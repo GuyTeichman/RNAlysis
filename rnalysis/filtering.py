@@ -174,8 +174,8 @@ class Filter:
         a list of two Filter objects: the first contains all of the features below the specified percentile, \
         and the second contains all of the features above and equal to the specified percentile.
         """
-        return [self.filter_below_percentile(percentile=percentile, column=column, opposite=False, inplace=False),
-                self.filter_below_percentile(percentile=percentile, column=column, opposite=True, inplace=False)]
+        return [self.filter_percentile(percentile=percentile, column=column, opposite=False, inplace=False),
+                self.filter_percentile(percentile=percentile, column=column, opposite=True, inplace=False)]
 
     def filter_biotype(self, biotype='protein_coding',
                        ref: str = __gene_names_and_biotype__, opposite: bool = False, inplace: bool = True):

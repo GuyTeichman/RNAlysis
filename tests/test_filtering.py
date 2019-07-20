@@ -110,8 +110,8 @@ def test_deseq_filter_significant_opposite():
     d.filter_significant(alpha=0.05, opposite=True)
     d.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
-    truth.fillna(1234567890,inplace=True)
-    d.df.fillna(1234567890,inplace=True)
+    truth.fillna(1234567890, inplace=True)
+    d.df.fillna(1234567890, inplace=True)
     assert np.all(d.df == truth)
 
 
@@ -256,3 +256,23 @@ def test_htcount_split_by_rpm():
     high, low = h.split_by_rpm(threshold=60)
     assert np.all(high.df == high_truth)
     assert np.all(low.df == low_truth)
+
+
+def test_filter_percentile():
+    truth = general.load_csv(r'test_deseq_percentile_0.25.csv', 0)
+    h = DESeqFilter(r'test_deseq_percentile.csv')
+    h.filter_percentile(0.25, 'padj', inplace=True)
+    h.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(h.df == truth)
+
+
+def test_split_by_percentile():
+    truth_below = general.load_csv(r'test_deseq_percentile_0.25.csv', 0)
+    truth_above = general.load_csv(r'test_deseq_percentile_0.75.csv', 0)
+    h = DESeqFilter(r'test_deseq_percentile.csv')
+    below, above = h.split_by_percentile(0.25, 'padj')
+    for i in [truth_below, truth_above, below.df, above.df]:
+        i.sort_index(inplace=True)
+    assert np.all(truth_below == below.df)
+    assert np.all(truth_above == above.df)
