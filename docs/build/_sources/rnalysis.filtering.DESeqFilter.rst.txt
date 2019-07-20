@@ -13,7 +13,7 @@ rnalysis.filtering.DESeqFilter
 
    .. autosummary::
     :toctree:
-   
+
       ~DESeqFilter.__init__
       ~DESeqFilter.describe
       ~DESeqFilter.difference
@@ -23,11 +23,14 @@ rnalysis.filtering.DESeqFilter
       ~DESeqFilter.filter_biotype
       ~DESeqFilter.filter_by_bigtable_group
       ~DESeqFilter.filter_fold_change_direction
+      ~DESeqFilter.filter_percentile
       ~DESeqFilter.filter_significant
       ~DESeqFilter.filter_top_n
+      ~DESeqFilter.head
       ~DESeqFilter.intersection
       ~DESeqFilter.save_csv
       ~DESeqFilter.split_by_bigtable_group
+      ~DESeqFilter.split_by_percentile
       ~DESeqFilter.split_fold_change_direction
       ~DESeqFilter.symmetric_difference
       ~DESeqFilter.union

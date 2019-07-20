@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.general.set_reference_table_path" href="rnalysis.general.set_reference_table_path.html" />
+    <link rel="next" title="rnalysis.general.check_is_df" href="rnalysis.general.check_is_df.html" />
     <link rel="prev" title="rnalysis.enrichment.EnrichmentProcessing.union" href="rnalysis.enrichment.EnrichmentProcessing.union.html" /> 
 </head>
 
@@ -93,14 +93,17 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">rnalysis.general</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_reference_table_path.html">rnalysis.general.set_reference_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.check_is_df.html">rnalysis.general.check_is_df</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.filter_low_rpm.html">rnalysis.general.filter_low_rpm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.is_reference_table_defined.html">rnalysis.general.is_reference_table_defined</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.load_csv.html">rnalysis.general.load_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.norm_reads_to_rpm.html">rnalysis.general.norm_reads_to_rpm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.normalize_file.html">rnalysis.general.normalize_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.parse_wbgene_string.html">rnalysis.general.parse_wbgene_string</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.read_reference_table_path.html">rnalysis.general.read_reference_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.remove_unindexed_rows.html">rnalysis.general.remove_unindexed_rows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.save_to_csv.html">rnalysis.general.save_to_csv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_reference_table_path.html">rnalysis.general.set_reference_table_path</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
@@ -181,14 +184,14 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.set_reference_table_path.html#rnalysis.general.set_reference_table_path" title="rnalysis.general.set_reference_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_reference_table_path</span></code></a>([path])</p></td>
-<td><p>Set the path for a user-defined reference table for filtering and enrichment analyses.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.check_is_df.html#rnalysis.general.check_is_df" title="rnalysis.general.check_is_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_is_df</span></code></a>(inp)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.check_is_df.html#rnalysis.general.check_is_df" title="rnalysis.general.check_is_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_is_df</span></code></a>(inp)</p></td>
 <td><p>checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object     of a .csv file, or an invalid input.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.filter_low_rpm.html#rnalysis.general.filter_low_rpm" title="rnalysis.general.filter_low_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_low_rpm</span></code></a>(df[, threshold])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.filter_low_rpm.html#rnalysis.general.filter_low_rpm" title="rnalysis.general.filter_low_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_low_rpm</span></code></a>(df[, threshold])</p></td>
 <td><p>remove all features which have less then ‘threshold’ reads per million in all conditions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.is_reference_table_defined.html#rnalysis.general.is_reference_table_defined" title="rnalysis.general.is_reference_table_defined"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_reference_table_defined</span></code></a>([…])</p></td>
+<td><p>Check whether a reference table path is defined.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.load_csv.html#rnalysis.general.load_csv" title="rnalysis.general.load_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_csv</span></code></a>(filename[, idx_col, drop_gene_names])</p></td>
 <td><p>loads a csv df into a pandas dataframe.</p></td>
@@ -199,11 +202,20 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.normalize_file.html#rnalysis.general.normalize_file" title="rnalysis.general.normalize_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_file</span></code></a>(htcount_filename, …)</p></td>
 <td><p>receives an htcount filename and a feature filename, normalizes the htcount file to rpm, removes unindexed rows,     and saves the file with the suffix ‘_rpm’.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.parse_wbgene_string.html#rnalysis.general.parse_wbgene_string" title="rnalysis.general.parse_wbgene_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_wbgene_string</span></code></a>(string)</p></td>
+<td><p>Receives a string that contains WBGene indices.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.read_reference_table_path.html#rnalysis.general.read_reference_table_path" title="rnalysis.general.read_reference_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_reference_table_path</span></code></a>()</p></td>
+<td><p>Attempt to read the reference table path from settings.ini.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.remove_unindexed_rows.html#rnalysis.general.remove_unindexed_rows" title="rnalysis.general.remove_unindexed_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_unindexed_rows</span></code></a>(df)</p></td>
 <td><p>removes rows which have no WBGene index.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.save_to_csv.html#rnalysis.general.save_to_csv" title="rnalysis.general.save_to_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_to_csv</span></code></a>(df, filename, suffix)</p></td>
 <td><p>save a pandas DataFrame to csv.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.set_reference_table_path.html#rnalysis.general.set_reference_table_path" title="rnalysis.general.set_reference_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_reference_table_path</span></code></a>([path])</p></td>
+<td><p>Set the path for a user-defined reference table for filtering and enrichment analyses.</p></td>
 </tr>
 </tbody>
 </table>
@@ -217,7 +229,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.general.set_reference_table_path.html" class="btn btn-neutral float-right" title="rnalysis.general.set_reference_table_path" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.general.check_is_df.html" class="btn btn-neutral float-right" title="rnalysis.general.check_is_df" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="rnalysis.enrichment.EnrichmentProcessing.union.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.EnrichmentProcessing.union" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

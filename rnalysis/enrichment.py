@@ -24,10 +24,9 @@ class EnrichmentProcessing:
 
     def __init__(self, gene_set: set = None):
         if gene_set is None:
-            self.gene_set = set(self._from_string(
+            self.gene_set = general.parse_wbgene_string(input(
                 "Please insert WBGenes separated by newline "
-                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')",
-                del_spaces=True))
+                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')"))
         elif isinstance(gene_set, set):
             pass
         elif isinstance(gene_set, (list, tuple)):
@@ -84,7 +83,8 @@ class EnrichmentProcessing:
     def _set_ops(self, other, op):
         """
         Performs a given set operation on self and on another object (EnrichmentProcessing or set).
-        :param other: Other object. EnrichmentProcessing or set.
+        :type other: EnrichmentProcessing, set or str
+        :param other: Other object to perform set operation with.
         :param op: The set operation to be performed. \
         set.union, set.intersection, set.difference or set.symmetric_difference.
         :return:
@@ -94,6 +94,8 @@ class EnrichmentProcessing:
             genes = op(self.gene_set, other)
         elif isinstance(other, EnrichmentProcessing):
             genes = op(self.gene_set, other.gene_set)
+        elif isinstance(other, str):
+            genes = op(self.gene_set, general.parse_wbgene_string(other))
         else:
             raise TypeError("'other' must be an EnrichmentProcessing object or a set!")
         return genes
@@ -103,9 +105,10 @@ class EnrichmentProcessing:
          Calculates the set union of the WBGene indices from two EnrichmentProcessing objects \
         (the indices that exist in at least one of the EnrichmentProcessing objects).
 
-        :param other: A second EnrichmentProcessing object, \
-        or a set of WBGene indices, against which the current object will be compared.
-        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        :type other: EnrichmentProcessing, set or str
+        :param other: A second  object against which the current object will be compared.
+        :type other: bool
+        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.
@@ -117,9 +120,10 @@ class EnrichmentProcessing:
         Calculates the set intersection of the WBGene indices from two EnrichmentProcessing objects \
         (the indices that exist in BOTH of the EnrichmentProcessing objects).
 
-        :param other: A second EnrichmentProcessing object, \
-        or a set of WBGene indices , against which the current object will be compared.
-        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        :type other: EnrichmentProcessing, set or str
+        :param other: A second  object against which the current object will be compared.
+        :type other: bool
+        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.
@@ -131,9 +135,10 @@ class EnrichmentProcessing:
         Calculates the set difference of the WBGene indices from two EnrichmentProcessing objects \
         (the indices that appear in the first EnrichmentProcessing object but NOT in the second object).
 
-        :param other: A second EnrichmentProcessing object, \
-        or a set of WBGene indices , against which the current object will be compared.
-        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        :type other: EnrichmentProcessing, set or str
+        :param other: A second  object against which the current object will be compared.
+        :type other: bool
+        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.
@@ -146,9 +151,10 @@ class EnrichmentProcessing:
         (the indices that appear in EXACTLY ONE of the EnrichmentProcessing objects, and not both/neither). \
         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).
 
-        :param other:  A second EnrichmentProcessing object, \
-        or a set of WBGene indices , against which the current object will be compared.
-        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        :type other: EnrichmentProcessing, set or str
+        :param other: A second  object against which the current object will be compared.
+        :type other: bool
+        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.

@@ -300,7 +300,7 @@ WBGene12345678”.</p>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>If ‘inplace’ is False, returns a new instance of DESeqFilter.</p>
+<p>If ‘inplace’ is False, returns a new and filtered instance of the Filter object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -320,6 +320,26 @@ WBGene12345678”.</p>
 </dd>
 </dl>
 <p>If ‘inplace’ is False, returns a new instance of DESeqFilter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">filter_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Removes all entries above the specified percentile in the specified column.         For example, if the column were ‘pvalue’ and the percentile was 0.5, then all features whose pvalue is above         the median pvalue will be filtered out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
+<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>If inplace is False, returns a new and filtered instance of the Filter object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -358,6 +378,21 @@ WBGene12345678”.</p>
 </dd>
 </dl>
 <p>If ‘inplace’ is False, returns a new instance of DESeqFilter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
+<dd><p>Return the first n rows of the DataFrame. See pandas.DataFrame.head documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>returns the first n rows of the Filter object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -405,6 +440,24 @@ WBGene12345678”.</p>
 </dd>
 </dl>
 <p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
+<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>a list of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
 </dd></dl>
 
 <dl class="method">
@@ -571,7 +624,7 @@ WBGene12345678”.</p>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>If ‘inplace’ is False, returns a new instance of DESeqFilter.</p>
+<p>If ‘inplace’ is False, returns a new and filtered instance of the Filter object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -595,6 +648,26 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">filter_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Removes all entries above the specified percentile in the specified column.         For example, if the column were ‘pvalue’ and the percentile was 0.5, then all features whose pvalue is above         the median pvalue will be filtered out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
+<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>If inplace is False, returns a new and filtered instance of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <em class="property">static </em><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">save_csv: bool = True</em>, <em class="sig-param">norm_to_rpm: bool = True</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em><span class="sig-paren">)</span></dt>
 <dd><p>Iterates over htcount files in a given folder and combines them into a single HTCountFilter table.         Can also save the count data table and the uncounted data table to .csv files, and normalize the HTCountFilter         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data,         regardless if the HTCountFilter table was normalized or not.</p>
 <dl class="field-list simple">
@@ -612,6 +685,21 @@ WBGene12345678”.</p>
 </dd>
 </dl>
 <p>an HTCountFilter object containing the combined count data from all individual htcount .txt files in the         specified folder.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
+<dd><p>Return the first n rows of the DataFrame. See pandas.DataFrame.head documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>returns the first n rows of the Filter object.</p>
 </dd></dl>
 
 <dl class="method">
@@ -730,6 +818,24 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
+<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>a list of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">split_by_rpm</code><span class="sig-paren">(</span><em class="sig-param">threshold: float = 5</em><span class="sig-paren">)</span></dt>
 <dd><p>Splits the features in the current HTCountFilter object into two complementary, non-overlapping HTCountFilter         objects, based on the their maximum expression level. The first object will contain only highly-expressed          features (which have RPM over the specified threshold in at least one sample). The second object will contain          only lowly-expressed features (which have RPM below the specified threshold in all samples).</p>
 <dl class="field-list simple">
@@ -780,8 +886,8 @@ WBGene12345678”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> – A second EnrichmentProcessing object,         or a set of WBGene indices , against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – boolean. If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -870,8 +976,8 @@ and ‘pvalue’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> – A second EnrichmentProcessing object,         or a set of WBGene indices , against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – boolean. If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -888,8 +994,8 @@ and ‘pvalue’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> – A second EnrichmentProcessing object,         or a set of WBGene indices , against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – boolean. If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -908,8 +1014,8 @@ and ‘pvalue’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> – A second EnrichmentProcessing object,         or a set of WBGene indices, against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – boolean. If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1020,6 +1126,16 @@ and ‘pvalue’.</p>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_wbgene_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span></dt>
+<dd><p>Receives a string that contains WBGene indices. Parses the string into a set of WBGene indices.     The format of a WBGene index is ‘WBGene’ and exactly 8 digits.
+:type string: str
+:param string: The string to be parsed. Can be any format of string.
+:return:
+a set of the WBGene indices that appear in the given string.</p>
 </dd></dl>
 
 <dl class="function">

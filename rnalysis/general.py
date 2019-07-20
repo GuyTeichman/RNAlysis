@@ -6,7 +6,20 @@ This module contains general-purpose functions, such as loading and saving files
 import pandas as pd
 from pathlib import Path
 import os
+import re
 from rnalysis import __settings_start_phrase__
+
+
+def parse_wbgene_string(string):
+    """
+    Receives a string that contains WBGene indices. Parses the string into a set of WBGene indices. \
+    The format of a WBGene index is 'WBGene' and exactly 8 digits.
+    :type string: str
+    :param string: The string to be parsed. Can be any format of string.
+    :return:
+    a set of the WBGene indices that appear in the given string.
+    """
+    return set(re.findall('WBGene[0-9]{8}', string))
 
 
 def is_reference_table_defined(settings_start_phrase=__settings_start_phrase__):

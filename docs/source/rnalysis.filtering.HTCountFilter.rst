@@ -22,13 +22,16 @@ rnalysis.filtering.HTCountFilter
       ~HTCountFilter.filter_biotype
       ~HTCountFilter.filter_by_bigtable_group
       ~HTCountFilter.filter_low_rpm
+      ~HTCountFilter.filter_percentile
       ~HTCountFilter.from_folder
+      ~HTCountFilter.head
       ~HTCountFilter.norm_reads_to_rpm
       ~HTCountFilter.pairplot
       ~HTCountFilter.run_pca
       ~HTCountFilter.save_csv
       ~HTCountFilter.scatter_rpm_vs_rpm
       ~HTCountFilter.split_by_bigtable_group
+      ~HTCountFilter.split_by_percentile
       ~HTCountFilter.split_by_rpm
       ~HTCountFilter.violin_plot
    

@@ -13,7 +13,7 @@ rnalysis.enrichment.EnrichmentProcessing
 
    .. autosummary::
     :toctree:
-   
+
       ~EnrichmentProcessing.__init__
       ~EnrichmentProcessing.difference
       ~EnrichmentProcessing.enrich_big_table
