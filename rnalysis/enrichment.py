@@ -1,0 +1,370 @@
+"""
+This module receives a set of feature names, and can perform various enrichment analyses on them, such as \
+GO enrichment, tissue/phenotype enrichment, enrichment and depletion of big table columns, etc. \
+Furthermore, set operations (union, intersect, difference, symmetric difference) can be performed on two \
+EnrichmentProcessing objects. \
+Results of enrichment analyses can be saved to .csv files.
+"""
+
+import os
+import numpy as np
+import pandas as pd
+from rnalysis import general, __gene_names_and_biotype__
+import tissue_enrichment_analysis as tea
+import seaborn as sns
+import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+from pathlib import Path
+import statsmodels.stats.multitest as multitest
+
+
+class EnrichmentProcessing:
+    """ receives a filtered gene set and preforms various enrichment analyses"""
+    _go_dicts = {}
+
+    def __init__(self, gene_set: set = None):
+        if gene_set is None:
+            self.gene_set = set(self._from_string(
+                "Please insert WBGenes separated by newline "
+                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')",
+                del_spaces=True))
+        elif isinstance(gene_set, set):
+            pass
+        elif isinstance(gene_set, (list, tuple)):
+            gene_set = set(gene_set)
+        else:
+            raise TypeError(f"Error: 'gene_set' must be a set, list or tuple! Is a {type(gene_set)} instead. ")
+        self.gene_set = gene_set
+
+    @staticmethod
+    def _from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
+        """
+        Takes a manual string input from the user, and then splits it using a comma delimiter into a list of values. \
+        Called when an EnrichmentProcessing instance is created without input, \
+        or when EnrichmentProcessing.enrich_big_table is called without input.
+
+        :param msg: a promprt to be printed to the user
+        :param del_spaces: if True, will delete all spaces in each delimited value.
+        :param delimiter: the delimiter used to separate the values. Default is '\n'
+        :return:
+        A list of the comma-seperated values the user inserted.
+        """
+        string = input(msg)
+        split = string.split(sep=delimiter)
+        if del_spaces:
+            for i in range(len(split)):
+                split[i] = split[i].replace(' ', '')
+        if split[-1] == '':
+            split = split[:-1]
+        return split
+
+    def _inplace(self, gene_set: set, inplace: bool):
+        """
+        Executes the user's choice whether to perform set operations in-place \
+        or create a new instance of the EnrichmentProcessing object.
+
+        :param gene_set: The set of features resulting from the set operations
+        :param inplace: bool. If True, gene_set will be saved to the current EnrichmentProcessing object. \
+        If False, gene_set will be used to created a new instance of EnrichmentProcessing.
+        :return:
+        If inplace is True, returns a new instance of EnrichmentProcessing.
+        """
+        if inplace:
+            self.gene_set = gene_set
+        else:
+            return EnrichmentProcessing(gene_set)
+
+    @staticmethod
+    def _get_ref_path(ref):
+        if ref == 'predefined':
+            return general.read_reference_table_path()
+        else:
+            return ref
+
+    def _set_ops(self, other, op):
+        """
+        Performs a given set operation on self and on another object (EnrichmentProcessing or set).
+        :param other: Other object. EnrichmentProcessing or set.
+        :param op: The set operation to be performed. \
+        set.union, set.intersection, set.difference or set.symmetric_difference.
+        :return:
+        A set resulting from the set operation.
+        """
+        if isinstance(other, set):
+            genes = op(self.gene_set, other)
+        elif isinstance(other, EnrichmentProcessing):
+            genes = op(self.gene_set, other.gene_set)
+        else:
+            raise TypeError("'other' must be an EnrichmentProcessing object or a set!")
+        return genes
+
+    def union(self, other, inplace: bool = True):
+        """
+         Calculates the set union of the WBGene indices from two EnrichmentProcessing objects \
+        (the indices that exist in at least one of the EnrichmentProcessing objects).
+
+        :param other: A second EnrichmentProcessing object, \
+        or a set of WBGene indices, against which the current object will be compared.
+        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        If False, returns a new instance of EnrichmentProcessing.
+        :return:
+        if inplace is False, returns a new instance of EnrichmentProcessing.
+        """
+        return self._inplace(self._set_ops(other, set.union), inplace)
+
+    def intersect(self, other, inplace: bool = True):
+        """
+        Calculates the set intersection of the WBGene indices from two EnrichmentProcessing objects \
+        (the indices that exist in BOTH of the EnrichmentProcessing objects).
+
+        :param other: A second EnrichmentProcessing object, \
+        or a set of WBGene indices , against which the current object will be compared.
+        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        If False, returns a new instance of EnrichmentProcessing.
+        :return:
+        if inplace is False, returns a new instance of EnrichmentProcessing.
+                """
+        return self._inplace(self._set_ops(other, set.intersection), inplace)
+
+    def difference(self, other, inplace: bool = True):
+        """
+        Calculates the set difference of the WBGene indices from two EnrichmentProcessing objects \
+        (the indices that appear in the first EnrichmentProcessing object but NOT in the second object).
+
+        :param other: A second EnrichmentProcessing object, \
+        or a set of WBGene indices , against which the current object will be compared.
+        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        If False, returns a new instance of EnrichmentProcessing.
+        :return:
+        if inplace is False, returns a new instance of EnrichmentProcessing.
+        """
+        return self._inplace(self._set_ops(other, set.difference), inplace)
+
+    def symmetric_difference(self, other, inplace: bool = True):
+        """
+        Calculates the set symmetric difference of the WBGene indices from two EnrichmentProcessing objects \
+        (the indices that appear in EXACTLY ONE of the EnrichmentProcessing objects, and not both/neither). \
+        A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).
+
+        :param other:  A second EnrichmentProcessing object, \
+        or a set of WBGene indices , against which the current object will be compared.
+        :param inplace: boolean. If True (default), modifies the current instance of EnrichmentProcessing. \
+        If False, returns a new instance of EnrichmentProcessing.
+        :return:
+        if inplace is False, returns a new instance of EnrichmentProcessing.
+        """
+        return self._inplace(self._set_ops(other, set.symmetric_difference), inplace)
+
+    @staticmethod
+    def _enrichment_save_csv(df: pd.DataFrame, fname: str, suffix: str = ''):
+        """
+        Internal method, used to save enrichment results to .csv files. Static class method.
+
+        :param df: pandas DataFrame to be saved.
+        :param fname: Name and full path under which the DataFrame will be saved
+        :param suffix: Suffix to add to the file name before the .csv.
+        """
+        if fname is None:
+            fname = input("Please insert the full name and path to save the file to")
+        else:
+            assert isinstance(fname, (str, Path))
+        if isinstance(fname, Path):
+            fname = str(Path)
+        general.save_to_csv(df, filename=fname + '.csv', suffix=suffix)
+
+    def go_enrichment(self, mode: str = 'go', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
+        """
+        Analyzes GO, Tissue and/or Phenotype enrichment of the given group of features. \
+        Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans. \
+        Corrected p-values are calculated using hypergeometric statistics. \
+        For more details see GitHub page of the developers: https://github.com/dangeles/TissueEnrichmentAnalysis
+
+        :param mode: the enrichment you wish to perform. 'go' for gene ontology enrichment, \
+        'tissue' for tissue enrichment, 'phenotype' for phenotype enrichment.
+        :param alpha: float. Significance threshold. Default is 0.05
+        :param save_csv: bool. False by default. If True, save the result to a csv.
+        :param fname: Name and path in which to save the results. Must be filled if save_csv is True.
+        :return:
+        a DataFrame which contains the significant enrichmenet terms
+
+        .. figure::  go_en.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of GO enrichment
+
+        .. figure::  tissue_en.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of Tissue enrichment
+        """
+        assert isinstance(alpha, float), "alpha must be a float!"
+        assert isinstance(mode, str), "'mode' must be a string!"
+        if mode == 'all':
+            d = []
+            df_comb = pd.DataFrame()
+            for k, arg in enumerate(('go', 'tissue', 'phenotype')):
+                print(f'Calculating... {100 * k / 3 :.2f}% done')
+                if arg in EnrichmentProcessing._go_dicts:
+                    d.append(EnrichmentProcessing._go_dicts[arg])
+                else:
+                    d.append(tea.fetch_dictionary(arg))
+                    EnrichmentProcessing._go_dicts[arg] = d[-1]
+                df = tea.enrichment_analysis(self.gene_set, d[-1], alpha=alpha)
+                if not df.empty:
+                    df_comb = df_comb.append(df)
+                    tea.plot_enrichment_results(df, title=f'{arg.capitalize()} Enrichment Analysis', analysis=arg)
+                    plt.title(f'{arg.capitalize()} Enrichment Analysis', fontsize=20)
+
+        else:
+            assert (mode == 'go' or mode == 'tissue' or mode == 'phenotype'), "Invalid mode!"
+            d = tea.fetch_dictionary(mode)
+            df_comb = tea.enrichment_analysis(self.gene_set, d, show=True)
+            tea.plot_enrichment_results(df_comb, title=f'{mode.capitalize()} Enrichment Analysis', analysis=mode)
+            plt.title(f'{mode.capitalize()} Enrichment Analysis', fontsize=20)
+
+        if save_csv:
+            self._enrichment_save_csv(df_comb, fname)
+        plt.show()
+        return df_comb
+
+    def enrich_big_table(self, attributes: list = None, fdr: float = 0.05, reps=10000, biotype: str = 'protein_coding',
+                         big_table_pth: str = 'predefined', save_csv: bool = True, fname=None):
+        """
+        Calculates enrichment scores, p-values and q-values \
+        for enrichment and depletion of selected attributes from the Big Table. \
+        P-values are calculated using a randomization test, and corrected for multiple comparisons using \
+        the Benjamini–Hochberg step-up procedure (original FDR method). \
+        Enrichment/depletion is determined automatically by the calculated enrichment score: \
+        if log2(enrichment score) is positive then enrichment is assumed, \
+        and if log2(enrichment score) is negative then depletion is assumed.
+
+        :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
+        :param fdr: float. Indicates the FDR threshold for significance.
+        :param reps: How many repetitions to run the randomization for. \
+        10,000 is the default. Recommended 10,000 or higher.
+        :param big_table_pth: the path of the Big Table file to be used as reference.
+        :param biotype: the biotype you want your reference to have. 'all' will include all biotypes, \
+        'protein_coding' will include only protein-coding genes in the reference, etc.
+        :param save_csv: bool. If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :param fname: str/Path. The full path and name of the file to which to save the results. For example: \
+        r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :return:
+        a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_enrichment_score'
+        and 'pvalue'.
+
+        .. figure::  bigtable_en.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of big table enrichment
+        """
+        big_table_pth = self._get_ref_path(big_table_pth)
+        if attributes is None:
+            attributes = self._from_string(
+                "Please insert attributes separated by newline "
+                "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
+        elif isinstance(attributes, str):
+            attributes = [attributes]
+        else:
+            assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
+
+        try:
+            big_table = general.load_csv(big_table_pth, 0, drop_gene_names=False)
+        except:
+            raise ValueError("Invalid or nonexistent big table path!")
+
+        assert (isinstance(biotype, str))
+        if biotype == 'all':
+            pass
+        else:
+            biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
+            big_table = big_table.loc[biotype_ref[biotype_ref['bioType'] == biotype].index]
+
+        fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
+        enriched_list = []
+        for k, attribute in enumerate(attributes):
+            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
+            print(f"Finished {k} attributes out of {len(attributes)}")
+
+            srs = big_table[attribute]
+            obs_srs = srs.loc[self.gene_set]
+            expected_fraction = fraction(srs)
+            observed_fraction = fraction(obs_srs)
+            log2_enrichment_score = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
+            success = sum((fraction(srs.loc[np.random.choice(srs.index, obs_srs.shape[0],
+                                                             replace=False)]) >= observed_fraction
+                           if log2_enrichment_score >= 0 else fraction(
+                srs.loc[np.random.choice(srs.index, obs_srs.shape[0], replace=False)]) <= observed_fraction
+                           for rep in range(reps)))
+            pval = (success + 1) / (reps + 1)
+            n = obs_srs.shape[0]
+            enriched_list.append(
+                (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_enrichment_score, pval))
+
+        enriched_df = pd.DataFrame(enriched_list,
+                                   columns=['name', 'samples', 'n obs', 'n exp', 'log2_enrichment_score', 'pvals'])
+        significant, padj = multitest.fdrcorrection(enriched_df['pvals'].values, alpha=fdr)
+        enriched_df['padj'] = padj
+        enriched_df['significant'] = significant
+        enriched_df.set_index('name', inplace=True)
+
+        self._plot_enrich_big_table(enriched_df)
+
+        if save_csv:
+            self._enrichment_save_csv(enriched_df, fname)
+        print(enriched_df)
+        return enriched_df
+
+    @staticmethod
+    def _plot_enrich_big_table(df: pd.DataFrame):
+        """
+        Receives a DataFrame output from EnrichmentProcessing.enrich_big_table, and plots it in a bar plort \
+        Static class method.
+
+        :param df: a pandas DataFrame created by EnrichmentProcessing.enrich_big_table.
+        :return:
+        a matplotlib.pyplot.bar instance
+        """
+        enrichment_names = df.index.values.tolist()
+        enrichment_scores = df['log2_enrichment_score']
+        enrichment_pvalue = df['padj']
+        data_color = [i / max(enrichment_scores) for i in enrichment_scores]
+        my_cmap = plt.cm.get_cmap('coolwarm')
+        colors = my_cmap(data_color)
+        fig, ax = plt.subplots()
+        # ax.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
+        bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors)
+        bar.tick_labels = enrichment_names
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*ax.get_ylim()))
+        sm.set_array([])
+        cbar = fig.colorbar(sm)
+        cbar.set_label('', rotation=90, labelpad=25, fontsize=26)
+        plt.xticks(range(len(enrichment_names)), enrichment_names, fontsize=13, rotation='vertical')
+        plt.ylabel("Log2 Enrichment Score", fontsize=26)
+        for col, sig in zip(bar, enrichment_pvalue):
+            fontsize = 21
+            if sig < 0.0001:
+                asterisks = '****'
+            elif sig < 0.001:
+                asterisks = '***'
+            elif sig < 0.01:
+                asterisks = '**'
+            elif sig < 0.05:
+                asterisks = '*'
+            else:
+                asterisks = 'ns'
+                fontsize = 16
+            plt.text(x=col.xy[0] + 0.5 * col._width,
+                     y=col._height + (max(enrichment_scores) - min(enrichment_scores)) / 50 * np.sign(col._height),
+                     s=asterisks,
+                     fontsize=fontsize, horizontalalignment='center', verticalalignment='center')
+
+        sns.despine()
+        plt.tight_layout()
+        plt.show()
+        return bar
+
+# TODO: other types of plots
+# TODO: heat map plot of multiple DESEQ files

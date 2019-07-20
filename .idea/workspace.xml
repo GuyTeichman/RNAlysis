@@ -1,0 +1,1183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="33f08f1e-989f-4256-b9a3-d3a3a577cf8c" name="Default Changelist" comment="updated documentation">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rnalysis/extendedCelegansIDs_bigTable_39col_2019format_edit.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/rnalysis/settings.ini" beforeDir="false" />
+    </list>
+    <list id="8763a3eb-998d-43c6-a6cf-0776cda3e0ff" name="Revert &quot;Delete extendedCelegansIDs_bigTable_39col_2019format_edit.csv&quot;" comment="Revert &quot;Delete extendedCelegansIDs_bigTable_39col_2019format_edit.csv&quot;&#10;&#10;This reverts commit a8f90d2d" />
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/rnalysis/enrichment.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="271">
+              <caret line="369" column="2" selection-start-line="369" selection-start-column="2" selection-end-line="369" selection-end-column="2" />
+              <folding>
+                <element signature="e#413#422#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/rnalysis/general.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="270">
+              <caret line="15" column="97" selection-start-line="15" selection-start-column="97" selection-end-line="15" selection-end-column="97" />
+              <folding>
+                <element signature="e#223#242#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/tests/test_filtering.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="104">
+              <caret line="69" column="11" selection-start-line="69" selection-start-column="4" selection-end-line="69" selection-end-column="11" />
+              <folding>
+                <element signature="e#0#13#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/rnalysis/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="180">
+              <caret line="10" column="45" selection-start-line="10" selection-start-column="45" selection-end-line="10" selection-end-column="45" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/rnalysis/filtering.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="222">
+              <caret line="156" column="11" lean-forward="true" selection-start-line="156" selection-start-column="11" selection-end-line="156" selection-end-column="11" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="213">
+              <caret line="93" column="23" lean-forward="true" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>norm_reads</find>
+      <find>inplace</find>
+      <find>_from</find>
+      <find>opposite</find>
+      <find>split</find>
+      <find>for e</find>
+      <find>commas</find>
+      <find>for ex</find>
+      <find>for example</find>
+      <find>pca</find>
+      <find>if biotype</find>
+      <find>pairpl</find>
+      <find>plot_en</find>
+      <find>0.1.4</find>
+      <find>1.0.0</find>
+      <find>extendedCelegansIDs_bigTable_39col_2019format_edit.csv</find>
+      <find>big_table_for</find>
+      <find>_plot</find>
+      <find>__bigtable_path__</find>
+      <find>1.0.</find>
+      <find>1.0.1</find>
+      <find>all_feature</find>
+      <find>read_Ref</find>
+      <find>Filter.</find>
+      <find>= Fil</find>
+      <find>reference_ta</find>
+      <find>reference</find>
+      <find>test_ht</find>
+      <find>'prede</find>
+      <find>biotype</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>gene_set</replace>
+      <replace>__inplace</replace>
+      <replace>enriched_df</replace>
+      <replace>rnalysis</replace>
+      <replace>RNAlysis</replace>
+      <replace>extendedCelegansIDs_bigTable_39col_2019format_edit.csv</replace>
+      <replace>0.1.3</replace>
+      <replace>0.1.4</replace>
+      <replace>_plot</replace>
+      <replace>set_ops</replace>
+      <replace>_enr</replace>
+      <replace>_from</replace>
+      <replace>intersection</replace>
+      <replace>1.0.0</replace>
+      <replace>1.0.1</replace>
+      <replace>big_table_for_tests.csv</replace>
+      <replace>1.0.2</replace>
+      <replace>_plot_en</replace>
+      <replace>__gene_names_and_biotype__</replace>
+    </replaceStrings>
+    <dirStrings>
+      <dir>C:\Users\Guy_Teichman\PycharmProjects\RNAlysis\tests</dir>
+      <dir>C:\Users\Guy_Teichman\PycharmProjects\RNAlysis</dir>
+    </dirStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/tests/test_go_enrichment.py" />
+        <option value="$PROJECT_DIR$/tests/test_filter_methods.py" />
+        <option value="$PROJECT_DIR$/tests/test_bigtable_enrichment.py" />
+        <option value="$PROJECT_DIR$/tests/test_feature_name_to_wbgene.py" />
+        <option value="$PROJECT_DIR$/tests/test_load_file.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/load_file.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/srna_analysis.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/filter_methods.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/bigtable_enrichment.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/enrichment_processing.py" />
+        <option value="$PROJECT_DIR$/tests/test_general.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/machine_learning_analyses.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/enrichment.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/general.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/feature_name_to_wbgene.py" />
+        <option value="$PROJECT_DIR$/srna_analysis/filtering.py" />
+        <option value="$PROJECT_DIR$/docs/source/conf.py" />
+        <option value="$PROJECT_DIR$/docs/index.html" />
+        <option value="$PROJECT_DIR$/AUTHORS.rst" />
+        <option value="$PROJECT_DIR$/docs/source/installation.rst" />
+        <option value="$PROJECT_DIR$/docs/source/usage.rst" />
+        <option value="$PROJECT_DIR$/docs/source/readme.rst" />
+        <option value="$PROJECT_DIR$/docs/source/history.rst" />
+        <option value="$PROJECT_DIR$/CONTRIBUTING.rst" />
+        <option value="$PROJECT_DIR$/docs/source/contributing.rst" />
+        <option value="$PROJECT_DIR$/docs/source/authors.rst" />
+        <option value="$PROJECT_DIR$/tests/test_enrichment.py" />
+        <option value="$PROJECT_DIR$/rnalysis.egg-info/PKG-INFO" />
+        <option value="$PROJECT_DIR$/Makefile" />
+        <option value="$PROJECT_DIR$/docs/source/index.rst" />
+        <option value="$PROJECT_DIR$/setup.cfg" />
+        <option value="$PROJECT_DIR$/rnalysis/rnalysis.py" />
+        <option value="$PROJECT_DIR$/tests/__init__.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
+        <option value="$PROJECT_DIR$/docs/source/rnalysis.filtering.DESeqFilter.rst" />
+        <option value="$PROJECT_DIR$/docs/source/rnalysis.filtering.HTCountFilter.rst" />
+        <option value="$PROJECT_DIR$/docs/source/rnalysis.enrichment.EnrichmentProcessing.rst" />
+        <option value="$PROJECT_DIR$/README.rst" />
+        <option value="$PROJECT_DIR$/tests/test_filtering.py" />
+        <option value="$PROJECT_DIR$/MANIFEST.in" />
+        <option value="$PROJECT_DIR$/rnalysis/feature_name_to_wbgene.py" />
+        <option value="$PROJECT_DIR$/rnalysis/__init__.py" />
+        <option value="$PROJECT_DIR$/setup.py" />
+        <option value="$PROJECT_DIR$/rnalysis/enrichment.py" />
+        <option value="$PROJECT_DIR$/rnalysis/filtering.py" />
+        <option value="$PROJECT_DIR$/docs/source/rnalysis.general.rst" />
+        <option value="$PROJECT_DIR$/rnalysis/general.py" />
+        <option value="$PROJECT_DIR$/.gitignore" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectConfigurationFiles">
+    <option name="files">
+      <list>
+        <option value="$PROJECT_DIR$/.idea/other.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="7">
+    <option name="x" value="925" />
+    <option name="y" value="70" />
+    <option name="width" value="790" />
+    <option name="height" value="1040" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="RNAlysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="RNAlysis" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="RNAlysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="RNAlysis" type="462c0819:PsiDirectoryNode" />
+              <item name="dist" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="RNAlysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="RNAlysis" type="462c0819:PsiDirectoryNode" />
+              <item name="rnalysis" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="RNAlysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="RNAlysis" type="462c0819:PsiDirectoryNode" />
+              <item name="tests" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="RNAlysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+            </path>
+            <path>
+              <item name="RNAlysis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
+    <property name="editor.config.ad.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/docs/build" />
+    <property name="settings.editor.selected.configurable" value="PyScientificConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Guy_Teichman\PycharmProjects\RNAlysis\rnalysis" />
+      <recent name="C:\Users\Guy_Teichman\PycharmProjects\RNAlysis\docs\source" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python docs.sphinx task in">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="RNAlysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sphinx task in" type="docs" factoryName="Sphinx task">
+      <module name="RNAlysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="C:\ProgramData\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="docutils_input_file" value="C:\Users\Guy_Teichman\PycharmProjects\RNAlysis\docs\source" />
+      <option name="docutils_output_file" value="C:\Users\Guy_Teichman\PycharmProjects\RNAlysis\docs\build" />
+      <option name="docutils_params" value="" />
+      <option name="docutils_task" value="html" />
+      <option name="docutils_open_in_browser" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest for test_filtering.test_deseq_filter_significant_opposite" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="RNAlysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_filtering.test_deseq_filter_significant_opposite&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest for test_filtering.test_filter_low_rpm_reverse" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="RNAlysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_filtering.test_filter_low_rpm_reverse&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest for test_filtering.test_htcount_filter_biotype" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="RNAlysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_filtering.test_htcount_filter_biotype&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest for test_filtering.test_htcount_filter_biotype_opposite" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="RNAlysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_filtering.test_htcount_filter_biotype_opposite&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="pytest in tests" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+      <module name="RNAlysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python docs.sphinx task in" />
+      <item itemvalue="Python tests.pytest in tests" />
+      <item itemvalue="Python tests.pytest for test_filtering.test_filter_low_rpm_reverse" />
+      <item itemvalue="Python tests.pytest for test_filtering.test_htcount_filter_biotype_opposite" />
+      <item itemvalue="Python tests.pytest for test_filtering.test_deseq_filter_significant_opposite" />
+      <item itemvalue="Python tests.pytest for test_filtering.test_htcount_filter_biotype" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.pytest in tests" />
+        <item itemvalue="Python tests.pytest for test_filtering.test_htcount_filter_biotype" />
+        <item itemvalue="Python tests.pytest for test_filtering.test_deseq_filter_significant_opposite" />
+        <item itemvalue="Python tests.pytest for test_filtering.test_htcount_filter_biotype_opposite" />
+        <item itemvalue="Python tests.pytest for test_filtering.test_filter_low_rpm_reverse" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="33f08f1e-989f-4256-b9a3-d3a3a577cf8c" name="Default Changelist" comment="" />
+      <created>1561033100713</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1561033100713</updated>
+      <workItem from="1561879396840" duration="22632000" />
+      <workItem from="1562839791278" duration="10824000" />
+      <workItem from="1562859287873" duration="3423000" />
+      <workItem from="1562932235088" duration="1454000" />
+      <workItem from="1563108750710" duration="22000" />
+      <workItem from="1563108918140" duration="39484000" />
+    </task>
+    <task id="LOCAL-00070" summary="fixed errors in build">
+      <created>1563114877095</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1563114877095</updated>
+    </task>
+    <task id="LOCAL-00071" summary="fixed an error in load-csv (encoding support and ValueError)">
+      <created>1563114973838</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1563114973838</updated>
+    </task>
+    <task id="LOCAL-00072" summary="updated setup">
+      <created>1563223262158</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1563223262158</updated>
+    </task>
+    <task id="LOCAL-00073" summary="added describe function and pairplot function for HTCount">
+      <created>1563223284869</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1563223284869</updated>
+    </task>
+    <task id="LOCAL-00074" summary="added describe function and pairplot function for HTCount">
+      <created>1563224239282</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1563224239282</updated>
+    </task>
+    <task id="LOCAL-00075" summary="moved 'describe' to Filter">
+      <created>1563224412689</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1563224412689</updated>
+    </task>
+    <task id="LOCAL-00076" summary="set operations now support set objects as 'other'. Better implementation of set operations. Renamed intersect to intersection.">
+      <created>1563225214302</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1563225214302</updated>
+    </task>
+    <task id="LOCAL-00077" summary="set operations now support set objects as 'other'. Better implementation of set operations. Renamed intersect to intersection.">
+      <created>1563225700055</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1563225700055</updated>
+    </task>
+    <task id="LOCAL-00078" summary="added print prompts for functions that take a long time to run.">
+      <created>1563225721394</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1563225721394</updated>
+    </task>
+    <task id="LOCAL-00079" summary="Fixed bug in go_enrichment where using 'all' will cause no enrichments to be displayed. go_enrichment now plots automatically.">
+      <created>1563227548925</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1563227548925</updated>
+    </task>
+    <task id="LOCAL-00080" summary="updated documentation">
+      <created>1563227711185</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1563227711185</updated>
+    </task>
+    <task id="LOCAL-00081" summary="fontsize for title in go_enrichment plotting is now largeer">
+      <created>1563228954025</created>
+      <option name="number" value="00081" />
+      <option name="presentableId" value="LOCAL-00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1563228954025</updated>
+    </task>
+    <task id="LOCAL-00082" summary="fixed enrichment printouts. Made enrichment marginally faster with list comprehension. Made equation for randomization be p=(success+1)/(reps+1)">
+      <created>1563274153114</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1563274153114</updated>
+    </task>
+    <task id="LOCAL-00083" summary="go enrichment now locally saves the dictionaries until end of session once they have been initially fetched">
+      <created>1563274416263</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1563274416263</updated>
+    </task>
+    <task id="LOCAL-00084" summary="default padj threshold for filter_significant is now 0.1 from 0.05">
+      <created>1563279277457</created>
+      <option name="number" value="00084" />
+      <option name="presentableId" value="LOCAL-00084" />
+      <option name="project" value="LOCAL" />
+      <updated>1563279277457</updated>
+    </task>
+    <task id="LOCAL-00085" summary="can now get gene set/string from any Filter object, not just DESeqFilter">
+      <created>1563279473046</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1563279473046</updated>
+    </task>
+    <task id="LOCAL-00086" summary="plot_bigtable_enrichment now has vertical xtick labels instead of horizontal.">
+      <created>1563279575178</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1563279575178</updated>
+    </task>
+    <task id="LOCAL-00087" summary="functions in filtering that require a sample list can now accept 'all'.">
+      <created>1563279987008</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1563279987008</updated>
+    </task>
+    <task id="LOCAL-00088" summary="filter_top_n now sorts properly before sorting">
+      <created>1563280193261</created>
+      <option name="number" value="00088" />
+      <option name="presentableId" value="LOCAL-00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1563280193261</updated>
+    </task>
+    <task id="LOCAL-00089" summary="added an 'opposite' feature to all filtering methods, that returns the opposite of the filtered result.">
+      <created>1563287806673</created>
+      <option name="number" value="00089" />
+      <option name="presentableId" value="LOCAL-00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1563287806673</updated>
+    </task>
+    <task id="LOCAL-00090" summary="'opposite' now adds the 'opposite' suffix to filename (Attached to the specific filter operation)">
+      <created>1563288020406</created>
+      <option name="number" value="00090" />
+      <option name="presentableId" value="LOCAL-00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1563288020406</updated>
+    </task>
+    <task id="LOCAL-00091" summary="updated tests to support 'opposite'">
+      <created>1563289584568</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1563289584568</updated>
+    </task>
+    <task id="LOCAL-00092" summary="_from_string now accepts a delimiter argument. default delimiter is now newline ('\n') and not comma.">
+      <created>1563289622670</created>
+      <option name="number" value="00092" />
+      <option name="presentableId" value="LOCAL-00092" />
+      <option name="project" value="LOCAL" />
+      <updated>1563289622670</updated>
+    </task>
+    <task id="LOCAL-00093" summary="_from_string now accepts a delimiter argument. default delimiter is now newline ('\n') and not comma.">
+      <created>1563289912753</created>
+      <option name="number" value="00093" />
+      <option name="presentableId" value="LOCAL-00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1563289912753</updated>
+    </task>
+    <task id="LOCAL-00094" summary="can now give any iterable as input for rpm_vs_rpm">
+      <created>1563289928534</created>
+      <option name="number" value="00094" />
+      <option name="presentableId" value="LOCAL-00094" />
+      <option name="project" value="LOCAL" />
+      <updated>1563289928534</updated>
+    </task>
+    <task id="LOCAL-00095" summary="updated documentation">
+      <created>1563290060540</created>
+      <option name="number" value="00095" />
+      <option name="presentableId" value="LOCAL-00095" />
+      <option name="project" value="LOCAL" />
+      <updated>1563290060540</updated>
+    </task>
+    <task id="LOCAL-00096" summary="updated documentation">
+      <created>1563290813315</created>
+      <option name="number" value="00096" />
+      <option name="presentableId" value="LOCAL-00096" />
+      <option name="project" value="LOCAL" />
+      <updated>1563290813315</updated>
+    </task>
+    <task id="LOCAL-00097" summary="fixed bug in 'reverse' feature">
+      <created>1563363524071</created>
+      <option name="number" value="00097" />
+      <option name="presentableId" value="LOCAL-00097" />
+      <option name="project" value="LOCAL" />
+      <updated>1563363524071</updated>
+    </task>
+    <task id="LOCAL-00098" summary="tests for reverse">
+      <created>1563366980951</created>
+      <option name="number" value="00098" />
+      <option name="presentableId" value="LOCAL-00098" />
+      <option name="project" value="LOCAL" />
+      <updated>1563366980951</updated>
+    </task>
+    <task id="LOCAL-00099" summary="bigtable enrichment now reports n, n obs, n exp">
+      <created>1563373810342</created>
+      <option name="number" value="00099" />
+      <option name="presentableId" value="LOCAL-00099" />
+      <option name="project" value="LOCAL" />
+      <updated>1563373810342</updated>
+    </task>
+    <task id="LOCAL-00100" summary="updated examples and features_string to use newline as the delimiter.">
+      <created>1563373854147</created>
+      <option name="number" value="00100" />
+      <option name="presentableId" value="LOCAL-00100" />
+      <option name="project" value="LOCAL" />
+      <updated>1563373854147</updated>
+    </task>
+    <task id="LOCAL-00101" summary="go enrichment now plots each enrichment separately">
+      <created>1563374455635</created>
+      <option name="number" value="00101" />
+      <option name="presentableId" value="LOCAL-00101" />
+      <option name="project" value="LOCAL" />
+      <updated>1563374455635</updated>
+    </task>
+    <task id="LOCAL-00102" summary="filter objects now have a 'columns' attribute.">
+      <created>1563374480413</created>
+      <option name="number" value="00102" />
+      <option name="presentableId" value="LOCAL-00102" />
+      <option name="project" value="LOCAL" />
+      <updated>1563374480413</updated>
+    </task>
+    <task id="LOCAL-00103" summary="added example images to enrichment">
+      <created>1563375061103</created>
+      <option name="number" value="00103" />
+      <option name="presentableId" value="LOCAL-00103" />
+      <option name="project" value="LOCAL" />
+      <updated>1563375061103</updated>
+    </task>
+    <task id="LOCAL-00104" summary="added example images to pairplot">
+      <created>1563375792029</created>
+      <option name="number" value="00104" />
+      <option name="presentableId" value="LOCAL-00104" />
+      <option name="project" value="LOCAL" />
+      <updated>1563375792029</updated>
+    </task>
+    <task id="LOCAL-00105" summary="added example images to documentation">
+      <created>1563375852739</created>
+      <option name="number" value="00105" />
+      <option name="presentableId" value="LOCAL-00105" />
+      <option name="project" value="LOCAL" />
+      <updated>1563375852739</updated>
+    </task>
+    <task id="LOCAL-00106" summary="made plot_enrich_big_table a hidden function">
+      <created>1563375997070</created>
+      <option name="number" value="00106" />
+      <option name="presentableId" value="LOCAL-00106" />
+      <option name="project" value="LOCAL" />
+      <updated>1563375997070</updated>
+    </task>
+    <task id="LOCAL-00107" summary="updated documentation">
+      <created>1563376057006</created>
+      <option name="number" value="00107" />
+      <option name="presentableId" value="LOCAL-00107" />
+      <option name="project" value="LOCAL" />
+      <updated>1563376057006</updated>
+    </task>
+    <task id="LOCAL-00108" summary="updated documentation">
+      <created>1563377594515</created>
+      <option name="number" value="00108" />
+      <option name="presentableId" value="LOCAL-00108" />
+      <option name="project" value="LOCAL" />
+      <updated>1563377594515</updated>
+    </task>
+    <task id="LOCAL-00109" summary="updated documentation">
+      <created>1563377709252</created>
+      <option name="number" value="00109" />
+      <option name="presentableId" value="LOCAL-00109" />
+      <option name="project" value="LOCAL" />
+      <updated>1563377709252</updated>
+    </task>
+    <task id="LOCAL-00110" summary="updated documentation">
+      <created>1563377811135</created>
+      <option name="number" value="00110" />
+      <option name="presentableId" value="LOCAL-00110" />
+      <option name="project" value="LOCAL" />
+      <updated>1563377811135</updated>
+    </task>
+    <task id="LOCAL-00111" summary="updated documentation">
+      <created>1563377989837</created>
+      <option name="number" value="00111" />
+      <option name="presentableId" value="LOCAL-00111" />
+      <option name="project" value="LOCAL" />
+      <updated>1563377989837</updated>
+    </task>
+    <task id="LOCAL-00112" summary="updated documentation">
+      <created>1563378088512</created>
+      <option name="number" value="00112" />
+      <option name="presentableId" value="LOCAL-00112" />
+      <option name="project" value="LOCAL" />
+      <updated>1563378088512</updated>
+    </task>
+    <task id="LOCAL-00113" summary="fixed bug in plotting go enrichment">
+      <created>1563379571137</created>
+      <option name="number" value="00113" />
+      <option name="presentableId" value="LOCAL-00113" />
+      <option name="project" value="LOCAL" />
+      <updated>1563379571137</updated>
+    </task>
+    <task id="LOCAL-00114" summary="plotting in go enrichment now only happens when the df is not empty">
+      <created>1563398132643</created>
+      <option name="number" value="00114" />
+      <option name="presentableId" value="LOCAL-00114" />
+      <option name="project" value="LOCAL" />
+      <updated>1563398132643</updated>
+    </task>
+    <task id="LOCAL-00115" summary="updated tests">
+      <created>1563471585626</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1563471585626</updated>
+    </task>
+    <task id="LOCAL-00116" summary="reference is now saved in a settings.ini file">
+      <created>1563628020630</created>
+      <option name="number" value="00116" />
+      <option name="presentableId" value="LOCAL-00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1563628020630</updated>
+    </task>
+    <task id="LOCAL-00117" summary="updated documentation">
+      <created>1563628284179</created>
+      <option name="number" value="00117" />
+      <option name="presentableId" value="LOCAL-00117" />
+      <option name="project" value="LOCAL" />
+      <updated>1563628284179</updated>
+    </task>
+    <task id="LOCAL-00118" summary="updated documentation">
+      <created>1563628646540</created>
+      <option name="number" value="00118" />
+      <option name="presentableId" value="LOCAL-00118" />
+      <option name="project" value="LOCAL" />
+      <updated>1563628646540</updated>
+    </task>
+    <option name="localTasksCounter" value="119" />
+    <servers />
+  </component>
+  <component name="TestHistory">
+    <history-entry file="pytest_in_tests - 2019.07.20 at 15h 44m 45s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 15h 44m 58s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 15h 46m 16s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 15h 46m 46s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 15h 47m 03s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 15h 49m 56s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 16h 04m 33s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 16h 04m 45s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 16h 06m 06s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="pytest_in_tests - 2019.07.20 at 16h 06m 23s.xml">
+      <configuration name="pytest in tests" configurationId="tests" />
+    </history-entry>
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="77839000" />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.27479893" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Messages" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32956153" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.44554454" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.3281471" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.3281471" />
+      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.3281471" />
+      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.50033045" side_tool="true" weight="0.3286119" />
+      <window_info anchor="bottom" id="Docker" order="10" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Database Changes" order="11" />
+      <window_info anchor="bottom" id="Python Console" order="12" sideWeight="0.49966952" weight="0.32107496" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" x="0" y="0" width="337" height="638" id="Documentation" order="3" sideWeight="0.577551" side_tool="true" weight="0.38337803" />
+      <window_info anchor="right" id="Database" order="4" />
+      <window_info anchor="right" id="SciView" order="5" sideWeight="0.422449" weight="0.64008045" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ORDER">
+      <list>
+        <option value="0" />
+        <option value="2" />
+        <option value="3" />
+        <option value="1" />
+      </list>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="default padj threshold for filter_significant is now 0.1 from 0.05" />
+    <MESSAGE value="can now get gene set/string from any Filter object, not just DESeqFilter" />
+    <MESSAGE value="plot_bigtable_enrichment now has vertical xtick labels instead of horizontal." />
+    <MESSAGE value="functions in filtering that require a sample list can now accept 'all'." />
+    <MESSAGE value="filter_top_n now sorts properly before sorting" />
+    <MESSAGE value="added an 'opposite' feature to all filtering methods, that returns the opposite of the filtered result." />
+    <MESSAGE value="'opposite' now adds the 'opposite' suffix to filename (Attached to the specific filter operation)" />
+    <MESSAGE value="updated tests to support 'opposite'" />
+    <MESSAGE value="_from_string now accepts a delimiter argument. default delimiter is now newline ('\n') and not comma." />
+    <MESSAGE value="can now give any iterable as input for rpm_vs_rpm" />
+    <MESSAGE value="fixed bug in 'reverse' feature" />
+    <MESSAGE value="tests for reverse" />
+    <MESSAGE value="bigtable enrichment now reports n, n obs, n exp" />
+    <MESSAGE value="updated examples and features_string to use newline as the delimiter." />
+    <MESSAGE value="go enrichment now plots each enrichment separately" />
+    <MESSAGE value="filter objects now have a 'columns' attribute." />
+    <MESSAGE value="added example images to enrichment" />
+    <MESSAGE value="added example images to pairplot" />
+    <MESSAGE value="added example images to documentation" />
+    <MESSAGE value="made plot_enrich_big_table a hidden function" />
+    <MESSAGE value="fixed bug in plotting go enrichment" />
+    <MESSAGE value="plotting in go enrichment now only happens when the df is not empty" />
+    <MESSAGE value="updated tests" />
+    <MESSAGE value="reference is now saved in a settings.ini file" />
+    <MESSAGE value="updated documentation" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated documentation" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/RNAlysis$sphinx_task_in_sphinx_task_in_.coverage" NAME="sphinx task in sphinx task in sphinx task in sphinx task in  Coverage Results" MODIFIED="1562845987809" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_deseq_feature_set.coverage" NAME="pytest for test_filtering.test_deseq_feature_set Coverage Results" MODIFIED="1561998452677" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_deseq_filter_significant.coverage" NAME="pytest for test_filtering.test_deseq_filter_significant Coverage Results" MODIFIED="1561998955375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_filter_by_bigtable_group_intersect.coverage" NAME="pytest for test_filtering.test_filter_by_bigtable_group_intersect Coverage Results" MODIFIED="1562160490044" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_filter_by_bigtable_group_union.coverage" NAME="pytest for test_filtering.test_filter_by_bigtable_group_union Coverage Results" MODIFIED="1562161081492" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$pytest_for_test_filtering_test_deseq_filter_significant_opposite.coverage" NAME="pytest for test_filtering.test_deseq_filter_significant_opposite Coverage Results" MODIFIED="1563366575736" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_deseq_filter_top_n.coverage" NAME="pytest for test_filtering.test_deseq_filter_top_n Coverage Results" MODIFIED="1562159447476" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_in_test_enrichment_py.coverage" NAME="pytest in test_enrichment.py Coverage Results" MODIFIED="1561973884888" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_filter_inplace.coverage" NAME="pytest for test_filtering.test_filter_inplace Coverage Results" MODIFIED="1561989048046" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$pytest_for_test_filtering_test_filter_low_rpm_reverse.coverage" NAME="pytest for test_filtering.test_filter_low_rpm_reverse Coverage Results" MODIFIED="1563363501921" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$pytest_in_tests.coverage" NAME="pytest in tests Coverage Results" MODIFIED="1563627977948" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_in_test_filtering_py.coverage" NAME="pytest in test_filtering.py Coverage Results" MODIFIED="1562160547238" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_filter_low_rpm.coverage" NAME="pytest for test_filtering.test_filter_low_rpm Coverage Results" MODIFIED="1561974854586" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$pytest_for_test_filtering_test_htcount_filter_biotype_opposite.coverage" NAME="pytest for test_filtering.test_htcount_filter_biotype_opposite Coverage Results" MODIFIED="1563366087654" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$pytest_in_test_filtering_py.coverage" NAME="pytest in test_filtering.py Coverage Results" MODIFIED="1563225674618" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_in_test_general_py.coverage" NAME="pytest in test_general.py Coverage Results" MODIFIED="1561974228675" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$sphinx_task_in_sphinx_task_in_sphinx_task_in_sphinx_task_in_.coverage" NAME="sphinx task in Coverage Results" MODIFIED="1563628629893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_htcount_filter_biotype.coverage" NAME="pytest for test_filtering.test_htcount_filter_biotype Coverage Results" MODIFIED="1561988049209" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_deseq_feature_string.coverage" NAME="pytest for test_filtering.test_deseq_feature_string Coverage Results" MODIFIED="1561998462040" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$pytest_for_test_filtering_test_htcount_filter_biotype.coverage" NAME="pytest for test_filtering.test_htcount_filter_biotype Coverage Results" MODIFIED="1563471378406" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/srna_analysis$pytest_for_test_filtering_test_htcount_split_by_rpm.coverage" NAME="pytest for test_filtering.test_htcount_split_by_rpm Coverage Results" MODIFIED="1562159228734" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/RNAlysis$pytest_in_test_enrichment_py.coverage" NAME="pytest in test_enrichment.py Coverage Results" MODIFIED="1562856000367" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/srna_analysis.egg-info/PKG-INFO" />
+    <entry file="file://$PROJECT_DIR$/srna_analysis/srna_analysis.py" />
+    <entry file="file://$PROJECT_DIR$/srna_analysis/bigtable_enrichment.py" />
+    <entry file="file://$PROJECT_DIR$/srna_analysis/machine_learning_analyses.py" />
+    <entry file="file://$PROJECT_DIR$/srna_analysis/feature_name_to_wbgene.py" />
+    <entry file="file://$PROJECT_DIR$/tests/test_general.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="259">
+          <caret line="72" column="20" selection-start-line="72" selection-start-column="20" selection-end-line="72" selection-end-column="20" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/srna_analysis/general.py" />
+    <entry file="file://$PROJECT_DIR$/srna_analysis/filtering.py" />
+    <entry file="file://$PROJECT_DIR$/source/index.rst" />
+    <entry file="file://$PROJECT_DIR$/srna_analysis/enrichment.py" />
+    <entry file="file://$PROJECT_DIR$/docs/Makefile" />
+    <entry file="file://$PROJECT_DIR$/docs/.nojekyll">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/index.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="43" selection-start-column="43" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HISTORY.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/AUTHORS.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CONTRIBUTING.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/contributing.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/history.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/installation.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/usage.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/authors.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/readme.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis.egg-info/PKG-INFO">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="3" column="83" selection-start-line="3" selection-start-column="83" selection-end-line="3" selection-end-column="83" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/conf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="504">
+          <caret line="29" column="50" selection-start-line="29" selection-start-column="50" selection-end-line="29" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_enrichment.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1512">
+          <caret line="84" column="50" selection-start-line="84" selection-start-column="50" selection-end-line="84" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup.cfg">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="411">
+          <caret line="26" lean-forward="true" selection-start-line="26" selection-end-line="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/index.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis/rnalysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="3" selection-start-line="3" selection-end-line="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="18" lean-forward="true" selection-end-column="209" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/__init__.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2019.1/system/python_stubs/-313451744/builtins.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="166">
+          <caret line="3724" column="8" selection-start-line="3724" selection-start-column="8" selection-end-line="3724" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/rnalysis.filtering.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/rnalysis.filtering.DESeqFilter.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/rnalysis.filtering.HTCountFilter.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/build/rnalysis.enrichment.html">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/rnalysis.enrichment.EnrichmentProcessing.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Makefile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1458">
+          <caret line="81" column="30" lean-forward="true" selection-start-line="81" selection-start-column="30" selection-end-line="81" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_feature_name_to_wbgene.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="144">
+          <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis/settings.ini">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MANIFEST.in">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="17" selection-start-line="5" selection-start-column="17" selection-end-line="5" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="197">
+          <caret line="51" column="19" lean-forward="true" selection-start-line="51" selection-start-column="19" selection-end-line="51" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis/feature_name_to_wbgene.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="882">
+          <caret line="55" column="77" selection-start-line="55" selection-start-column="54" selection-end-line="55" selection-end-column="77" />
+          <folding>
+            <element signature="e#152#161#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_filtering.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="104">
+          <caret line="69" column="11" selection-start-line="69" selection-start-column="4" selection-end-line="69" selection-end-column="11" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="10" column="45" selection-start-line="10" selection-start-column="45" selection-end-line="10" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/rnalysis.general.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis/general.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="15" column="97" selection-start-line="15" selection-start-column="97" selection-end-line="15" selection-end-column="97" />
+          <folding>
+            <element signature="e#223#242#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis/enrichment.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="271">
+          <caret line="369" column="2" selection-start-line="369" selection-start-column="2" selection-end-line="369" selection-end-column="2" />
+          <folding>
+            <element signature="e#413#422#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rnalysis/filtering.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="222">
+          <caret line="156" column="11" lean-forward="true" selection-start-line="156" selection-start-column="11" selection-end-line="156" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="213">
+          <caret line="93" column="23" lean-forward="true" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ScopeChooserConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>

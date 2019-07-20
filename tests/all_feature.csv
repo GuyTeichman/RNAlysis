@@ -1,0 +1,6 @@
+feature,cond1,cond2,cond3,cond4
+__alignment_not_unique,0,0,0,0
+__ambiguous,4460,3903,3127,3140
+__no_feature,768762,703960,816809,687362
+__not_aligned,529169,409542,343004,329677
+__too_low_aQual,0,0,0,0
