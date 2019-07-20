@@ -77,10 +77,8 @@ def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True):
     else:
         df = pd.read_csv(filename, encoding=encoding)
     if drop_gene_names:
-        try:
+        if 'genes' in df:
             df.drop('genes', axis=1, inplace=True)
-        except (ValueError, KeyError):
-            pass
     return df
 
 

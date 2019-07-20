@@ -785,8 +785,6 @@ class HTCountFilter(Filter):
         plt.show()
         return ax
 
-    # TODO: fix pandas warning
-
     def violin_plot(self, samples='all'):
         """
         Generates a violin plot of the specified samples in the HTCountFilter object. \
