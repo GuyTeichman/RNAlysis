@@ -65,6 +65,7 @@ class Filter:
         If inplace is False, returns a new instance of the Filter object.
         """
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
+        assert isinstance(opposite, bool), "'opposite' must be True or False!"
         if opposite:
             new_df = self.df.loc[self.df.index.difference(new_df.index)]
             suffix += 'opposite'
@@ -123,6 +124,59 @@ class Filter:
             split = split[:-1]
         return split
 
+    def head(self, n=5):
+        """
+        Return the first n rows of the DataFrame. See pandas.DataFrame.head documentation.
+
+        :type n: int, default 5
+        :param n: Number of rows to show.
+        :return:
+        returns the first n rows of the Filter object.
+        """
+        return self.df.head()
+
+    def filter_percentile(self, percentile: float, column: str, opposite: bool = False, inplace: bool = True):
+        """
+        Removes all entries above the specified percentile in the specified column. \
+        For example, if the column were 'pvalue' and the percentile was 0.5, then all features whose pvalue is above \
+        the median pvalue will be filtered out.
+
+        :type percentile: float between 0 and 1
+        :param percentile: The percentile that all features above it will be filtered out.
+        :type column: str
+        :param column: Name of the DataFrame column according to which the filtering will be performed.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return:
+        If inplace is False, returns a new and filtered instance of the Filter object.
+        """
+        assert isinstance(percentile, float), "percentile must be a float between 0 and 1!"
+        assert isinstance(column, str) and column in self.df, "Invalid column name!"
+        suffix = f'_below{percentile}percentile'
+        new_df = self.df[self.df[column]<self.df[column].quantile(percentile)]
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    def split_by_percentile(self, percentile: float, column: str):
+        """
+        Splits the Filter object into two Filter objects: \
+        above and below the specified percentile in the spcfieid column.
+
+        :type percentile: float between 0 and 1
+        :param percentile: The percentile that all features above it will be filtered out.
+        :type column: str
+        :param column: Name of the DataFrame column according to which the filtering will be performed.
+        :return:
+        a list of two Filter objects: the first contains all of the features below the specified percentile, \
+        and the second contains all of the features above and equal to the specified percentile.
+        """
+        return [self.filter_below_percentile(percentile=percentile, column=column, opposite=False, inplace=False),
+                self.filter_below_percentile(percentile=percentile, column=column, opposite=True, inplace=False)]
+
     def filter_biotype(self, biotype='protein_coding',
                        ref: str = __gene_names_and_biotype__, opposite: bool = False, inplace: bool = True):
         """
@@ -180,7 +234,7 @@ class Filter:
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return:
-        If 'inplace' is False, returns a new instance of DESeqFilter.
+        If 'inplace' is False, returns a new and filtered instance of the Filter object.
         """
         ref = self._get_ref_path(ref)
         if attributes is None:
