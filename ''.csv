@@ -1,2 +1,0 @@
-name,samples,n obs,n exp,log2_enrichment_score,pvals,padj,significant
-epigenetic_related_genes,88,2,0.5140588682970977,1.9418404463531478,0.10018998100189981,0.10018998100189981,False

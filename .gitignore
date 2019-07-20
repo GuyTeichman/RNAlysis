@@ -103,3 +103,4 @@ ENV/
 # saved settings
 rnalysis/settings.ini
 settings.ini
+.idea/
