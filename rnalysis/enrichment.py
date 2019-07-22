@@ -288,22 +288,24 @@ class EnrichmentProcessing:
             biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
             big_table = big_table.loc[biotype_ref[biotype_ref['bioType'] == biotype].index]
 
+        big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             print(f"Finished {k} attributes out of {len(attributes)}")
-
-            srs = big_table[attribute]
+            df = big_table[[attribute, 'int_index']]
+            srs = df[attribute]
+            srs_int = (df.set_index('int_index', inplace=False))[attribute]
             obs_srs = srs.loc[self.gene_set]
             expected_fraction = fraction(srs)
             observed_fraction = fraction(obs_srs)
             log2_enrichment_score = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
-            success = sum((fraction(srs.loc[np.random.choice(srs.index, obs_srs.shape[0],
-                                                             replace=False)]) >= observed_fraction
+            success = sum((fraction(srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0],
+                                                                 replace=False)]) >= observed_fraction
                            if log2_enrichment_score >= 0 else fraction(
-                srs.loc[np.random.choice(srs.index, obs_srs.shape[0], replace=False)]) <= observed_fraction
-                           for rep in range(reps)))
+                srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0], replace=False)]) <= observed_fraction
+                           for _ in range(reps)))
             pval = (success + 1) / (reps + 1)
             n = obs_srs.shape[0]
             enriched_list.append(
