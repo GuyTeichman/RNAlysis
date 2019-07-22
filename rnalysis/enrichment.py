@@ -257,7 +257,7 @@ class EnrichmentProcessing:
         :param fname: str/Path. The full path and name of the file to which to save the results. For example: \
         r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :return:
-        a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_enrichment_score'
+        a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
         and 'pvalue'.
 
         .. figure::  bigtable_en.png
@@ -300,19 +300,19 @@ class EnrichmentProcessing:
             obs_srs = srs.loc[self.gene_set]
             expected_fraction = fraction(srs)
             observed_fraction = fraction(obs_srs)
-            log2_enrichment_score = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
+            log2_fold_enrichment = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
             success = sum((fraction(srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0],
                                                                  replace=False)]) >= observed_fraction
-                           if log2_enrichment_score >= 0 else fraction(
+                           if log2_fold_enrichment >= 0 else fraction(
                 srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0], replace=False)]) <= observed_fraction
                            for _ in range(reps)))
             pval = (success + 1) / (reps + 1)
             n = obs_srs.shape[0]
             enriched_list.append(
-                (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_enrichment_score, pval))
+                (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval))
 
         enriched_df = pd.DataFrame(enriched_list,
-                                   columns=['name', 'samples', 'n obs', 'n exp', 'log2_enrichment_score', 'pvals'])
+                                   columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment', 'pvals'])
         significant, padj = multitest.fdrcorrection(enriched_df['pvals'].values, alpha=fdr)
         enriched_df['padj'] = padj
         enriched_df['significant'] = significant
@@ -336,21 +336,24 @@ class EnrichmentProcessing:
         a matplotlib.pyplot.bar instance
         """
         enrichment_names = df.index.values.tolist()
-        enrichment_scores = df['log2_enrichment_score']
+        enrichment_scores = df['log2_fold_enrichment']
         enrichment_pvalue = df['padj']
-        data_color = [i / max(enrichment_scores) for i in enrichment_scores]
+        abs_enrichment_scores = [abs(i) for i in enrichment_scores]
+        data_color = [float(i / max(abs_enrichment_scores)) for i in enrichment_scores]
         my_cmap = plt.cm.get_cmap('coolwarm')
         colors = my_cmap(data_color)
         fig, ax = plt.subplots()
         # ax.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
         bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors)
         bar.tick_labels = enrichment_names
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*ax.get_ylim()))
+        # sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*ax.get_ylim()))
+        absmax = max([abs(i) for i in ax.get_ylim()])
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(absmax, -absmax))
         sm.set_array([])
         cbar = fig.colorbar(sm)
         cbar.set_label('', rotation=90, labelpad=25, fontsize=26)
         plt.xticks(range(len(enrichment_names)), enrichment_names, fontsize=13, rotation='vertical')
-        plt.ylabel("Log2 Enrichment Score", fontsize=26)
+        plt.ylabel("Log2 Fold Enrichment", fontsize=26)
         for col, sig in zip(bar, enrichment_pvalue):
             fontsize = 21
             if sig < 0.0001:
