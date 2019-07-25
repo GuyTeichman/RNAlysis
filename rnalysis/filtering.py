@@ -158,7 +158,7 @@ class Filter:
         assert isinstance(percentile, float), "percentile must be a float between 0 and 1!"
         assert isinstance(column, str) and column in self.df, "Invalid column name!"
         suffix = f'_below{percentile}percentile'
-        new_df = self.df[self.df[column]<self.df[column].quantile(percentile)]
+        new_df = self.df[self.df[column] < self.df[column].quantile(percentile)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def split_by_percentile(self, percentile: float, column: str):
@@ -615,12 +615,13 @@ class HTCountFilter(Filter):
             new_df[column] /= norm_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
 
-    def filter_low_rpm(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
+    def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
         """
         remove all features which have less then 'threshold' reads per million in all conditions.
 
         :type threshold: float
-        :param threshold: The minimal rpm a feature should have in at least one sample in order not to be filtered out.
+        :param threshold: The minimal number of reads (counts, rpm, rpkm, tpm, etc) a feature should have \
+        in at least one sample in order not to be filtered out.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -633,17 +634,18 @@ class HTCountFilter(Filter):
         """
         self._rpm_assertions(threshold=threshold)
         new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
-        suffix = f"_filt{threshold}rpm"
+        suffix = f"_filt{threshold}reads"
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_rpm(self, threshold: float = 5):
+    def split_by_reads(self, threshold: float = 5):
         """
         Splits the features in the current HTCountFilter object into two complementary, non-overlapping HTCountFilter \
         objects, based on the their maximum expression level. The first object will contain only highly-expressed \
-         features (which have RPM over the specified threshold in at least one sample). The second object will contain \
-         only lowly-expressed features (which have RPM below the specified threshold in all samples).
+         features (which have reads over the specified threshold in at least one sample). The second object will \
+         contain only lowly-expressed features (which have reads below the specified threshold in all samples).
 
-        :param threshold: A float. The minimal rpm a feature needs to have in at least one sample in order to be \
+        :param threshold: A float. The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have \
+        in at least one sample in order to be \
         included in the "highly expressed" object and no the "lowly expressed" object.
         :return:
         A tuple containing two HTCountFilter objects: the first has only highly-expressed features, \
@@ -652,8 +654,8 @@ class HTCountFilter(Filter):
         self._rpm_assertions(threshold=threshold)
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in self.df.iterrows()]]
-        return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}'), \
-               self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}')
+        return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), \
+               self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
 
     def clustergram(self, sample_names: list = 'all', metric: str = 'euclidean', linkage: str = 'average'):
         """
@@ -702,7 +704,6 @@ class HTCountFilter(Filter):
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"]
         :param n_components: number of PCA components to return \
-        have rpm lower than filter_low_rpm in all relevant samples.
         :param sample_grouping: Optional. Indicates which samples are grouped together as replicates, \
         so they will be colored similarly in the PCA plot. A list of indices from 0 and up, that indicates the sample \
          grouping. \
@@ -783,11 +784,11 @@ class HTCountFilter(Filter):
         ax.grid(True)
         return ax
 
-    def scatter_rpm_vs_rpm(self, sample1: str, sample2: str, xlabel: str = None, ylabel: str = None,
-                           deseq_highlight=None):
+    def scatter_sample_vs_sample(self, sample1: str, sample2: str, xlabel: str = None, ylabel: str = None,
+                               deseq_highlight=None):
         """
-        Generate a scatter plot where every dot is a feature, \
-        the x value is log10 of rpm in sample1, the y value is log10 of rpm in sample2.
+        Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
+        (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.
 
         :param sample1: str/list. Name of the first sample from the HTCountFilter object. \
         If sample1 is a list, they will be avarged as replicates.
@@ -805,7 +806,7 @@ class HTCountFilter(Filter):
            :align:   center
            :scale: 60 %
 
-           Example plot of scatter_rpm_vs_rpm()
+           Example plot of scatter_sample_vs_sample()
 
         """
         self._rpm_assertions()

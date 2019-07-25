@@ -32,17 +32,17 @@ def test_htcountfilter_norm_reads_to_rpm():
     assert np.isclose(truth, h.df).all()
 
 
-def test_filter_low_rpm():
+def test_filter_low_reads():
     truth = general.load_csv("all_expr_low_rpm_truth.csv", 0)
     h = HTCountFilter("all_expr_low_rpm.csv")
-    h.filter_low_rpm(threshold=5)
+    h.filter_low_reads(threshold=5)
     assert np.isclose(truth, h.df).all()
 
 
-def test_filter_low_rpm_reverse():
+def test_filter_low_reads_reverse():
     h = HTCountFilter(r"all_expr.csv")
     low_truth = general.load_csv(r"all_expr_below60_rpm.csv", 0)
-    h.filter_low_rpm(threshold=60, opposite=True)
+    h.filter_low_reads(threshold=60, opposite=True)
     h.df.sort_index(inplace=True)
     low_truth.sort_index(inplace=True)
     print(h.shape)
@@ -240,20 +240,20 @@ def test_deseq_feature_string():
 def test_htcount_rpm_negative_threshold():
     h = HTCountFilter("all_expr.csv")
     with pytest.raises(AssertionError):
-        h.filter_low_rpm(threshold=-3)
+        h.filter_low_reads(threshold=-3)
 
 
 def test_htcount_threshold_invalid():
     h = HTCountFilter("all_expr.csv")
     with pytest.raises(AssertionError):
-        h.filter_low_rpm("5")
+        h.filter_low_reads("5")
 
 
-def test_htcount_split_by_rpm():
+def test_htcount_split_by_reads():
     h = HTCountFilter(r"all_expr.csv")
     high_truth = general.load_csv(r"all_expr_above60_rpm.csv", 0)
     low_truth = general.load_csv(r"all_expr_below60_rpm.csv", 0)
-    high, low = h.split_by_rpm(threshold=60)
+    high, low = h.split_by_reads(threshold=60)
     assert np.all(high.df == high_truth)
     assert np.all(low.df == low_truth)
 
