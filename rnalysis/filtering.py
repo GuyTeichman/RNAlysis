@@ -107,7 +107,7 @@ class Filter:
             yield np.random.random(3)
 
     @staticmethod
-    def _from_string(self, msg: str = '', delimiter: str = '\n'):
+    def _from_string(msg: str = '', delimiter: str = '\n'):
         """
         Takes a manual string input from the user, and then splits it using a delimiter into a list of values. \
         Called when an EnrichmentProcessing instance is created without input, \
@@ -560,7 +560,7 @@ class HTCountFilter(Filter):
         """
         assert isinstance(threshold, (float, int)), "Threshold must be a number!"
         assert threshold >= 0, "Threshold must be zero or larger!"
-        if 'rpm' not in str(self.fname):
+        if 'rpm' not in str(self.fname) and 'sizefactor' not in str(self.fname):
             warnings.warn("Warning: using a function meant for normalized values on potentially unnormalized values!")
 
     def _avg_subsamples(self, sample_list: list):
@@ -749,6 +749,7 @@ class HTCountFilter(Filter):
            Example plot of run_pca()
         """
         if sample_names == 'all':
+            sample_names=list(self.df.columns)
             srna_data = self.df.transpose()
         else:
             srna_data = self.df[sample_names].transpose()
@@ -907,7 +908,7 @@ class HTCountFilter(Filter):
     # TODO: add ranksum test
 
     @staticmethod
-    def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = True, save_reads_fname: str = None,
+    def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = False, save_reads_fname: str = None,
                     save_not_counted_fname: str = None):
         """
         Iterates over htcount files in a given folder and combines them into a single HTCountFilter table. \
@@ -920,8 +921,8 @@ class HTCountFilter(Filter):
         to two separate .csv files. The files will be saved in 'folder_path', and named according to the parameters \
         'save_reads_fname' for the count data, and 'save_not_counted_fname' for the uncounted data (unaligned, \
         alignment not unique, etc).
-        :param norm_to_rpm: bool. If True (default), the HTCountFilter table will be automatically normalized to \
-        reads per million (RPM). If False, the HTCountFilter object will not be normalized, and will instead contain \
+        :param norm_to_rpm: bool. If True, the HTCountFilter table will be automatically normalized to reads per \
+        million (RPM). If False (defualt), the HTCountFilter object will not be normalized, and will instead contain \
         absolute count data (as in the original htcount .txt files). \
         Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original \
         htcount .txt files, and NOT normalized data.
