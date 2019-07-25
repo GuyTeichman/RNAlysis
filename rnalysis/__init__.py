@@ -6,7 +6,7 @@ import os
 __name__ = "rnalysis"
 __author__ = """Guy Teichman"""
 __email__ = 'guyteichman@gmail.com'
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 __gene_names_and_biotype__ = os.path.join(os.path.dirname(__file__), 'gene_names_and_biotype.csv')
 __settings_start_phrase__ = 'big_table_path='
 
