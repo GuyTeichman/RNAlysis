@@ -26,6 +26,7 @@ rnalysis.filtering.HTCountFilter
       ~HTCountFilter.from_folder
       ~HTCountFilter.head
       ~HTCountFilter.norm_reads_to_rpm
+      ~HTCountFilter.norm_reads_with_size_factor
       ~HTCountFilter.pairplot
       ~HTCountFilter.run_pca
       ~HTCountFilter.save_csv

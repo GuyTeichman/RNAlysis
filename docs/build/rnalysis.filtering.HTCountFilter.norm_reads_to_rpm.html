@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.HTCountFilter.pairplot" href="rnalysis.filtering.HTCountFilter.pairplot.html" />
+    <link rel="next" title="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html" />
     <link rel="prev" title="rnalysis.filtering.HTCountFilter.head" href="rnalysis.filtering.HTCountFilter.head.html" /> 
 </head>
 
@@ -105,6 +105,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.from_folder.html">rnalysis.filtering.HTCountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.head.html">rnalysis.filtering.HTCountFilter.head</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.norm_reads_to_rpm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html">rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pairplot.html">rnalysis.filtering.HTCountFilter.pairplot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.run_pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html">rnalysis.filtering.HTCountFilter.save_csv</a></li>
@@ -196,7 +197,7 @@
 <dl class="method">
 <dt id="rnalysis.filtering.HTCountFilter.norm_reads_to_rpm">
 <code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">norm_reads_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">all_feature_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.norm_reads_to_rpm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Receives a dataframe of reads/counts and a dataframe of feature counts (ambiguous, no feature, not aligned, etc).         Divides each column in the read dataframe by (total reads + ambiguous + no feature)*10^-6 in order to normalize the         reads to RPM (reads per million).</p>
+<dd><p>Normalizes the reads in the HTCountFilter to reads per million (RPM).         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq’s output.         Divides each column in the HTCountFilter object by (total reads + ambiguous + no feature)*10^-6 .</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -208,7 +209,7 @@
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>a DataFrame normalized to RPM</p>
+<p>If inplace is False, returns a new instance of the Filter object.</p>
 </dd></dl>
 
 </div>
@@ -221,7 +222,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.HTCountFilter.pairplot.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.pairplot" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="rnalysis.filtering.HTCountFilter.head.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter.head" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

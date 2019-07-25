@@ -105,6 +105,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.from_folder.html">rnalysis.filtering.HTCountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.head.html">rnalysis.filtering.HTCountFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_to_rpm.html">rnalysis.filtering.HTCountFilter.norm_reads_to_rpm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html">rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pairplot.html">rnalysis.filtering.HTCountFilter.pairplot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.run_pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html">rnalysis.filtering.HTCountFilter.save_csv</a></li>
@@ -247,30 +248,33 @@
 <td><p>Return the first n rows of the DataFrame.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_to_rpm.html#rnalysis.filtering.HTCountFilter.norm_reads_to_rpm" title="rnalysis.filtering.HTCountFilter.norm_reads_to_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm_reads_to_rpm</span></code></a>(all_feature_fname[, inplace])</p></td>
-<td><p>Receives a dataframe of reads/counts and a dataframe of feature counts (ambiguous, no feature, not aligned, etc).</p></td>
+<td><p>Normalizes the reads in the HTCountFilter to reads per million (RPM).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pairplot.html#rnalysis.filtering.HTCountFilter.pairplot" title="rnalysis.filtering.HTCountFilter.pairplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairplot</span></code></a>(sample_list)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html#rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor" title="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm_reads_with_size_factor</span></code></a>(size_factor_fname)</p></td>
+<td><p>Normalizes the reads in the HTCountFilter using pre-calculated size factors.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pairplot.html#rnalysis.filtering.HTCountFilter.pairplot" title="rnalysis.filtering.HTCountFilter.pairplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pairplot</span></code></a>(sample_list)</p></td>
 <td><p>Plot pairwise relationships in the dataset.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.run_pca.html#rnalysis.filtering.HTCountFilter.run_pca" title="rnalysis.filtering.HTCountFilter.run_pca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_pca</span></code></a>([sample_names, n_components, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.run_pca.html#rnalysis.filtering.HTCountFilter.run_pca" title="rnalysis.filtering.HTCountFilter.run_pca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_pca</span></code></a>([sample_names, n_components, …])</p></td>
 <td><p>runs and plots a PCA for a given set of samples.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html#rnalysis.filtering.HTCountFilter.save_csv" title="rnalysis.filtering.HTCountFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code></a>([alt_filename])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html#rnalysis.filtering.HTCountFilter.save_csv" title="rnalysis.filtering.HTCountFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code></a>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample.html#rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample" title="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scatter_sample_vs_sample</span></code></a>(sample1, sample2[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample.html#rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample" title="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scatter_sample_vs_sample</span></code></a>(sample1, sample2[, …])</p></td>
 <td><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_bigtable_group.html#rnalysis.filtering.HTCountFilter.split_by_bigtable_group" title="rnalysis.filtering.HTCountFilter.split_by_bigtable_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_bigtable_group</span></code></a>([attributes, ref])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_bigtable_group.html#rnalysis.filtering.HTCountFilter.split_by_bigtable_group" title="rnalysis.filtering.HTCountFilter.split_by_bigtable_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_bigtable_group</span></code></a>([attributes, ref])</p></td>
 <td><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_percentile.html#rnalysis.filtering.HTCountFilter.split_by_percentile" title="rnalysis.filtering.HTCountFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_percentile.html#rnalysis.filtering.HTCountFilter.split_by_percentile" title="rnalysis.filtering.HTCountFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
 <td><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_reads.html#rnalysis.filtering.HTCountFilter.split_by_reads" title="rnalysis.filtering.HTCountFilter.split_by_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_reads</span></code></a>([threshold])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_reads.html#rnalysis.filtering.HTCountFilter.split_by_reads" title="rnalysis.filtering.HTCountFilter.split_by_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_reads</span></code></a>([threshold])</p></td>
 <td><p>Splits the features in the current HTCountFilter object into two complementary, non-overlapping HTCountFilter         objects, based on the their maximum expression level.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.violin_plot.html#rnalysis.filtering.HTCountFilter.violin_plot" title="rnalysis.filtering.HTCountFilter.violin_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">violin_plot</span></code></a>([samples])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.violin_plot.html#rnalysis.filtering.HTCountFilter.violin_plot" title="rnalysis.filtering.HTCountFilter.violin_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">violin_plot</span></code></a>([samples])</p></td>
 <td><p>Generates a violin plot of the specified samples in the HTCountFilter object.</p></td>
 </tr>
 </tbody>

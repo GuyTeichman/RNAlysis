@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rnalysis.filtering.HTCountFilter.run_pca &mdash; RNAlysis 1.0 documentation</title>
+  <title>rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample &mdash; RNAlysis 1.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.HTCountFilter.save_csv" href="rnalysis.filtering.HTCountFilter.save_csv.html" />
-    <link rel="prev" title="rnalysis.filtering.HTCountFilter.pairplot" href="rnalysis.filtering.HTCountFilter.pairplot.html" /> 
+    <link rel="next" title="rnalysis.filtering.HTCountFilter.split_by_bigtable_group" href="rnalysis.filtering.HTCountFilter.split_by_bigtable_group.html" />
+    <link rel="prev" title="rnalysis.filtering.HTCountFilter.save_csv" href="rnalysis.filtering.HTCountFilter.save_csv.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -107,9 +107,9 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_to_rpm.html">rnalysis.filtering.HTCountFilter.norm_reads_to_rpm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html">rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pairplot.html">rnalysis.filtering.HTCountFilter.pairplot</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.run_pca</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.run_pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html">rnalysis.filtering.HTCountFilter.save_csv</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample.html">rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_bigtable_group.html">rnalysis.filtering.HTCountFilter.split_by_bigtable_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_percentile.html">rnalysis.filtering.HTCountFilter.split_by_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_reads.html">rnalysis.filtering.HTCountFilter.split_by_reads</a></li>
@@ -173,13 +173,13 @@
         
           <li><a href="rnalysis.filtering.HTCountFilter.html">rnalysis.filtering.HTCountFilter</a> &raquo;</li>
         
-      <li>rnalysis.filtering.HTCountFilter.run_pca</li>
+      <li>rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/rnalysis.filtering.HTCountFilter.run_pca.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -192,27 +192,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rnalysis-filtering-htcountfilter-run-pca">
-<h1>rnalysis.filtering.HTCountFilter.run_pca<a class="headerlink" href="#rnalysis-filtering-htcountfilter-run-pca" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="rnalysis-filtering-htcountfilter-scatter-sample-vs-sample">
+<h1>rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample<a class="headerlink" href="#rnalysis-filtering-htcountfilter-scatter-sample-vs-sample" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="rnalysis.filtering.HTCountFilter.run_pca">
-<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">run_pca</code><span class="sig-paren">(</span><em class="sig-param">sample_names: list = 'all'</em>, <em class="sig-param">n_components=3</em>, <em class="sig-param">sample_grouping: list = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.run_pca" title="Permalink to this definition">¶</a></dt>
-<dd><p>runs and plots a PCA for a given set of samples.</p>
+<dt id="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample">
+<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">deseq_highlight=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”]</p></li>
-<li><p><strong>n_components</strong> – number of PCA components to return         :param sample_grouping: Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 0 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [0, 0, 0, 1, 1, 1, 1, 2]</p></li>
+<li><p><strong>sample1</strong> – str/list. Name of the first sample from the HTCountFilter object.         If sample1 is a list, they will be avarged as replicates.</p></li>
+<li><p><strong>sample2</strong> – str/list. Name of the second sample from the HTCountFilter object.         If sample2 is a list, they will be averaged as replicates.</p></li>
+<li><p><strong>xlabel</strong> – optional. If not specified, sample1 will be used as xlabel.</p></li>
+<li><p><strong>ylabel</strong> – optional. If not specified, sample2 will be used as ylabel.</p></li>
+<li><p><strong>deseq_highlight</strong> – DESeqFilter object or iterable of WBGene indices(optional).         If specified, the points in the scatter corresponding to the WBGene indices in deseq_highlight will be         highlighted in red.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
+<p>a matplotlib axis object.</p>
 <div class="figure align-center" id="id1">
-<a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of run_pca()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 525.6px; height: 550.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
@@ -226,10 +229,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.HTCountFilter.save_csv.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.save_csv" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.HTCountFilter.split_by_bigtable_group.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.split_by_bigtable_group" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.HTCountFilter.pairplot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter.pairplot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.HTCountFilter.save_csv.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter.save_csv" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -705,7 +705,7 @@ WBGene12345678”.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">norm_reads_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">all_feature_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Receives a dataframe of reads/counts and a dataframe of feature counts (ambiguous, no feature, not aligned, etc).         Divides each column in the read dataframe by (total reads + ambiguous + no feature)*10^-6 in order to normalize the         reads to RPM (reads per million).</p>
+<dd><p>Normalizes the reads in the HTCountFilter to reads per million (RPM).         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq’s output.         Divides each column in the HTCountFilter object by (total reads + ambiguous + no feature)*10^-6 .</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -717,7 +717,25 @@ WBGene12345678”.</p>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>a DataFrame normalized to RPM</p>
+<p>If inplace is False, returns a new instance of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">norm_reads_with_size_factor</code><span class="sig-paren">(</span><em class="sig-param">size_factor_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Normalizes the reads in the HTCountFilter using pre-calculated size factors.         Such size factors can be calculated using DESeq2’s median of ratios method.         Receives a table of sample names and their corresponding size factors,         and divides each column in the HTCountFilter object dataframe by the corresponding size factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>size_factor_fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – the .csv file which contains size factors for the different libraries.</p></li>
+<li><p><strong>inplace</strong> – If True (default), filtering will be applied to the current HTCountFilter object. If False,         the function will return a new HTCountFilter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>If inplace is False, returns a new instance of the Filter object.</p>
 </dd></dl>
 
 <dl class="method">

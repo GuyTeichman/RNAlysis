@@ -32,6 +32,13 @@ def test_htcountfilter_norm_reads_to_rpm():
     assert np.isclose(truth, h.df).all()
 
 
+def test_htcountfilter_norm_reads_with_size_factor():
+    truth = general.load_csv(r"test_norm_size_factor.csv", 0)
+    h = HTCountFilter(r"all_expr.csv")
+    h.norm_reads_with_size_factor(r"size_factors.csv")
+    assert np.isclose(truth, h.df).all()
+
+
 def test_filter_low_reads():
     truth = general.load_csv("all_expr_low_rpm_truth.csv", 0)
     h = HTCountFilter("all_expr_low_rpm.csv")

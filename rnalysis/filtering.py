@@ -590,16 +590,16 @@ class HTCountFilter(Filter):
 
     def norm_reads_to_rpm(self, all_feature_fname: str, inplace: bool = True):
         """
-        Receives a dataframe of reads/counts and a dataframe of feature counts (ambiguous, no feature, not aligned, etc). \
-        Divides each column in the read dataframe by (total reads + ambiguous + no feature)*10^-6 in order to normalize the \
-        reads to RPM (reads per million).
+        Normalizes the reads in the HTCountFilter to reads per million (RPM). \
+        Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq's output. \
+        Divides each column in the HTCountFilter object by (total reads + ambiguous + no feature)*10^-6 .
 
         :param all_feature_fname: the .csv file which contains feature information about the RNA library \
         (ambiguous, no feature, not aligned, etc).
         :param inplace: If True (default), filtering will be applied to the current HTCountFilter object. If False, \
         the function will return a new HTCountFilter instance and the current instance will not be affected.
         :return:
-        a DataFrame normalized to RPM
+        If inplace is False, returns a new instance of the Filter object.
         """
         suffix = '_rpm'
         new_df = self.df.copy()
@@ -612,6 +612,33 @@ class HTCountFilter(Filter):
         for column in new_df.columns:
             norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
                 r'__no_feature', column]) / (10 ** 6)
+            new_df[column] /= norm_factor
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
+
+    def norm_reads_with_size_factor(self, size_factor_fname: str, inplace: bool = True):
+        """
+        Normalizes the reads in the HTCountFilter using pre-calculated size factors. \
+        Such size factors can be calculated using DESeq2's median of ratios method. \
+        Receives a table of sample names and their corresponding size factors, \
+        and divides each column in the HTCountFilter object dataframe by the corresponding size factor.
+
+        :type size_factor_fname: str or pathlib.Path
+        :param size_factor_fname: the .csv file which contains size factors for the different libraries.
+        :param inplace: If True (default), filtering will be applied to the current HTCountFilter object. If False, \
+        the function will return a new HTCountFilter instance and the current instance will not be affected.
+        :return:
+        If inplace is False, returns a new instance of the Filter object.
+        """
+        suffix = '_sizefactor'
+        new_df = self.df.copy()
+        if isinstance(size_factor_fname, (str, Path)):
+            size_factors = general.load_csv(size_factor_fname)
+        elif isinstance(size_factor_fname, pd.DataFrame):
+            size_factors = size_factor_fname
+        else:
+            raise TypeError("Invalid type for 'size_factor_fname'!")
+        for column in new_df.columns:
+            norm_factor = size_factors[column].values
             new_df[column] /= norm_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
 
@@ -785,7 +812,7 @@ class HTCountFilter(Filter):
         return ax
 
     def scatter_sample_vs_sample(self, sample1: str, sample2: str, xlabel: str = None, ylabel: str = None,
-                               deseq_highlight=None):
+                                 deseq_highlight=None):
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.
