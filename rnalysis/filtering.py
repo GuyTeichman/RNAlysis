@@ -898,6 +898,8 @@ class HTCountFilter(Filter):
             samples_df = self._avg_subsamples(samples)
 
         samples_df = np.log10(samples_df + 1)
+        fig = plt.figure(figsize=(8, 8))
+
         violin = sns.violinplot(data=samples_df)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
@@ -906,6 +908,7 @@ class HTCountFilter(Filter):
         return violin
 
     # TODO: add ranksum test
+    # TODO: fix futureWarning scipy
 
     @staticmethod
     def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = False, save_reads_fname: str = None,
