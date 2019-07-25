@@ -1,6 +1,0 @@
-rnalysis.filtering.DESeqFilter.intersect
-========================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. automethod:: DESeqFilter.intersect

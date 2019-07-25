@@ -629,12 +629,12 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_low_rpm</code><span class="sig-paren">(</span><em class="sig-param">threshold: float = 5</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_low_reads</code><span class="sig-paren">(</span><em class="sig-param">threshold: float = 5</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>remove all features which have less then ‘threshold’ reads per million in all conditions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>threshold</strong> (<em>float</em>) – The minimal rpm a feature should have in at least one sample in order not to be filtered out.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The minimal number of reads (counts, rpm, rpkm, tpm, etc) a feature should have         in at least one sample in order not to be filtered out.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current HTCountFilter object. If False,         the function will return a new HTCountFilter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -747,8 +747,7 @@ WBGene12345678”.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”]</p></li>
-<li><p><strong>n_components</strong> – number of PCA components to return         have rpm lower than filter_low_rpm in all relevant samples.</p></li>
-<li><p><strong>sample_grouping</strong> – Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 0 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [0, 0, 0, 1, 1, 1, 1, 2]</p></li>
+<li><p><strong>n_components</strong> – number of PCA components to return         :param sample_grouping: Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 0 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [0, 0, 0, 1, 1, 1, 1, 2]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -775,8 +774,8 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">scatter_rpm_vs_rpm</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">deseq_highlight=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Generate a scatter plot where every dot is a feature,         the x value is log10 of rpm in sample1, the y value is log10 of rpm in sample2.</p>
+<code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">deseq_highlight=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -794,7 +793,7 @@ WBGene12345678”.</p>
 <p>a matplotlib axis object.</p>
 <div class="figure align-center" id="id4">
 <a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 525.6px; height: 550.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of scatter_rpm_vs_rpm()</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
@@ -836,11 +835,11 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">split_by_rpm</code><span class="sig-paren">(</span><em class="sig-param">threshold: float = 5</em><span class="sig-paren">)</span></dt>
-<dd><p>Splits the features in the current HTCountFilter object into two complementary, non-overlapping HTCountFilter         objects, based on the their maximum expression level. The first object will contain only highly-expressed          features (which have RPM over the specified threshold in at least one sample). The second object will contain          only lowly-expressed features (which have RPM below the specified threshold in all samples).</p>
+<code class="sig-name descname">split_by_reads</code><span class="sig-paren">(</span><em class="sig-param">threshold: float = 5</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the features in the current HTCountFilter object into two complementary, non-overlapping HTCountFilter         objects, based on the their maximum expression level. The first object will contain only highly-expressed          features (which have reads over the specified threshold in at least one sample). The second object will          contain only lowly-expressed features (which have reads below the specified threshold in all samples).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>threshold</strong> – A float. The minimal rpm a feature needs to have in at least one sample in order to be         included in the “highly expressed” object and no the “lowly expressed” object.</p>
+<dd class="field-odd"><p><strong>threshold</strong> – A float. The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have         in at least one sample in order to be         included in the “highly expressed” object and no the “lowly expressed” object.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>

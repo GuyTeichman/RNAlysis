@@ -1,6 +1,0 @@
-rnalysis.enrichment.EnrichmentProcessing.plot\_enrich\_big\_table
-=================================================================
-
-.. currentmodule:: rnalysis.enrichment
-
-.. automethod:: EnrichmentProcessing.plot_enrich_big_table

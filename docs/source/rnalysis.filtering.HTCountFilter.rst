@@ -21,7 +21,7 @@ rnalysis.filtering.HTCountFilter
       ~HTCountFilter.features_string
       ~HTCountFilter.filter_biotype
       ~HTCountFilter.filter_by_bigtable_group
-      ~HTCountFilter.filter_low_rpm
+      ~HTCountFilter.filter_low_reads
       ~HTCountFilter.filter_percentile
       ~HTCountFilter.from_folder
       ~HTCountFilter.head
@@ -29,10 +29,10 @@ rnalysis.filtering.HTCountFilter
       ~HTCountFilter.pairplot
       ~HTCountFilter.run_pca
       ~HTCountFilter.save_csv
-      ~HTCountFilter.scatter_rpm_vs_rpm
+      ~HTCountFilter.scatter_sample_vs_sample
       ~HTCountFilter.split_by_bigtable_group
       ~HTCountFilter.split_by_percentile
-      ~HTCountFilter.split_by_rpm
+      ~HTCountFilter.split_by_reads
       ~HTCountFilter.violin_plot
    
    
