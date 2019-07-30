@@ -241,7 +241,7 @@ def test_deseq_feature_string():
              'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
              'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036'}
     d = DESeqFilter('test_deseq_set_ops_1.csv')
-    assert set(d.features_string().split(",")) == truth
+    assert set(d.features_string().split("\n")) == truth
 
 
 def test_htcount_rpm_negative_threshold():
