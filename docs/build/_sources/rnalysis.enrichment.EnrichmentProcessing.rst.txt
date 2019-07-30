@@ -15,12 +15,13 @@ rnalysis.enrichment.EnrichmentProcessing
     :toctree:
 
       ~EnrichmentProcessing.__init__
-      ~EnrichmentProcessing.difference
       ~EnrichmentProcessing.enrich_big_table
       ~EnrichmentProcessing.go_enrichment
+      ~EnrichmentProcessing.difference
       ~EnrichmentProcessing.intersect
       ~EnrichmentProcessing.symmetric_difference
       ~EnrichmentProcessing.union
+      ~EnrichmentProcessing.save_txt
    
    
 
