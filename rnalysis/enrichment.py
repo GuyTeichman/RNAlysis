@@ -80,6 +80,18 @@ class EnrichmentProcessing:
         else:
             return ref
 
+    def save_txt(self,fname):
+        """
+        Save the list of features in the EnrichmentProcessing object under the specified filename and path.
+
+        :type fname: str, pathlib.Path
+        :param fname: full filename/path for the output file.
+        """
+        assert isinstance(fname,(str,Path)), "fname must be str or pathlib.Path!"
+        with open(fname, 'w') as f:
+            for gene in self.gene_set:
+                f.write(gene)
+
     def _set_ops(self, other, op):
         """
         Performs a given set operation on self and on another object (EnrichmentProcessing or set).
