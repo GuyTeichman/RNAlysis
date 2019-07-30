@@ -80,14 +80,14 @@ class EnrichmentProcessing:
         else:
             return ref
 
-    def save_txt(self,fname):
+    def save_txt(self, fname):
         """
         Save the list of features in the EnrichmentProcessing object under the specified filename and path.
 
         :type fname: str, pathlib.Path
         :param fname: full filename/path for the output file.
         """
-        assert isinstance(fname,(str,Path)), "fname must be str or pathlib.Path!"
+        assert isinstance(fname, (str, Path)), "fname must be str or pathlib.Path!"
         with open(fname, 'w') as f:
             for gene in self.gene_set:
                 f.write(gene)
@@ -295,49 +295,59 @@ class EnrichmentProcessing:
         except:
             raise ValueError("Invalid or nonexistent big table path!")
 
-        assert (isinstance(biotype, str))
+        assert (isinstance(biotype, (str, list, set, tuple)))
         if biotype == 'all':
             pass
         else:
             biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
-            big_table = big_table.loc[biotype_ref[biotype_ref['bioType'] == biotype].index]
+            if isinstance(biotype, (list, tuple, set)):
+                mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values,dtype=bool), biotype_ref['bioType'].index,
+                                 name='bioType')
+                for bio in biotype:
+                    mask = mask | (biotype_ref['bioType'] == bio)
+            else:
+                mask = biotype_ref['bioType'] == biotype
+            big_table = big_table.loc[biotype_ref[mask].index]
 
-        big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
-        fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
-        enriched_list = []
-        for k, attribute in enumerate(attributes):
-            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-            print(f"Finished {k} attributes out of {len(attributes)}")
-            df = big_table[[attribute, 'int_index']]
-            srs = df[attribute]
-            srs_int = (df.set_index('int_index', inplace=False))[attribute]
-            obs_srs = srs.loc[self.gene_set]
-            expected_fraction = fraction(srs)
-            observed_fraction = fraction(obs_srs)
-            log2_fold_enrichment = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
-            success = sum((fraction(srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0],
-                                                                 replace=False)]) >= observed_fraction
-                           if log2_fold_enrichment >= 0 else fraction(
-                srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0], replace=False)]) <= observed_fraction
-                           for _ in range(reps)))
-            pval = (success + 1) / (reps + 1)
-            n = obs_srs.shape[0]
-            enriched_list.append(
-                (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval))
+            big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
+            fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
+            enriched_list = []
+            for k, attribute in enumerate(attributes):
+                assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
+                print(f"Finished {k} attributes out of {len(attributes)}")
+                df = big_table[[attribute, 'int_index']]
+                srs = df[attribute]
+                srs_int = (df.set_index('int_index', inplace=False))[attribute]
+                obs_srs = srs.loc[self.gene_set]
+                expected_fraction = fraction(srs)
+                observed_fraction = fraction(obs_srs)
+                log2_fold_enrichment = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
+                success = sum((fraction(srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0],
+                                                                     replace=False)]) >= observed_fraction
+                               if log2_fold_enrichment >= 0 else fraction(
+                    srs_int.loc[
+                        np.random.choice(srs_int.index, obs_srs.shape[0], replace=False)]) <= observed_fraction
+                               for _ in range(reps)))
+                pval = (success + 1) / (reps + 1)
+                n = obs_srs.shape[0]
+                enriched_list.append(
+                    (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval))
 
-        enriched_df = pd.DataFrame(enriched_list,
-                                   columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment', 'pvals'])
-        significant, padj = multitest.fdrcorrection(enriched_df['pvals'].values, alpha=fdr)
-        enriched_df['padj'] = padj
-        enriched_df['significant'] = significant
-        enriched_df.set_index('name', inplace=True)
+            enriched_df = pd.DataFrame(enriched_list,
+                                       columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
+                                                'pvals'])
+            significant, padj = multitest.fdrcorrection(enriched_df['pvals'].values, alpha=fdr)
+            enriched_df['padj'] = padj
+            enriched_df['significant'] = significant
+            enriched_df.set_index('name', inplace=True)
 
-        self._plot_enrich_big_table(enriched_df)
+            self._plot_enrich_big_table(enriched_df)
 
-        if save_csv:
-            self._enrichment_save_csv(enriched_df, fname)
-        print(enriched_df)
-        return enriched_df
+            if save_csv:
+                self._enrichment_save_csv(enriched_df, fname)
+            print(enriched_df)
+
+            return enriched_df
 
     @staticmethod
     def _plot_enrich_big_table(df: pd.DataFrame):

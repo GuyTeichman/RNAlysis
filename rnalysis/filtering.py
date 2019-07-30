@@ -183,7 +183,8 @@ class Filter:
         Filters out all features that do not match the indicated biotype. \
         Legal inputs: 'protein_coding','pseudogene','piRNA','miRNA','ncRNA','lincRNA','rRNA','snRNA','snoRNA'.
 
-        :param biotype: str
+        :type biotype: str or list
+        :param biotype: the biotypes which will not be filtered out.
         :param ref: Name of the reference file used to determine biotype. Default is the BigTable.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
@@ -195,11 +196,17 @@ class Filter:
         :return: If 'inplace' is False, returns a new instance of Filter object.
         """
         legal_inputs = ('protein_coding', 'pseudogene', 'piRNA', 'miRNA', 'ncRNA', 'lincRNA', 'rRNA', 'snRNA', 'snoRNA')
-        assert isinstance(biotype, str), "biotype must be a string!"
-        assert biotype in legal_inputs, "biotype is not a legal string!"
+        assert isinstance(biotype, (str, list)), "biotype must be a string or a list!"
+        if isinstance(biotype, str):
+            biotype = [biotype]
+        for bio in biotype:
+            assert biotype in legal_inputs, f"biotype {bio} is not a legal string!"
         ref_df = general.load_csv(ref, 0)
-        suffix = f"_{biotype}"
-        gene_names = ref_df[ref_df['bioType'] == biotype].index.intersection(self.df.index)
+        suffix = f"_{'_'.join(biotype)}"
+        mask = pd.Series(np.zeros_like(ref_df['bioType'], dtype=bool), ref_df['bioType'].index, name='bioType')
+        for bio in biotype:
+            mask = mask | (ref_df['bioType'] == bio)
+        gene_names = ref_df[mask.index.intersection(self.df.index)]
         new_df = self.df.loc[gene_names]
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -749,7 +756,7 @@ class HTCountFilter(Filter):
            Example plot of run_pca()
         """
         if sample_names == 'all':
-            sample_names=list(self.df.columns)
+            sample_names = list(self.df.columns)
             srna_data = self.df.transpose()
         else:
             srna_data = self.df[sample_names].transpose()
