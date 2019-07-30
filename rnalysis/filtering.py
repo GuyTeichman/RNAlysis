@@ -914,7 +914,7 @@ class HTCountFilter(Filter):
     def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = False, save_reads_fname: str = None,
                     save_not_counted_fname: str = None):
         """
-        Iterates over htcount files in a given folder and combines them into a single HTCountFilter table. \
+        Iterates over HTSeq count .txt files in a given folder and combines them into a single HTCountFilter table. \
         Can also save the count data table and the uncounted data table to .csv files, and normalize the HTCountFilter \
         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data, \
         regardless if the HTCountFilter table was normalized or not.
