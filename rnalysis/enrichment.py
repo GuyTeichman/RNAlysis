@@ -232,6 +232,7 @@ class EnrichmentProcessing:
                 df = tea.enrichment_analysis(self.gene_set, d[-1], alpha=alpha)
                 if not df.empty:
                     df_comb = df_comb.append(df)
+                    plt.figure()
                     tea.plot_enrichment_results(df, title=f'{arg.capitalize()} Enrichment Analysis', analysis=arg)
                     plt.title(f'{arg.capitalize()} Enrichment Analysis', fontsize=20)
 
@@ -239,8 +240,9 @@ class EnrichmentProcessing:
             assert (mode == 'go' or mode == 'tissue' or mode == 'phenotype'), "Invalid mode!"
             d = tea.fetch_dictionary(mode)
             df_comb = tea.enrichment_analysis(self.gene_set, d, show=True)
-            tea.plot_enrichment_results(df_comb, title=f'{mode.capitalize()} Enrichment Analysis', analysis=mode)
-            plt.title(f'{mode.capitalize()} Enrichment Analysis', fontsize=20)
+            if not df_comb.empty:
+                tea.plot_enrichment_results(df_comb, title=f'{mode.capitalize()} Enrichment Analysis', analysis=mode)
+                plt.title(f'{mode.capitalize()} Enrichment Analysis', fontsize=20)
 
         if save_csv:
             self._enrichment_save_csv(df_comb, fname)
