@@ -523,7 +523,7 @@ class HTCountFilter(Filter):
     :type fname: str or pathlib.Path
     """
 
-    def pairplot(self, sample_list: list):
+    def pairplot(self, sample_list: list = 'all'):
         """
         Plot pairwise relationships in the dataset. \
         Can plot both single samples and average multiple replicates. \
@@ -971,3 +971,4 @@ class HTCountFilter(Filter):
 
 # TODO: a function that receives a dataframe, and can plot correlation with the BigTable instead of just enrichment
 # TODO: add option for mask in clustergram
+# TODO: fix no sample grouping in pca returning error
