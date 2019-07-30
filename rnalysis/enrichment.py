@@ -248,7 +248,7 @@ class EnrichmentProcessing:
         return df_comb
 
     def enrich_big_table(self, attributes: list = None, fdr: float = 0.05, reps=10000, biotype: str = 'protein_coding',
-                         big_table_pth: str = 'predefined', save_csv: bool = True, fname=None):
+                         big_table_pth: str = 'predefined', save_csv: bool = False, fname=None):
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from the Big Table. \
