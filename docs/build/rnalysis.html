@@ -513,7 +513,7 @@ WBGene12345678”.</p>
 <dt>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">HTCountFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></p>
-<p>A class that receives an HTSeq output file and can filter it according to various characteristics.</p>
+<p>A class that receives HTSeq count output files and can filter them according to various characteristics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the .csv HTCount file to be loaded.</p>
@@ -668,14 +668,14 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<em class="property">static </em><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">save_csv: bool = True</em>, <em class="sig-param">norm_to_rpm: bool = True</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em><span class="sig-paren">)</span></dt>
-<dd><p>Iterates over htcount files in a given folder and combines them into a single HTCountFilter table.         Can also save the count data table and the uncounted data table to .csv files, and normalize the HTCountFilter         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data,         regardless if the HTCountFilter table was normalized or not.</p>
+<em class="property">static </em><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">save_csv: bool = True</em>, <em class="sig-param">norm_to_rpm: bool = False</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em><span class="sig-paren">)</span></dt>
+<dd><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single HTCountFilter table.         Can also save the count data table and the uncounted data table to .csv files, and normalize the HTCountFilter         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data,         regardless if the HTCountFilter table was normalized or not.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder_path</strong> – str or pathlib.Path. Full path of the folder that contains individual htcount .txt files.</p></li>
 <li><p><strong>save_csv</strong> – bool. If True (default), the joint DataFrame of count data and uncounted data will be saved         to two separate .csv files. The files will be saved in ‘folder_path’, and named according to the parameters         ‘save_reads_fname’ for the count data, and ‘save_not_counted_fname’ for the uncounted data (unaligned,         alignment not unique, etc).</p></li>
-<li><p><strong>norm_to_rpm</strong> – bool. If True (default), the HTCountFilter table will be automatically normalized to         reads per million (RPM). If False, the HTCountFilter object will not be normalized, and will instead contain         absolute count data (as in the original htcount .txt files).         Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original         htcount .txt files, and NOT normalized data.</p></li>
+<li><p><strong>norm_to_rpm</strong> – bool. If True, the HTCountFilter table will be automatically normalized to reads per         million (RPM). If False (defualt), the HTCountFilter object will not be normalized, and will instead contain         absolute count data (as in the original htcount .txt files).         Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original         htcount .txt files, and NOT normalized data.</p></li>
 <li><p><strong>save_reads_fname</strong> – str. Name under which to save the combined count data table. Does not need to include         the ‘.csv’ suffix.</p></li>
 <li><p><strong>save_not_counted_fname</strong> – save_reads_fname: str. Name under which to save the combined uncounted data.         Does not need to include the ‘.csv’ suffix.</p></li>
 </ul>
@@ -1002,6 +1002,17 @@ and ‘pvalue’.</p>
 </dd>
 </dl>
 <p>if inplace is False, returns a new instance of EnrichmentProcessing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">save_txt</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span></dt>
+<dd><p>Save the list of features in the EnrichmentProcessing object under the specified filename and path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em>, </em><em>pathlib.Path</em>) – full filename/path for the output file.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">

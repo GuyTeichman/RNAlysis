@@ -195,7 +195,7 @@
 <dl class="class">
 <dt id="rnalysis.filtering.HTCountFilter">
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">HTCountFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class that receives an HTSeq output file and can filter it according to various characteristics.</p>
+<dd><p>A class that receives HTSeq count output files and can filter them according to various characteristics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the .csv HTCount file to be loaded.</p>
@@ -242,7 +242,7 @@
 <td><p>Removes all entries above the specified percentile in the specified column.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.from_folder.html#rnalysis.filtering.HTCountFilter.from_folder" title="rnalysis.filtering.HTCountFilter.from_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_folder</span></code></a>(folder_path[, save_csv, …])</p></td>
-<td><p>Iterates over htcount files in a given folder and combines them into a single HTCountFilter table.</p></td>
+<td><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single HTCountFilter table.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.HTCountFilter.head.html#rnalysis.filtering.HTCountFilter.head" title="rnalysis.filtering.HTCountFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the DataFrame.</p></td>
