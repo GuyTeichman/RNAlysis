@@ -326,7 +326,7 @@ class Filter:
         A string of WBGene indices separated by newlines (\n). \
         For example, "WBGene00000001\nWBGene00000003\nWBGene12345678".
         """
-        return ",".join(self.features_set())
+        return "\n".join(self.features_set())
 
 
 class DESeqFilter(Filter):
