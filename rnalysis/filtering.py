@@ -517,7 +517,7 @@ class DESeqFilter(Filter):
 
 class HTCountFilter(Filter):
     """
-    A class that receives an HTSeq output file and can filter it according to various characteristics.
+    A class that receives HTSeq count output files and can filter them according to various characteristics.
 
     :param fname: name of the .csv HTCount file to be loaded.
     :type fname: str or pathlib.Path
