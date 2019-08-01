@@ -532,7 +532,7 @@ class HTCountFilter(Filter):
     :type fname: str or pathlib.Path
     """
 
-    def pairplot(self, sample_list: list = 'all'):
+    def pairplot(self, sample_list: list = 'all', log2: bool = False):
         """
         Plot pairwise relationships in the dataset. \
         Can plot both single samples and average multiple replicates. \
@@ -544,6 +544,9 @@ class HTCountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
+        :type log2: bool
+        :param log2: if True, the pairplot will be calculated with log2 of the dataframe, and not with the raw data. \
+        If False (default), the pairplot will be calculated with the raw data.
         :return:
         An instance of seaborn.PairGrid.
 
