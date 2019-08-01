@@ -554,10 +554,10 @@ class HTCountFilter(Filter):
            Example plot of pairplot()
         """
         if sample_list == 'all':
-            pairplt = sns.pairplot(self.df)
+            pairplt = sns.pairplot(np.log2(self.df))
         else:
             sample_df = self._avg_subsamples(sample_list)
-            pairplt = sns.pairplot(sample_df)
+            pairplt = sns.pairplot(np.log2(sample_df))
         plt.show()
         return pairplt
 
