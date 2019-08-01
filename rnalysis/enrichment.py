@@ -22,7 +22,7 @@ class EnrichmentProcessing:
     """ receives a filtered gene set and preforms various enrichment analyses"""
     _go_dicts = {}
 
-    def __init__(self, gene_set: set = None):
+    def __init__(self, gene_set: set = None, set_name: str = ''):
         if gene_set is None:
             self.gene_set = general.parse_wbgene_string(input(
                 "Please insert WBGenes separated by newline "
@@ -34,6 +34,7 @@ class EnrichmentProcessing:
         else:
             raise TypeError(f"Error: 'gene_set' must be a set, list or tuple! Is a {type(gene_set)} instead. ")
         self.gene_set = gene_set
+        self.set_name = set_name
 
     @staticmethod
     def _from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
@@ -90,7 +91,7 @@ class EnrichmentProcessing:
         assert isinstance(fname, (str, Path)), "fname must be str or pathlib.Path!"
         with open(fname, 'w') as f:
             for gene in self.gene_set:
-                f.write(gene+'\n')
+                f.write(gene + '\n')
 
     def _set_ops(self, other, op):
         """
@@ -301,7 +302,7 @@ class EnrichmentProcessing:
         else:
             biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
             if isinstance(biotype, (list, tuple, set)):
-                mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values,dtype=bool), biotype_ref['bioType'].index,
+                mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values, dtype=bool), biotype_ref['bioType'].index,
                                  name='bioType')
                 for bio in biotype:
                     mask = mask | (biotype_ref['bioType'] == bio)
@@ -341,7 +342,7 @@ class EnrichmentProcessing:
             enriched_df['significant'] = significant
             enriched_df.set_index('name', inplace=True)
 
-            self._plot_enrich_big_table(enriched_df)
+            self._plot_enrich_big_table(enriched_df, title=self.set_name)
 
             if save_csv:
                 self._enrichment_save_csv(enriched_df, fname)
@@ -350,12 +351,13 @@ class EnrichmentProcessing:
             return enriched_df
 
     @staticmethod
-    def _plot_enrich_big_table(df: pd.DataFrame):
+    def _plot_enrich_big_table(df: pd.DataFrame, title: str = ''):
         """
         Receives a DataFrame output from EnrichmentProcessing.enrich_big_table, and plots it in a bar plort \
         Static class method.
 
         :param df: a pandas DataFrame created by EnrichmentProcessing.enrich_big_table.
+        :param title: plot title.
         :return:
         a matplotlib.pyplot.bar instance
         """
