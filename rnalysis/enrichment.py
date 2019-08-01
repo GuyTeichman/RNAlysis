@@ -235,7 +235,7 @@ class EnrichmentProcessing:
                     df_comb = df_comb.append(df)
                     plt.figure()
                     tea.plot_enrichment_results(df, title=f'{arg.capitalize()} Enrichment Analysis', analysis=arg)
-                    plt.title(f'{arg.capitalize()} Enrichment Analysis', fontsize=20)
+                    plt.title(f'{arg.capitalize()} Enrichment Analysis for sample {self.set_name}', fontsize=20)
 
         else:
             assert (mode == 'go' or mode == 'tissue' or mode == 'phenotype'), "Invalid mode!"
@@ -399,9 +399,11 @@ class EnrichmentProcessing:
                      fontsize=fontsize, horizontalalignment='center', verticalalignment='center')
 
         sns.despine()
+        plt.title(title)
         plt.tight_layout()
         plt.show()
         return bar
 
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
+# TODO: function that prints all biotypes in the sample
