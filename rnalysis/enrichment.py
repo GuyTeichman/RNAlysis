@@ -90,7 +90,7 @@ class EnrichmentProcessing:
         assert isinstance(fname, (str, Path)), "fname must be str or pathlib.Path!"
         with open(fname, 'w') as f:
             for gene in self.gene_set:
-                f.write(gene)
+                f.write(gene+'\n')
 
     def _set_ops(self, other, op):
         """
