@@ -387,10 +387,10 @@ class DESeqFilter(Filter):
         suffix = f"_top{n}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_abs_fold_change(self, abslog2fc: float = 2, opposite: bool = False, inplace: bool = True):
+    def filter_abs_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
         """
         Filters out all features whose absolute log2 fold change is below the indicated threshold. \
-        For example: if log2fc is 2.0, all features whose log2 fold change is between 2 and -2 (went up less than \
+        For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than \
         two-fold or went down less than two-fold) will be filtered out.
 
         :param abslog2fc: The threshold absolute log2 fold change for filtering out a feature. Float or int. \
@@ -987,3 +987,4 @@ class HTCountFilter(Filter):
 # TODO: a function that receives a dataframe, and can plot correlation with the BigTable instead of just enrichment
 # TODO: add option for mask in clustergram
 # TODO: fix no sample grouping in pca returning error
+# TODO: function that prints all biotypes in the sample
