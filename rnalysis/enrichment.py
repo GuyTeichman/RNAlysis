@@ -93,7 +93,7 @@ class EnrichmentProcessing:
             for gene in self.gene_set:
                 f.write(gene + '\n')
 
-    def _set_ops(self, other, op):
+    def _set_ops(self, others, op):
         """
         Performs a given set operation on self and on another object (EnrichmentProcessing or set).
         :type other: EnrichmentProcessing, set or str
@@ -103,60 +103,69 @@ class EnrichmentProcessing:
         :return:
         A set resulting from the set operation.
         """
-        if isinstance(other, set):
-            genes = op(self.gene_set, other)
-        elif isinstance(other, EnrichmentProcessing):
-            genes = op(self.gene_set, other.gene_set)
-        elif isinstance(other, str):
-            genes = op(self.gene_set, general.parse_wbgene_string(other))
-        else:
-            raise TypeError("'other' must be an EnrichmentProcessing object or a set!")
-        return genes
+        others = list(others)
+        for i, other in enumerate(others):
+            if isinstance(other, set):
+                pass
+            elif isinstance(other, EnrichmentProcessing):
+                others[i] = other.gene_set
+            elif isinstance(other, str):
+                others[i] = general.parse_wbgene_string(other)
+            else:
+                raise TypeError("'other' must be an EnrichmentProcessing object or a set!")
+        try:
+            return op(self.gene_set, *others)
+        except TypeError as e:
+            if op == set.symmetric_difference:
+                raise TypeError(
+                    f"Symmetric difference can only be calculated for two objects, {len(others) + 1} were given!")
+            else:
+                raise e
 
-    def union(self, other, inplace: bool = True):
+    def union(self, *others, inplace: bool = True):
         """
-         Calculates the set union of the WBGene indices from two EnrichmentProcessing objects \
+         Calculates the set union of the WBGene indices from multipple EnrichmentProcessing objects \
         (the indices that exist in at least one of the EnrichmentProcessing objects).
 
-        :type other: EnrichmentProcessing, set or str
-        :param other: A second  object against which the current object will be compared.
-        :type other: bool
+        :type others: EnrichmentProcessing, set or str
+        :param others: The objects against which the current object will be compared.
+        :type inplace: bool
         :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.
         """
-        return self._inplace(self._set_ops(other, set.union), inplace)
+        return self._inplace(self._set_ops(others, set.union), inplace)
 
-    def intersect(self, other, inplace: bool = True):
+    def intersection(self, *others, inplace: bool = True):
         """
-        Calculates the set intersection of the WBGene indices from two EnrichmentProcessing objects \
-        (the indices that exist in BOTH of the EnrichmentProcessing objects).
+        Calculates the set intersection of the WBGene indices from multiple EnrichmentProcessing objects \
+        (the indices that exist in ALL of the EnrichmentProcessing objects).
 
-        :type other: EnrichmentProcessing, set or str
-        :param other: A second  object against which the current object will be compared.
-        :type other: bool
+        :type others: EnrichmentProcessing, set or str
+        :param others: The objects against which the current object will be compared.
+        :type inplace: bool
         :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.
                 """
-        return self._inplace(self._set_ops(other, set.intersection), inplace)
+        return self._inplace(self._set_ops(others, set.intersection), inplace)
 
-    def difference(self, other, inplace: bool = True):
+    def difference(self, *others, inplace: bool = True):
         """
-        Calculates the set difference of the WBGene indices from two EnrichmentProcessing objects \
-        (the indices that appear in the first EnrichmentProcessing object but NOT in the second object).
+        Calculates the set difference of the WBGene indices from multiple EnrichmentProcessing objects \
+        (the indices that appear in the first EnrichmentProcessing object but NOT in the other objects).
 
-        :type other: EnrichmentProcessing, set or str
-        :param other: A second  object against which the current object will be compared.
-        :type other: bool
+        :type others: EnrichmentProcessing, set or str
+        :param others: The objects against which the current object will be compared.
+        :type inplace: bool
         :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.
         """
-        return self._inplace(self._set_ops(other, set.difference), inplace)
+        return self._inplace(self._set_ops(others, set.difference), inplace)
 
     def symmetric_difference(self, other, inplace: bool = True):
         """
@@ -166,13 +175,13 @@ class EnrichmentProcessing:
 
         :type other: EnrichmentProcessing, set or str
         :param other: A second  object against which the current object will be compared.
-        :type other: bool
+        :type inplace: bool
         :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
         If False, returns a new instance of EnrichmentProcessing.
         :return:
         if inplace is False, returns a new instance of EnrichmentProcessing.
         """
-        return self._inplace(self._set_ops(other, set.symmetric_difference), inplace)
+        return self._inplace(self._set_ops([other], set.symmetric_difference), inplace)
 
     @staticmethod
     def _enrichment_save_csv(df: pd.DataFrame, fname: str, suffix: str = ''):
@@ -407,3 +416,5 @@ class EnrichmentProcessing:
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
 # TODO: function that prints all biotypes in the sample
+# TODO: option to give a list/set of background genes (enrichment)
+# TODO: option to remove specific genes from the background genes (enrichment)

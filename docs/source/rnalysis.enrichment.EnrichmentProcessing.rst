@@ -18,7 +18,7 @@ rnalysis.enrichment.EnrichmentProcessing
       ~EnrichmentProcessing.enrich_big_table
       ~EnrichmentProcessing.go_enrichment
       ~EnrichmentProcessing.difference
-      ~EnrichmentProcessing.intersect
+      ~EnrichmentProcessing.intersection
       ~EnrichmentProcessing.symmetric_difference
       ~EnrichmentProcessing.union
       ~EnrichmentProcessing.save_txt

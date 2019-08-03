@@ -39,14 +39,14 @@ def test_enrichment_processing_union():
     assert np.all(up.gene_set == truth)
 
 
-def test_enrichment_processing_intersect():
+def test_enrichment_processing_intersection():
     other = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523'}
     up = enrichment.EnrichmentProcessing(up_feature_set)
     other_ep = enrichment.EnrichmentProcessing(other)
-    up.intersect(other_ep)
+    up.intersection(other_ep)
     assert np.all(up.gene_set == truth)
 
 
@@ -77,7 +77,7 @@ def test_set_operations_invalid_obj():
     first = {'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390'}
     first_ep = enrichment.EnrichmentProcessing(first)
     with pytest.raises(TypeError):
-        first_ep.intersect(['WBGene00044200', 'WBGene00206390', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'])
+        first_ep.intersection(['WBGene00044200', 'WBGene00206390', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'])
 
 
 def test_set_operations_with_set():

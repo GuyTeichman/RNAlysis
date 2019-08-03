@@ -307,3 +307,15 @@ def test_deseq_filter_biotype_multiple():
 
 def test_deseq_filter_biotype_multiple_opposite():
     pass
+
+
+def test_deseqfilter_union_multiple():
+    pass
+
+
+def test_deseqfilter_intersection_multiple():
+    pass
+
+
+def test_deseqfilter_difference_multiple():
+    pass
