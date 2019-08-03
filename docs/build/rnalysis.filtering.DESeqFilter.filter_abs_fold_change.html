@@ -195,8 +195,8 @@
 <h1>rnalysis.filtering.DESeqFilter.filter_abs_fold_change<a class="headerlink" href="#rnalysis-filtering-deseqfilter-filter-abs-fold-change" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.filter_abs_fold_change">
-<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">filter_abs_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 2</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.filter_abs_fold_change" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 2 and -2 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
+<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">filter_abs_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.filter_abs_fold_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

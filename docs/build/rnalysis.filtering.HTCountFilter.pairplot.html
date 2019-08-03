@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.HTCountFilter.run_pca" href="rnalysis.filtering.HTCountFilter.run_pca.html" />
+    <link rel="next" title="rnalysis.filtering.HTCountFilter.run_pca" href="rnalysis.filtering.HTCountFilter.pca.html" />
     <link rel="prev" title="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html" /> 
 </head>
 
@@ -107,7 +107,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_to_rpm.html">rnalysis.filtering.HTCountFilter.norm_reads_to_rpm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html">rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.pairplot</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.run_pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html">rnalysis.filtering.HTCountFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample.html">rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_bigtable_group.html">rnalysis.filtering.HTCountFilter.split_by_bigtable_group</a></li>
@@ -196,11 +196,14 @@
 <h1>rnalysis.filtering.HTCountFilter.pairplot<a class="headerlink" href="#rnalysis-filtering-htcountfilter-pairplot" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.HTCountFilter.pairplot">
-<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">pairplot</code><span class="sig-paren">(</span><em class="sig-param">sample_list: list</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.pairplot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">pairplot</code><span class="sig-paren">(</span><em class="sig-param">sample_list: list = 'all'</em>, <em class="sig-param">log2: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.pairplot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot pairwise relationships in the dataset.         Can plot both single samples and average multiple replicates.         For more information see the documentation of seaborn.pairplot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>sample_list</strong> (<em>'all'</em><em>, </em><em>list</em><em>, or </em><em>nested list.</em>) – A list of the sample names and/or grouped sample names to be included in the pairplot.         All specified samples must be present in the HTCountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_list</strong> (<em>'all'</em><em>, </em><em>list</em><em>, or </em><em>nested list.</em>) – A list of the sample names and/or grouped sample names to be included in the pairplot.         All specified samples must be present in the HTCountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
+<li><p><strong>log2</strong> (<em>bool</em>) – if True, the pairplot will be calculated with log2 of the dataframe, and not with the raw data.         If False (default), the pairplot will be calculated with the raw data.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
@@ -223,7 +226,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.HTCountFilter.run_pca.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.run_pca" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.HTCountFilter.pca.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.run_pca" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

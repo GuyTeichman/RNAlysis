@@ -759,7 +759,7 @@ class HTCountFilter(Filter):
         plt.show()
         return clustering
 
-    def run_pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None):
+    def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None):
         """
         runs and plots a PCA for a given set of samples.
 
@@ -782,7 +782,7 @@ class HTCountFilter(Filter):
            :align:   center
            :scale: 40 %
 
-           Example plot of run_pca()
+           Example plot of pca()
         """
         if sample_names == 'all':
             sample_names = list(self.df.columns)
@@ -811,9 +811,9 @@ class HTCountFilter(Filter):
     @staticmethod
     def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list):
         """
-        Internal method, used to plot the results from HTCountFilter.run_pca. Static class method.
+        Internal method, used to plot the results from HTCountFilter.pca. Static class method.
 
-        :param final_df: The DataFrame output from run_pca
+        :param final_df: The DataFrame output from pca
         :param pc1_var: Variance explained by the first PC.
         :param pc2_var: Variance explained by the second PC.
         :param sample_grouping: a list of indices from 0 and up, that indicates what samples are grouped together as \

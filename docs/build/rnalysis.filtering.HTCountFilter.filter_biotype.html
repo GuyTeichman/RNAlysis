@@ -107,7 +107,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_to_rpm.html">rnalysis.filtering.HTCountFilter.norm_reads_to_rpm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor.html">rnalysis.filtering.HTCountFilter.norm_reads_with_size_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pairplot.html">rnalysis.filtering.HTCountFilter.pairplot</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.run_pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html">rnalysis.filtering.HTCountFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample.html">rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_bigtable_group.html">rnalysis.filtering.HTCountFilter.split_by_bigtable_group</a></li>
@@ -201,7 +201,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>biotype</strong> – str</p></li>
+<li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
 <li><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is the BigTable.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>

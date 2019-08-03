@@ -199,17 +199,20 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the second.</p>
+<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the others.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set.</em>) – a second DESeqFilter object or set to calculate difference with.</p></li>
-<li><p><strong>return_type</strong> – If ‘set’, returns a set of the WBGene indices that exist only in the first DESeqFilter.         If ‘str’, returns a string of the WBGene indices that exist only in the first DESeqFilter, delimited by a comma.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first DESeqFilter.         If ‘str’, returns a string of the WBGene indices that exist only in the first DESeqFilter, delimited by a comma.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set or str</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
 </dd>
 </dl>
 <p>a set/string of the WBGene indices that that exist only in the first DESeqFilter object (set difference).</p>
@@ -245,8 +248,8 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_abs_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 2</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 2 and -2 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
+<code class="sig-name descname">filter_abs_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -269,7 +272,7 @@ WBGene12345678”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>biotype</strong> – str</p></li>
+<li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
 <li><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is the BigTable.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
@@ -397,17 +400,20 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in BOTH of the DESeqFilter objects.</p>
+<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a set/string of the WBGene indices that exist in ALL of the given DESeqFilter objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set.</em>) – a second DESeqFilter object or set to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set or str</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
 </dd>
 </dl>
 <p>a set/string of the WBGene indices that intersect between two DESeqFilter objects.</p>
@@ -480,11 +486,14 @@ WBGene12345678”.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set.</em>) – a second DESeqFilter object or set to calculate symmetric difference with.</p></li>
-<li><p><strong>return_type</strong> – If ‘set’, returns a set of the WBGene indices that exist in exactly one DESeqFilter.         If ‘str’, returns a string of the WBGene indices that exist in exactly one DESeqFilter., delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist in exactly one DESeqFilter.         If ‘str’, returns a string of the WBGene indices that exist in exactly one DESeqFilter., delimited by a comma.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set or str</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
 </dd>
 </dl>
 <p>a set/string of the WBGene indices that that exist t in exactly one DESeqFilter. (set symmetric difference).</p>
@@ -492,17 +501,20 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the union of WBGene indices between two DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p>
+<code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set.</em>) – a second DESeqFilter object or set to calculate union with.</p></li>
-<li><p><strong>return_type</strong> – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate union with.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a set/string of the WBGene indices that exist in at least one of the DESeqFilter objects.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set or str</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a set/string of the WBGene indices that exist in at least one of the DESeqFilter objects.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -593,7 +605,7 @@ WBGene12345678”.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>biotype</strong> – str</p></li>
+<li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
 <li><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is the BigTable.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
@@ -740,11 +752,14 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">pairplot</code><span class="sig-paren">(</span><em class="sig-param">sample_list: list</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">pairplot</code><span class="sig-paren">(</span><em class="sig-param">sample_list: list = 'all'</em>, <em class="sig-param">log2: bool = False</em><span class="sig-paren">)</span></dt>
 <dd><p>Plot pairwise relationships in the dataset.         Can plot both single samples and average multiple replicates.         For more information see the documentation of seaborn.pairplot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>sample_list</strong> (<em>'all'</em><em>, </em><em>list</em><em>, or </em><em>nested list.</em>) – A list of the sample names and/or grouped sample names to be included in the pairplot.         All specified samples must be present in the HTCountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_list</strong> (<em>'all'</em><em>, </em><em>list</em><em>, or </em><em>nested list.</em>) – A list of the sample names and/or grouped sample names to be included in the pairplot.         All specified samples must be present in the HTCountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
+<li><p><strong>log2</strong> (<em>bool</em>) – if True, the pairplot will be calculated with log2 of the dataframe, and not with the raw data.         If False (default), the pairplot will be calculated with the raw data.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
@@ -759,7 +774,7 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">run_pca</code><span class="sig-paren">(</span><em class="sig-param">sample_names: list = 'all'</em>, <em class="sig-param">n_components=3</em>, <em class="sig-param">sample_grouping: list = None</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">pca</code><span class="sig-paren">(</span><em class="sig-param">sample_names: list = 'all'</em>, <em class="sig-param">n_components=3</em>, <em class="sig-param">sample_grouping: list = None</em><span class="sig-paren">)</span></dt>
 <dd><p>runs and plots a PCA for a given set of samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -775,7 +790,7 @@ WBGene12345678”.</p>
 <p>A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
 <div class="figure align-center" id="id3">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of run_pca()</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
@@ -893,18 +908,18 @@ WBGene12345678”.</p>
 <p>This module receives a set of feature names, and can perform various enrichment analyses on them, such as GO enrichment, tissue/phenotype enrichment, enrichment and depletion of big table columns, etc. Furthermore, set operations (union, intersect, difference, symmetric difference) can be performed on two EnrichmentProcessing objects. Results of enrichment analyses can be saved to .csv files.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">EnrichmentProcessing</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">EnrichmentProcessing</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>receives a filtered gene set and preforms various enrichment analyses</p>
 <dl class="method">
 <dt>
-<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set difference of the WBGene indices from two EnrichmentProcessing objects         (the indices that appear in the first EnrichmentProcessing object but NOT in the second object).</p>
+<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates the set difference of the WBGene indices from multiple EnrichmentProcessing objects         (the indices that appear in the first EnrichmentProcessing object but NOT in the other objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -916,7 +931,7 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">enrich_big_table</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">big_table_pth: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = True</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">enrich_big_table</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">big_table_pth: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from the Big Table.         P-values are calculated using a randomization test, and corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.</p>
 <dl class="field-list simple">
@@ -988,13 +1003,13 @@ and ‘pvalue’.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set intersection of the WBGene indices from two EnrichmentProcessing objects         (the indices that exist in BOTH of the EnrichmentProcessing objects).</p>
+<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates the set intersection of the WBGene indices from multiple EnrichmentProcessing objects         (the indices that exist in ALL of the EnrichmentProcessing objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1022,8 +1037,8 @@ and ‘pvalue’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – A second  object against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1035,15 +1050,15 @@ and ‘pvalue’.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
-<div><p>Calculates the set union of the WBGene indices from two EnrichmentProcessing objects         (the indices that exist in at least one of the EnrichmentProcessing objects).</p>
+<div><p>Calculates the set union of the WBGene indices from multipple EnrichmentProcessing objects         (the indices that exist in at least one of the EnrichmentProcessing objects).</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<em>bool</em>) – A second  object against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

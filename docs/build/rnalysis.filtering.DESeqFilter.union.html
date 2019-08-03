@@ -195,17 +195,20 @@
 <h1>rnalysis.filtering.DESeqFilter.union<a class="headerlink" href="#rnalysis-filtering-deseqfilter-union" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.union">
-<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.union" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a set/string of the union of WBGene indices between two DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p>
+<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set.</em>) – a second DESeqFilter object or set to calculate union with.</p></li>
-<li><p><strong>return_type</strong> – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate union with.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a set/string of the WBGene indices that exist in at least one of the DESeqFilter objects.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set or str</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a set/string of the WBGene indices that exist in at least one of the DESeqFilter objects.</p>
 </dd>
 </dl>
 </dd></dl>

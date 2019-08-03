@@ -219,8 +219,8 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html#rnalysis.filtering.DESeqFilter.describe" title="rnalysis.filtering.DESeqFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe</span></code></a>([percentiles])</p></td>
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(other[, return_type])</p></td>
-<td><p>Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the second.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type])</p></td>
+<td><p>Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the others.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_set.html#rnalysis.filtering.DESeqFilter.features_set" title="rnalysis.filtering.DESeqFilter.features_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_set</span></code></a>()</p></td>
 <td><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p></td>
@@ -252,8 +252,8 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html#rnalysis.filtering.DESeqFilter.head" title="rnalysis.filtering.DESeqFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the DataFrame.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html#rnalysis.filtering.DESeqFilter.intersection" title="rnalysis.filtering.DESeqFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(other[, return_type])</p></td>
-<td><p>Returns a set/string of the WBGene indices that exist in BOTH of the DESeqFilter objects.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html#rnalysis.filtering.DESeqFilter.intersection" title="rnalysis.filtering.DESeqFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, return_type])</p></td>
+<td><p>Returns a set/string of the WBGene indices that exist in ALL of the given DESeqFilter objects.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html#rnalysis.filtering.DESeqFilter.save_csv" title="rnalysis.filtering.DESeqFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code></a>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>
@@ -270,8 +270,8 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.symmetric_difference.html#rnalysis.filtering.DESeqFilter.symmetric_difference" title="rnalysis.filtering.DESeqFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, return_type])</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist either in the first DESeqFilter object OR the second,         but NOT in both (set symmetric difference).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.union.html#rnalysis.filtering.DESeqFilter.union" title="rnalysis.filtering.DESeqFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(other[, return_type])</p></td>
-<td><p>Returns a set/string of the union of WBGene indices between two DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.union.html#rnalysis.filtering.DESeqFilter.union" title="rnalysis.filtering.DESeqFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, return_type])</p></td>
+<td><p>Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p></td>
 </tr>
 </tbody>
 </table>

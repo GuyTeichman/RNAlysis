@@ -28,7 +28,7 @@ rnalysis.filtering.HTCountFilter
       ~HTCountFilter.norm_reads_to_rpm
       ~HTCountFilter.norm_reads_with_size_factor
       ~HTCountFilter.pairplot
-      ~HTCountFilter.run_pca
+      ~HTCountFilter.pca
       ~HTCountFilter.save_csv
       ~HTCountFilter.scatter_sample_vs_sample
       ~HTCountFilter.split_by_bigtable_group

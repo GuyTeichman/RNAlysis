@@ -94,13 +94,13 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.enrichment.EnrichmentProcessing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.__init__.html">rnalysis.enrichment.EnrichmentProcessing.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.difference.html">rnalysis.enrichment.EnrichmentProcessing.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.enrich_big_table.html">rnalysis.enrichment.EnrichmentProcessing.enrich_big_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html">rnalysis.enrichment.EnrichmentProcessing.go_enrichment</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.difference.html">rnalysis.enrichment.EnrichmentProcessing.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.intersect.html">rnalysis.enrichment.EnrichmentProcessing.intersect</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.intersection.html">rnalysis.enrichment.EnrichmentProcessing.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.save_txt.html">rnalysis.enrichment.EnrichmentProcessing.save_txt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.symmetric_difference.html">rnalysis.enrichment.EnrichmentProcessing.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.union.html">rnalysis.enrichment.EnrichmentProcessing.union</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.save_txt.html">rnalysis.enrichment.EnrichmentProcessing.save_txt</a></li>
 </ul>
 </li>
 </ul>
@@ -180,11 +180,11 @@
 <h1>rnalysis.enrichment.EnrichmentProcessing<a class="headerlink" href="#rnalysis-enrichment-enrichmentprocessing" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="rnalysis.enrichment.EnrichmentProcessing">
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">EnrichmentProcessing</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.EnrichmentProcessing" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">EnrichmentProcessing</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.EnrichmentProcessing" title="Permalink to this definition">¶</a></dt>
 <dd><p>receives a filtered gene set and preforms various enrichment analyses</p>
 <dl class="method">
 <dt id="rnalysis.enrichment.EnrichmentProcessing.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.EnrichmentProcessing.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.EnrichmentProcessing.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -195,29 +195,29 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rnalysis.enrichment.EnrichmentProcessing.__init__" title="rnalysis.enrichment.EnrichmentProcessing.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([gene_set])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rnalysis.enrichment.EnrichmentProcessing.__init__" title="rnalysis.enrichment.EnrichmentProcessing.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([gene_set, set_name])</p></td>
 <td><p>Initialize self.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.enrich_big_table.html#rnalysis.enrichment.EnrichmentProcessing.enrich_big_table" title="rnalysis.enrichment.EnrichmentProcessing.enrich_big_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enrich_big_table</span></code></a>([attributes, fdr, reps, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.difference.html#rnalysis.enrichment.EnrichmentProcessing.difference" title="rnalysis.enrichment.EnrichmentProcessing.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, inplace])</p></td>
+<td><p>Calculates the set difference of the WBGene indices from multiple EnrichmentProcessing objects         (the indices that appear in the first EnrichmentProcessing object but NOT in the other objects).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.enrich_big_table.html#rnalysis.enrichment.EnrichmentProcessing.enrich_big_table" title="rnalysis.enrichment.EnrichmentProcessing.enrich_big_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enrich_big_table</span></code></a>([attributes, fdr, reps, …])</p></td>
 <td><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from the Big Table.         P-values are calculated using a randomization test, and corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html#rnalysis.enrichment.EnrichmentProcessing.go_enrichment" title="rnalysis.enrichment.EnrichmentProcessing.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">go_enrichment</span></code></a>([mode, alpha, save_csv, fname])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html#rnalysis.enrichment.EnrichmentProcessing.go_enrichment" title="rnalysis.enrichment.EnrichmentProcessing.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">go_enrichment</span></code></a>([mode, alpha, save_csv, fname])</p></td>
 <td><p>Analyzes GO, Tissue and/or Phenotype enrichment of the given group of features.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.difference.html#rnalysis.enrichment.EnrichmentProcessing.difference" title="rnalysis.enrichment.EnrichmentProcessing.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(other[, inplace])</p></td>
-<td><p>Calculates the set difference of the WBGene indices from two EnrichmentProcessing objects         (the indices that appear in the first EnrichmentProcessing object but NOT in the second object).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.intersect.html#rnalysis.enrichment.EnrichmentProcessing.intersect" title="rnalysis.enrichment.EnrichmentProcessing.intersect"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersect</span></code></a>(other[, inplace])</p></td>
-<td><p>Calculates the set intersection of the WBGene indices from two EnrichmentProcessing objects         (the indices that exist in BOTH of the EnrichmentProcessing objects).</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.symmetric_difference.html#rnalysis.enrichment.EnrichmentProcessing.symmetric_difference" title="rnalysis.enrichment.EnrichmentProcessing.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, inplace])</p></td>
-<td><p>Calculates the set symmetric difference of the WBGene indices from two EnrichmentProcessing objects         (the indices that appear in EXACTLY ONE of the EnrichmentProcessing objects, and not both/neither).</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.union.html#rnalysis.enrichment.EnrichmentProcessing.union" title="rnalysis.enrichment.EnrichmentProcessing.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(other[, inplace])</p></td>
-<td><p>Calculates the set union of the WBGene indices from two EnrichmentProcessing objects         (the indices that exist in at least one of the EnrichmentProcessing objects).</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.intersection.html#rnalysis.enrichment.EnrichmentProcessing.intersection" title="rnalysis.enrichment.EnrichmentProcessing.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, inplace])</p></td>
+<td><p>Calculates the set intersection of the WBGene indices from multiple EnrichmentProcessing objects         (the indices that exist in ALL of the EnrichmentProcessing objects).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.save_txt.html#rnalysis.enrichment.EnrichmentProcessing.save_txt" title="rnalysis.enrichment.EnrichmentProcessing.save_txt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_txt</span></code></a>(fname)</p></td>
 <td><p>Save the list of features in the EnrichmentProcessing object under the specified filename and path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.symmetric_difference.html#rnalysis.enrichment.EnrichmentProcessing.symmetric_difference" title="rnalysis.enrichment.EnrichmentProcessing.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, inplace])</p></td>
+<td><p>Calculates the set symmetric difference of the WBGene indices from two EnrichmentProcessing objects         (the indices that appear in EXACTLY ONE of the EnrichmentProcessing objects, and not both/neither).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.union.html#rnalysis.enrichment.EnrichmentProcessing.union" title="rnalysis.enrichment.EnrichmentProcessing.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, inplace])</p></td>
+<td><p>Calculates the set union of the WBGene indices from multipple EnrichmentProcessing objects         (the indices that exist in at least one of the EnrichmentProcessing objects).</p></td>
 </tr>
 </tbody>
 </table>

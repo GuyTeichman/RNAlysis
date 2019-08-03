@@ -9,7 +9,7 @@ rnalysis.general
 
    .. autosummary::
     :toctree:
-   
+
       check_is_df
       filter_low_rpm
       is_reference_table_defined
