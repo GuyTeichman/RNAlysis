@@ -22,6 +22,34 @@ def parse_wbgene_string(string):
     return set(re.findall('WBGene[0-9]{8}', string))
 
 
+def parse_sequence_name_string(string):
+    """
+    Receives a string that contains sequence names (such as 'Y55D5A.5'). \
+    Parses the string into a set of WBGene indices. \
+    The format of a sequence name is a sequence consisting of the expression '[A-Z,0-9]{5,6}', \
+    the character '.', and a digit.
+    :type string: str
+    :param string: The string to be parsed. Can be any format of string.
+    :return:
+    a set of the WBGene indices that appear in the given string.
+    """
+    return set(re.findall('[A-Z,0-9]{5,6}\.\d', string))
+
+
+def parse_gene_name_string(string):
+    """
+    Receives a string that contains gene names (like 'daf-2' or 'lin15B'). \
+    Parses the string into a set of gene names. \
+    The format of a gene name is a sequence consisting of the expression \
+    '[a-z]{3,4}', the character '-', and the expression '[A-Z,0-9]{1,4}'.
+    :type string: str
+    :param string: The string to be parsed. Can be any format of string.
+    :return:
+    a set of the WBGene indices that appear in the given string.
+    """
+    return set(re.findall('[a-z]{3,4}-[A-Z,0-9]{1,4}', string))
+
+
 def is_reference_table_defined(settings_start_phrase=__settings_start_phrase__):
     """
     Check whether a reference table path is defined.
