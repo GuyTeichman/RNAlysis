@@ -283,3 +283,27 @@ def test_split_by_percentile():
         i.sort_index(inplace=True)
     assert np.all(truth_below == below.df)
     assert np.all(truth_above == above.df)
+
+
+def test_htcount_filter_biotype_multiple():
+    pass
+
+
+def test_htcount_filter_biotype_multiple_opposite():
+    pass
+
+
+def test_deseq_filter_biotype():
+    pass
+
+
+def test_deseq_filter_biotype_opposite():
+    pass
+
+
+def test_deseq_filter_biotype_multiple():
+    pass
+
+
+def test_deseq_filter_biotype_multiple_opposite():
+    pass

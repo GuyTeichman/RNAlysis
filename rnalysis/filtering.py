@@ -459,55 +459,74 @@ class DESeqFilter(Filter):
         if return_type == 'set':
             return index_set
         elif return_type == 'str':
-            return ",".join(index_set)
+            return "\n".join(index_set)
         else:
             raise ValueError(f"'return type' must be either 'set' or 'str', is instead '{return_type}'!")
 
-    def _set_ops(self, other, return_type, op):
-        assert isinstance(other, (DESeqFilter, set)), "'other' must be a DESeqFilter object or a set!"
-        op_indices = op(set(self.df.index), set(other.df.index)) if isinstance(other, DESeqFilter) else op(
-            set(self.df.index), other)
+    def _set_ops(self, others, return_type, op):
+        others = list(others)
+        for i, other in enumerate(others):
+            if isinstance(other, DESeqFilter):
+                others[i] = other.features_set()
+            elif isinstance(other, set):
+                pass
+            else:
+                raise TypeError("'other' must be a DESeqFilter object or a set!")
+        try:
+            op_indices = op(set(self.df.index), *others)
+        except TypeError as e:
+            if op == set.symmetric_difference:
+                raise TypeError(
+                    f"Symmetric difference can only be calculated for two objects, {len(others) + 1} were given!")
+            else:
+                raise e
         return DESeqFilter.__return_type(op_indices, return_type)
 
-    def intersection(self, other, return_type: str = 'set'):
+    def intersection(self, *others, return_type: str = 'set'):
         """
-        Returns a set/string of the WBGene indices that exist in BOTH of the DESeqFilter objects.
+        Returns a set/string of the WBGene indices that exist in ALL of the given DESeqFilter objects.
 
-        :type other: DESeqFilter or set.
-        :param other: a second DESeqFilter object or set to calculate intersection with.
+        :type others: DESeqFilter or set objects.
+        :param others: Objects to calculate intersection with.
+        :type return_type: 'set' or 'str.
         :param return_type: If 'set', returns a set of the intersecting WBGene indices. If 'str', returns a string of \
         the intersecting WBGene indices, delimited by a comma.
+        :rtype: set or str
         :return:
         a set/string of the WBGene indices that intersect between two DESeqFilter objects.
         """
-        return self._set_ops(other, return_type, set.intersection)
+        return self._set_ops(others, return_type, set.intersection)
 
-    def union(self, other, return_type: str = 'set'):
+    def union(self, *others, return_type: str = 'set'):
         """
-        Returns a set/string of the union of WBGene indices between two DESeqFilter objects \
+        Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects \
         (the indices that exist in at least one of the DESeqFilter objects).
 
-        :type other: DESeqFilter or set.
-        :param other: a second DESeqFilter object or set to calculate union with.
+        :type others: DESeqFilter or set objects.
+        :param others: Objects to calculate union with.
+        :type return_type: 'set' or 'str.
         :param return_type: If 'set', returns a set of the union WBGene indices. If 'str', returns a string of \
         the union WBGene indices, delimited by a comma.
+        :rtype: set or str
         :return:
          a set/string of the WBGene indices that exist in at least one of the DESeqFilter objects.
         """
-        return self._set_ops(other, return_type, set.union)
+        return self._set_ops(others, return_type, set.union)
 
-    def difference(self, other, return_type: str = 'set'):
+    def difference(self, *others, return_type: str = 'set'):
         """
-        Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the second.
+        Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the others.
 
-        :type other: DESeqFilter or set.
-        :param other: a second DESeqFilter object or set to calculate difference with.
+        :type others: DESeqFilter or set objects.
+        :param others: Objects to calculate difference with.
+        :type return_type: 'set' or 'str.
         :param return_type: If 'set', returns a set of the WBGene indices that exist only in the first DESeqFilter. \
         If 'str', returns a string of the WBGene indices that exist only in the first DESeqFilter, delimited by a comma.
+        :rtype: set or str
         :return:
         a set/string of the WBGene indices that that exist only in the first DESeqFilter object (set difference).
         """
-        return self._set_ops(other, return_type, set.difference)
+        return self._set_ops(others, return_type, set.difference)
 
     def symmetric_difference(self, other, return_type: str = 'set'):
         """
@@ -516,12 +535,14 @@ class DESeqFilter(Filter):
 
         :type other: DESeqFilter or set.
         :param other: a second DESeqFilter object or set to calculate symmetric difference with.
+        :type return_type: 'set' or 'str.
         :param return_type: If 'set', returns a set of the WBGene indices that exist in exactly one DESeqFilter. \
         If 'str', returns a string of the WBGene indices that exist in exactly one DESeqFilter., delimited by a comma.
+        :rtype: set or str
         :return:
         a set/string of the WBGene indices that that exist t in exactly one DESeqFilter. (set symmetric difference).
         """
-        return self._set_ops(other, return_type, set.symmetric_difference)
+        return self._set_ops([other], return_type, set.symmetric_difference)
 
 
 class HTCountFilter(Filter):
