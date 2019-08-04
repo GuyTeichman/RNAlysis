@@ -126,14 +126,25 @@ class Filter:
 
     def head(self, n=5):
         """
-        Return the first n rows of the DataFrame. See pandas.DataFrame.head documentation.
+        Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.
 
         :type n: int, default 5
         :param n: Number of rows to show.
         :return:
         returns the first n rows of the Filter object.
         """
-        return self.df.head()
+        return self.df.head(n)
+
+    def tail(self, n=5):
+        """
+        Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.
+
+        :type n: int, default 5
+        :param n: Number of rows to show.
+        :return:
+        returns the last n rows of the Filter object.
+        """
+        return self.df.tail(n)
 
     def filter_percentile(self, percentile: float, column: str, opposite: bool = False, inplace: bool = True):
         """
