@@ -86,7 +86,7 @@ class EnrichmentProcessing:
         Save the list of features in the EnrichmentProcessing object under the specified filename and path.
 
         :type fname: str, pathlib.Path
-        :param fname: full filename/path for the output file.
+        :param fname: full filename/path for the output file. Can include the '.txt' suffix but doesn't have to.
         """
         assert isinstance(fname, (str, Path)), "fname must be str or pathlib.Path!"
         if isinstance(fname, str):
