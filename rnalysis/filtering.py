@@ -28,7 +28,7 @@ class Filter:
 
     def __init__(self, fname: str):
         if isinstance(fname, tuple):
-            assert isinstance(fname[1], pd.DataFrame) and isinstance(fname[0], (str, Path))
+            assert isinstance(fname[1], (pd.DataFrame, pd.Series)) and isinstance(fname[0], (str, Path))
             self.fname = fname[0]
             self.df = fname[1]
         else:
@@ -38,7 +38,8 @@ class Filter:
         if self.df.index.has_duplicates:
             warnings.warn("Warning: this Filter object contains multiple rows with the same WBGene index.")
         self.shape = self.df.shape
-        self.columns = tuple(self.df.columns)
+        if isinstance(self.df, pd.DataFrame):
+            self.columns = tuple(self.df.columns)
 
     def __str__(self):
         return f"{type(self).__name__} of file {self.fname}: \n{self.df.__str__()}"
@@ -349,6 +350,137 @@ class Filter:
         return "\n".join(self.features_set())
 
 
+class FoldChangeFilter(Filter):
+    """
+    A class that contains a single column, representing the gene-specific fold change between two conditions.
+
+    """
+
+    def __init__(self, fname: str, numerator_name: str, denominator_name: str):
+        super().__init__(fname)
+        self.numerator = numerator_name
+        self.denominator = denominator_name
+        self.df.name = 'Fold Change'
+
+    def __copy__(self):
+        return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
+                          denominator_name=self.denominator)
+
+    def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None):
+        """
+
+        :type ref: FoldChangeFilter
+        :param ref: A reference FoldChangeFilter object which contains the fold change for every reference gene. \
+        Will be used to calculate the expected score and to perform randomizations.
+        :type alpha: float between 0 and 1
+        :param alpha: Indicates the threshold for significance (alpha).
+        :type reps: int larger than 0
+        :param reps: How many repetitions to run the randomization for. \
+        10,000 is the default. Recommended 10,000 or higher.
+        :type save_csv: bool, default False
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :rtype: pandas DataFrame
+        :return:
+        A Dataframe with the number of given genes, the observed fold change for the given group of genes, \
+        the expected fold change for a group of genes of that size and the p value for the comparison.
+        """
+
+        obs_fc = self.df.mean(axis=0)
+        ref_df = pd.DataFrame(ref.df.__copy__(deep=True))
+        exp_fc = ref_df['Fold Change'].mean(axis=0)
+        n = self.df.shape[0]
+
+        ref_df['int_index'] = [int(i[6:14]) for i in ref_df.index]
+
+        srs_int = (ref_df.set_index('int_index', inplace=False))['Fold Change']
+
+        print('Calculating...')
+        success = sum((srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
+            axis=0) >= obs_fc if obs_fc > exp_fc else srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
+            axis=0) <= obs_fc for _ in range(reps)))
+
+        pval = (success + 1) / (reps + 1)
+        res = [[n, obs_fc, exp_fc, pval]]
+
+        res_df = pd.DataFrame(res, columns=['samples', 'observed fold change', 'expected fold change', 'pval'],index=[1])
+        res_df['significant'] = pval <= alpha
+        if save_csv:
+            general.save_to_csv(res_df, fname, '')
+        print(res_df)
+
+        return res_df
+
+    def filter_abs_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
+        """
+        Filters out all features whose absolute log2 fold change is below the indicated threshold. \
+        For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than \
+        two-fold or went down less than two-fold) will be filtered out.
+
+        :param abslog2fc: The threshold absolute log2 fold change for filtering out a feature. Float or int. \
+        All features whose absolute log2 fold change is lower than log2fc will be filtered out.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
+        the function will return a new FoldChangeFilter instance and the current instance will not be affected.
+        :return:
+        If 'inplace' is False, returns a new instance of FoldChangeFilter.
+        """
+        assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
+        assert abslog2fc >= 0, "abslog2fc must be non-negative!"
+        suffix = f"_{abslog2fc}abslog2foldchange"
+        new_df = self.df[np.abs(self.df) >= abslog2fc]
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    def filter_fold_change_direction(self, direction: str = 'pos', opposite: bool = False, inplace: bool = True):
+        """
+        Filters out features according to the direction in which they changed between the two conditions.
+
+        :param direction: 'pos' or 'neg'. If 'pos', will keep only features that have positive log2foldchange. \
+        If 'neg', will keep only features that have negative log2foldchange.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
+        the function will return a new FoldChangeFilter instance and the current instance will not be affected.
+        :return:
+        If 'inplace' is False, returns a new instance of FoldChangeFilter.
+        """
+        assert isinstance(direction, str), \
+            "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
+        if direction == 'pos':
+            new_df = self.df[self.df > 1]
+            suffix = '_PositiveLog2FC'
+        elif direction == 'neg':
+            new_df = self.df[self.df < 1]
+            suffix = '_NegativeLog2FC'
+        else:
+            raise ValueError(
+                "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    def split_fold_change_direction(self):
+        """
+        Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping \
+        FoldChangeFilter objects, based on the direction of their log2foldchange. \
+        The first object will contain only features with a positive log2foldchange, \
+        the second object will contain only features with a negative log2foldchange.
+
+        :return:
+        a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change, \
+        and the other has only features with negative log2 fold change.
+        """
+        return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
+            direction='neg', inplace=False)
+
+
 class DESeqFilter(Filter):
     """
     A class that receives a DESeq output file and can filter it according to various characteristics.
@@ -418,7 +550,7 @@ class DESeqFilter(Filter):
         """
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
-        suffix = f"_changed{abslog2fc}fold"
+        suffix = f"_{abslog2fc}abslog2foldchange"
         new_df = self.df[np.abs(self.df['log2FoldChange']) >= abslog2fc]
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -563,6 +695,55 @@ class HTCountFilter(Filter):
     :param fname: name of the .csv HTCount file to be loaded.
     :type fname: str or pathlib.Path
     """
+
+    def fold_change(self, numerator, denominator, numer_name: str = 'default', denom_name: str = 'default'):
+        """
+        Calculate the fold change between the numerator condition and the denominator condition, \
+        and return it as a FoldChangeFilter object.
+
+        :type numerator: str, or list of strs
+        :param numerator: the HTCountFilter columns to be used as the numerator. If multiple arguments are given \
+        in a list, they will be averaged.
+        :type denominator: str, or list of strs
+        :param denominator: the HTCountFilter columns to be used as the denominator. If multiple arguments are given \
+        in a list, they will be averaged.
+        :type numer_name: str or 'default'
+        :param numer_name: name to give the numerator condition. If 'default', the name will be generarated \
+        automatically from the names of numerator columns.
+        :type denom_name: str or 'default'
+        :param denom_name: name to give the denominator condition. If 'default', the name will be generarated \
+        automatically from the names of denominator columns.
+        :rtype: FoldChangeFilter
+        :return:
+        A new instance of FoldChangeFilter
+        """
+        assert isinstance(numerator, (str, list, tuple)), "numerator must be a string or a list!"
+        assert isinstance(denominator, (str, list, tuple)), "denominator must be a string or a list!"
+        assert isinstance(numer_name, str), "numerator name must be a string or 'default'!"
+        assert isinstance(denom_name, str), "denominator name must be a string or 'default'!"
+        if isinstance(numerator, str):
+            numerator = [numerator]
+        elif isinstance(numerator, tuple):
+            numerator = list(numerator)
+        if isinstance(denominator, str):
+            denominator = [denominator]
+        elif isinstance(denominator, tuple):
+            denominator = list(denominator)
+        for num in numerator:
+            assert num in self.df, f"all numerator arguments must be columns in the HTCountFilter object! ({num})"
+
+        for den in denominator:
+            assert den in self.df, f"all denominator arguments must be columns in the HTCountFilter object! ({den})"
+        srs = (self.df[numerator].mean(axis=1)+1) / (self.df[denominator].mean(axis=1)+1)
+        numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
+        denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
+        new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}{'_fold_change'}{self.fname.suffix}")
+
+        fcfilt = FoldChangeFilter((new_fname, srs), numerator_name=numer_name, denominator_name=denom_name)
+
+        return fcfilt
+
+        pass
 
     def pairplot(self, sample_list: list = 'all', log2: bool = False):
         """
