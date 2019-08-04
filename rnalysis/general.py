@@ -101,22 +101,27 @@ def read_reference_table_path():
         return f.readline()[len(settings_start_phrase)::]
 
 
-def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True):
+def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, squeeze=False):
     """
     loads a csv df into a pandas dataframe.
 
+    :type filename: str or pathlib.Path
     :param filename: name of the csv file to be loaded
+    :type idx_col: int, default None
     :param idx_col: number of column to be used as index. default is None, meaning no column will be used as index.
+    :type drop_gene_names: bool, default True
     :param drop_gene_names: bool. If True, tries to drop the 'genes' column from the DataFrame (useful for filtering).
+    :type squeeze: bool, default False
+    :param squeeze: If the parsed data only contains one column then return a Series.
     :return: a pandas dataframe of the csv file
     """
     assert isinstance(filename, (str, Path))
     # with open(filename) as f:
     encoding = 'ISO-8859-1'
     if idx_col is not None:
-        df = pd.read_csv(filename, index_col=idx_col, encoding=encoding)
+        df = pd.read_csv(filename, index_col=idx_col, encoding=encoding, squeeze=squeeze)
     else:
-        df = pd.read_csv(filename, encoding=encoding)
+        df = pd.read_csv(filename, encoding=encoding, squeeze=squeeze)
     if drop_gene_names:
         if 'genes' in df:
             df.drop('genes', axis=1, inplace=True)
