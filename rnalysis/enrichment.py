@@ -339,17 +339,18 @@ class EnrichmentProcessing:
                 srs = df[attribute]
                 srs_int = (df.set_index('int_index', inplace=False))[attribute]
                 obs_srs = srs.loc[self.gene_set]
+                n = obs_srs.shape[0]
                 expected_fraction = fraction(srs)
                 observed_fraction = fraction(obs_srs)
                 log2_fold_enrichment = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
-                success = sum((fraction(srs_int.loc[np.random.choice(srs_int.index, obs_srs.shape[0],
+                success = sum((fraction(srs_int.loc[np.random.choice(srs_int.index, n,
                                                                      replace=False)]) >= observed_fraction
                                if log2_fold_enrichment >= 0 else fraction(
                     srs_int.loc[
-                        np.random.choice(srs_int.index, obs_srs.shape[0], replace=False)]) <= observed_fraction
+                        np.random.choice(srs_int.index, n, replace=False)]) <= observed_fraction
                                for _ in range(reps)))
                 pval = (success + 1) / (reps + 1)
-                n = obs_srs.shape[0]
+
                 enriched_list.append(
                     (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval))
 
