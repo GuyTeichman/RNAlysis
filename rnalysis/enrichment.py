@@ -89,6 +89,12 @@ class EnrichmentProcessing:
         :param fname: full filename/path for the output file.
         """
         assert isinstance(fname, (str, Path)), "fname must be str or pathlib.Path!"
+        if isinstance(fname, str):
+            if not fname.endswith('.txt'):
+                fname = fname + '.txt'
+        elif isinstance(fname, Path):
+            if not fname.suffix == '.txt':
+                fname = Path(f"{str(fname.parent)}{fname.name}.txt")
         with open(fname, 'w') as f:
             for gene in self.gene_set:
                 f.write(gene + '\n')
