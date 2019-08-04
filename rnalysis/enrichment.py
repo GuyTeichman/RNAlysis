@@ -271,14 +271,18 @@ class EnrichmentProcessing:
         and if log2(enrichment score) is negative then depletion is assumed.
 
         :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
-        :param fdr: float. Indicates the FDR threshold for significance.
+        :type fdr: float between 0 and 1
+        :param fdr: Indicates the FDR threshold for significance.
+        :type reps: int larger than 0
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
         :param big_table_pth: the path of the Big Table file to be used as reference.
         :param biotype: the biotype you want your reference to have. 'all' will include all biotypes, \
         'protein_coding' will include only protein-coding genes in the reference, etc.
-        :param save_csv: bool. If True, will save the results to a .csv file, under the name specified in 'fname'.
-        :param fname: str/Path. The full path and name of the file to which to save the results. For example: \
+        :type save_csv: bool, default False
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path
+        :param fname: The full path and name of the file to which to save the results. For example: \
         r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :return:
         a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
