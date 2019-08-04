@@ -355,8 +355,8 @@ class EnrichmentProcessing:
 
             enriched_df = pd.DataFrame(enriched_list,
                                        columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
-                                                'pvals'])
-            significant, padj = multitest.fdrcorrection(enriched_df['pvals'].values, alpha=fdr)
+                                                'pval'])
+            significant, padj = multitest.fdrcorrection(enriched_df['pval'].values, alpha=fdr)
             enriched_df['padj'] = padj
             enriched_df['significant'] = significant
             enriched_df.set_index('name', inplace=True)
