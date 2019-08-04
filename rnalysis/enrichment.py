@@ -343,12 +343,14 @@ class EnrichmentProcessing:
                 expected_fraction = fraction(srs)
                 observed_fraction = fraction(obs_srs)
                 log2_fold_enrichment = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
-                success = sum((fraction(srs_int.loc[np.random.choice(srs_int.index, n,
-                                                                     replace=False)]) >= observed_fraction
-                               if log2_fold_enrichment >= 0 else fraction(
-                    srs_int.loc[
-                        np.random.choice(srs_int.index, n, replace=False)]) <= observed_fraction
-                               for _ in range(reps)))
+                if log2_fold_enrichment >= 0:
+                    success = sum(
+                        (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) >= observed_fraction
+                         for _ in range(reps)))
+                else:
+                    success = sum(
+                        (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) <= observed_fraction
+                         for _ in range(reps)))
                 pval = (success + 1) / (reps + 1)
 
                 enriched_list.append(

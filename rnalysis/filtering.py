@@ -34,7 +34,7 @@ class Filter:
         else:
             assert isinstance(fname, (str, Path))
             self.fname = Path(fname)
-            self.df = general.load_csv(fname, 0)
+            self.df = general.load_csv(fname, 0, squeeze=True)
         if self.df.index.has_duplicates:
             warnings.warn("Warning: this Filter object contains multiple rows with the same WBGene index.")
         self.shape = self.df.shape
@@ -390,7 +390,7 @@ class FoldChangeFilter(Filter):
 
         obs_fc = self.df.mean(axis=0)
         ref_df = pd.DataFrame(ref.df.__copy__(deep=True))
-        exp_fc = ref_df['Fold Change'].mean(axis=0)
+        # exp_fc = ref_df['Fold Change'].mean(axis=0)
         n = self.df.shape[0]
 
         ref_df['int_index'] = [int(i[6:14]) for i in ref_df.index]
@@ -398,14 +398,22 @@ class FoldChangeFilter(Filter):
         srs_int = (ref_df.set_index('int_index', inplace=False))['Fold Change']
 
         print('Calculating...')
-        success = sum((srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
-            axis=0) >= obs_fc if obs_fc > exp_fc else srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
-            axis=0) <= obs_fc for _ in range(reps)))
+        rand = [srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(axis=0) for _ in range(reps)]
+        exp_fc = np.mean(rand)
+        if obs_fc > exp_fc:
+            success = sum(r >= obs_fc for r in rand)
+        else:
+            success = sum(r <= obs_fc for r in rand)
+
+        # success = sum((srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
+        #     axis=0) >= obs_fc if obs_fc > exp_fc else srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
+        #     axis=0) <= obs_fc for _ in range(reps)))
 
         pval = (success + 1) / (reps + 1)
         res = [[n, obs_fc, exp_fc, pval]]
 
-        res_df = pd.DataFrame(res, columns=['samples', 'observed fold change', 'expected fold change', 'pval'],index=[1])
+        res_df = pd.DataFrame(res, columns=['samples', 'observed fold change', 'expected fold change', 'pval'],
+                              index=[1])
         res_df['significant'] = pval <= alpha
         if save_csv:
             general.save_to_csv(res_df, fname, '')
@@ -734,7 +742,7 @@ class HTCountFilter(Filter):
 
         for den in denominator:
             assert den in self.df, f"all denominator arguments must be columns in the HTCountFilter object! ({den})"
-        srs = (self.df[numerator].mean(axis=1)+1) / (self.df[denominator].mean(axis=1)+1)
+        srs = (self.df[numerator].mean(axis=1) + 1) / (self.df[denominator].mean(axis=1) + 1)
         numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
         denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
         new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}{'_fold_change'}{self.fname.suffix}")
