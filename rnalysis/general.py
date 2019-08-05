@@ -7,7 +7,33 @@ import pandas as pd
 from pathlib import Path
 import os
 import re
+import time
+import subprocess
 from rnalysis import __settings_start_phrase__
+
+
+def start_ipcluster(n_engines: int = 'default'):
+    """
+    Start an ipyparallel ipcluster in order to perform parallelized computation.
+
+    :type n_engines: int or 'default'
+    :param n_engines: if 'default', will initiate the default amount of engines. \
+    Otherwise, will initiate n_engines engines.
+
+    """
+    if n_engines == 'default':
+        subprocess.Popen("ipcluster start")
+        time.sleep(30)
+    else:
+        subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)])
+
+
+def stop_ipcluster():
+    """
+    Stop a previously started ipyparallel ipcluster.
+
+    """
+    subprocess.Popen("ipcluster stop")
 
 
 def parse_wbgene_string(string):
