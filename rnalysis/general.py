@@ -23,7 +23,6 @@ def start_ipcluster(n_engines: int = 'default'):
     """
     if n_engines == 'default':
         subprocess.Popen("ipcluster start")
-        time.sleep(30)
     else:
         subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)])
 
@@ -34,6 +33,21 @@ def stop_ipcluster():
 
     """
     subprocess.Popen("ipcluster stop")
+
+
+def start_parallel_session(n_engines: int = 'default'):
+    """
+    Stop previous ipyparallel ipcluster and start a new one in order to perform parallelized computation.
+
+    :type n_engines: int or 'default'
+    :param n_engines: if 'default', will initiate the default amount of engines. \
+    Otherwise, will initiate n_engines engines.
+
+    """
+    stop_ipcluster()
+    time.sleep(2)
+    start_ipcluster(n_engines)
+    time.sleep(30)
 
 
 def parse_wbgene_string(string):
