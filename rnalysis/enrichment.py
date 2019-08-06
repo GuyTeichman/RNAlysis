@@ -269,7 +269,7 @@ class EnrichmentProcessing:
 
     @staticmethod
     def _single_enrichment(gene_set, attributes, big_table, fraction, reps):
-        attributes=[attributes] if not isinstance(attributes,list) else attributes
+        attributes = [attributes] if not isinstance(attributes, list) else attributes
         for attribute in attributes:
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             df = big_table[[attribute, 'int_index']]
@@ -365,13 +365,14 @@ class EnrichmentProcessing:
         dview = client[:]
         dview.execute("""import numpy as np
               import pandas as pd""")
-        k=len(attributes)
-        gene_set_rep = list(repeat(self.gene_set,k))
-        big_table_rep = list(repeat(big_table,k))
-        fraction_rep = list(repeat(fraction,k))
-        reps_rep = list(repeat(reps,k))
+        k = len(attributes)
+        gene_set_rep = list(repeat(self.gene_set, k))
+        big_table_rep = list(repeat(big_table, k))
+        fraction_rep = list(repeat(fraction, k))
+        reps_rep = list(repeat(reps, k))
 
-        res = dview.map(EnrichmentProcessing._single_enrichment,gene_set_rep,attributes,big_table_rep,fraction_rep,reps_rep)
+        res = dview.map(EnrichmentProcessing._single_enrichment, gene_set_rep, attributes, big_table_rep, fraction_rep,
+                        reps_rep)
         enriched_list = res.result()
         enriched_df = pd.DataFrame(enriched_list,
                                    columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
@@ -511,9 +512,11 @@ class EnrichmentProcessing:
         enrichment_scores = df['log2_fold_enrichment']
         enrichment_pvalue = df['padj']
         abs_enrichment_scores = [abs(i) for i in enrichment_scores]
-        data_color = [float(i / max(abs_enrichment_scores)) for i in enrichment_scores]
+        data_color = [i / max(abs_enrichment_scores) for i in enrichment_scores]
+        data_color_norm = [i - min(data_color) for i in data_color]
+        data_color_norm_256 = [int(255 * (i/max(data_color_norm))) for i in data_color_norm]
         my_cmap = plt.cm.get_cmap('coolwarm')
-        colors = my_cmap(data_color)
+        colors = my_cmap(data_color_norm_256)
         fig, ax = plt.subplots()
         # ax.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
         bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors)
