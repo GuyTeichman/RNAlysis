@@ -386,7 +386,7 @@ WBGene12345678”.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
-<dd><p>Return the first n rows of the DataFrame. See pandas.DataFrame.head documentation.</p>
+<dd><p>Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
@@ -501,6 +501,21 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">tail</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
+<dd><p>Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>returns the last n rows of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
 <dd><p>Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p>
 <dl class="field-list simple">
@@ -517,6 +532,295 @@ WBGene12345678”.</p>
 <dd class="field-odd"><p>a set/string of the WBGene indices that exist in at least one of the DESeqFilter objects.</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></p>
+<p>A class that contains a single column, representing the gene-specific fold change between two conditions.</p>
+<dl class="method">
+<dt>
+<code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]</em><span class="sig-paren">)</span></dt>
+<dd><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.         For more information see the documentation of pandas.DataFrame.describe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>percentiles</strong> (<em>list-like of numbers</em><em>, </em><em>optional</em>) – The percentiles to include in the output.         All should fall between 0 and 1.         The default is [.25, .5, .75], which returns the 25th, 50th, and 75th percentiles.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>Summary statistics of the dataset.
+:rtype: Series or DataFrame</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">features_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
+<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A set of WBGene names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><blockquote>
+<div><p>Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which         were not filtered out by previously-used filter methods).         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned string ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>A string of WBGene indices separated by newlines (</p>
+</div></blockquote>
+<p>).         For example, “WBGene00000001
+WBGene00000003
+WBGene12345678”.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">filter_abs_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>abslog2fc</strong> – The threshold absolute log2 fold change for filtering out a feature. Float or int.         All features whose absolute log2 fold change is lower than log2fc will be filtered out.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current FoldChangeFilter object. If False,         the function will return a new FoldChangeFilter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>If ‘inplace’ is False, returns a new instance of FoldChangeFilter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters out all features that do not match the indicated biotype.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
+<li><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is the BigTable.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If ‘inplace’ is False, returns a new instance of Filter object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">filter_by_bigtable_group</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">mode='union'</em>, <em class="sig-param">inclusion: bool = True</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes.         When multiple attributes are given, filtering can be done in ‘union’ mode         (where features that belong to at least one attribute are not filtered out), or in ‘intersection’ mode         (where only features that belong to ALL attributes are not filtered out).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – ‘union’ or ‘intersection’. If ‘union’, filters out every feature that does not match at least one         of the indicated Big Table attributes. If ‘intersection’,         filters out every feature that does not match all of the indicated Big Table attributes.</p></li>
+<li><p><strong>inclusion</strong> – boolean. If True (default), features will be filtered by inclusion in the specified criteria         (meaning features that  belong to the attributes are kept         and features that don’t belong to the attributes are filtered out).         If False, features will be filtered out by exclusion from the specified criteria         (meaning features that DON’T belong to the attributes         are kept, and features that do belong to the attributes are filtered out).</p></li>
+<li><p><strong>ref</strong> – filename/path of the Big Table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>If ‘inplace’ is False, returns a new and filtered instance of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">filter_fold_change_direction</code><span class="sig-paren">(</span><em class="sig-param">direction: str = 'pos'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters out features according to the direction in which they changed between the two conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> – ‘pos’ or ‘neg’. If ‘pos’, will keep only features that have positive log2foldchange.         If ‘neg’, will keep only features that have negative log2foldchange.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current FoldChangeFilter object. If False,         the function will return a new FoldChangeFilter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>If ‘inplace’ is False, returns a new instance of FoldChangeFilter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">filter_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Removes all entries above the specified percentile in the specified column.         For example, if the column were ‘pvalue’ and the percentile was 0.5, then all features whose pvalue is above         the median pvalue will be filtered out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
+<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>If inplace is False, returns a new and filtered instance of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
+<dd><p>Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>returns the first n rows of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">randomization_test</code><span class="sig-paren">(</span><em class="sig-param">ref</em>, <em class="sig-param">alpha: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">type ref</dt>
+<dd class="field-odd"><p>FoldChangeFilter</p>
+</dd>
+<dt class="field-even">param ref</dt>
+<dd class="field-even"><p>A reference FoldChangeFilter object which contains the fold change for every reference gene.         Will be used to calculate the expected score and to perform randomizations.</p>
+</dd>
+<dt class="field-odd">type alpha</dt>
+<dd class="field-odd"><p>float between 0 and 1</p>
+</dd>
+<dt class="field-even">param alpha</dt>
+<dd class="field-even"><p>Indicates the threshold for significance (alpha).</p>
+</dd>
+<dt class="field-odd">type reps</dt>
+<dd class="field-odd"><p>int larger than 0</p>
+</dd>
+<dt class="field-even">param reps</dt>
+<dd class="field-even"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
+</dd>
+<dt class="field-odd">type save_csv</dt>
+<dd class="field-odd"><p>bool, default False</p>
+</dd>
+<dt class="field-even">param save_csv</dt>
+<dd class="field-even"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+</dd>
+<dt class="field-odd">type fname</dt>
+<dd class="field-odd"><p>str or pathlib.Path</p>
+</dd>
+<dt class="field-even">param fname</dt>
+<dd class="field-even"><p>The full path and name of the file to which to save the results. For example:         r’C:dir</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl>
+<dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p>pandas DataFrame</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+<p>A Dataframe with the number of given genes, the observed fold change for the given group of genes,         the expected fold change for a group of genes of that size and the p value for the comparison.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">save_csv</code><span class="sig-paren">(</span><em class="sig-param">alt_filename=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Saves the current filtered data to a .csv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>alt_filename</strong> – If None, file name will be generated automatically according to the filtering methods used.         if string, will be the name of the saved file. Example input: ‘myfilename’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">split_by_bigtable_group</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>ref</strong> – filename/path of the Big Table to be used as reference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
+<li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>a list of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping         FoldChangeFilter objects, based on the direction of their log2foldchange.         The first object will contain only features with a positive log2foldchange,         the second object will contain only features with a negative log2foldchange.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">tail</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
+<dd><p>Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>returns the last n rows of the Filter object.</p>
 </dd></dl>
 
 </dd></dl>
@@ -680,6 +984,29 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">fold_change</code><span class="sig-paren">(</span><em class="sig-param">numerator</em>, <em class="sig-param">denominator</em>, <em class="sig-param">numer_name: str = 'default'</em>, <em class="sig-param">denom_name: str = 'default'</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate the fold change between the numerator condition and the denominator condition,         and return it as a FoldChangeFilter object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>numerator</strong> (<em>str</em><em>, or </em><em>list of strs</em>) – the HTCountFilter columns to be used as the numerator. If multiple arguments are given         in a list, they will be averaged.</p></li>
+<li><p><strong>denominator</strong> (<em>str</em><em>, or </em><em>list of strs</em>) – the HTCountFilter columns to be used as the denominator. If multiple arguments are given         in a list, they will be averaged.</p></li>
+<li><p><strong>numer_name</strong> (<em>str</em><em> or </em><em>'default'</em>) – name to give the numerator condition. If ‘default’, the name will be generarated         automatically from the names of numerator columns.</p></li>
+<li><p><strong>denom_name</strong> (<em>str</em><em> or </em><em>'default'</em>) – name to give the denominator condition. If ‘default’, the name will be generarated         automatically from the names of denominator columns.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">FoldChangeFilter</a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A new instance of FoldChangeFilter</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <em class="property">static </em><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">save_csv: bool = True</em>, <em class="sig-param">norm_to_rpm: bool = False</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em><span class="sig-paren">)</span></dt>
 <dd><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single HTCountFilter table.         Can also save the count data table and the uncounted data table to .csv files, and normalize the HTCountFilter         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data,         regardless if the HTCountFilter table was normalized or not.</p>
 <dl class="field-list simple">
@@ -702,7 +1029,7 @@ WBGene12345678”.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
-<dd><p>Return the first n rows of the DataFrame. See pandas.DataFrame.head documentation.</p>
+<dd><p>Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
@@ -883,6 +1210,21 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">tail</code><span class="sig-paren">(</span><em class="sig-param">n=5</em><span class="sig-paren">)</span></dt>
+<dd><p>Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>returns the last n rows of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">violin_plot</code><span class="sig-paren">(</span><em class="sig-param">samples='all'</em><span class="sig-paren">)</span></dt>
 <dd><p>Generates a violin plot of the specified samples in the HTCountFilter object.         Can plot both single samples and average multiple replicates.         It is recommended to use this function on normalized values and not on absolute read values.         Box inside the violin plot indicates 25% and 75% percentiles, and the white dot indicates the median.</p>
 <dl class="field-list simple">
@@ -938,8 +1280,14 @@ WBGene12345678”.</p>
 <dt class="field-odd">param attributes</dt>
 <dd class="field-odd"><p>An iterable of attribute names (strings). If None, a manual input prompt will be raised.</p>
 </dd>
-<dt class="field-even">param fdr</dt>
-<dd class="field-even"><p>float. Indicates the FDR threshold for significance.</p>
+<dt class="field-even">type fdr</dt>
+<dd class="field-even"><p>float between 0 and 1</p>
+</dd>
+<dt class="field-odd">param fdr</dt>
+<dd class="field-odd"><p>Indicates the FDR threshold for significance.</p>
+</dd>
+<dt class="field-even">type reps</dt>
+<dd class="field-even"><p>int larger than 0</p>
 </dd>
 <dt class="field-odd">param reps</dt>
 <dd class="field-odd"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
@@ -950,11 +1298,17 @@ WBGene12345678”.</p>
 <dt class="field-odd">param biotype</dt>
 <dd class="field-odd"><p>the biotype you want your reference to have. ‘all’ will include all biotypes,         ‘protein_coding’ will include only protein-coding genes in the reference, etc.</p>
 </dd>
-<dt class="field-even">param save_csv</dt>
-<dd class="field-even"><p>bool. If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+<dt class="field-even">type save_csv</dt>
+<dd class="field-even"><p>bool, default False</p>
+</dd>
+<dt class="field-odd">param save_csv</dt>
+<dd class="field-odd"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+</dd>
+<dt class="field-even">type fname</dt>
+<dd class="field-even"><p>str or pathlib.Path</p>
 </dd>
 <dt class="field-odd">param fname</dt>
-<dd class="field-odd"><p>str/Path. The full path and name of the file to which to save the results. For example:         r’C:dir</p>
+<dd class="field-odd"><p>The full path and name of the file to which to save the results. For example:         r’C:dir</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -968,6 +1322,62 @@ and ‘pvalue’.</p>
 <div class="figure align-center" id="id6">
 <a class="reference internal image-reference" href="_images/bigtable_en.png"><img alt="_images/bigtable_en.png" src="_images/bigtable_en.png" style="width: 768.0px; height: 370.8px;" /></a>
 <p class="caption"><span class="caption-text">Example plot of big table enrichment</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">enrich_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">big_table_pth: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Calculates enrichment scores, p-values and q-values        for enrichment and depletion of selected attributes from the Big Table.        Runs in parallel processing, making is generally faster than enrich_big_table.        To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster().        P-values are calculated using a randomization test, and corrected for multiple comparisons using        the Benjamini–Hochberg step-up procedure (original FDR method).        Enrichment/depletion is determined automatically by the calculated enrichment score:        if log2(enrichment score) is positive then enrichment is assumed,        and if log2(enrichment score) is negative then depletion is assumed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param attributes</dt>
+<dd class="field-odd"><p>An iterable of attribute names (strings). If None, a manual input prompt will be raised.</p>
+</dd>
+<dt class="field-even">type fdr</dt>
+<dd class="field-even"><p>float between 0 and 1</p>
+</dd>
+<dt class="field-odd">param fdr</dt>
+<dd class="field-odd"><p>Indicates the FDR threshold for significance.</p>
+</dd>
+<dt class="field-even">type reps</dt>
+<dd class="field-even"><p>int larger than 0</p>
+</dd>
+<dt class="field-odd">param reps</dt>
+<dd class="field-odd"><p>How many repetitions to run the randomization for.        10,000 is the default. Recommended 10,000 or higher.</p>
+</dd>
+<dt class="field-even">param big_table_pth</dt>
+<dd class="field-even"><p>the path of the Big Table file to be used as reference.</p>
+</dd>
+<dt class="field-odd">param biotype</dt>
+<dd class="field-odd"><p>the biotype you want your reference to have. ‘all’ will include all biotypes,        ‘protein_coding’ will include only protein-coding genes in the reference, etc.</p>
+</dd>
+<dt class="field-even">type save_csv</dt>
+<dd class="field-even"><p>bool, default False</p>
+</dd>
+<dt class="field-odd">param save_csv</dt>
+<dd class="field-odd"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+</dd>
+<dt class="field-even">type fname</dt>
+<dd class="field-even"><p>str or pathlib.Path</p>
+</dd>
+<dt class="field-odd">param fname</dt>
+<dd class="field-odd"><p>The full path and name of the file to which to save the results. For example:        r’C:dir</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl>
+<dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
+and ‘pvalue’.</p>
+<div class="figure align-center" id="id7">
+<a class="reference internal image-reference" href="_images/bigtable_en.png"><img alt="_images/bigtable_en.png" src="_images/bigtable_en.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of big table enrichment</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
 </div>
 </dd>
 </dl>
@@ -991,13 +1401,13 @@ and ‘pvalue’.</p>
 </dd>
 </dl>
 <p>a DataFrame which contains the significant enrichmenet terms</p>
-<div class="figure align-center" id="id7">
-<a class="reference internal image-reference" href="_images/go_en.png"><img alt="_images/go_en.png" src="_images/go_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of GO enrichment</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
-</div>
 <div class="figure align-center" id="id8">
+<a class="reference internal image-reference" href="_images/go_en.png"><img alt="_images/go_en.png" src="_images/go_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of GO enrichment</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id9">
 <a class="reference internal image-reference" href="_images/tissue_en.png"><img alt="_images/tissue_en.png" src="_images/tissue_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of Tissue enrichment</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of Tissue enrichment</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
@@ -1025,7 +1435,7 @@ and ‘pvalue’.</p>
 <dd><p>Save the list of features in the EnrichmentProcessing object under the specified filename and path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em>, </em><em>pathlib.Path</em>) – full filename/path for the output file.</p>
+<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em>, </em><em>pathlib.Path</em>) – full filename/path for the output file. Can include the ‘.txt’ suffix but doesn’t have to.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1123,14 +1533,15 @@ and ‘pvalue’.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_gene_names: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_gene_names: bool = True</em>, <em class="sig-param">squeeze=False</em><span class="sig-paren">)</span></dt>
 <dd><p>loads a csv df into a pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> – name of the csv file to be loaded</p></li>
-<li><p><strong>idx_col</strong> – number of column to be used as index. default is None, meaning no column will be used as index.</p></li>
-<li><p><strong>drop_gene_names</strong> – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
+<li><p><strong>filename</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the csv file to be loaded</p></li>
+<li><p><strong>idx_col</strong> (<em>int</em><em>, </em><em>default None</em>) – number of column to be used as index. default is None, meaning no column will be used as index.</p></li>
+<li><p><strong>drop_gene_names</strong> (<em>bool</em><em>, </em><em>default True</em>) – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
+<li><p><strong>squeeze</strong> (<em>bool</em><em>, </em><em>default False</em>) – If the parsed data only contains one column then return a Series.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1251,6 +1662,23 @@ a set of the WBGene indices that appear in the given string.</p>
 <dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The full path and name of the .csv reference file.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">start_ipcluster</code><span class="sig-paren">(</span><em class="sig-param">n_engines: int = 'default'</em><span class="sig-paren">)</span></dt>
+<dd><p>Start an ipyparallel ipcluster in order to perform parallelized computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_engines</strong> (<em>int</em><em> or </em><em>'default'</em>) – if ‘default’, will initiate the default amount of engines.     Otherwise, will initiate n_engines engines.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">stop_ipcluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Stop a previously started ipyparallel ipcluster.</p>
 </dd></dl>
 
 </div>

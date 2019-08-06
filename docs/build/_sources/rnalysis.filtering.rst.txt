@@ -16,6 +16,7 @@ rnalysis.filtering
    
       DESeqFilter
       HTCountFilter
+      FoldChangeFilter
    
    
 

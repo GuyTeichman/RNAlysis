@@ -34,7 +34,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.enrichment.EnrichmentProcessing.go_enrichment" href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html" />
+    <link rel="prev" title="rnalysis.enrichment.EnrichmentProcessing.difference" href="rnalysis.enrichment.EnrichmentProcessing.difference.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,9 +89,22 @@
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html">rnalysis.enrichment.EnrichmentProcessing</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.__init__.html">rnalysis.enrichment.EnrichmentProcessing.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.difference.html">rnalysis.enrichment.EnrichmentProcessing.difference</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.EnrichmentProcessing.enrich_big_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html">rnalysis.enrichment.EnrichmentProcessing.go_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.intersection.html">rnalysis.enrichment.EnrichmentProcessing.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.save_txt.html">rnalysis.enrichment.EnrichmentProcessing.save_txt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.symmetric_difference.html">rnalysis.enrichment.EnrichmentProcessing.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.union.html">rnalysis.enrichment.EnrichmentProcessing.union</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
@@ -140,6 +155,10 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
+          <li><a href="rnalysis.enrichment.html">rnalysis.enrichment</a> &raquo;</li>
+        
+          <li><a href="rnalysis.enrichment.EnrichmentProcessing.html">rnalysis.enrichment.EnrichmentProcessing</a> &raquo;</li>
+        
       <li>rnalysis.enrichment.EnrichmentProcessing.enrich_big_table</li>
     
     
@@ -170,8 +189,14 @@
 <dt class="field-odd">param attributes</dt>
 <dd class="field-odd"><p>An iterable of attribute names (strings). If None, a manual input prompt will be raised.</p>
 </dd>
-<dt class="field-even">param fdr</dt>
-<dd class="field-even"><p>float. Indicates the FDR threshold for significance.</p>
+<dt class="field-even">type fdr</dt>
+<dd class="field-even"><p>float between 0 and 1</p>
+</dd>
+<dt class="field-odd">param fdr</dt>
+<dd class="field-odd"><p>Indicates the FDR threshold for significance.</p>
+</dd>
+<dt class="field-even">type reps</dt>
+<dd class="field-even"><p>int larger than 0</p>
 </dd>
 <dt class="field-odd">param reps</dt>
 <dd class="field-odd"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
@@ -182,11 +207,17 @@
 <dt class="field-odd">param biotype</dt>
 <dd class="field-odd"><p>the biotype you want your reference to have. ‘all’ will include all biotypes,         ‘protein_coding’ will include only protein-coding genes in the reference, etc.</p>
 </dd>
-<dt class="field-even">param save_csv</dt>
-<dd class="field-even"><p>bool. If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+<dt class="field-even">type save_csv</dt>
+<dd class="field-even"><p>bool, default False</p>
+</dd>
+<dt class="field-odd">param save_csv</dt>
+<dd class="field-odd"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+</dd>
+<dt class="field-even">type fname</dt>
+<dd class="field-even"><p>str or pathlib.Path</p>
 </dd>
 <dt class="field-odd">param fname</dt>
-<dd class="field-odd"><p>str/Path. The full path and name of the file to which to save the results. For example:         r’C:dir</p>
+<dd class="field-odd"><p>The full path and name of the file to which to save the results. For example:         r’C:dir</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -212,6 +243,15 @@ and ‘pvalue’.</p>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.EnrichmentProcessing.go_enrichment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rnalysis.enrichment.EnrichmentProcessing.difference.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.EnrichmentProcessing.difference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
