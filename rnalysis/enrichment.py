@@ -517,9 +517,9 @@ class EnrichmentProcessing:
         enrichment_scores = df['log2_fold_enrichment']
         enrichment_pvalue = df['padj']
         abs_enrichment_scores = [abs(i) for i in enrichment_scores]
-        data_color = [i / max(abs_enrichment_scores) for i in enrichment_scores]
-        data_color_norm = [i - min(data_color) for i in data_color]
-        data_color_norm_256 = [int(255 * (i / max(data_color_norm))) for i in data_color_norm]
+        data_color = [(i / 3) * 127.5 for i in enrichment_scores]
+        data_color_norm = [i + 127.5 for i in data_color]
+        data_color_norm_256 = [int((i)) for i in data_color_norm]
         my_cmap = plt.cm.get_cmap('coolwarm')
         colors = my_cmap(data_color_norm_256)
         fig, ax = plt.subplots()
@@ -528,7 +528,7 @@ class EnrichmentProcessing:
         bar.tick_labels = enrichment_names
         # sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*ax.get_ylim()))
         absmax = max([abs(i) for i in ax.get_ylim()])
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(absmax, -absmax))
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(3, -3))
         sm.set_array([])
         cbar = fig.colorbar(sm)
         cbar.set_label('', rotation=90, labelpad=25, fontsize=26)
