@@ -79,7 +79,7 @@ class EnrichmentProcessing:
     @staticmethod
     def _get_ref_path(ref):
         if ref == 'predefined':
-            return general.read_ref_path_table_path()
+            return general.read_reference_table_path()
         else:
             return ref
 
