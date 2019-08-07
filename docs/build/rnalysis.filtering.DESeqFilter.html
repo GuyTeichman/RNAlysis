@@ -97,7 +97,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html">rnalysis.filtering.DESeqFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_set.html">rnalysis.filtering.DESeqFilter.features_set</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_string.html">rnalysis.filtering.DESeqFilter.features_string</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_fold_change.html">rnalysis.filtering.DESeqFilter.filter_abs_fold_change</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html">rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html">rnalysis.filtering.DESeqFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_bigtable_group.html">rnalysis.filtering.DESeqFilter.filter_by_bigtable_group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html">rnalysis.filtering.DESeqFilter.filter_fold_change_direction</a></li>
@@ -229,7 +229,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_string.html#rnalysis.filtering.DESeqFilter.features_string" title="rnalysis.filtering.DESeqFilter.features_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_string</span></code></a>()</p></td>
 <td><p>Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which         were not filtered out by previously-used filter methods).         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned string ONLY ONCE.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_fold_change.html#rnalysis.filtering.DESeqFilter.filter_abs_fold_change" title="rnalysis.filtering.DESeqFilter.filter_abs_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_abs_fold_change</span></code></a>([abslog2fc, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_abs_log2_fold_change</span></code></a>([abslog2fc, …])</p></td>
 <td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html#rnalysis.filtering.DESeqFilter.filter_biotype" title="rnalysis.filtering.DESeqFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_biotype</span></code></a>([biotype, ref, opposite, inplace])</p></td>

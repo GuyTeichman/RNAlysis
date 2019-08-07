@@ -248,7 +248,7 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_abs_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_abs_log2_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -587,8 +587,8 @@ WBGene12345678”.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_abs_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
+<code class="sig-name descname">filter_abs_log2_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 1.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

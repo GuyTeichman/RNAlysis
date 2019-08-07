@@ -17,7 +17,7 @@ rnalysis.filtering.FoldChangeFilter
       ~FoldChangeFilter.describe
       ~FoldChangeFilter.features_set
       ~FoldChangeFilter.features_string
-      ~FoldChangeFilter.filter_abs_fold_change
+      ~FoldChangeFilter.filter_abs_log2_fold_change
       ~FoldChangeFilter.filter_biotype
       ~FoldChangeFilter.filter_by_bigtable_group
       ~FoldChangeFilter.filter_fold_change_direction
@@ -32,6 +32,5 @@ rnalysis.filtering.FoldChangeFilter
    
    
 
-   
    
    

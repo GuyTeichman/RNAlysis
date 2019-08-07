@@ -421,7 +421,7 @@ class FoldChangeFilter(Filter):
 
         return res_df
 
-    def filter_abs_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
+    def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
         """
         Filters out all features whose absolute log2 fold change is below the indicated threshold. \
         For example: if log2fc is 1.0, all features whose log2 fold change is between 1 and -1 (went up less than \
@@ -538,7 +538,7 @@ class DESeqFilter(Filter):
         suffix = f"_top{n}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_abs_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
+    def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
         """
         Filters out all features whose absolute log2 fold change is below the indicated threshold. \
         For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than \

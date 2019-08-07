@@ -19,7 +19,7 @@ rnalysis.filtering.DESeqFilter
       ~DESeqFilter.difference
       ~DESeqFilter.features_set
       ~DESeqFilter.features_string
-      ~DESeqFilter.filter_abs_fold_change
+      ~DESeqFilter.filter_abs_log2_fold_change
       ~DESeqFilter.filter_biotype
       ~DESeqFilter.filter_by_bigtable_group
       ~DESeqFilter.filter_fold_change_direction

@@ -3,4 +3,4 @@ rnalysis.filtering.DESeqFilter.filter\_abs\_fold\_change
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: DESeqFilter.filter_abs_fold_change
+.. automethod:: DESeqFilter.filter_abs_log2_fold_change
