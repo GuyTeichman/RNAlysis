@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.enrichment.EnrichmentProcessing.go_enrichment" href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html" />
-    <link rel="prev" title="rnalysis.enrichment.EnrichmentProcessing.difference" href="rnalysis.enrichment.EnrichmentProcessing.difference.html" /> 
+    <link rel="next" title="rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel" href="rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel.html" />
+    <link rel="prev" title="rnalysis.enrichment.EnrichmentProcessing.__init__" href="rnalysis.enrichment.EnrichmentProcessing.__init__.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -94,13 +94,14 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html">rnalysis.enrichment.EnrichmentProcessing</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.__init__.html">rnalysis.enrichment.EnrichmentProcessing.__init__</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.difference.html">rnalysis.enrichment.EnrichmentProcessing.difference</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.EnrichmentProcessing.enrich_big_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel.html">rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html">rnalysis.enrichment.EnrichmentProcessing.go_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.difference.html">rnalysis.enrichment.EnrichmentProcessing.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.intersection.html">rnalysis.enrichment.EnrichmentProcessing.intersection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.save_txt.html">rnalysis.enrichment.EnrichmentProcessing.save_txt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.symmetric_difference.html">rnalysis.enrichment.EnrichmentProcessing.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.union.html">rnalysis.enrichment.EnrichmentProcessing.union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.save_txt.html">rnalysis.enrichment.EnrichmentProcessing.save_txt</a></li>
 </ul>
 </li>
 </ul>
@@ -165,7 +166,7 @@
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/rnalysis.enrichment.EnrichmentProcessing.enrich_big_table.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rnalysis.enrichment.EnrichmentProcessing.enrich_randomization.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -180,62 +181,6 @@
             
   <div class="section" id="rnalysis-enrichment-enrichmentprocessing-enrich-big-table">
 <h1>rnalysis.enrichment.EnrichmentProcessing.enrich_big_table<a class="headerlink" href="#rnalysis-enrichment-enrichmentprocessing-enrich-big-table" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
-<dt id="rnalysis.enrichment.EnrichmentProcessing.enrich_big_table">
-<code class="sig-prename descclassname">EnrichmentProcessing.</code><code class="sig-name descname">enrich_big_table</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">big_table_pth: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.EnrichmentProcessing.enrich_big_table" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from the Big Table.         P-values are calculated using a randomization test, and corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">param attributes</dt>
-<dd class="field-odd"><p>An iterable of attribute names (strings). If None, a manual input prompt will be raised.</p>
-</dd>
-<dt class="field-even">type fdr</dt>
-<dd class="field-even"><p>float between 0 and 1</p>
-</dd>
-<dt class="field-odd">param fdr</dt>
-<dd class="field-odd"><p>Indicates the FDR threshold for significance.</p>
-</dd>
-<dt class="field-even">type reps</dt>
-<dd class="field-even"><p>int larger than 0</p>
-</dd>
-<dt class="field-odd">param reps</dt>
-<dd class="field-odd"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
-</dd>
-<dt class="field-even">param big_table_pth</dt>
-<dd class="field-even"><p>the path of the Big Table file to be used as reference.</p>
-</dd>
-<dt class="field-odd">param biotype</dt>
-<dd class="field-odd"><p>the biotype you want your reference to have. ‘all’ will include all biotypes,         ‘protein_coding’ will include only protein-coding genes in the reference, etc.</p>
-</dd>
-<dt class="field-even">type save_csv</dt>
-<dd class="field-even"><p>bool, default False</p>
-</dd>
-<dt class="field-odd">param save_csv</dt>
-<dd class="field-odd"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
-</dd>
-<dt class="field-even">type fname</dt>
-<dd class="field-even"><p>str or pathlib.Path</p>
-</dd>
-<dt class="field-odd">param fname</dt>
-<dd class="field-odd"><p>The full path and name of the file to which to save the results. For example:         r’C:dir</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl>
-<dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
-and ‘pvalue’.</p>
-<div class="figure align-center" id="id1">
-<a class="reference internal image-reference" href="_images/bigtable_en.png"><img alt="_images/bigtable_en.png" src="_images/bigtable_en.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of big table enrichment</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
-</div>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 
 
@@ -246,10 +191,10 @@ and ‘pvalue’.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.enrichment.EnrichmentProcessing.go_enrichment.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.EnrichmentProcessing.go_enrichment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.enrichment.EnrichmentProcessing.difference.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.EnrichmentProcessing.difference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.enrichment.EnrichmentProcessing.__init__.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.EnrichmentProcessing.__init__" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

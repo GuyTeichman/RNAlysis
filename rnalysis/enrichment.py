@@ -43,7 +43,7 @@ class EnrichmentProcessing:
         """
         Takes a manual string input from the user, and then splits it using a comma delimiter into a list of values. \
         Called when an EnrichmentProcessing instance is created without input, \
-        or when EnrichmentProcessing.enrich_big_table is called without input.
+        or when EnrichmentProcessing.enrich_randomization is called without input.
 
         :param msg: a promprt to be printed to the user
         :param del_spaces: if True, will delete all spaces in each delimited value.
@@ -79,7 +79,7 @@ class EnrichmentProcessing:
     @staticmethod
     def _get_ref_path(ref):
         if ref == 'predefined':
-            return general.read_reference_table_path()
+            return general.read_ref_path_table_path()
         else:
             return ref
 
@@ -292,12 +292,13 @@ class EnrichmentProcessing:
 
             return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
-    def enrich_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000, biotype: str = 'protein_coding',
-                        big_table_pth: str = 'predefined', save_csv: bool = False, fname=None):
+    def enrich_randomization_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000,
+                                      biotype: str = 'protein_coding',
+                                      ref_path: str = 'predefined', save_csv: bool = False, fname=None):
         """
        Calculates enrichment scores, p-values and q-values \
        for enrichment and depletion of selected attributes from the Big Table. \
-       Runs in parallel processing, making is generally faster than enrich_big_table. \
+       Runs in parallel processing, making is generally faster than enrich_randomization. \
        To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster(). \
        P-values are calculated using a randomization test, and corrected for multiple comparisons using \
        the Benjamini–Hochberg step-up procedure (original FDR method). \
@@ -305,13 +306,14 @@ class EnrichmentProcessing:
        if log2(enrichment score) is positive then enrichment is assumed, \
        and if log2(enrichment score) is negative then depletion is assumed.
 
+       :type attributes: iterable (list, tuple, set, etc)
        :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
        :type fdr: float between 0 and 1
        :param fdr: Indicates the FDR threshold for significance.
        :type reps: int larger than 0
        :param reps: How many repetitions to run the randomization for. \
        10,000 is the default. Recommended 10,000 or higher.
-       :param big_table_pth: the path of the Big Table file to be used as reference.
+       :param ref_path: the path of the Big Table file to be used as reference.
        :param biotype: the biotype you want your reference to have. 'all' will include all biotypes, \
        'protein_coding' will include only protein-coding genes in the reference, etc.
        :type save_csv: bool, default False
@@ -329,7 +331,7 @@ class EnrichmentProcessing:
 
           Example plot of big table enrichment
        """
-        big_table_pth = self._get_ref_path(big_table_pth)
+        ref_path = self._get_ref_path(ref_path)
         if attributes is None:
             attributes = self._from_string(
                 "Please insert attributes separated by newline "
@@ -340,7 +342,7 @@ class EnrichmentProcessing:
             assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
 
         try:
-            big_table = general.load_csv(big_table_pth, 0, drop_gene_names=False)
+            big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
         except:
             raise ValueError("Invalid or nonexistent big table path!")
 
@@ -374,24 +376,25 @@ class EnrichmentProcessing:
         res = dview.map(EnrichmentProcessing._single_enrichment, gene_set_rep, attributes, big_table_rep, fraction_rep,
                         reps_rep)
         enriched_list = res.result()
-        enriched_df = pd.DataFrame(enriched_list,
-                                   columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
-                                            'pval'])
-        significant, padj = multitest.fdrcorrection(enriched_df['pval'].values, alpha=fdr)
-        enriched_df['padj'] = padj
-        enriched_df['significant'] = significant
-        enriched_df.set_index('name', inplace=True)
+        res_df = pd.DataFrame(enriched_list,
+                              columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
+                                       'pval'])
+        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
+        res_df['padj'] = padj
+        res_df['significant'] = significant
+        res_df.set_index('name', inplace=True)
 
-        self._plot_enrich_big_table(enriched_df, title=self.set_name)
+        self._plot_enrich_randomization(res_df, title=self.set_name)
 
         if save_csv:
-            self._enrichment_save_csv(enriched_df, fname)
-        print(enriched_df)
+            self._enrichment_save_csv(res_df, fname)
+        print(res_df)
 
-        return enriched_df
+        return res_df
 
-    def enrich_big_table(self, attributes: list = None, fdr: float = 0.05, reps=10000, biotype: str = 'protein_coding',
-                         big_table_pth: str = 'predefined', save_csv: bool = False, fname=None):
+    def enrich_randomization(self, attributes: list = None, fdr: float = 0.05, reps=10000,
+                             biotype: str = 'protein_coding',
+                             ref_path: str = 'predefined', save_csv: bool = False, fname=None):
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from the Big Table. \
@@ -401,13 +404,15 @@ class EnrichmentProcessing:
         if log2(enrichment score) is positive then enrichment is assumed, \
         and if log2(enrichment score) is negative then depletion is assumed.
 
+        :type attributes: iterable (list, tuple, set, etc)
         :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
         :type fdr: float between 0 and 1
         :param fdr: Indicates the FDR threshold for significance.
         :type reps: int larger than 0
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
-        :param big_table_pth: the path of the Big Table file to be used as reference.
+        :type ref_path: 'predefined' (default), str or pathlib.Path
+        :param ref_path: the path of the Big Table file to be used as reference.
         :param biotype: the biotype you want your reference to have. 'all' will include all biotypes, \
         'protein_coding' will include only protein-coding genes in the reference, etc.
         :type save_csv: bool, default False
@@ -425,7 +430,7 @@ class EnrichmentProcessing:
 
            Example plot of big table enrichment
         """
-        big_table_pth = self._get_ref_path(big_table_pth)
+        ref_path = self._get_ref_path(ref_path)
         if attributes is None:
             attributes = self._from_string(
                 "Please insert attributes separated by newline "
@@ -436,7 +441,7 @@ class EnrichmentProcessing:
             assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
 
         try:
-            big_table = general.load_csv(big_table_pth, 0, drop_gene_names=False)
+            big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
         except:
             raise ValueError("Invalid or nonexistent big table path!")
 
@@ -481,29 +486,29 @@ class EnrichmentProcessing:
             enriched_list.append(
                 (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval))
 
-        enriched_df = pd.DataFrame(enriched_list,
-                                   columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
-                                            'pval'])
-        significant, padj = multitest.fdrcorrection(enriched_df['pval'].values, alpha=fdr)
-        enriched_df['padj'] = padj
-        enriched_df['significant'] = significant
-        enriched_df.set_index('name', inplace=True)
+        res_df = pd.DataFrame(enriched_list,
+                              columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
+                                       'pval'])
+        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
+        res_df['padj'] = padj
+        res_df['significant'] = significant
+        res_df.set_index('name', inplace=True)
 
-        self._plot_enrich_big_table(enriched_df, title=self.set_name)
+        self._plot_enrich_randomization(res_df, title=self.set_name)
 
         if save_csv:
-            self._enrichment_save_csv(enriched_df, fname)
-        print(enriched_df)
+            self._enrichment_save_csv(res_df, fname)
+        print(res_df)
 
-        return enriched_df
+        return res_df
 
     @staticmethod
-    def _plot_enrich_big_table(df: pd.DataFrame, title: str = ''):
+    def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):
         """
-        Receives a DataFrame output from EnrichmentProcessing.enrich_big_table, and plots it in a bar plort \
+        Receives a DataFrame output from EnrichmentProcessing.enrich_randomization, and plots it in a bar plort \
         Static class method.
 
-        :param df: a pandas DataFrame created by EnrichmentProcessing.enrich_big_table.
+        :param df: a pandas DataFrame created by EnrichmentProcessing.enrich_randomization.
         :param title: plot title.
         :return:
         a matplotlib.pyplot.bar instance
@@ -514,7 +519,7 @@ class EnrichmentProcessing:
         abs_enrichment_scores = [abs(i) for i in enrichment_scores]
         data_color = [i / max(abs_enrichment_scores) for i in enrichment_scores]
         data_color_norm = [i - min(data_color) for i in data_color]
-        data_color_norm_256 = [int(255 * (i/max(data_color_norm))) for i in data_color_norm]
+        data_color_norm_256 = [int(255 * (i / max(data_color_norm))) for i in data_color_norm]
         my_cmap = plt.cm.get_cmap('coolwarm')
         colors = my_cmap(data_color_norm_256)
         fig, ax = plt.subplots()
