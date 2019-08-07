@@ -424,7 +424,7 @@ class FoldChangeFilter(Filter):
     def filter_abs_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
         """
         Filters out all features whose absolute log2 fold change is below the indicated threshold. \
-        For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than \
+        For example: if log2fc is 1.0, all features whose log2 fold change is between 1 and -1 (went up less than \
         two-fold or went down less than two-fold) will be filtered out.
 
         :param abslog2fc: The threshold absolute log2 fold change for filtering out a feature. Float or int. \
@@ -442,7 +442,7 @@ class FoldChangeFilter(Filter):
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
         suffix = f"_{abslog2fc}abslog2foldchange"
-        new_df = self.df[np.abs(self.df) >= abslog2fc]
+        new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def filter_fold_change_direction(self, direction: str = 'pos', opposite: bool = False, inplace: bool = True):
