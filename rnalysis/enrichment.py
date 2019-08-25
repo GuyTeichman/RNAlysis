@@ -279,7 +279,7 @@ class EnrichmentProcessing:
             n = obs_srs.shape[0]
             expected_fraction = fraction(srs)
             observed_fraction = fraction(obs_srs)
-            log2_fold_enrichment = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
+            log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
             if log2_fold_enrichment >= 0:
                 success = sum(
                     (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) >= observed_fraction
@@ -314,7 +314,8 @@ class EnrichmentProcessing:
        :param reps: How many repetitions to run the randomization for. \
        10,000 is the default. Recommended 10,000 or higher.
        :param ref_path: the path of the Big Table file to be used as reference.
-       :param biotype: the biotype you want your reference to have. 'all' will include all biotypes, \
+       :type biotype: str, default 'protein_coding'
+       :param biotype: the biotype you want your background reference to have. 'all' will include all biotypes, \
        'protein_coding' will include only protein-coding genes in the reference, etc.
        :type save_csv: bool, default False
        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
@@ -362,7 +363,6 @@ class EnrichmentProcessing:
 
         big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
-        enriched_list = []
         client = Client()
         dview = client[:]
         dview.execute("""import numpy as np
@@ -379,6 +379,7 @@ class EnrichmentProcessing:
         res_df = pd.DataFrame(enriched_list,
                               columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
                                        'pval'])
+        res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_fold_enrichment'].values)))
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
         res_df['significant'] = significant
@@ -472,7 +473,7 @@ class EnrichmentProcessing:
             n = obs_srs.shape[0]
             expected_fraction = fraction(srs)
             observed_fraction = fraction(obs_srs)
-            log2_fold_enrichment = np.log2((observed_fraction + 0.0001) / (expected_fraction + 0.0001))
+            log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
             if log2_fold_enrichment >= 0:
                 success = sum(
                     (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) >= observed_fraction
@@ -489,6 +490,7 @@ class EnrichmentProcessing:
         res_df = pd.DataFrame(enriched_list,
                               columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
                                        'pval'])
+        res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_fold_enrichment'].values)))
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
         res_df['significant'] = significant
