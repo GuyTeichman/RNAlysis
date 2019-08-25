@@ -129,10 +129,10 @@ def test_deseq_filter_top_n():
     assert np.isclose(truth, d.df).all()
 
 
-def test_deseq_filter_abs_fold_change():
+def test_deseq_filter_abs_log2_fold_change():
     truth = general.load_csv("test_deseq_fc_4_truth.csv", 0)
     d = DESeqFilter("test_deseq_fc.csv")
-    fc4 = d.filter_abs_fold_change(4, inplace=False)
+    fc4 = d.filter_abs_log2_fold_change(4, inplace=False)
     fc4.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(fc4.df == truth)
@@ -377,3 +377,27 @@ def test_deseqfilter_difference_multiple():
 
     assert set1.difference(set2, set3) == set1_unique
     assert set2.difference(set3, set1) == set2_unique
+
+
+def test_htcount_fold_change():
+    truth_num_name = f"Mean of {['cond1', 'cond2']}"
+    truth_denom_name = f"Mean of {['cond3', 'cond4']}"
+    truth = general.load_csv(r'all_expr_fold_change_truth.csv', 0)
+    truth = truth.squeeze()
+    h = HTCountFilter(r'all_expr_fold_change.csv')
+    fc = h.fold_change(['cond1', 'cond2'], ['cond3', 'cond4'])
+    assert truth_num_name == fc.numerator
+    assert truth_denom_name == fc.denominator
+    assert np.all(np.isclose(fc.df, truth))
+
+
+def test_fcfilter_filter_abs_fc():
+    truth = general.load_csv('fcfilter_abs_fold_change_truth.csv', 0)
+    truth = truth.squeeze()
+    truth.sort_index()
+    f = FoldChangeFilter('all_expr_fold_change_truth.csv', 'numer', 'denom')
+    f.filter_abs_log2_fold_change(1)
+    f.df.sort_index()
+    print(f.df.values)
+    print(truth.values)
+    assert np.all(np.squeeze(f.df.values) == np.squeeze(truth.values))

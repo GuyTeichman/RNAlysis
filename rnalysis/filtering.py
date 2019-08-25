@@ -353,7 +353,7 @@ class Filter:
 class FoldChangeFilter(Filter):
     """
     A class that contains a single column, representing the gene-specific fold change between two conditions. \
-    Note: this class does not support 'inf' and '0' values, and importing a file with such values could lead \
+    Warning: this class does not support 'inf' and '0' values, and importing a file with such values could lead \
     to incorrect filtering and statistical analyses.
 
     """
@@ -374,7 +374,7 @@ class FoldChangeFilter(Filter):
 
     def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None):
         """
-        Perform a randomization test
+        Perform a randomization test to examine
 
         :type ref: FoldChangeFilter
         :param ref: A reference FoldChangeFilter object which contains the fold change for every reference gene. \
@@ -449,7 +449,7 @@ class FoldChangeFilter(Filter):
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
         suffix = f"_{abslog2fc}abslog2foldchange"
-        new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc]
+        new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc].dropna()
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def filter_fold_change_direction(self, direction: str = 'pos', opposite: bool = False, inplace: bool = True):
