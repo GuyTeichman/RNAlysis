@@ -352,7 +352,9 @@ class Filter:
 
 class FoldChangeFilter(Filter):
     """
-    A class that contains a single column, representing the gene-specific fold change between two conditions.
+    A class that contains a single column, representing the gene-specific fold change between two conditions. \
+    Note: this class does not support 'inf' and '0' values, and importing a file with such values could lead \
+    to incorrect filtering and statistical analyses.
 
     """
 
@@ -361,6 +363,10 @@ class FoldChangeFilter(Filter):
         self.numerator = numerator_name
         self.denominator = denominator_name
         self.df.name = 'Fold Change'
+        if np.inf in self.df or 0 in self.df:
+            warnings.warn(
+                "Warning: FoldChangeFilter does not support 'inf' or '0' values! "
+                "Unexpected results may occur during filtering or statistical analyses. ")
 
     def __copy__(self):
         return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
@@ -368,6 +374,7 @@ class FoldChangeFilter(Filter):
 
     def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None):
         """
+        Perform a randomization test
 
         :type ref: FoldChangeFilter
         :param ref: A reference FoldChangeFilter object which contains the fold change for every reference gene. \
