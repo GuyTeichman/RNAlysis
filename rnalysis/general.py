@@ -73,7 +73,7 @@ def parse_sequence_name_string(string):
     :return:
     a set of the WBGene indices that appear in the given string.
     """
-    return set(re.findall('[A-Z,0-9]{5,6}\.\d', string))
+    return set(re.findall('[A-Z,0-9]{5,8}\.\d{1,2}', string))
 
 
 def parse_gene_name_string(string):
@@ -87,7 +87,7 @@ def parse_gene_name_string(string):
     :return:
     a set of the WBGene indices that appear in the given string.
     """
-    return set(re.findall('[a-z]{3,4}-[A-Z,0-9]{1,4}', string))
+    return set(re.findall('[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
 
 
 def is_reference_table_defined(settings_start_phrase=__settings_start_phrase__):
