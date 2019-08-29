@@ -296,15 +296,18 @@ class EnrichmentProcessing:
                                       biotype: str = 'protein_coding',
                                       ref_path: str = 'predefined', save_csv: bool = False, fname=None):
         """
-       Calculates enrichment scores, p-values and q-values \
-       for enrichment and depletion of selected attributes from the Big Table. \
-       Runs in parallel processing, making is generally faster than enrich_randomization. \
-       To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster(). \
-       P-values are calculated using a randomization test, and corrected for multiple comparisons using \
-       the Benjamini–Hochberg step-up procedure (original FDR method). \
-       Enrichment/depletion is determined automatically by the calculated enrichment score: \
-       if log2(enrichment score) is positive then enrichment is assumed, \
-       and if log2(enrichment score) is negative then depletion is assumed.
+        Calculates enrichment scores, p-values and q-values \
+        for enrichment and depletion of selected attributes from a reference table using parallel processing. \
+        Parallel processing makes this function generally faster than EnrichmentProcessing.enrich_randomization. \
+        To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster(). \
+        P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
+        P-values are corrected for multiple comparisons using \
+        the Benjamini–Hochberg step-up procedure (original FDR method). \
+        Enrichment/depletion is determined automatically by the calculated enrichment score: \
+        if log2(enrichment score) is positive then enrichment is assumed, \
+        and if log2(enrichment score) is negative then depletion is assumed. \
+        In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        appears with the smallest value in the scale.
 
        :type attributes: iterable (list, tuple, set, etc)
        :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
@@ -398,12 +401,16 @@ class EnrichmentProcessing:
                              ref_path: str = 'predefined', save_csv: bool = False, fname=None):
         """
         Calculates enrichment scores, p-values and q-values \
-        for enrichment and depletion of selected attributes from the Big Table. \
-        P-values are calculated using a randomization test, and corrected for multiple comparisons using \
+        for enrichment and depletion of selected attributes from a reference table. \
+        P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
+        P-values are corrected for multiple comparisons using \
         the Benjamini–Hochberg step-up procedure (original FDR method). \
         Enrichment/depletion is determined automatically by the calculated enrichment score: \
         if log2(enrichment score) is positive then enrichment is assumed, \
-        and if log2(enrichment score) is negative then depletion is assumed.
+        and if log2(enrichment score) is negative then depletion is assumed. \
+        In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        appears with the smallest value in the scale.
+
 
         :type attributes: iterable (list, tuple, set, etc)
         :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
@@ -508,7 +515,9 @@ class EnrichmentProcessing:
     def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):
         """
         Receives a DataFrame output from EnrichmentProcessing.enrich_randomization, and plots it in a bar plort \
-        Static class method.
+        Static class method. \
+        For the clarity of display, complete depletion (linear enrichment = 0) \
+        appears with the smallest value in the scale.
 
         :param df: a pandas DataFrame created by EnrichmentProcessing.enrich_randomization.
         :param title: plot title.
@@ -516,12 +525,17 @@ class EnrichmentProcessing:
         a matplotlib.pyplot.bar instance
         """
         enrichment_names = df.index.values.tolist()
-        enrichment_scores = df['log2_fold_enrichment']
+        enrichment_scores = df['log2_fold_enrichment'].values.copy()
+        scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf]
+        for i in range(len(enrichment_scores)):
+            if enrichment_scores[i] == -np.inf:
+                enrichment_scores[i] = min(scores_no_inf)
         enrichment_pvalue = df['padj']
         abs_enrichment_scores = [abs(i) for i in enrichment_scores]
         data_color = [(i / 3) * 127.5 for i in enrichment_scores]
         data_color_norm = [i + 127.5 for i in data_color]
-        data_color_norm_256 = [int((i)) for i in data_color_norm]
+        data_color_norm_256 = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for i
+                               in data_color_norm]
         my_cmap = plt.cm.get_cmap('coolwarm')
         colors = my_cmap(data_color_norm_256)
         fig, ax = plt.subplots()
