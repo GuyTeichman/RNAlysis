@@ -185,7 +185,9 @@
 <dt id="rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel">
 <code class="sig-prename descclassname">EnrichmentProcessing.</code><code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">ref_path: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.EnrichmentProcessing.enrich_randomization_parallel" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values        for enrichment and depletion of selected attributes from the Big Table.        Runs in parallel processing, making is generally faster than enrich_randomization.        To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster().        P-values are calculated using a randomization test, and corrected for multiple comparisons using        the Benjamini–Hochberg step-up procedure (original FDR method).        Enrichment/depletion is determined automatically by the calculated enrichment score:        if log2(enrichment score) is positive then enrichment is assumed,        and if log2(enrichment score) is negative then depletion is assumed.</p>
+<div><blockquote>
+<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table using parallel processing.         Parallel processing makes this function generally faster than EnrichmentProcessing.enrich_randomization.         To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
 <dd class="field-odd"><p>iterable (list, tuple, set, etc)</p>
@@ -208,20 +210,23 @@
 <dt class="field-odd">param ref_path</dt>
 <dd class="field-odd"><p>the path of the Big Table file to be used as reference.</p>
 </dd>
-<dt class="field-even">param biotype</dt>
-<dd class="field-even"><p>the biotype you want your reference to have. ‘all’ will include all biotypes,        ‘protein_coding’ will include only protein-coding genes in the reference, etc.</p>
+<dt class="field-even">type biotype</dt>
+<dd class="field-even"><p>str, default ‘protein_coding’</p>
 </dd>
-<dt class="field-odd">type save_csv</dt>
-<dd class="field-odd"><p>bool, default False</p>
+<dt class="field-odd">param biotype</dt>
+<dd class="field-odd"><p>the biotype you want your background reference to have. ‘all’ will include all biotypes,        ‘protein_coding’ will include only protein-coding genes in the reference, etc.</p>
 </dd>
-<dt class="field-even">param save_csv</dt>
-<dd class="field-even"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+<dt class="field-even">type save_csv</dt>
+<dd class="field-even"><p>bool, default False</p>
 </dd>
-<dt class="field-odd">type fname</dt>
-<dd class="field-odd"><p>str or pathlib.Path</p>
+<dt class="field-odd">param save_csv</dt>
+<dd class="field-odd"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
 </dd>
-<dt class="field-even">param fname</dt>
-<dd class="field-even"><p>The full path and name of the file to which to save the results. For example:        r’C:dir</p>
+<dt class="field-even">type fname</dt>
+<dd class="field-even"><p>str or pathlib.Path</p>
+</dd>
+<dt class="field-odd">param fname</dt>
+<dd class="field-odd"><p>The full path and name of the file to which to save the results. For example:        r’C:dir</p>
 </dd>
 </dl>
 </div></blockquote>

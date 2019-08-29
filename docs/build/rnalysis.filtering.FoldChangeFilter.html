@@ -173,7 +173,7 @@
 <dl class="class">
 <dt id="rnalysis.filtering.FoldChangeFilter">
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class that contains a single column, representing the gene-specific fold change between two conditions.</p>
+<dd><p>A class that contains a single column, representing the gene-specific fold change between two conditions.     Warning: this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
 <dl class="method">
 <dt id="rnalysis.filtering.FoldChangeFilter.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.__init__" title="Permalink to this definition">¶</a></dt>
@@ -218,12 +218,7 @@
 <td><p>Return the first n rows of the Filter object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">randomization_test</span></code>(ref[, alpha, reps, …])</p></td>
-<td><p><dl class="field-list simple">
-<dt class="field-odd">type ref</dt>
-<dd class="field-odd"><p>FoldChangeFilter</p>
-</dd>
-</dl>
-</p></td>
+<td><p>Perform a randomization test to examine</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>
