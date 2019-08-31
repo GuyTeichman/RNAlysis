@@ -39,7 +39,7 @@ class Filter:
             warnings.warn("Warning: this Filter object contains multiple rows with the same WBGene index.")
         self.shape = self.df.shape
         if isinstance(self.df, pd.DataFrame):
-            self.columns = tuple(self.df.columns)
+            self.columns = list(self.df.columns)
 
     def __str__(self):
         return f"{type(self).__name__} of file {self.fname}: \n{self.df.__str__()}"
