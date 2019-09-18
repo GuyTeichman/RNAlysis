@@ -141,7 +141,7 @@ def read_reference_table_path():
         return f.readline()[len(settings_start_phrase)::]
 
 
-def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, squeeze=False):
+def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, squeeze=False, comment: str = None):
     """
     loads a csv df into a pandas dataframe.
 
@@ -153,15 +153,18 @@ def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, s
     :param drop_gene_names: bool. If True, tries to drop the 'genes' column from the DataFrame (useful for filtering).
     :type squeeze: bool, default False
     :param squeeze: If the parsed data only contains one column then return a Series.
+    :type comment: str (optional)
+    :param comment: Indicates remainder of line should not be parsed. \
+    If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
     :return: a pandas dataframe of the csv file
     """
     assert isinstance(filename, (str, Path))
     # with open(filename) as f:
     encoding = 'ISO-8859-1'
     if idx_col is not None:
-        df = pd.read_csv(filename, index_col=idx_col, encoding=encoding, squeeze=squeeze)
+        df = pd.read_csv(filename, index_col=idx_col, encoding=encoding, squeeze=squeeze, comment=comment)
     else:
-        df = pd.read_csv(filename, encoding=encoding, squeeze=squeeze)
+        df = pd.read_csv(filename, encoding=encoding, squeeze=squeeze, comment=comment)
     if drop_gene_names:
         if 'genes' in df:
             df.drop('genes', axis=1, inplace=True)
