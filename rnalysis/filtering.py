@@ -197,7 +197,7 @@ class Filter:
 
         :type biotype: str or list
         :param biotype: the biotypes which will not be filtered out.
-        :param ref: Name of the reference file used to determine biotype. Default is the BigTable.
+        :param ref: Name of the reference file used to determine biotype. Default is ce11 (included in the package).
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -246,7 +246,7 @@ class Filter:
         If False, features will be filtered out by exclusion from the specified criteria \
         (meaning features that DON'T belong to the attributes \
         are kept, and features that do belong to the attributes are filtered out).
-        :param ref: filename/path of the Big Table to be used as reference.
+        :param ref: filename/path of the reference table to be used as reference.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -294,7 +294,7 @@ class Filter:
         Each object contains only features that match its indicated Big Table attribute.
 
         :param attributes: list of Big Table attributes to filter by.
-        :param ref: filename/path of the Big Table to be used as reference.
+        :param ref: filename/path of the reference table to be used as reference.
         :return:
         A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects \
         appear in the list in the same order the Big Table attributes were given in.
@@ -348,6 +348,17 @@ class Filter:
         For example, "WBGene00000001\nWBGene00000003\nWBGene12345678".
         """
         return "\n".join(self.features_set())
+
+    def biotypes(self, ref: str = __gene_names_and_biotype__):
+        """
+        Returns a DataFrame of the biotypes in the Filter object and their count.
+
+        :param ref: Name of the reference file used to determine biotype. Default is ce11 (included in the package).
+        """
+        ref_df = general.load_csv(ref, 0)
+        ref_df['WBGene']=ref_df.index
+        ref_df = ref_df.iloc[:,[0,-1]]
+        return ref_df.loc[self.df.index].groupby('bioType').count()
 
 
 class FoldChangeFilter(Filter):
@@ -799,7 +810,7 @@ class HTCountFilter(Filter):
         """
         Various assertions for functions that normalize to RPM, or are meant to be used on pre-normalized values.
 
-        :param threshold: optional. A threshold value for filter_low_rpm to be asserted.   
+        :param threshold: optional. A threshold value for filter_low_rpm to be asserted.
         """
         assert isinstance(threshold, (float, int)), "Threshold must be a number!"
         assert threshold >= 0, "Threshold must be zero or larger!"
@@ -1216,3 +1227,4 @@ class HTCountFilter(Filter):
 # TODO: add option for mask in clustergram
 # TODO: fix no sample grouping in pca returning error
 # TODO: function that prints all biotypes in the sample
+# TODO: add to all Filter subclasses a "filter larger than", "filter smaller than", "filter between", "filter equal"
