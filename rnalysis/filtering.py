@@ -407,8 +407,9 @@ class Filter:
         :type column: str
         :param column: name of the column to filter by
         :type operator: str: 'eq'/'equal'/'=', 'ct'/'contains'/'in', 'bw'/'begins with', 'ew'/'ends with'
-        :param operator:
-        :param value:
+        :param operator: the operator to filter the column by (equals, contains, starts with, ends with)
+        :type value: number (int or float)
+        :param value: the value to filter by
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
