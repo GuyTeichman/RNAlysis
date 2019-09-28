@@ -292,10 +292,11 @@ class EnrichmentProcessing:
 
             return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
-    def _enrichemnt_get_reference(self, attributes, biotype, ref_path):
-        ref_path = self._get_ref_path(ref_path)
+    @staticmethod
+    def _enrichemnt_get_reference(attributes, biotype, ref_path):
+        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
         if attributes is None:
-            attributes = self._from_string(
+            attributes = EnrichmentProcessing._from_string(
                 "Please insert attributes separated by newline "
                 "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
         elif isinstance(attributes, str):
