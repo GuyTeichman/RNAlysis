@@ -360,7 +360,7 @@ class Filter:
         ref_df = ref_df.iloc[:, [0, -1]]
         return ref_df.loc[self.df.index].groupby('bioType').count()
 
-    def number_filter(self, column: str, operator: str, value, opposite=False, inplace=True):
+    def number_filters(self, column: str, operator: str, value, opposite=False, inplace=True):
         """
         Applay a number filter (larger than, equal, smaller than) on a particular column in the Filter object.
 
@@ -397,6 +397,47 @@ class Filter:
             new_df = self.df[self.df[column] > value]
         elif op == 'st':
             new_df = self.df[self.df[column] < value]
+
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    def text_filters(self, column: str, operator: str, value: str, opposite=False, inplace=True):
+        """
+        Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.
+
+        :type column: str
+        :param column: name of the column to filter by
+        :type operator: str: 'eq'/'equal'/'=', 'ct'/'contains'/'in', 'bw'/'begins with', 'ew'/'ends with'
+        :param operator:
+        :param value:
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return:
+        If 'inplace' is False, returns a new instance of the Filter object.
+
+        Example usage: filt.text_filters('name','sw','pseudo', inplace=False) \
+        will return a Filter object in which all rows have a value that starts with 'pseudo' in the column 'name'.
+        """
+        operator_dict = {'eq': 'eq', 'equal': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'bw': 'bw',
+                         'begins with': 'bw', 'ew': 'ew', 'ends with': 'ew'}
+        assert operator in operator_dict, f"Invalid operator {operator}"
+        assert isinstance(value, (int, float)), f"'value' must be a number!"
+        assert column in self.columns, f"column {column} not in DataFrame!"
+        op = operator_dict[operator]
+        suffix = f"_{column}{op}{value}"
+
+        if op == 'eq':
+            new_df = self.df[self.df[column] == value]
+        elif op == 'ct':
+            new_df = self.df[self.df[column].str.contains(value)]
+        elif op == 'sw':
+            new_df = self.df[self.df[column].str.endswith(value)]
+        elif op == 'ew':
+            new_df = self.df[self.df[column].str.startswith(value)]
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
