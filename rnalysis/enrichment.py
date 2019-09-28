@@ -592,4 +592,3 @@ class EnrichmentProcessing:
 
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
-# TODO: function that prints all biotypes in the sample
