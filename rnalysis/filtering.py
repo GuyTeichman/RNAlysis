@@ -1100,6 +1100,8 @@ class HTCountFilter(Filter):
 
         pc_var = pca_obj.explained_variance_ratio_
         graphs = 2 if n_components > 2 else 1
+        if sample_grouping is None:
+            sample_grouping = [i + 1 for i in range(len(sample_names))]
         axes = []
         for graph in range(graphs):
             axes.append(HTCountFilter._plot_pca(
@@ -1134,11 +1136,8 @@ class HTCountFilter(Filter):
         ax.set_title('PCA', fontsize=20)
 
         color_generator = HTCountFilter._color_gen()
-        if sample_grouping is None:
-            colors = [next(color_generator) for _ in range(len(final_df.columns))]
-        else:
-            color_opts = [next(color_generator) for _ in range(max(sample_grouping))]
-            colors = [color_opts[i - 1] for i in sample_grouping]
+        color_opts = [next(color_generator) for _ in range(max(sample_grouping))]
+        colors = [color_opts[i - 1] for i in sample_grouping]
 
         ax.scatter(final_df.iloc[:, 0], final_df.iloc[:, 1], c=colors, s=50)
         for _, row in final_df.iterrows():
@@ -1307,4 +1306,3 @@ class HTCountFilter(Filter):
 
 # TODO: a function that receives a dataframe, and can plot correlation with the BigTable instead of just enrichment
 # TODO: add option for mask in clustergram
-# TODO: fix no sample grouping in pca returning error
