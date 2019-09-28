@@ -356,9 +356,39 @@ class Filter:
         :param ref: Name of the reference file used to determine biotype. Default is ce11 (included in the package).
         """
         ref_df = general.load_csv(ref, 0)
-        ref_df['WBGene']=ref_df.index
-        ref_df = ref_df.iloc[:,[0,-1]]
+        ref_df['WBGene'] = ref_df.index
+        ref_df = ref_df.iloc[:, [0, -1]]
         return ref_df.loc[self.df.index].groupby('bioType').count()
+
+    def number_filter(self, column: str, operator: str, value):
+        """
+        Applay a number filter (larger than, equal, smaller than) on a particular column in the Filter object.
+
+        :type column: str
+        :param column: name of the column to filter by
+        :type operator: str: 'lt'/'larger than'/'>'. 'eq'/'equal'/'=', 'st'/'smaller than'/'<'
+        :param operator: the operator to filter the column by (larger than, equal or smaller than)
+        :type value: number (int or float)
+        :param value: the value to filter by
+        :return:
+        If 'inplace' is False, returns a new instance of the Filter object.
+
+        Example usage: filt.number_filter('baseMean','lt',57, inplace=False) \
+        will return a Filter object in which all rows have a value larger than 57 in the column 'baseMean'.
+        """
+        operator_dict = {'lt': 'lt', 'larger than': 'lt', '>': 'lt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'st': 'st',
+                         'smaller than': 'st', '<': 'st'}
+        assert operator in operator_dict, f"Invalid operator {operator}"
+        assert isinstance(value, (int, float)), f"'value' must be a number!"
+        assert column in self.columns, f"column {column} not in DataFrame!"
+
+        op = operator_dict[operator]
+        if op == 'eq':
+            new_df = self.df[self.df[column] == value]
+        elif op == 'lt':
+            new_df = self.df[self.df[column] > value]
+        elif op == 'st':
+            new_df = self.df[self.df[column] < value]
 
 
 class FoldChangeFilter(Filter):
