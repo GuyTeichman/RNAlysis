@@ -579,6 +579,17 @@ class EnrichmentProcessing:
         plt.show()
         return bar
 
+    def biotypes(self, ref: str = __gene_names_and_biotype__):
+        """
+        Returns a DataFrame of the biotypes in the gene set and their count.
+
+        :param ref: Name of the reference file used to determine biotype. Default is ce11 (included in the package).
+        """
+        ref_df = general.load_csv(ref, 0)
+        ref_df['WBGene'] = ref_df.index
+        ref_df = ref_df.iloc[:, [0, -1]]
+        return ref_df.loc[self.gene_set].groupby('bioType').count()
+
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
 # TODO: function that prints all biotypes in the sample
