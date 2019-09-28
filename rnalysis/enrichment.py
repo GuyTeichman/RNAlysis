@@ -293,8 +293,7 @@ class EnrichmentProcessing:
             return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
     @staticmethod
-    def _enrichemnt_get_reference(attributes, biotype, ref_path):
-        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
+    def _enrichment_get_attrs(attributes):
         if attributes is None:
             attributes = EnrichmentProcessing._from_string(
                 "Please insert attributes separated by newline "
@@ -303,7 +302,11 @@ class EnrichmentProcessing:
             attributes = [attributes]
         else:
             assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
+        return attributes
 
+    @staticmethod
+    def _enrichemnt_get_reference(biotype, ref_path):
+        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
         try:
             big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
         except:
@@ -368,8 +371,8 @@ class EnrichmentProcessing:
 
           Example plot of big table enrichment
        """
-        big_table = EnrichmentProcessing._enrichemnt_get_reference(attributes=attributes, biotype=biotype,
-                                                                   ref_path=ref_path)
+        attributes = EnrichmentProcessing._enrichment_get_attrs(attributes=attributes)
+        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         client = Client()
         dview = client[:]
@@ -443,8 +446,8 @@ class EnrichmentProcessing:
 
            Example plot of big table enrichment
         """
-        big_table = EnrichmentProcessing._enrichemnt_get_reference(attributes=attributes, biotype=biotype,
-                                                                   ref_path=ref_path)
+        attributes = EnrichmentProcessing._enrichment_get_attrs(attributes=attributes)
+        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
