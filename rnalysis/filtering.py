@@ -1308,5 +1308,3 @@ class HTCountFilter(Filter):
 # TODO: a function that receives a dataframe, and can plot correlation with the BigTable instead of just enrichment
 # TODO: add option for mask in clustergram
 # TODO: fix no sample grouping in pca returning error
-# TODO: function that prints all biotypes in the sample
-# TODO: add to all Filter subclasses a "filter larger than", "filter smaller than", "filter between", "filter equal"
