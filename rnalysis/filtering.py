@@ -360,7 +360,7 @@ class Filter:
         ref_df = ref_df.iloc[:, [0, -1]]
         return ref_df.loc[self.df.index].groupby('bioType').count()
 
-    def number_filter(self, column: str, operator: str, value):
+    def number_filter(self, column: str, operator: str, value, opposite=False, inplace=True):
         """
         Applay a number filter (larger than, equal, smaller than) on a particular column in the Filter object.
 
@@ -370,6 +370,13 @@ class Filter:
         :param operator: the operator to filter the column by (larger than, equal or smaller than)
         :type value: number (int or float)
         :param value: the value to filter by
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of the Filter object.
 
@@ -381,14 +388,17 @@ class Filter:
         assert operator in operator_dict, f"Invalid operator {operator}"
         assert isinstance(value, (int, float)), f"'value' must be a number!"
         assert column in self.columns, f"column {column} not in DataFrame!"
-
         op = operator_dict[operator]
+        suffix = f"_{column}{op}{value}"
+
         if op == 'eq':
             new_df = self.df[self.df[column] == value]
         elif op == 'lt':
             new_df = self.df[self.df[column] > value]
         elif op == 'st':
             new_df = self.df[self.df[column] < value]
+
+        return self._inplace(new_df, opposite, inplace, suffix)
 
 
 class FoldChangeFilter(Filter):
