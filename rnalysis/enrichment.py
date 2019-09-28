@@ -292,6 +292,38 @@ class EnrichmentProcessing:
 
             return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
+    def _enrichemnt_get_reference(self, attributes, biotype, ref_path):
+        ref_path = self._get_ref_path(ref_path)
+        if attributes is None:
+            attributes = self._from_string(
+                "Please insert attributes separated by newline "
+                "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
+        elif isinstance(attributes, str):
+            attributes = [attributes]
+        else:
+            assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
+
+        try:
+            big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
+        except:
+            raise ValueError("Invalid or nonexistent big table path!")
+
+        assert (isinstance(biotype, (str, list, set, tuple)))
+        if biotype == 'all':
+            pass
+        else:
+            biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
+            if isinstance(biotype, (list, tuple, set)):
+                mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values, dtype=bool), biotype_ref['bioType'].index,
+                                 name='bioType')
+                for bio in biotype:
+                    mask = mask | (biotype_ref['bioType'] == bio)
+            else:
+                mask = biotype_ref['bioType'] == biotype
+            big_table = big_table.loc[biotype_ref[mask].index]
+        big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
+        return big_table
+
     def enrich_randomization_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                                       biotype: str = 'protein_coding',
                                       ref_path: str = 'predefined', save_csv: bool = False, fname=None):
@@ -335,36 +367,8 @@ class EnrichmentProcessing:
 
           Example plot of big table enrichment
        """
-        ref_path = self._get_ref_path(ref_path)
-        if attributes is None:
-            attributes = self._from_string(
-                "Please insert attributes separated by newline "
-                "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
-        elif isinstance(attributes, str):
-            attributes = [attributes]
-        else:
-            assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
-
-        try:
-            big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
-        except:
-            raise ValueError("Invalid or nonexistent big table path!")
-
-        assert (isinstance(biotype, (str, list, set, tuple)))
-        if biotype == 'all':
-            pass
-        else:
-            biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
-            if isinstance(biotype, (list, tuple, set)):
-                mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values, dtype=bool), biotype_ref['bioType'].index,
-                                 name='bioType')
-                for bio in biotype:
-                    mask = mask | (biotype_ref['bioType'] == bio)
-            else:
-                mask = biotype_ref['bioType'] == biotype
-            big_table = big_table.loc[biotype_ref[mask].index]
-
-        big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
+        big_table = EnrichmentProcessing._enrichemnt_get_reference(attributes=attributes, biotype=biotype,
+                                                                   ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         client = Client()
         dview = client[:]
@@ -438,36 +442,8 @@ class EnrichmentProcessing:
 
            Example plot of big table enrichment
         """
-        ref_path = self._get_ref_path(ref_path)
-        if attributes is None:
-            attributes = self._from_string(
-                "Please insert attributes separated by newline "
-                "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
-        elif isinstance(attributes, str):
-            attributes = [attributes]
-        else:
-            assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
-
-        try:
-            big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
-        except:
-            raise ValueError("Invalid or nonexistent big table path!")
-
-        assert (isinstance(biotype, (str, list, set, tuple)))
-        if biotype == 'all':
-            pass
-        else:
-            biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
-            if isinstance(biotype, (list, tuple, set)):
-                mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values, dtype=bool), biotype_ref['bioType'].index,
-                                 name='bioType')
-                for bio in biotype:
-                    mask = mask | (biotype_ref['bioType'] == bio)
-            else:
-                mask = biotype_ref['bioType'] == biotype
-            big_table = big_table.loc[biotype_ref[mask].index]
-
-        big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
+        big_table = EnrichmentProcessing._enrichemnt_get_reference(attributes=attributes, biotype=biotype,
+                                                                   ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
