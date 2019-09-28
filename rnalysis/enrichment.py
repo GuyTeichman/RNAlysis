@@ -582,5 +582,3 @@ class EnrichmentProcessing:
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
 # TODO: function that prints all biotypes in the sample
-# TODO: option to give a list/set of background genes (enrichment)
-# TODO: option to remove specific genes from the background genes (enrichment)
