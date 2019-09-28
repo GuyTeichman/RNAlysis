@@ -18,6 +18,7 @@ from pathlib import Path
 import statsmodels.stats.multitest as multitest
 from ipyparallel import Client
 from itertools import repeat
+import warnings
 
 
 class EnrichmentProcessing:
@@ -305,7 +306,7 @@ class EnrichmentProcessing:
         return attributes
 
     @staticmethod
-    def _enrichemnt_get_reference(biotype, ref_path):
+    def _enrichemnt_get_reference(biotype, background_genes, ref_path):
         ref_path = EnrichmentProcessing._get_ref_path(ref_path)
         try:
             big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
@@ -313,6 +314,18 @@ class EnrichmentProcessing:
             raise ValueError("Invalid or nonexistent big table path!")
 
         assert (isinstance(biotype, (str, list, set, tuple)))
+
+        if background_genes is None:
+            pass
+        else:
+            assert isinstance(background_genes,
+                              set), f"background_genes must be a set, instead is {type(background_genes)}"
+            if biotype != 'all':
+                warnings.warn(
+                    "Warning: both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")
+                biotype = 'all'
+
+            big_table = big_table.loc[background_genes]
         if biotype == 'all':
             pass
         else:
@@ -325,11 +338,12 @@ class EnrichmentProcessing:
             else:
                 mask = biotype_ref['bioType'] == biotype
             big_table = big_table.loc[biotype_ref[mask].index]
+
         big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
         return big_table
 
     def enrich_randomization_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000,
-                                      biotype: str = 'protein_coding',
+                                      biotype: str = 'protein_coding', background_genes: set = None,
                                       ref_path: str = 'predefined', save_csv: bool = False, fname=None):
         """
         Calculates enrichment scores, p-values and q-values \
@@ -353,9 +367,13 @@ class EnrichmentProcessing:
        :param reps: How many repetitions to run the randomization for. \
        10,000 is the default. Recommended 10,000 or higher.
        :param ref_path: the path of the Big Table file to be used as reference.
-       :type biotype: str, default 'protein_coding'
+       :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
        :param biotype: the biotype you want your background reference to have. 'all' will include all biotypes, \
-       'protein_coding' will include only protein-coding genes in the reference, etc.
+       'protein_coding' will include only protein-coding genes in the reference, etc. \
+       Cannot be specified together with 'background_genes'.
+       :type background_genes: set of WBGene indices
+       :param background_genes: a set of specific WBGene indices to be used as background reference. \
+       Cannot be specified together with 'biotype'.
        :type save_csv: bool, default False
        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
        :type fname: str or pathlib.Path
@@ -372,7 +390,8 @@ class EnrichmentProcessing:
           Example plot of big table enrichment
        """
         attributes = EnrichmentProcessing._enrichment_get_attrs(attributes=attributes)
-        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, ref_path=ref_path)
+        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, background_genes=background_genes,
+                                                                   ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         client = Client()
         dview = client[:]
@@ -405,7 +424,7 @@ class EnrichmentProcessing:
         return res_df
 
     def enrich_randomization(self, attributes: list = None, fdr: float = 0.05, reps=10000,
-                             biotype: str = 'protein_coding',
+                             biotype: str = 'protein_coding', background_genes: set = None,
                              ref_path: str = 'predefined', save_csv: bool = False, fname=None):
         """
         Calculates enrichment scores, p-values and q-values \
@@ -429,8 +448,13 @@ class EnrichmentProcessing:
         10,000 is the default. Recommended 10,000 or higher.
         :type ref_path: 'predefined' (default), str or pathlib.Path
         :param ref_path: the path of the Big Table file to be used as reference.
-        :param biotype: the biotype you want your reference to have. 'all' will include all biotypes, \
-        'protein_coding' will include only protein-coding genes in the reference, etc.
+        :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
+        :param biotype: the biotype you want your background reference to have. 'all' will include all biotypes, \
+        'protein_coding' will include only protein-coding genes in the reference, etc. \
+        Cannot be specified together with 'background_genes'.
+        :type background_genes: set of WBGene indices
+        :param background_genes: a set of specific WBGene indices to be used as background reference. \
+        Cannot be specified together with 'biotype'.
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path
@@ -447,7 +471,8 @@ class EnrichmentProcessing:
            Example plot of big table enrichment
         """
         attributes = EnrichmentProcessing._enrichment_get_attrs(attributes=attributes)
-        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, ref_path=ref_path)
+        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, background_genes=background_genes,
+                                                                   ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
