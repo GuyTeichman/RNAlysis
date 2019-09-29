@@ -362,11 +362,11 @@ class Filter:
 
     def number_filters(self, column: str, operator: str, value, opposite=False, inplace=True):
         """
-        Applay a number filter (larger than, equal, smaller than) on a particular column in the Filter object.
+        Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.
 
         :type column: str
         :param column: name of the column to filter by
-        :type operator: str: 'lt'/'larger than'/'>'. 'eq'/'equal'/'=', 'st'/'smaller than'/'<'
+        :type operator: str: 'gt'/'greater than'/'>'. 'eq'/'equal'/'=', 'lt'/'lesser than'/'<'
         :param operator: the operator to filter the column by (larger than, equal or smaller than)
         :type value: number (int or float)
         :param value: the value to filter by
@@ -380,10 +380,10 @@ class Filter:
         :return:
         If 'inplace' is False, returns a new instance of the Filter object.
 
-        Example usage: filt.number_filter('baseMean','lt',57, inplace=False) \
-        will return a Filter object in which all rows have a value larger than 57 in the column 'baseMean'.
+        Example usage: filt.number_filter('baseMean','gt',57, inplace=False) \
+        will return a Filter object in which all rows have a value greater than 57 in the column 'baseMean'.
         """
-        operator_dict = {'lt': 'lt', 'larger than': 'lt', '>': 'lt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'st': 'st',
+        operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'st': 'st',
                          'smaller than': 'st', '<': 'st'}
         assert operator in operator_dict, f"Invalid operator {operator}"
         assert isinstance(value, (int, float)), f"'value' must be a number!"
@@ -393,9 +393,9 @@ class Filter:
 
         if op == 'eq':
             new_df = self.df[self.df[column] == value]
-        elif op == 'lt':
+        elif op == 'gt':
             new_df = self.df[self.df[column] > value]
-        elif op == 'st':
+        elif op == 'lt':
             new_df = self.df[self.df[column] < value]
 
         return self._inplace(new_df, opposite, inplace, suffix)
