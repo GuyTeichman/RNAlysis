@@ -385,6 +385,7 @@ class Filter:
         """
         operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'st': 'st',
                          'smaller than': 'st', '<': 'st'}
+        operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
         assert isinstance(value, (int, float)), f"'value' must be a number!"
         assert column in self.columns, f"column {column} not in DataFrame!"
@@ -425,6 +426,7 @@ class Filter:
         """
         operator_dict = {'eq': 'eq', 'equal': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'bw': 'bw',
                          'begins with': 'bw', 'ew': 'ew', 'ends with': 'ew'}
+        operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
         assert isinstance(value, (int, float)), f"'value' must be a number!"
         assert column in self.columns, f"column {column} not in DataFrame!"
