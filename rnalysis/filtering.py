@@ -426,8 +426,8 @@ class Filter:
         Example usage: filt.text_filters('name','sw','pseudo', inplace=False) \
         will return a Filter object in which all rows have a value that starts with 'pseudo' in the column 'name'.
         """
-        operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'bw': 'bw',
-                         'begins with': 'bw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq'}
+        operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'sw': 'sw',
+                         'starts with': 'sw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq','begins with':'sw'}
         operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
         assert isinstance(value, str), f"'value' must be a string!"
@@ -439,9 +439,9 @@ class Filter:
             new_df = self.df[self.df[column] == value]
         elif op == 'ct':
             new_df = self.df[self.df[column].str.contains(value)]
-        elif op == 'sw':
-            new_df = self.df[self.df[column].str.endswith(value)]
         elif op == 'ew':
+            new_df = self.df[self.df[column].str.endswith(value)]
+        elif op == 'sw':
             new_df = self.df[self.df[column].str.startswith(value)]
         else:
             raise KeyError(f"Problem with operator {operator} or key {op}. Please report to the developer. ")

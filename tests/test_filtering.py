@@ -394,10 +394,132 @@ def test_htcount_fold_change():
 def test_fcfilter_filter_abs_fc():
     truth = general.load_csv('fcfilter_abs_fold_change_truth.csv', 0)
     truth = truth.squeeze()
-    truth.sort_index()
+    truth.sort_index(inplace=True)
     f = FoldChangeFilter('all_expr_fold_change_truth.csv', 'numer', 'denom')
     f.filter_abs_log2_fold_change(1)
-    f.df.sort_index()
+    f.df.sort_index(inplace=True)
     print(f.df.values)
     print(truth.values)
     assert np.all(np.squeeze(f.df.values) == np.squeeze(truth.values))
+
+
+def test_number_filters_gt():
+    truth = general.load_csv(r'test_deseq_gt.csv', 0)
+    d = DESeqFilter(r'test_deseq.csv')
+    filt_1 = d.number_filters('baseMean', '>', 1000, inplace=False)
+    filt_2 = d.number_filters('baseMean', 'GT', 1000, inplace=False)
+    filt_3 = d.number_filters('baseMean', 'greater tHAn', 1000, inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    filt_3.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(filt_2.df == filt_3.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
+def test_number_filters_lt():
+    truth = general.load_csv(r'test_deseq_lt.csv', 0)
+    d = DESeqFilter(r'test_deseq.csv')
+    filt_1 = d.number_filters('lfcSE', 'Lesser than', 0.2, inplace=False)
+    filt_2 = d.number_filters('lfcSE', 'lt', 0.2, inplace=False)
+    filt_3 = d.number_filters('lfcSE', '<', 0.2, inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    filt_3.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(filt_2.df == filt_3.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
+def test_number_filters_eq():
+    truth = general.load_csv(r'all_expr_eq.csv', 0)
+    d = HTCountFilter(r'all_expr.csv')
+    filt_1 = d.number_filters('cond2', 'eQ', 0, inplace=False)
+    filt_2 = d.number_filters('cond2', '=', 0, inplace=False)
+    filt_3 = d.number_filters('cond2', 'Equals', 0, inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    filt_3.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(filt_2.df == filt_3.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
+def test_number_filters_invalid_input():
+    d = HTCountFilter(r'all_expr.csv')
+    with pytest.raises(AssertionError):
+        d.number_filters('Cond2', 'lt', 5)
+    with pytest.raises(AssertionError):
+        d.number_filters('cond2', 'contains', 6)
+    with pytest.raises(AssertionError):
+        d.number_filters('cond2', 'equals', '55')
+
+
+def test_text_filters_eq():
+    truth = general.load_csv(r'text_filters_eq.csv', 0)
+    d = HTCountFilter(r'text_filters.csv')
+    filt_1 = d.text_filters('class', 'eQ', 'B', inplace=False)
+    filt_2 = d.text_filters('class', '=', 'B', inplace=False)
+    filt_3 = d.text_filters('class', 'Equals', 'B', inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    filt_3.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(filt_2.df == filt_3.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
+def test_text_filters_ct():
+    truth = general.load_csv(r'text_filters_ct.csv', 0)
+    d = HTCountFilter(r'text_filters.csv')
+    filt_1 = d.text_filters('name', 'ct', 'C3.', inplace=False)
+    filt_2 = d.text_filters('name', 'IN', 'C3.', inplace=False)
+    filt_3 = d.text_filters('name', 'contaiNs', 'C3.', inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    filt_3.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(filt_2.df == filt_3.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
+
+def test_text_filters_sw():
+    truth = general.load_csv(r'text_filters_sw.csv', 0)
+    d = HTCountFilter(r'text_filters.csv')
+    filt_1 = d.text_filters('name', 'sw', '2R', inplace=False)
+    filt_2 = d.text_filters('name', 'Starts With', '2R', inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    print(filt_1.df)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
+def test_text_filters_ew():
+    truth = general.load_csv(r'text_filters_ew.csv', 0)
+    d = HTCountFilter(r'text_filters.csv')
+    filt_1 = d.text_filters('name', 'ew', '3', inplace=False)
+    filt_2 = d.text_filters('name', 'ends With', '3', inplace=False)
+    filt_1.df.sort_index(inplace=True)
+    filt_2.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    print(filt_1.df)
+    assert np.all(filt_1.df == filt_2.df)
+    assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
+
+
+def test_text_filters_invalid_input():
+    d = HTCountFilter(r'all_expr.csv')
+    with pytest.raises(AssertionError):
+        d.text_filters('Cond2', 'contains', '5')
+    with pytest.raises(AssertionError):
+        d.text_filters('cond2', 'lt', '6')
+    with pytest.raises(AssertionError):
+        d.text_filters('cond2', 'equals', 55)
