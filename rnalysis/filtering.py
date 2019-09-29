@@ -383,8 +383,8 @@ class Filter:
         Example usage: filt.number_filter('baseMean','gt',57, inplace=False) \
         will return a Filter object in which all rows have a value greater than 57 in the column 'baseMean'.
         """
-        operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'st': 'st',
-                         'smaller than': 'st', '<': 'st'}
+        operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'lt': 'lt',
+                         'lesser than': 'lt', '<': 'lt', 'equal': 'eq'}
         operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
         assert isinstance(value, (int, float)), f"'value' must be a number!"
@@ -398,6 +398,8 @@ class Filter:
             new_df = self.df[self.df[column] > value]
         elif op == 'lt':
             new_df = self.df[self.df[column] < value]
+        else:
+            raise KeyError(f"Problem with operator {operator} or key {op}. Please report to the developer. ")
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -424,11 +426,11 @@ class Filter:
         Example usage: filt.text_filters('name','sw','pseudo', inplace=False) \
         will return a Filter object in which all rows have a value that starts with 'pseudo' in the column 'name'.
         """
-        operator_dict = {'eq': 'eq', 'equal': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'bw': 'bw',
-                         'begins with': 'bw', 'ew': 'ew', 'ends with': 'ew'}
+        operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'bw': 'bw',
+                         'begins with': 'bw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq'}
         operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
-        assert isinstance(value, (int, float)), f"'value' must be a number!"
+        assert isinstance(value, str), f"'value' must be a string!"
         assert column in self.columns, f"column {column} not in DataFrame!"
         op = operator_dict[operator]
         suffix = f"_{column}{op}{value}"
@@ -441,6 +443,8 @@ class Filter:
             new_df = self.df[self.df[column].str.endswith(value)]
         elif op == 'ew':
             new_df = self.df[self.df[column].str.startswith(value)]
+        else:
+            raise KeyError(f"Problem with operator {operator} or key {op}. Please report to the developer. ")
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
