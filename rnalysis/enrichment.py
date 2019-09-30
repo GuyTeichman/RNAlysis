@@ -324,7 +324,11 @@ class EnrichmentProcessing:
                     "Warning: both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")
                 biotype = 'all'
 
-            big_table = big_table.loc[background_genes]
+            big_table = big_table.loc[background_genes.intersection(set(big_table.index))]
+            if len(big_table.index) < len(background_genes):
+                warnings.warn(
+                    f"Warning: {len(big_table.index) - len(background_genes)} WBGene indices from the requested "
+                    f"background genes do not appear in the reference table, and are therefore ignored.")
         if biotype == 'all':
             pass
         else:
