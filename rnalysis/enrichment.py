@@ -336,6 +336,7 @@ class EnrichmentProcessing:
                 for bio in biotype:
                     mask = mask | (biotype_ref['bioType'] == bio)
             else:
+                biotype_ref = biotype_ref.loc[biotype_ref.index.intersection(big_table.index)]
                 mask = biotype_ref['bioType'] == biotype
             big_table = big_table.loc[biotype_ref[mask].index]
 

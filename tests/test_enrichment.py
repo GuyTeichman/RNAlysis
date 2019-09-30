@@ -117,9 +117,56 @@ def test_biotypes():
     assert np.all(df == truth)
 
 
-def test_enrichment_randomization():
+def test_enrichment_get_ref_biotype():
+    truth = general.load_csv('big_table_for_tests_biotype.csv', 0)
+    res = EnrichmentProcessing._enrichemnt_get_reference(biotype='protein_coding', background_genes=None,
+                                                         ref_path='big_table_for_tests.csv')
+    truth.sort_index(inplace=True)
+    res.sort_index(inplace=True)
+
+    assert np.all(res.index == truth.index)
+    assert np.all(res.columns == truth.columns)
+    assert np.all(res.bioType == truth.bioType)
+    assert np.all(res.attribute1.isna() == truth.attribute1.isna())
+    assert np.all(res.attribute2.isna() == truth.attribute2.isna())
+    assert np.all(res.int_index == truth.int_index)
+
+
+def test_enrichment_get_ref_custom_background():
+    truth = general.load_csv('big_table_for_tests_specified_bg.csv', 0)
+    bg_genes = {'WBGene00000041',
+                'WBGene00000105',
+                'WBGene00000106',
+                'WBGene00000369',
+                'WBGene00000859',
+                'WBGene00000863',
+                'WBGene00000864',
+                'WBGene00000865',
+                'WBGene00001131',
+                'WBGene00001436',
+                'WBGene00002074',
+                'WBGene00003864',
+                'WBGene00003902',
+                'WBGene00011910',
+                'WBGene00048863',
+                'WBGene00199486',
+                'WBGene00268189'}
+    res = EnrichmentProcessing._enrichemnt_get_reference(biotype='all', background_genes=bg_genes,
+                                                         ref_path='big_table_for_tests.csv')
+    truth.sort_index(inplace=True)
+    res.sort_index(inplace=True)
+
+    assert np.all(res.index == truth.index)
+    assert np.all(res.columns == truth.columns)
+    assert np.all(res.bioType == truth.bioType)
+    assert np.all(res.attribute1.isna() == truth.attribute1.isna())
+    assert np.all(res.attribute2.isna() == truth.attribute2.isna())
+    assert np.all(res.int_index == truth.int_index)
+
+
+def test_enrichment_randomization_reliability():
     assert False
 
 
-def test_enrichment_custom_Background():
+def test_enrichment_randomization_validity():
     assert False
