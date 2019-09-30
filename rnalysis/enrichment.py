@@ -6,7 +6,7 @@ EnrichmentProcessing objects. \
 Results of enrichment analyses can be saved to .csv files.
 """
 
-import os
+import random
 import numpy as np
 import pandas as pd
 from rnalysis import general, __gene_names_and_biotype__

@@ -1,9 +1,14 @@
 import pytest
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
 from pathlib import Path
 from rnalysis import general
+import statsmodels.stats.multitest as multitest
 from rnalysis.enrichment import *
+
+matplotlib.use('Agg')
 
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',
                   'WBGene00012848', 'WBGene00020817', 'WBGene00012452', 'WBGene00016635', 'WBGene00044478',
@@ -93,23 +98,10 @@ def test_set_operations_with_set():
 
 def test_biotypes():
     truth = general.load_csv('biotypes_truth.csv', 0)
-    genes = {'WBGene00000019',
-             'WBGene00000041',
-             'WBGene00000105',
-             'WBGene00000106',
-             'WBGene00000137',
-             'WBGene00048863',
-             'WBGene00048864',
-             'WBGene00048865',
-             'WBGene00199484',
-             'WBGene00199485',
-             'WBGene00199486',
-             'WBGene00255734',
-             'WBGene00255735',
-             'WBGene00268189',
-             'WBGene00268190',
-             'WBGene00268191',
-             'WBGene00268195'}
+    genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
+             'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
+             'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105'}
+
     en = EnrichmentProcessing(genes)
     df = en.biotypes()
     df.sort_index(inplace=True)
@@ -134,23 +126,11 @@ def test_enrichment_get_ref_biotype():
 
 def test_enrichment_get_ref_custom_background():
     truth = general.load_csv('big_table_for_tests_specified_bg.csv', 0)
-    bg_genes = {'WBGene00000041',
-                'WBGene00000105',
-                'WBGene00000106',
-                'WBGene00000369',
-                'WBGene00000859',
-                'WBGene00000863',
-                'WBGene00000864',
-                'WBGene00000865',
-                'WBGene00001131',
-                'WBGene00001436',
-                'WBGene00002074',
-                'WBGene00003864',
-                'WBGene00003902',
-                'WBGene00011910',
-                'WBGene00048863',
-                'WBGene00199486',
-                'WBGene00268189'}
+    bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
+                'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
+                'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
+                'WBGene00000105', 'WBGene00001131'}
+
     res = EnrichmentProcessing._enrichemnt_get_reference(biotype='all', background_genes=bg_genes,
                                                          ref_path='big_table_for_tests.csv')
     truth.sort_index(inplace=True)
@@ -164,9 +144,53 @@ def test_enrichment_get_ref_custom_background():
     assert np.all(res.int_index == truth.int_index)
 
 
+def tests_enrichment_randomization_api():
+    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
+             'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
+             'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
+             'WBGene00003864', 'WBGene00000019', 'WBGene00014208', 'WBGene00002074', 'WBGene00000106', 'WBGene00000137',
+             'WBGene00000859', 'WBGene00268189'}
+    attrs = ['attribute1', 'attribute2']
+    en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
+    res1 = en.enrich_randomization(attrs, reps=1, biotype='all', ref_path='big_table_for_tests.csv')
+
+
 def test_enrichment_randomization_reliability():
-    assert False
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
+    attrs = ['attribute1', 'attribute2']
+    en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
+
+    for i in range(5):
+        res1 = en.enrich_randomization(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
+        res2 = en.enrich_randomization(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
+        res3 = en.enrich_randomization(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
+
+        for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
+            assert np.all(res1[col] == res2[col])
+            assert np.all(res2[col] == res3[col])
+        for randcol in ['pval', 'padj']:
+            assert np.isclose(res1[randcol], res2[randcol], atol=0.0, rtol=0.2).all()
+            assert np.isclose(res2[randcol], res3[randcol], atol=0.0, rtol=0.2).all()
+            assert np.isclose(res2[randcol], res1[randcol], atol=0.0, rtol=0.2).all()
+            assert np.isclose(res3[randcol], res2[randcol], atol=0.0, rtol=0.2).all()
 
 
 def test_enrichment_randomization_validity():
-    assert False
+    truth = general.load_csv('enrichment_randomization_res.csv', 0)
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
+    attrs = ['attribute1', 'attribute2']
+    en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
+
+    res = en.enrich_randomization(attrs, reps=100000, biotype='all', ref_path='big_table_for_tests.csv')
+
+    for col in ['samples', 'n obs', 'significant']:
+        assert np.all(res[col] == truth[col])
+    for closecol in ['n exp', 'log2_fold_enrichment']:
+        assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
+    for randcol in ['pval']:
+        assert np.isclose(res[randcol], truth[randcol], atol=2*10**-4, rtol=0.25).all()
+    pvals = res['pval'].values
+    _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
+    assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
