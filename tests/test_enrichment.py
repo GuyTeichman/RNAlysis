@@ -2,7 +2,8 @@ import pytest
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from rnalysis import general, enrichment
+from rnalysis import general
+from rnalysis.enrichment import *
 
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',
                   'WBGene00012848', 'WBGene00020817', 'WBGene00012452', 'WBGene00016635', 'WBGene00044478',
@@ -26,15 +27,15 @@ up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene0
 
 
 def test_enrichment_processing_api():
-    up = enrichment.EnrichmentProcessing(up_feature_set)
+    up = EnrichmentProcessing(up_feature_set)
 
 
 def test_enrichment_processing_union():
     other = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = up_feature_set.union(other)
-    up = enrichment.EnrichmentProcessing(up_feature_set)
-    other_ep = enrichment.EnrichmentProcessing(other)
+    up = EnrichmentProcessing(up_feature_set)
+    other_ep = EnrichmentProcessing(other)
     up.union(other_ep)
     assert np.all(up.gene_set == truth)
 
@@ -44,8 +45,8 @@ def test_enrichment_processing_intersection():
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523'}
-    up = enrichment.EnrichmentProcessing(up_feature_set)
-    other_ep = enrichment.EnrichmentProcessing(other)
+    up = EnrichmentProcessing(up_feature_set)
+    other_ep = EnrichmentProcessing(other)
     up.intersection(other_ep)
     assert np.all(up.gene_set == truth)
 
@@ -54,8 +55,8 @@ def test_enrichment_processing_difference():
     other = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00000001', 'WBGene00000002'}
-    up = enrichment.EnrichmentProcessing(up_feature_set)
-    other_ep = enrichment.EnrichmentProcessing(other)
+    up = EnrichmentProcessing(up_feature_set)
+    other_ep = EnrichmentProcessing(other)
     other_ep.difference(up)
     assert np.all(other_ep.gene_set == truth)
 
@@ -65,8 +66,8 @@ def test_enrichment_processing_symmetric_difference():
     second = {'WBGene00044200', 'WBGene00206390',
               'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00016520', 'WBGene00017225', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
-    first_ep = enrichment.EnrichmentProcessing(first)
-    second_ep = enrichment.EnrichmentProcessing(second)
+    first_ep = EnrichmentProcessing(first)
+    second_ep = EnrichmentProcessing(second)
     direction1 = second_ep.symmetric_difference(first_ep, inplace=False)
     direction2 = first_ep.symmetric_difference(second_ep, inplace=False)
     assert np.all(direction1.gene_set == truth)
@@ -75,15 +76,50 @@ def test_enrichment_processing_symmetric_difference():
 
 def test_set_operations_invalid_obj():
     first = {'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390'}
-    first_ep = enrichment.EnrichmentProcessing(first)
+    first_ep = EnrichmentProcessing(first)
     with pytest.raises(TypeError):
-        first_ep.intersection(['WBGene00044200', 'WBGene00206390', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'])
+        first_ep.intersection(
+            ['WBGene00044200', 'WBGene00206390', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'])
 
 
 def test_set_operations_with_set():
     first = {'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390'}
     second = {'WBGene00044200', 'WBGene00206390', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00016520', 'WBGene00017225', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
-    first_ep = enrichment.EnrichmentProcessing(first)
+    first_ep = EnrichmentProcessing(first)
     symm_diff = first_ep.symmetric_difference(second, inplace=False)
     assert np.all(symm_diff.gene_set == truth)
+
+
+def test_biotypes():
+    truth = general.load_csv('biotypes_truth.csv', 0)
+    genes = {'WBGene00000019',
+             'WBGene00000041',
+             'WBGene00000105',
+             'WBGene00000106',
+             'WBGene00000137',
+             'WBGene00048863',
+             'WBGene00048864',
+             'WBGene00048865',
+             'WBGene00199484',
+             'WBGene00199485',
+             'WBGene00199486',
+             'WBGene00255734',
+             'WBGene00255735',
+             'WBGene00268189',
+             'WBGene00268190',
+             'WBGene00268191',
+             'WBGene00268195'}
+    en = EnrichmentProcessing(genes)
+    df = en.biotypes()
+    df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(df == truth)
+
+
+def test_enrichment_randomization():
+    assert False
+
+
+def test_enrichment_custom_Background():
+    assert False
