@@ -488,7 +488,6 @@ def test_text_filters_ct():
     assert np.all(np.squeeze(truth) == np.squeeze(filt_1.df))
 
 
-
 def test_text_filters_sw():
     truth = general.load_csv(r'text_filters_sw.csv', 0)
     d = HTCountFilter(r'text_filters.csv')
@@ -523,3 +522,11 @@ def test_text_filters_invalid_input():
         d.text_filters('cond2', 'lt', '6')
     with pytest.raises(AssertionError):
         d.text_filters('cond2', 'equals', 55)
+
+
+def test_biotypes():
+    truth = general.load_csv('biotypes_truth.csv', 0)
+    df = HTCountFilter(r'all_expr_biotype.csv').biotypes()
+    truth.sort_index(inplace=True)
+    df.sort_index(inplace=True)
+    assert np.all(df == truth)
