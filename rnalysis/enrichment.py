@@ -328,7 +328,8 @@ class EnrichmentProcessing:
             if len(big_table.index) < len(background_genes):
                 warnings.warn(
                     f"Warning: {len(background_genes) - len(big_table.index)} WBGene indices from the requested "
-                    f"background genes do not appear in the reference table, and are therefore ignored.")
+                    f"background genes do not appear in the reference table, and are therefore ignored. "
+                    f"This leaves a total of {len(big_table.index)} background genes. ")
         if biotype == 'all':
             pass
         else:
