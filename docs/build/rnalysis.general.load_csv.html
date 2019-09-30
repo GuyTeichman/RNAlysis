@@ -182,7 +182,7 @@
 <h1>rnalysis.general.load_csv<a class="headerlink" href="#rnalysis-general-load-csv" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="rnalysis.general.load_csv">
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_gene_names: bool = True</em>, <em class="sig-param">squeeze=False</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.load_csv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_gene_names: bool = True</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.load_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>loads a csv df into a pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -191,6 +191,7 @@
 <li><p><strong>idx_col</strong> (<em>int</em><em>, </em><em>default None</em>) – number of column to be used as index. default is None, meaning no column will be used as index.</p></li>
 <li><p><strong>drop_gene_names</strong> (<em>bool</em><em>, </em><em>default True</em>) – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
 <li><p><strong>squeeze</strong> (<em>bool</em><em>, </em><em>default False</em>) – If the parsed data only contains one column then return a Series.</p></li>
+<li><p><strong>comment</strong> (<em>str</em><em> (</em><em>optional</em><em>)</em>) – Indicates remainder of line should not be parsed.     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

@@ -8,7 +8,6 @@ rnalysis.general
    .. rubric:: Functions
 
    .. autosummary::
-    :toctree:
    
       check_is_df
       filter_low_rpm
@@ -23,6 +22,9 @@ rnalysis.general
       remove_unindexed_rows
       save_to_csv
       set_reference_table_path
+      start_ipcluster
+      start_parallel_session
+      stop_ipcluster
    
    
 
@@ -30,5 +32,6 @@ rnalysis.general
    
    
 
+   
    
    

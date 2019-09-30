@@ -5,15 +5,17 @@ rnalysis.filtering.FoldChangeFilter
 
 .. autoclass:: FoldChangeFilter
 
-   
+
    .. automethod:: __init__
 
-   
+
    .. rubric:: Methods
 
    .. autosummary::
-   
+    :toctree:
+
       ~FoldChangeFilter.__init__
+      ~FoldChangeFilter.biotypes
       ~FoldChangeFilter.describe
       ~FoldChangeFilter.features_set
       ~FoldChangeFilter.features_string
@@ -23,14 +25,16 @@ rnalysis.filtering.FoldChangeFilter
       ~FoldChangeFilter.filter_fold_change_direction
       ~FoldChangeFilter.filter_percentile
       ~FoldChangeFilter.head
+      ~FoldChangeFilter.number_filters
       ~FoldChangeFilter.randomization_test
       ~FoldChangeFilter.save_csv
       ~FoldChangeFilter.split_by_bigtable_group
       ~FoldChangeFilter.split_by_percentile
       ~FoldChangeFilter.split_fold_change_direction
       ~FoldChangeFilter.tail
-   
-   
+      ~FoldChangeFilter.text_filters
 
-   
-   
+
+
+
+

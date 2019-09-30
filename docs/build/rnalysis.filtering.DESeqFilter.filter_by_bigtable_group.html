@@ -204,7 +204,7 @@
 <li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
 <li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – ‘union’ or ‘intersection’. If ‘union’, filters out every feature that does not match at least one         of the indicated Big Table attributes. If ‘intersection’,         filters out every feature that does not match all of the indicated Big Table attributes.</p></li>
 <li><p><strong>inclusion</strong> – boolean. If True (default), features will be filtered by inclusion in the specified criteria         (meaning features that  belong to the attributes are kept         and features that don’t belong to the attributes are filtered out).         If False, features will be filtered out by exclusion from the specified criteria         (meaning features that DON’T belong to the attributes         are kept, and features that do belong to the attributes are filtered out).</p></li>
-<li><p><strong>ref</strong> – filename/path of the Big Table to be used as reference.</p></li>
+<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
