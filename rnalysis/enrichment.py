@@ -5,7 +5,7 @@ Furthermore, set operations (union, intersect, difference, symmetric difference)
 EnrichmentProcessing objects. \
 Results of enrichment analyses can be saved to .csv files.
 """
-
+import random
 import numpy as np
 import pandas as pd
 from rnalysis import general, __gene_names_and_biotype__
@@ -280,14 +280,15 @@ class EnrichmentProcessing:
             expected_fraction = fraction(srs)
             observed_fraction = fraction(obs_srs)
             log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
+            ind = srs_int.index
             if log2_fold_enrichment >= 0:
                 success = sum(
-                    (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) >= observed_fraction
-                     for _ in range(reps)))
+                    (fraction(srs_int.loc[np.random.choice(ind, n, replace=False)]) >= observed_fraction
+                     for _ in repeat(None, reps)))
             else:
                 success = sum(
-                    (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) <= observed_fraction
-                     for _ in range(reps)))
+                    (fraction(srs_int.loc[np.random.choice(ind, n, replace=False)]) <= observed_fraction
+                     for _ in repeat(None, reps)))
             pval = (success + 1) / (reps + 1)
 
             return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
@@ -491,14 +492,15 @@ class EnrichmentProcessing:
             expected_fraction = fraction(srs)
             observed_fraction = fraction(obs_srs)
             log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
+            ind = set(srs_int.index)
             if log2_fold_enrichment >= 0:
                 success = sum(
-                    (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) >= observed_fraction
-                     for _ in range(reps)))
+                    (fraction(srs_int.loc[random.sample(ind, n)]) >= observed_fraction
+                     for _ in repeat(None, reps)))
             else:
                 success = sum(
-                    (fraction(srs_int.loc[np.random.choice(srs_int.index, n, replace=False)]) <= observed_fraction
-                     for _ in range(reps)))
+                    (fraction(srs_int.loc[random.sample(ind, n)]) <= observed_fraction
+                     for _ in repeat(None, reps)))
             pval = (success + 1) / (reps + 1)
 
             enriched_list.append(

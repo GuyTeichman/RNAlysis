@@ -170,10 +170,10 @@ def test_enrichment_randomization_reliability():
             assert np.all(res1[col] == res2[col])
             assert np.all(res2[col] == res3[col])
         for randcol in ['pval', 'padj']:
-            assert np.isclose(res1[randcol], res2[randcol], atol=0.0, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res3[randcol], atol=0.0, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res1[randcol], atol=0.0, rtol=0.2).all()
-            assert np.isclose(res3[randcol], res2[randcol], atol=0.0, rtol=0.2).all()
+            assert np.isclose(res1[randcol], res2[randcol], atol=4*10**-4, rtol=0.2).all()
+            assert np.isclose(res2[randcol], res3[randcol], atol=4*10**-4, rtol=0.2).all()
+            assert np.isclose(res2[randcol], res1[randcol], atol=4*10**-4, rtol=0.2).all()
+            assert np.isclose(res3[randcol], res2[randcol], atol=4*10**-4, rtol=0.2).all()
 
 
 def test_enrichment_randomization_validity():
