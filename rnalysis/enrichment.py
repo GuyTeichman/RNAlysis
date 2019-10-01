@@ -305,8 +305,8 @@ class EnrichmentProcessing:
             assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
         return attributes
 
-    @staticmethod
-    def _enrichemnt_get_reference(biotype, background_genes, ref_path):
+    def _enrichment_get_reference(self, biotype, background_genes, ref_path):
+        gene_set = self.gene_set
         ref_path = EnrichmentProcessing._get_ref_path(ref_path)
         try:
             big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
@@ -329,7 +329,7 @@ class EnrichmentProcessing:
             if len(big_table.index) < len(background_genes):
                 warnings.warn(
                     f"Warning: {len(background_genes) - len(big_table.index)} WBGene indices from the requested "
-                    f"background genes do not appear in the reference table, and are therefore ignored. "
+                    f"background genes do not appear in the reference table, and are therefore ignored. \n"
                     f"This leaves a total of {len(big_table.index)} background genes. ")
         if biotype == 'all':
             pass
@@ -346,7 +346,14 @@ class EnrichmentProcessing:
             big_table = big_table.loc[biotype_ref[mask].index]
 
         big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
-        return big_table
+        print(f"{len(big_table.index)} background genes are used. ")
+
+        not_in_bg = gene_set.difference(set(big_table.index))
+        if len(not_in_bg) > 0:
+            gene_set = gene_set.difference(not_in_bg)
+            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the background reference. \n"
+                          f"Enrichment will be run on the remaining {len(gene_set)}.")
+        return big_table, gene_set
 
     def enrich_randomization_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                                       biotype: str = 'protein_coding', background_genes: set = None,
@@ -395,16 +402,16 @@ class EnrichmentProcessing:
 
           Example plot of big table enrichment
        """
-        attributes = EnrichmentProcessing._enrichment_get_attrs(attributes=attributes)
-        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, background_genes=background_genes,
-                                                                   ref_path=ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes)
+        big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
+                                                             ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         client = Client()
         dview = client[:]
         dview.execute("""import numpy as np
               import pandas as pd""")
         k = len(attributes)
-        gene_set_rep = list(repeat(self.gene_set, k))
+        gene_set_rep = list(repeat(gene_set, k))
         big_table_rep = list(repeat(big_table, k))
         fraction_rep = list(repeat(fraction, k))
         reps_rep = list(repeat(reps, k))
@@ -476,9 +483,9 @@ class EnrichmentProcessing:
 
            Example plot of big table enrichment
         """
-        attributes = EnrichmentProcessing._enrichment_get_attrs(attributes=attributes)
-        big_table = EnrichmentProcessing._enrichemnt_get_reference(biotype=biotype, background_genes=background_genes,
-                                                                   ref_path=ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes)
+        big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
+                                                             ref_path=ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
@@ -487,7 +494,7 @@ class EnrichmentProcessing:
             df = big_table[[attribute, 'int_index']]
             srs = df[attribute]
             srs_int = (df.set_index('int_index', inplace=False))[attribute]
-            obs_srs = srs.loc[self.gene_set]
+            obs_srs = srs.loc[gene_set]
             n = obs_srs.shape[0]
             expected_fraction = fraction(srs)
             observed_fraction = fraction(obs_srs)

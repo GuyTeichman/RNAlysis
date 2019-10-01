@@ -111,8 +111,11 @@ def test_biotypes():
 
 def test_enrichment_get_ref_biotype():
     truth = general.load_csv('big_table_for_tests_biotype.csv', 0)
-    res = EnrichmentProcessing._enrichemnt_get_reference(biotype='protein_coding', background_genes=None,
-                                                         ref_path='big_table_for_tests.csv')
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
+    en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
+    res, _ = en._enrichment_get_reference(biotype='protein_coding', background_genes=None,
+                                          ref_path='big_table_for_tests.csv')
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
 
@@ -130,9 +133,12 @@ def test_enrichment_get_ref_custom_background():
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
                 'WBGene00000105', 'WBGene00001131'}
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
+    en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
 
-    res = EnrichmentProcessing._enrichemnt_get_reference(biotype='all', background_genes=bg_genes,
-                                                         ref_path='big_table_for_tests.csv')
+    res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_genes,
+                                          ref_path='big_table_for_tests.csv')
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
 
@@ -170,10 +176,10 @@ def test_enrichment_randomization_reliability():
             assert np.all(res1[col] == res2[col])
             assert np.all(res2[col] == res3[col])
         for randcol in ['pval', 'padj']:
-            assert np.isclose(res1[randcol], res2[randcol], atol=4*10**-4, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res3[randcol], atol=4*10**-4, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res1[randcol], atol=4*10**-4, rtol=0.2).all()
-            assert np.isclose(res3[randcol], res2[randcol], atol=4*10**-4, rtol=0.2).all()
+            assert np.isclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+            assert np.isclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+            assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+            assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
 
 
 def test_enrichment_randomization_validity():
@@ -190,7 +196,7 @@ def test_enrichment_randomization_validity():
     for closecol in ['n exp', 'log2_fold_enrichment']:
         assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
     for randcol in ['pval']:
-        assert np.isclose(res[randcol], truth[randcol], atol=2*10**-4, rtol=0.25).all()
+        assert np.isclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25).all()
     pvals = res['pval'].values
     _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
     assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
