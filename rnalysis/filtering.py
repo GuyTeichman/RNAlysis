@@ -519,7 +519,7 @@ class FoldChangeFilter(Filter):
         res = [[n, obs_fc, exp_fc, pval]]
 
         res_df = pd.DataFrame(res, columns=['group size', 'observed fold change', 'expected fold change', 'pval'],
-                              index=[1])
+                              index=[0])
         res_df['significant'] = pval <= alpha
         if save_csv:
             general.save_to_csv(res_df, fname, '')

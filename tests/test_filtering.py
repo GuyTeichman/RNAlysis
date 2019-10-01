@@ -391,6 +391,17 @@ def test_htcount_fold_change():
     assert np.all(np.isclose(fc.df, truth))
 
 
+def test_fc_randomization():
+    truth = general.load_csv('fc_randomization_truth.csv')
+    fc1 = FoldChangeFilter("fc_1.csv", 'a', 'b')
+    fc2 = FoldChangeFilter("fc_2.csv", "c", "d")
+
+    res = fc1.randomization_test(fc2)
+
+    assert np.all(truth['significant'] == res['significant'])
+    assert np.isclose(truth.iloc[:, :-1], res.iloc[:, :-1]).all()
+
+
 def test_fcfilter_filter_abs_fc():
     truth = general.load_csv('fcfilter_abs_fold_change_truth.csv', 0)
     truth = truth.squeeze()
