@@ -751,6 +751,7 @@ class DESeqFilter(Filter):
         else:
             raise ValueError(f"'return type' must be either 'set' or 'str', is instead '{return_type}'!")
 
+#TODO: move 'filter_top_n' and SET OPERATIONS to be general Filter functions, and not specific to DESeqFilter.
     def _set_ops(self, others, return_type, op):
         others = list(others)
         for i, other in enumerate(others):
