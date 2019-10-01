@@ -226,7 +226,7 @@ class Filter:
 
     # TODO: add 'remove unindexed rows' to here!
 
-    def filter_by_bigtable_group(self, attributes: list = None, mode='union', inclusion: bool = True,
+    def filter_by_ref_table_attr(self, attributes: list = None, mode='union', inclusion: bool = True,
                                  ref: str = 'predefined',
                                  opposite: bool = False, inplace: bool = True):
         """
@@ -271,12 +271,12 @@ class Filter:
         sep_idx = [big_table[big_table[attr].notnull()].index for attr in attributes]
 
         if mode == 'intersection':
-            suffix = '_bigtableintersection'
+            suffix = '_reftableintersection'
             indices = self.df.index
             for idx in sep_idx:
                 indices = indices.intersection(idx)
         elif mode == 'union':
-            suffix = '_bigtableUnion'
+            suffix = '_reftableUnion'
             indices = pd.Index([])
             for idx in sep_idx:
                 indices = indices.union(idx)
@@ -286,7 +286,7 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_bigtable_group(self, attributes: tuple = None,
+    def split_by_ref_table_attr(self, attributes: tuple = None,
                                 ref: str = 'predefined'):
         """
         Splits the Filter object into multiple Filter objects, \
@@ -301,7 +301,7 @@ class Filter:
         """
         assert isinstance(attributes, (tuple, list, set))
         ref = self._get_ref_path(ref)
-        return [self.filter_by_bigtable_group(attributes=[att], mode='union', ref=ref, inplace=False) for att in
+        return [self.filter_by_ref_table_attr(attributes=[att], mode='union', ref=ref, inplace=False) for att in
                 attributes]
 
     def describe(self, percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]):
@@ -428,7 +428,7 @@ class Filter:
         will return a Filter object in which all rows have a value that starts with 'pseudo' in the column 'name'.
         """
         operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'sw': 'sw',
-                         'starts with': 'sw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq','begins with':'sw'}
+                         'starts with': 'sw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq', 'begins with': 'sw'}
         operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
         assert isinstance(value, str), f"'value' must be a string!"
@@ -674,6 +674,7 @@ class DESeqFilter(Filter):
         suffix = f"_top{n}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    # todo: change 'filter_top_n' so it gets a specific column and filters according to it, not specifically padj.
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
         """
         Filters out all features whose absolute log2 fold change is below the indicated threshold. \

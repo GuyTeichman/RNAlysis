@@ -83,20 +83,20 @@ def test_htcount_filter_biotype_opposite():
     assert np.all(h.df == truth_no_pirna)
 
 
-def test_filter_by_bigtable_group_union():
+def test_filter_by_ref_table_attr_union():
     union_truth = general.load_csv(r'all_expr_filter_by_bigtable_union_truth.csv', 0)
     h = HTCountFilter('all_expr_filter_by_bigtable.csv')
-    union = h.filter_by_bigtable_group(['attribute1', 'attribute2'], mode='union',
+    union = h.filter_by_ref_table_attr(['attribute1', 'attribute2'], mode='union',
                                        ref='big_table_for_tests.csv', inplace=False)
     union.df.sort_index(inplace=True)
     union_truth.sort_index(inplace=True)
     assert np.all(union.df == union_truth)
 
 
-def test_filter_by_bigtable_group_intersection():
+def test_filter_by_ref_table_attr_intersection():
     intersection_truth = general.load_csv(r'all_expr_filter_by_bigtable_intersect_truth.csv', 0)
     h = HTCountFilter('all_expr_filter_by_bigtable.csv')
-    intersection = h.filter_by_bigtable_group(['attribute1', 'attribute2'], mode='intersection',
+    intersection = h.filter_by_ref_table_attr(['attribute1', 'attribute2'], mode='intersection',
                                               ref='big_table_for_tests.csv',
                                               inplace=False)
     intersection.df.sort_index(inplace=True)

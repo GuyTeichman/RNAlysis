@@ -19,7 +19,7 @@ rnalysis.filtering.HTCountFilter
       ~HTCountFilter.features_set
       ~HTCountFilter.features_string
       ~HTCountFilter.filter_biotype
-      ~HTCountFilter.filter_by_bigtable_group
+      ~HTCountFilter.filter_by_ref_table_attr
       ~HTCountFilter.filter_low_reads
       ~HTCountFilter.filter_percentile
       ~HTCountFilter.fold_change
@@ -32,7 +32,7 @@ rnalysis.filtering.HTCountFilter
       ~HTCountFilter.pca
       ~HTCountFilter.save_csv
       ~HTCountFilter.scatter_sample_vs_sample
-      ~HTCountFilter.split_by_bigtable_group
+      ~HTCountFilter.split_by_ref_table_attr
       ~HTCountFilter.split_by_percentile
       ~HTCountFilter.split_by_reads
       ~HTCountFilter.tail
