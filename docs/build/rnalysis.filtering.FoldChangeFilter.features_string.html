@@ -94,7 +94,6 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.html">rnalysis.filtering.HTCountFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.__init__.html">rnalysis.filtering.FoldChangeFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes.html">rnalysis.filtering.FoldChangeFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.features_set.html">rnalysis.filtering.FoldChangeFilter.features_set</a></li>
@@ -196,17 +195,14 @@
 <dl class="method">
 <dt id="rnalysis.filtering.FoldChangeFilter.features_string">
 <code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.features_string" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which         were not filtered out by previously-used filter methods).         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned string ONLY ONCE.</p>
+<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
+<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
 </dl>
-<p>A string of WBGene indices separated by newlines (</p>
-</div></blockquote>
-<p>).         For example, “WBGene00000001
-WBGene00000003
-WBGene12345678”.</p>
+<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
 </dd></dl>
 
 </div>

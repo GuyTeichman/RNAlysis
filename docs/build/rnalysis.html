@@ -176,9 +176,15 @@
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">DESeqFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></p>
 <p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the .csv DESeq file to be loaded.</p>
+<p><strong>Attributes</strong></p>
+<dl class="simple">
+<dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the DESeq output file contents.         The DataFrame is modified upon usage of filter operations. .</p>
+</dd>
+<dt>shape: tuple (rows, columns)</dt><dd><p>The dimensions of df.</p>
+</dd>
+<dt>columns: list</dt><dd><p>The columns of df.</p>
+</dd>
+<dt>fname: pathlib.Path</dt><dd><p>The path and filename for the purpose of saving df as a csv file.         Updates automatically when filter operations are applied.</p>
 </dd>
 </dl>
 <dl class="method">
@@ -244,17 +250,14 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
-<dd><blockquote>
-<div><p>Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which         were not filtered out by previously-used filter methods).         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned string ONLY ONCE.</p>
+<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
+<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
 </dl>
-<p>A string of WBGene indices separated by newlines (</p>
-</div></blockquote>
-<p>).         For example, “WBGene00000001
-WBGene00000003
-WBGene12345678”.</p>
+<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
 </dd></dl>
 
 <dl class="method">
@@ -595,7 +598,23 @@ WBGene12345678”.</p>
 <dt>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></p>
-<p>A class that contains a single column, representing the gene-specific fold change between two conditions.     Warning: this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
+<p>A class that contains a single column, representing the gene-specific fold change between two conditions. 
+Warning: this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
+<p><strong>Attributes</strong></p>
+<dl class="simple">
+<dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the fold change values.         The DataFrame is modified upon usage of filter operations. .</p>
+</dd>
+<dt>shape: tuple (rows, columns)</dt><dd><p>The dimensions of df.</p>
+</dd>
+<dt>columns: list</dt><dd><p>The columns of df.</p>
+</dd>
+<dt>fname: pathlib.Path</dt><dd><p>The path and filename for the purpose of saving df as a csv file.         Updates automatically when filter operations are applied.</p>
+</dd>
+<dt>numerator: str</dt><dd><p>Name of the numerator used to calculate the fold change.</p>
+</dd>
+<dt>denominator: str</dt><dd><p>Name of the denominator used to calculate the fold change.</p>
+</dd>
+</dl>
 <dl class="method">
 <dt>
 <code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span></dt>
@@ -638,17 +657,14 @@ WBGene12345678”.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
-<dd><blockquote>
-<div><p>Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which         were not filtered out by previously-used filter methods).         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned string ONLY ONCE.</p>
+<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
+<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
 </dl>
-<p>A string of WBGene indices separated by newlines (</p>
-</div></blockquote>
-<p>).         For example, “WBGene00000001
-WBGene00000003
-WBGene12345678”.</p>
+<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
 </dd></dl>
 
 <dl class="method">
@@ -941,9 +957,15 @@ WBGene12345678”.</p>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">HTCountFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></p>
 <p>A class that receives HTSeq count output files and can filter them according to various characteristics.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the .csv HTCount file to be loaded.</p>
+<p><strong>Attributes</strong></p>
+<dl class="simple">
+<dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the HTCount output files contents.         The DataFrame is modified upon usage of filter operations. .</p>
+</dd>
+<dt>shape: tuple (rows, columns)</dt><dd><p>The dimensions of df.</p>
+</dd>
+<dt>columns: list</dt><dd><p>The columns of df.</p>
+</dd>
+<dt>fname: pathlib.Path</dt><dd><p>The path and filename for the purpose of saving df as a csv file.         Updates automatically when filter operations are applied.</p>
 </dd>
 </dl>
 <dl class="method">
@@ -1011,17 +1033,14 @@ WBGene12345678”.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
-<dd><blockquote>
-<div><p>Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which         were not filtered out by previously-used filter methods).         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned string ONLY ONCE.</p>
+<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
+<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
 </dl>
-<p>A string of WBGene indices separated by newlines (</p>
-</div></blockquote>
-<p>).         For example, “WBGene00000001
-WBGene00000003
-WBGene12345678”.</p>
+<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
 </dd></dl>
 
 <dl class="method">

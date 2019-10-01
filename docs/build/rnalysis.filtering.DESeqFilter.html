@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.DESeqFilter.__init__" href="rnalysis.filtering.DESeqFilter.__init__.html" />
+    <link rel="next" title="rnalysis.filtering.DESeqFilter.biotypes" href="rnalysis.filtering.DESeqFilter.biotypes.html" />
     <link rel="prev" title="rnalysis.filtering" href="rnalysis.filtering.html" /> 
 </head>
 
@@ -92,7 +92,6 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.DESeqFilter</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.__init__.html">rnalysis.filtering.DESeqFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html">rnalysis.filtering.DESeqFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html">rnalysis.filtering.DESeqFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html">rnalysis.filtering.DESeqFilter.difference</a></li>
@@ -200,17 +199,17 @@
 <dt id="rnalysis.filtering.DESeqFilter">
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">DESeqFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the .csv DESeq file to be loaded.</p>
+<p><strong>Attributes</strong></p>
+<dl class="simple">
+<dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the DESeq output file contents.         The DataFrame is modified upon usage of filter operations. .</p>
+</dd>
+<dt>shape: tuple (rows, columns)</dt><dd><p>The dimensions of df.</p>
+</dd>
+<dt>columns: list</dt><dd><p>The columns of df.</p>
+</dd>
+<dt>fname: pathlib.Path</dt><dd><p>The path and filename for the purpose of saving df as a csv file.         Updates automatically when filter operations are applied.</p>
 </dd>
 </dl>
-<dl class="method">
-<dt id="rnalysis.filtering.DESeqFilter.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
-</dd></dl>
-
 <p class="rubric">Methods</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -218,76 +217,73 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#rnalysis.filtering.DESeqFilter.__init__" title="rnalysis.filtering.DESeqFilter.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(fname)</p></td>
-<td><p>Initialize self.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html#rnalysis.filtering.DESeqFilter.biotypes" title="rnalysis.filtering.DESeqFilter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">biotypes</span></code></a>([ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html#rnalysis.filtering.DESeqFilter.biotypes" title="rnalysis.filtering.DESeqFilter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">biotypes</span></code></a>([ref])</p></td>
 <td><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html#rnalysis.filtering.DESeqFilter.describe" title="rnalysis.filtering.DESeqFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe</span></code></a>([percentiles])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html#rnalysis.filtering.DESeqFilter.describe" title="rnalysis.filtering.DESeqFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe</span></code></a>([percentiles])</p></td>
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type])</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the others.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_set.html#rnalysis.filtering.DESeqFilter.features_set" title="rnalysis.filtering.DESeqFilter.features_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_set</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_set.html#rnalysis.filtering.DESeqFilter.features_set" title="rnalysis.filtering.DESeqFilter.features_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_set</span></code></a>()</p></td>
 <td><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_string.html#rnalysis.filtering.DESeqFilter.features_string" title="rnalysis.filtering.DESeqFilter.features_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_string</span></code></a>()</p></td>
-<td><p>Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which         were not filtered out by previously-used filter methods).         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned string ONLY ONCE.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_string.html#rnalysis.filtering.DESeqFilter.features_string" title="rnalysis.filtering.DESeqFilter.features_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_string</span></code></a>()</p></td>
+<td><p>Returns a string of all feature indices in the current DataFrame separated by newline.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_abs_log2_fold_change</span></code></a>([abslog2fc, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_abs_log2_fold_change</span></code></a>([abslog2fc, …])</p></td>
 <td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html#rnalysis.filtering.DESeqFilter.filter_biotype" title="rnalysis.filtering.DESeqFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_biotype</span></code></a>([biotype, ref, opposite, inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html#rnalysis.filtering.DESeqFilter.filter_biotype" title="rnalysis.filtering.DESeqFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_biotype</span></code></a>([biotype, ref, opposite, inplace])</p></td>
 <td><p>Filters out all features that do not match the indicated biotype.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_bigtable_group.html#rnalysis.filtering.DESeqFilter.filter_by_bigtable_group" title="rnalysis.filtering.DESeqFilter.filter_by_bigtable_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_bigtable_group</span></code></a>([attributes, mode, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_bigtable_group.html#rnalysis.filtering.DESeqFilter.filter_by_bigtable_group" title="rnalysis.filtering.DESeqFilter.filter_by_bigtable_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_bigtable_group</span></code></a>([attributes, mode, …])</p></td>
 <td><p>Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html#rnalysis.filtering.DESeqFilter.filter_fold_change_direction" title="rnalysis.filtering.DESeqFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_fold_change_direction</span></code></a>([direction, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html#rnalysis.filtering.DESeqFilter.filter_fold_change_direction" title="rnalysis.filtering.DESeqFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_fold_change_direction</span></code></a>([direction, …])</p></td>
 <td><p>Filters out features according to the direction in which they changed between the two conditions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_percentile.html#rnalysis.filtering.DESeqFilter.filter_percentile" title="rnalysis.filtering.DESeqFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_percentile</span></code></a>(percentile, column[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_percentile.html#rnalysis.filtering.DESeqFilter.filter_percentile" title="rnalysis.filtering.DESeqFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_percentile</span></code></a>(percentile, column[, …])</p></td>
 <td><p>Removes all entries above the specified percentile in the specified column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html#rnalysis.filtering.DESeqFilter.filter_significant" title="rnalysis.filtering.DESeqFilter.filter_significant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_significant</span></code></a>([alpha, opposite, inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html#rnalysis.filtering.DESeqFilter.filter_significant" title="rnalysis.filtering.DESeqFilter.filter_significant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_significant</span></code></a>([alpha, opposite, inplace])</p></td>
 <td><p>Removes all features which did not change significantly, according to the provided alpha.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html#rnalysis.filtering.DESeqFilter.filter_top_n" title="rnalysis.filtering.DESeqFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_top_n</span></code></a>([n, opposite, inplace])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html#rnalysis.filtering.DESeqFilter.filter_top_n" title="rnalysis.filtering.DESeqFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_top_n</span></code></a>([n, opposite, inplace])</p></td>
 <td><p>Removes all features except the ‘n’ most significantly-changed features.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html#rnalysis.filtering.DESeqFilter.head" title="rnalysis.filtering.DESeqFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code></a>([n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html#rnalysis.filtering.DESeqFilter.head" title="rnalysis.filtering.DESeqFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html#rnalysis.filtering.DESeqFilter.intersection" title="rnalysis.filtering.DESeqFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, return_type])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html#rnalysis.filtering.DESeqFilter.intersection" title="rnalysis.filtering.DESeqFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, return_type])</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist in ALL of the given DESeqFilter objects.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.number_filters.html#rnalysis.filtering.DESeqFilter.number_filters" title="rnalysis.filtering.DESeqFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_filters</span></code></a>(column, operator, value[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.number_filters.html#rnalysis.filtering.DESeqFilter.number_filters" title="rnalysis.filtering.DESeqFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_filters</span></code></a>(column, operator, value[, …])</p></td>
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html#rnalysis.filtering.DESeqFilter.save_csv" title="rnalysis.filtering.DESeqFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code></a>([alt_filename])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html#rnalysis.filtering.DESeqFilter.save_csv" title="rnalysis.filtering.DESeqFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code></a>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_bigtable_group.html#rnalysis.filtering.DESeqFilter.split_by_bigtable_group" title="rnalysis.filtering.DESeqFilter.split_by_bigtable_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_bigtable_group</span></code></a>([attributes, ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_bigtable_group.html#rnalysis.filtering.DESeqFilter.split_by_bigtable_group" title="rnalysis.filtering.DESeqFilter.split_by_bigtable_group"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_bigtable_group</span></code></a>([attributes, ref])</p></td>
 <td><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_percentile.html#rnalysis.filtering.DESeqFilter.split_by_percentile" title="rnalysis.filtering.DESeqFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_percentile.html#rnalysis.filtering.DESeqFilter.split_by_percentile" title="rnalysis.filtering.DESeqFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
 <td><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_fold_change_direction.html#rnalysis.filtering.DESeqFilter.split_fold_change_direction" title="rnalysis.filtering.DESeqFilter.split_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_fold_change_direction</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_fold_change_direction.html#rnalysis.filtering.DESeqFilter.split_fold_change_direction" title="rnalysis.filtering.DESeqFilter.split_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_fold_change_direction</span></code></a>()</p></td>
 <td><p>Splits the features in the current DESeqFilter object into two complementary, non-overlapping DESeqFilter         objects, based on the direction of their log2foldchange.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.symmetric_difference.html#rnalysis.filtering.DESeqFilter.symmetric_difference" title="rnalysis.filtering.DESeqFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, return_type])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.symmetric_difference.html#rnalysis.filtering.DESeqFilter.symmetric_difference" title="rnalysis.filtering.DESeqFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, return_type])</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist either in the first DESeqFilter object OR the second,         but NOT in both (set symmetric difference).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.tail.html#rnalysis.filtering.DESeqFilter.tail" title="rnalysis.filtering.DESeqFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail</span></code></a>([n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.tail.html#rnalysis.filtering.DESeqFilter.tail" title="rnalysis.filtering.DESeqFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail</span></code></a>([n])</p></td>
 <td><p>Return the last n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.text_filters.html#rnalysis.filtering.DESeqFilter.text_filters" title="rnalysis.filtering.DESeqFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text_filters</span></code></a>(column, operator, value[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.text_filters.html#rnalysis.filtering.DESeqFilter.text_filters" title="rnalysis.filtering.DESeqFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text_filters</span></code></a>(column, operator, value[, …])</p></td>
 <td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.union.html#rnalysis.filtering.DESeqFilter.union" title="rnalysis.filtering.DESeqFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, return_type])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.union.html#rnalysis.filtering.DESeqFilter.union" title="rnalysis.filtering.DESeqFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, return_type])</p></td>
 <td><p>Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p></td>
 </tr>
 </tbody>
@@ -304,7 +300,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.DESeqFilter.__init__.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter.__init__" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.DESeqFilter.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="rnalysis.filtering.html" class="btn btn-neutral float-left" title="rnalysis.filtering" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

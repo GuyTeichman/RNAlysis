@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 
 class Filter:
     """
-    A parent class for DESeqFilter and HTCountFilter.
+    A parent Filter class.
 
     """
 
@@ -337,15 +337,16 @@ class Filter:
         return set(self.df.index)
 
     def features_string(self) -> str:
-        """
-        Returns a string of all WBGene indices in the current DataFrame separated by newline (the WBGene indices which \
-        were not filtered out by previously-used filter methods). \
-        Warning: if any duplicate features exist in the filter object (same WBGene appears more than once), \
-        the corresponding WBGene index will appear in the returned string ONLY ONCE.
+        r"""
+        Returns a string of all feature indices in the current DataFrame separated by newline. \
+
+        This includes all of the feature indices which were not filtered out by previously-used filter methods. \
+        Warning: if any duplicate features exist in the filter object (same index appears more than once), \
+        the corresponding index will appear in the returned string ONLY ONCE.
 
         :return:
-        A string of WBGene indices separated by newlines (\n). \
-        For example, "WBGene00000001\nWBGene00000003\nWBGene12345678".
+        A string of WBGene indices separated by newlines (\\n). \
+        For example, "WBGene00000001\\nWBGene00000003\\nWBGene12345678".
         """
         return "\n".join(self.features_set())
 
@@ -452,9 +453,27 @@ class Filter:
 class FoldChangeFilter(Filter):
     """
     A class that contains a single column, representing the gene-specific fold change between two conditions. \
+
     Warning: this class does not support 'inf' and '0' values, and importing a file with such values could lead \
     to incorrect filtering and statistical analyses.
 
+
+    **Attributes**
+
+    df: pandas DataFrame
+        A DataFrame that contains the fold change values. \
+        The DataFrame is modified upon usage of filter operations. .
+    shape: tuple (rows, columns)
+        The dimensions of df.
+    columns: list
+        The columns of df.
+    fname: pathlib.Path
+        The path and filename for the purpose of saving df as a csv file. \
+        Updates automatically when filter operations are applied.
+    numerator: str
+        Name of the numerator used to calculate the fold change.
+    denominator: str
+        Name of the denominator used to calculate the fold change.
     """
 
     def __init__(self, fname: str, numerator_name: str, denominator_name: str):
@@ -599,8 +618,19 @@ class DESeqFilter(Filter):
     """
     A class that receives a DESeq output file and can filter it according to various characteristics.
 
-    :param fname: name of the .csv DESeq file to be loaded.
-    :type fname: str or pathlib.Path
+    **Attributes**
+
+    df: pandas DataFrame
+        A DataFrame that contains the DESeq output file contents. \
+        The DataFrame is modified upon usage of filter operations. .
+    shape: tuple (rows, columns)
+        The dimensions of df.
+    columns: list
+        The columns of df.
+    fname: pathlib.Path
+        The path and filename for the purpose of saving df as a csv file. \
+        Updates automatically when filter operations are applied.
+
     """
 
     def filter_significant(self, alpha: float = 0.1, opposite: bool = False, inplace: bool = True, ):
@@ -806,8 +836,19 @@ class HTCountFilter(Filter):
     """
     A class that receives HTSeq count output files and can filter them according to various characteristics.
 
-    :param fname: name of the .csv HTCount file to be loaded.
-    :type fname: str or pathlib.Path
+    **Attributes**
+
+    df: pandas DataFrame
+        A DataFrame that contains the HTCount output files contents. \
+        The DataFrame is modified upon usage of filter operations. .
+    shape: tuple (rows, columns)
+        The dimensions of df.
+    columns: list
+        The columns of df.
+    fname: pathlib.Path
+        The path and filename for the purpose of saving df as a csv file. \
+        Updates automatically when filter operations are applied.
+
     """
 
     def fold_change(self, numerator, denominator, numer_name: str = 'default', denom_name: str = 'default'):

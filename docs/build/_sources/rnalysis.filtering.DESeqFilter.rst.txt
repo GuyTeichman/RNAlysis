@@ -6,7 +6,7 @@ rnalysis.filtering.DESeqFilter
 .. autoclass:: DESeqFilter
 
 
-   .. automethod:: __init__
+
 
 
    .. rubric:: Methods
@@ -14,7 +14,6 @@ rnalysis.filtering.DESeqFilter
    .. autosummary::
     :toctree:
 
-      ~DESeqFilter.__init__
       ~DESeqFilter.biotypes
       ~DESeqFilter.describe
       ~DESeqFilter.difference

@@ -6,7 +6,6 @@ rnalysis.filtering.FoldChangeFilter
 .. autoclass:: FoldChangeFilter
 
 
-   .. automethod:: __init__
 
 
    .. rubric:: Methods
@@ -14,7 +13,6 @@ rnalysis.filtering.FoldChangeFilter
    .. autosummary::
     :toctree:
 
-      ~FoldChangeFilter.__init__
       ~FoldChangeFilter.biotypes
       ~FoldChangeFilter.describe
       ~FoldChangeFilter.features_set

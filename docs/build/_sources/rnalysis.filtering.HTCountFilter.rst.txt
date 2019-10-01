@@ -6,7 +6,6 @@ rnalysis.filtering.HTCountFilter
 .. autoclass:: HTCountFilter
 
 
-   .. automethod:: __init__
 
 
    .. rubric:: Methods
@@ -14,7 +13,6 @@ rnalysis.filtering.HTCountFilter
    .. autosummary::
     :toctree:
 
-      ~HTCountFilter.__init__
       ~HTCountFilter.biotypes
       ~HTCountFilter.clustergram
       ~HTCountFilter.describe
