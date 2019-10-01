@@ -15,6 +15,7 @@ https://github.com/GuyTeichman/RNAlysis
    readme
    installation
    usage
+   rnalysis_user_guide
    contributing
    authors
    history
