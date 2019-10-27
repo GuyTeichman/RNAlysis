@@ -191,31 +191,30 @@ Data visualization and clustering analysis with HTCountFilter
 HTCountFilter includes multiple methods for visualization and clustering of count data. 
 
 
-#pairplot
+With HTCountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
 
 .. figure::  pairplot.png
            :align:   center
            :scale: 40 %
 
-           Example plot of pairplot()
+           Example output of HTCount.pairplot()
 
 
-#clustergram
-
+With HTCount.clustergram, you can cluster your samples according to specified distance and linkage metrics:
 
  .. figure::  clustergram.png
            :align:   center
            :scale: 40 %
 
-           Example plot of clustergram()
+           Example plot of HTCount.clustergram()
 
-#pca
+With HTCount.pca, you can perform a principal component analysis and look for strong patterns in your dataset: 
 
  .. figure::  pca.png
            :align:   center
            :scale: 40 %
 
-           Example plot of pca()
+           Example plot of HTCount.pca()
 
 Filtering fold-change data of features using filtering.FoldChangeFilter
 =======================================================================
@@ -274,6 +273,28 @@ EnrichmentProcessing objects have two attributes: gene_set, a python set contain
 
 Randomization test enrichment analysis for user-defined attributes
 -------------------------------------------------------------------
+Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis is performed using a randomization test. 
+
+Enrichment analysis is performed using the EnrichmentProcessing.enrichment_randomization. We will start by creating an EnrichmentProcessing object::
+
+	h = filtering.HTCountFilter('path_to_my_file.csv')
+	en = enrichment.EnrichmentProcessing(h.features_set(), 'my set')
+
+Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, have genes that have no paralogs for the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute should have any value other than NaN. 
+
++----------------+--------------+-------------+
+| feature_indices| attribute1   | attribute2  |
++================+================+===========+
+| WBGene0000001  |      1       |     NaN     |
++----------------+--------------+-------------+
+| WBGene0000002  |     NaN      |      1      |
++----------------+--------------+-------------+
+| WBGene0000003  |     NaN      |      1      |
++----------------+--------------+-------------+
+| WBGene0000004  |      1       |      1      |
++----------------+--------------+-------------+
+
+
 #randomization
 #parallel
 #ref table

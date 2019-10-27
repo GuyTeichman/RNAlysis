@@ -460,7 +460,7 @@ class EnrichmentProcessing:
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
         :type ref_path: 'predefined' (default), str or pathlib.Path
-        :param ref_path: the path of the Big Table file to be used as reference.
+        :param ref_path: the path of the reference table file to be used as reference.
         :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
         :param biotype: the biotype you want your background reference to have. 'all' will include all biotypes, \
         'protein_coding' will include only protein-coding genes in the reference, etc. \

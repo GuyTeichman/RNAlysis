@@ -335,11 +335,11 @@ However, some DESeqFilter functions (such as ‘filter_significant’ and ‘fil
 <div class="section" id="filtering-htseq-count-output-files-with-filtering-htcountfilter">
 <h3>Filtering HTSeq-count output files with filtering.HTCountFilter<a class="headerlink" href="#filtering-htseq-count-output-files-with-filtering-htcountfilter" title="Permalink to this headline">¶</a></h3>
 <p>You can read more about HTSeq-count here:
-#link</p>
+<a class="reference external" href="https://htseq.readthedocs.io/en/release_0.11.1/count.html">https://htseq.readthedocs.io/en/release_0.11.1/count.html</a></p>
 <p>In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for HTCountFilter. However, some HTCountFilter functions (such as ‘norm_reads_to_rpm’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
 <div class="section" id="generating-an-htcountfilter-object-from-a-folder-of-htseq-count-output-txt-files">
 <h4>Generating an HTCountFilter object from a folder of HTSeq-count output .txt files<a class="headerlink" href="#generating-an-htcountfilter-object-from-a-folder-of-htseq-count-output-txt-files" title="Permalink to this headline">¶</a></h4>
-<p>HTSeq-count receives as input an aligned SAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
+<p>HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">HTCountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;my_folder_path&#39;</span><span class="p">,</span> <span class="n">save_reads_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">save_not_counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_unmapped_reads_csv_file&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -355,7 +355,7 @@ It is also possible to automatically normalize the reads in the new HTCountFilte
 </div>
 <div class="section" id="filtering-operations-unique-to-htcountfilter">
 <h4>Filtering operations unique to HTCountFilter<a class="headerlink" href="#filtering-operations-unique-to-htcountfilter" title="Permalink to this headline">¶</a></h4>
-<p>#filter low reads</p>
+<p>There are a few filtering operations unique to HTCountFilter. Those include ‘filter_low_reads’, which removes rows that have less than n reads in all columns.</p>
 </div>
 <div class="section" id="normalizing-reads-with-htcountfilter">
 <h4>Normalizing reads with HTCountFilter<a class="headerlink" href="#normalizing-reads-with-htcountfilter" title="Permalink to this headline">¶</a></h4>
@@ -365,9 +365,26 @@ It is also possible to automatically normalize the reads in the new HTCountFilte
 </div>
 <div class="section" id="data-visualization-and-clustering-analysis-with-htcountfilter">
 <h4>Data visualization and clustering analysis with HTCountFilter<a class="headerlink" href="#data-visualization-and-clustering-analysis-with-htcountfilter" title="Permalink to this headline">¶</a></h4>
-<p>#pairplot
-#clustermap
-#pca</p>
+<p>HTCountFilter includes multiple methods for visualization and clustering of count data.</p>
+<p>With HTCountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example output of HTCount.pairplot()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>With HTCount.clustergram, you can cluster your samples according to specified distance and linkage metrics:</p>
+<blockquote>
+<div><div class="figure align-center" id="id2">
+<a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of HTCount.clustergram()</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+</div></blockquote>
+<p>With HTCount.pca, you can perform a principal component analysis and look for strong patterns in your dataset:</p>
+<blockquote>
+<div><div class="figure align-center" id="id3">
+<a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of HTCount.pca()</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+</div></blockquote>
 </div>
 </div>
 <div class="section" id="filtering-fold-change-data-of-features-using-filtering-foldchangefilter">
@@ -414,6 +431,43 @@ The first method is to directly specify a python set of genomic feature indices:
 </div>
 <div class="section" id="randomization-test-enrichment-analysis-for-user-defined-attributes">
 <h4>Randomization test enrichment analysis for user-defined attributes<a class="headerlink" href="#randomization-test-enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
+<p>Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’). The enrichment analysis is performed using a randomization test.</p>
+<p>Enrichment analysis is performed using the EnrichmentProcessing.enrichment_randomization. We will start by creating an EnrichmentProcessing object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">HTCountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">features_set</span><span class="p">(),</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, have genes that have no paralogs for the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute should have any value other than NaN.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 33%" />
+<col style="width: 2%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>feature_indices</p></th>
+<th class="head" colspan="3"><p>attribute1   | attribute2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>WBGene0000001</p></td>
+<td colspan="3"><p>1       |     NaN</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene0000002</p></td>
+<td><p>NaN</p></td>
+<td colspan="2"><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene0000003</p></td>
+<td><p>NaN</p></td>
+<td colspan="2"><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene0000004</p></td>
+<td><p>1</p></td>
+<td colspan="2"><p>1</p></td>
+</tr>
+</tbody>
+</table>
 <p>#randomization
 #parallel
 #ref table
