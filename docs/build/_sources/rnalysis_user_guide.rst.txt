@@ -6,7 +6,7 @@ RNAlysis user guide
 ****************************
 RNAlysis filtering module
 ****************************
-RNAlysis's filtering module (rnalysis.filtering) is build to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data. 
+RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data. 
 
 The filtering module is built around Filter objects, which are containers for tabular sequencing data. You can use the different types of Filter objects to apply filtering operations to various types of tabular data. You will learn more about Filter objects in the next section. 
 
@@ -212,3 +212,68 @@ Generating fold change data from an existing HTCountFilter object
 ****************************
 RNAlysis enrichment module
 ****************************
+RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features. 
+
+
+Working with EnrichmentProcessing objects
+=========================================
+
+The enrichment module is built around EnrichmentProcessing objects, which are a container for a set of genomic features and their name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the EnrichmentProcessing object. 
+
+
+Initialize an EnrichmentProcessing object
+------------------------------------------
+We will start by importing the enrichment module::
+
+	from rnalysis import enrichment
+
+An EnrichmentProcessing object can now be initialized by one of three methods.
+The first method is to directly specify a python set of genomic feature indices::
+
+	myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
+	en = enrichment.EnrichmentProcessing(myset, 'a name for my set')
+
+The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'features_set'::
+
+	h = filtering.HTCountFilter('path_to_my_file.csv')
+	en = enrichment.EnrichmentProcessing(h.features_set(), 'a name for my set')
+	
+The third method is not to specify a gene set at all::
+
+	en = enrichment.EnrichmentProcessing(set_name = 'a name for my set')
+
+At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set. 
+
+EnrichmentProcessing objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional). 
+
+
+Randomization test enrichment analysis for user-defined attributes 
+-------------------------------------------------------------------
+#randomization
+#parallel
+#ref table
+#background genes
+
+
+Performing set operations on multiple EnrichmentProcessing objects
+-------------------------------------------------------------------
+
+Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple EnrichmentProcessing objects. Those set operations can be applied to both EnrichmentProcessing objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of an EnrichmentProcessing object and a python set::
+
+	en = enrichment.EnrichmentProcessing({'WBGene00003002','WBGene00004201','WBGene00300139'})
+
+	s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+	union_result = en.union(s)
+
+When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object. 
+
+
+Saving indices from EnrichmentProcessing to a .txt file
+--------------------------------------------------------
+
+It is possible to save the feature indices from an EnrichmentProcessing object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the 'save_txt' function::
+
+	en.save_txt('D:\path\filename')
+
+
+The feature indices will be saved to the text file in the specified path, separated by newline ('\n'). 

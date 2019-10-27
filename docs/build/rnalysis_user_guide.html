@@ -116,7 +116,16 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">RNAlysis enrichment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">RNAlysis enrichment module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#working-with-enrichmentprocessing-objects">Working with EnrichmentProcessing objects</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initialize-an-enrichmentprocessing-object">Initialize an EnrichmentProcessing object</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#randomization-test-enrichment-analysis-for-user-defined-attributes">Randomization test enrichment analysis for user-defined attributes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-on-multiple-enrichmentprocessing-objects">Performing set operations on multiple EnrichmentProcessing objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#saving-indices-from-enrichmentprocessing-to-a-txt-file">Saving indices from EnrichmentProcessing to a .txt file</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -199,7 +208,7 @@
 <h1>RNAlysis user guide<a class="headerlink" href="#rnalysis-user-guide" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="rnalysis-filtering-module">
 <h2>RNAlysis filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this headline">¶</a></h2>
-<p>RNAlysis’s filtering module (rnalysis.filtering) is build to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.</p>
+<p>RNAlysis’s filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.</p>
 <p>The filtering module is built around Filter objects, which are containers for tabular sequencing data. You can use the different types of Filter objects to apply filtering operations to various types of tabular data. You will learn more about Filter objects in the next section.</p>
 <div class="section" id="working-with-filter-objects">
 <h3>Working with Filter objects<a class="headerlink" href="#working-with-filter-objects" title="Permalink to this headline">¶</a></h3>
@@ -375,6 +384,61 @@ It is also possible to automatically normalize the reads in the new HTCountFilte
 </div>
 <div class="section" id="rnalysis-enrichment-module">
 <h2>RNAlysis enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline">¶</a></h2>
+<p>RNAlysis’s enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.</p>
+<div class="section" id="working-with-enrichmentprocessing-objects">
+<h3>Working with EnrichmentProcessing objects<a class="headerlink" href="#working-with-enrichmentprocessing-objects" title="Permalink to this headline">¶</a></h3>
+<p>The enrichment module is built around EnrichmentProcessing objects, which are a container for a set of genomic features and their name (for example, ‘genes that are upregulated under hyperosmotic conditions’). All further anslyses of the set of features is done through the EnrichmentProcessing object.</p>
+<div class="section" id="initialize-an-enrichmentprocessing-object">
+<h4>Initialize an EnrichmentProcessing object<a class="headerlink" href="#initialize-an-enrichmentprocessing-object" title="Permalink to this headline">¶</a></h4>
+<p>We will start by importing the enrichment module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">enrichment</span>
+</pre></div>
+</div>
+<p>An EnrichmentProcessing object can now be initialized by one of three methods.
+The first method is to directly specify a python set of genomic feature indices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myset</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene0245200&#39;</span><span class="p">,</span><span class="s1">&#39; WBGene00402029&#39;</span><span class="p">}</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">myset</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function ‘features_set’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">HTCountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">features_set</span><span class="p">(),</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The third method is not to specify a gene set at all:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">set_name</span> <span class="o">=</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.</p>
+<p>EnrichmentProcessing objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).</p>
+</div>
+<div class="section" id="randomization-test-enrichment-analysis-for-user-defined-attributes">
+<h4>Randomization test enrichment analysis for user-defined attributes<a class="headerlink" href="#randomization-test-enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
+<p>#randomization
+#parallel
+#ref table
+#background genes</p>
+</div>
+<div class="section" id="performing-set-operations-on-multiple-enrichmentprocessing-objects">
+<h4>Performing set operations on multiple EnrichmentProcessing objects<a class="headerlink" href="#performing-set-operations-on-multiple-enrichmentprocessing-objects" title="Permalink to this headline">¶</a></h4>
+<p>Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple EnrichmentProcessing objects. Those set operations can be applied to both EnrichmentProcessing objects and python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of an EnrichmentProcessing object and a python set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">({</span><span class="s1">&#39;WBGene00003002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00004201&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00300139&#39;</span><span class="p">})</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="n">union_result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object.</p>
+</div>
+<div class="section" id="saving-indices-from-enrichmentprocessing-to-a-txt-file">
+<h4>Saving indices from EnrichmentProcessing to a .txt file<a class="headerlink" href="#saving-indices-from-enrichmentprocessing-to-a-txt-file" title="Permalink to this headline">¶</a></h4>
+<p>It is possible to save the feature indices from an EnrichmentProcessing object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the ‘save_txt’ function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span><span class="o">.</span><span class="n">save_txt</span><span class="p">(</span><span class="s1">&#39;D:\path</span><span class="se">\f</span><span class="s1">ilename&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The feature indices will be saved to the text file in the specified path, separated by newline (‘n’).</p>
+</div>
+</div>
 </div>
 </div>
 

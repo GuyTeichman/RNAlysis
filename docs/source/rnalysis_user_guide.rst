@@ -6,9 +6,9 @@ RNAlysis user guide
 ****************************
 RNAlysis filtering module
 ****************************
-RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data. 
+RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
 
-The filtering module is built around Filter objects, which are containers for tabular sequencing data. You can use the different types of Filter objects to apply filtering operations to various types of tabular data. You will learn more about Filter objects in the next section. 
+The filtering module is built around Filter objects, which are containers for tabular sequencing data. You can use the different types of Filter objects to apply filtering operations to various types of tabular data. You will learn more about Filter objects in the next section.
 
 Working with Filter objects
 ============================
@@ -133,8 +133,8 @@ Filtering DESeq2 output files with filtering.DESeqFilter
 DESeqFilter objects are built to easily filter the output of R's DESeq2 package. This package is meant to analyze differential expression of genomic features in sequencing data. You can read more about it here: {}
 Like other filter objects, filtering operations on DESeqFilter are performed in-place by default,meaning the original object is modified.
 
-In principle, any .csv file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter. 
-However, some DESeqFilter functions (such as 'filter_significant' and 'filter_abs_log2_fold_change') may only work on DESeq2 output files, and other unintended interactions may occur. 
+In principle, any .csv file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter.
+However, some DESeqFilter functions (such as 'filter_significant' and 'filter_abs_log2_fold_change') may only work on DESeq2 output files, and other unintended interactions may occur.
 
 Loading from a .csv file
 ------------------------
@@ -155,18 +155,18 @@ Filtering HTSeq-count output files with filtering.HTCountFilter
 ===============================================================
 
 You can read more about HTSeq-count here:
-#link
+https://htseq.readthedocs.io/en/release_0.11.1/count.html
 
-In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for HTCountFilter. However, some HTCountFilter functions (such as 'norm_reads_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur. 
+In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for HTCountFilter. However, some HTCountFilter functions (such as 'norm_reads_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
 Generating an HTCountFilter object from a folder of HTSeq-count output .txt files
 ---------------------------------------------------------------------------------
-HTSeq-count receives as input an aligned SAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
+HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
 	h = filtering.HTCountFilter.from_folder('my_folder_path', save_reads_fname='name_for_reads_csv_file', save_not_counted_fname='name_for_unmapped_reads_csv_file')
 
-By deault, 'from_folder' saves the generated tables as .csv files. However, you can avoid that by specifying 'save_csv=False'. 
-It is also possible to automatically normalize the reads in the new HTCountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'. 
+By deault, 'from_folder' saves the generated tables as .csv files. However, you can avoid that by specifying 'save_csv=False'.
+It is also possible to automatically normalize the reads in the new HTCountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'.
 
 
 Loading from a pre-made .csv file
@@ -178,19 +178,44 @@ If you have previously generated a .csv file from HTSeq-count output files using
 
 Filtering operations unique to HTCountFilter
 --------------------------------------------
-#filter low reads
+There are a few filtering operations unique to HTCountFilter. Those include 'filter_low_reads', which removes rows that have less than n reads in all columns.
 
 Normalizing reads with HTCountFilter
 ------------------------------------
-HTCountFilter offers two methods for normalizing reads: reads per million (RPM) and DESeq2's size factors. Data normalized in other methods (such as RPKM) can be used as input for HTCountFilter, but it cannot perform such normalization methods on its own. 
+HTCountFilter offers two methods for normalizing reads: reads per million (RPM) and DESeq2's size factors. Data normalized in other methods (such as RPKM) can be used as input for HTCountFilter, but it cannot perform such normalization methods on its own.
 #normalize to rpm
 #normalize with size factors
 
 Data visualization and clustering analysis with HTCountFilter
 -------------------------------------------------------------
+HTCountFilter includes multiple methods for visualization and clustering of count data. 
+
+
 #pairplot
-#clustermap
+
+.. figure::  pairplot.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of pairplot()
+
+
+#clustergram
+
+
+ .. figure::  clustergram.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of clustergram()
+
 #pca
+
+ .. figure::  pca.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of pca()
 
 Filtering fold-change data of features using filtering.FoldChangeFilter
 =======================================================================
@@ -212,13 +237,13 @@ Generating fold change data from an existing HTCountFilter object
 ****************************
 RNAlysis enrichment module
 ****************************
-RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features. 
+RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
 
 
 Working with EnrichmentProcessing objects
 =========================================
 
-The enrichment module is built around EnrichmentProcessing objects, which are a container for a set of genomic features and their name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the EnrichmentProcessing object. 
+The enrichment module is built around EnrichmentProcessing objects, which are a container for a set of genomic features and their name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the EnrichmentProcessing object.
 
 
 Initialize an EnrichmentProcessing object
@@ -237,17 +262,17 @@ The second method is to extract a python set of genomic feature indices from an 
 
 	h = filtering.HTCountFilter('path_to_my_file.csv')
 	en = enrichment.EnrichmentProcessing(h.features_set(), 'a name for my set')
-	
+
 The third method is not to specify a gene set at all::
 
 	en = enrichment.EnrichmentProcessing(set_name = 'a name for my set')
 
-At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set. 
+At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.
 
-EnrichmentProcessing objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional). 
+EnrichmentProcessing objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
 
-Randomization test enrichment analysis for user-defined attributes 
+Randomization test enrichment analysis for user-defined attributes
 -------------------------------------------------------------------
 #randomization
 #parallel
@@ -265,7 +290,7 @@ Similarly to Filter objects, it is possible to use set operations such as union,
 	s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
 	union_result = en.union(s)
 
-When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object. 
+When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object.
 
 
 Saving indices from EnrichmentProcessing to a .txt file
@@ -276,4 +301,4 @@ It is possible to save the feature indices from an EnrichmentProcessing object t
 	en.save_txt('D:\path\filename')
 
 
-The feature indices will be saved to the text file in the specified path, separated by newline ('\n'). 
+The feature indices will be saved to the text file in the specified path, separated by newline ('\n').
