@@ -280,19 +280,19 @@ Enrichment analysis is performed using the EnrichmentProcessing.enrichment_rando
 	h = filtering.HTCountFilter('path_to_my_file.csv')
 	en = enrichment.EnrichmentProcessing(h.features_set(), 'my set')
 
-Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, have genes that have no paralogs for the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute should have any value other than NaN. 
+Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, have genes that have no paralogs for the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute should have any value other than NaN. See example for a Reference Table below:
 
-+----------------+--------------+-------------+
-| feature_indices| attribute1   | attribute2  |
-+================+================+===========+
-| WBGene0000001  |      1       |     NaN     |
-+----------------+--------------+-------------+
-| WBGene0000002  |     NaN      |      1      |
-+----------------+--------------+-------------+
-| WBGene0000003  |     NaN      |      1      |
-+----------------+--------------+-------------+
-| WBGene0000004  |      1       |      1      |
-+----------------+--------------+-------------+
++----------------+--------------+-------------+-------------+
+| feature_indices| attribute1   | attribute2  | attribute3  |
++================+==============+=============+=============+
+| WBGene0000001  |      1       |     NaN     |     13.7    |
++----------------+--------------+-------------+-------------+
+| WBGene0000002  |     NaN      |      1      |     241     |
++----------------+--------------+-------------+-------------+
+| WBGene0000003  |     NaN      |      1      |     3.6     |
++----------------+--------------+-------------+-------------+
+| WBGene0000004  |      1       |      1      |     NaN     |
++----------------+--------------+-------------+-------------+
 
 
 #randomization
