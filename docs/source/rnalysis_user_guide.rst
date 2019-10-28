@@ -362,6 +362,25 @@ can be used to perform various enrichment analyses including gene ontology (GO) 
 Start and stop a parallel processing session
 ==============================================
 
+What is a parallel session?
+----------------------------
+Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: https://ipyparallel.readthedocs.io/en/latest/
+To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function::
+
+    from rnalysis import general
+    general.start_parallel_session()
+
+Your python console will then become unavailable for 30 seconds while the ipcluster is being started.
+By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.
+
+start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period::
+
+    from rnalysis import general
+    general.start_ipcluster()
+    #perform parallel processing here
+    general.stop_ipcluster()
+
+
 .. _reference-table-ref:
 
 Set and load a Reference Table

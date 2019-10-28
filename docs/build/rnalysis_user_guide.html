@@ -127,7 +127,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module">RNAlysis general module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#start-and-stop-a-parallel-processing-session">Start and stop a parallel processing session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start-and-stop-a-parallel-processing-session">Start and stop a parallel processing session</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#what-is-a-parallel-session">What is a parallel session?</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-a-reference-table">What is a Reference Table?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#set-a-reference-table-as-default">Set a Reference Table as default</a></li>
@@ -550,6 +553,24 @@ Afterwards, enrich_randomization_parallel is used exactly like enrich_randomizat
 can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.</p>
 <div class="section" id="start-and-stop-a-parallel-processing-session">
 <span id="parallel-ref"></span><h3>Start and stop a parallel processing session<a class="headerlink" href="#start-and-stop-a-parallel-processing-session" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="what-is-a-parallel-session">
+<h4>What is a parallel session?<a class="headerlink" href="#what-is-a-parallel-session" title="Permalink to this headline">¶</a></h4>
+<p>Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: <a class="reference external" href="https://ipyparallel.readthedocs.io/en/latest/">https://ipyparallel.readthedocs.io/en/latest/</a>
+To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Your python console will then become unavailable for 30 seconds while the ipcluster is being started.
+By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.</p>
+<p>start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<span class="n">general</span><span class="o">.</span><span class="n">start_ipcluster</span><span class="p">()</span>
+<span class="c1">#perform parallel processing here</span>
+<span class="n">general</span><span class="o">.</span><span class="n">stop_ipcluster</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="set-and-load-a-reference-table">
 <span id="reference-table-ref"></span><h3>Set and load a Reference Table<a class="headerlink" href="#set-and-load-a-reference-table" title="Permalink to this headline">¶</a></h3>
