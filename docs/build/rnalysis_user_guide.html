@@ -245,9 +245,7 @@ but you can specify a specific number of lines to show.</p>
 <span class="n">d</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>will give the following output:
-#insert output here</p>
-<p>We can also see the total number of rows an columns by accessing the ‘shape’ attribute:</p>
+<p>We can also see the total number of rows and columns by accessing the ‘shape’ attribute:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
@@ -316,11 +314,12 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 </div>
 <div class="section" id="using-a-reference-table-for-filter-operations">
 <h4>Using a reference table for filter operations<a class="headerlink" href="#using-a-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
-<p>#set reference path
-#read reference path
-#what does reference table look like
-#what do reference table attributes look like
-#biotype table</p>
+<p>A Reference Table contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
+You can read more about Reference Table format and loading a Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
+Using the function Filter.filter_by_ref_table_attr(), you can filter your genomic features by one of the user-defined attributes in the Reference Table:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">filter_by_ref_table_attr</span><span class="p">(</span><span class="s1">&#39;genes_that_have_a_paralog&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="filtering-deseq2-output-files-with-filtering-deseqfilter">
@@ -458,13 +457,15 @@ There are two methods of changing the default background set:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span><span class="o">.</span><span class="n">enrich_randomization</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In this example, instead of using all of the protein-coding genes in the Reference Table as background, we use all of the genomic features in the Reference Table as background.</p>
+<p>In this example, instead of using all of the protein-coding genes in the Reference Table as background, we use all of the genomic features in the Reference Table as background.
+When specifying a biotype, an internal reference file is used to categorize different genomic features into different biotypes.</p>
 <p>The second method of changing the background set is to define a specific set of genomic features to be used as background:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_background_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;feature1&#39;</span><span class="p">,</span><span class="s1">&#39;feature2&#39;</span><span class="p">,</span><span class="s1">&#39;feature3&#39;</span><span class="p">}</span>
 <span class="n">en</span><span class="o">.</span><span class="n">enrich_randomization</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">background_genes</span><span class="o">=</span><span class="n">my_background_set</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this example, our background set consists of feature1, feature2 and feature3.</p>
+<p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 <p>Calling enrich_randomization will perform a randomization test for each of the specified attributes, and return a pandas DataFrame with the following format:</p>
 <table class="docutils align-default">
@@ -546,8 +547,7 @@ Afterwards, enrich_randomization_parallel is used exactly like enrich_randomizat
 </div>
 <div class="section" id="rnalysis-general-module">
 <h2>RNAlysis general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline">¶</a></h2>
-<p>RNAlysis’s general module (rnalysis.general) contains general functions
-can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.</p>
+<p>RNAlysis’s general module (rnalysis.general) contains general functions that can be useful during analysis of RNA sequencing data, including regular expression parsers and setting the Reference Table path.</p>
 <div class="section" id="start-and-stop-a-parallel-processing-session">
 <span id="parallel-ref"></span><h3>Start and stop a parallel processing session<a class="headerlink" href="#start-and-stop-a-parallel-processing-session" title="Permalink to this headline">¶</a></h3>
 <p>Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: <a class="reference external" href="https://ipyparallel.readthedocs.io/en/latest/">https://ipyparallel.readthedocs.io/en/latest/</a>

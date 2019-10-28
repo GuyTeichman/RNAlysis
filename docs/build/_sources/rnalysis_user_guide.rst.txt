@@ -39,10 +39,7 @@ but you can specify a specific number of lines to show.
     d.head()
     d.tail(8)
 
-will give the following output:
-#insert output here
-
-We can also see the total number of rows an columns by accessing the 'shape' attribute::
+We can also see the total number of rows and columns by accessing the 'shape' attribute::
 
     d.shape
 
@@ -118,14 +115,13 @@ Sets of genomic feature indices can be used later for enrichment analysis using 
 
 
 Using a reference table for filter operations
----------------------------------------------
+----------------------------------------------
 
-#set reference path
-#read reference path
-#what does reference table look like
-#what do reference table attributes look like
-#biotype table
+A Reference Table contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
+You can read more about Reference Table format and loading a Reference Table in the :ref:`reference-table-ref` section.
+Using the function Filter.filter_by_ref_table_attr(), you can filter your genomic features by one of the user-defined attributes in the Reference Table::
 
+    d.filter_by_ref_table_attr('genes_that_have_a_paralog')
 
 Filtering DESeq2 output files with filtering.DESeqFilter
 =========================================================
@@ -293,6 +289,7 @@ The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or '
     en.enrich_randomization(['attribute1','attribute2'], biotype='all')
 
 In this example, instead of using all of the protein-coding genes in the Reference Table as background, we use all of the genomic features in the Reference Table as background.
+When specifying a biotype, an internal reference file is used to categorize different genomic features into different biotypes.
 
 The second method of changing the background set is to define a specific set of genomic features to be used as background::
 
@@ -300,6 +297,8 @@ The second method of changing the background set is to define a specific set of 
     en.enrich_randomization(['attribute1','attribute2'], background_genes=my_background_set)
 
 In this example, our background set consists of feature1, feature2 and feature3.
+
+It is not possible to specify both a biotype and a specific background set.
 
 If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
 
@@ -354,8 +353,7 @@ The feature indices will be saved to the text file in the specified path, separa
 ****************************
 RNAlysis general module
 ****************************
-RNAlysis's general module (rnalysis.general) contains general functions
-can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
+RNAlysis's general module (rnalysis.general) contains general functions that can be useful during analysis of RNA sequencing data, including regular expression parsers and setting the Reference Table path.
 
 .. _parallel-ref:
 
