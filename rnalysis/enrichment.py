@@ -1,6 +1,6 @@
 """
 This module receives a set of feature names, and can perform various enrichment analyses on them, such as \
-GO enrichment, tissue/phenotype enrichment, enrichment and depletion of big table columns, etc. \
+GO enrichment, tissue/phenotype enrichment, enrichment and depletion of Reference Table attributes, etc. \
 Furthermore, set operations (union, intersect, difference, symmetric difference) can be performed on two \
 EnrichmentProcessing objects. \
 Results of enrichment analyses can be saved to .csv files.
@@ -436,6 +436,10 @@ class EnrichmentProcessing:
 
         return res_df
 
+    # TODO: allow 'all' in attributes to calculate enrichment for all attributes in the table
+    # TODO: allow to specify column numbers for attributes
+    # TODO: rename 'background reference' to something else
+    # TODO: set/list of biotypes
     def enrich_randomization(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                              biotype: str = 'protein_coding', background_genes: set = None,
                              ref_path: str = 'predefined', save_csv: bool = False, fname=None):
@@ -481,7 +485,7 @@ class EnrichmentProcessing:
            :align:   center
            :scale: 40 %
 
-           Example plot of big table enrichment
+           Example plot of enrich_randomization
         """
         attributes = self._enrichment_get_attrs(attributes=attributes)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,

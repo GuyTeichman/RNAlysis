@@ -126,6 +126,16 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module">RNAlysis general module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#start-and-stop-a-parallel-processing-session">Start and stop a parallel processing session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#what-is-a-reference-table">What is a Reference Table?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#set-a-reference-table-as-default">Set a Reference Table as default</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load-the-default-reference-table">Load the default Reference Table</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -432,12 +442,119 @@ The first method is to directly specify a python set of genomic feature indices:
 <div class="section" id="randomization-test-enrichment-analysis-for-user-defined-attributes">
 <h4>Randomization test enrichment analysis for user-defined attributes<a class="headerlink" href="#randomization-test-enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
 <p>Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’). The enrichment analysis is performed using a randomization test.</p>
-<p>Enrichment analysis is performed using the EnrichmentProcessing.enrichment_randomization. We will start by creating an EnrichmentProcessing object:</p>
+<p>Enrichment analysis is performed using either EnrichmentProcessing.enrich_randomization or EnrichmentProcessing.enrich_randomization_parallel. We will start by creating an EnrichmentProcessing object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">HTCountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
 <span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">features_set</span><span class="p">(),</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, have genes that have no paralogs for the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute should have any value other than NaN. See example for a Reference Table below:</p>
+<p>Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
+Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function EnrichmentProcessing.enrich_randomization.
+If our Reference Table is set to be the default Reference Table (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) we do not need to specify it when calling enrich_randomization. Otherwise, we need to specify our Reference Table’s path.
+The names of the attributes we want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
+<p>Next, we need to determine the set of genes to be used as background. Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, enrich_randomization uses all of the protein-coding genes that appear in the Reference Table as a background set.
+There are two methods of changing the default background set:</p>
+<p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span><span class="o">.</span><span class="n">enrich_randomization</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, instead of using all of the protein-coding genes in the Reference Table as background, we use all of the genomic features in the Reference Table as background.</p>
+<p>The second method of changing the background set is to define a specific set of genomic features to be used as background:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_background_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;feature1&#39;</span><span class="p">,</span><span class="s1">&#39;feature2&#39;</span><span class="p">,</span><span class="s1">&#39;feature3&#39;</span><span class="p">}</span>
+<span class="n">en</span><span class="o">.</span><span class="n">enrich_randomization</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">background_genes</span><span class="o">=</span><span class="n">my_background_set</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, our background set consists of feature1, feature2 and feature3.</p>
+<p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
+<p>Calling enrich_randomization will perform a randomization test for each of the specified attributes, and return a pandas DataFrame with the following format:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 14%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 22%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>name</p></th>
+<th class="head"><p>samples</p></th>
+<th class="head"><p>n obs</p></th>
+<th class="head"><p>n exp</p></th>
+<th class="head"><p>log2_fold_enrichment</p></th>
+<th class="head"><p>pval</p></th>
+<th class="head"><p>padj</p></th>
+<th class="head"><p>significant</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>attribute1</p></td>
+<td><p>1327</p></td>
+<td><p>451</p></td>
+<td><p>319.52</p></td>
+<td><p>0.49722119558</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-odd"><td><p>attribute2</p></td>
+<td><p>1327</p></td>
+<td><p>89</p></td>
+<td><p>244.87</p></td>
+<td><p>-1.46013879322</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+</tbody>
+</table>
+<p>‘samples’ is the number of features that were used in the enrichment set. ‘n obs’ is the observed number of features positive for the attribute in the enrichment set.
+‘n exp’ is the expected number of features positive for the attribute in the enrichment set. ‘log2_fold_enrichment’ is log2 of the fold change ‘n obs’/’n exp’.
+enrich_randomization performs the number of randomizations specified by the user (10,000 by default), and marks each randomization as either a success or a failure.
+The p values specified in ‘pval’ are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
+<p>If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
+To use it, you must first start a parallel session:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">RNAlysis</span> <span class="k">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">general</span>
+<span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To read more about parallel sessions, visit the <a class="reference internal" href="#parallel-ref"><span class="std std-ref">Start and stop a parallel processing session</span></a> section.
+Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.</p>
+</div>
+<div class="section" id="performing-set-operations-on-multiple-enrichmentprocessing-objects">
+<h4>Performing set operations on multiple EnrichmentProcessing objects<a class="headerlink" href="#performing-set-operations-on-multiple-enrichmentprocessing-objects" title="Permalink to this headline">¶</a></h4>
+<p>Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple EnrichmentProcessing objects. Those set operations can be applied to both EnrichmentProcessing objects and python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of an EnrichmentProcessing object and a python set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">({</span><span class="s1">&#39;WBGene00003002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00004201&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00300139&#39;</span><span class="p">})</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="n">union_result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object.</p>
+</div>
+<div class="section" id="saving-indices-from-enrichmentprocessing-to-a-txt-file">
+<h4>Saving indices from EnrichmentProcessing to a .txt file<a class="headerlink" href="#saving-indices-from-enrichmentprocessing-to-a-txt-file" title="Permalink to this headline">¶</a></h4>
+<p>It is possible to save the feature indices from an EnrichmentProcessing object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the ‘save_txt’ function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span><span class="o">.</span><span class="n">save_txt</span><span class="p">(</span><span class="s1">&#39;D:\path</span><span class="se">\f</span><span class="s1">ilename&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The feature indices will be saved to the text file in the specified path, separated by newline (‘n’).</p>
+</div>
+</div>
+</div>
+<div class="section" id="rnalysis-general-module">
+<h2>RNAlysis general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline">¶</a></h2>
+<p>RNAlysis’s general module (rnalysis.general) contains general functions
+can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.</p>
+<div class="section" id="start-and-stop-a-parallel-processing-session">
+<span id="parallel-ref"></span><h3>Start and stop a parallel processing session<a class="headerlink" href="#start-and-stop-a-parallel-processing-session" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="set-and-load-a-reference-table">
+<span id="reference-table-ref"></span><h3>Set and load a Reference Table<a class="headerlink" href="#set-and-load-a-reference-table" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="what-is-a-reference-table">
+<h4>What is a Reference Table?<a class="headerlink" href="#what-is-a-reference-table" title="Permalink to this headline">¶</a></h4>
+<p>Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for a Reference Table below:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 29%" />
@@ -473,31 +590,20 @@ The first method is to directly specify a python set of genomic feature indices:
 <td><p>1</p></td>
 <td><p>NaN</p></td>
 </tr>
+<tr class="row-even"><td><p>WBGene0000005</p></td>
+<td><p>1</p></td>
+<td><p>NaN</p></td>
+<td><p>21.5</p></td>
+</tr>
 </tbody>
 </table>
-<p>#randomization
-#parallel
-#ref table
-#background genes</p>
 </div>
-<div class="section" id="performing-set-operations-on-multiple-enrichmentprocessing-objects">
-<h4>Performing set operations on multiple EnrichmentProcessing objects<a class="headerlink" href="#performing-set-operations-on-multiple-enrichmentprocessing-objects" title="Permalink to this headline">¶</a></h4>
-<p>Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple EnrichmentProcessing objects. Those set operations can be applied to both EnrichmentProcessing objects and python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of an EnrichmentProcessing object and a python set:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">({</span><span class="s1">&#39;WBGene00003002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00004201&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00300139&#39;</span><span class="p">})</span>
-
-<span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
-<span class="n">union_result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-</pre></div>
+<div class="section" id="set-a-reference-table-as-default">
+<h4>Set a Reference Table as default<a class="headerlink" href="#set-a-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
+<p>Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis</p>
 </div>
-<p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object.</p>
-</div>
-<div class="section" id="saving-indices-from-enrichmentprocessing-to-a-txt-file">
-<h4>Saving indices from EnrichmentProcessing to a .txt file<a class="headerlink" href="#saving-indices-from-enrichmentprocessing-to-a-txt-file" title="Permalink to this headline">¶</a></h4>
-<p>It is possible to save the feature indices from an EnrichmentProcessing object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the ‘save_txt’ function:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span><span class="o">.</span><span class="n">save_txt</span><span class="p">(</span><span class="s1">&#39;D:\path</span><span class="se">\f</span><span class="s1">ilename&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The feature indices will be saved to the text file in the specified path, separated by newline (‘n’).</p>
+<div class="section" id="load-the-default-reference-table">
+<h4>Load the default Reference Table<a class="headerlink" href="#load-the-default-reference-table" title="Permalink to this headline">¶</a></h4>
 </div>
 </div>
 </div>
