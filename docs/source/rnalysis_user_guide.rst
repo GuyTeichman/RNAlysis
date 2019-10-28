@@ -369,7 +369,8 @@ Set and load a Reference Table
 
 What is a Reference Table?
 ----------------------------
-Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for a Reference Table below:
+You can perform enrichment analysis or filtering operations based on user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs').
+User-defined attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for a Reference Table below:
 
 +----------------+--------------+-------------+-------------+
 | feature_indices| attribute1   | attribute2  | attribute3  |
@@ -388,11 +389,21 @@ Our attributes should be defined in a Reference Table csv file. The format of th
 
 Set a Reference Table as default
 ---------------------------------
-Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis
+Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis::
+
+    from RNAlysis import general
+    general.set_reference_table_path('path/to/my/reference/table.csv')
+
+This will
 
 
-Load the default Reference Table
----------------------------------
+Load the default Reference Table path
+--------------------------------------
+
+Parse *C. elegans* gene names, WBGene indices and sequence names using regular expressions
+===========================================================================================
+
+
 
 
 
