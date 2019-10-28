@@ -427,10 +427,16 @@ If a Reference Table path was not previously defined, you will be requested to d
 Parse *C. elegans* gene names, WBGene indices and sequence names using regular expressions
 ===========================================================================================
 
+The general module includes functions which can parse *C. elegans* gene names (like *daf-2* or *lin-15B*), WBGene indices (like WBGene00023495) and sequence names (like Y55D5A.5 or T23G5.6).
+For example, we could extract all WBGene indices from the following string::
 
+    from rnalysis import general
+    my_string='''WBGene00000001 and WBGene00000002WBGene00000003
 
+    WBGene00000004g
+    '''
+    indices = general.parse_wbgene_string(my_string)
 
+And the output would be the following set::
 
-
-
-
+    {'WBGene00000001','WBGene000000002','WBGene00000003','WBGene00000004'}
