@@ -362,8 +362,6 @@ can be used to perform various enrichment analyses including gene ontology (GO) 
 Start and stop a parallel processing session
 ==============================================
 
-What is a parallel session?
-----------------------------
 Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: https://ipyparallel.readthedocs.io/en/latest/
 To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function::
 
