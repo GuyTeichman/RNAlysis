@@ -94,7 +94,7 @@ def is_reference_table_defined(settings_start_phrase=__settings_start_phrase__):
     """
     Check whether a reference table path is defined.
 
-    :param settings_start_phrase: The key phrase to look for in settings.ini ('big_table_path=').
+    :param settings_start_phrase: The key phrase to look for in settings.ini ('reference_table_path=').
     :return:
     True if defined, False if not defined.
     """
@@ -120,8 +120,8 @@ def set_reference_table_path(path: str = None):
     settings_pth = Path(os.path.join(os.path.dirname(__file__), 'settings.ini'))
     with open(settings_pth, 'w') as f:
         pth = path if path is not None else input(
-            'Please insert the full path of your reference data table ("big table"):\n')
-        f.write("big_table_path=" + pth)
+            'Please insert the full path of your Reference Table:\n')
+        f.write("reference_table_path=" + pth)
 
 
 def read_reference_table_path():
@@ -133,7 +133,7 @@ def read_reference_table_path():
     The path of the reference table.
     """
     settings_pth = Path(os.path.join(os.path.dirname(__file__), 'settings.ini'))
-    settings_start_phrase = 'big_table_path='
+    settings_start_phrase = 'reference_table_path='
     if not is_reference_table_defined():
         set_reference_table_path()
 
