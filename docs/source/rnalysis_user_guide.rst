@@ -321,7 +321,7 @@ The p values specified in 'pval' are calculated as (sucesses+1)/(repetitions+1).
 If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
 To use it, you must first start a parallel session::
 
-    from RNAlysis import enrichment, general
+    from rnalysis import enrichment, general
     general.start_parallel_session()
 
 To read more about parallel sessions, visit the :ref:`parallel-ref` section.
@@ -391,14 +391,21 @@ Set a Reference Table as default
 ---------------------------------
 Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis::
 
-    from RNAlysis import general
+    from rnalysis import general
     general.set_reference_table_path('path/to/my/reference/table.csv')
 
-This will
-
+This will create a file called 'settings.ini', which will store the full path of your Reference Table file.
+Whenever RNAlysis needs to use a Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+The saved path can be changed any time using the general.set_reference_table_path() function.
 
 Load the default Reference Table path
 --------------------------------------
+You can load the saved path from the settings file using the read_reference_table_path function::
+
+    from rnalysis import general
+    general.read_reference_table_path()
+
+If a Reference Table path was not previously defined, you will be requested to define it when you run this function.
 
 Parse *C. elegans* gene names, WBGene indices and sequence names using regular expressions
 ===========================================================================================

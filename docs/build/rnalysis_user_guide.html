@@ -131,9 +131,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-a-reference-table">What is a Reference Table?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#set-a-reference-table-as-default">Set a Reference Table as default</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#load-the-default-reference-table">Load the default Reference Table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load-the-default-reference-table-path">Load the default Reference Table path</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions">Parse <em>C. elegans</em> gene names, WBGene indices and sequence names using regular expressions</a></li>
 </ul>
 </li>
 </ul>
@@ -515,7 +516,7 @@ enrich_randomization performs the number of randomizations specified by the user
 The p values specified in ‘pval’ are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
 <p>If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
 To use it, you must first start a parallel session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">RNAlysis</span> <span class="k">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -554,7 +555,8 @@ can be used to perform various enrichment analyses including gene ontology (GO) 
 <span id="reference-table-ref"></span><h3>Set and load a Reference Table<a class="headerlink" href="#set-and-load-a-reference-table" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="what-is-a-reference-table">
 <h4>What is a Reference Table?<a class="headerlink" href="#what-is-a-reference-table" title="Permalink to this headline">¶</a></h4>
-<p>Our attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for a Reference Table below:</p>
+<p>You can perform enrichment analysis or filtering operations based on user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’).
+User-defined attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for a Reference Table below:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 29%" />
@@ -600,11 +602,27 @@ can be used to perform various enrichment analyses including gene ontology (GO) 
 </div>
 <div class="section" id="set-a-reference-table-as-default">
 <h4>Set a Reference Table as default<a class="headerlink" href="#set-a-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
-<p>Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis</p>
+<p>Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<span class="n">general</span><span class="o">.</span><span class="n">set_reference_table_path</span><span class="p">(</span><span class="s1">&#39;path/to/my/reference/table.csv&#39;</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="load-the-default-reference-table">
-<h4>Load the default Reference Table<a class="headerlink" href="#load-the-default-reference-table" title="Permalink to this headline">¶</a></h4>
+<p>This will create a file called ‘settings.ini’, which will store the full path of your Reference Table file.
+Whenever RNAlysis needs to use a Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+The saved path can be changed any time using the general.set_reference_table_path() function.</p>
 </div>
+<div class="section" id="load-the-default-reference-table-path">
+<h4>Load the default Reference Table path<a class="headerlink" href="#load-the-default-reference-table-path" title="Permalink to this headline">¶</a></h4>
+<p>You can load the saved path from the settings file using the read_reference_table_path function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<span class="n">general</span><span class="o">.</span><span class="n">read_reference_table_path</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If a Reference Table path was not previously defined, you will be requested to define it when you run this function.</p>
+</div>
+</div>
+<div class="section" id="parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions">
+<h3>Parse <em>C. elegans</em> gene names, WBGene indices and sequence names using regular expressions<a class="headerlink" href="#parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
 </div>
