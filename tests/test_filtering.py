@@ -122,11 +122,23 @@ def test_deseq_filter_significant_opposite():
     assert np.all(d.df == truth)
 
 
-def test_deseq_filter_top_n():
+def test_filter_top_n_ascending_number():
     truth = general.load_csv("test_deseq_top10.csv", 0)
     d = DESeqFilter("test_deseq.csv")
-    d.filter_top_n(10)
+    d.filter_top_n('padj', 10)
     assert np.isclose(truth, d.df).all()
+
+
+def test_filter_top_n_ascending_text():
+    assert False
+
+
+def test_filter_top_n_descending_number():
+    assert False
+
+
+def test_filter_top_n_descending_text():
+    assert False
 
 
 def test_deseq_filter_abs_log2_fold_change():
@@ -158,7 +170,7 @@ def test_deseq_split_fold_change():
     assert np.all(neg.df == neg_truth)
 
 
-def test_deseq_intersection():
+def test_intersection():
     intersection_truth = {'WBGene00021375', 'WBGene00044258', 'WBGene00219304', 'WBGene00194708', 'WBGene00018199',
                           'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
                           'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036',
@@ -166,10 +178,10 @@ def test_deseq_intersection():
     set1 = DESeqFilter('test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('test_deseq_set_ops_2.csv')
 
-    assert set1.intersection(set2) == intersection_truth
+    assert set1.intersection(set2, inplace=False) == intersection_truth
 
 
-def test_deseq_union():
+def test_union():
     intersection_truth = {'WBGene00021375', 'WBGene00044258', 'WBGene00219304', 'WBGene00194708', 'WBGene00018199',
                           'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
                           'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036',
@@ -185,7 +197,7 @@ def test_deseq_union():
     assert set1.union(set2) == union_truth
 
 
-def test_deseq_difference():
+def test_difference():
     set2_unique = {'WBGene00018193', 'WBGene00021589', 'WBGene00001118', 'WBGene00010755', 'WBGene00020407',
                    'WBGene00044799', 'WBGene00021654', 'WBGene00012919', 'WBGene00021605'}
     set1_unique = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730',
@@ -194,11 +206,11 @@ def test_deseq_difference():
     set1 = DESeqFilter('test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('test_deseq_set_ops_2.csv')
 
-    assert set1.difference(set2) == set1_unique
-    assert set2.difference(set1) == set2_unique
+    assert set1.difference(set2, inplace=False) == set1_unique
+    assert set2.difference(set1, inplace=False) == set2_unique
 
 
-def test_deseq_symmetric_difference():
+def test_symmetric_difference():
     intersection_truth = {'WBGene00021375', 'WBGene00044258', 'WBGene00219304', 'WBGene00194708', 'WBGene00018199',
                           'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
                           'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036',
@@ -233,6 +245,10 @@ def test_deseq_feature_string():
              'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036'}
     d = DESeqFilter('test_deseq_set_ops_1.csv')
     assert set(d.features_string().split("\n")) == truth
+
+
+def test_set_ops_multiple_variable_types():
+    assert False
 
 
 def test_htcount_rpm_negative_threshold():
@@ -362,7 +378,7 @@ def test_deseqfilter_intersection_multiple():
     set3 = {'WBGene00077437', 'WBGene00007674', 'WBGene00023036', 'WBGene00012648', 'WBGene00022486', 'WBGene99999999',
             'WBGene98765432'}
 
-    assert set1.intersection(set2, set3) == intersection_truth
+    assert set1.intersection(set2, set3, inplace=False) == intersection_truth
 
 
 def test_deseqfilter_difference_multiple():
@@ -375,8 +391,16 @@ def test_deseqfilter_difference_multiple():
     set2 = DESeqFilter('test_deseq_set_ops_2.csv')
     set3 = {'WBGene00018193', 'WBGene00008447', 'WBGene12345678'}
 
-    assert set1.difference(set2, set3) == set1_unique
-    assert set2.difference(set3, set1) == set2_unique
+    assert set1.difference(set2, set3, inplace=False) == set1_unique
+    assert set2.difference(set3, set1, inplace=False) == set2_unique
+
+
+def test_intersection_inplace():
+    assert False
+
+
+def test_difference_inplace():
+    assert False
 
 
 def test_htcount_fold_change():

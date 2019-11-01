@@ -465,8 +465,8 @@ class Filter:
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
         :type inplace: bool
-        :param inplace: If True (default), filtering will be applied to the current DESeqFilter object. If False, \
-        the function will return a new DESeqFilter instance and the current instance will not be affected.
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of Filter.
         """
@@ -509,20 +509,30 @@ class Filter:
                 raise e
         return Filter.__return_type(op_indices, return_type)
 
-    def intersection(self, *others, return_type: str = 'set'):
+    def intersection(self, *others, return_type: str = 'set', inplace: bool = True):
         """
-        Returns a set/string of the WBGene indices that exist in ALL of the given Filter objects/sets.
+        Keep only the features that exist in ALL of the given Filter objects/sets. \
+        Can be done inplace on the first Filter object, or return a set/string of features.
 
         :type others: Filter or set objects.
         :param others: Objects to calculate intersection with.
         :type return_type: 'set' or 'str.
         :param return_type: If 'set', returns a set of the intersecting WBGene indices. If 'str', returns a string of \
-        the intersecting WBGene indices, delimited by a comma.
+        the intersecting indices, delimited by a comma.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a set/str that contains the intersecting indices.
         :rtype: set or str
         :return:
-        a set/string of the WBGene indices that intersect between two Filter objects.
+        If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.
         """
-        return self._set_ops(others, return_type, set.intersection)
+        if inplace:
+            suffix = f"_intersection"
+            new_set = self._set_ops(others, 'set', set.intersection)
+            return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
+        else:
+            new_set = self._set_ops(others, return_type, set.intersection)
+            return new_set
 
     def union(self, *others, return_type: str = 'set'):
         """
@@ -540,21 +550,33 @@ class Filter:
         """
         return self._set_ops(others, return_type, set.union)
 
-    def difference(self, *others, return_type: str = 'set'):
+    def difference(self, *others, return_type: str = 'set', inplace: bool = True):
         """
-        Returns a set/string of the WBGene indices that exist in the first Filter object/set but NOT in the others.
+        Keep only the features that exist in the first Filter object/set but NOT in the others. \
+        Can be done inplace on the first Filter object, or return a set/string of features.
 
-        :type others: DESeqFilter or set objects.
+        :type others: Filter or set objects.
         :param others: Objects to calculate difference with.
         :type return_type: 'set' or 'str.
         :param return_type: If 'set', returns a set of the WBGene indices that exist only in the first Filter object. \
         If 'str', returns a string of the WBGene indices that exist only in the first Filter object, \
         delimited by a comma.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a set/str that contains the intersecting indices.
         :rtype: set or str
         :return:
-        a set/string of the WBGene indices that that exist only in the first Filter object/set (set difference).
+        If inplace=False, returns a set/string of the WBGene indices\
+         that exist only in the first Filter object/set (set difference).
         """
-        return self._set_ops(others, return_type, set.difference)
+
+        if inplace:
+            suffix = f"_difference"
+            new_set = self._set_ops(others, 'set', set.difference)
+            return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
+        else:
+            new_set = self._set_ops(others, return_type, set.difference)
+            return new_set
 
     def symmetric_difference(self, other, return_type: str = 'set'):
         """
