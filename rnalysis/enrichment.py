@@ -352,7 +352,7 @@ class EnrichmentProcessing:
         not_in_bg = gene_set.difference(set(big_table.index))
         if len(not_in_bg) > 0:
             gene_set = gene_set.difference(not_in_bg)
-            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the background reference. \n"
+            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the background genes. \n"
                           f"Enrichment will be run on the remaining {len(gene_set)}.")
         return big_table, gene_set
 
@@ -382,11 +382,11 @@ class EnrichmentProcessing:
        10,000 is the default. Recommended 10,000 or higher.
        :param ref_path: the path of the Big Table file to be used as reference.
        :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
-       :param biotype: the biotype you want your background reference to have. 'all' will include all biotypes, \
+       :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
        'protein_coding' will include only protein-coding genes in the reference, etc. \
        Cannot be specified together with 'background_genes'.
        :type background_genes: set of WBGene indices
-       :param background_genes: a set of specific WBGene indices to be used as background reference. \
+       :param background_genes: a set of specific WBGene indices to be used as background genes. \
        Cannot be specified together with 'biotype'.
        :type save_csv: bool, default False
        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
@@ -439,8 +439,6 @@ class EnrichmentProcessing:
 
     # TODO: allow 'all' in attributes to calculate enrichment for all attributes in the table
     # TODO: allow to specify column numbers for attributes
-    # TODO: rename 'background reference' to something else
-    # TODO: set/list of biotypes
     def enrich_randomization(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                              biotype: str = 'protein_coding', background_genes: set = None,
                              ref_path: str = 'predefined', save_csv: bool = False, fname=None):
@@ -466,12 +464,13 @@ class EnrichmentProcessing:
         10,000 is the default. Recommended 10,000 or higher.
         :type ref_path: 'predefined' (default), str or pathlib.Path
         :param ref_path: the path of the reference table file to be used as reference.
-        :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
-        :param biotype: the biotype you want your background reference to have. 'all' will include all biotypes, \
+        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
+        Default 'protein_coding'.
+        :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
         'protein_coding' will include only protein-coding genes in the reference, etc. \
         Cannot be specified together with 'background_genes'.
         :type background_genes: set of WBGene indices
-        :param background_genes: a set of specific WBGene indices to be used as background reference. \
+        :param background_genes: a set of specific WBGene indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
