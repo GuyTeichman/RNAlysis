@@ -237,6 +237,7 @@ class EnrichmentProcessing:
         """
         assert isinstance(alpha, float), "alpha must be a float!"
         assert isinstance(mode, str), "'mode' must be a string!"
+        plt.style.use('seaborn-white')
         if mode == 'all':
             d = []
             df_comb = pd.DataFrame()
@@ -547,6 +548,7 @@ class EnrichmentProcessing:
         :return:
         a matplotlib.pyplot.bar instance
         """
+        plt.style.use('seaborn-white')
         enrichment_names = df.index.values.tolist()
         enrichment_scores = df['log2_fold_enrichment'].values.copy()
         scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf]
