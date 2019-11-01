@@ -449,6 +449,129 @@ class Filter:
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    def filter_top_n(self, col: str, n: int = 100, ascending: bool = True, opposite: bool = False,
+                     inplace: bool = True, ):
+        """
+        Removes all features except the 'n' most significantly-changed features.
+
+        :type col: str
+        :param col: The column to filter by
+        :type ascending: bool (default True)
+        :param ascending: sort ascending (keep lowest values) or descending (keep highest values).
+        :type n: int
+        :param n: How many features to keep in the Filter object.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current DESeqFilter object. If False, \
+        the function will return a new DESeqFilter instance and the current instance will not be affected.
+        :return:
+        If 'inplace' is False, returns a new instance of Filter.
+        """
+        assert isinstance(n, int), "n must be an integer!"
+        assert isinstance(col, str), "'col' must be a string!"
+        assert col in self.columns, "'col' must be a column in the Filter object!"
+        assert isinstance(ascending, bool), "'ascending' must be either True or False!"
+        self.df.sort_values(by=[col], ascending=ascending)
+        new_df = self.df.iloc[0:min(n, self.df.shape[0])]
+        order = 'asc' if ascending else 'desc'
+        suffix = f"_top{n}{col}{order}"
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    @staticmethod
+    def __return_type(index_set: set, return_type: str):
+        assert isinstance(return_type, str), "'return_type' must be a string!!"
+        if return_type == 'set':
+            return index_set
+        elif return_type == 'str':
+            return "\n".join(index_set)
+        else:
+            raise ValueError(f"'return type' must be either 'set' or 'str', is instead '{return_type}'!")
+
+    def _set_ops(self, others, return_type, op):
+        others = list(others)
+        for i, other in enumerate(others):
+            if isinstance(other, Filter):
+                others[i] = other.features_set()
+            elif isinstance(other, set):
+                pass
+            else:
+                raise TypeError("'other' must be a Filter object or a set!")
+        try:
+            op_indices = op(set(self.df.index), *others)
+        except TypeError as e:
+            if op == set.symmetric_difference:
+                raise TypeError(
+                    f"Symmetric difference can only be calculated for two objects, {len(others) + 1} were given!")
+            else:
+                raise e
+        return Filter.__return_type(op_indices, return_type)
+
+    def intersection(self, *others, return_type: str = 'set'):
+        """
+        Returns a set/string of the WBGene indices that exist in ALL of the given Filter objects/sets.
+
+        :type others: Filter or set objects.
+        :param others: Objects to calculate intersection with.
+        :type return_type: 'set' or 'str.
+        :param return_type: If 'set', returns a set of the intersecting WBGene indices. If 'str', returns a string of \
+        the intersecting WBGene indices, delimited by a comma.
+        :rtype: set or str
+        :return:
+        a set/string of the WBGene indices that intersect between two Filter objects.
+        """
+        return self._set_ops(others, return_type, set.intersection)
+
+    def union(self, *others, return_type: str = 'set'):
+        """
+        Returns a set/string of the union of WBGene indices between multiple Filter objects \
+        (the indices that exist in at least one of the Filter objects/sets).
+
+        :type others: Filter or set objects.
+        :param others: Objects to calculate union with.
+        :type return_type: 'set' or 'str.
+        :param return_type: If 'set', returns a set of the union WBGene indices. If 'str', returns a string of \
+        the union WBGene indices, delimited by a comma.
+        :rtype: set or str
+        :return:
+         a set/string of the WBGene indices that exist in at least one of the Filter objects.
+        """
+        return self._set_ops(others, return_type, set.union)
+
+    def difference(self, *others, return_type: str = 'set'):
+        """
+        Returns a set/string of the WBGene indices that exist in the first Filter object/set but NOT in the others.
+
+        :type others: DESeqFilter or set objects.
+        :param others: Objects to calculate difference with.
+        :type return_type: 'set' or 'str.
+        :param return_type: If 'set', returns a set of the WBGene indices that exist only in the first Filter object. \
+        If 'str', returns a string of the WBGene indices that exist only in the first Filter object, \
+        delimited by a comma.
+        :rtype: set or str
+        :return:
+        a set/string of the WBGene indices that that exist only in the first Filter object/set (set difference).
+        """
+        return self._set_ops(others, return_type, set.difference)
+
+    def symmetric_difference(self, other, return_type: str = 'set'):
+        """
+        Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second, \
+        but NOT in both (set symmetric difference).
+
+        :type other: Filter or set.
+        :param other: a second Filter object/set to calculate symmetric difference with.
+        :type return_type: 'set' or 'str.
+        :param return_type: If 'set', returns a set of the WBGene indices that exist in exactly one Filter object. \
+        If 'str', returns a string of the WBGene indices that exist in exactly one Filter object, delimited by a comma.
+        :rtype: set or str
+        :return:
+        a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).
+        """
+        return self._set_ops([other], return_type, set.symmetric_difference)
+
 
 class FoldChangeFilter(Filter):
     """
@@ -653,28 +776,6 @@ class DESeqFilter(Filter):
         suffix = f"_sig{alpha}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_top_n(self, n: int = 100, opposite: bool = False, inplace: bool = True, ):
-        """
-        Removes all features except the 'n' most significantly-changed features.
-
-        :param n: an integer. How many genes to keep in the DESeqFilter instance
-        :type opposite: bool
-        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
-        (instead of filtering out X, the function will filter out anything BUT X). \
-        If False (default), the function will filter as expected.
-        :type inplace: bool
-        :param inplace: If True (default), filtering will be applied to the current DESeqFilter object. If False, \
-        the function will return a new DESeqFilter instance and the current instance will not be affected.
-        :return:
-        If 'inplace' is False, returns a new instance of DESeqFilter.
-        """
-        assert isinstance(n, int), "n must be an integer!"
-        self.df.sort_values(by=['padj'])
-        new_df = self.df.iloc[0:min(n, self.df.shape[0])]
-        suffix = f"_top{n}"
-        return self._inplace(new_df, opposite, inplace, suffix)
-
-    # todo: change 'filter_top_n' so it gets a specific column and filters according to it, not specifically padj.
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
         """
         Filters out all features whose absolute log2 fold change is below the indicated threshold. \
@@ -740,98 +841,6 @@ class DESeqFilter(Filter):
         """
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
             direction='neg', inplace=False)
-
-    @staticmethod
-    def __return_type(index_set: set, return_type: str):
-        assert isinstance(return_type, str), "'return_type' must be a string!!"
-        if return_type == 'set':
-            return index_set
-        elif return_type == 'str':
-            return "\n".join(index_set)
-        else:
-            raise ValueError(f"'return type' must be either 'set' or 'str', is instead '{return_type}'!")
-
-#TODO: move 'filter_top_n' and SET OPERATIONS to be general Filter functions, and not specific to DESeqFilter.
-    def _set_ops(self, others, return_type, op):
-        others = list(others)
-        for i, other in enumerate(others):
-            if isinstance(other, DESeqFilter):
-                others[i] = other.features_set()
-            elif isinstance(other, set):
-                pass
-            else:
-                raise TypeError("'other' must be a DESeqFilter object or a set!")
-        try:
-            op_indices = op(set(self.df.index), *others)
-        except TypeError as e:
-            if op == set.symmetric_difference:
-                raise TypeError(
-                    f"Symmetric difference can only be calculated for two objects, {len(others) + 1} were given!")
-            else:
-                raise e
-        return DESeqFilter.__return_type(op_indices, return_type)
-
-    def intersection(self, *others, return_type: str = 'set'):
-        """
-        Returns a set/string of the WBGene indices that exist in ALL of the given DESeqFilter objects.
-
-        :type others: DESeqFilter or set objects.
-        :param others: Objects to calculate intersection with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the intersecting WBGene indices. If 'str', returns a string of \
-        the intersecting WBGene indices, delimited by a comma.
-        :rtype: set or str
-        :return:
-        a set/string of the WBGene indices that intersect between two DESeqFilter objects.
-        """
-        return self._set_ops(others, return_type, set.intersection)
-
-    def union(self, *others, return_type: str = 'set'):
-        """
-        Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects \
-        (the indices that exist in at least one of the DESeqFilter objects).
-
-        :type others: DESeqFilter or set objects.
-        :param others: Objects to calculate union with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the union WBGene indices. If 'str', returns a string of \
-        the union WBGene indices, delimited by a comma.
-        :rtype: set or str
-        :return:
-         a set/string of the WBGene indices that exist in at least one of the DESeqFilter objects.
-        """
-        return self._set_ops(others, return_type, set.union)
-
-    def difference(self, *others, return_type: str = 'set'):
-        """
-        Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the others.
-
-        :type others: DESeqFilter or set objects.
-        :param others: Objects to calculate difference with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the WBGene indices that exist only in the first DESeqFilter. \
-        If 'str', returns a string of the WBGene indices that exist only in the first DESeqFilter, delimited by a comma.
-        :rtype: set or str
-        :return:
-        a set/string of the WBGene indices that that exist only in the first DESeqFilter object (set difference).
-        """
-        return self._set_ops(others, return_type, set.difference)
-
-    def symmetric_difference(self, other, return_type: str = 'set'):
-        """
-        Returns a set/string of the WBGene indices that exist either in the first DESeqFilter object OR the second, \
-        but NOT in both (set symmetric difference).
-
-        :type other: DESeqFilter or set.
-        :param other: a second DESeqFilter object or set to calculate symmetric difference with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the WBGene indices that exist in exactly one DESeqFilter. \
-        If 'str', returns a string of the WBGene indices that exist in exactly one DESeqFilter., delimited by a comma.
-        :rtype: set or str
-        :return:
-        a set/string of the WBGene indices that that exist t in exactly one DESeqFilter. (set symmetric difference).
-        """
-        return self._set_ops([other], return_type, set.symmetric_difference)
 
 
 class HTCountFilter(Filter):
