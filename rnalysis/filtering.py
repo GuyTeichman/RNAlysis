@@ -94,7 +94,7 @@ class Filter:
             alt_filename = self.fname
         else:
             alt_filename = f"{str(self.fname.parent)}\\{alt_filename}{self.fname.suffix}"
-        general.save_to_csv(self.df, alt_filename, "")
+        general.save_to_csv(self.df, alt_filename)
 
     @staticmethod
     def _color_gen():
@@ -664,7 +664,7 @@ class FoldChangeFilter(Filter):
                               index=[0])
         res_df['significant'] = pval <= alpha
         if save_csv:
-            general.save_to_csv(res_df, fname, '')
+            general.save_to_csv(res_df, fname)
         print(res_df)
 
         return res_df
@@ -1353,8 +1353,8 @@ class HTCountFilter(Filter):
         counts = pd.concat([df, uncounted]).drop_duplicates(keep=False)
 
         if save_csv:
-            general.save_to_csv(df=counts, filename=save_reads_fname, suffix='')
-            general.save_to_csv(df=uncounted, filename=save_not_counted_fname, suffix='')
+            general.save_to_csv(df=counts, filename=save_reads_fname)
+            general.save_to_csv(df=uncounted, filename=save_not_counted_fname)
 
         fname = save_reads_fname if save_csv else folder.name + file_suffix
         h = HTCountFilter((Path(fname), counts))

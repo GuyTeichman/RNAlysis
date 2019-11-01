@@ -219,16 +219,21 @@ def check_is_df(inp):
     raise ValueError("The input is neither a pandas DataFrame or a csv file")
 
 
-def save_to_csv(df: pd.DataFrame, filename: str, suffix: str, index: bool = True):
+def save_to_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = True):
     """
     save a pandas DataFrame to csv.
 
     :param df: pandas DataFrame to be saved
     :param filename: a string or pathlib.Path object stating the original name of the file
-    :param suffix: str, a suffix to be added to the original name of the file
+    :type suffix: str, default None
+    :param suffix: A suffix to be added to the original name of the file. If None, no suffix will be added.
     :param index: if True, saves the DataFrame with the indices. If false, ignores the index.
     """
     fname = Path(filename)
+    if suffix is None:
+        suffix = ''
+    else:
+        assert isinstance(suffix, str), "'suffix' must be either str or None!"
     new_fname = Path(f"{str(fname.parent)}\\{fname.stem}{suffix}{fname.suffix}")
     df.to_csv(new_fname)
 

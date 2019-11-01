@@ -192,7 +192,7 @@ class EnrichmentProcessing:
         return self._inplace(self._set_ops([other], set.symmetric_difference), inplace)
 
     @staticmethod
-    def _enrichment_save_csv(df: pd.DataFrame, fname: str, suffix: str = ''):
+    def _enrichment_save_csv(df: pd.DataFrame, fname: str):
         """
         Internal method, used to save enrichment results to .csv files. Static class method.
 
@@ -206,7 +206,7 @@ class EnrichmentProcessing:
             assert isinstance(fname, (str, Path))
         if isinstance(fname, Path):
             fname = str(Path)
-        general.save_to_csv(df, filename=fname + '.csv', suffix=suffix)
+        general.save_to_csv(df, filename=fname + '.csv')
 
     def go_enrichment(self, mode: str = 'go', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
         """
