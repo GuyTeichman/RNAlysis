@@ -842,6 +842,18 @@ class DESeqFilter(Filter):
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
             direction='neg', inplace=False)
 
+    def volcano_plot(self, threshold: float = 0.1):
+        # TODO: documentation for volcano_plot
+        plt.style.use('seaborn-white')
+        colors = pd.Series(index=self.df.index)
+        colors.loc[(self.df['padj'] <= threshold) & (self.df['log2FoldChange'] > 0)] = 'tab:red'
+        colors.loc[(self.df['padj'] <= threshold) & (self.df['log2FoldChange'] < 0)] = 'tab:blue'
+        colors.fillna('grey', inplace=True)
+        plt.scatter(self.df['log2FoldChange'], -np.log10(self.df['padj']), c=colors, s=1)
+        plt.title(f"Volcano plot of {self.fname.stem}", fontsize=18)
+        plt.xlabel('Log2(fold change)', fontsize=15)
+        plt.ylabel('-Log10(adj. p-value)', fontsize=15)
+
 
 class HTCountFilter(Filter):
     """
