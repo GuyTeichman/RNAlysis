@@ -18,6 +18,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
+from grid_strategy import strategies
 
 
 class Filter:
@@ -1163,6 +1164,37 @@ class HTCountFilter(Filter):
                                     cmap=sns.color_palette("RdBu_r", 10), yticklabels=False)
         plt.show()
         return clustering
+
+    def plot_expression(self, features: list, sample_grouping: dict, count_unit: str = 'Reads per million'):
+        # TODO: documentation for plot_expression
+        plt.style.use('seaborn-white')
+        if isinstance(features, str):
+            features = [features]
+        assert isinstance(features, list), "'features' must be a string or list of strings!"
+
+        g = strategies.SquareStrategy()
+        subplots = g.get_grid(len(features))
+        plt.close()
+        f = plt.figure()
+        axes = []
+        ylims=[]
+        for subplot, feature in zip(subplots, features):
+
+            axes.append(f.add_subplot(subplot))
+            mean = [self.df.loc[feature].iloc[ind].mean() for ind in sample_grouping.values()]
+            sem = [self.df.loc[feature].iloc[ind].sem() for ind in sample_grouping.values()]
+            axes[-1].bar(np.arange(len(sample_grouping)), mean, yerr=sem)
+            axes[-1].set_xticks(np.arange(len(sample_grouping)))
+            axes[-1].set_xticklabels(list(sample_grouping.keys()))
+            axes[-1].set_title(feature)
+            plt.ylabel(count_unit)
+            sns.despine()
+            ylims.append(axes[-1].get_ylim()[1])
+        for ax in axes:
+            ax.set_ylim((0.0,max(ylims)))
+        f.tight_layout()
+        plt.show()
+        return ylims
 
     def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None):
         """
