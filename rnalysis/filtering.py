@@ -842,12 +842,25 @@ class DESeqFilter(Filter):
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
             direction='neg', inplace=False)
 
-    def volcano_plot(self, threshold: float = 0.1):
-        # TODO: documentation for volcano_plot
+    def volcano_plot(self, alpha: float = 0.1):
+        """
+        Plots a volcano plot (log2(fold change) vs -log10(adj. p-value)) of the DESeqFilter object. \
+        Significantly upregulated features are colored in red, \
+        and significantly downregulated features are colored in blue.
+
+        :type alpha: float between 0 and 1
+        :param alpha: the significance threshold to color data points as significantly up/down-regulated.
+
+        .. figure::  volcano.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of volcano_plot()
+        """
         plt.style.use('seaborn-white')
         colors = pd.Series(index=self.df.index)
-        colors.loc[(self.df['padj'] <= threshold) & (self.df['log2FoldChange'] > 0)] = 'tab:red'
-        colors.loc[(self.df['padj'] <= threshold) & (self.df['log2FoldChange'] < 0)] = 'tab:blue'
+        colors.loc[(self.df['padj'] <= alpha) & (self.df['log2FoldChange'] > 0)] = 'tab:red'
+        colors.loc[(self.df['padj'] <= alpha) & (self.df['log2FoldChange'] < 0)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
         plt.scatter(self.df['log2FoldChange'], -np.log10(self.df['padj']), c=colors, s=1)
         plt.title(f"Volcano plot of {self.fname.stem}", fontsize=18)
@@ -857,13 +870,13 @@ class DESeqFilter(Filter):
 
 class HTCountFilter(Filter):
     """
-    A class that receives HTSeq count output files and can filter them according to various characteristics.
+    A class that receives a count matrix and can filter it according to various characteristics.
 
     **Attributes**
 
     df: pandas DataFrame
-        A DataFrame that contains the HTCount output files contents. \
-        The DataFrame is modified upon usage of filter operations. .
+        A DataFrame that contains the count matrix contents. \
+        The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
         The dimensions of df.
     columns: list
