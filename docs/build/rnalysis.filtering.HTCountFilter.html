@@ -85,7 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">Working with Filter objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
@@ -201,10 +201,10 @@
 <dl class="class">
 <dt id="rnalysis.filtering.HTCountFilter">
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">HTCountFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class that receives HTSeq count output files and can filter them according to various characteristics.</p>
+<dd><p>A class that receives a count matrix and can filter it according to various characteristics.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
-<dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the HTCount output files contents.         The DataFrame is modified upon usage of filter operations. .</p>
+<dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the count matrix contents.         The DataFrame is modified upon usage of filter operations.</p>
 </dd>
 <dt>shape: tuple (rows, columns)</dt><dd><p>The dimensions of df.</p>
 </dd>

@@ -85,7 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">Working with Filter objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
@@ -225,7 +225,7 @@
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type])</p></td>
-<td><p>Returns a set/string of the WBGene indices that exist in the first DESeqFilter object but NOT in the others.</p></td>
+<td><p>Returns a set/string of the WBGene indices that exist in the first Filter object/set but NOT in the others.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.features_set.html#rnalysis.filtering.DESeqFilter.features_set" title="rnalysis.filtering.DESeqFilter.features_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">features_set</span></code></a>()</p></td>
 <td><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p></td>
@@ -251,14 +251,14 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html#rnalysis.filtering.DESeqFilter.filter_significant" title="rnalysis.filtering.DESeqFilter.filter_significant"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_significant</span></code></a>([alpha, opposite, inplace])</p></td>
 <td><p>Removes all features which did not change significantly, according to the provided alpha.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html#rnalysis.filtering.DESeqFilter.filter_top_n" title="rnalysis.filtering.DESeqFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_top_n</span></code></a>([n, opposite, inplace])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html#rnalysis.filtering.DESeqFilter.filter_top_n" title="rnalysis.filtering.DESeqFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_top_n</span></code></a>(col[, n, ascending, opposite, …])</p></td>
 <td><p>Removes all features except the ‘n’ most significantly-changed features.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html#rnalysis.filtering.DESeqFilter.head" title="rnalysis.filtering.DESeqFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html#rnalysis.filtering.DESeqFilter.intersection" title="rnalysis.filtering.DESeqFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, return_type])</p></td>
-<td><p>Returns a set/string of the WBGene indices that exist in ALL of the given DESeqFilter objects.</p></td>
+<td><p>Returns a set/string of the WBGene indices that exist in ALL of the given Filter objects/sets.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.number_filters.html#rnalysis.filtering.DESeqFilter.number_filters" title="rnalysis.filtering.DESeqFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_filters</span></code></a>(column, operator, value[, …])</p></td>
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
@@ -276,7 +276,7 @@
 <td><p>Splits the features in the current DESeqFilter object into two complementary, non-overlapping DESeqFilter         objects, based on the direction of their log2foldchange.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.symmetric_difference.html#rnalysis.filtering.DESeqFilter.symmetric_difference" title="rnalysis.filtering.DESeqFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, return_type])</p></td>
-<td><p>Returns a set/string of the WBGene indices that exist either in the first DESeqFilter object OR the second,         but NOT in both (set symmetric difference).</p></td>
+<td><p>Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second,         but NOT in both (set symmetric difference).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.tail.html#rnalysis.filtering.DESeqFilter.tail" title="rnalysis.filtering.DESeqFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail</span></code></a>([n])</p></td>
 <td><p>Return the last n rows of the Filter object.</p></td>
@@ -285,7 +285,7 @@
 <td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.union.html#rnalysis.filtering.DESeqFilter.union" title="rnalysis.filtering.DESeqFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, return_type])</p></td>
-<td><p>Returns a set/string of the union of WBGene indices between multiple DESeqFilter objects         (the indices that exist in at least one of the DESeqFilter objects).</p></td>
+<td><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p></td>
 </tr>
 </tbody>
 </table>

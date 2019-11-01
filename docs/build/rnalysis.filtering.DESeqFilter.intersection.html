@@ -85,7 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">Working with Filter objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
@@ -201,11 +201,11 @@
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.intersection">
 <code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.intersection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in ALL of the given DESeqFilter objects.</p>
+<dd><p>Returns a set/string of the WBGene indices that exist in ALL of the given Filter objects/sets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
+<li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
@@ -216,7 +216,7 @@
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
-<p>a set/string of the WBGene indices that intersect between two DESeqFilter objects.</p>
+<p>a set/string of the WBGene indices that intersect between two Filter objects.</p>
 </dd></dl>
 
 </div>

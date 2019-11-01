@@ -164,14 +164,14 @@
 <h1>rnalysis.general.save_to_csv<a class="headerlink" href="#rnalysis-general-save-to-csv" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="rnalysis.general.save_to_csv">
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">save_to_csv</code><span class="sig-paren">(</span><em class="sig-param">df: pandas.core.frame.DataFrame</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">suffix: str</em>, <em class="sig-param">index: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.save_to_csv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">save_to_csv</code><span class="sig-paren">(</span><em class="sig-param">df: pandas.core.frame.DataFrame</em>, <em class="sig-param">filename: str</em>, <em class="sig-param">suffix: str = None</em>, <em class="sig-param">index: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.save_to_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>save a pandas DataFrame to csv.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>df</strong> – pandas DataFrame to be saved</p></li>
 <li><p><strong>filename</strong> – a string or pathlib.Path object stating the original name of the file</p></li>
-<li><p><strong>suffix</strong> – str, a suffix to be added to the original name of the file</p></li>
+<li><p><strong>suffix</strong> (<em>str</em><em>, </em><em>default None</em>) – A suffix to be added to the original name of the file. If None, no suffix will be added.</p></li>
 <li><p><strong>index</strong> – if True, saves the DataFrame with the indices. If false, ignores the index.</p></li>
 </ul>
 </dd>
