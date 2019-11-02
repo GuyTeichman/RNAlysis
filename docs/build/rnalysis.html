@@ -217,13 +217,14 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in the first Filter object/set but NOT in the others.</p>
+<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Keep only the features that exist in the first Filter object/set but NOT in the others.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
+<li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -233,7 +234,7 @@
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
-<p>a set/string of the WBGene indices that that exist only in the first Filter object/set (set difference).</p>
+<p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
 </dd></dl>
 
 <dl class="method">
@@ -390,7 +391,7 @@
 <li><p><strong>ascending</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – sort ascending (keep lowest values) or descending (keep highest values).</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current DESeqFilter object. If False,         the function will return a new DESeqFilter instance and the current instance will not be affected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -417,13 +418,14 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in ALL of the given Filter objects/sets.</p>
+<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -433,7 +435,7 @@
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
-<p>a set/string of the WBGene indices that intersect between two Filter objects.</p>
+<p>If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.</p>
 </dd></dl>
 
 <dl class="method">
@@ -662,13 +664,14 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in the first Filter object/set but NOT in the others.</p>
+<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Keep only the features that exist in the first Filter object/set but NOT in the others.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
+<li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -678,7 +681,7 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
-<p>a set/string of the WBGene indices that that exist only in the first Filter object/set (set difference).</p>
+<p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
 </dd></dl>
 
 <dl class="method">
@@ -816,7 +819,7 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <li><p><strong>ascending</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – sort ascending (keep lowest values) or descending (keep highest values).</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current DESeqFilter object. If False,         the function will return a new DESeqFilter instance and the current instance will not be affected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -843,13 +846,14 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in ALL of the given Filter objects/sets.</p>
+<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -859,7 +863,7 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
-<p>a set/string of the WBGene indices that intersect between two Filter objects.</p>
+<p>If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1142,13 +1146,14 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in the first Filter object/set but NOT in the others.</p>
+<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Keep only the features that exist in the first Filter object/set but NOT in the others.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><em>DESeqFilter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
+<li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -1158,7 +1163,7 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
-<p>a set/string of the WBGene indices that that exist only in the first Filter object/set (set difference).</p>
+<p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
 </dd></dl>
 
 <dl class="method">
@@ -1277,7 +1282,7 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <li><p><strong>ascending</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – sort ascending (keep lowest values) or descending (keep highest values).</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current DESeqFilter object. If False,         the function will return a new DESeqFilter instance and the current instance will not be affected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1348,13 +1353,14 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the WBGene indices that exist in ALL of the given Filter objects/sets.</p>
+<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -1364,7 +1370,7 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <dd class="field-odd"><p></p>
 </dd>
 </dl>
-<p>a set/string of the WBGene indices that intersect between two Filter objects.</p>
+<p>If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1471,6 +1477,25 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">plot_expression</code><span class="sig-paren">(</span><em class="sig-param">features: list</em>, <em class="sig-param">sample_grouping: dict</em>, <em class="sig-param">count_unit: str = 'Reads per million'</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the average expression and standard error of the specified features under the specified conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> (<em>str</em><em> or </em><em>list of strings</em>) – the feature/features to plot expression for.</p></li>
+<li><p><strong>sample_grouping</strong> (<em>dict</em><em>, </em><em>with condition names as keys         and list of the sample numbers for each condition as a list</em>) – a dictionary of the conditions to plot expression for.         Each key should be a name of a conditions, and the value for each key is         a list of the numbers of columns to be used as samples of that condition.         For example, if the first 3 columns are replicates of the condition ‘condition 1’ and         the last 3 column are replicates of the condition ‘condition 2’, then sample_grouping should be:         {‘condition 1’:[0, 1, 2], ‘condition 2’:[3, 4, 5]}</p></li>
+<li><p><strong>count_unit</strong> (<em>str</em><em>, </em><em>default 'Reads per million'</em>) – The unit of the count data. Will be displayed in the y axis.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="figure align-center" id="id5">
+<a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 403.6px; height: 294.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">save_csv</code><span class="sig-paren">(</span><em class="sig-param">alt_filename=None</em><span class="sig-paren">)</span></dt>
 <dd><p>Saves the current filtered data to a .csv file.</p>
 <dl class="field-list simple">
@@ -1499,9 +1524,9 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 </dd>
 </dl>
 <p>a matplotlib axis object.</p>
-<div class="figure align-center" id="id5">
+<div class="figure align-center" id="id6">
 <a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 525.6px; height: 550.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
@@ -1647,9 +1672,9 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 </dd>
 </dl>
 <p>a seaborn violin object.</p>
-<div class="figure align-center" id="id6">
+<div class="figure align-center" id="id7">
 <a class="reference internal image-reference" href="_images/violin.png"><img alt="_images/violin.png" src="_images/violin.png" style="width: 1152.0px; height: 556.1999999999999px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
@@ -1756,9 +1781,9 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 </dl>
 <p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
 and ‘pvalue’.</p>
-<div class="figure align-center" id="id7">
+<div class="figure align-center" id="id8">
 <a class="reference internal image-reference" href="_images/bigtable_en.png"><img alt="_images/bigtable_en.png" src="_images/bigtable_en.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of enrich_randomization</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
 </div>
 </dd>
 </dl>
@@ -1826,9 +1851,9 @@ and ‘pvalue’.</p>
 </dl>
 <p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
 and ‘pvalue’.</p>
-<div class="figure align-center" id="id8">
+<div class="figure align-center" id="id9">
 <a class="reference internal image-reference" href="_images/bigtable_en.png"><img alt="_images/bigtable_en.png" src="_images/bigtable_en.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of big table enrichment</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of big table enrichment</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
 </div>
 </dd>
 </dl>
@@ -1852,13 +1877,13 @@ and ‘pvalue’.</p>
 </dd>
 </dl>
 <p>a DataFrame which contains the significant enrichmenet terms</p>
-<div class="figure align-center" id="id9">
-<a class="reference internal image-reference" href="_images/go_en.png"><img alt="_images/go_en.png" src="_images/go_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of GO enrichment</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
-</div>
 <div class="figure align-center" id="id10">
+<a class="reference internal image-reference" href="_images/go_en.png"><img alt="_images/go_en.png" src="_images/go_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of GO enrichment</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id11">
 <a class="reference internal image-reference" href="_images/tissue_en.png"><img alt="_images/tissue_en.png" src="_images/tissue_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of Tissue enrichment</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of Tissue enrichment</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
