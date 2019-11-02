@@ -876,7 +876,7 @@ class DESeqFilter(Filter):
 
         .. figure::  volcano.png
            :align:   center
-           :scale: 40 %
+           :scale: 70 %
 
            Example plot of volcano_plot()
         """
