@@ -566,5 +566,5 @@ def test_biotypes():
     df.sort_index(inplace=True)
     assert np.all(df == truth)
 
-def test_filter_by_sum():
+def test_filter_by_row_sum():
     assert False
