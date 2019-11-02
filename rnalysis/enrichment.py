@@ -269,9 +269,12 @@ class EnrichmentProcessing:
         return df_comb
 
     @staticmethod
-    def _single_enrichment(gene_set, attributes, big_table, fraction, reps):
+    def _single_enrichment(gene_set, attributes, big_table: pd.DataFrame, fraction, reps):
         attributes = [attributes] if not isinstance(attributes, list) else attributes
         for attribute in attributes:
+            if isinstance(attribute, int):
+                assert attribute >= 0, f"Error in attribute number {attribute}: index must be non-negative!"
+                attribute = big_table.columns[attribute]
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             df = big_table[[attribute, 'int_index']]
             srs = df[attribute]
@@ -300,7 +303,7 @@ class EnrichmentProcessing:
             attributes = EnrichmentProcessing._from_string(
                 "Please insert attributes separated by newline "
                 "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
-        elif isinstance(attributes, str):
+        elif isinstance(attributes, (str, int)):
             attributes = [attributes]
         else:
             assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
@@ -493,6 +496,9 @@ class EnrichmentProcessing:
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
+            if isinstance(attribute, int):
+                assert attribute >= 0, f"Error in attribute number {attribute}: index must be non-negative!"
+                attribute = big_table.columns[attribute]
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             print(f"Finished {k} attributes out of {len(attributes)}")
             df = big_table[[attribute, 'int_index']]
