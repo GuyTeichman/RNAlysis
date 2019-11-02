@@ -1166,7 +1166,28 @@ class HTCountFilter(Filter):
         return clustering
 
     def plot_expression(self, features: list, sample_grouping: dict, count_unit: str = 'Reads per million'):
-        # TODO: documentation for plot_expression
+        """
+        Plot the average expression and standard error of the specified features under the specified conditions.
+
+        :type features: str or list of strings
+        :param features: the feature/features to plot expression for.
+        :type sample_grouping: dict, with condition names as keys \
+        and list of the sample numbers for each condition as a list
+        :param sample_grouping: a dictionary of the conditions to plot expression for. \
+        Each key should be a name of a conditions, and the value for each key is \
+        a list of the numbers of columns to be used as samples of that condition. \
+        For example, if the first 3 columns are replicates of the condition 'condition 1' and \
+        the last 3 column are replicates of the condition 'condition 2', then sample_grouping should be: \
+        {'condition 1':[0, 1, 2], 'condition 2':[3, 4, 5]}
+        :type count_unit: str, default 'Reads per million'
+        :param count_unit: The unit of the count data. Will be displayed in the y axis.
+
+        .. figure::  plot_expression.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of plot_expression()
+        """
         plt.style.use('seaborn-white')
         if isinstance(features, str):
             features = [features]
@@ -1194,7 +1215,6 @@ class HTCountFilter(Filter):
             ax.set_ylim((0.0,max(ylims)))
         f.tight_layout()
         plt.show()
-        return ylims
 
     def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None):
         """
