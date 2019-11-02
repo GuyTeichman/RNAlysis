@@ -1126,6 +1126,27 @@ class HTCountFilter(Filter):
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), \
                self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
 
+    def filter_by_row_sum(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
+        """
+        remove all features which have less then 'threshold' reads per million in all conditions.
+
+        :type threshold: float
+        :param threshold: The minimal sum a row should have in order not to be filtered out.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current HTCountFilter object. If False, \
+        the function will return a new HTCountFilter instance and the current instance will not be affected.
+        :return:
+        If 'inplace' is False, returns a new instance of HTCountFilter.
+        """
+        self._rpm_assertions(threshold=threshold)
+        new_df = self.df.loc[self.df.sum(axis=1) >= threshold]
+        suffix = f"_filt{threshold}sum"
+        return self._inplace(new_df, opposite, inplace, suffix)
+
     def clustergram(self, sample_names: list = 'all', metric: str = 'euclidean', linkage: str = 'average'):
         """
         Runs and plots a clustergram on the base-2 log of a given set of samples.
@@ -1198,9 +1219,8 @@ class HTCountFilter(Filter):
         plt.close()
         f = plt.figure()
         axes = []
-        ylims=[]
+        ylims = []
         for subplot, feature in zip(subplots, features):
-
             axes.append(f.add_subplot(subplot))
             mean = [self.df.loc[feature].iloc[ind].mean() for ind in sample_grouping.values()]
             sem = [self.df.loc[feature].iloc[ind].sem() for ind in sample_grouping.values()]
@@ -1212,7 +1232,7 @@ class HTCountFilter(Filter):
             sns.despine()
             ylims.append(axes[-1].get_ylim()[1])
         for ax in axes:
-            ax.set_ylim((0.0,max(ylims)))
+            ax.set_ylim((0.0, max(ylims)))
         f.tight_layout()
         plt.show()
 
