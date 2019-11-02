@@ -105,6 +105,11 @@ class Filter:
         :return:
         a numpy.ndarray of size (3,) containing three random values, each between 0 and 1.
         """
+        preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
+                         'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
+                         'mediumblue', 'black', 'lawngreen']
+        for color in preset_colors:
+            yield color
         while True:
             yield np.random.random(3)
 
