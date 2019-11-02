@@ -409,6 +409,8 @@ class EnrichmentProcessing:
         attributes = self._enrichment_get_attrs(attributes=attributes)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
+        if attributes == ['all']:
+            attributes = big_table.columns
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         client = Client()
         dview = client[:]
@@ -441,7 +443,6 @@ class EnrichmentProcessing:
         return res_df
 
     # TODO: allow 'all' in attributes to calculate enrichment for all attributes in the table
-    # TODO: allow to specify column numbers for attributes
     def enrich_randomization(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                              biotype: str = 'protein_coding', background_genes: set = None,
                              ref_path: str = 'predefined', save_csv: bool = False, fname=None):
@@ -493,6 +494,8 @@ class EnrichmentProcessing:
         attributes = self._enrichment_get_attrs(attributes=attributes)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
+        if attributes == ['all']:
+            attributes = big_table.columns
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):

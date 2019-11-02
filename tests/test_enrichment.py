@@ -260,8 +260,14 @@ def test_enrichment_parallel_validity():
     _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
     assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
 
-def test_randomization_int_index():
+def test_randomization_int_index_attributes():
     assert False
 
-def test_randomization_parallel_int_index():
+def test_randomization_parallel_int_index_attributes():
+    assert False
+
+def test_randomization_all_attributes():
+    assert False
+
+def test_randomization_parallel_all_attributes():
     assert False
