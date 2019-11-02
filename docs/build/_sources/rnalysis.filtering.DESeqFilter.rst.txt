@@ -6,7 +6,7 @@ rnalysis.filtering.DESeqFilter
 .. autoclass:: DESeqFilter
 
 
-
+   .. automethod:: __init__
 
 
    .. rubric:: Methods
@@ -14,6 +14,7 @@ rnalysis.filtering.DESeqFilter
    .. autosummary::
     :toctree:
 
+      ~DESeqFilter.__init__
       ~DESeqFilter.biotypes
       ~DESeqFilter.describe
       ~DESeqFilter.difference
@@ -30,13 +31,14 @@ rnalysis.filtering.DESeqFilter
       ~DESeqFilter.intersection
       ~DESeqFilter.number_filters
       ~DESeqFilter.save_csv
-      ~DESeqFilter.split_by_ref_table_attr
       ~DESeqFilter.split_by_percentile
+      ~DESeqFilter.split_by_ref_table_attr
       ~DESeqFilter.split_fold_change_direction
       ~DESeqFilter.symmetric_difference
       ~DESeqFilter.tail
       ~DESeqFilter.text_filters
       ~DESeqFilter.union
+      ~DESeqFilter.volcano_plot
 
 
 

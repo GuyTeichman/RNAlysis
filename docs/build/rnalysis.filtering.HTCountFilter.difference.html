@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rnalysis.filtering.HTCountFilter.__init__ &mdash; RNAlysis 1.0 documentation</title>
+  <title>rnalysis.filtering.HTCountFilter.difference &mdash; RNAlysis 1.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.HTCountFilter.biotypes" href="rnalysis.filtering.HTCountFilter.biotypes.html" />
-    <link rel="prev" title="rnalysis.filtering.HTCountFilter" href="rnalysis.filtering.HTCountFilter.html" /> 
+    <link rel="next" title="rnalysis.filtering.HTCountFilter.features_set" href="rnalysis.filtering.HTCountFilter.features_set.html" />
+    <link rel="prev" title="rnalysis.filtering.HTCountFilter.describe" href="rnalysis.filtering.HTCountFilter.describe.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -94,11 +94,11 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.html">rnalysis.filtering.HTCountFilter</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.__init__.html">rnalysis.filtering.HTCountFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.biotypes.html">rnalysis.filtering.HTCountFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.clustergram.html">rnalysis.filtering.HTCountFilter.clustergram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.describe.html">rnalysis.filtering.HTCountFilter.describe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.difference.html">rnalysis.filtering.HTCountFilter.difference</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.features_set.html">rnalysis.filtering.HTCountFilter.features_set</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.features_string.html">rnalysis.filtering.HTCountFilter.features_string</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.filter_biotype.html">rnalysis.filtering.HTCountFilter.filter_biotype</a></li>
@@ -186,13 +186,13 @@
         
           <li><a href="rnalysis.filtering.HTCountFilter.html">rnalysis.filtering.HTCountFilter</a> &raquo;</li>
         
-      <li>rnalysis.filtering.HTCountFilter.__init__</li>
+      <li>rnalysis.filtering.HTCountFilter.difference</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/rnalysis.filtering.HTCountFilter.__init__.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rnalysis.filtering.HTCountFilter.difference.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -205,12 +205,28 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rnalysis-filtering-htcountfilter-init">
-<h1>rnalysis.filtering.HTCountFilter.__init__<a class="headerlink" href="#rnalysis-filtering-htcountfilter-init" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="rnalysis-filtering-htcountfilter-difference">
+<h1>rnalysis.filtering.HTCountFilter.difference<a class="headerlink" href="#rnalysis-filtering-htcountfilter-difference" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="rnalysis.filtering.HTCountFilter.__init__">
-<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="rnalysis.filtering.HTCountFilter.difference">
+<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.difference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keep only the features that exist in the first Filter object/set but NOT in the others.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set or str</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
 </dd></dl>
 
 </div>
@@ -223,10 +239,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.HTCountFilter.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.HTCountFilter.features_set.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.features_set" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.HTCountFilter.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.HTCountFilter.describe.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter.describe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

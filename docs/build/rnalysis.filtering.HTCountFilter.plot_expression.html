@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rnalysis.filtering.HTCountFilter.__init__ &mdash; RNAlysis 1.0 documentation</title>
+  <title>rnalysis.filtering.HTCountFilter.plot_expression &mdash; RNAlysis 1.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.HTCountFilter.biotypes" href="rnalysis.filtering.HTCountFilter.biotypes.html" />
-    <link rel="prev" title="rnalysis.filtering.HTCountFilter" href="rnalysis.filtering.HTCountFilter.html" /> 
+    <link rel="next" title="rnalysis.filtering.HTCountFilter.save_csv" href="rnalysis.filtering.HTCountFilter.save_csv.html" />
+    <link rel="prev" title="rnalysis.filtering.HTCountFilter.run_pca" href="rnalysis.filtering.HTCountFilter.pca.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -94,7 +94,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.html">rnalysis.filtering.HTCountFilter</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.__init__.html">rnalysis.filtering.HTCountFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.biotypes.html">rnalysis.filtering.HTCountFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.clustergram.html">rnalysis.filtering.HTCountFilter.clustergram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.describe.html">rnalysis.filtering.HTCountFilter.describe</a></li>
@@ -115,7 +115,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.number_filters.html">rnalysis.filtering.HTCountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pairplot.html">rnalysis.filtering.HTCountFilter.pairplot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.pca.html">rnalysis.filtering.HTCountFilter.run_pca</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.plot_expression.html">rnalysis.filtering.HTCountFilter.plot_expression</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.HTCountFilter.plot_expression</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.save_csv.html">rnalysis.filtering.HTCountFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample.html">rnalysis.filtering.HTCountFilter.scatter_sample_vs_sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.split_by_percentile.html">rnalysis.filtering.HTCountFilter.split_by_percentile</a></li>
@@ -186,13 +186,13 @@
         
           <li><a href="rnalysis.filtering.HTCountFilter.html">rnalysis.filtering.HTCountFilter</a> &raquo;</li>
         
-      <li>rnalysis.filtering.HTCountFilter.__init__</li>
+      <li>rnalysis.filtering.HTCountFilter.plot_expression</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/rnalysis.filtering.HTCountFilter.__init__.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rnalysis.filtering.HTCountFilter.plot_expression.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -205,12 +205,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rnalysis-filtering-htcountfilter-init">
-<h1>rnalysis.filtering.HTCountFilter.__init__<a class="headerlink" href="#rnalysis-filtering-htcountfilter-init" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="rnalysis-filtering-htcountfilter-plot-expression">
+<h1>rnalysis.filtering.HTCountFilter.plot_expression<a class="headerlink" href="#rnalysis-filtering-htcountfilter-plot-expression" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="rnalysis.filtering.HTCountFilter.__init__">
-<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="rnalysis.filtering.HTCountFilter.plot_expression">
+<code class="sig-prename descclassname">HTCountFilter.</code><code class="sig-name descname">plot_expression</code><span class="sig-paren">(</span><em class="sig-param">features: list</em>, <em class="sig-param">sample_grouping: dict</em>, <em class="sig-param">count_unit: str = 'Reads per million'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.HTCountFilter.plot_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the average expression and standard error of the specified features under the specified conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> (<em>str</em><em> or </em><em>list of strings</em>) – the feature/features to plot expression for.</p></li>
+<li><p><strong>sample_grouping</strong> (<em>dict</em><em>, </em><em>with condition names as keys         and list of the sample numbers for each condition as a list</em>) – a dictionary of the conditions to plot expression for.         Each key should be a name of a conditions, and the value for each key is         a list of the numbers of columns to be used as samples of that condition.         For example, if the first 3 columns are replicates of the condition ‘condition 1’ and         the last 3 column are replicates of the condition ‘condition 2’, then sample_grouping should be:         {‘condition 1’:[0, 1, 2], ‘condition 2’:[3, 4, 5]}</p></li>
+<li><p><strong>count_unit</strong> (<em>str</em><em>, </em><em>default 'Reads per million'</em>) – The unit of the count data. Will be displayed in the y axis.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 403.6px; height: 294.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
 </dd></dl>
 
 </div>
@@ -223,10 +236,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.HTCountFilter.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.HTCountFilter.save_csv.html" class="btn btn-neutral float-right" title="rnalysis.filtering.HTCountFilter.save_csv" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.HTCountFilter.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.HTCountFilter.pca.html" class="btn btn-neutral float-left" title="rnalysis.filtering.HTCountFilter.run_pca" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
