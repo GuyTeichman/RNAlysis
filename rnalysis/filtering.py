@@ -525,8 +525,8 @@ class Filter:
         :type return_type: 'set' or 'str.
         :param return_type: If 'set', returns a set of the intersecting WBGene indices. If 'str', returns a string of \
         the intersecting indices, delimited by a comma.
-        :type inplace: bool
-        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        :type inplace: bool, default False
+        :param inplace: If True, filtering will be applied to the current Filter object. If False (default), \
         the function will return a set/str that contains the intersecting indices.
         :rtype: set or str
         :return:
@@ -567,8 +567,8 @@ class Filter:
         :param return_type: If 'set', returns a set of the WBGene indices that exist only in the first Filter object. \
         If 'str', returns a string of the WBGene indices that exist only in the first Filter object, \
         delimited by a comma.
-        :type inplace: bool
-        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        :type inplace: bool, default False
+        :param inplace: If True, filtering will be applied to the current Filter object. If False (default), \
         the function will return a set/str that contains the intersecting indices.
         :rtype: set or str
         :return:
