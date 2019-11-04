@@ -515,7 +515,7 @@ class Filter:
                 raise e
         return Filter.__return_type(op_indices, return_type)
 
-    def intersection(self, *others, return_type: str = 'set', inplace: bool = True):
+    def intersection(self, *others, return_type: str = 'set', inplace: bool = False):
         """
         Keep only the features that exist in ALL of the given Filter objects/sets. \
         Can be done inplace on the first Filter object, or return a set/string of features.
@@ -556,7 +556,7 @@ class Filter:
         """
         return self._set_ops(others, return_type, set.union)
 
-    def difference(self, *others, return_type: str = 'set', inplace: bool = True):
+    def difference(self, *others, return_type: str = 'set', inplace: bool = False):
         """
         Keep only the features that exist in the first Filter object/set but NOT in the others. \
         Can be done inplace on the first Filter object, or return a set/string of features.
