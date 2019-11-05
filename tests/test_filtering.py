@@ -559,6 +559,9 @@ def test_text_filters_invalid_input():
         d.text_filters('cond2', 'equals', 55)
 
 
+def test_htcount_filter_from_folder():
+    assert False
+
 def test_biotypes():
     truth = general.load_csv('biotypes_truth.csv', 0)
     df = HTCountFilter(r'all_expr_biotype.csv').biotypes()

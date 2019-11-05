@@ -1429,7 +1429,7 @@ class HTCountFilter(Filter):
 
     @staticmethod
     def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = False, save_reads_fname: str = None,
-                    save_not_counted_fname: str = None):
+                    save_not_counted_fname: str = None, input_format: str = '.txt'):
         """
         Iterates over HTSeq count .txt files in a given folder and combines them into a single HTCountFilter table. \
         Can also save the count data table and the uncounted data table to .csv files, and normalize the HTCountFilter \
@@ -1450,6 +1450,7 @@ class HTCountFilter(Filter):
         the '.csv' suffix.
         :param save_not_counted_fname: save_reads_fname: str. Name under which to save the combined uncounted data. \
         Does not need to include the '.csv' suffix.
+        :param input_format: the file format of the input files. Default is '.txt'.
         :return:
         an HTCountFilter object containing the combined count data from all individual htcount .txt files in the \
         specified folder.
@@ -1470,8 +1471,8 @@ class HTCountFilter(Filter):
         folder = Path(folder_path)
         df = pd.DataFrame()
         for item in folder.iterdir():
-            if item.is_file() and item.suffix == '.txt':
-                df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.name])], axis=1)
+            if item.is_file() and item.suffix == input_format:
+                df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
 
         uncounted = df.loc['__no_feature':'__alignment_not_unique']
         counts = pd.concat([df, uncounted]).drop_duplicates(keep=False)
