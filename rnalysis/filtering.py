@@ -885,6 +885,7 @@ class DESeqFilter(Filter):
 
            Example plot of volcano_plot()
         """
+        plt.figure()
         plt.style.use('seaborn-white')
         colors = pd.Series(index=self.df.index)
         colors.loc[(self.df['padj'] <= alpha) & (self.df['log2FoldChange'] > 0)] = 'tab:red'
