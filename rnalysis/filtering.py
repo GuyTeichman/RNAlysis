@@ -637,9 +637,6 @@ class FoldChangeFilter(Filter):
                 "Warning: FoldChangeFilter does not support 'inf' or '0' values! "
                 "Unexpected results may occur during filtering or statistical analyses. ")
 
-    def __repr(self):
-        return f""""""
-
     def __copy__(self):
         return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
                           denominator_name=self.denominator)
@@ -1492,4 +1489,3 @@ class HTCountFilter(Filter):
 
 # TODO: a function that receives a dataframe, and can plot correlation with the BigTable instead of just enrichment
 # TODO: add option for mask in clustergram
-# TODO: add a __repr__ for Filter objects (in particular FoldChangeFilter)
