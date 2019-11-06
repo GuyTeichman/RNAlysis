@@ -43,7 +43,7 @@ class Filter:
             self.columns = list(self.df.columns)
 
     def __str__(self):
-        return f"{type(self).__name__} of file {self.fname}: \n{self.df.__str__()}"
+        return f"{type(self).__name__} of file {self.fname}"
 
     def __copy__(self):
         return type(self)((self.fname, self.df.copy(deep=True)))
@@ -636,6 +636,9 @@ class FoldChangeFilter(Filter):
             warnings.warn(
                 "Warning: FoldChangeFilter does not support 'inf' or '0' values! "
                 "Unexpected results may occur during filtering or statistical analyses. ")
+
+    def __repr(self):
+        return f""""""
 
     def __copy__(self):
         return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
@@ -1475,7 +1478,7 @@ class HTCountFilter(Filter):
                 df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
 
         uncounted = df.loc['__no_feature':'__alignment_not_unique']
-        counts = pd.concat([df, uncounted]).drop_duplicates(keep=False)
+        counts = df.drop(uncounted.index,inplace=False)
 
         if save_csv:
             general.save_to_csv(df=counts, filename=save_reads_fname)
@@ -1489,3 +1492,4 @@ class HTCountFilter(Filter):
 
 # TODO: a function that receives a dataframe, and can plot correlation with the BigTable instead of just enrichment
 # TODO: add option for mask in clustergram
+# TODO: add a __repr__ for Filter objects (in particular FoldChangeFilter)
