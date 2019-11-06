@@ -895,6 +895,7 @@ class DESeqFilter(Filter):
         plt.title(f"Volcano plot of {self.fname.stem}", fontsize=18)
         plt.xlabel('Log2(fold change)', fontsize=15)
         plt.ylabel('-Log10(adj. p-value)', fontsize=15)
+        plt.show()
 
 
 class HTCountFilter(Filter):
