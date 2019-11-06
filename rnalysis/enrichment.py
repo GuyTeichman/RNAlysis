@@ -406,6 +406,7 @@ class EnrichmentProcessing:
 
           Example plot of big table enrichment
        """
+        # TODO: fix description for enrichment/parallel randomization attributes as int
         attributes = self._enrichment_get_attrs(attributes=attributes)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
@@ -560,6 +561,8 @@ class EnrichmentProcessing:
         enrichment_names = df.index.values.tolist()
         enrichment_scores = df['log2_fold_enrichment'].values.copy()
         scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf]
+        if len(scores_no_inf) == 0:
+            scores_no_inf.append(-10)
         for i in range(len(enrichment_scores)):
             if enrichment_scores[i] == -np.inf:
                 enrichment_scores[i] = min(scores_no_inf)
@@ -576,7 +579,7 @@ class EnrichmentProcessing:
         bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors)
         bar.tick_labels = enrichment_names
         # sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*ax.get_ylim()))
-        absmax = max([abs(i) for i in ax.get_ylim()])
+        # absmax = max([abs(i) for i in ax.get_ylim()])
         sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(3, -3))
         sm.set_array([])
         cbar = fig.colorbar(sm)
