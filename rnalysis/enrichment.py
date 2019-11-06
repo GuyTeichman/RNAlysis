@@ -562,7 +562,7 @@ class EnrichmentProcessing:
         enrichment_scores = df['log2_fold_enrichment'].values.copy()
         scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
-            scores_no_inf.append(-10)
+            scores_no_inf.append(-1)
         for i in range(len(enrichment_scores)):
             if enrichment_scores[i] == -np.inf:
                 enrichment_scores[i] = min(scores_no_inf)
