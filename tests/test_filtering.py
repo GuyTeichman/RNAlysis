@@ -428,8 +428,6 @@ def test_difference_inplace():
     set1_truth.sort_index(inplace=True)
     set2_truth.sort_index(inplace=True)
 
-    print(set2_truth)
-    print(set2_diff.df)
     assert np.all(set1_truth == set1_diff.df)
     assert np.all(set2_truth == set2_diff.df)
 
