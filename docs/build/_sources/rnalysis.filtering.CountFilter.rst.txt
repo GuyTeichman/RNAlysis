@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter
-================================
+==============================
 
 .. currentmodule:: rnalysis.filtering
 
@@ -23,6 +23,7 @@ rnalysis.filtering.CountFilter
       ~CountFilter.features_string
       ~CountFilter.filter_biotype
       ~CountFilter.filter_by_ref_table_attr
+      ~CountFilter.filter_by_row_sum
       ~CountFilter.filter_low_reads
       ~CountFilter.filter_percentile
       ~CountFilter.filter_top_n
@@ -36,6 +37,7 @@ rnalysis.filtering.CountFilter
       ~CountFilter.pairplot
       ~CountFilter.pca
       ~CountFilter.plot_expression
+      ~CountFilter.print_features
       ~CountFilter.save_csv
       ~CountFilter.scatter_sample_vs_sample
       ~CountFilter.split_by_percentile

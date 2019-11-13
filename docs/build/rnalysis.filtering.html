@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.DESeqFilter" href="rnalysis.filtering.DESeqFilter.html" />
+    <link rel="next" title="rnalysis.filtering.Filter" href="rnalysis.filtering.Filter.html" />
     <link rel="prev" title="History" href="history.html" /> 
 </head>
 
@@ -92,8 +92,9 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">rnalysis.filtering</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 </ul>
 </li>
@@ -177,13 +178,16 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter</span></code></a>(fname)</p></td>
-<td><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter</span></code></a>(fname)</p></td>
+<td><p>A parent Filter class.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter</span></code></a>(fname)</p></td>
 <td><p>A class that receives a count matrix and can filter it according to various characteristics.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter</span></code></a>(fname, numerator_name, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter</span></code></a>(fname)</p></td>
+<td><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter</span></code></a>(fname, numerator_name, …)</p></td>
 <td><p>A class that contains a single column, representing the gene-specific fold change between two conditions.</p></td>
 </tr>
 </tbody>
@@ -198,7 +202,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.DESeqFilter.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.Filter.html" class="btn btn-neutral float-right" title="rnalysis.filtering.Filter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="history.html" class="btn btn-neutral float-left" title="History" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

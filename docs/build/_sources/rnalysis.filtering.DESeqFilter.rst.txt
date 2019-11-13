@@ -30,6 +30,7 @@ rnalysis.filtering.DESeqFilter
       ~DESeqFilter.head
       ~DESeqFilter.intersection
       ~DESeqFilter.number_filters
+      ~DESeqFilter.print_features
       ~DESeqFilter.save_csv
       ~DESeqFilter.split_by_percentile
       ~DESeqFilter.split_by_ref_table_attr

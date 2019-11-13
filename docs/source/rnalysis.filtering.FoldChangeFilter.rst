@@ -29,6 +29,7 @@ rnalysis.filtering.FoldChangeFilter
       ~FoldChangeFilter.head
       ~FoldChangeFilter.intersection
       ~FoldChangeFilter.number_filters
+      ~FoldChangeFilter.print_features
       ~FoldChangeFilter.randomization_test
       ~FoldChangeFilter.save_csv
       ~FoldChangeFilter.split_by_percentile

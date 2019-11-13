@@ -14,8 +14,9 @@ rnalysis.filtering
    .. autosummary::
     :toctree:
 
-      DESeqFilter
+      Filter
       CountFilter
+      DESeqFilter
       FoldChangeFilter
 
 
