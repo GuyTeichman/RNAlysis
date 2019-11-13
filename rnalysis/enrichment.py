@@ -8,7 +8,7 @@ Results of enrichment analyses can be saved to .csv files.
 import random
 import numpy as np
 import pandas as pd
-from rnalysis import general, __gene_names_and_biotype__
+from rnalysis import general, filtering, __gene_names_and_biotype__
 import tissue_enrichment_analysis as tea
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -340,7 +340,13 @@ class FeatureSet:
             pass
         else:
             assert isinstance(background_genes,
-                              set), f"background_genes must be a set, instead is {type(background_genes)}"
+                              (set, FeatureSet, filtering.Filter)), f"background_genes must be a set, " \
+                                                                    f"enrichment.FeatureSet or filtering.Filter;" \
+                                                                    f" instead is {type(background_genes)}"
+            if isinstance(background_genes, FeatureSet):
+                background_genes = background_genes.gene_set
+            elif isinstance(background_genes, filtering.Filter):
+                background_genes = background_genes.index_set()
             if biotype != 'all':
                 warnings.warn(
                     "Warning: both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")
@@ -393,8 +399,11 @@ class FeatureSet:
         In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
-       :type attributes: iterable (list, tuple, set, etc)
-       :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
+       :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'
+       :param attributes: An iterable of attribute names or attribute numbers \
+       (according to their order in the reference table). \
+       If 'all', all of the attributes in the reference table will be used. \
+       If None, a manual input prompt will be raised.
        :type fdr: float between 0 and 1
        :param fdr: Indicates the FDR threshold for significance.
        :type reps: int larger than 0
@@ -405,8 +414,8 @@ class FeatureSet:
        :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
        'protein_coding' will include only protein-coding genes in the reference, etc. \
        Cannot be specified together with 'background_genes'.
-       :type background_genes: set of WBGene indices
-       :param background_genes: a set of specific WBGene indices to be used as background genes. \
+       :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+       :param background_genes: a set of specific feature indices to be used as background genes. \
        Cannot be specified together with 'biotype'.
        :type save_csv: bool, default False
        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
@@ -423,7 +432,6 @@ class FeatureSet:
 
           Example plot of big table enrichment
        """
-        # TODO: fix description for enrichment/parallel randomization attributes as int
         ref_path = FeatureSet._get_ref_path(ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
@@ -477,8 +485,11 @@ class FeatureSet:
         appears with the smallest value in the scale.
 
 
-        :type attributes: iterable (list, tuple, set, etc)
-        :param attributes: An iterable of attribute names (strings). If None, a manual input prompt will be raised.
+        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
+        :param attributes: An iterable of attribute names or attribute numbers \
+        (according to their order in the reference table). \
+        If 'all', all of the attributes in the reference table will be used. \
+        If None, a manual input prompt will be raised.
         :type fdr: float between 0 and 1
         :param fdr: Indicates the FDR threshold for significance.
         :type reps: int larger than 0
@@ -491,8 +502,8 @@ class FeatureSet:
         :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
         'protein_coding' will include only protein-coding genes in the reference, etc. \
         Cannot be specified together with 'background_genes'.
-        :type background_genes: set of WBGene indices
-        :param background_genes: a set of specific WBGene indices to be used as background genes. \
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+        :param background_genes: a set of specific feature indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
@@ -636,4 +647,3 @@ class FeatureSet:
 
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
-# TODO: accept a FeatureSet/Filter object as a 'set of genes' for background
