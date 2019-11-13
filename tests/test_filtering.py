@@ -588,4 +588,9 @@ def test_biotypes():
 
 
 def test_filter_by_row_sum():
-    assert False
+    truth = general.load_csv('test_filter_row_sum.csv', 0)
+    h = HTCountFilter('all_expr.csv')
+    h.filter_by_row_sum(29)
+    h.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(h.df == truth)
