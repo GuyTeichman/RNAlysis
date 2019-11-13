@@ -92,6 +92,8 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.__init__.html">rnalysis.filtering.DESeqFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html">rnalysis.filtering.DESeqFilter.biotypes</a></li>
@@ -109,6 +111,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html">rnalysis.filtering.DESeqFilter.head</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.DESeqFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.number_filters.html">rnalysis.filtering.DESeqFilter.number_filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.print_features.html">rnalysis.filtering.DESeqFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html">rnalysis.filtering.DESeqFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_percentile.html">rnalysis.filtering.DESeqFilter.split_by_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_ref_table_attr.html">rnalysis.filtering.DESeqFilter.split_by_ref_table_attr</a></li>
@@ -120,7 +123,6 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.volcano_plot.html">rnalysis.filtering.DESeqFilter.volcano_plot</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 </ul>
 </li>
@@ -207,7 +209,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
