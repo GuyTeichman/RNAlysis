@@ -356,6 +356,12 @@ class Filter:
         """
         return "\n".join(self.features_set())
 
+    def print_features(self):
+        """
+        Print the feature indices in the Filter object, separated by newline ('\n').
+        """
+        print(self.features_string())
+
     def biotypes(self, ref: str = __gene_names_and_biotype__):
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
@@ -1477,7 +1483,7 @@ class HTCountFilter(Filter):
                 df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
 
         uncounted = df.loc['__no_feature':'__alignment_not_unique']
-        counts = df.drop(uncounted.index,inplace=False)
+        counts = df.drop(uncounted.index, inplace=False)
 
         if save_csv:
             general.save_to_csv(df=counts, filename=save_reads_fname)
@@ -1489,5 +1495,5 @@ class HTCountFilter(Filter):
             h.norm_reads_to_rpm(uncounted)
         return h
 
-# TODO: a function that receives a dataframe, and can plot correlation with the BigTable instead of just enrichment
+# TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
