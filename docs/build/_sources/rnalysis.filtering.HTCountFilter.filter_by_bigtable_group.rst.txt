@@ -1,6 +1,6 @@
-rnalysis.filtering.HTCountFilter.filter\_by\_bigtable\_group
+rnalysis.filtering.CountFilter.filter\_by\_bigtable\_group
 ============================================================
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: HTCountFilter.filter_by_ref_table_attr
+.. automethod:: CountFilter.filter_by_ref_table_attr

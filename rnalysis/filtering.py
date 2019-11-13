@@ -907,7 +907,7 @@ class DESeqFilter(Filter):
         plt.show()
 
 
-class HTCountFilter(Filter):
+class CountFilter(Filter):
     """
     A class that receives a count matrix and can filter it according to various characteristics.
 
@@ -932,10 +932,10 @@ class HTCountFilter(Filter):
         and return it as a FoldChangeFilter object.
 
         :type numerator: str, or list of strs
-        :param numerator: the HTCountFilter columns to be used as the numerator. If multiple arguments are given \
+        :param numerator: the CountFilter columns to be used as the numerator. If multiple arguments are given \
         in a list, they will be averaged.
         :type denominator: str, or list of strs
-        :param denominator: the HTCountFilter columns to be used as the denominator. If multiple arguments are given \
+        :param denominator: the CountFilter columns to be used as the denominator. If multiple arguments are given \
         in a list, they will be averaged.
         :type numer_name: str or 'default'
         :param numer_name: name to give the numerator condition. If 'default', the name will be generarated \
@@ -960,10 +960,10 @@ class HTCountFilter(Filter):
         elif isinstance(denominator, tuple):
             denominator = list(denominator)
         for num in numerator:
-            assert num in self.df, f"all numerator arguments must be columns in the HTCountFilter object! ({num})"
+            assert num in self.df, f"all numerator arguments must be columns in the CountFilter object! ({num})"
 
         for den in denominator:
-            assert den in self.df, f"all denominator arguments must be columns in the HTCountFilter object! ({den})"
+            assert den in self.df, f"all denominator arguments must be columns in the CountFilter object! ({den})"
         srs = (self.df[numerator].mean(axis=1) + 1) / (self.df[denominator].mean(axis=1) + 1)
         numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
         denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
@@ -983,7 +983,7 @@ class HTCountFilter(Filter):
 
         :type sample_list: 'all', list, or nested list.
         :param sample_list: A list of the sample names and/or grouped sample names to be included in the pairplot. \
-        All specified samples must be present in the HTCountFilter object. \
+        All specified samples must be present in the CountFilter object. \
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
@@ -1028,7 +1028,7 @@ class HTCountFilter(Filter):
         or a list of multiple sample names to be averaged (list).
 
         :param sample_list: A list of the sample names and/or grouped sample names passed by the user. \
-        All specified samples must be present in the HTCountFilter object. \
+        All specified samples must be present in the CountFilter object. \
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6'] \
@@ -1048,14 +1048,14 @@ class HTCountFilter(Filter):
 
     def norm_reads_to_rpm(self, all_feature_fname: str, inplace: bool = True):
         """
-        Normalizes the reads in the HTCountFilter to reads per million (RPM). \
+        Normalizes the reads in the CountFilter to reads per million (RPM). \
         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq's output. \
-        Divides each column in the HTCountFilter object by (total reads + ambiguous + no feature)*10^-6 .
+        Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .
 
         :param all_feature_fname: the .csv file which contains feature information about the RNA library \
         (ambiguous, no feature, not aligned, etc).
-        :param inplace: If True (default), filtering will be applied to the current HTCountFilter object. If False, \
-        the function will return a new HTCountFilter instance and the current instance will not be affected.
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
         If inplace is False, returns a new instance of the Filter object.
         """
@@ -1075,15 +1075,15 @@ class HTCountFilter(Filter):
 
     def norm_reads_with_size_factor(self, size_factor_fname: str, inplace: bool = True):
         """
-        Normalizes the reads in the HTCountFilter using pre-calculated size factors. \
+        Normalizes the reads in the CountFilter using pre-calculated size factors. \
         Such size factors can be calculated using DESeq2's median of ratios method. \
         Receives a table of sample names and their corresponding size factors, \
-        and divides each column in the HTCountFilter object dataframe by the corresponding size factor.
+        and divides each column in the CountFilter object dataframe by the corresponding size factor.
 
         :type size_factor_fname: str or pathlib.Path
         :param size_factor_fname: the .csv file which contains size factors for the different libraries.
-        :param inplace: If True (default), filtering will be applied to the current HTCountFilter object. If False, \
-        the function will return a new HTCountFilter instance and the current instance will not be affected.
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
         If inplace is False, returns a new instance of the Filter object.
         """
@@ -1112,10 +1112,10 @@ class HTCountFilter(Filter):
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
         :type inplace: bool
-        :param inplace: If True (default), filtering will be applied to the current HTCountFilter object. If False, \
-        the function will return a new HTCountFilter instance and the current instance will not be affected.
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
-        If 'inplace' is False, returns a new instance of HTCountFilter.
+        If 'inplace' is False, returns a new instance of CountFilter.
         """
         self._rpm_assertions(threshold=threshold)
         new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
@@ -1124,7 +1124,7 @@ class HTCountFilter(Filter):
 
     def split_by_reads(self, threshold: float = 5):
         """
-        Splits the features in the current HTCountFilter object into two complementary, non-overlapping HTCountFilter \
+        Splits the features in the current CountFilter object into two complementary, non-overlapping CountFilter \
         objects, based on the their maximum expression level. The first object will contain only highly-expressed \
          features (which have reads over the specified threshold in at least one sample). The second object will \
          contain only lowly-expressed features (which have reads below the specified threshold in all samples).
@@ -1133,7 +1133,7 @@ class HTCountFilter(Filter):
         in at least one sample in order to be \
         included in the "highly expressed" object and no the "lowly expressed" object.
         :return:
-        A tuple containing two HTCountFilter objects: the first has only highly-expressed features, \
+        A tuple containing two CountFilter objects: the first has only highly-expressed features, \
         and the second has only lowly-expressed features.
         """
         self._rpm_assertions(threshold=threshold)
@@ -1153,10 +1153,10 @@ class HTCountFilter(Filter):
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
         :type inplace: bool
-        :param inplace: If True (default), filtering will be applied to the current HTCountFilter object. If False, \
-        the function will return a new HTCountFilter instance and the current instance will not be affected.
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
-        If 'inplace' is False, returns a new instance of HTCountFilter.
+        If 'inplace' is False, returns a new instance of CountFilter.
         """
         self._rpm_assertions(threshold=threshold)
         new_df = self.df.loc[self.df.sum(axis=1) >= threshold]
@@ -1297,7 +1297,7 @@ class HTCountFilter(Filter):
             sample_grouping = [i + 1 for i in range(len(sample_names))]
         axes = []
         for graph in range(graphs):
-            axes.append(HTCountFilter._plot_pca(
+            axes.append(CountFilter._plot_pca(
                 final_df=final_df[['Principal component 1', f'Principal component {2 + graph}', 'lib']],
                 pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=sample_grouping))
 
@@ -1306,7 +1306,7 @@ class HTCountFilter(Filter):
     @staticmethod
     def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list):
         """
-        Internal method, used to plot the results from HTCountFilter.pca. Static class method.
+        Internal method, used to plot the results from CountFilter.pca. Static class method.
 
         :param final_df: The DataFrame output from pca
         :param pc1_var: Variance explained by the first PC.
@@ -1328,7 +1328,7 @@ class HTCountFilter(Filter):
         ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=15)
         ax.set_title('PCA', fontsize=20)
 
-        color_generator = HTCountFilter._color_gen()
+        color_generator = CountFilter._color_gen()
         color_opts = [next(color_generator) for _ in range(max(sample_grouping))]
         colors = [color_opts[i - 1] for i in sample_grouping]
 
@@ -1346,9 +1346,9 @@ class HTCountFilter(Filter):
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.
 
-        :param sample1: str/list. Name of the first sample from the HTCountFilter object. \
+        :param sample1: str/list. Name of the first sample from the CountFilter object. \
         If sample1 is a list, they will be avarged as replicates.
-        :param sample2: str/list. Name of the second sample from the HTCountFilter object. \
+        :param sample2: str/list. Name of the second sample from the CountFilter object. \
         If sample2 is a list, they will be averaged as replicates.
         :param xlabel: optional. If not specified, sample1 will be used as xlabel.
         :param ylabel: optional. If not specified, sample2 will be used as ylabel.
@@ -1398,14 +1398,14 @@ class HTCountFilter(Filter):
 
     def violin_plot(self, samples='all'):
         """
-        Generates a violin plot of the specified samples in the HTCountFilter object. \
+        Generates a violin plot of the specified samples in the CountFilter object. \
         Can plot both single samples and average multiple replicates. \
         It is recommended to use this function on normalized values and not on absolute read values. \
         Box inside the violin plot indicates 25% and 75% percentiles, and the white dot indicates the median.
 
         :type samples: 'all' or list.
         :param samples: A list of the sample names and/or grouped sample names to be plotted in the violin plot. \
-        All specified samples must be present in the HTCountFilter object. \
+        All specified samples must be present in the CountFilter object. \
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
@@ -1442,18 +1442,18 @@ class HTCountFilter(Filter):
     def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = False, save_reads_fname: str = None,
                     save_not_counted_fname: str = None, input_format: str = '.txt'):
         """
-        Iterates over HTSeq count .txt files in a given folder and combines them into a single HTCountFilter table. \
-        Can also save the count data table and the uncounted data table to .csv files, and normalize the HTCountFilter \
+        Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table. \
+        Can also save the count data table and the uncounted data table to .csv files, and normalize the CountFilter \
         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data, \
-        regardless if the HTCountFilter table was normalized or not.
+        regardless if the CountFilter table was normalized or not.
 
         :param folder_path: str or pathlib.Path. Full path of the folder that contains individual htcount .txt files.
         :param save_csv: bool. If True (default), the joint DataFrame of count data and uncounted data will be saved \
         to two separate .csv files. The files will be saved in 'folder_path', and named according to the parameters \
         'save_reads_fname' for the count data, and 'save_not_counted_fname' for the uncounted data (unaligned, \
         alignment not unique, etc).
-        :param norm_to_rpm: bool. If True, the HTCountFilter table will be automatically normalized to reads per \
-        million (RPM). If False (defualt), the HTCountFilter object will not be normalized, and will instead contain \
+        :param norm_to_rpm: bool. If True, the CountFilter table will be automatically normalized to reads per \
+        million (RPM). If False (defualt), the CountFilter object will not be normalized, and will instead contain \
         absolute count data (as in the original htcount .txt files). \
         Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original \
         htcount .txt files, and NOT normalized data.
@@ -1463,7 +1463,7 @@ class HTCountFilter(Filter):
         Does not need to include the '.csv' suffix.
         :param input_format: the file format of the input files. Default is '.txt'.
         :return:
-        an HTCountFilter object containing the combined count data from all individual htcount .txt files in the \
+        an CountFilter object containing the combined count data from all individual htcount .txt files in the \
         specified folder.
         """
         file_suffix = '.csv'
@@ -1494,7 +1494,7 @@ class HTCountFilter(Filter):
             general.save_to_csv(df=uncounted, filename=save_not_counted_fname)
 
         fname = save_reads_fname if save_csv else folder.name + file_suffix
-        h = HTCountFilter((Path(fname), counts))
+        h = CountFilter((Path(fname), counts))
         if norm_to_rpm:
             h.norm_reads_to_rpm(uncounted)
         return h

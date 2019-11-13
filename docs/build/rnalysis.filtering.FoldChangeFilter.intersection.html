@@ -93,7 +93,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.HTCountFilter.html">rnalysis.filtering.HTCountFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.__init__.html">rnalysis.filtering.FoldChangeFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes.html">rnalysis.filtering.FoldChangeFilter.biotypes</a></li>
@@ -201,14 +201,14 @@
 <h1>rnalysis.filtering.FoldChangeFilter.intersection<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-intersection" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.FoldChangeFilter.intersection">
-<code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.intersection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em>, <em class="sig-param">inplace: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.intersection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<em>Filter</em><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>

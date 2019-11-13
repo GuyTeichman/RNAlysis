@@ -1,6 +1,6 @@
-rnalysis.filtering.HTCountFilter.run\_pca
+rnalysis.filtering.CountFilter.run\_pca
 =========================================
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: HTCountFilter.pca
+.. automethod:: CountFilter.pca

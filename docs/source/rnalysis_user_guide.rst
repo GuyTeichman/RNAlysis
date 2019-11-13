@@ -13,7 +13,7 @@ The filtering module is built around Filter objects, which are containers for ta
 Working with Filter objects
 ============================
 
-All Filter objects (DESeqFilter, HTCountFilter, FoldChangeFilter) work on the same principles,
+All Filter objects (DESeqFilter, CountFilter, FoldChangeFilter) work on the same principles,
 and share many of the same functions and features. Each of them also has specific filtering, analysis and visualisation functions. In this section we will look into the general usage of Filter objects.
 
 Initialize a Filter object
@@ -71,16 +71,16 @@ For example, if we now wanted to remove the rows which are below the 25% percent
 
 Calling this function without the 'opposite' parameter would have removed all values except the bottom 25% of the 'log2FoldChange' column. When specifying 'opposite', we instead throw out the bottom 25% of the 'log2FoldChange' column and keep the rest.
 
-There are many different filtering functions within the filtering module. Some of them are subtype-specific (such as 'filter_low_reads' for HTCountFilter objects and 'filter_significant' for DESeqFilter objects), while others can be applied to any Filter object. You can read more about the different functions and their usage in the project's documentation.
+There are many different filtering functions within the filtering module. Some of them are subtype-specific (such as 'filter_low_reads' for CountFilter objects and 'filter_significant' for DESeqFilter objects), while others can be applied to any Filter object. You can read more about the different functions and their usage in the project's documentation.
 
 
 Performing set operations on multiple Filter objects
 ----------------------------------------------------
 
-In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an HTCountFilter object and a python set::
+In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an CountFilter object and a python set::
 
     d = filtering.DESeqFilter('deseqfile.csv')
-    h = filtering.HTCountFilter('htseq_count_file.csv')
+    h = filtering.CountFilter('htseq_count_file.csv')
     s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
     union_result = d.union(h, s)
 
@@ -147,47 +147,47 @@ The unique DESeqFilter filter operations expect specific column names (the colum
 'log2FoldChange','pval','padj'.
 
 
-Filtering HTSeq-count output files with filtering.HTCountFilter
+Filtering HTSeq-count output files with filtering.CountFilter
 ===============================================================
 
 You can read more about HTSeq-count here:
 https://htseq.readthedocs.io/en/release_0.11.1/count.html
 
-In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for HTCountFilter. However, some HTCountFilter functions (such as 'norm_reads_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
+In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as 'norm_reads_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
-Generating an HTCountFilter object from a folder of HTSeq-count output .txt files
+Generating an CountFilter object from a folder of HTSeq-count output .txt files
 ---------------------------------------------------------------------------------
 HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
-    h = filtering.HTCountFilter.from_folder('my_folder_path', save_reads_fname='name_for_reads_csv_file', save_not_counted_fname='name_for_unmapped_reads_csv_file')
+    h = filtering.CountFilter.from_folder('my_folder_path', save_reads_fname='name_for_reads_csv_file', save_not_counted_fname='name_for_unmapped_reads_csv_file')
 
 By deault, 'from_folder' saves the generated tables as .csv files. However, you can avoid that by specifying 'save_csv=False'.
-It is also possible to automatically normalize the reads in the new HTCountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'.
+It is also possible to automatically normalize the reads in the new CountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'.
 
 
 Loading from a pre-made .csv file
 ----------------------------------
-If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an HTCountFilter object as you would any other Filter object::
+If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an CountFilter object as you would any other Filter object::
 
-    h = filtering.HTCountFilter('my_csv_file.csv')
+    h = filtering.CountFilter('my_csv_file.csv')
 
 
-Filtering operations unique to HTCountFilter
+Filtering operations unique to CountFilter
 --------------------------------------------
-There are a few filtering operations unique to HTCountFilter. Those include 'filter_low_reads', which removes rows that have less than n reads in all columns.
+There are a few filtering operations unique to CountFilter. Those include 'filter_low_reads', which removes rows that have less than n reads in all columns.
 
-Normalizing reads with HTCountFilter
+Normalizing reads with CountFilter
 ------------------------------------
-HTCountFilter offers two methods for normalizing reads: reads per million (RPM) and DESeq2's size factors. Data normalized in other methods (such as RPKM) can be used as input for HTCountFilter, but it cannot perform such normalization methods on its own.
+CountFilter offers two methods for normalizing reads: reads per million (RPM) and DESeq2's size factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
 #normalize to rpm
 #normalize with size factors
 
-Data visualization and clustering analysis with HTCountFilter
+Data visualization and clustering analysis with CountFilter
 -------------------------------------------------------------
-HTCountFilter includes multiple methods for visualization and clustering of count data.
+CountFilter includes multiple methods for visualization and clustering of count data.
 
 
-With HTCountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
+With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
 
 .. figure::  pairplot.png
            :align:   center
@@ -223,7 +223,7 @@ Loading fold change data from a .csv file
 
 
 
-Generating fold change data from an existing HTCountFilter object
+Generating fold change data from an existing CountFilter object
 -----------------------------------------------------------------
 
 
@@ -255,7 +255,7 @@ The first method is to directly specify a python set of genomic feature indices:
 
 The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'features_set'::
 
-    h = filtering.HTCountFilter('path_to_my_file.csv')
+    h = filtering.CountFilter('path_to_my_file.csv')
     en = enrichment.EnrichmentProcessing(h.features_set(), 'a name for my set')
 
 The third method is not to specify a gene set at all::
@@ -273,7 +273,7 @@ Using the enrichment module, you can perform enrichment analysis for user-define
 
 Enrichment analysis is performed using either EnrichmentProcessing.enrich_randomization or EnrichmentProcessing.enrich_randomization_parallel. We will start by creating an EnrichmentProcessing object::
 
-    h = filtering.HTCountFilter('path_to_my_file.csv')
+    h = filtering.CountFilter('path_to_my_file.csv')
     en = enrichment.EnrichmentProcessing(h.features_set(), 'my set')
 
 Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
