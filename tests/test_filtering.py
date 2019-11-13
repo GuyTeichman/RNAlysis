@@ -127,19 +127,36 @@ def test_filter_top_n_ascending_number():
     truth = general.load_csv("test_deseq_top10.csv", 0)
     d = DESeqFilter("test_deseq.csv")
     d.filter_top_n('padj', 10)
+    d.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
     assert np.isclose(truth, d.df).all()
 
 
 def test_filter_top_n_ascending_text():
-    assert False
+    truth = general.load_csv("test_deseq_top10_text_ascend.csv", 0)
+    d = DESeqFilter("test_deseq_textcol.csv")
+    d.filter_top_n('textcol', 10, True)
+    d.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(truth == d.df)
 
 
 def test_filter_top_n_descending_number():
-    assert False
+    truth = general.load_csv("test_deseq_bottom7.csv", 0)
+    d = DESeqFilter("test_deseq.csv")
+    d.filter_top_n('log2FoldChange', 7, False)
+    d.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.isclose(truth, d.df).all()
 
 
 def test_filter_top_n_descending_text():
-    assert False
+    truth = general.load_csv("test_deseq_bottom10_text_descend.csv", 0)
+    d = DESeqFilter("test_deseq_textcol.csv")
+    d.filter_top_n('textcol', 10, False)
+    d.df.sort_index(inplace=True)
+    truth.sort_index(inplace=True)
+    assert np.all(truth == d.df)
 
 
 def test_deseq_filter_abs_log2_fold_change():
@@ -397,8 +414,8 @@ def test_deseqfilter_difference_multiple():
 
 
 def test_intersection_inplace():
-    set1_truth = general.load_csv('test_deseq_set_ops_1_inplace_intersection.csv',0)
-    set2_truth = general.load_csv('test_deseq_set_ops_2_inplace_intersection.csv',0)
+    set1_truth = general.load_csv('test_deseq_set_ops_1_inplace_intersection.csv', 0)
+    set2_truth = general.load_csv('test_deseq_set_ops_2_inplace_intersection.csv', 0)
     set1 = DESeqFilter('test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('test_deseq_set_ops_2.csv')
     set1_int = set1.__copy__()
@@ -415,8 +432,8 @@ def test_intersection_inplace():
 
 
 def test_difference_inplace():
-    set1_truth = general.load_csv('test_deseq_set_ops_1_inplace_difference.csv',0)
-    set2_truth = general.load_csv('test_deseq_set_ops_2_inplace_difference.csv',0)
+    set1_truth = general.load_csv('test_deseq_set_ops_1_inplace_difference.csv', 0)
+    set2_truth = general.load_csv('test_deseq_set_ops_2_inplace_difference.csv', 0)
     set1 = DESeqFilter('test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('test_deseq_set_ops_2.csv')
     set1_diff = set1.__copy__()
