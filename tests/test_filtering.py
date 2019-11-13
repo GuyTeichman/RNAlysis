@@ -237,10 +237,6 @@ def test_difference():
 
 
 def test_symmetric_difference():
-    intersection_truth = {'WBGene00021375', 'WBGene00044258', 'WBGene00219304', 'WBGene00194708', 'WBGene00018199',
-                          'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
-                          'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036',
-                          'WBGene00012648', 'WBGene00022486'}
     set2_unique = {'WBGene00018193', 'WBGene00021589', 'WBGene00001118', 'WBGene00010755', 'WBGene00020407',
                    'WBGene00044799', 'WBGene00021654', 'WBGene00012919', 'WBGene00021605'}
     set1_unique = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730',
@@ -274,7 +270,16 @@ def test_deseq_feature_string():
 
 
 def test_set_ops_multiple_variable_types():
-    assert False
+    set2_unique = {'WBGene00018193', 'WBGene00021589', 'WBGene00001118', 'WBGene00010755', 'WBGene00020407',
+                   'WBGene00044799', 'WBGene00021654', 'WBGene00012919', 'WBGene00021605'}
+    set1_unique = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730',
+                   'WBGene00012961', 'WBGene00022438', 'WBGene00016635', 'WBGene00044478'}
+
+    set1 = HTCountFilter('test_deseq_set_ops_1.csv')
+    set2 = DESeqFilter('test_deseq_set_ops_2.csv')
+
+    assert set1.symmetric_difference(set2) == set2.symmetric_difference(set1)
+    assert set1.symmetric_difference(set2) == set1_unique.union(set2_unique)
 
 
 def test_htcount_rpm_negative_threshold():
