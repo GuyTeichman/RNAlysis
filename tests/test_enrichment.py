@@ -1,10 +1,12 @@
 import pytest
+from rnalysis import general
+
+general.start_parallel_session()
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 from pathlib import Path
-from rnalysis import general
 import statsmodels.stats.multitest as multitest
 import time
 from rnalysis.enrichment import *
@@ -165,7 +167,7 @@ def tests_enrichment_randomization_api():
 def test_enrichment_randomization_reliability():
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
-    attrs = ['attribute1', 'attribute2']
+    attrs = ['attribute1', 'attribute2', 'attribute4']
     en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
 
     for i in range(5):
@@ -204,8 +206,6 @@ def test_enrichment_randomization_validity():
 
 
 def test_enrichment_parallel_api():
-    general.start_parallel_session()
-    time.sleep(15)
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
              'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
@@ -217,11 +217,9 @@ def test_enrichment_parallel_api():
 
 
 def test_enrichment_randomization_parallel_reliability():
-    general.start_parallel_session()
-    time.sleep(15)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
-    attrs = ['attribute1', 'attribute2']
+    attrs = ['attribute1', 'attribute2', 'attribute4']
     en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
 
     for i in range(5):
@@ -232,16 +230,14 @@ def test_enrichment_randomization_parallel_reliability():
         for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
             assert np.all(res1[col] == res2[col])
             assert np.all(res2[col] == res3[col])
-        for randcol in ['pval', 'padj']:
-            assert np.isclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-            assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+        for randcol in ['pval']:
+            assert np.isclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
+            assert np.isclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
+            assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
+            assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
 
 
 def test_enrichment_parallel_validity():
-    general.start_parallel_session()
-    time.sleep(15)
     truth = general.load_csv('enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
@@ -260,14 +256,20 @@ def test_enrichment_parallel_validity():
     _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
     assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
 
-def test_randomization_int_index_attributes():
-    assert False
 
-def test_randomization_parallel_int_index_attributes():
-    assert False
+def test_randomization_int_index_attributes():
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
+    en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
+    attrs_truth = ['attribute1', 'attribute3', 'attribute4']
+    attrs = en._enrichment_get_attrs([1, 3, 4], 'big_table_for_tests.csv')
+    assert attrs == attrs_truth
+
 
 def test_randomization_all_attributes():
-    assert False
-
-def test_randomization_parallel_all_attributes():
-    assert False
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
+    en = EnrichmentProcessing(gene_set=genes, set_name='test_set')
+    attrs_truth = ['bioType', 'attribute1', 'attribute2', 'attribute3', 'attribute4']
+    attrs = en._enrichment_get_attrs('all', 'big_table_for_tests.csv')
+    assert attrs == attrs_truth
