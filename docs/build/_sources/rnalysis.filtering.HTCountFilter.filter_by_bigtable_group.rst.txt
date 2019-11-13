@@ -1,6 +1,0 @@
-rnalysis.filtering.CountFilter.filter\_by\_bigtable\_group
-============================================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. automethod:: CountFilter.filter_by_ref_table_attr

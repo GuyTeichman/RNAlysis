@@ -1,6 +1,0 @@
-rnalysis.enrichment.FeatureSet.enrich\_big\_table
-===========================================================
-
-.. currentmodule:: rnalysis.enrichment
-
-.. automethod:: FeatureSet.enrich_big_table
