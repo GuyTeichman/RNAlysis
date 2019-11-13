@@ -17,16 +17,15 @@ RNAlysis allows you to perform filtering and analyses at any order you wish.
 It has the ability to save or load your progress at any given phase,
 Wand document the order of operations you performed in the saved file names.
 
-RNAlysis work with HTCount files from python's HTSeq and with DESeq files from R's DESeq2.
-
+RNAlysis works with sequencing count matrices and differential expression output files in general, and integrates in particular with python's HTSeq-count and R's DESeq2.
 * Documentation: https://guyteichman.github.io/RNAlysis
 
 
 Main Features
 -------------
 
-* Filtering of DESeq and HTCount files by counts, biotype, change direction, significance and more.
-* Normalization of HTCount files
+* Filtering of differential expression outupt files and read count matrices by counts, biotype, change direction, significance and more.
+* Normalization of read count matrices
 * Exploratory plots
 * GO, Tissue and Phenotype enrichment analysis
 * Enrichment analysis for custom feature characteristics
