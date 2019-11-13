@@ -489,7 +489,7 @@ class Filter:
         assert isinstance(col, str), "'col' must be a string!"
         assert col in self.columns, "'col' must be a column in the Filter object!"
         assert isinstance(ascending, bool), "'ascending' must be either True or False!"
-        self.df.sort_values(by=[col], ascending=ascending)
+        self.df.sort_values(by=[col], ascending=ascending, inplace=True)
         new_df = self.df.iloc[0:min(n, self.df.shape[0])]
         order = 'asc' if ascending else 'desc'
         suffix = f"_top{n}{col}{order}"
