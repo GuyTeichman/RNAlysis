@@ -23,7 +23,7 @@ from grid_strategy import strategies
 
 class Filter:
     """
-    A parent Filter class.
+    An all-purpose Filter.
 
     """
 
