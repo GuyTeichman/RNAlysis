@@ -190,10 +190,10 @@
 <div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
-<dd class="field-odd"><p>iterable (list, tuple, set, etc)</p>
+<dd class="field-odd"><p>str, int, iterable (list, tuple, set, etc) of str/int, or ‘all’.</p>
 </dd>
 <dt class="field-even">param attributes</dt>
-<dd class="field-even"><p>An iterable of attribute names (strings). If None, a manual input prompt will be raised.</p>
+<dd class="field-even"><p>An iterable of attribute names or attribute numbers         (according to their order in the reference table).         If ‘all’, all of the attributes in the reference table will be used.         If None, a manual input prompt will be raised.</p>
 </dd>
 <dt class="field-odd">type fdr</dt>
 <dd class="field-odd"><p>float between 0 and 1</p>
@@ -220,10 +220,10 @@
 <dd class="field-even"><p>the biotype you want your background genes to have. ‘all’ will include all biotypes,         ‘protein_coding’ will include only protein-coding genes in the reference, etc.         Cannot be specified together with ‘background_genes’.</p>
 </dd>
 <dt class="field-odd">type background_genes</dt>
-<dd class="field-odd"><p>set of WBGene indices</p>
+<dd class="field-odd"><p>set of feature indices, filtering.Filter object, or enrichment.FeatureSet object</p>
 </dd>
 <dt class="field-even">param background_genes</dt>
-<dd class="field-even"><p>a set of specific WBGene indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p>
+<dd class="field-even"><p>a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p>
 </dd>
 <dt class="field-odd">type save_csv</dt>
 <dd class="field-odd"><p>bool, default False</p>
