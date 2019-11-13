@@ -298,7 +298,7 @@ class EnrichmentProcessing:
             return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
     @staticmethod
-    def _enrichment_get_attrs(attributes):
+    def _enrichment_get_attrs(attributes, ref_path):
         if attributes is None:
             attributes = EnrichmentProcessing._from_string(
                 "Please insert attributes separated by newline "
@@ -307,15 +307,30 @@ class EnrichmentProcessing:
             attributes = [attributes]
         else:
             assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
+
+        try:
+            with open(ref_path) as f:
+                all_attrs = f.readline().split(',')[1::]
+        except:
+            raise ValueError(f"Invalid or nonexistent reference table path! path:'{ref_path}'")
+        if all_attrs[-1].endswith('\n'):
+            all_attrs[-1] = all_attrs[-1][:-1]
+
+        if attributes == ['all']:
+            attributes = all_attrs
+        elif np.all([True if isinstance(i, int) else False for i in attributes]):
+            select_attributes = []
+            for i in attributes:
+                select_attributes.append(all_attrs[i])
+            return select_attributes
         return attributes
 
     def _enrichment_get_reference(self, biotype, background_genes, ref_path):
         gene_set = self.gene_set
-        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
         try:
             big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
         except:
-            raise ValueError("Invalid or nonexistent big table path!")
+            raise ValueError(f"Invalid or nonexistent reference table path! path:'{ref_path}'")
 
         assert (isinstance(biotype, (str, list, set, tuple)))
 
@@ -407,7 +422,8 @@ class EnrichmentProcessing:
           Example plot of big table enrichment
        """
         # TODO: fix description for enrichment/parallel randomization attributes as int
-        attributes = self._enrichment_get_attrs(attributes=attributes)
+        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
         if attributes == ['all']:
@@ -491,11 +507,10 @@ class EnrichmentProcessing:
 
            Example plot of enrich_randomization
         """
-        attributes = self._enrichment_get_attrs(attributes=attributes)
+        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
-        if attributes == ['all']:
-            attributes = big_table.columns
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
