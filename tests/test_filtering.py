@@ -397,11 +397,41 @@ def test_deseqfilter_difference_multiple():
 
 
 def test_intersection_inplace():
-    assert False
+    set1_truth = general.load_csv('test_deseq_set_ops_1_inplace_intersection.csv',0)
+    set2_truth = general.load_csv('test_deseq_set_ops_2_inplace_intersection.csv',0)
+    set1 = DESeqFilter('test_deseq_set_ops_1.csv')
+    set2 = DESeqFilter('test_deseq_set_ops_2.csv')
+    set1_int = set1.__copy__()
+    set2_int = set2.__copy__()
+    set1_int.intersection(set2, inplace=True)
+    set2_int.intersection(set1, inplace=True)
+    set1_int.df.sort_index(inplace=True)
+    set2_int.df.sort_index(inplace=True)
+    set1_truth.sort_index(inplace=True)
+    set2_truth.sort_index(inplace=True)
+
+    assert np.all(set1_truth == set1_int.df)
+    assert np.all(set2_truth == set2_int.df)
 
 
 def test_difference_inplace():
-    assert False
+    set1_truth = general.load_csv('test_deseq_set_ops_1_inplace_difference.csv',0)
+    set2_truth = general.load_csv('test_deseq_set_ops_2_inplace_difference.csv',0)
+    set1 = DESeqFilter('test_deseq_set_ops_1.csv')
+    set2 = DESeqFilter('test_deseq_set_ops_2.csv')
+    set1_diff = set1.__copy__()
+    set2_diff = set2.__copy__()
+    set1_diff.difference(set2, inplace=True)
+    set2_diff.difference(set1, inplace=True)
+    set1_diff.df.sort_index(inplace=True)
+    set2_diff.df.sort_index(inplace=True)
+    set1_truth.sort_index(inplace=True)
+    set2_truth.sort_index(inplace=True)
+
+    print(set2_truth)
+    print(set2_diff.df)
+    assert np.all(set1_truth == set1_diff.df)
+    assert np.all(set2_truth == set2_diff.df)
 
 
 def test_htcount_fold_change():

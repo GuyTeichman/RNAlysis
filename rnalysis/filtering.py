@@ -46,6 +46,9 @@ class Filter:
         return f"{type(self).__name__} of file {self.fname}"
 
     def __copy__(self):
+        """
+        :rtype: Filter
+        """
         return type(self)((self.fname, self.df.copy(deep=True)))
 
     @staticmethod
