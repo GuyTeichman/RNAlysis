@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 from rnalysis import general
 from rnalysis.filtering import *
+from os import remove
 
 
 def test_deseqfilter_api():
@@ -560,7 +561,23 @@ def test_text_filters_invalid_input():
 
 
 def test_htcount_filter_from_folder():
-    assert False
+    truth_all_expr = general.load_csv(r'test_count_from_folder_all_expr.csv', 0)
+    truth_all_feature = general.load_csv(r'test_count_from_folder_all_feature.csv', 0)
+    truth_norm = general.load_csv(r'test_count_from_folder_norm.csv', 0)
+    h_notnorm = HTCountFilter.from_folder('test_count_from_folder', True, False, '__allexpr_temporary_testfile.csv',
+                                          '__allfeature_temporary_testfile.csv')
+    os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
+    assert np.all(np.isclose(h_notnorm.df, truth_all_expr))
+
+    h_norm = HTCountFilter.from_folder('test_count_from_folder', False, True)
+    assert np.all(np.isclose(h_norm.df, truth_norm))
+
+    all_feature = general.load_csv('test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
+    all_feature.sort_index(inplace=True)
+    truth_all_feature.sort_index(inplace=True)
+    assert np.all(np.isclose(all_feature, truth_all_feature))
+    os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+
 
 def test_biotypes():
     truth = general.load_csv('biotypes_truth.csv', 0)
@@ -568,6 +585,7 @@ def test_biotypes():
     truth.sort_index(inplace=True)
     df.sort_index(inplace=True)
     assert np.all(df == truth)
+
 
 def test_filter_by_row_sum():
     assert False

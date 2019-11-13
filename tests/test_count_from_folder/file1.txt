@@ -1,0 +1,15 @@
+WBGene00000001	376
+WBGene00000002	1
+WBGene00000003	1
+WBGene00000004	18
+WBGene00000005	1
+WBGene00000006	3
+WBGene00000007	6
+WBGene00000008	0
+WBGene00000009	1
+WBGene00000010	177
+__no_feature	32
+__ambiguous	12
+__too_low_aQual	1
+__not_aligned	121
+__alignment_not_unique	100
