@@ -1482,7 +1482,8 @@ class HTCountFilter(Filter):
             if item.is_file() and item.suffix == input_format:
                 df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
 
-        uncounted = df.loc[['__no_feature', '__ambiguous', '__alignment_not_unique']]
+        uncounted = df.loc[
+            ['__no_feature', '__ambiguous', '__alignment_not_unique', '__too_low_aQual', '__not_aligned']]
         counts = df.drop(uncounted.index, inplace=False)
 
         if save_csv:
