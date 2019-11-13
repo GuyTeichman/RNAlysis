@@ -3,4 +3,4 @@ rnalysis.filtering.FoldChangeFilter.features\_string
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: FoldChangeFilter.features_string
+.. automethod:: FoldChangeFilter.index_string

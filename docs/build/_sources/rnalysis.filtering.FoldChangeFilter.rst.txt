@@ -18,8 +18,8 @@ rnalysis.filtering.FoldChangeFilter
       ~FoldChangeFilter.biotypes
       ~FoldChangeFilter.describe
       ~FoldChangeFilter.difference
-      ~FoldChangeFilter.features_set
-      ~FoldChangeFilter.features_string
+      ~FoldChangeFilter.index_set
+      ~FoldChangeFilter.index_string
       ~FoldChangeFilter.filter_abs_log2_fold_change
       ~FoldChangeFilter.filter_biotype
       ~FoldChangeFilter.filter_by_ref_table_attr

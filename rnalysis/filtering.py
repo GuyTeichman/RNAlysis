@@ -120,8 +120,8 @@ class Filter:
     def _from_string(msg: str = '', delimiter: str = '\n'):
         """
         Takes a manual string input from the user, and then splits it using a delimiter into a list of values. \
-        Called when an EnrichmentProcessing instance is created without input, \
-        or when EnrichmentProcessing.enrich_big_table is called without input.
+        Called when an FeatureSet instance is created without input, \
+        or when FeatureSet.enrich_big_table is called without input.
 
         :param msg: a promprt to be printed to the user
         :param delimiter: the delimiter used to separate the values. Default is '\n'
@@ -329,7 +329,7 @@ class Filter:
         """
         return self.df.describe(percentiles=percentiles)
 
-    def features_set(self) -> set:
+    def index_set(self) -> set:
         """
         Returns all of the features in the current DataFrame (which were not removed by previously used filter methods) \
         as a set. \
@@ -345,7 +345,7 @@ class Filter:
                           "appear ONLY ONCE!")
         return set(self.df.index)
 
-    def features_string(self) -> str:
+    def index_string(self) -> str:
         r"""
         Returns a string of all feature indices in the current DataFrame separated by newline. \
 
@@ -357,13 +357,13 @@ class Filter:
         A string of WBGene indices separated by newlines (\\n). \
         For example, "WBGene00000001\\nWBGene00000003\\nWBGene12345678".
         """
-        return "\n".join(self.features_set())
+        return "\n".join(self.index_set())
 
     def print_features(self):
         """
         Print the feature indices in the Filter object, separated by newline ('\n').
         """
-        print(self.features_string())
+        print(self.index_string())
 
     def biotypes(self, ref: str = __gene_names_and_biotype__):
         """
@@ -509,7 +509,7 @@ class Filter:
         others = list(others)
         for i, other in enumerate(others):
             if isinstance(other, Filter):
-                others[i] = other.features_set()
+                others[i] = other.index_set()
             elif isinstance(other, set):
                 pass
             else:
@@ -1385,7 +1385,7 @@ class CountFilter(Filter):
         ax.scatter(xvals, yvals, s=3, c='#6d7178')
 
         if deseq_highlight is not None:
-            highlight_features = deseq_highlight.features_set() if isinstance(deseq_highlight,
+            highlight_features = deseq_highlight.index_set() if isinstance(deseq_highlight,
                                                                               DESeqFilter) else deseq_highlight
             xvals_highlight = np.log10(self.df[sample1].loc[highlight_features].values + 1) if \
                 isinstance(sample1, str) else np.log10(self.df[sample1].loc[highlight_features].mean(axis=1).values + 1)

@@ -117,11 +117,11 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">RNAlysis enrichment module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#working-with-enrichmentprocessing-objects">Working with EnrichmentProcessing objects</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#initialize-an-enrichmentprocessing-object">Initialize an EnrichmentProcessing object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#working-with-featureset-objects">Working with FeatureSet objects</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#initialize-an-featureset-object">Initialize an FeatureSet object</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#randomization-test-enrichment-analysis-for-user-defined-attributes">Randomization test enrichment analysis for user-defined attributes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-on-multiple-enrichmentprocessing-objects">Performing set operations on multiple EnrichmentProcessing objects</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#saving-indices-from-enrichmentprocessing-to-a-txt-file">Saving indices from EnrichmentProcessing to a .txt file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-on-multiple-featureset-objects">Performing set operations on multiple FeatureSet objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#saving-indices-from-featureset-to-a-txt-file">Saving indices from FeatureSet to a .txt file</a></li>
 </ul>
 </li>
 </ul>
@@ -306,8 +306,8 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 </pre></div>
 </div>
 <p>Instead of directly saving the results to a file, you can also get them as a set or string of genomic feature indices:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">set_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">features_set</span><span class="p">()</span>
-<span class="n">str_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">features_string</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">set_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">index_set</span><span class="p">()</span>
+<span class="n">str_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">index_string</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).</p>
@@ -412,43 +412,43 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 <div class="section" id="rnalysis-enrichment-module">
 <h2>RNAlysis enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline">¶</a></h2>
 <p>RNAlysis’s enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.</p>
-<div class="section" id="working-with-enrichmentprocessing-objects">
-<h3>Working with EnrichmentProcessing objects<a class="headerlink" href="#working-with-enrichmentprocessing-objects" title="Permalink to this headline">¶</a></h3>
-<p>The enrichment module is built around EnrichmentProcessing objects, which are a container for a set of genomic features and their name (for example, ‘genes that are upregulated under hyperosmotic conditions’). All further anslyses of the set of features is done through the EnrichmentProcessing object.</p>
-<div class="section" id="initialize-an-enrichmentprocessing-object">
-<h4>Initialize an EnrichmentProcessing object<a class="headerlink" href="#initialize-an-enrichmentprocessing-object" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="working-with-featureset-objects">
+<h3>Working with FeatureSet objects<a class="headerlink" href="#working-with-featureset-objects" title="Permalink to this headline">¶</a></h3>
+<p>The enrichment module is built around FeatureSet objects, which are a container for a set of genomic features and their name (for example, ‘genes that are upregulated under hyperosmotic conditions’). All further anslyses of the set of features is done through the FeatureSet object.</p>
+<div class="section" id="initialize-an-featureset-object">
+<h4>Initialize an FeatureSet object<a class="headerlink" href="#initialize-an-featureset-object" title="Permalink to this headline">¶</a></h4>
 <p>We will start by importing the enrichment module:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">enrichment</span>
 </pre></div>
 </div>
-<p>An EnrichmentProcessing object can now be initialized by one of three methods.
+<p>An FeatureSet object can now be initialized by one of three methods.
 The first method is to directly specify a python set of genomic feature indices:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myset</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene0245200&#39;</span><span class="p">,</span><span class="s1">&#39; WBGene00402029&#39;</span><span class="p">}</span>
-<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">myset</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">myset</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function ‘features_set’:</p>
+<p>The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function ‘index_set’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
-<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">features_set</span><span class="p">(),</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index_set</span><span class="p">(),</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The third method is not to specify a gene set at all:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">set_name</span> <span class="o">=</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">set_name</span> <span class="o">=</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.</p>
-<p>EnrichmentProcessing objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).</p>
+<p>FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).</p>
 </div>
 <div class="section" id="randomization-test-enrichment-analysis-for-user-defined-attributes">
 <h4>Randomization test enrichment analysis for user-defined attributes<a class="headerlink" href="#randomization-test-enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
 <p>Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’). The enrichment analysis is performed using a randomization test.</p>
-<p>Enrichment analysis is performed using either EnrichmentProcessing.enrich_randomization or EnrichmentProcessing.enrich_randomization_parallel. We will start by creating an EnrichmentProcessing object:</p>
+<p>Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
-<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">features_set</span><span class="p">(),</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index_set</span><span class="p">(),</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
-Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function EnrichmentProcessing.enrich_randomization.
+Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
 If our Reference Table is set to be the default Reference Table (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) we do not need to specify it when calling enrich_randomization. Otherwise, we need to specify our Reference Table’s path.
 The names of the attributes we want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 <p>Next, we need to determine the set of genes to be used as background. Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, enrich_randomization uses all of the protein-coding genes that appear in the Reference Table as a background set.
@@ -524,20 +524,20 @@ To use it, you must first start a parallel session:</p>
 <p>To read more about parallel sessions, visit the <a class="reference internal" href="#parallel-ref"><span class="std std-ref">Start and stop a parallel processing session</span></a> section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.</p>
 </div>
-<div class="section" id="performing-set-operations-on-multiple-enrichmentprocessing-objects">
-<h4>Performing set operations on multiple EnrichmentProcessing objects<a class="headerlink" href="#performing-set-operations-on-multiple-enrichmentprocessing-objects" title="Permalink to this headline">¶</a></h4>
-<p>Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple EnrichmentProcessing objects. Those set operations can be applied to both EnrichmentProcessing objects and python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of an EnrichmentProcessing object and a python set:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">EnrichmentProcessing</span><span class="p">({</span><span class="s1">&#39;WBGene00003002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00004201&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00300139&#39;</span><span class="p">})</span>
+<div class="section" id="performing-set-operations-on-multiple-featureset-objects">
+<h4>Performing set operations on multiple FeatureSet objects<a class="headerlink" href="#performing-set-operations-on-multiple-featureset-objects" title="Permalink to this headline">¶</a></h4>
+<p>Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of an FeatureSet object and a python set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00003002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00004201&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00300139&#39;</span><span class="p">})</span>
 
 <span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
 <span class="n">union_result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object.</p>
+<p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.</p>
 </div>
-<div class="section" id="saving-indices-from-enrichmentprocessing-to-a-txt-file">
-<h4>Saving indices from EnrichmentProcessing to a .txt file<a class="headerlink" href="#saving-indices-from-enrichmentprocessing-to-a-txt-file" title="Permalink to this headline">¶</a></h4>
-<p>It is possible to save the feature indices from an EnrichmentProcessing object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the ‘save_txt’ function:</p>
+<div class="section" id="saving-indices-from-featureset-to-a-txt-file">
+<h4>Saving indices from FeatureSet to a .txt file<a class="headerlink" href="#saving-indices-from-featureset-to-a-txt-file" title="Permalink to this headline">¶</a></h4>
+<p>It is possible to save the feature indices from an FeatureSet object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the ‘save_txt’ function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">en</span><span class="o">.</span><span class="n">save_txt</span><span class="p">(</span><span class="s1">&#39;D:\path</span><span class="se">\f</span><span class="s1">ilename&#39;</span><span class="p">)</span>
 </pre></div>
 </div>

@@ -18,8 +18,8 @@ rnalysis.filtering.Filter
       ~Filter.biotypes
       ~Filter.describe
       ~Filter.difference
-      ~Filter.features_set
-      ~Filter.features_string
+      ~Filter.index_set
+      ~Filter.index_string
       ~Filter.filter_biotype
       ~Filter.filter_by_ref_table_attr
       ~Filter.filter_percentile

@@ -1,6 +1,6 @@
-rnalysis.enrichment.EnrichmentProcessing.intersection
+rnalysis.enrichment.FeatureSet.intersection
 =====================================================
 
 .. currentmodule:: rnalysis.enrichment
 
-.. automethod:: EnrichmentProcessing.intersection
+.. automethod:: FeatureSet.intersection

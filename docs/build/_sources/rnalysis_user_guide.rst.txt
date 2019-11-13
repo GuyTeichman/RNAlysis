@@ -108,8 +108,8 @@ Alternatively, you can specify a filename::
 
 Instead of directly saving the results to a file, you can also get them as a set or string of genomic feature indices::
 
-    set_output = d.features_set()
-    str_output = d.features_string()
+    set_output = d.index_set()
+    str_output = d.index_string()
 
 Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).
 
@@ -235,49 +235,49 @@ RNAlysis enrichment module
 RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
 
 
-Working with EnrichmentProcessing objects
+Working with FeatureSet objects
 =========================================
 
-The enrichment module is built around EnrichmentProcessing objects, which are a container for a set of genomic features and their name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the EnrichmentProcessing object.
+The enrichment module is built around FeatureSet objects, which are a container for a set of genomic features and their name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the FeatureSet object.
 
 
-Initialize an EnrichmentProcessing object
+Initialize an FeatureSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
     from rnalysis import enrichment
 
-An EnrichmentProcessing object can now be initialized by one of three methods.
+An FeatureSet object can now be initialized by one of three methods.
 The first method is to directly specify a python set of genomic feature indices::
 
     myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
-    en = enrichment.EnrichmentProcessing(myset, 'a name for my set')
+    en = enrichment.FeatureSet(myset, 'a name for my set')
 
-The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'features_set'::
+The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'index_set'::
 
     h = filtering.CountFilter('path_to_my_file.csv')
-    en = enrichment.EnrichmentProcessing(h.features_set(), 'a name for my set')
+    en = enrichment.FeatureSet(h.index_set(), 'a name for my set')
 
 The third method is not to specify a gene set at all::
 
-    en = enrichment.EnrichmentProcessing(set_name = 'a name for my set')
+    en = enrichment.FeatureSet(set_name = 'a name for my set')
 
 At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.
 
-EnrichmentProcessing objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
+FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
 
 Randomization test enrichment analysis for user-defined attributes
 -------------------------------------------------------------------
 Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis is performed using a randomization test.
 
-Enrichment analysis is performed using either EnrichmentProcessing.enrich_randomization or EnrichmentProcessing.enrich_randomization_parallel. We will start by creating an EnrichmentProcessing object::
+Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
     h = filtering.CountFilter('path_to_my_file.csv')
-    en = enrichment.EnrichmentProcessing(h.features_set(), 'my set')
+    en = enrichment.FeatureSet(h.index_set(), 'my set')
 
 Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
-Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function EnrichmentProcessing.enrich_randomization.
+Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
 If our Reference Table is set to be the default Reference Table (as explained in :ref:`reference-table-ref`) we do not need to specify it when calling enrich_randomization. Otherwise, we need to specify our Reference Table's path.
 The names of the attributes we want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
 
@@ -326,23 +326,23 @@ To use it, you must first start a parallel session::
 To read more about parallel sessions, visit the :ref:`parallel-ref` section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.
 
-Performing set operations on multiple EnrichmentProcessing objects
+Performing set operations on multiple FeatureSet objects
 -------------------------------------------------------------------
 
-Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple EnrichmentProcessing objects. Those set operations can be applied to both EnrichmentProcessing objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of an EnrichmentProcessing object and a python set::
+Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of an FeatureSet object and a python set::
 
-    en = enrichment.EnrichmentProcessing({'WBGene00003002','WBGene00004201','WBGene00300139'})
+    en = enrichment.FeatureSet({'WBGene00003002','WBGene00004201','WBGene00300139'})
 
     s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
     union_result = en.union(s)
 
-When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new EnrichmentProcessing object.
+When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.
 
 
-Saving indices from EnrichmentProcessing to a .txt file
+Saving indices from FeatureSet to a .txt file
 --------------------------------------------------------
 
-It is possible to save the feature indices from an EnrichmentProcessing object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the 'save_txt' function::
+It is possible to save the feature indices from an FeatureSet object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the 'save_txt' function::
 
     en.save_txt('D:\path\filename')
 

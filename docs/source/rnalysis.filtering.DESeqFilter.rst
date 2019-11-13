@@ -18,8 +18,8 @@ rnalysis.filtering.DESeqFilter
       ~DESeqFilter.biotypes
       ~DESeqFilter.describe
       ~DESeqFilter.difference
-      ~DESeqFilter.features_set
-      ~DESeqFilter.features_string
+      ~DESeqFilter.index_set
+      ~DESeqFilter.index_string
       ~DESeqFilter.filter_abs_log2_fold_change
       ~DESeqFilter.filter_biotype
       ~DESeqFilter.filter_by_ref_table_attr

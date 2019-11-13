@@ -19,8 +19,8 @@ rnalysis.filtering.CountFilter
       ~CountFilter.clustergram
       ~CountFilter.describe
       ~CountFilter.difference
-      ~CountFilter.features_set
-      ~CountFilter.features_string
+      ~CountFilter.index_set
+      ~CountFilter.index_string
       ~CountFilter.filter_biotype
       ~CountFilter.filter_by_ref_table_attr
       ~CountFilter.filter_low_reads

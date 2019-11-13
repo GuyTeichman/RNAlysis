@@ -2,7 +2,7 @@
 This module receives a set of feature names, and can perform various enrichment analyses on them, such as \
 GO enrichment, tissue/phenotype enrichment, enrichment and depletion of Reference Table attributes, etc. \
 Furthermore, set operations (union, intersect, difference, symmetric difference) can be performed on two \
-EnrichmentProcessing objects. \
+FeatureSet objects. \
 Results of enrichment analyses can be saved to .csv files.
 """
 import random
@@ -20,7 +20,7 @@ from itertools import repeat
 import warnings
 
 
-class EnrichmentProcessing:
+class FeatureSet:
     """ receives a filtered gene set and preforms various enrichment analyses"""
     _go_dicts = {}
 
@@ -42,8 +42,8 @@ class EnrichmentProcessing:
     def _from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
         """
         Takes a manual string input from the user, and then splits it using a comma delimiter into a list of values. \
-        Called when an EnrichmentProcessing instance is created without input, \
-        or when EnrichmentProcessing.enrich_randomization is called without input.
+        Called when an FeatureSet instance is created without input, \
+        or when FeatureSet.enrich_randomization is called without input.
 
         :param msg: a promprt to be printed to the user
         :param del_spaces: if True, will delete all spaces in each delimited value.
@@ -63,18 +63,18 @@ class EnrichmentProcessing:
     def _inplace(self, gene_set: set, inplace: bool):
         """
         Executes the user's choice whether to perform set operations in-place \
-        or create a new instance of the EnrichmentProcessing object.
+        or create a new instance of the FeatureSet object.
 
         :param gene_set: The set of features resulting from the set operations
-        :param inplace: bool. If True, gene_set will be saved to the current EnrichmentProcessing object. \
-        If False, gene_set will be used to created a new instance of EnrichmentProcessing.
+        :param inplace: bool. If True, gene_set will be saved to the current FeatureSet object. \
+        If False, gene_set will be used to created a new instance of FeatureSet.
         :return:
-        If inplace is True, returns a new instance of EnrichmentProcessing.
+        If inplace is True, returns a new instance of FeatureSet.
         """
         if inplace:
             self.gene_set = gene_set
         else:
-            return EnrichmentProcessing(gene_set)
+            return FeatureSet(gene_set)
 
     @staticmethod
     def _get_ref_path(ref):
@@ -85,7 +85,7 @@ class EnrichmentProcessing:
 
     def save_txt(self, fname):
         """
-        Save the list of features in the EnrichmentProcessing object under the specified filename and path.
+        Save the list of features in the FeatureSet object under the specified filename and path.
 
         :type fname: str, pathlib.Path
         :param fname: full filename/path for the output file. Can include the '.txt' suffix but doesn't have to.
@@ -103,8 +103,8 @@ class EnrichmentProcessing:
 
     def _set_ops(self, others, op):
         """
-        Performs a given set operation on self and on another object (EnrichmentProcessing or set).
-        :type other: EnrichmentProcessing, set or str
+        Performs a given set operation on self and on another object (FeatureSet or set).
+        :type other: FeatureSet, set or str
         :param other: Other object to perform set operation with.
         :param op: The set operation to be performed. \
         set.union, set.intersection, set.difference or set.symmetric_difference.
@@ -115,12 +115,12 @@ class EnrichmentProcessing:
         for i, other in enumerate(others):
             if isinstance(other, set):
                 pass
-            elif isinstance(other, EnrichmentProcessing):
+            elif isinstance(other, FeatureSet):
                 others[i] = other.gene_set
             elif isinstance(other, str):
                 others[i] = general.parse_wbgene_string(other)
             else:
-                raise TypeError("'other' must be an EnrichmentProcessing object or a set!")
+                raise TypeError("'other' must be an FeatureSet object or a set!")
         try:
             return op(self.gene_set, *others)
         except TypeError as e:
@@ -132,62 +132,62 @@ class EnrichmentProcessing:
 
     def union(self, *others, inplace: bool = True):
         """
-         Calculates the set union of the WBGene indices from multipple EnrichmentProcessing objects \
-        (the indices that exist in at least one of the EnrichmentProcessing objects).
+         Calculates the set union of the WBGene indices from multipple FeatureSet objects \
+        (the indices that exist in at least one of the FeatureSet objects).
 
-        :type others: EnrichmentProcessing, set or str
+        :type others: FeatureSet, set or str
         :param others: The objects against which the current object will be compared.
         :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
-        If False, returns a new instance of EnrichmentProcessing.
+        :param inplace: If True (default), modifies the current instance of FeatureSet. \
+        If False, returns a new instance of FeatureSet.
         :return:
-        if inplace is False, returns a new instance of EnrichmentProcessing.
+        if inplace is False, returns a new instance of FeatureSet.
         """
         return self._inplace(self._set_ops(others, set.union), inplace)
 
     def intersection(self, *others, inplace: bool = True):
         """
-        Calculates the set intersection of the WBGene indices from multiple EnrichmentProcessing objects \
-        (the indices that exist in ALL of the EnrichmentProcessing objects).
+        Calculates the set intersection of the WBGene indices from multiple FeatureSet objects \
+        (the indices that exist in ALL of the FeatureSet objects).
 
-        :type others: EnrichmentProcessing, set or str
+        :type others: FeatureSet, set or str
         :param others: The objects against which the current object will be compared.
         :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
-        If False, returns a new instance of EnrichmentProcessing.
+        :param inplace: If True (default), modifies the current instance of FeatureSet. \
+        If False, returns a new instance of FeatureSet.
         :return:
-        if inplace is False, returns a new instance of EnrichmentProcessing.
+        if inplace is False, returns a new instance of FeatureSet.
                 """
         return self._inplace(self._set_ops(others, set.intersection), inplace)
 
     def difference(self, *others, inplace: bool = True):
         """
-        Calculates the set difference of the WBGene indices from multiple EnrichmentProcessing objects \
-        (the indices that appear in the first EnrichmentProcessing object but NOT in the other objects).
+        Calculates the set difference of the WBGene indices from multiple FeatureSet objects \
+        (the indices that appear in the first FeatureSet object but NOT in the other objects).
 
-        :type others: EnrichmentProcessing, set or str
+        :type others: FeatureSet, set or str
         :param others: The objects against which the current object will be compared.
         :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
-        If False, returns a new instance of EnrichmentProcessing.
+        :param inplace: If True (default), modifies the current instance of FeatureSet. \
+        If False, returns a new instance of FeatureSet.
         :return:
-        if inplace is False, returns a new instance of EnrichmentProcessing.
+        if inplace is False, returns a new instance of FeatureSet.
         """
         return self._inplace(self._set_ops(others, set.difference), inplace)
 
     def symmetric_difference(self, other, inplace: bool = True):
         """
-        Calculates the set symmetric difference of the WBGene indices from two EnrichmentProcessing objects \
-        (the indices that appear in EXACTLY ONE of the EnrichmentProcessing objects, and not both/neither). \
+        Calculates the set symmetric difference of the WBGene indices from two FeatureSet objects \
+        (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither). \
         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).
 
-        :type other: EnrichmentProcessing, set or str
+        :type other: FeatureSet, set or str
         :param other: A second  object against which the current object will be compared.
         :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of EnrichmentProcessing. \
-        If False, returns a new instance of EnrichmentProcessing.
+        :param inplace: If True (default), modifies the current instance of FeatureSet. \
+        If False, returns a new instance of FeatureSet.
         :return:
-        if inplace is False, returns a new instance of EnrichmentProcessing.
+        if inplace is False, returns a new instance of FeatureSet.
         """
         return self._inplace(self._set_ops([other], set.symmetric_difference), inplace)
 
@@ -243,11 +243,11 @@ class EnrichmentProcessing:
             df_comb = pd.DataFrame()
             for k, arg in enumerate(('go', 'tissue', 'phenotype')):
                 print(f'Calculating... {100 * k / 3 :.2f}% done')
-                if arg in EnrichmentProcessing._go_dicts:
-                    d.append(EnrichmentProcessing._go_dicts[arg])
+                if arg in FeatureSet._go_dicts:
+                    d.append(FeatureSet._go_dicts[arg])
                 else:
                     d.append(tea.fetch_dictionary(arg))
-                    EnrichmentProcessing._go_dicts[arg] = d[-1]
+                    FeatureSet._go_dicts[arg] = d[-1]
                 df = tea.enrichment_analysis(self.gene_set, d[-1], alpha=alpha)
                 if not df.empty:
                     df_comb = df_comb.append(df)
@@ -297,7 +297,7 @@ class EnrichmentProcessing:
     @staticmethod
     def _enrichment_get_attrs(attributes, ref_path):
         if attributes is None:
-            attributes = EnrichmentProcessing._from_string(
+            attributes = FeatureSet._from_string(
                 "Please insert attributes separated by newline "
                 "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
         elif isinstance(attributes, (str, int)):
@@ -305,10 +305,10 @@ class EnrichmentProcessing:
         else:
             assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
             for attr in attributes:
-                if isinstance(attr,int):
+                if isinstance(attr, int):
                     assert attr >= 0, f"Error in attribute number {attr}: index must be non-negative!"
                 else:
-                    assert isinstance(attr,str), f"Invalid type of attribute {attr}: {type(attr)}"
+                    assert isinstance(attr, str), f"Invalid type of attribute {attr}: {type(attr)}"
 
         try:
             with open(ref_path) as f:
@@ -382,7 +382,7 @@ class EnrichmentProcessing:
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from a reference table using parallel processing. \
-        Parallel processing makes this function generally faster than EnrichmentProcessing.enrich_randomization. \
+        Parallel processing makes this function generally faster than FeatureSet.enrich_randomization. \
         To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster(). \
         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
         P-values are corrected for multiple comparisons using \
@@ -424,7 +424,7 @@ class EnrichmentProcessing:
           Example plot of big table enrichment
        """
         # TODO: fix description for enrichment/parallel randomization attributes as int
-        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
+        ref_path = FeatureSet._get_ref_path(ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
@@ -441,7 +441,7 @@ class EnrichmentProcessing:
         fraction_rep = list(repeat(fraction, k))
         reps_rep = list(repeat(reps, k))
 
-        res = dview.map(EnrichmentProcessing._single_enrichment, gene_set_rep, attributes, big_table_rep, fraction_rep,
+        res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, big_table_rep, fraction_rep,
                         reps_rep)
         enriched_list = res.result()
         res_df = pd.DataFrame(enriched_list,
@@ -509,7 +509,7 @@ class EnrichmentProcessing:
 
            Example plot of enrich_randomization
         """
-        ref_path = EnrichmentProcessing._get_ref_path(ref_path)
+        ref_path = FeatureSet._get_ref_path(ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
@@ -560,12 +560,12 @@ class EnrichmentProcessing:
     @staticmethod
     def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):
         """
-        Receives a DataFrame output from EnrichmentProcessing.enrich_randomization, and plots it in a bar plort \
+        Receives a DataFrame output from FeatureSet.enrich_randomization, and plots it in a bar plort \
         Static class method. \
         For the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
-        :param df: a pandas DataFrame created by EnrichmentProcessing.enrich_randomization.
+        :param df: a pandas DataFrame created by FeatureSet.enrich_randomization.
         :param title: plot title.
         :return:
         a matplotlib.pyplot.bar instance
@@ -636,3 +636,4 @@ class EnrichmentProcessing:
 
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
+# TODO: accept a FeatureSet/Filter object as a 'set of genes' for background

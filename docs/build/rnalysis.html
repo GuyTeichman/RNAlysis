@@ -262,31 +262,6 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">features_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
-<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-</dl>
-<p>A set of WBGene names.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
-<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
-<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-</dl>
-<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
 <code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Filters out all features that do not match the indicated biotype.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
 <dl class="field-list simple">
@@ -463,6 +438,31 @@
 </dd>
 </dl>
 <p>returns the first n rows of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">index_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
+<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A set of WBGene names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">index_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
+<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
 </dd></dl>
 
 <dl class="method">
@@ -870,31 +870,6 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">features_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
-<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-</dl>
-<p>A set of WBGene names.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
-<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
-<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-</dl>
-<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
 <code class="sig-name descname">filter_abs_log2_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 2.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
 <dl class="field-list simple">
@@ -1045,6 +1020,31 @@
 </dd>
 </dl>
 <p>returns the first n rows of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">index_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
+<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A set of WBGene names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">index_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
+<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1326,31 +1326,6 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">features_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
-<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-</dl>
-<p>A set of WBGene names.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">features_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
-<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
-<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-</dl>
-<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
 <code class="sig-name descname">filter_abs_log2_fold_change</code><span class="sig-paren">(</span><em class="sig-param">abslog2fc: float = 1</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.         For example: if log2fc is 1.0, all features whose log2 fold change is between 1 and -1 (went up less than         two-fold or went down less than two-fold) will be filtered out.</p>
 <dl class="field-list simple">
@@ -1482,6 +1457,31 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 </dd>
 </dl>
 <p>returns the first n rows of the Filter object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">index_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
+<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A set of WBGene names.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">index_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
+<dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
+<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+<p>A string of WBGene indices separated by newlines (\n). For example, “WBGene00000001\nWBGene00000003\nWBGene12345678”.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1730,10 +1730,10 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 </div>
 <div class="section" id="rnalysis-enrichment-module">
 <h2>rnalysis.enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline">¶</a></h2>
-<p>This module receives a set of feature names, and can perform various enrichment analyses on them, such as GO enrichment, tissue/phenotype enrichment, enrichment and depletion of Reference Table attributes, etc. Furthermore, set operations (union, intersect, difference, symmetric difference) can be performed on two EnrichmentProcessing objects. Results of enrichment analyses can be saved to .csv files.</p>
+<p>This module receives a set of feature names, and can perform various enrichment analyses on them, such as GO enrichment, tissue/phenotype enrichment, enrichment and depletion of Reference Table attributes, etc. Furthermore, set operations (union, intersect, difference, symmetric difference) can be performed on two FeatureSet objects. Results of enrichment analyses can be saved to .csv files.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">EnrichmentProcessing</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">FeatureSet</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>receives a filtered gene set and preforms various enrichment analyses</p>
 <dl class="method">
@@ -1750,19 +1750,19 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <dl class="method">
 <dt>
 <code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set difference of the WBGene indices from multiple EnrichmentProcessing objects         (the indices that appear in the first EnrichmentProcessing object but NOT in the other objects).</p>
+<dd><p>Calculates the set difference of the WBGene indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of FeatureSet.         If False, returns a new instance of FeatureSet.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>if inplace is False, returns a new instance of EnrichmentProcessing.</p>
+<p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1841,7 +1841,7 @@ and ‘pvalue’.</p>
 <code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">background_genes: set = None</em>, <em class="sig-param">ref_path: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table using parallel processing.         Parallel processing makes this function generally faster than EnrichmentProcessing.enrich_randomization.         To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table using parallel processing.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
@@ -1937,25 +1937,25 @@ and ‘pvalue’.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set intersection of the WBGene indices from multiple EnrichmentProcessing objects         (the indices that exist in ALL of the EnrichmentProcessing objects).</p>
+<dd><p>Calculates the set intersection of the WBGene indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of FeatureSet.         If False, returns a new instance of FeatureSet.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>if inplace is False, returns a new instance of EnrichmentProcessing.</p>
+<p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
 <code class="sig-name descname">save_txt</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span></dt>
-<dd><p>Save the list of features in the EnrichmentProcessing object under the specified filename and path.</p>
+<dd><p>Save the list of features in the FeatureSet object under the specified filename and path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em>, </em><em>pathlib.Path</em>) – full filename/path for the output file. Can include the ‘.txt’ suffix but doesn’t have to.</p>
@@ -1966,39 +1966,39 @@ and ‘pvalue’.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">symmetric_difference</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set symmetric difference of the WBGene indices from two EnrichmentProcessing objects         (the indices that appear in EXACTLY ONE of the EnrichmentProcessing objects, and not both/neither).         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).</p>
+<dd><p>Calculates the set symmetric difference of the WBGene indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – A second  object against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – A second  object against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of FeatureSet.         If False, returns a new instance of FeatureSet.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>if inplace is False, returns a new instance of EnrichmentProcessing.</p>
+<p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd></dl>
 
 <dl class="method">
 <dt>
 <code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
-<div><p>Calculates the set union of the WBGene indices from multipple EnrichmentProcessing objects         (the indices that exist in at least one of the EnrichmentProcessing objects).</p>
+<div><p>Calculates the set union of the WBGene indices from multipple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.EnrichmentProcessing.html#rnalysis.enrichment.EnrichmentProcessing" title="rnalysis.enrichment.EnrichmentProcessing"><em>EnrichmentProcessing</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of EnrichmentProcessing.         If False, returns a new instance of EnrichmentProcessing.</p></li>
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of FeatureSet.         If False, returns a new instance of FeatureSet.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>if inplace is False, returns a new instance of EnrichmentProcessing.</p>
+<p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd></dl>
 
 </dd></dl>
