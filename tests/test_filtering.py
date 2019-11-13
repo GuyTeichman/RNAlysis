@@ -159,6 +159,14 @@ def test_filter_top_n_descending_text():
     assert np.all(truth == d.df)
 
 
+def test_filter_top_n_nonexisting_column():
+    d = DESeqFilter("test_deseq.csv")
+    colname='somecol'
+    with pytest.raises(AssertionError):
+        d.filter_top_n(colname, 5)
+    assert colname not in d.df.columns
+
+
 def test_deseq_filter_abs_log2_fold_change():
     truth = general.load_csv("test_deseq_fc_4_truth.csv", 0)
     d = DESeqFilter("test_deseq_fc.csv")
