@@ -1069,7 +1069,7 @@ class CountFilter(Filter):
             raise TypeError("Invalid type for 'all_feature_fname'!")
         for column in new_df.columns:
             norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
-                r'__no_feature', column]) / (10 ** 6)
+                r'__no_feature', column]+ features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
             new_df[column] /= norm_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
 

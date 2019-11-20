@@ -618,7 +618,7 @@ def test_text_filters_invalid_input():
         d.text_filters('cond2', 'equals', 55)
 
 
-def test_htcount_filter_from_folder():
+def test_count_filter_from_folder():
     truth_all_expr = general.load_csv(r'test_count_from_folder_all_expr.csv', 0)
     truth_all_feature = general.load_csv(r'test_count_from_folder_all_feature.csv', 0)
     truth_norm = general.load_csv(r'test_count_from_folder_norm.csv', 0)
@@ -633,7 +633,11 @@ def test_htcount_filter_from_folder():
     all_feature = general.load_csv('test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
     all_feature.sort_index(inplace=True)
     truth_all_feature.sort_index(inplace=True)
-    assert np.all(np.isclose(all_feature, truth_all_feature))
+    try:
+        assert np.all(np.isclose(all_feature, truth_all_feature))
+    except AssertionError:
+        os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+        raise AssertionError
     os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
 
 
