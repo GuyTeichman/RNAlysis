@@ -266,7 +266,9 @@ For example, we can the function ‘filter_percentile’ to remove all rows that
 </div>
 <p>If we now look at the shape of d, we will see that 5954 rows have been filtered out of the object, and we remain with 17781 rows.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">shape</span>
-<span class="p">(</span><span class="mi">17781</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">17781</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument ‘inplace=False’ to any filtering function within RNAlysis. For example:</p>
@@ -414,8 +416,11 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 <div class="section" id="filtering-fold-change-data-of-features-using-filtering-foldchangefilter">
 <h3>Filtering fold-change data of features using filtering.FoldChangeFilter<a class="headerlink" href="#filtering-fold-change-data-of-features-using-filtering-foldchangefilter" title="Permalink to this headline">¶</a></h3>
 <p>FoldChangeFilter objects can perform filtering operations and randomization tests on fold change values between two conditions.</p>
-<p>A FoldChangeFilter object can be calculated from a CountFilter object (you can read more about it in the <a class="reference internal" href="#fold-change-from-count-ref"><span class="std std-ref">Generating fold change data from an existing CountFilter object</span></a>), or imported from a .csv file like other Filter objects.
-.. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.</p>
+<p>A FoldChangeFilter object can be calculated from a CountFilter object (you can read more about it in the <a class="reference internal" href="#fold-change-from-count-ref"><span class="std std-ref">Generating fold change data from an existing CountFilter object</span></a>), or imported from a .csv file like other Filter objects.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>by default, FoldChangeFilter assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.</p>
+</div>
 <p>Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.</p>
 <div class="section" id="loading-fold-change-data-from-a-csv-file">
 <h4>Loading fold change data from a .csv file<a class="headerlink" href="#loading-fold-change-data-from-a-csv-file" title="Permalink to this headline">¶</a></h4>
@@ -425,7 +430,9 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 </div>
 <p>The names of the conditions are saved in the object attributes ‘numerator’ and ‘denominator’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">numerator</span><span class="p">,</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">denominator</span><span class="p">)</span>
-<span class="n">name</span> <span class="n">of</span> <span class="n">numerator</span> <span class="n">condition</span> <span class="o">|</span> <span class="n">name</span> <span class="n">of</span> <span class="n">denominator</span> <span class="n">condition</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span> <span class="n">of</span> <span class="n">numerator</span> <span class="n">condition</span> <span class="o">|</span> <span class="n">name</span> <span class="n">of</span> <span class="n">denominator</span> <span class="n">condition</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -441,7 +448,9 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 </div>
 <p>The CountFilter has the following columns:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">columns</span>
-<span class="p">[</span><span class="s1">&#39;cond1_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond1_rep2&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep2&#39;</span><span class="p">,</span><span class="s1">&#39;cond3_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond3_rep2&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;cond1_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond1_rep2&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep2&#39;</span><span class="p">,</span><span class="s1">&#39;cond3_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond3_rep2&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list:</p>
@@ -450,7 +459,9 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 </div>
 <p>In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">numerator</span><span class="p">,</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">denominator</span><span class="p">)</span>
-<span class="n">Mean</span> <span class="n">of</span> <span class="p">[</span><span class="s1">&#39;cond1_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond1_rep2&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">Mean</span> <span class="n">of</span> <span class="p">[</span><span class="s1">&#39;cond2_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep2&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Mean</span> <span class="n">of</span> <span class="p">[</span><span class="s1">&#39;cond1_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond1_rep2&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">Mean</span> <span class="n">of</span> <span class="p">[</span><span class="s1">&#39;cond2_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep2&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>We now have a FoldChangeFilter object that we can perform further filtering operations on.</p>

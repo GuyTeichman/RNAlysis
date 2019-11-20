@@ -62,6 +62,9 @@ If we now look at the shape of d, we will see that 5954 rows have been filtered 
 ::
 
     d.shape
+
+::
+
     (17781, 6)
 
 By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within RNAlysis. For example::
@@ -231,6 +234,7 @@ Filtering fold-change data of features using filtering.FoldChangeFilter
 FoldChangeFilter objects can perform filtering operations and randomization tests on fold change values between two conditions.
 
 A FoldChangeFilter object can be calculated from a CountFilter object (you can read more about it in the :ref:`fold-change-from-count-ref`), or imported from a .csv file like other Filter objects.
+
 .. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.
 
 Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.
@@ -245,6 +249,9 @@ Like with other objects from the Filter family, you can simply load a pre-existi
 The names of the conditions are saved in the object attributes 'numerator' and 'denominator'::
 
     print(f.numerator,'|',f.denominator)
+
+::
+
     name of numerator condition | name of denominator condition
 
 .. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.
@@ -261,6 +268,9 @@ Alternatively, you can generate a FoldChangeFilter object from count data in a C
 The CountFilter has the following columns::
 
     c.columns
+
+::
+
     ['cond1_rep1','cond1_rep2','cond2_rep1','cond2_rep2','cond3_rep1','cond3_rep2']
 
 We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list::
@@ -270,6 +280,9 @@ We will now calculate the fold change between the mean of condition1 and conditi
 In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically::
 
     print(f.numerator,'|',f.denominator)
+
+::
+
     Mean of ['cond1_rep1','cond1_rep2'] | Mean of ['cond2_rep1','cond2_rep2']
 
 We now have a FoldChangeFilter object that we can perform further filtering operations on.
