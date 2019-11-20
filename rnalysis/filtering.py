@@ -103,10 +103,11 @@ class Filter:
     @staticmethod
     def _color_gen():
         """
-        A generator that randomizes RGB values.
+        A generator that yields distinct colors up to a certain limit, and then yields randomized RGB values.
 
         :return:
-        a numpy.ndarray of size (3,) containing three random values, each between 0 and 1.
+        a color name string (like 'black', \
+        or a numpy.ndarray of size (3,) containing three random values each between 0 and 1.
         """
         preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
                          'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
