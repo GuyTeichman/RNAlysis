@@ -43,9 +43,11 @@ We can also see the total number of rows and columns by accessing the 'shape' at
 
     d.shape
 
-which will return the following output:
-#insert output here
-meaning there are {} rows and {} columns in the file.
+which will return the following output::
+
+    (23735, 6)
+
+meaning there are 23735 rows and 6 columns in the file.
 
 Filtering operations
 --------------------
@@ -56,7 +58,11 @@ For example, we can the function 'filter_percentile' to remove all rows that are
 
     d.filter_percentile(0.75,'log2FoldChange')
 
-If we now look at the shape of d, we will see that {} rows have been filtered out of the object, and we remain with {} rows.
+If we now look at the shape of d, we will see that 5954 rows have been filtered out of the object, and we remain with 17781 rows.
+::
+
+    d.shape
+    (17781, 6)
 
 By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within RNAlysis. For example::
 
@@ -80,11 +86,11 @@ Performing set operations on multiple Filter objects
 In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an CountFilter object and a python set::
 
     d = filtering.DESeqFilter('deseqfile.csv')
-    h = filtering.CountFilter('htseq_count_file.csv')
+    c = filtering.CountFilter('htseq_count_file.csv')
     s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
     union_result = d.union(h, s)
 
-When performing set operations, the return type will always be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as 'head' and 'save_csv' on it, or apply filters to it directly.
+When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as 'head' and 'save_csv' on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first Filter object.
 
 
 Saving Filter results
@@ -159,7 +165,7 @@ Generating an CountFilter object from a folder of HTSeq-count output .txt files
 ---------------------------------------------------------------------------------
 HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
-    h = filtering.CountFilter.from_folder('my_folder_path', save_reads_fname='name_for_reads_csv_file', save_not_counted_fname='name_for_unmapped_reads_csv_file')
+    c = filtering.CountFilter.from_folder('my_folder_path', save_reads_fname='name_for_reads_csv_file', save_not_counted_fname='name_for_unmapped_reads_csv_file')
 
 By deault, 'from_folder' saves the generated tables as .csv files. However, you can avoid that by specifying 'save_csv=False'.
 It is also possible to automatically normalize the reads in the new CountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'.
@@ -169,7 +175,7 @@ Loading from a pre-made .csv file
 ----------------------------------
 If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an CountFilter object as you would any other Filter object::
 
-    h = filtering.CountFilter('my_csv_file.csv')
+    c = filtering.CountFilter('my_csv_file.csv')
 
 
 Filtering operations unique to CountFilter
@@ -193,40 +199,85 @@ With CountFilter.pairplot, you can get a quick overview of the distribution of c
            :align:   center
            :scale: 40 %
 
-           Example output of HTCount.pairplot()
+           Example output of CountFilter.pairplot()
 
-
-With HTCount.clustergram, you can cluster your samples according to specified distance and linkage metrics:
+With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:
 
  .. figure::  clustergram.png
            :align:   center
            :scale: 40 %
 
-           Example plot of HTCount.clustergram()
+           Example plot of CountFilter.clustergram()
 
-With HTCount.pca, you can perform a principal component analysis and look for strong patterns in your dataset:
+With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:
 
  .. figure::  pca.png
            :align:   center
            :scale: 40 %
 
-           Example plot of HTCount.pca()
+           Example plot of CountFilter.pca()
+
+With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:
+
+ .. figure::  plot_expression.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of CountFilter.plot_expression()
 
 Filtering fold-change data of features using filtering.FoldChangeFilter
 =======================================================================
 
-#fold change is calculated (1+reads)/(1+reads)
-#0 and inf are not supported, and may lead to unintented results
+FoldChangeFilter objects can perform filtering operations and randomization tests on fold change values between two conditions.
+
+A FoldChangeFilter object can be calculated from a CountFilter object (you can read more about it in the :ref:`fold-change-from-count-ref`), or imported from a .csv file like other Filter objects.
+.. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.
+
+Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.
 
 Loading fold change data from a .csv file
 -----------------------------------------
 
+Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated .csv file into a FoldChangeFilter object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition::
 
+    f = filtering.FoldChangeFilter('path_to_file.csv','name of numerator condition', 'name of denominator condition')
+
+The names of the conditions are saved in the object attributes 'numerator' and 'denominator'::
+
+    print(f.numerator,'|',f.denominator)
+    name of numerator condition | name of denominator condition
+
+.. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.
+
+.. _fold-change-from-count-ref:
 
 Generating fold change data from an existing CountFilter object
 -----------------------------------------------------------------
 
+Alternatively, you can generate a FoldChangeFilter object from count data in a CountFilter object. We will start by loading a CountFilter object::
 
+    c = filtering.CountFilter('path_of_my_count_matrix.csv')
+
+The CountFilter has the following columns::
+
+    c.columns
+    ['cond1_rep1','cond1_rep2','cond2_rep1','cond2_rep2','cond3_rep1','cond3_rep2']
+
+We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list::
+
+    f = c.fold_change(['cond1_rep1','cond1_rep2'],['cond2_rep1','cond2_rep2'])
+
+In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically::
+
+    print(f.numerator,'|',f.denominator)
+    Mean of ['cond1_rep1','cond1_rep2'] | Mean of ['cond2_rep1','cond2_rep2']
+
+We now have a FoldChangeFilter object that we can perform further filtering operations on.
+
+Performing randomization tests on a FoldChangeFilter object
+------------------------------------------------------------
+
+#continue
 
 
 ****************************
@@ -248,15 +299,17 @@ We will start by importing the enrichment module::
     from rnalysis import enrichment
 
 An FeatureSet object can now be initialized by one of three methods.
-The first method is to directly specify a python set of genomic feature indices::
+The first method is to specify an existing Filter object::
+
+    c = filtering.CountFilter('path_to_my_file.csv')
+    en = enrichment.FeatureSet(filt, 'a name for my set')
+
+The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'index_set'::
 
     myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
     en = enrichment.FeatureSet(myset, 'a name for my set')
-
-The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'index_set'::
-
-    h = filtering.CountFilter('path_to_my_file.csv')
-    en = enrichment.FeatureSet(h.index_set(), 'a name for my set')
+    # alternatively, using 'index_set' on an existing Filter object:
+    en2 = enrichment.FeatureSet(filt.index_set(),' a name for my set')
 
 The third method is not to specify a gene set at all::
 
@@ -273,7 +326,7 @@ Using the enrichment module, you can perform enrichment analysis for user-define
 
 Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
-    h = filtering.CountFilter('path_to_my_file.csv')
+    c = filtering.CountFilter('path_to_my_file.csv')
     en = enrichment.FeatureSet(h.index_set(), 'my set')
 
 Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.

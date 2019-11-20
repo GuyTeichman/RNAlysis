@@ -112,6 +112,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#filtering-fold-change-data-of-features-using-filtering-foldchangefilter">Filtering fold-change data of features using filtering.FoldChangeFilter</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#loading-fold-change-data-from-a-csv-file">Loading fold change data from a .csv file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#generating-fold-change-data-from-an-existing-countfilter-object">Generating fold change data from an existing CountFilter object</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-randomization-tests-on-a-foldchangefilter-object">Performing randomization tests on a FoldChangeFilter object</a></li>
 </ul>
 </li>
 </ul>
@@ -249,9 +250,11 @@ but you can specify a specific number of lines to show.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
-<p>which will return the following output:
-#insert output here
-meaning there are {} rows and {} columns in the file.</p>
+<p>which will return the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">23735</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>meaning there are 23735 rows and 6 columns in the file.</p>
 </div>
 <div class="section" id="filtering-operations">
 <h4>Filtering operations<a class="headerlink" href="#filtering-operations" title="Permalink to this headline">¶</a></h4>
@@ -261,7 +264,11 @@ For example, we can the function ‘filter_percentile’ to remove all rows that
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>If we now look at the shape of d, we will see that {} rows have been filtered out of the object, and we remain with {} rows.</p>
+<p>If we now look at the shape of d, we will see that 5954 rows have been filtered out of the object, and we remain with 17781 rows.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">shape</span>
+<span class="p">(</span><span class="mi">17781</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument ‘inplace=False’ to any filtering function within RNAlysis. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d_filtered</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
@@ -279,12 +286,12 @@ For example, if we now wanted to remove the rows which are below the 25% percent
 <h4>Performing set operations on multiple Filter objects<a class="headerlink" href="#performing-set-operations-on-multiple-filter-objects" title="Permalink to this headline">¶</a></h4>
 <p>In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an CountFilter object and a python set:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;deseqfile.csv&#39;</span><span class="p">)</span>
-<span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;htseq_count_file.csv&#39;</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;htseq_count_file.csv&#39;</span><span class="p">)</span>
 <span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
 <span class="n">union_result</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>When performing set operations, the return type will always be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as ‘head’ and ‘save_csv’ on it, or apply filters to it directly.</p>
+<p>When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as ‘head’ and ‘save_csv’ on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first Filter object.</p>
 </div>
 <div class="section" id="saving-filter-results">
 <h4>Saving Filter results<a class="headerlink" href="#saving-filter-results" title="Permalink to this headline">¶</a></h4>
@@ -350,7 +357,7 @@ However, some DESeqFilter functions (such as ‘filter_significant’ and ‘fil
 <div class="section" id="generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files">
 <h4>Generating an CountFilter object from a folder of HTSeq-count output .txt files<a class="headerlink" href="#generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files" title="Permalink to this headline">¶</a></h4>
 <p>HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;my_folder_path&#39;</span><span class="p">,</span> <span class="n">save_reads_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">save_not_counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_unmapped_reads_csv_file&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;my_folder_path&#39;</span><span class="p">,</span> <span class="n">save_reads_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">save_not_counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_unmapped_reads_csv_file&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By deault, ‘from_folder’ saves the generated tables as .csv files. However, you can avoid that by specifying ‘save_csv=False’.
@@ -359,7 +366,7 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 <div class="section" id="loading-from-a-pre-made-csv-file">
 <h4>Loading from a pre-made .csv file<a class="headerlink" href="#loading-from-a-pre-made-csv-file" title="Permalink to this headline">¶</a></h4>
 <p>If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an CountFilter object as you would any other Filter object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;my_csv_file.csv&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;my_csv_file.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -379,33 +386,78 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 <p>With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:</p>
 <div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example output of HTCount.pairplot()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </div>
-<p>With HTCount.clustergram, you can cluster your samples according to specified distance and linkage metrics:</p>
+<p>With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:</p>
 <blockquote>
 <div><div class="figure align-center" id="id2">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of HTCount.clustergram()</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
 </div></blockquote>
-<p>With HTCount.pca, you can perform a principal component analysis and look for strong patterns in your dataset:</p>
+<p>With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:</p>
 <blockquote>
 <div><div class="figure align-center" id="id3">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of HTCount.pca()</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+</div></blockquote>
+<p>With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:</p>
+<blockquote>
+<div><div class="figure align-center" id="id4">
+<a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 605.4px; height: 441.59999999999997px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
 </div>
 </div></blockquote>
 </div>
 </div>
 <div class="section" id="filtering-fold-change-data-of-features-using-filtering-foldchangefilter">
 <h3>Filtering fold-change data of features using filtering.FoldChangeFilter<a class="headerlink" href="#filtering-fold-change-data-of-features-using-filtering-foldchangefilter" title="Permalink to this headline">¶</a></h3>
-<p>#fold change is calculated (1+reads)/(1+reads)
-#0 and inf are not supported, and may lead to unintented results</p>
+<p>FoldChangeFilter objects can perform filtering operations and randomization tests on fold change values between two conditions.</p>
+<p>A FoldChangeFilter object can be calculated from a CountFilter object (you can read more about it in the <a class="reference internal" href="#fold-change-from-count-ref"><span class="std std-ref">Generating fold change data from an existing CountFilter object</span></a>), or imported from a .csv file like other Filter objects.
+.. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.</p>
+<p>Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.</p>
 <div class="section" id="loading-fold-change-data-from-a-csv-file">
 <h4>Loading fold change data from a .csv file<a class="headerlink" href="#loading-fold-change-data-from-a-csv-file" title="Permalink to this headline">¶</a></h4>
+<p>Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated .csv file into a FoldChangeFilter object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;path_to_file.csv&#39;</span><span class="p">,</span><span class="s1">&#39;name of numerator condition&#39;</span><span class="p">,</span> <span class="s1">&#39;name of denominator condition&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The names of the conditions are saved in the object attributes ‘numerator’ and ‘denominator’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">numerator</span><span class="p">,</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">denominator</span><span class="p">)</span>
+<span class="n">name</span> <span class="n">of</span> <span class="n">numerator</span> <span class="n">condition</span> <span class="o">|</span> <span class="n">name</span> <span class="n">of</span> <span class="n">denominator</span> <span class="n">condition</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>by default, FoldChangeFilter assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.</p>
+</div>
 </div>
 <div class="section" id="generating-fold-change-data-from-an-existing-countfilter-object">
-<h4>Generating fold change data from an existing CountFilter object<a class="headerlink" href="#generating-fold-change-data-from-an-existing-countfilter-object" title="Permalink to this headline">¶</a></h4>
+<span id="fold-change-from-count-ref"></span><h4>Generating fold change data from an existing CountFilter object<a class="headerlink" href="#generating-fold-change-data-from-an-existing-countfilter-object" title="Permalink to this headline">¶</a></h4>
+<p>Alternatively, you can generate a FoldChangeFilter object from count data in a CountFilter object. We will start by loading a CountFilter object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_of_my_count_matrix.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The CountFilter has the following columns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">columns</span>
+<span class="p">[</span><span class="s1">&#39;cond1_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond1_rep2&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep2&#39;</span><span class="p">,</span><span class="s1">&#39;cond3_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond3_rep2&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">fold_change</span><span class="p">([</span><span class="s1">&#39;cond1_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond1_rep2&#39;</span><span class="p">],[</span><span class="s1">&#39;cond2_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep2&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">numerator</span><span class="p">,</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">denominator</span><span class="p">)</span>
+<span class="n">Mean</span> <span class="n">of</span> <span class="p">[</span><span class="s1">&#39;cond1_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond1_rep2&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">Mean</span> <span class="n">of</span> <span class="p">[</span><span class="s1">&#39;cond2_rep1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2_rep2&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>We now have a FoldChangeFilter object that we can perform further filtering operations on.</p>
+</div>
+<div class="section" id="performing-randomization-tests-on-a-foldchangefilter-object">
+<h4>Performing randomization tests on a FoldChangeFilter object<a class="headerlink" href="#performing-randomization-tests-on-a-foldchangefilter-object" title="Permalink to this headline">¶</a></h4>
+<p>#continue</p>
 </div>
 </div>
 </div>
@@ -422,14 +474,16 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 </pre></div>
 </div>
 <p>An FeatureSet object can now be initialized by one of three methods.
-The first method is to directly specify a python set of genomic feature indices:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myset</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene0245200&#39;</span><span class="p">,</span><span class="s1">&#39; WBGene00402029&#39;</span><span class="p">}</span>
-<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">myset</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+The first method is to specify an existing Filter object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">filt</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The second method is to extract a python set of genomic feature indices from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function ‘index_set’:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
-<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index_set</span><span class="p">(),</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+<p>The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function ‘index_set’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myset</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene0245200&#39;</span><span class="p">,</span><span class="s1">&#39; WBGene00402029&#39;</span><span class="p">}</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">myset</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+<span class="c1"># alternatively, using &#39;index_set&#39; on an existing Filter object:</span>
+<span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">filt</span><span class="o">.</span><span class="n">index_set</span><span class="p">(),</span><span class="s1">&#39; a name for my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The third method is not to specify a gene set at all:</p>
@@ -443,7 +497,7 @@ The first method is to directly specify a python set of genomic feature indices:
 <h4>Randomization test enrichment analysis for user-defined attributes<a class="headerlink" href="#randomization-test-enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
 <p>Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’). The enrichment analysis is performed using a randomization test.</p>
 <p>Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
 <span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index_set</span><span class="p">(),</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
