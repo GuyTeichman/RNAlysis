@@ -337,6 +337,94 @@ Using the function Filter.filter_by_ref_table_attr(), you can filter your genomi
 Like other filter objects, filtering operations on DESeqFilter are performed in-place by default,meaning the original object is modified.</p>
 <p>In principle, any .csv file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter.
 However, some DESeqFilter functions (such as ‘filter_significant’ and ‘filter_abs_log2_fold_change’) may only work on DESeq2 output files, and other unintended interactions may occur.</p>
+<p>A correct input to a DESeqFilter object would follow the following format:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 12%" />
+<col style="width: 20%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>baseMean</p></th>
+<th class="head"><p>log2FoldChange</p></th>
+<th class="head"><p>lfcSE</p></th>
+<th class="head"><p>stat</p></th>
+<th class="head"><p>pvalue</p></th>
+<th class="head"><p>padj</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>WBGene00000021</p></td>
+<td><p>2688.044</p></td>
+<td><p>3.329404</p></td>
+<td><p>0.158938</p></td>
+<td><p>20.94783</p></td>
+<td><p>1.96E-97</p></td>
+<td><p>1.80E-94</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000022</p></td>
+<td><p>365.813</p></td>
+<td><p>6.101303</p></td>
+<td><p>0.291484</p></td>
+<td><p>20.93189</p></td>
+<td><p>2.74E-97</p></td>
+<td><p>2.40E-94</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000023</p></td>
+<td><p>3168.567</p></td>
+<td><p>3.906719</p></td>
+<td><p>0.190439</p></td>
+<td><p>20.51433</p></td>
+<td><p>1.60E-93</p></td>
+<td><p>1.34E-90</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000024</p></td>
+<td><p>221.9257</p></td>
+<td><p>4.801676</p></td>
+<td><p>0.246313</p></td>
+<td><p>19.49419</p></td>
+<td><p>1.23E-84</p></td>
+<td><p>9.82E-82</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000025</p></td>
+<td><p>2236.186</p></td>
+<td><p>2.477374</p></td>
+<td><p>0.129606</p></td>
+<td><p>19.11463</p></td>
+<td><p>1.91E-81</p></td>
+<td><p>1.46E-78</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000026</p></td>
+<td><p>343.649</p></td>
+<td><p>-4.03719</p></td>
+<td><p>0.219781</p></td>
+<td><p>-18.3691</p></td>
+<td><p>2.32E-75</p></td>
+<td><p>1.70E-72</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000027</p></td>
+<td><p>175.1429</p></td>
+<td><p>6.352044</p></td>
+<td><p>0.347777</p></td>
+<td><p>18.26471</p></td>
+<td><p>1.58E-74</p></td>
+<td><p>1.12E-71</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000028</p></td>
+<td><p>219.1632</p></td>
+<td><p>3.913657</p></td>
+<td><p>0.217802</p></td>
+<td><p>17.96885</p></td>
+<td><p>3.42E-72</p></td>
+<td><p>2.32E-69</p></td>
+</tr>
+</tbody>
+</table>
 <div class="section" id="loading-from-a-csv-file">
 <h4>Loading from a .csv file<a class="headerlink" href="#loading-from-a-csv-file" title="Permalink to this headline">¶</a></h4>
 <p>Loading a file into a DESeqFilter works as explained above for any Filter object:</p>
@@ -358,7 +446,62 @@ However, some DESeqFilter functions (such as ‘filter_significant’ and ‘fil
 <p>In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as ‘norm_reads_to_rpm’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
 <div class="section" id="generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files">
 <span id="from-folder-ref"></span><h4>Generating an CountFilter object from a folder of HTSeq-count output .txt files<a class="headerlink" href="#generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files" title="Permalink to this headline">¶</a></h4>
-<p>HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
+<p>HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature).
+An HTSeq-count output file would follow the following format:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 83%" />
+<col style="width: 17%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>WBGene00000001</p></td>
+<td><p>376</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000002</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000003</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000004</p></td>
+<td><p>18</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000005</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000006</p></td>
+<td><p>3</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000007</p></td>
+<td><p>6</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000008</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00000009</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00000010</p></td>
+<td><p>177</p></td>
+</tr>
+<tr class="row-odd"><td><p>__no_feature</p></td>
+<td><p>32</p></td>
+</tr>
+<tr class="row-even"><td><p>__ambiguous</p></td>
+<td><p>12</p></td>
+</tr>
+<tr class="row-odd"><td><p>__too_low_aQual</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>__not_aligned</p></td>
+<td><p>121</p></td>
+</tr>
+<tr class="row-odd"><td><p>__alignment_not_unique</p></td>
+<td><p>100</p></td>
+</tr>
+</tbody>
+</table>
+<p>When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;my_folder_path&#39;</span><span class="p">,</span> <span class="n">save_reads_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">save_not_counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_unmapped_reads_csv_file&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -371,6 +514,80 @@ It is also possible to automatically normalize the reads in the new CountFilter 
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;my_csv_file.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>A correct input to a CountFilter object would follow the following format:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>cond1</p></th>
+<th class="head"><p>cond2</p></th>
+<th class="head"><p>cond3</p></th>
+<th class="head"><p>cond4</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>WBGene00007063</p></td>
+<td><p>633</p></td>
+<td><p>451</p></td>
+<td><p>365</p></td>
+<td><p>388</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00007064</p></td>
+<td><p>60</p></td>
+<td><p>57</p></td>
+<td><p>20</p></td>
+<td><p>23</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00044951</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00007066</p></td>
+<td><p>55</p></td>
+<td><p>266</p></td>
+<td><p>46</p></td>
+<td><p>39</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00007067</p></td>
+<td><p>15</p></td>
+<td><p>13</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00007069</p></td>
+<td><p>0</p></td>
+<td><p>2</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00077502</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene00077503</p></td>
+<td><p>1</p></td>
+<td><p>4</p></td>
+<td><p>2</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene00077504</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="filtering-operations-unique-to-countfilter">
 <h4>Filtering operations unique to CountFilter<a class="headerlink" href="#filtering-operations-unique-to-countfilter" title="Permalink to this headline">¶</a></h4>

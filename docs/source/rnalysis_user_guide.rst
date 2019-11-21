@@ -142,6 +142,28 @@ Like other filter objects, filtering operations on DESeqFilter are performed in-
 In principle, any .csv file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter.
 However, some DESeqFilter functions (such as 'filter_significant' and 'filter_abs_log2_fold_change') may only work on DESeq2 output files, and other unintended interactions may occur.
 
+A correct input to a DESeqFilter object would follow the following format:
+
++----------------+----------+----------------+----------+----------+----------+----------+
+|                | baseMean | log2FoldChange | lfcSE    | stat     | pvalue   | padj     |
++================+==========+================+==========+==========+==========+==========+
+| WBGene00000021 | 2688.044 | 3.329404       | 0.158938 | 20.94783 | 1.96E-97 | 1.80E-94 |
++----------------+----------+----------------+----------+----------+----------+----------+
+| WBGene00000022 | 365.813  | 6.101303       | 0.291484 | 20.93189 | 2.74E-97 | 2.40E-94 |
++----------------+----------+----------------+----------+----------+----------+----------+
+| WBGene00000023 | 3168.567 | 3.906719       | 0.190439 | 20.51433 | 1.60E-93 | 1.34E-90 |
++----------------+----------+----------------+----------+----------+----------+----------+
+| WBGene00000024 | 221.9257 | 4.801676       | 0.246313 | 19.49419 | 1.23E-84 | 9.82E-82 |
++----------------+----------+----------------+----------+----------+----------+----------+
+| WBGene00000025 | 2236.186 | 2.477374       | 0.129606 | 19.11463 | 1.91E-81 | 1.46E-78 |
++----------------+----------+----------------+----------+----------+----------+----------+
+| WBGene00000026 | 343.649  | -4.03719       | 0.219781 | -18.3691 | 2.32E-75 | 1.70E-72 |
++----------------+----------+----------------+----------+----------+----------+----------+
+| WBGene00000027 | 175.1429 | 6.352044       | 0.347777 | 18.26471 | 1.58E-74 | 1.12E-71 |
++----------------+----------+----------------+----------+----------+----------+----------+
+| WBGene00000028 | 219.1632 | 3.913657       | 0.217802 | 17.96885 | 3.42E-72 | 2.32E-69 |
++----------------+----------+----------------+----------+----------+----------+----------+
+
 Loading from a .csv file
 ------------------------
 Loading a file into a DESeqFilter works as explained above for any Filter object::
@@ -169,7 +191,42 @@ In principle, any .csv file where the columns are different conditions/replicate
 
 Generating an CountFilter object from a folder of HTSeq-count output .txt files
 ---------------------------------------------------------------------------------
-HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
+HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature).
+An HTSeq-count output file would follow the following format:
+
++------------------------+-----+
+| WBGene00000001         | 376 |
++------------------------+-----+
+| WBGene00000002         | 1   |
++------------------------+-----+
+| WBGene00000003         | 1   |
++------------------------+-----+
+| WBGene00000004         | 18  |
++------------------------+-----+
+| WBGene00000005         | 1   |
++------------------------+-----+
+| WBGene00000006         | 3   |
++------------------------+-----+
+| WBGene00000007         | 6   |
++------------------------+-----+
+| WBGene00000008         | 0   |
++------------------------+-----+
+| WBGene00000009         | 1   |
++------------------------+-----+
+| WBGene00000010         | 177 |
++------------------------+-----+
+| __no_feature           | 32  |
++------------------------+-----+
+| __ambiguous            | 12  |
++------------------------+-----+
+| __too_low_aQual        | 1   |
++------------------------+-----+
+| __not_aligned          | 121 |
++------------------------+-----+
+| __alignment_not_unique | 100 |
++------------------------+-----+
+
+When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
     c = filtering.CountFilter.from_folder('my_folder_path', save_reads_fname='name_for_reads_csv_file', save_not_counted_fname='name_for_unmapped_reads_csv_file')
 
@@ -183,6 +240,29 @@ If you have previously generated a .csv file from HTSeq-count output files using
 
     c = filtering.CountFilter('my_csv_file.csv')
 
+A correct input to a CountFilter object would follow the following format:
+
++----------------+-------+-------+-------+-------+
+|                | cond1 | cond2 | cond3 | cond4 |
++================+=======+=======+=======+=======+
+| WBGene00007063 | 633   | 451   | 365   | 388   |
++----------------+-------+-------+-------+-------+
+| WBGene00007064 | 60    | 57    | 20    | 23    |
++----------------+-------+-------+-------+-------+
+| WBGene00044951 | 0     | 0     | 0     | 1     |
++----------------+-------+-------+-------+-------+
+| WBGene00007066 | 55    | 266   | 46    | 39    |
++----------------+-------+-------+-------+-------+
+| WBGene00007067 | 15    | 13    | 1     | 0     |
++----------------+-------+-------+-------+-------+
+| WBGene00007069 | 0     | 2     | 1     | 0     |
++----------------+-------+-------+-------+-------+
+| WBGene00077502 | 0     | 0     | 0     | 0     |
++----------------+-------+-------+-------+-------+
+| WBGene00077503 | 1     | 4     | 2     | 0     |
++----------------+-------+-------+-------+-------+
+| WBGene00077504 | 0     | 0     | 0     | 0     |
++----------------+-------+-------+-------+-------+
 
 Filtering operations unique to CountFilter
 --------------------------------------------
