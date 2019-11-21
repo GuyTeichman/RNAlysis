@@ -653,7 +653,8 @@ class FoldChangeFilter(Filter):
 
     def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None):
         """
-        Perform a randomization test to examine
+        Perform a randomization test to examine whether the fold change of a group of specific genomic features \
+        is significantly different than the fold change of a background set of genomic features.
 
         :type ref: FoldChangeFilter
         :param ref: A reference FoldChangeFilter object which contains the fold change for every reference gene. \

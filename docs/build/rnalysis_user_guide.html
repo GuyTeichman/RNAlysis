@@ -552,7 +552,41 @@ We would then supply the normalization function with the path to the special cou
 </div>
 <div class="section" id="performing-randomization-tests-on-a-foldchangefilter-object">
 <h4>Performing randomization tests on a FoldChangeFilter object<a class="headerlink" href="#performing-randomization-tests-on-a-foldchangefilter-object" title="Permalink to this headline">¶</a></h4>
-<p>#continue</p>
+<p>You can perform a randomization test to examine whether the fold change of a group of specific genomic features (for example, genes with a specific biological function) is significantly different than the fold change of a background set of genomic features.
+To perform a randomization test you need two FoldChangeFilter objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;pre_existing_fold_change_file.csv&#39;</span> <span class="p">,</span> <span class="s1">&#39;numerator&#39;</span> <span class="p">,</span> <span class="s1">&#39;denominator&#39;</span><span class="p">)</span>
+<span class="n">f_background</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1">#keep only protein-coding genes as reference)</span>
+<span class="n">f_test</span> <span class="o">=</span> <span class="n">f_background</span><span class="o">.</span><span class="n">filter_by_ref_table_attr</span><span class="p">(</span><span class="s1">&#39;epigenetic_genes&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">rand_test_res</span> <span class="o">=</span> <span class="n">f_test</span><span class="o">.</span><span class="n">randomization_test</span><span class="p">(</span><span class="n">f_background</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output table would look like this:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 29%" />
+<col style="width: 29%" />
+<col style="width: 10%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>group size</p></th>
+<th class="head"><p>observed fold change</p></th>
+<th class="head"><p>expected fold change</p></th>
+<th class="head"><p>pval</p></th>
+<th class="head"><p>significant</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>220</p></td>
+<td><p>2.271681</p></td>
+<td><p>0.825341</p></td>
+<td><p>0.0001</p></td>
+<td><p>TRUE</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>

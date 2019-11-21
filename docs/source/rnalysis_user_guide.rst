@@ -111,6 +111,7 @@ We can view the current automatic filename by looking at the 'fname' attribute::
 In this example, the automatic filename is::
 
     'D:/myfolder/my_deseq2_output_below0.75percentile_below0.25percentileopposite.csv'
+
 Alternatively, you can specify a filename::
 
     d.save_csv('alt_filename')
@@ -331,7 +332,22 @@ We now have a FoldChangeFilter object that we can perform further filtering oper
 Performing randomization tests on a FoldChangeFilter object
 ------------------------------------------------------------
 
-#continue
+You can perform a randomization test to examine whether the fold change of a group of specific genomic features (for example, genes with a specific biological function) is significantly different than the fold change of a background set of genomic features.
+To perform a randomization test you need two FoldChangeFilter objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example::
+
+    f = filtering.FoldChangeFilter('pre_existing_fold_change_file.csv' , 'numerator' , 'denominator')
+    f_background = f.filter_biotype('protein_coding', inplace=False) #keep only protein-coding genes as reference)
+    f_test = f_background.filter_by_ref_table_attr('epigenetic_genes', inplace=False)
+
+    rand_test_res = f_test.randomization_test(f_background)
+
+The output table would look like this:
+
++------------+----------------------+----------------------+--------+-------------+
+| group size | observed fold change | expected fold change | pval   | significant |
++============+======================+======================+========+=============+
+| 220        | 2.271681             | 0.825341             | 0.0001 | TRUE        |
++------------+----------------------+----------------------+--------+-------------+
 
 
 ****************************
@@ -545,3 +561,4 @@ For example, we could extract all WBGene indices from the following string::
 And the output would be the following set::
 
     {'WBGene00000001','WBGene000000002','WBGene00000003','WBGene00000004'}
+
