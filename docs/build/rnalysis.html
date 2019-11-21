@@ -489,12 +489,12 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">norm_reads_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">all_feature_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">norm_reads_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">special_counter_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Normalizes the reads in the CountFilter to reads per million (RPM).         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq’s output.         Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>all_feature_fname</strong> – the .csv file which contains feature information about the RNA library         (ambiguous, no feature, not aligned, etc).</p></li>
+<li><p><strong>special_counter_fname</strong> – the .csv file which contains feature information about the RNA library         (ambiguous, no feature, not aligned, etc).</p></li>
 <li><p><strong>inplace</strong> – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>

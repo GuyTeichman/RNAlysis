@@ -164,6 +164,8 @@ https://htseq.readthedocs.io/en/release_0.11.1/count.html
 
 In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as 'norm_reads_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
+.. _from-folder-ref:
+
 Generating an CountFilter object from a folder of HTSeq-count output .txt files
 ---------------------------------------------------------------------------------
 HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature). When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
@@ -188,8 +190,47 @@ There are a few filtering operations unique to CountFilter. Those include 'filte
 Normalizing reads with CountFilter
 ------------------------------------
 CountFilter offers two methods for normalizing reads: reads per million (RPM) and DESeq2's size factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
-#normalize to rpm
-#normalize with size factors
+
+To normalize a CountFilter that originated from HTSeq-count to reads per million, we need a .csv table with the special counters that appear in HTSeq-count output:
+
++------------------------+---------+---------+---------+---------+
+|                        | sample1 | sample2 | sample3 | sample4 |
++========================+=========+=========+=========+=========+
+| __ambiguous            | 37      | 12      | 145     | 77      |
++------------------------+---------+---------+---------+---------+
+| __no_feature           | 9468    | 11354   | 14009   | 30287   |
++------------------------+---------+---------+---------+---------+
+| __alignment_not_unique | 108     | 290     | 557     | 893     |
++------------------------+---------+---------+---------+---------+
+| __too_low_aQual        | 0       | 5       | 12      | 9       |
++------------------------+---------+---------+---------+---------+
+| __not_aligned          | 109853  | 277653  | 88653   | 96012   |
++------------------------+---------+---------+---------+---------+
+
+Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
+We would then supply the normalization function with the path to the special counter file::
+
+    c = filtering.CountFilter('path_to_my_count_file.csv')
+    c.norm_reads_to_rpm('path_to_my_special_counter_table.csv')
+
+The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
+
+
+
+To normalize a CountFilter with size factors, we need a .csv table with the size factor for each sample:
+
++----------------+----------------+----------------+----------------+
+|    sample1     |    sample2     |    sample3     |    sample4     |
++================+================+================+================+
+|      0.96      |       1        |      0.78      |      1.23      |
++----------------+----------------+----------------+----------------+
+
+We would then supply the function with the path to the size factor file::
+
+    c = filtering.CountFilter('path_to_my_count_file.csv')
+    c.norm_reads_with_size_factor('path_to_my_size_factor_table.csv')
+
+The resulting CountFilter object will be normalized with the size factors (dividing the value of each column by the value of the corresponding size factor).
 
 Data visualization and clustering analysis with CountFilter
 -------------------------------------------------------------
