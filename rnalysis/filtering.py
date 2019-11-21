@@ -1047,13 +1047,13 @@ class CountFilter(Filter):
 
         return samples_df
 
-    def norm_reads_to_rpm(self, all_feature_fname: str, inplace: bool = True):
+    def norm_reads_to_rpm(self, special_counter_fname: str, inplace: bool = True):
         """
         Normalizes the reads in the CountFilter to reads per million (RPM). \
         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq's output. \
         Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .
 
-        :param all_feature_fname: the .csv file which contains feature information about the RNA library \
+        :param special_counter_fname: the .csv file which contains feature information about the RNA library \
         (ambiguous, no feature, not aligned, etc).
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
@@ -1062,12 +1062,12 @@ class CountFilter(Filter):
         """
         suffix = '_rpm'
         new_df = self.df.copy()
-        if isinstance(all_feature_fname, (str, Path)):
-            features = general.load_csv(all_feature_fname, 0)
-        elif isinstance(all_feature_fname, pd.DataFrame):
-            features = all_feature_fname
+        if isinstance(special_counter_fname, (str, Path)):
+            features = general.load_csv(special_counter_fname, 0)
+        elif isinstance(special_counter_fname, pd.DataFrame):
+            features = special_counter_fname
         else:
-            raise TypeError("Invalid type for 'all_feature_fname'!")
+            raise TypeError("Invalid type for 'special_counter_fname'!")
         for column in new_df.columns:
             norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
                 r'__no_feature', column]+ features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
