@@ -1071,7 +1071,7 @@ class CountFilter(Filter):
             raise TypeError("Invalid type for 'special_counter_fname'!")
         for column in new_df.columns:
             norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
-                r'__no_feature', column]+ features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
+                r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
             new_df[column] /= norm_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
 
@@ -1323,8 +1323,8 @@ class CountFilter(Filter):
 
         if sample_grouping is None:
             sample_grouping = [i + 1 for i in range(final_df.shape[0])]
-        elif sample_grouping == 'triplicate':
-            sample_grouping = [1+i//3 for i in range(final_df.shape[0])]
+        elif sample_grouping == 'triplicate' or sample_grouping == 'triplicates':
+            sample_grouping = [1 + i // 3 for i in range(final_df.shape[0])]
 
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
@@ -1391,7 +1391,7 @@ class CountFilter(Filter):
 
         if deseq_highlight is not None:
             highlight_features = deseq_highlight.index_set() if isinstance(deseq_highlight,
-                                                                              DESeqFilter) else deseq_highlight
+                                                                           DESeqFilter) else deseq_highlight
             xvals_highlight = np.log10(self.df[sample1].loc[highlight_features].values + 1) if \
                 isinstance(sample1, str) else np.log10(self.df[sample1].loc[highlight_features].mean(axis=1).values + 1)
             yvals_highlight = np.log10(self.df[sample2].loc[highlight_features].values + 1) if \
