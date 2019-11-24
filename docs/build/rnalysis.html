@@ -5,62 +5,62 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rnalysis package &mdash; RNAlysis 1.0 documentation</title>
+  
 
-  <title>rnalysis package &mdash; RNAlysis 1.3.1 documentation</title>
+  
+  
+  
+  
 
-
-
-
-
-
-
-
+  
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-
-
+  
+    
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-
+    
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
+    
 
-
-
+  
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" />
+    <link rel="prev" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
-
+   
   <div class="wy-grid-for-nav">
-
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
 
-
-
+          
             <a href="index.html" class="icon icon-home"> RNAlysis
+          
 
-
-
+          
           </a>
 
+          
+            
+            
+          
 
-
-
-
-
-
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -69,16 +69,16 @@
   </form>
 </div>
 
-
+          
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-
-
-
-
-
-
+          
+            
+            
+              
+            
+            
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
@@ -105,28 +105,28 @@
 </li>
 </ul>
 
-
-
+            
+          
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-
+      
       <nav class="wy-nav-top" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-
+        
       </nav>
 
 
       <div class="wy-nav-content">
-
+        
         <div class="rst-content">
-
-
+        
+          
 
 
 
@@ -145,28 +145,28 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-
+    
       <li><a href="index.html">Docs</a> &raquo;</li>
-
+        
       <li>rnalysis package</li>
-
-
+    
+    
       <li class="wy-breadcrumbs-aside">
-
-
+        
+            
             <a href="_sources/rnalysis.rst.txt" rel="nofollow"> View page source</a>
-
-
+          
+        
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+            
   <div class="section" id="rnalysis-package">
 <h1>rnalysis package<a class="headerlink" href="#rnalysis-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="rnalysis-filtering-module">
@@ -575,7 +575,8 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”]</p></li>
-<li><p><strong>n_components</strong> – number of PCA components to return         :param sample_grouping: Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 0 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [0, 0, 0, 1, 1, 1, 1, 2]</p></li>
+<li><p><strong>n_components</strong> (<em>positive int</em><em> (</em><em>default 3</em><em>)</em>) – number of PCA components to return.</p></li>
+<li><p><strong>sample_grouping</strong> (<em>list of positive integers</em><em>, </em><em>'triplicates'</em><em> or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [1, 1, 1, 2, 2, 2, 2, 3].         If ‘triplicate’, then sample_groupins will automatically group samples into triplicates. For example:         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1258,7 +1259,7 @@
 <dt>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
-<p>A class that contains a single column, representing the gene-specific fold change between two conditions.
+<p>A class that contains a single column, representing the gene-specific fold change between two conditions. 
 Warning: this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
@@ -2281,17 +2282,17 @@ a list of all GeneNameTranslator objects</p>
 
 
            </div>
-
+           
           </div>
           <footer>
-
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-
-
+      
+      
         <a href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" class="btn btn-neutral float-left" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-
+      
     </div>
-
+  
 
   <hr/>
 
@@ -2301,7 +2302,7 @@ a list of all GeneNameTranslator objects</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -2311,7 +2312,7 @@ a list of all GeneNameTranslator objects</p>
     </section>
 
   </div>
-
+  
 
 
   <script type="text/javascript">
@@ -2320,10 +2321,10 @@ a list of all GeneNameTranslator objects</p>
       });
   </script>
 
-
-
-
-
+  
+  
+    
+   
 
 </body>
 </html>
