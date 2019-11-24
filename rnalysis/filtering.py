@@ -1295,8 +1295,6 @@ class CountFilter(Filter):
 
         pc_var = pca_obj.explained_variance_ratio_
         graphs = 2 if n_components > 2 else 1
-        if sample_grouping is None:
-            sample_grouping = [i + 1 for i in range(len(sample_names))]
         axes = []
         for graph in range(graphs):
             axes.append(CountFilter._plot_pca(
@@ -1322,6 +1320,11 @@ class CountFilter(Filter):
         an axis object containing the PCA plot.
         """
         plt.style.use('seaborn-whitegrid')
+
+        if sample_grouping is None:
+            sample_grouping = [i + 1 for i in range(final_df.shape[0])]
+        elif sample_grouping == 'triplicate':
+            sample_grouping = [1+i//3 for i in range(final_df.shape[0])]
 
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
