@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels', 'scikit-learn',
-                'ipyparallel']
+                'ipyparallel','grid_strategy']
 # requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels',
 # 'scikit-learn', 'matplotlib-venn', 'simple-venn']
 
@@ -33,9 +33,10 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
-    description='RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data from '
-                'C. elegans. The package includes various filtering methods, data visualisation, clustering analyses, '
+    description='RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data. '
+                'The package includes various filtering methods, data visualisation, clustering analyses, '
                 'enrichment anslyses and exploratory analyses.',
     install_requires=requirements,
     license="MIT license",
