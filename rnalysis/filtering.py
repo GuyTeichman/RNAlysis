@@ -1261,14 +1261,18 @@ class CountFilter(Filter):
         :type sample_names: 'all' or list.
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"]
-        :param n_components: number of PCA components to return \
+        :type n_components: positive int (default 3)
+        :param n_components: number of PCA components to return.
+        :type sample_grouping: list of positive integers, 'triplicates' or None (default)
         :param sample_grouping: Optional. Indicates which samples are grouped together as replicates, \
-        so they will be colored similarly in the PCA plot. A list of indices from 0 and up, that indicates the sample \
+        so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample \
          grouping. \
          For example, if sample_names is: \
         ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"], \
         then the sample_grouping will be: \
-        [0, 0, 0, 1, 1, 1, 1, 2]
+        [1, 1, 1, 2, 2, 2, 2, 3]. \
+        If 'triplicate', then sample_groupins will automatically group samples into triplicates. For example: \
+        [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].
         :return:
         A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
