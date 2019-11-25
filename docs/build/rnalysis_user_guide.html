@@ -5,63 +5,63 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>RNAlysis user guide &mdash; RNAlysis 1.0 documentation</title>
+  
 
-  <title>RNAlysis user guide &mdash; RNAlysis 1.3.2 documentation</title>
+  
+  
+  
+  
 
-
-
-
-
-
-
-
+  
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-
-
+  
+    
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-
+    
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
+    
 
-
-
+  
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contributing" href="contributing.html" />
-    <link rel="prev" title="Usage" href="usage.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
-
+   
   <div class="wy-grid-for-nav">
-
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
 
-
-
+          
             <a href="index.html" class="icon icon-home"> RNAlysis
+          
 
-
-
+          
           </a>
 
+          
+            
+            
+          
 
-
-
-
-
-
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -70,16 +70,16 @@
   </form>
 </div>
 
-
+          
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-
-
-
-
-
-
+          
+            
+            
+              
+            
+            
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
@@ -154,28 +154,28 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
 </ul>
 
-
-
+            
+          
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-
+      
       <nav class="wy-nav-top" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-
+        
       </nav>
 
 
       <div class="wy-nav-content">
-
+        
         <div class="rst-content">
-
-
+        
+          
 
 
 
@@ -194,28 +194,28 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-
+    
       <li><a href="index.html">Docs</a> &raquo;</li>
-
+        
       <li>RNAlysis user guide</li>
-
-
+    
+    
       <li class="wy-breadcrumbs-aside">
-
-
+        
+            
             <a href="_sources/rnalysis_user_guide.rst.txt" rel="nofollow"> View page source</a>
-
-
+          
+        
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+            
   <div class="section" id="rnalysis-user-guide">
 <h1>RNAlysis user guide<a class="headerlink" href="#rnalysis-user-guide" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="rnalysis-filtering-module">
@@ -315,8 +315,8 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 </pre></div>
 </div>
 <p>Instead of directly saving the results to a file, you can also get them as a set or string of genomic feature indices:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">set_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">index_set</span><span class="p">()</span>
-<span class="n">str_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">index_string</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">set_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">index_set</span>
+<span class="n">str_output</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">index_string</span>
 </pre></div>
 </div>
 <p>Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).</p>
@@ -829,7 +829,7 @@ The first method is to specify an existing Filter object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">myset</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene0245200&#39;</span><span class="p">,</span><span class="s1">&#39; WBGene00402029&#39;</span><span class="p">}</span>
 <span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">myset</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
 <span class="c1"># alternatively, using &#39;index_set&#39; on an existing Filter object:</span>
-<span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">filt</span><span class="o">.</span><span class="n">index_set</span><span class="p">(),</span><span class="s1">&#39; a name for my set&#39;</span><span class="p">)</span>
+<span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">filt</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span><span class="s1">&#39; a name for my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The third method is not to specify a gene set at all:</p>
@@ -844,7 +844,7 @@ The first method is to specify an existing Filter object:</p>
 <p>Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’). The enrichment analysis is performed using a randomization test.</p>
 <p>Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
-<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index_set</span><span class="p">(),</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
+<span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
@@ -1058,19 +1058,19 @@ For example, we could extract all WBGene indices from the following string:</p>
 
 
            </div>
-
+           
           </div>
           <footer>
-
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-
+      
         <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-
-
+      
+      
         <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-
+      
     </div>
-
+  
 
   <hr/>
 
@@ -1080,7 +1080,7 @@ For example, we could extract all WBGene indices from the following string:</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1090,7 +1090,7 @@ For example, we could extract all WBGene indices from the following string:</p>
     </section>
 
   </div>
-
+  
 
 
   <script type="text/javascript">
@@ -1099,10 +1099,10 @@ For example, we could extract all WBGene indices from the following string:</p>
       });
   </script>
 
-
-
-
-
+  
+  
+    
+   
 
 </body>
 </html>

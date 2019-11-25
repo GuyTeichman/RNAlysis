@@ -99,8 +99,6 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html">rnalysis.filtering.CountFilter.clustergram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.index_set.html">rnalysis.filtering.CountFilter.features_set</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.index_string.html">rnalysis.filtering.CountFilter.index_string</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype.html">rnalysis.filtering.CountFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_ref_table_attr.html">rnalysis.filtering.CountFilter.filter_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html">rnalysis.filtering.CountFilter.filter_by_row_sum</a></li>
@@ -126,7 +124,6 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html">rnalysis.filtering.CountFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html">rnalysis.filtering.CountFilter.tail</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.text_filters.html">rnalysis.filtering.CountFilter.text_filters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.triplicates.html">rnalysis.filtering.CountFilter.triplicates</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.union.html">rnalysis.filtering.CountFilter.union</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.violin_plot.html">rnalysis.filtering.CountFilter.violin_plot</a></li>
 </ul>
@@ -252,12 +249,6 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html#rnalysis.filtering.CountFilter.difference" title="rnalysis.filtering.CountFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type, inplace])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.index_set.html#rnalysis.filtering.CountFilter.index_set" title="rnalysis.filtering.CountFilter.index_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_set</span></code></a>()</p></td>
-<td><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.index_string.html#rnalysis.filtering.CountFilter.index_string" title="rnalysis.filtering.CountFilter.index_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_string</span></code></a>()</p></td>
-<td><p>Returns a string of all feature indices in the current DataFrame separated by newline.</p></td>
-</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype.html#rnalysis.filtering.CountFilter.filter_biotype" title="rnalysis.filtering.CountFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_biotype</span></code></a>([biotype, ref, opposite, inplace])</p></td>
 <td><p>Filters out all features that do not match the indicated biotype.</p></td>
 </tr>
@@ -315,35 +306,47 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.scatter_sample_vs_sample.html#rnalysis.filtering.CountFilter.scatter_sample_vs_sample" title="rnalysis.filtering.CountFilter.scatter_sample_vs_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scatter_sample_vs_sample</span></code></a>(sample1, sample2[, …])</p></td>
 <td><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.shape</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html#rnalysis.filtering.CountFilter.split_by_percentile" title="rnalysis.filtering.CountFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html#rnalysis.filtering.CountFilter.split_by_percentile" title="rnalysis.filtering.CountFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
 <td><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html#rnalysis.filtering.CountFilter.split_by_reads" title="rnalysis.filtering.CountFilter.split_by_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_reads</span></code></a>([threshold])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html#rnalysis.filtering.CountFilter.split_by_reads" title="rnalysis.filtering.CountFilter.split_by_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_reads</span></code></a>([threshold])</p></td>
 <td><p>Splits the features in the current CountFilter object into two complementary, non-overlapping CountFilter         objects, based on the their maximum expression level.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_ref_table_attr.html#rnalysis.filtering.CountFilter.split_by_ref_table_attr" title="rnalysis.filtering.CountFilter.split_by_ref_table_attr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_ref_table_attr</span></code></a>([attributes, ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_ref_table_attr.html#rnalysis.filtering.CountFilter.split_by_ref_table_attr" title="rnalysis.filtering.CountFilter.split_by_ref_table_attr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_ref_table_attr</span></code></a>([attributes, ref])</p></td>
 <td><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html#rnalysis.filtering.CountFilter.symmetric_difference" title="rnalysis.filtering.CountFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, return_type])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html#rnalysis.filtering.CountFilter.symmetric_difference" title="rnalysis.filtering.CountFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, return_type])</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second,         but NOT in both (set symmetric difference).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html#rnalysis.filtering.CountFilter.tail" title="rnalysis.filtering.CountFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail</span></code></a>([n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html#rnalysis.filtering.CountFilter.tail" title="rnalysis.filtering.CountFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail</span></code></a>([n])</p></td>
 <td><p>Return the last n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.text_filters.html#rnalysis.filtering.CountFilter.text_filters" title="rnalysis.filtering.CountFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text_filters</span></code></a>(column, operator, value[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.text_filters.html#rnalysis.filtering.CountFilter.text_filters" title="rnalysis.filtering.CountFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text_filters</span></code></a>(column, operator, value[, …])</p></td>
 <td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.triplicates.html#rnalysis.filtering.CountFilter.triplicates" title="rnalysis.filtering.CountFilter.triplicates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triplicates</span></code></a></p></td>
-<td><p>Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.union.html#rnalysis.filtering.CountFilter.union" title="rnalysis.filtering.CountFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, return_type])</p></td>
 <td><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.violin_plot.html#rnalysis.filtering.CountFilter.violin_plot" title="rnalysis.filtering.CountFilter.violin_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">violin_plot</span></code></a>([samples])</p></td>
 <td><p>Generates a violin plot of the specified samples in the CountFilter object.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.index_set.html#rnalysis.filtering.CountFilter.index_set" title="rnalysis.filtering.CountFilter.index_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_set</span></code></a></p></td>
+<td><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.index_string.html#rnalysis.filtering.CountFilter.index_string" title="rnalysis.filtering.CountFilter.index_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_string</span></code></a></p></td>
+<td><p>Returns a string of all feature indices in the current DataFrame separated by newline.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.triplicates.html#rnalysis.filtering.CountFilter.triplicates" title="rnalysis.filtering.CountFilter.triplicates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triplicates</span></code></a></p></td>
+<td><p>Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates.</p></td>
 </tr>
 </tbody>
 </table>

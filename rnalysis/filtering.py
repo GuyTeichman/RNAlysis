@@ -25,6 +25,19 @@ class Filter:
     """
     An all-purpose Filter.
 
+
+    **Attributes**
+
+    df: pandas DataFrame
+        A DataFrame that contains the DESeq output file contents. \
+        The DataFrame is modified upon usage of filter operations. .
+    shape: tuple (rows, columns)
+        The dimensions of df.
+    columns: list
+        The columns of df.
+    fname: pathlib.Path
+        The path and filename for the purpose of saving df as a csv file. \
+        Updates automatically when filter operations are applied.
     """
 
     def __init__(self, fname: str):
@@ -335,7 +348,7 @@ class Filter:
         """
         Returns all of the features in the current DataFrame (which were not removed by previously used filter methods) \
         as a set. \
-         if any duplicate features exist in the filter object (same WBGene appears more than once), \
+        if any duplicate features exist in the filter object (same WBGene appears more than once), \
         the corresponding WBGene index will appear in the returned set ONLY ONCE.
 
         :return:
@@ -623,9 +636,9 @@ class FoldChangeFilter(Filter):
 
     **Attributes**
 
-    df: pandas DataFrame
-        A DataFrame that contains the fold change values. \
-        The DataFrame is modified upon usage of filter operations. .
+    df: pandas Series
+        A Series that contains the fold change values. \
+        The Series is modified upon usage of filter operations. .
     shape: tuple (rows, columns)
         The dimensions of df.
     columns: list
