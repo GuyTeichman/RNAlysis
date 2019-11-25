@@ -47,15 +47,3 @@ rnalysis.filtering.CountFilter
       ~CountFilter.union
       ~CountFilter.violin_plot
 
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~CountFilter.index_set
-      ~CountFilter.index_string
-      ~CountFilter.triplicates
-

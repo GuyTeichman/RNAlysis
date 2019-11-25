@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.DESeqFilter.__init__" href="rnalysis.filtering.DESeqFilter.__init__.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter" href="rnalysis.filtering.CountFilter.html" /> 
+    <link rel="prev" title="rnalysis.filtering.CountFilter.violin_plot" href="rnalysis.filtering.CountFilter.violin_plot.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -99,8 +99,6 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html">rnalysis.filtering.DESeqFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html">rnalysis.filtering.DESeqFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html">rnalysis.filtering.DESeqFilter.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.index_set.html">rnalysis.filtering.DESeqFilter.features_set</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.index_string.html">rnalysis.filtering.DESeqFilter.index_string</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html">rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html">rnalysis.filtering.DESeqFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr.html">rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr</a></li>
@@ -203,7 +201,8 @@
 <dl class="class">
 <dt id="rnalysis.filtering.DESeqFilter">
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">DESeqFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
+<dd><blockquote>
+<div><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
 <dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the DESeq output file contents.         The DataFrame is modified upon usage of filter operations. .</p>
@@ -214,7 +213,13 @@
 </dd>
 <dt>fname: pathlib.Path</dt><dd><p>The path and filename for the purpose of saving df as a csv file.         Updates automatically when filter operations are applied.</p>
 </dd>
+<dt>index_set: set</dt><dd><p>All of the indices in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p>
+</dd>
+<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline (‘</p>
+</dd>
 </dl>
+</div></blockquote>
+<p>‘).</p>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.__init__" title="Permalink to this definition">¶</a></dt>
@@ -239,12 +244,6 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type, inplace])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.index_set.html#rnalysis.filtering.DESeqFilter.index_set" title="rnalysis.filtering.DESeqFilter.index_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_set</span></code></a></p></td>
-<td><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.index_string.html#rnalysis.filtering.DESeqFilter.index_string" title="rnalysis.filtering.DESeqFilter.index_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_string</span></code></a></p></td>
-<td><p>Returns a string of all feature indices in the current DataFrame separated by newline.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_abs_log2_fold_change</span></code></a>([abslog2fc, …])</p></td>
 <td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
@@ -323,7 +322,7 @@
         <a href="rnalysis.filtering.DESeqFilter.__init__.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter.__init__" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.CountFilter.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.CountFilter.violin_plot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.violin_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

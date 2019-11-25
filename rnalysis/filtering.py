@@ -38,6 +38,11 @@ class Filter:
     fname: pathlib.Path
         The path and filename for the purpose of saving df as a csv file. \
         Updates automatically when filter operations are applied.
+    index_set: set
+        All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
+        as a set.
+    index_string: string
+        A string of all feature indices in the current DataFrame separated by newline ('\n').
     """
 
     def __init__(self, fname: str):
@@ -646,6 +651,11 @@ class FoldChangeFilter(Filter):
     fname: pathlib.Path
         The path and filename for the purpose of saving df as a csv file. \
         Updates automatically when filter operations are applied.
+    index_set: set
+        All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
+        as a set.
+    index_string: string
+        A string of all feature indices in the current DataFrame separated by newline ('\n').
     numerator: str
         Name of the numerator used to calculate the fold change.
     denominator: str
@@ -807,6 +817,11 @@ class DESeqFilter(Filter):
     fname: pathlib.Path
         The path and filename for the purpose of saving df as a csv file. \
         Updates automatically when filter operations are applied.
+    index_set: set
+        All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
+        as a set.
+    index_string: string
+        A string of all feature indices in the current DataFrame separated by newline ('\n').
 
     """
 
@@ -940,6 +955,15 @@ class CountFilter(Filter):
     fname: pathlib.Path
         The path and filename for the purpose of saving df as a csv file. \
         Updates automatically when filter operations are applied.
+    index_set: set
+        All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
+        as a set.
+    index_string: string
+        A string of all feature indices in the current DataFrame separated by newline ('\n').
+    class triplicates: list
+        Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates. \
+        For example, if counts.columns is ['A_rep1','A_rep2','A_rep3','B_rep1','B_rep2',_B_rep3'], then \
+        counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
 
     """
 
@@ -947,8 +971,8 @@ class CountFilter(Filter):
     def triplicates(self):
         """
         Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates. \
-        For example, if myfilter.columns is ['A_rep1','A_rep2','A_rep3','B_rep1','B_rep2',_B_rep3'], then \
-        myfilter.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
+        For example, if counts.columns is ['A_rep1','A_rep2','A_rep3','B_rep1','B_rep2',_B_rep3'], then \
+        counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
         """
 
         mltplr = 3

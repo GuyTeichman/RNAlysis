@@ -97,8 +97,6 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html">rnalysis.filtering.Filter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.index_set.html">rnalysis.filtering.Filter.features_set</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.index_string.html">rnalysis.filtering.Filter.index_string</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html">rnalysis.filtering.Filter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_ref_table_attr.html">rnalysis.filtering.Filter.filter_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
@@ -198,7 +196,8 @@
 <dl class="class">
 <dt id="rnalysis.filtering.Filter">
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">Filter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>An all-purpose Filter.</p>
+<dd><blockquote>
+<div><p>An all-purpose Filter.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
 <dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the DESeq output file contents.         The DataFrame is modified upon usage of filter operations. .</p>
@@ -209,7 +208,13 @@
 </dd>
 <dt>fname: pathlib.Path</dt><dd><p>The path and filename for the purpose of saving df as a csv file.         Updates automatically when filter operations are applied.</p>
 </dd>
+<dt>index_set: set</dt><dd><p>All of the indices in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p>
+</dd>
+<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline (‘</p>
+</dd>
 </dl>
+</div></blockquote>
+<p>‘).</p>
 <dl class="method">
 <dt id="rnalysis.filtering.Filter.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.__init__" title="Permalink to this definition">¶</a></dt>
@@ -234,12 +239,6 @@
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.difference.html#rnalysis.filtering.Filter.difference" title="rnalysis.filtering.Filter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type, inplace])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.index_set.html#rnalysis.filtering.Filter.index_set" title="rnalysis.filtering.Filter.index_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_set</span></code></a></p></td>
-<td><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.index_string.html#rnalysis.filtering.Filter.index_string" title="rnalysis.filtering.Filter.index_string"><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_string</span></code></a></p></td>
-<td><p>Returns a string of all feature indices in the current DataFrame separated by newline.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html#rnalysis.filtering.Filter.filter_biotype" title="rnalysis.filtering.Filter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_biotype</span></code></a>([biotype, ref, opposite, inplace])</p></td>
 <td><p>Filters out all features that do not match the indicated biotype.</p></td>

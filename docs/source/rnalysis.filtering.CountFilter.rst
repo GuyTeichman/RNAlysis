@@ -19,8 +19,6 @@ rnalysis.filtering.CountFilter
       ~CountFilter.clustergram
       ~CountFilter.describe
       ~CountFilter.difference
-      ~CountFilter.index_set
-      ~CountFilter.index_string
       ~CountFilter.filter_biotype
       ~CountFilter.filter_by_ref_table_attr
       ~CountFilter.filter_by_row_sum
@@ -46,11 +44,6 @@ rnalysis.filtering.CountFilter
       ~CountFilter.symmetric_difference
       ~CountFilter.tail
       ~CountFilter.text_filters
-      ~CountFilter.triplicates
       ~CountFilter.union
       ~CountFilter.violin_plot
-
-
-
-
 
