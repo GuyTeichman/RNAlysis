@@ -256,7 +256,7 @@ def test_deseq_feature_set():
              'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
              'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036'}
     d = DESeqFilter('test_deseq_set_ops_1.csv')
-    assert d.index_set() == truth
+    assert d.index_set == truth
 
 
 def test_deseq_feature_string():
@@ -266,7 +266,7 @@ def test_deseq_feature_string():
              'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
              'WBGene00045410', 'WBGene00010100', 'WBGene00077437', 'WBGene00007674', 'WBGene00023036'}
     d = DESeqFilter('test_deseq_set_ops_1.csv')
-    assert set(d.index_string().split("\n")) == truth
+    assert set(d.index_string.split("\n")) == truth
 
 
 def test_set_ops_multiple_variable_types():

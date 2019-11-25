@@ -40,6 +40,7 @@ rnalysis.filtering.CountFilter
       ~CountFilter.print_features
       ~CountFilter.save_csv
       ~CountFilter.scatter_sample_vs_sample
+      ~CountFilter.shape
       ~CountFilter.split_by_percentile
       ~CountFilter.split_by_reads
       ~CountFilter.split_by_ref_table_attr

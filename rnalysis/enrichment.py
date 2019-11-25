@@ -346,7 +346,7 @@ class FeatureSet:
             if isinstance(background_genes, FeatureSet):
                 background_genes = background_genes.gene_set
             elif isinstance(background_genes, filtering.Filter):
-                background_genes = background_genes.index_set()
+                background_genes = background_genes.index_set
             if biotype != 'all':
                 warnings.warn(
                     "both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")

@@ -118,8 +118,8 @@ Alternatively, you can specify a filename::
 
 Instead of directly saving the results to a file, you can also get them as a set or string of genomic feature indices::
 
-    set_output = d.index_set()
-    str_output = d.index_string()
+    set_output = d.index_set
+    str_output = d.index_string
 
 Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).
 
@@ -459,7 +459,7 @@ The second method is to directly specify a python set of genomic feature indices
     myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
     en = enrichment.FeatureSet(myset, 'a name for my set')
     # alternatively, using 'index_set' on an existing Filter object:
-    en2 = enrichment.FeatureSet(filt.index_set(),' a name for my set')
+    en2 = enrichment.FeatureSet(filt.index_set,' a name for my set')
 
 The third method is not to specify a gene set at all::
 
@@ -477,7 +477,7 @@ Using the enrichment module, you can perform enrichment analysis for user-define
 Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
     c = filtering.CountFilter('path_to_my_file.csv')
-    en = enrichment.FeatureSet(h.index_set(), 'my set')
+    en = enrichment.FeatureSet(h.index_set, 'my set')
 
 Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
