@@ -928,6 +928,16 @@ class CountFilter(Filter):
 
     """
 
+    @property
+    def triplicates(self):
+        mltplr = 3
+        triplicate = [self.columns[(i) * mltplr:(1 + i) * mltplr] for i in range(self.shape[1] // mltplr)]
+        if len(self.columns[(self.shape[1] // mltplr) * mltplr::]) > 0:
+            triplicate.append([self.columns[(self.shape[1] // mltplr) * mltplr::]])
+            warnings.warn(
+                f'Number of samples {self.shape[1]} is not divisible by 3. Appending the remaining {self.shape[1] % mltplr} as an inncomplete triplicate')
+        return triplicate
+
     def fold_change(self, numerator, denominator, numer_name: str = 'default', denom_name: str = 'default'):
         """
         Calculate the fold change between the numerator condition and the denominator condition, \
