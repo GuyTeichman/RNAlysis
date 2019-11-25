@@ -42,7 +42,7 @@ class Filter:
         All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
         as a set.
     index_string: string
-        A string of all feature indices in the current DataFrame separated by newline ('\n').
+        A string of all feature indices in the current DataFrame separated by newline.
     """
 
     def __init__(self, fname: str):
@@ -382,7 +382,7 @@ class Filter:
 
     def print_features(self):
         """
-        Print the feature indices in the Filter object, separated by newline ('\n').
+        Print the feature indices in the Filter object, separated by newline.
         """
         print(self.index_string)
 
@@ -655,7 +655,7 @@ class FoldChangeFilter(Filter):
         All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
         as a set.
     index_string: string
-        A string of all feature indices in the current DataFrame separated by newline ('\n').
+        A string of all feature indices in the current DataFrame separated by newline.
     numerator: str
         Name of the numerator used to calculate the fold change.
     denominator: str
@@ -821,7 +821,7 @@ class DESeqFilter(Filter):
         All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
         as a set.
     index_string: string
-        A string of all feature indices in the current DataFrame separated by newline ('\n').
+        A string of all feature indices in the current DataFrame separated by newline.
 
     """
 
@@ -959,8 +959,8 @@ class CountFilter(Filter):
         All of the indices in the current DataFrame (which were not removed by previously used filter methods) \
         as a set.
     index_string: string
-        A string of all feature indices in the current DataFrame separated by newline ('\n').
-    class triplicates: list
+        A string of all feature indices in the current DataFrame separated by newline.
+    triplicates: list
         Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates. \
         For example, if counts.columns is ['A_rep1','A_rep2','A_rep3','B_rep1','B_rep2',_B_rep3'], then \
         counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]

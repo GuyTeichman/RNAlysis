@@ -201,8 +201,7 @@
 <dl class="class">
 <dt id="rnalysis.filtering.DESeqFilter">
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">DESeqFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
+<dd><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
 <dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the DESeq output file contents.         The DataFrame is modified upon usage of filter operations. .</p>
@@ -215,11 +214,9 @@
 </dd>
 <dt>index_set: set</dt><dd><p>All of the indices in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p>
 </dd>
-<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline (‘</p>
+<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline.</p>
 </dd>
 </dl>
-</div></blockquote>
-<p>‘).</p>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.__init__" title="Permalink to this definition">¶</a></dt>
@@ -276,7 +273,7 @@
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.print_features.html#rnalysis.filtering.DESeqFilter.print_features" title="rnalysis.filtering.DESeqFilter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_features</span></code></a>()</p></td>
-<td><p>Print the feature indices in the Filter object, separated by newline (‘</p></td>
+<td><p>Print the feature indices in the Filter object, separated by newline.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html#rnalysis.filtering.DESeqFilter.save_csv" title="rnalysis.filtering.DESeqFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code></a>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>

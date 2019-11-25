@@ -176,8 +176,7 @@
 <dt>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">CountFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
-<blockquote>
-<div><p>A class that receives a count matrix and can filter it according to various characteristics.</p>
+<p>A class that receives a count matrix and can filter it according to various characteristics.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
 <dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the count matrix contents.         The DataFrame is modified upon usage of filter operations.</p>
@@ -190,15 +189,9 @@
 </dd>
 <dt>index_set: set</dt><dd><p>All of the indices in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p>
 </dd>
-<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline (‘</p>
+<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline.</p>
 </dd>
-</dl>
-</div></blockquote>
-<dl class="simple">
-<dt>‘).</dt><dd><dl class="simple">
-<dt>class triplicates: list</dt><dd><p>Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates.         For example, if counts.columns is [‘A_rep1’,’A_rep2’,’A_rep3’,’B_rep1’,’B_rep2’,_B_rep3’], then         counts.triplicates will be  [[‘A_rep1’,’A_rep2’,’A_rep3’],[‘B_rep1’,’B_rep2’,_B_rep3’]]</p>
-</dd>
-</dl>
+<dt>triplicates: list</dt><dd><p>Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates.         For example, if counts.columns is [‘A_rep1’,’A_rep2’,’A_rep3’,’B_rep1’,’B_rep2’,_B_rep3’], then         counts.triplicates will be  [[‘A_rep1’,’A_rep2’,’A_rep3’],[‘B_rep1’,’B_rep2’,_B_rep3’]]</p>
 </dd>
 </dl>
 <dl class="method">
@@ -629,10 +622,7 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">print_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><blockquote>
-<div><p>Print the feature indices in the Filter object, separated by newline (‘</p>
-</div></blockquote>
-<p>‘).</p>
+<dd><p>Print the feature indices in the Filter object, separated by newline.</p>
 </dd></dl>
 
 <dl class="method">
@@ -831,8 +821,7 @@
 <dt>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">DESeqFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
-<blockquote>
-<div><p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
+<p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
 <dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the DESeq output file contents.         The DataFrame is modified upon usage of filter operations. .</p>
@@ -845,11 +834,9 @@
 </dd>
 <dt>index_set: set</dt><dd><p>All of the indices in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p>
 </dd>
-<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline (‘</p>
+<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline.</p>
 </dd>
 </dl>
-</div></blockquote>
-<p>‘).</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span></dt>
@@ -1129,10 +1116,7 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">print_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><blockquote>
-<div><p>Print the feature indices in the Filter object, separated by newline (‘</p>
-</div></blockquote>
-<p>‘).</p>
+<dd><p>Print the feature indices in the Filter object, separated by newline.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1293,8 +1277,7 @@
 <dt>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
-<blockquote>
-<div><dl class="simple">
+<dl class="simple">
 <dt>A class that contains a single column, representing the gene-specific fold change between two conditions. </dt><dd><p>this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
 </dd>
 </dl>
@@ -1310,17 +1293,11 @@
 </dd>
 <dt>index_set: set</dt><dd><p>All of the indices in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p>
 </dd>
-<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline (‘</p>
+<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline.</p>
 </dd>
-</dl>
-</div></blockquote>
-<dl class="simple">
-<dt>‘).</dt><dd><dl class="simple">
 <dt>numerator: str</dt><dd><p>Name of the numerator used to calculate the fold change.</p>
 </dd>
 <dt>denominator: str</dt><dd><p>Name of the denominator used to calculate the fold change.</p>
-</dd>
-</dl>
 </dd>
 </dl>
 <dl class="method">
@@ -1583,10 +1560,7 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">print_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><blockquote>
-<div><p>Print the feature indices in the Filter object, separated by newline (‘</p>
-</div></blockquote>
-<p>‘).</p>
+<dd><p>Print the feature indices in the Filter object, separated by newline.</p>
 </dd></dl>
 
 <dl class="method">
