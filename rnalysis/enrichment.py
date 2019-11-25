@@ -349,13 +349,13 @@ class FeatureSet:
                 background_genes = background_genes.index_set()
             if biotype != 'all':
                 warnings.warn(
-                    "Warning: both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")
+                    "both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")
                 biotype = 'all'
 
             big_table = big_table.loc[background_genes.intersection(set(big_table.index))]
             if len(big_table.index) < len(background_genes):
                 warnings.warn(
-                    f"Warning: {len(background_genes) - len(big_table.index)} WBGene indices from the requested "
+                    f"{len(background_genes) - len(big_table.index)} WBGene indices from the requested "
                     f"background genes do not appear in the reference table, and are therefore ignored. \n"
                     f"This leaves a total of {len(big_table.index)} background genes. ")
         if biotype == 'all':

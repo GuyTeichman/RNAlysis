@@ -37,7 +37,7 @@ class Filter:
             self.fname = Path(fname)
             self.df = general.load_csv(fname, 0, squeeze=True)
         if self.df.index.has_duplicates:
-            warnings.warn("Warning: this Filter object contains multiple rows with the same WBGene index.")
+            warnings.warn("This Filter object contains multiple rows with the same WBGene index.")
         self.shape = self.df.shape
         if isinstance(self.df, pd.DataFrame):
             self.columns = list(self.df.columns)
@@ -334,14 +334,14 @@ class Filter:
         """
         Returns all of the features in the current DataFrame (which were not removed by previously used filter methods) \
         as a set. \
-        Warning: if any duplicate features exist in the filter object (same WBGene appears more than once), \
+         if any duplicate features exist in the filter object (same WBGene appears more than once), \
         the corresponding WBGene index will appear in the returned set ONLY ONCE.
 
         :return:
         A set of WBGene names.
         """
         if self.df.index.has_duplicates:
-            warnings.warn("Warning: this filter object contains multiple rows with the same WBGene index. When "
+            warnings.warn(" this filter object contains multiple rows with the same WBGene index. When "
                           "returning a set or string of features from this DESeqFilter object, each WBGene index will "
                           "appear ONLY ONCE!")
         return set(self.df.index)
@@ -351,7 +351,7 @@ class Filter:
         Returns a string of all feature indices in the current DataFrame separated by newline. \
 
         This includes all of the feature indices which were not filtered out by previously-used filter methods. \
-        Warning: if any duplicate features exist in the filter object (same index appears more than once), \
+         if any duplicate features exist in the filter object (same index appears more than once), \
         the corresponding index will appear in the returned string ONLY ONCE.
 
         :return:
@@ -615,7 +615,7 @@ class FoldChangeFilter(Filter):
     """
     A class that contains a single column, representing the gene-specific fold change between two conditions. \
 
-    Warning: this class does not support 'inf' and '0' values, and importing a file with such values could lead \
+     this class does not support 'inf' and '0' values, and importing a file with such values could lead \
     to incorrect filtering and statistical analyses.
 
 
@@ -644,7 +644,7 @@ class FoldChangeFilter(Filter):
         self.df.name = 'Fold Change'
         if np.inf in self.df or 0 in self.df:
             warnings.warn(
-                "Warning: FoldChangeFilter does not support 'inf' or '0' values! "
+                " FoldChangeFilter does not support 'inf' or '0' values! "
                 "Unexpected results may occur during filtering or statistical analyses. ")
 
     def __copy__(self):
@@ -1021,7 +1021,7 @@ class CountFilter(Filter):
         assert isinstance(threshold, (float, int)), "Threshold must be a number!"
         assert threshold >= 0, "Threshold must be zero or larger!"
         if 'rpm' not in str(self.fname) and 'sizefactor' not in str(self.fname):
-            warnings.warn("Warning: using a function meant for normalized values on potentially unnormalized values!")
+            warnings.warn(" using a function meant for normalized values on potentially unnormalized values!")
 
     def _avg_subsamples(self, sample_list: list):
         """
