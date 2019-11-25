@@ -930,6 +930,12 @@ class CountFilter(Filter):
 
     @property
     def triplicates(self):
+        """
+        Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates. \
+        For example, if myfilter.columns is ['A_rep1','A_rep2','A_rep3','B_rep1','B_rep2',_B_rep3'], then \
+        myfilter.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
+        """
+
         mltplr = 3
         triplicate = [self.columns[(i) * mltplr:(1 + i) * mltplr] for i in range(self.shape[1] // mltplr)]
         if len(self.columns[(self.shape[1] // mltplr) * mltplr::]) > 0:
