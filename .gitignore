@@ -104,3 +104,4 @@ ENV/
 rnalysis/settings.ini
 settings.ini
 .idea/
+/rnalysis_examples.ipynb
