@@ -5,62 +5,62 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>rnalysis package &mdash; RNAlysis 1.0 documentation</title>
-  
 
-  
-  
-  
-  
+  <title>rnalysis package &mdash; RNAlysis 1.3.2 documentation</title>
 
-  
+
+
+
+
+
+
+
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
+
+
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-    
+
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
-    
 
-  
+
+
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" /> 
+    <link rel="prev" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" />
 </head>
 
 <body class="wy-body-for-nav">
 
-   
+
   <div class="wy-grid-for-nav">
-    
+
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
-          
+
+
             <a href="index.html" class="icon icon-home"> RNAlysis
-          
 
-          
+
+
           </a>
 
-          
-            
-            
-          
 
-          
+
+
+
+
+
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -69,16 +69,16 @@
   </form>
 </div>
 
-          
+
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+
+
+
+
+
+
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
@@ -105,28 +105,28 @@
 </li>
 </ul>
 
-            
-          
+
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-      
+
       <nav class="wy-nav-top" aria-label="top navigation">
-        
+
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-        
+
       </nav>
 
 
       <div class="wy-nav-content">
-        
+
         <div class="rst-content">
-        
-          
+
+
 
 
 
@@ -145,28 +145,28 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-    
+
       <li><a href="index.html">Docs</a> &raquo;</li>
-        
+
       <li>rnalysis package</li>
-    
-    
+
+
       <li class="wy-breadcrumbs-aside">
-        
-            
+
+
             <a href="_sources/rnalysis.rst.txt" rel="nofollow"> View page source</a>
-          
-        
+
+
       </li>
-    
+
   </ul>
 
-  
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+
   <div class="section" id="rnalysis-package">
 <h1>rnalysis package<a class="headerlink" href="#rnalysis-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="rnalysis-filtering-module">
@@ -443,7 +443,7 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">index_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
-<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
+<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.          if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -456,7 +456,11 @@
 <dt>
 <code class="sig-name descname">index_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
 <dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
-<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
+<dl class="simple">
+<dt>This includes all of the feature indices which were not filtered out by previously-used filter methods. </dt><dd><p>if any duplicate features exist in the filter object (same index appears more than once), </p>
+</dd>
+</dl>
+<p>the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -765,6 +769,12 @@
 
 <dl class="method">
 <dt>
+<em class="property">property </em><code class="sig-name descname">triplicates</code></dt>
+<dd><p>Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates.         For example, if myfilter.columns is [‘A_rep1’,’A_rep2’,’A_rep3’,’B_rep1’,’B_rep2’,_B_rep3’], then         myfilter.triplicates will be  [[‘A_rep1’,’A_rep2’,’A_rep3’],[‘B_rep1’,’B_rep2’,_B_rep3’]]</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">return_type: str = 'set'</em><span class="sig-paren">)</span></dt>
 <dd><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p>
 <dl class="field-list simple">
@@ -1026,7 +1036,7 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">index_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
-<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
+<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.          if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -1039,7 +1049,11 @@
 <dt>
 <code class="sig-name descname">index_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
 <dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
-<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
+<dl class="simple">
+<dt>This includes all of the feature indices which were not filtered out by previously-used filter methods. </dt><dd><p>if any duplicate features exist in the filter object (same index appears more than once), </p>
+</dd>
+</dl>
+<p>the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -1259,8 +1273,10 @@
 <dt>
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
-<p>A class that contains a single column, representing the gene-specific fold change between two conditions. 
-Warning: this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
+<dl class="simple">
+<dt>A class that contains a single column, representing the gene-specific fold change between two conditions. </dt><dd><p>this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
+</dd>
+</dl>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
 <dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the fold change values.         The DataFrame is modified upon usage of filter operations. .</p>
@@ -1463,7 +1479,7 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <dl class="method">
 <dt>
 <code class="sig-name descname">index_set</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; set</dt>
-<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.         Warning: if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
+<dd><p>Returns all of the features in the current DataFrame (which were not removed by previously used filter methods)         as a set.          if any duplicate features exist in the filter object (same WBGene appears more than once),         the corresponding WBGene index will appear in the returned set ONLY ONCE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -1476,7 +1492,11 @@ Warning: this class does not support ‘inf’ and ‘0’ values, and importing
 <dt>
 <code class="sig-name descname">index_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str</dt>
 <dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
-<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
+<dl class="simple">
+<dt>This includes all of the feature indices which were not filtered out by previously-used filter methods. </dt><dd><p>if any duplicate features exist in the filter object (same index appears more than once), </p>
+</dd>
+</dl>
+<p>the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -2282,17 +2302,17 @@ a list of all GeneNameTranslator objects</p>
 
 
            </div>
-           
+
           </div>
           <footer>
-  
+
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-      
+
+
         <a href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" class="btn btn-neutral float-left" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+
     </div>
-  
+
 
   <hr/>
 
@@ -2302,7 +2322,7 @@ a list of all GeneNameTranslator objects</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
 </footer>
 
@@ -2312,7 +2332,7 @@ a list of all GeneNameTranslator objects</p>
     </section>
 
   </div>
-  
+
 
 
   <script type="text/javascript">
@@ -2321,10 +2341,10 @@ a list of all GeneNameTranslator objects</p>
       });
   </script>
 
-  
-  
-    
-   
+
+
+
+
 
 </body>
 </html>

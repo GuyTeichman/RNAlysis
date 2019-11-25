@@ -46,6 +46,7 @@ rnalysis.filtering.CountFilter
       ~CountFilter.symmetric_difference
       ~CountFilter.tail
       ~CountFilter.text_filters
+      ~CountFilter.triplicates
       ~CountFilter.union
       ~CountFilter.violin_plot
 

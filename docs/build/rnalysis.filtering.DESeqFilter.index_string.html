@@ -5,63 +5,63 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>rnalysis.filtering.DESeqFilter.index_string &mdash; RNAlysis 1.0 documentation</title>
-  
 
-  
-  
-  
-  
+  <title>rnalysis.filtering.DESeqFilter.index_string &mdash; RNAlysis 1.3.2 documentation</title>
 
-  
+
+
+
+
+
+
+
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
+
+
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-    
+
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
-    
 
-  
+
+
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html" />
-    <link rel="prev" title="rnalysis.filtering.DESeqFilter.features_set" href="rnalysis.filtering.DESeqFilter.index_set.html" /> 
+    <link rel="prev" title="rnalysis.filtering.DESeqFilter.features_set" href="rnalysis.filtering.DESeqFilter.index_set.html" />
 </head>
 
 <body class="wy-body-for-nav">
 
-   
+
   <div class="wy-grid-for-nav">
-    
+
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
-          
+
+
             <a href="index.html" class="icon icon-home"> RNAlysis
-          
 
-          
+
+
           </a>
 
-          
-            
-            
-          
 
-          
+
+
+
+
+
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -70,16 +70,16 @@
   </form>
 </div>
 
-          
+
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+
+
+
+
+
+
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
@@ -134,28 +134,28 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
 </ul>
 
-            
-          
+
+
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-      
+
       <nav class="wy-nav-top" aria-label="top navigation">
-        
+
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-        
+
       </nav>
 
 
       <div class="wy-nav-content">
-        
+
         <div class="rst-content">
-        
-          
+
+
 
 
 
@@ -174,39 +174,43 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-    
+
       <li><a href="index.html">Docs</a> &raquo;</li>
-        
+
           <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
-        
+
           <li><a href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a> &raquo;</li>
-        
+
       <li>rnalysis.filtering.DESeqFilter.index_string</li>
-    
-    
+
+
       <li class="wy-breadcrumbs-aside">
-        
-            
+
+
             <a href="_sources/rnalysis.filtering.DESeqFilter.index_string.rst.txt" rel="nofollow"> View page source</a>
-          
-        
+
+
       </li>
-    
+
   </ul>
 
-  
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+
   <div class="section" id="rnalysis-filtering-deseqfilter-index-string">
 <h1>rnalysis.filtering.DESeqFilter.index_string<a class="headerlink" href="#rnalysis-filtering-deseqfilter-index-string" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.index_string">
 <code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">index_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#rnalysis.filtering.DESeqFilter.index_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a string of all feature indices in the current DataFrame separated by newline. </p>
-<p>This includes all of the feature indices which were not filtered out by previously-used filter methods. Warning: if any duplicate features exist in the filter object (same index appears more than once), the corresponding index will appear in the returned string ONLY ONCE.</p>
+<dl class="simple">
+<dt>This includes all of the feature indices which were not filtered out by previously-used filter methods. </dt><dd><p>if any duplicate features exist in the filter object (same index appears more than once), </p>
+</dd>
+</dl>
+<p>the corresponding index will appear in the returned string ONLY ONCE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p></p>
@@ -219,19 +223,19 @@
 
 
            </div>
-           
+
           </div>
           <footer>
-  
+
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
+
         <a href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
+
+
         <a href="rnalysis.filtering.DESeqFilter.index_set.html" class="btn btn-neutral float-left" title="rnalysis.filtering.DESeqFilter.features_set" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+
     </div>
-  
+
 
   <hr/>
 
@@ -241,7 +245,7 @@
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
 </footer>
 
@@ -251,7 +255,7 @@
     </section>
 
   </div>
-  
+
 
 
   <script type="text/javascript">
@@ -260,10 +264,10 @@
       });
   </script>
 
-  
-  
-    
-   
+
+
+
+
 
 </body>
 </html>
