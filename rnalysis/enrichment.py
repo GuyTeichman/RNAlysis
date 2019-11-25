@@ -465,7 +465,6 @@ class FeatureSet:
 
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
-        print(res_df)
 
         return res_df
 
@@ -564,7 +563,6 @@ class FeatureSet:
 
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
-        print(res_df)
 
         return res_df
 
