@@ -1266,7 +1266,7 @@ class CountFilter(Filter):
         :type features: str or list of strings
         :param features: the feature/features to plot expression for.
         :type sample_grouping: dict, with condition names as keys \
-        and list of the sample numbers for each condition as a list
+        and list of the sample numbers or names for each condition as a list
         :param sample_grouping: a dictionary of the conditions to plot expression for. \
         Each key should be a name of a conditions, and the value for each key is \
         a list of the numbers of columns to be used as samples of that condition. \
@@ -1295,8 +1295,10 @@ class CountFilter(Filter):
         ylims = []
         for subplot, feature in zip(subplots, features):
             axes.append(f.add_subplot(subplot))
-            mean = [self.df.loc[feature].iloc[ind].mean() for ind in sample_grouping.values()]
-            sem = [self.df.loc[feature].iloc[ind].sem() for ind in sample_grouping.values()]
+            mean = [self.df.loc[feature].iloc[ind].mean() if isinstance(ind, int) else self.df.loc[feature][ind].mean()
+                    for ind in sample_grouping.values()]
+            sem = [self.df.loc[feature].iloc[ind].sem() if isinstance(ind, int) else self.df.loc[feature][ind].sem() for
+                   ind in sample_grouping.values()]
             axes[-1].bar(np.arange(len(sample_grouping)), mean, yerr=sem)
             axes[-1].set_xticks(np.arange(len(sample_grouping)))
             axes[-1].set_xticklabels(list(sample_grouping.keys()))
@@ -1450,7 +1452,7 @@ class CountFilter(Filter):
 
         if deseq_highlight is not None:
             highlight_features = deseq_highlight.index_set if isinstance(deseq_highlight,
-                                                                           DESeqFilter) else deseq_highlight
+                                                                         DESeqFilter) else deseq_highlight
             xvals_highlight = np.log10(self.df[sample1].loc[highlight_features].values + 1) if \
                 isinstance(sample1, str) else np.log10(self.df[sample1].loc[highlight_features].mean(axis=1).values + 1)
             yvals_highlight = np.log10(self.df[sample2].loc[highlight_features].values + 1) if \
