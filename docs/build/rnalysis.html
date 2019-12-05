@@ -608,7 +608,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>features</strong> (<em>str</em><em> or </em><em>list of strings</em>) – the feature/features to plot expression for.</p></li>
-<li><p><strong>sample_grouping</strong> (<em>dict</em><em>, </em><em>with condition names as keys         and list of the sample numbers for each condition as a list</em>) – a dictionary of the conditions to plot expression for.         Each key should be a name of a conditions, and the value for each key is         a list of the numbers of columns to be used as samples of that condition.         For example, if the first 3 columns are replicates of the condition ‘condition 1’ and         the last 3 column are replicates of the condition ‘condition 2’, then sample_grouping should be:         {‘condition 1’:[0, 1, 2], ‘condition 2’:[3, 4, 5]}</p></li>
+<li><p><strong>sample_grouping</strong> (<em>dict</em><em>, </em><em>with condition names as keys         and list of the sample numbers</em><em> or </em><em>names for each condition as a list</em>) – a dictionary of the conditions to plot expression for.         Each key should be a name of a conditions, and the value for each key is         a list of the numbers of columns to be used as samples of that condition.         For example, if the first 3 columns are replicates of the condition ‘condition 1’ and         the last 3 column are replicates of the condition ‘condition 2’, then sample_grouping should be:         {‘condition 1’:[0, 1, 2], ‘condition 2’:[3, 4, 5]}</p></li>
 <li><p><strong>count_unit</strong> (<em>str</em><em>, </em><em>default 'Reads per million'</em>) – The unit of the count data. Will be displayed in the y axis.</p></li>
 </ul>
 </dd>
