@@ -340,13 +340,13 @@ class FeatureSet:
             pass
         else:
             assert isinstance(background_genes,
-                              (set, FeatureSet)) or issubclass(background_genes,
+                              (set, FeatureSet)) or issubclass(background_genes.__class__,
                                                                filtering.Filter), f"background_genes must be a set, " \
                                                                                   f"enrichment.FeatureSet or filtering.Filter;" \
                                                                                   f" instead is {type(background_genes)}"
             if isinstance(background_genes, FeatureSet):
                 background_genes = background_genes.gene_set
-            elif issubclass(background_genes, filtering.Filter):
+            elif issubclass(background_genes.__class__, filtering.Filter):
                 background_genes = background_genes.index_set
             if biotype != 'all':
                 warnings.warn(
