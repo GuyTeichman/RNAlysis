@@ -1568,3 +1568,5 @@ class CountFilter(Filter):
 
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
+
+#TODO: fix df.loc in scatter sample vs sample
