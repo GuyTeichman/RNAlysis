@@ -33,6 +33,8 @@ class FeatureSet:
             pass
         elif isinstance(gene_set, (list, tuple)):
             gene_set = set(gene_set)
+        elif issubclass(gene_set.__class__, filtering.Filter):
+            gene_set = gene_set.index_set
         else:
             raise TypeError(f"Error: 'gene_set' must be a set, list or tuple! Is a {type(gene_set)} instead. ")
         self.gene_set = gene_set
