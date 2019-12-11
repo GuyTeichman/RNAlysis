@@ -1222,17 +1222,19 @@ class CountFilter(Filter):
 
     def clustergram(self, sample_names: list = 'all', metric: str = 'euclidean', linkage: str = 'average'):
         """
-        Runs and plots a clustergram on the base-2 log of a given set of samples.
+        Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
         :type sample_names: 'all' or list.
         :param sample_names: the names of the relevant samples in a list. \
-        Example input: ["1A_N2_25", "1B_N2_25", "1C_N2_25", "2A_rde4_25", "2B_rde4_25", "2C_rde4_25"]
+        Example input: ["condition1_rep1", "condition1_rep2", "condition1_rep3", \
+        "condition2_rep1", "condition3_rep1", "condition3_rep2"]
+        :type metric: 'euclidean', 'hamming', 'correlation', or any other \
+        distance metric available in scipy.spatial.distance.pdist
         :param metric: the distance metric to use in the clustergram. \
-        Example inputs: 'euclidean', 'hamming', 'correlation'. \
-        For all possible inputs see scipy.spatial.distance.pdist documentation online.
+        For all possible inputs and their meaning see scipy.spatial.distance.pdist documentation online.
+        :type linkage: 'single', 'average', 'complete', 'weighted', 'centroid', 'median' or 'ward'.
         :param linkage: the linkage method to use in the clustergram. \
-        Example inputs: 'single', 'average', 'complete', 'ward'. \
-        For all possible inputs see scipy.cluster.hierarchy.linkage documentation online.
+        For all possible inputs and their meaning see scipy.cluster.hierarchy.linkage documentation online.
         :return:
         A seaborn clustermap object.
 

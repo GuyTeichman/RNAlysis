@@ -5,62 +5,62 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rnalysis package &mdash; RNAlysis 1.0 documentation</title>
+  
 
-  <title>rnalysis package &mdash; RNAlysis 1.3.2 documentation</title>
+  
+  
+  
+  
 
-
-
-
-
-
-
-
+  
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-
-
+  
+    
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-
+    
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
+    
 
-
-
+  
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" />
+    <link rel="prev" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
-
+   
   <div class="wy-grid-for-nav">
-
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
 
-
-
+          
             <a href="index.html" class="icon icon-home"> RNAlysis
+          
 
-
-
+          
           </a>
 
+          
+            
+            
+          
 
-
-
-
-
-
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -69,16 +69,16 @@
   </form>
 </div>
 
-
+          
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-
-
-
-
-
-
+          
+            
+            
+              
+            
+            
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
@@ -105,28 +105,28 @@
 </li>
 </ul>
 
-
-
+            
+          
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-
+      
       <nav class="wy-nav-top" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-
+        
       </nav>
 
 
       <div class="wy-nav-content">
-
+        
         <div class="rst-content">
-
-
+        
+          
 
 
 
@@ -145,28 +145,28 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-
+    
       <li><a href="index.html">Docs</a> &raquo;</li>
-
+        
       <li>rnalysis package</li>
-
-
+    
+    
       <li class="wy-breadcrumbs-aside">
-
-
+        
+            
             <a href="_sources/rnalysis.rst.txt" rel="nofollow"> View page source</a>
-
-
+          
+        
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+            
   <div class="section" id="rnalysis-package">
 <h1>rnalysis package<a class="headerlink" href="#rnalysis-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="rnalysis-filtering-module">
@@ -208,13 +208,13 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">clustergram</code><span class="sig-paren">(</span><em class="sig-param">sample_names: list = 'all'</em>, <em class="sig-param">metric: str = 'euclidean'</em>, <em class="sig-param">linkage: str = 'average'</em><span class="sig-paren">)</span></dt>
-<dd><p>Runs and plots a clustergram on the base-2 log of a given set of samples.</p>
+<dd><p>Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“1A_N2_25”, “1B_N2_25”, “1C_N2_25”, “2A_rde4_25”, “2B_rde4_25”, “2C_rde4_25”]</p></li>
-<li><p><strong>metric</strong> – the distance metric to use in the clustergram.         Example inputs: ‘euclidean’, ‘hamming’, ‘correlation’.         For all possible inputs see scipy.spatial.distance.pdist documentation online.</p></li>
-<li><p><strong>linkage</strong> – the linkage method to use in the clustergram.         Example inputs: ‘single’, ‘average’, ‘complete’, ‘ward’.         For all possible inputs see scipy.cluster.hierarchy.linkage documentation online.</p></li>
+<li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“condition1_rep1”, “condition1_rep2”, “condition1_rep3”,         “condition2_rep1”, “condition3_rep1”, “condition3_rep2”]</p></li>
+<li><p><strong>metric</strong> (<em>'euclidean'</em><em>, </em><em>'hamming'</em><em>, </em><em>'correlation'</em><em>, or </em><em>any other         distance metric available in scipy.spatial.distance.pdist</em>) – the distance metric to use in the clustergram.         For all possible inputs and their meaning see scipy.spatial.distance.pdist documentation online.</p></li>
+<li><p><strong>linkage</strong> (<em>'single'</em><em>, </em><em>'average'</em><em>, </em><em>'complete'</em><em>, </em><em>'weighted'</em><em>, </em><em>'centroid'</em><em>, </em><em>'median'</em><em> or </em><em>'ward'.</em>) – the linkage method to use in the clustergram.         For all possible inputs and their meaning see scipy.cluster.hierarchy.linkage documentation online.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2307,17 +2307,17 @@ a list of all GeneNameTranslator objects</p>
 
 
            </div>
-
+           
           </div>
           <footer>
-
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-
-
+      
+      
         <a href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" class="btn btn-neutral float-left" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-
+      
     </div>
-
+  
 
   <hr/>
 
@@ -2327,7 +2327,7 @@ a list of all GeneNameTranslator objects</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -2337,7 +2337,7 @@ a list of all GeneNameTranslator objects</p>
     </section>
 
   </div>
-
+  
 
 
   <script type="text/javascript">
@@ -2346,10 +2346,10 @@ a list of all GeneNameTranslator objects</p>
       });
   </script>
 
-
-
-
-
+  
+  
+    
+   
 
 </body>
 </html>
