@@ -1455,6 +1455,14 @@ class CountFilter(Filter):
         if deseq_highlight is not None:
             highlight_features = deseq_highlight.index_set if isinstance(deseq_highlight,
                                                                          DESeqFilter) else deseq_highlight
+            highlight_intersection = highlight_features.intersection(self.index_set)
+            if len(highlight_intersection) < len(highlight_features):
+                warnings.warn(
+                    f'Out of {len(highlight_features)} features to be highlighted, '
+                    f'{len(highlight_features) - len(highlight_intersection)} features are missing from the CountFilter '
+                    f'object and will not be highlighted.')
+                highlight_features = highlight_intersection
+
             xvals_highlight = np.log10(self.df[sample1].loc[highlight_features].values + 1) if \
                 isinstance(sample1, str) else np.log10(self.df[sample1].loc[highlight_features].mean(axis=1).values + 1)
             yvals_highlight = np.log10(self.df[sample2].loc[highlight_features].values + 1) if \
@@ -1504,7 +1512,6 @@ class CountFilter(Filter):
         return violin
 
     # TODO: add ranksum test
-    # TODO: fix futureWarning scipy
 
     @staticmethod
     def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = False, save_reads_fname: str = None,
@@ -1570,5 +1577,3 @@ class CountFilter(Filter):
 
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
-
-#TODO: fix df.loc in scatter sample vs sample
