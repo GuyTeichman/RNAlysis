@@ -56,14 +56,6 @@ def test_load_csv():
     assert (truth == load_csv(pth, 0)).all().all()
 
 
-def test_norm_reads_to_rpm():
-    truth = load_csv(r"test_norm_reads_rpm.csv", 0)
-    expr = load_csv(r"all_expr.csv", 0)
-    feature = load_csv("all_feature.csv", 0)
-    norm = norm_reads_to_rpm(expr, feature)
-    assert np.isclose(truth, norm).all()
-
-
 def test_remove_unindexed_rows():
     truth = load_csv("all_expr_missing_rows_deleted.csv", 0)
     missing = load_csv("all_expr_missing_rows.csv", 0)

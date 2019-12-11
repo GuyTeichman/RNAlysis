@@ -171,24 +171,6 @@ def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, s
     return df
 
 
-def norm_reads_to_rpm(htcount: pd.DataFrame, features: pd.DataFrame):
-    """
-    Receives a dataframe of reads/counts and a dataframe of feature counts (ambiguous, no feature, not aligned, etc). \
-    Divides each column in the read dataframe by (total reads + ambiguous + no feature)*10^-6 in order to normalize the \
-    reads to RPM (reads per million).
-
-    :param htcount: DataFrame of reads/counts
-    :param features: the corresponding DataFrame of
-    :return:
-    a DataFrame normalized to RPM
-    """
-    for column in htcount.columns:
-        norm_factor = (htcount[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
-            r'__no_feature', column]) / (10 ** 6)
-        htcount[column] /= norm_factor
-    return htcount
-
-
 def remove_unindexed_rows(df: pd.DataFrame):
     """
     removes rows which have no WBGene index.
@@ -248,15 +230,3 @@ def filter_low_rpm(df: pd.DataFrame, threshold: float = 5):
     A filtered DataFrame
     """
     return df.loc[[True if max(vals) > threshold else False for gene, vals in df.iterrows()]]
-
-
-def normalize_file(htcount_filename: str, feature_filename: str):
-    """
-    receives an htcount filename and a feature filename, normalizes the htcount file to rpm, removes unindexed rows, \
-    and saves the file with the suffix '_rpm'.
-
-    :param htcount_filename: str or pathlib.Path object. Name of the htcount file to be normalized
-    :param feature_filename: str or pathlib.path object. Name of the corresponding feature file to be used for normalizing
-    """
-    save_to_csv(remove_unindexed_rows(
-        norm_reads_to_rpm(load_csv(htcount_filename, idx_col=0), load_csv(feature_filename, idx_col=0))), '_rpm')

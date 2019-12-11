@@ -2102,38 +2102,6 @@ and ‘pvalue’.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">norm_reads_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">htcount: pandas.core.frame.DataFrame</em>, <em class="sig-param">features: pandas.core.frame.DataFrame</em><span class="sig-paren">)</span></dt>
-<dd><p>Receives a dataframe of reads/counts and a dataframe of feature counts (ambiguous, no feature, not aligned, etc).     Divides each column in the read dataframe by (total reads + ambiguous + no feature)*10^-6 in order to normalize the     reads to RPM (reads per million).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>htcount</strong> – DataFrame of reads/counts</p></li>
-<li><p><strong>features</strong> – the corresponding DataFrame of</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-<p>a DataFrame normalized to RPM</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">normalize_file</code><span class="sig-paren">(</span><em class="sig-param">htcount_filename: str</em>, <em class="sig-param">feature_filename: str</em><span class="sig-paren">)</span></dt>
-<dd><p>receives an htcount filename and a feature filename, normalizes the htcount file to rpm, removes unindexed rows,     and saves the file with the suffix ‘_rpm’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>htcount_filename</strong> – str or pathlib.Path object. Name of the htcount file to be normalized</p></li>
-<li><p><strong>feature_filename</strong> – str or pathlib.path object. Name of the corresponding feature file to be used for normalizing</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_gene_name_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span></dt>
 <dd><p>Receives a string that contains gene names (like ‘daf-2’ or ‘lin15B’).     Parses the string into a set of gene names.     The format of a gene name is a sequence consisting of the expression     ‘[a-z]{3,4}’, the character ‘-‘, and the expression ‘[A-Z,0-9]{1,4}’.
 :type string: str
