@@ -103,6 +103,10 @@ ENV/
 # saved settings
 rnalysis/settings.ini
 settings.ini
+
+# pycharm files
 .idea/
+
+# other
 /rnalysis_examples.ipynb
 /what_can_you_do_with_RNAlysis.ipynb

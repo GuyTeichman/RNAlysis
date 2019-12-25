@@ -1,5 +1,5 @@
 ====================================================
-RNAlysis - *C. elegans* RNA sequencing data analysis
+RNAlysis - RNA sequencing data analysis
 ====================================================
 
 
@@ -9,7 +9,7 @@ RNAlysis - *C. elegans* RNA sequencing data analysis
 What is it?
 -----------
 
-RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data from *C. elegans*.
+RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data.
 The package includes various filtering methods, data visualisation, clustering analyses, enrichment anslyses and
 exploratory analyses.
 
@@ -26,9 +26,9 @@ Main Features
 
 * Filtering of differential expression outupt files and read count matrices by counts, biotype, change direction, significance and more.
 * Normalization of read count matrices
-* Exploratory plots
+* Exploratory visualisation
 * GO, Tissue and Phenotype enrichment analysis
-* Enrichment analysis for custom feature characteristics
+* Enrichment analysis for custom attributes
 
 Dependencies
 ------------

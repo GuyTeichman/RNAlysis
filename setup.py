@@ -24,20 +24,23 @@ setup(
     author="Guy Teichman",
     author_email='guyteichman@gmail.com',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Scientific/Engineering :: Visualization',
     ],
-    description='RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data. '
-                'The package includes various filtering methods, data visualisation, clustering analyses, '
-                'enrichment anslyses and exploratory analyses.',
+    description='RNAlysis provides a modular analysis pipeline for RNA sequencing data. '
+                'The package includes various methods for filtering, data visualisation, exploratory analyses, '
+                'enrichment anslyses and clustering.',
     install_requires=requirements,
     license="MIT license",
     long_description=readme + '\n\n' + history,
