@@ -358,7 +358,7 @@ class FeatureSet:
             big_table = big_table.loc[background_genes.intersection(set(big_table.index))]
             if len(big_table.index) < len(background_genes):
                 warnings.warn(
-                    f"{len(background_genes) - len(big_table.index)} WBGene indices from the requested "
+                    f"{len(background_genes) - len(big_table.index)} indices from the requested "
                     f"background genes do not appear in the reference table, and are therefore ignored. \n"
                     f"This leaves a total of {len(big_table.index)} background genes. ")
         if biotype == 'all':
@@ -374,8 +374,8 @@ class FeatureSet:
                 biotype_ref = biotype_ref.loc[biotype_ref.index.intersection(big_table.index)]
                 mask = biotype_ref['bioType'] == biotype
             big_table = big_table.loc[biotype_ref[mask].index]
-
-        big_table['int_index'] = [int(i[6:14]) for i in big_table.index]
+        big_table.sort_index(inplace=True)
+        big_table['int_index'] = [i for i in range(len(big_table.index))]
         print(f"{len(big_table.index)} background genes are used. ")
 
         not_in_bg = gene_set.difference(set(big_table.index))

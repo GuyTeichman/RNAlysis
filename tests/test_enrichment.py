@@ -127,6 +127,8 @@ def test_enrichment_get_ref_biotype():
     assert np.all(res.bioType == truth.bioType)
     assert np.all(res.attribute1.isna() == truth.attribute1.isna())
     assert np.all(res.attribute2.isna() == truth.attribute2.isna())
+    print(res.int_index)
+    print(truth.int_index)
     assert np.all(res.int_index == truth.int_index)
 
 
