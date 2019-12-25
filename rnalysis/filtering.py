@@ -1514,7 +1514,7 @@ class CountFilter(Filter):
     # TODO: add ranksum test
 
     @staticmethod
-    def from_folder(folder_path: str, save_csv: bool = True, norm_to_rpm: bool = False, save_reads_fname: str = None,
+    def from_folder(folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, save_reads_fname: str = None,
                     save_not_counted_fname: str = None, input_format: str = '.txt'):
         """
         Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table. \
@@ -1523,15 +1523,15 @@ class CountFilter(Filter):
         regardless if the CountFilter table was normalized or not.
 
         :param folder_path: str or pathlib.Path. Full path of the folder that contains individual htcount .txt files.
-        :param save_csv: bool. If True (default), the joint DataFrame of count data and uncounted data will be saved \
-        to two separate .csv files. The files will be saved in 'folder_path', and named according to the parameters \
-        'save_reads_fname' for the count data, and 'save_not_counted_fname' for the uncounted data (unaligned, \
-        alignment not unique, etc).
         :param norm_to_rpm: bool. If True, the CountFilter table will be automatically normalized to reads per \
         million (RPM). If False (defualt), the CountFilter object will not be normalized, and will instead contain \
         absolute count data (as in the original htcount .txt files). \
         Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original \
         htcount .txt files, and NOT normalized data.
+        :param save_csv: bool. If True, the joint DataFrame of count data and uncounted data will be saved \
+        to two separate .csv files. The files will be saved in 'folder_path', and named according to the parameters \
+        'save_reads_fname' for the count data, and 'save_not_counted_fname' for the uncounted data (unaligned, \
+        alignment not unique, etc).
         :param save_reads_fname: str. Name under which to save the combined count data table. Does not need to include \
         the '.csv' suffix.
         :param save_not_counted_fname: save_reads_fname: str. Name under which to save the combined uncounted data. \
