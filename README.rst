@@ -24,11 +24,11 @@ RNAlysis works with sequencing count matrices and differential expression output
 Main Features
 -------------
 
-* Filtering of differential expression outupt files and read count matrices by counts, biotype, change direction, significance and more.
-* Normalization of read count matrices
-* Exploratory visualisation
-* GO, Tissue and Phenotype enrichment analysis
+* Filtering of count matrices, fold changes and differential expression tables.
+* Normalization of count matrices
+* Exploratory data analysis and visualisation
 * Enrichment analysis for custom attributes
+* Clustering and dimentionality reduction
 
 Dependencies
 ------------
@@ -40,6 +40,9 @@ Dependencies
 * tissue_enrichment_analysis
 * statsmodels
 * sklearn
+* ipyparallel
+* grid_strategy
+* Distance
 
 Where to get it
 ---------------
