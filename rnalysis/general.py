@@ -10,7 +10,7 @@ import re
 import time
 import subprocess
 import yaml
-from rnalysis import __settings_start_phrase__, __biotype_file_start_phrase__
+from rnalysis import __attr_file_key__, __biotype_file_key__
 
 
 def start_ipcluster(n_engines: int = 'default'):
@@ -95,58 +95,35 @@ def get_settings_path():
     return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
 
 
-def read_settings():
+def load_settings():
     settings_pth = get_settings_path()
     with open(settings_pth) as f:
         settings = yaml.safe_load(f)
+        if settings is None:
+            settings = dict()
         return settings
 
 
-def set_biotype_reference_path(path: str, key=__biotype_file_start_phrase__):
+def update_settings(path: str, key):
     settings_pth = get_settings_path()
-    out = read_settings()
-    if out is None:
-        out = dict()
+    out = load_settings()
     out[key] = path
     with open(settings_pth, 'w') as f:
         yaml.safe_dump(out, f)
 
 
-def is_reference_table_defined(settings_start_phrase=__settings_start_phrase__):
-    """
-    Check whether a reference table path is defined.
-
-    :param settings_start_phrase: The key phrase to look for in settings.ini ('reference_table_path=').
-    :return:
-    True if defined, False if not defined.
-    """
-    settings_pth = Path(os.path.join(os.path.dirname(__file__), 'settings.ini'))
-
-    if settings_pth.exists():
-        with open(settings_pth) as f:
-            setting = f.readline()
-            if setting.startswith(settings_start_phrase):
-                return True
-
-    return False
+def read_path_from_settings(key):
+    settings = load_settings()
+    if key not in settings:
+        update_settings(input(f'Please insert the full path of {key}:\n'), key)
+    return settings[key]
 
 
-def set_reference_table_path(path: str = None):
-    """
-    Set the path for a user-defined reference table for filtering and enrichment analyses. \
-    The path will be saved in a settings.ini file that will persist through sessions.
-
-    :type path: str
-    :param path: The full path and name of the .csv reference file.
-    """
-    settings_pth = Path(os.path.join(os.path.dirname(__file__), 'settings.ini'))
-    with open(settings_pth, 'w') as f:
-        pth = path if path is not None else input(
-            'Please insert the full path of your Reference Table:\n')
-        f.write("reference_table_path=" + pth)
+def read_biotype_ref_table_path():
+    return read_path_from_settings(__biotype_file_key__)
 
 
-def read_reference_table_path():
+def read_attr_ref_table_path():
     """
     Attempt to read the reference table path from settings.ini. \
     If the path was not previously defined, will prompt user to define it.
@@ -154,13 +131,7 @@ def read_reference_table_path():
     :return:
     The path of the reference table.
     """
-    settings_pth = Path(os.path.join(os.path.dirname(__file__), 'settings.ini'))
-    settings_start_phrase = 'reference_table_path='
-    if not is_reference_table_defined():
-        set_reference_table_path()
-
-    with open(settings_pth) as f:
-        return f.readline()[len(settings_start_phrase)::]
+    return read_path_from_settings(__attr_file_key__)
 
 
 def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, squeeze=False, comment: str = None):

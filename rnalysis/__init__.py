@@ -7,7 +7,6 @@ __name__ = "rnalysis"
 __author__ = """Guy Teichman"""
 __email__ = 'guyteichman@gmail.com'
 __version__ = '1.3.2'
-__gene_names_and_biotype__ = os.path.join(os.path.dirname(__file__), 'gene_names_and_biotype.csv')
-__settings_start_phrase__ = 'reference_table_path='
-__biotype_file_start_phrase__ = 'biotype_reference_path'
+__attr_file_key__ = 'attribute_reference_table'
+__biotype_file_key__ = 'biotype_reference_table'
 
