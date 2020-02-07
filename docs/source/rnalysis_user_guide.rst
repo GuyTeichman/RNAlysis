@@ -124,7 +124,7 @@ Instead of directly saving the results to a file, you can also get them as a set
 Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).
 
 
-Using a reference table for filter operations
+Using an attribute reference table for filter operations
 ----------------------------------------------
 
 A Reference Table contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
@@ -588,7 +588,7 @@ Set and load a Reference Table
 What is a Reference Table?
 ----------------------------
 You can perform enrichment analysis or filtering operations based on user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs').
-User-defined attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for a Reference Table below:
+User-defined attributes should be defined in a Reference Table csv file. The format of the attribute reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an attribute reference table below:
 
 +----------------+--------------+-------------+-------------+
 | feature_indices| attribute1   | attribute2  | attribute3  |
@@ -605,25 +605,25 @@ User-defined attributes should be defined in a Reference Table csv file. The for
 +----------------+--------------+-------------+-------------+
 
 
-Set a Reference Table as default
+Set an attribute reference table as default
 ---------------------------------
-Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis::
+Once we have an attribute reference table, we can set it to be the default attribute reference table for all future uses of RNAlysis::
 
     from rnalysis import general
     general.set_reference_table_path('path/to/my/reference/table.csv')
 
-This will create a file called 'settings.ini', which will store the full path of your Reference Table file.
-Whenever RNAlysis needs to use a Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+This will create a file called 'settings.yaml', which will store the full path of your attribute reference table file.
+Whenever RNAlysis needs to use am attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
 The saved path can be changed any time using the general.set_reference_table_path() function.
 
-Load the default Reference Table path
+Load the default attribute reference table path
 --------------------------------------
 You can load the saved path from the settings file using the read_reference_table_path function::
 
     from rnalysis import general
     general.read_reference_table_path()
 
-If a Reference Table path was not previously defined, you will be requested to define it when you run this function.
+If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.
 
 Parse *C. elegans* gene names, WBGene indices and sequence names using regular expressions
 ===========================================================================================
