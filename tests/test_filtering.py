@@ -657,3 +657,18 @@ def test_filter_by_row_sum():
     h.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(h.df == truth)
+
+def sort_inplace():
+    assert False
+
+def sort_not_inplace():
+    assert False
+
+def sort_by_multiple_columns():
+    assert False
+
+def sort_with_na_first():
+    assert False
+
+def sort_descending():
+    assert False
