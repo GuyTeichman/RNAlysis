@@ -6,6 +6,7 @@ History
 
 * First stable release on PyPI.
 * Enrichment randomization tests now support non-WBGene indexing.
+* Changed argument order and default values in filtering.CountFilter.from_folder()
 
 1.3.2 (2019-12-11)
 ------------------

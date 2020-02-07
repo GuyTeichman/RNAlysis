@@ -27,7 +27,7 @@ class FeatureSet:
     def __init__(self, gene_set: set = None, set_name: str = ''):
         if gene_set is None:
             self.gene_set = general.parse_wbgene_string(input(
-                "Please insert WBGenes separated by newline "
+                "Please insert genomic features/indices separated by newline "
                 "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')"))
         elif isinstance(gene_set, set):
             pass
@@ -134,7 +134,7 @@ class FeatureSet:
 
     def union(self, *others, inplace: bool = True):
         """
-         Calculates the set union of the WBGene indices from multipple FeatureSet objects \
+         Calculates the set union of the indices from multipple FeatureSet objects \
         (the indices that exist in at least one of the FeatureSet objects).
 
         :type others: FeatureSet, set or str
@@ -149,7 +149,7 @@ class FeatureSet:
 
     def intersection(self, *others, inplace: bool = True):
         """
-        Calculates the set intersection of the WBGene indices from multiple FeatureSet objects \
+        Calculates the set intersection of the indices from multiple FeatureSet objects \
         (the indices that exist in ALL of the FeatureSet objects).
 
         :type others: FeatureSet, set or str
@@ -164,7 +164,7 @@ class FeatureSet:
 
     def difference(self, *others, inplace: bool = True):
         """
-        Calculates the set difference of the WBGene indices from multiple FeatureSet objects \
+        Calculates the set difference of the indices from multiple FeatureSet objects \
         (the indices that appear in the first FeatureSet object but NOT in the other objects).
 
         :type others: FeatureSet, set or str
@@ -179,7 +179,7 @@ class FeatureSet:
 
     def symmetric_difference(self, other, inplace: bool = True):
         """
-        Calculates the set symmetric difference of the WBGene indices from two FeatureSet objects \
+        Calculates the set symmetric difference of the indices from two FeatureSet objects \
         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither). \
         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).
 
