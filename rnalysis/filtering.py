@@ -403,28 +403,6 @@ class Filter:
             ref_df.loc[not_in_ref] = 'not_in_biotype_reference'
         return ref_df.loc[self.df.index].groupby('bioType').count()
 
-    def sort(self, by: str, ascending: bool = True, inplace: bool = True, na_position: str = 'last'):
-        """
-        Sort the rows by the values of specified column or columns.
-
-        :param by: str or list of str
-        :type by: Names of the column or columns to sort by.
-        :param ascending: bool or list of bool, default True
-        :type ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
-        If this is a list of bools, it must have the same length as 'by'.
-        :param inplace: bool, default True
-        :type inplace: If True, perform operation in-place. \
-        Otherwise, returns a sorted copy of the Filter object without modifying the original.
-        :param na_position: 'first' or 'last', default 'last'
-        :type na_position: If 'first', puts NaNs at the beginning; if 'last', puts NaNs at the end.
-        :return: None if inplace=True, a sorted Filter object otherwise.
-        """
-        if inplace:
-            self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=True, na_position=na_position)
-        else:
-            new_df = self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=False, na_position=na_position)
-            return self._inplace(new_df, False, inplace, '')
-
     def number_filters(self, column: str, operator: str, value, opposite=False, inplace=True):
         """
         Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.
@@ -512,6 +490,28 @@ class Filter:
             raise KeyError(f"Problem with operator {operator} or key {op}. Please report to the developer. ")
 
         return self._inplace(new_df, opposite, inplace, suffix)
+
+    def sort(self, by: str, ascending: bool = True, na_position: str = 'last', inplace: bool = True):
+        """
+        Sort the rows by the values of specified column or columns.
+
+        :type by: str or list of str
+        :param by: Names of the column or columns to sort by.
+        :type ascending: bool or list of bool, default True
+        :param ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
+        If this is a list of bools, it must have the same length as 'by'.
+        :type na_position: 'first' or 'last', default 'last'
+        :param na_position: If 'first', puts NaNs at the beginning; if 'last', puts NaNs at the end.
+        :type inplace: bool, default True
+        :param inplace: If True, perform operation in-place. \
+        Otherwise, returns a sorted copy of the Filter object without modifying the original.
+        :return: None if inplace=True, a sorted Filter object otherwise.
+        """
+        if inplace:
+            self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=True, na_position=na_position)
+        else:
+            new_df = self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=False, na_position=na_position)
+            return self._inplace(new_df, False, inplace, '')
 
     def filter_top_n(self, col: str, n: int = 100, ascending: bool = True, opposite: bool = False,
                      inplace: bool = True, ):
