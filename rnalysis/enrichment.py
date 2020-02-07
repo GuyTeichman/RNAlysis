@@ -79,9 +79,16 @@ class FeatureSet:
             return FeatureSet(gene_set)
 
     @staticmethod
-    def _get_ref_path(ref):
+    def _get_biotype_ref_path(ref):
         if ref == 'predefined':
-            return general.read_reference_table_path()
+            return general.read_biotype_ref_table_path()
+        else:
+            return ref
+
+    @staticmethod
+    def _get_attr_ref_path(ref):
+        if ref == 'predefined':
+            return general.read_attr_ref_table_path()
         else:
             return ref
 
@@ -435,7 +442,7 @@ class FeatureSet:
 
           Example plot of big table enrichment
        """
-        ref_path = FeatureSet._get_ref_path(ref_path)
+        ref_path = FeatureSet._get_attr_ref_path(ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
@@ -522,7 +529,7 @@ class FeatureSet:
 
            Example plot of enrich_randomization
         """
-        ref_path = FeatureSet._get_ref_path(ref_path)
+        ref_path = FeatureSet._get_attr_ref_path(ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              ref_path=ref_path)
