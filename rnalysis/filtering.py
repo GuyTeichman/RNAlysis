@@ -395,6 +395,12 @@ class Filter:
         ref_df = general.load_csv(ref, 0)
         ref_df['WBGene'] = ref_df.index
         ref_df = ref_df.iloc[:, [0, -1]]
+        not_in_ref = self.df.index.difference(ref_df.index)
+        if len(not_in_ref) > 0:
+            warnings.warn(
+                f'{len(not_in_ref)} of the features in the Filter object do not appear in the biotype reference file. ')
+            ref_df = ref_df.append(pd.DataFrame(index=not_in_ref),sort=True)
+            ref_df.loc[not_in_ref] = 'not_in_biotype_reference'
         return ref_df.loc[self.df.index].groupby('bioType').count()
 
     def sort(self, by: str, ascending: bool = True, inplace: bool = True, na_position: str = 'last'):
