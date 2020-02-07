@@ -107,7 +107,7 @@ def set_biotype_reference_path(path: str, key=__biotype_file_start_phrase__):
     out = read_settings()
     if out is None:
         out = dict()
-    out[__settings_start_phrase__] = path
+    out[key] = path
     with open(settings_pth, 'w') as f:
         yaml.safe_dump(out, f)
 
