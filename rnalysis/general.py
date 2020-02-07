@@ -9,7 +9,8 @@ import os
 import re
 import time
 import subprocess
-from rnalysis import __settings_start_phrase__
+import yaml
+from rnalysis import __settings_start_phrase__, __biotype_file_start_phrase__
 
 
 def start_ipcluster(n_engines: int = 'default'):
@@ -88,6 +89,27 @@ def parse_gene_name_string(string):
     a set of the WBGene indices that appear in the given string.
     """
     return set(re.findall('[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
+
+
+def get_settings_path():
+    return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
+
+
+def read_settings():
+    settings_pth = get_settings_path()
+    with open(settings_pth) as f:
+        settings = yaml.safe_load(f)
+        return settings
+
+
+def set_biotype_reference_path(path: str, key=__biotype_file_start_phrase__):
+    settings_pth = get_settings_path()
+    out = read_settings()
+    if out is None:
+        out = dict()
+    out[__settings_start_phrase__] = path
+    with open(settings_pth, 'w') as f:
+        yaml.safe_dump(out, f)
 
 
 def is_reference_table_defined(settings_start_phrase=__settings_start_phrase__):
