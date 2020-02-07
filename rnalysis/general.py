@@ -113,6 +113,16 @@ def update_settings(path: str, key):
 
 
 def read_path_from_settings(key):
+    """
+    Attempt to read the reference table path from settings.yaml. \
+    If the path was not previously defined, will prompt user to define it.
+
+    :type key: str
+    :param key: the key in the settings file whose path to read.
+
+    :return:
+    The path of the reference table.
+    """
     settings = load_settings()
     if key not in settings:
         update_settings(input(f'Please insert the full path of {key}:\n'), key)
@@ -126,13 +136,6 @@ def read_biotype_ref_table_path():
 
 
 def read_attr_ref_table_path():
-    """
-    Attempt to read the reference table path from settings.ini. \
-    If the path was not previously defined, will prompt user to define it.
-
-    :return:
-    The path of the reference table.
-    """
     pth =  read_path_from_settings(__attr_file_key__)
     print(f'Attribute reference table used: {pth}')
     return pth
