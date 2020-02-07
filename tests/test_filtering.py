@@ -161,7 +161,7 @@ def test_filter_top_n_descending_text():
 
 def test_filter_top_n_nonexisting_column():
     d = DESeqFilter("test_deseq.csv")
-    colname='somecol'
+    colname = 'somecol'
     with pytest.raises(AssertionError):
         d.filter_top_n(colname, 5)
     assert colname not in d.df.columns
@@ -622,12 +622,13 @@ def test_count_filter_from_folder():
     truth_all_expr = general.load_csv(r'test_count_from_folder_all_expr.csv', 0)
     truth_all_feature = general.load_csv(r'test_count_from_folder_all_feature.csv', 0)
     truth_norm = general.load_csv(r'test_count_from_folder_norm.csv', 0)
-    h_notnorm = CountFilter.from_folder('test_count_from_folder', True, False, '__allexpr_temporary_testfile.csv',
-                                          '__allfeature_temporary_testfile.csv')
+    h_notnorm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=False, save_csv=True,
+                                        save_reads_fname='__allexpr_temporary_testfile.csv',
+                                        save_not_counted_fname='__allfeature_temporary_testfile.csv')
     os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
     assert np.all(np.isclose(h_notnorm.df, truth_all_expr))
 
-    h_norm = CountFilter.from_folder('test_count_from_folder', False, True)
+    h_norm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=True, save_csv=False)
     assert np.all(np.isclose(h_norm.df, truth_norm))
 
     all_feature = general.load_csv('test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
