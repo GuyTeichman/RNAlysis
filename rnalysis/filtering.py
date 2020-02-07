@@ -225,7 +225,8 @@ class Filter:
 
         :type biotype: str or list
         :param biotype: the biotypes which will not be filtered out.
-        :param ref: Name of the reference file used to determine biotype. Default is ce11 (included in the package).
+        :param ref: Name of the biotype reference file used to determine biotypes. \
+        Default is ce11 (included in the package).
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -544,7 +545,7 @@ class Filter:
                 assert col in self.columns, f"{col} is not a column in the Filter object!"
         else:
             assert by in self.columns, f"{by} is not a column in the Filter object!"
-        self.sort(by=by,ascending=ascending,na_position=na_position,inplace=True)
+        self.sort(by=by, ascending=ascending, na_position=na_position, inplace=True)
         if n > self.df.shape[0]:
             warnings.warn(f'Current number of rows {self.df.shape[0]} is smaller than the specified n={n}. '
                           f'Therefore output Filter object will only have {self.df.shape[0]} rows. ')
