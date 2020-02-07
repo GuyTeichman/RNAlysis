@@ -392,7 +392,7 @@ class FeatureSet:
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from a reference table using parallel processing. \
         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization. \
-        To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster(). \
+        To use it you must first start a parallel session, using rnalysis.general.start_parallel_session(). \
         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
         P-values are corrected for multiple comparisons using \
         the Benjamini–Hochberg step-up procedure (original FDR method). \
