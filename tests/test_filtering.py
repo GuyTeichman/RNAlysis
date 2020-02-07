@@ -164,6 +164,7 @@ def test_filter_top_n_nonexisting_column():
     colname = 'somecol'
     with pytest.raises(AssertionError):
         d.filter_top_n(colname, 5)
+        d.filter_top_n([d.df.columns[0], colname])
     assert colname not in d.df.columns
 
 
@@ -658,17 +659,22 @@ def test_filter_by_row_sum():
     truth.sort_index(inplace=True)
     assert np.all(h.df == truth)
 
+
 def sort_inplace():
     assert False
+
 
 def sort_not_inplace():
     assert False
 
+
 def sort_by_multiple_columns():
     assert False
 
+
 def sort_with_na_first():
     assert False
+
 
 def sort_descending():
     assert False

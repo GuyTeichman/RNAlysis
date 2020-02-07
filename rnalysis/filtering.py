@@ -399,7 +399,7 @@ class Filter:
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the biotype reference file. ')
-            ref_df = ref_df.append(pd.DataFrame(index=not_in_ref),sort=True)
+            ref_df = ref_df.append(pd.DataFrame(index=not_in_ref), sort=True)
             ref_df.loc[not_in_ref] = 'not_in_biotype_reference'
         return ref_df.loc[self.df.index].groupby('bioType').count()
 
@@ -513,17 +513,20 @@ class Filter:
             new_df = self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=False, na_position=na_position)
             return self._inplace(new_df, False, inplace, '')
 
-    def filter_top_n(self, col: str, n: int = 100, ascending: bool = True, opposite: bool = False,
-                     inplace: bool = True, ):
+    def filter_top_n(self, by: str, n: int = 100, ascending: bool = True, na_position: str = 'last',
+                     opposite: bool = False, inplace: bool = True, ):
         """
-        Removes all features except the 'n' most significantly-changed features.
+        Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.
 
-        :type col: str
-        :param col: The column to filter by
-        :type ascending: bool (default True)
-        :param ascending: sort ascending (keep lowest values) or descending (keep highest values).
+        :type by: str or list of str
+        :param by: Names of the column or columns to sort and then filter by.
         :type n: int
         :param n: How many features to keep in the Filter object.
+       :type ascending: bool or list of bool, default True
+        :param ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
+        If this is a list of bools, it must have the same length as 'by'.
+        :type na_position: 'first' or 'last', default 'last'
+        :param na_position: If 'first', puts NaNs at the beginning; if 'last', puts NaNs at the end.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -535,13 +538,19 @@ class Filter:
         If 'inplace' is False, returns a new instance of Filter.
         """
         assert isinstance(n, int), "n must be an integer!"
-        assert isinstance(col, str), "'col' must be a string!"
-        assert col in self.columns, "'col' must be a column in the Filter object!"
-        assert isinstance(ascending, bool), "'ascending' must be either True or False!"
-        self.df.sort_values(by=[col], ascending=ascending, inplace=True)
+        assert n > 0, "n must be a positive integer!"
+        if isinstance(by, list):
+            for col in by:
+                assert col in self.columns, f"{col} is not a column in the Filter object!"
+        else:
+            assert by in self.columns, f"{by} is not a column in the Filter object!"
+        self.sort(by=by,ascending=ascending,na_position=na_position,inplace=True)
+        if n > self.df.shape[0]:
+            warnings.warn(f'Current number of rows {self.df.shape[0]} is smaller than the specified n={n}. '
+                          f'Therefore output Filter object will only have {self.df.shape[0]} rows. ')
         new_df = self.df.iloc[0:min(n, self.df.shape[0])]
         order = 'asc' if ascending else 'desc'
-        suffix = f"_top{n}{col}{order}"
+        suffix = f"_top{n}{by}{order}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @staticmethod
