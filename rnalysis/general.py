@@ -120,7 +120,9 @@ def read_path_from_settings(key):
 
 
 def read_biotype_ref_table_path():
-    return read_path_from_settings(__biotype_file_key__)
+    pth = read_path_from_settings(__biotype_file_key__)
+    print(f'Biotype reference table used: {pth}')
+    return pth
 
 
 def read_attr_ref_table_path():
@@ -131,7 +133,9 @@ def read_attr_ref_table_path():
     :return:
     The path of the reference table.
     """
-    return read_path_from_settings(__attr_file_key__)
+    pth =  read_path_from_settings(__attr_file_key__)
+    print(f'Attribute reference table used: {pth}')
+    return pth
 
 
 def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, squeeze=False, comment: str = None):
