@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import warnings
-from rnalysis import general, __gene_names_and_biotype__
+from rnalysis import general
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import seaborn as sns
@@ -70,9 +70,16 @@ class Filter:
         return type(self)((self.fname, self.df.copy(deep=True)))
 
     @staticmethod
-    def _get_ref_path(ref):
+    def _get_biotype_ref_path(ref):
         if ref == 'predefined':
-            return general.read_reference_table_path()
+            return general.read_biotype_ref_table_path()
+        else:
+            return ref
+
+    @staticmethod
+    def _get_attr_ref_path(ref):
+        if ref == 'predefined':
+            return general.read_attr_ref_table_path()
         else:
             return ref
 
@@ -218,7 +225,7 @@ class Filter:
                 self.filter_percentile(percentile=percentile, column=column, opposite=True, inplace=False)]
 
     def filter_biotype(self, biotype='protein_coding',
-                       ref: str = __gene_names_and_biotype__, opposite: bool = False, inplace: bool = True):
+                       ref: str = 'predefined', opposite: bool = False, inplace: bool = True):
         """
         Filters out all features that do not match the indicated biotype. \
         Legal inputs: 'protein_coding','pseudogene','piRNA','miRNA','ncRNA','lincRNA','rRNA','snRNA','snoRNA'.
@@ -226,7 +233,7 @@ class Filter:
         :type biotype: str or list
         :param biotype: the biotypes which will not be filtered out.
         :param ref: Name of the biotype reference file used to determine biotypes. \
-        Default is ce11 (included in the package).
+        Default is the path defined by the user in the settings.yaml file.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
@@ -242,6 +249,8 @@ class Filter:
             biotype = [biotype]
         for bio in biotype:
             assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
+
+        ref = self._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
         suffix = f"_{'_'.join(biotype)}"
 
@@ -286,7 +295,7 @@ class Filter:
         :return:
         If 'inplace' is False, returns a new and filtered instance of the Filter object.
         """
-        ref = self._get_ref_path(ref)
+        ref = self._get_attr_ref_path(ref)
         if attributes is None:
             attributes = self._from_string(
                 "Please insert attributes separated by newline "
@@ -329,7 +338,7 @@ class Filter:
         appear in the list in the same order the Big Table attributes were given in.
         """
         assert isinstance(attributes, (tuple, list, set))
-        ref = self._get_ref_path(ref)
+        ref = self._get_attr_ref_path(ref)
         return [self.filter_by_ref_table_attr(attributes=[att], mode='union', ref=ref, inplace=False) for att in
                 attributes]
 
@@ -387,12 +396,14 @@ class Filter:
         """
         print(self.index_string)
 
-    def biotypes(self, ref: str = __gene_names_and_biotype__):
+# TODO: fix biotypes for a reference table that isn't based on WBGene!!!!
+    def biotypes(self, ref: str = 'predefined'):
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
 
-        :param ref: Name of the reference file used to determine biotype. Default is ce11 (included in the package).
+        :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
         """
+        ref = self._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
         ref_df['WBGene'] = ref_df.index
         ref_df = ref_df.iloc[:, [0, -1]]
