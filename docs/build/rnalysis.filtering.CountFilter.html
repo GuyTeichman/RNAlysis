@@ -82,7 +82,7 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
@@ -270,13 +270,13 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html#rnalysis.filtering.CountFilter.filter_percentile" title="rnalysis.filtering.CountFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_percentile</span></code></a>(percentile, column[, …])</p></td>
 <td><p>Removes all entries above the specified percentile in the specified column.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html#rnalysis.filtering.CountFilter.filter_top_n" title="rnalysis.filtering.CountFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_top_n</span></code></a>(col[, n, ascending, opposite, …])</p></td>
-<td><p>Removes all features except the ‘n’ most significantly-changed features.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html#rnalysis.filtering.CountFilter.filter_top_n" title="rnalysis.filtering.CountFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_top_n</span></code></a>(by[, n, ascending, …])</p></td>
+<td><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html#rnalysis.filtering.CountFilter.fold_change" title="rnalysis.filtering.CountFilter.fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fold_change</span></code></a>(numerator, denominator[, …])</p></td>
 <td><p>Calculate the fold change between the numerator condition and the denominator condition,         and return it as a FoldChangeFilter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html#rnalysis.filtering.CountFilter.from_folder" title="rnalysis.filtering.CountFilter.from_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_folder</span></code></a>(folder_path[, save_csv, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html#rnalysis.filtering.CountFilter.from_folder" title="rnalysis.filtering.CountFilter.from_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_folder</span></code></a>(folder_path[, norm_to_rpm, …])</p></td>
 <td><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html#rnalysis.filtering.CountFilter.head" title="rnalysis.filtering.CountFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code></a>([n])</p></td>

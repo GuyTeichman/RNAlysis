@@ -82,7 +82,7 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
@@ -210,14 +210,14 @@
 <h1>rnalysis.filtering.CountFilter.from_folder<a class="headerlink" href="#rnalysis-filtering-countfilter-from-folder" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.CountFilter.from_folder">
-<em class="property">static </em><code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">save_csv: bool = True</em>, <em class="sig-param">norm_to_rpm: bool = False</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em>, <em class="sig-param">input_format: str = '.txt'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.from_folder" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">norm_to_rpm: bool = False</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em>, <em class="sig-param">input_format: str = '.txt'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.from_folder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table.         Can also save the count data table and the uncounted data table to .csv files, and normalize the CountFilter         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data,         regardless if the CountFilter table was normalized or not.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder_path</strong> – str or pathlib.Path. Full path of the folder that contains individual htcount .txt files.</p></li>
-<li><p><strong>save_csv</strong> – bool. If True (default), the joint DataFrame of count data and uncounted data will be saved         to two separate .csv files. The files will be saved in ‘folder_path’, and named according to the parameters         ‘save_reads_fname’ for the count data, and ‘save_not_counted_fname’ for the uncounted data (unaligned,         alignment not unique, etc).</p></li>
 <li><p><strong>norm_to_rpm</strong> – bool. If True, the CountFilter table will be automatically normalized to reads per         million (RPM). If False (defualt), the CountFilter object will not be normalized, and will instead contain         absolute count data (as in the original htcount .txt files).         Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original         htcount .txt files, and NOT normalized data.</p></li>
+<li><p><strong>save_csv</strong> – bool. If True, the joint DataFrame of count data and uncounted data will be saved         to two separate .csv files. The files will be saved in ‘folder_path’, and named according to the parameters         ‘save_reads_fname’ for the count data, and ‘save_not_counted_fname’ for the uncounted data (unaligned,         alignment not unique, etc).</p></li>
 <li><p><strong>save_reads_fname</strong> – str. Name under which to save the combined count data table. Does not need to include         the ‘.csv’ suffix.</p></li>
 <li><p><strong>save_not_counted_fname</strong> – save_reads_fname: str. Name under which to save the combined uncounted data.         Does not need to include the ‘.csv’ suffix.</p></li>
 <li><p><strong>input_format</strong> – the file format of the input files. Default is ‘.txt’.</p></li>

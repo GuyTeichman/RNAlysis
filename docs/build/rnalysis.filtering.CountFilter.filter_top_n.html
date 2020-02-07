@@ -82,7 +82,7 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
@@ -210,23 +210,26 @@
 <h1>rnalysis.filtering.CountFilter.filter_top_n<a class="headerlink" href="#rnalysis-filtering-countfilter-filter-top-n" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.CountFilter.filter_top_n">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">col: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.filter_top_n" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes all features except the ‘n’ most significantly-changed features.</p>
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.filter_top_n" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>col</strong> (<em>str</em>) – The column to filter by</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – sort ascending (keep lowest values) or descending (keep highest values).</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
-</ul>
+<dt class="field-odd">type by</dt>
+<dd class="field-odd"><p>str or list of str</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">param by</dt>
+<dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
+</dd>
+<dt class="field-odd">type n</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">param n</dt>
+<dd class="field-even"><p>How many features to keep in the Filter object.</p>
 </dd>
 </dl>
-<p>If ‘inplace’ is False, returns a new instance of Filter.</p>
+</div></blockquote>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 </div>

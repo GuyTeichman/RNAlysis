@@ -5,63 +5,63 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>RNAlysis - RNA sequencing data analysis &mdash; RNAlysis 1.0 documentation</title>
+  
 
-  <title>RNAlysis - C. elegans RNA sequencing data analysis &mdash; RNAlysis 1.3.2 documentation</title>
+  
+  
+  
+  
 
-
-
-
-
-
-
-
+  
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-
-
+  
+    
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script type="text/javascript" src="_static/jquery.js"></script>
         <script type="text/javascript" src="_static/underscore.js"></script>
         <script type="text/javascript" src="_static/doctools.js"></script>
         <script type="text/javascript" src="_static/language_data.js"></script>
-
+    
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
+    
 
-
-
+  
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" />
-    <link rel="prev" title="Welcome to RNAlysis’s documentation!" href="index.html" />
+    <link rel="prev" title="Welcome to RNAlysis’s documentation!" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
-
+   
   <div class="wy-grid-for-nav">
-
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
 
-
-
+          
             <a href="index.html" class="icon icon-home"> RNAlysis
+          
 
-
-
+          
           </a>
 
+          
+            
+            
+          
 
-
-
-
-
-
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -70,19 +70,19 @@
   </form>
 </div>
 
-
+          
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-
-
-
-
-
-
+          
+            
+            
+              
+            
+            
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">RNAlysis - RNA sequencing data analysis</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#what-is-it">What is it?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#main-features">Main Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
@@ -107,28 +107,28 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
 </ul>
 
-
-
+            
+          
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-
+      
       <nav class="wy-nav-top" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-
+        
       </nav>
 
 
       <div class="wy-nav-content">
-
+        
         <div class="rst-content">
-
-
+        
+          
 
 
 
@@ -147,34 +147,34 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-
+    
       <li><a href="index.html">Docs</a> &raquo;</li>
-
-      <li>RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</li>
-
-
+        
+      <li>RNAlysis - RNA sequencing data analysis</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
-
-
+        
+            
             <a href="_sources/readme.rst.txt" rel="nofollow"> View page source</a>
-
-
+          
+        
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
-  <div class="section" id="rnalysis-c-elegans-rna-sequencing-data-analysis">
-<h1>RNAlysis - <em>C. elegans</em> RNA sequencing data analysis<a class="headerlink" href="#rnalysis-c-elegans-rna-sequencing-data-analysis" title="Permalink to this headline">¶</a></h1>
+            
+  <div class="section" id="rnalysis-rna-sequencing-data-analysis">
+<h1>RNAlysis - RNA sequencing data analysis<a class="headerlink" href="#rnalysis-rna-sequencing-data-analysis" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://pypi.python.org/pypi/rnalysis"><img alt="https://img.shields.io/pypi/v/rnalysis.svg" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a>
 <div class="section" id="what-is-it">
 <h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">¶</a></h2>
-<p>RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data from <em>C. elegans</em>.
+<p>RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data.
 The package includes various filtering methods, data visualisation, clustering analyses, enrichment anslyses and
 exploratory analyses.</p>
 <p>RNAlysis allows you to perform filtering and analyses at any order you wish.
@@ -186,11 +186,11 @@ Wand document the order of operations you performed in the saved file names.</p>
 <div class="section" id="main-features">
 <h2>Main Features<a class="headerlink" href="#main-features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Filtering of differential expression outupt files and read count matrices by counts, biotype, change direction, significance and more.</p></li>
-<li><p>Normalization of read count matrices</p></li>
-<li><p>Exploratory plots</p></li>
-<li><p>GO, Tissue and Phenotype enrichment analysis</p></li>
-<li><p>Enrichment analysis for custom feature characteristics</p></li>
+<li><p>Filtering of count matrices, fold changes and differential expression tables.</p></li>
+<li><p>Normalization of count matrices</p></li>
+<li><p>Exploratory data analysis and visualisation</p></li>
+<li><p>Enrichment analysis for custom attributes</p></li>
+<li><p>Clustering and dimentionality reduction</p></li>
 </ul>
 </div>
 <div class="section" id="dependencies">
@@ -203,6 +203,9 @@ Wand document the order of operations you performed in the saved file names.</p>
 <li><p>tissue_enrichment_analysis</p></li>
 <li><p>statsmodels</p></li>
 <li><p>sklearn</p></li>
+<li><p>ipyparallel</p></li>
+<li><p>grid_strategy</p></li>
+<li><p>Distance</p></li>
 </ul>
 </div>
 <div class="section" id="where-to-get-it">
@@ -220,19 +223,19 @@ Wand document the order of operations you performed in the saved file names.</p>
 
 
            </div>
-
+           
           </div>
           <footer>
-
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-
+      
         <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-
-
+      
+      
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to RNAlysis’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-
+      
     </div>
-
+  
 
   <hr/>
 
@@ -242,7 +245,7 @@ Wand document the order of operations you performed in the saved file names.</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -252,7 +255,7 @@ Wand document the order of operations you performed in the saved file names.</p>
     </section>
 
   </div>
-
+  
 
 
   <script type="text/javascript">
@@ -261,10 +264,10 @@ Wand document the order of operations you performed in the saved file names.</p>
       });
   </script>
 
-
-
-
-
+  
+  
+    
+   
 
 </body>
 </html>

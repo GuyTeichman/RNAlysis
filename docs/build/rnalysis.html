@@ -81,7 +81,7 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
@@ -274,7 +274,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p></li>
+<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is ce11 (included in the package).</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -367,23 +367,26 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">col: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Removes all features except the ‘n’ most significantly-changed features.</p>
+<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>col</strong> (<em>str</em>) – The column to filter by</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – sort ascending (keep lowest values) or descending (keep highest values).</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
-</ul>
+<dt class="field-odd">type by</dt>
+<dd class="field-odd"><p>str or list of str</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">param by</dt>
+<dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
+</dd>
+<dt class="field-odd">type n</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">param n</dt>
+<dd class="field-even"><p>How many features to keep in the Filter object.</p>
 </dd>
 </dl>
-<p>If ‘inplace’ is False, returns a new instance of Filter.</p>
+</div></blockquote>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -411,14 +414,14 @@
 
 <dl class="method">
 <dt>
-<em class="property">static </em><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">save_csv: bool = True</em>, <em class="sig-param">norm_to_rpm: bool = False</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em>, <em class="sig-param">input_format: str = '.txt'</em><span class="sig-paren">)</span></dt>
+<em class="property">static </em><code class="sig-name descname">from_folder</code><span class="sig-paren">(</span><em class="sig-param">folder_path: str</em>, <em class="sig-param">norm_to_rpm: bool = False</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">save_reads_fname: str = None</em>, <em class="sig-param">save_not_counted_fname: str = None</em>, <em class="sig-param">input_format: str = '.txt'</em><span class="sig-paren">)</span></dt>
 <dd><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table.         Can also save the count data table and the uncounted data table to .csv files, and normalize the CountFilter         table to reads per million (RPM). Note that the saved data will always be count data, and not normalized data,         regardless if the CountFilter table was normalized or not.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder_path</strong> – str or pathlib.Path. Full path of the folder that contains individual htcount .txt files.</p></li>
-<li><p><strong>save_csv</strong> – bool. If True (default), the joint DataFrame of count data and uncounted data will be saved         to two separate .csv files. The files will be saved in ‘folder_path’, and named according to the parameters         ‘save_reads_fname’ for the count data, and ‘save_not_counted_fname’ for the uncounted data (unaligned,         alignment not unique, etc).</p></li>
 <li><p><strong>norm_to_rpm</strong> – bool. If True, the CountFilter table will be automatically normalized to reads per         million (RPM). If False (defualt), the CountFilter object will not be normalized, and will instead contain         absolute count data (as in the original htcount .txt files).         Note that if save_csv is True, the saved .csv fill will contain ABSOLUTE COUNT DATA, as in the original         htcount .txt files, and NOT normalized data.</p></li>
+<li><p><strong>save_csv</strong> – bool. If True, the joint DataFrame of count data and uncounted data will be saved         to two separate .csv files. The files will be saved in ‘folder_path’, and named according to the parameters         ‘save_reads_fname’ for the count data, and ‘save_not_counted_fname’ for the uncounted data (unaligned,         alignment not unique, etc).</p></li>
 <li><p><strong>save_reads_fname</strong> – str. Name under which to save the combined count data table. Does not need to include         the ‘.csv’ suffix.</p></li>
 <li><p><strong>save_not_counted_fname</strong> – save_reads_fname: str. Name under which to save the combined uncounted data.         Does not need to include the ‘.csv’ suffix.</p></li>
 <li><p><strong>input_format</strong> – the file format of the input files. Default is ‘.txt’.</p></li>
@@ -659,6 +662,25 @@
 <a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 525.6px; height: 550.8px;" /></a>
 <p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Sort the rows by the values of specified column or columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>by</strong> (<em>str</em><em> or </em><em>list of str</em>) – Names of the column or columns to sort by.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bool</em><em>, </em><em>default True</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default True</em>) – If True, perform operation in-place.         Otherwise, returns a sorted copy of the Filter object without modifying the original.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None if inplace=True, a sorted Filter object otherwise.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -913,7 +935,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p></li>
+<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is ce11 (included in the package).</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -1006,23 +1028,26 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">col: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Removes all features except the ‘n’ most significantly-changed features.</p>
+<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>col</strong> (<em>str</em>) – The column to filter by</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – sort ascending (keep lowest values) or descending (keep highest values).</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
-</ul>
+<dt class="field-odd">type by</dt>
+<dd class="field-odd"><p>str or list of str</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">param by</dt>
+<dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
+</dd>
+<dt class="field-odd">type n</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">param n</dt>
+<dd class="field-even"><p>How many features to keep in the Filter object.</p>
 </dd>
 </dl>
-<p>If ‘inplace’ is False, returns a new instance of Filter.</p>
+</div></blockquote>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1126,6 +1151,25 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>alt_filename</strong> – If None, file name will be generated automatically according to the filtering methods used.         if string, will be the name of the saved file. Example input: ‘myfilename’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Sort the rows by the values of specified column or columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>by</strong> (<em>str</em><em> or </em><em>list of str</em>) – Names of the column or columns to sort by.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bool</em><em>, </em><em>default True</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default True</em>) – If True, perform operation in-place.         Otherwise, returns a sorted copy of the Filter object without modifying the original.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None if inplace=True, a sorted Filter object otherwise.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1376,7 +1420,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p></li>
+<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is ce11 (included in the package).</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -1450,23 +1494,26 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">col: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Removes all features except the ‘n’ most significantly-changed features.</p>
+<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>col</strong> (<em>str</em>) – The column to filter by</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – sort ascending (keep lowest values) or descending (keep highest values).</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
-</ul>
+<dt class="field-odd">type by</dt>
+<dd class="field-odd"><p>str or list of str</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">param by</dt>
+<dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
+</dd>
+<dt class="field-odd">type n</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">param n</dt>
+<dd class="field-even"><p>How many features to keep in the Filter object.</p>
 </dd>
 </dl>
-<p>If ‘inplace’ is False, returns a new instance of Filter.</p>
+</div></blockquote>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1627,6 +1674,25 @@
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Sort the rows by the values of specified column or columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>by</strong> (<em>str</em><em> or </em><em>list of str</em>) – Names of the column or columns to sort by.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bool</em><em>, </em><em>default True</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default True</em>) – If True, perform operation in-place.         Otherwise, returns a sorted copy of the Filter object without modifying the original.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None if inplace=True, a sorted Filter object otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p>
 <dl class="field-list simple">
@@ -1776,7 +1842,7 @@
 <dl class="method">
 <dt>
 <code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set difference of the WBGene indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p>
+<dd><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1867,7 +1933,7 @@ and ‘pvalue’.</p>
 <code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">background_genes: set = None</em>, <em class="sig-param">ref_path: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table using parallel processing.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start an ipcluster, using rnalysis.general.start_ipcluster().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table using parallel processing.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
@@ -1963,7 +2029,7 @@ and ‘pvalue’.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set intersection of the WBGene indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p>
+<dd><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1992,7 +2058,7 @@ and ‘pvalue’.</p>
 <dl class="method">
 <dt>
 <code class="sig-name descname">symmetric_difference</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Calculates the set symmetric difference of the WBGene indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).</p>
+<dd><p>Calculates the set symmetric difference of the indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2011,7 +2077,7 @@ and ‘pvalue’.</p>
 <dt>
 <code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param">*others</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
-<div><p>Calculates the set union of the WBGene indices from multipple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p>
+<div><p>Calculates the set union of the indices from multipple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
