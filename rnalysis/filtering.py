@@ -397,6 +397,28 @@ class Filter:
         ref_df = ref_df.iloc[:, [0, -1]]
         return ref_df.loc[self.df.index].groupby('bioType').count()
 
+    def sort(self, by: str, ascending: bool = True, inplace: bool = True, na_position: str = 'last'):
+        """
+        Sort the rows by the values of specified column or columns.
+
+        :param by: str or list of str
+        :type by: Names of the column or columns to sort by.
+        :param ascending: bool or list of bool, default True
+        :type ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
+        If this is a list of bools, it must have the same length as 'by'.
+        :param inplace: bool, default True
+        :type inplace: If True, perform operation in-place. \
+        Otherwise, returns a sorted copy of the Filter object without modifying the original.
+        :param na_position: 'first' or 'last', default 'last'
+        :type na_position: If 'first', puts NaNs at the beginning; if 'last', puts NaNs at the end.
+        :return: None if inplace=True, a sorted Filter object otherwise.
+        """
+        if inplace:
+            self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=True, na_position=na_position)
+        else:
+            new_df = self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=False, na_position=na_position)
+            return self._inplace(new_df, False, inplace, '')
+
     def number_filters(self, column: str, operator: str, value, opposite=False, inplace=True):
         """
         Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.
