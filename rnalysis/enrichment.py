@@ -8,7 +8,7 @@ Results of enrichment analyses can be saved to .csv files.
 import random
 import numpy as np
 import pandas as pd
-from rnalysis import general, filtering, __gene_names_and_biotype__
+from rnalysis import general, filtering
 import tissue_enrichment_analysis as tea
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -304,7 +304,7 @@ class FeatureSet:
             return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
     @staticmethod
-    def _enrichment_get_attrs(attributes, ref_path):
+    def _enrichment_get_attrs(attributes, attr_ref_path):
         if attributes is None:
             attributes = FeatureSet._from_string(
                 "Please insert attributes separated by newline "
@@ -320,10 +320,10 @@ class FeatureSet:
                     assert isinstance(attr, str), f"Invalid type of attribute {attr}: {type(attr)}"
 
         try:
-            with open(ref_path) as f:
+            with open(attr_ref_path) as f:
                 all_attrs = f.readline().split(',')[1::]
         except:
-            raise ValueError(f"Invalid or nonexistent reference table path! path:'{ref_path}'")
+            raise ValueError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
         if all_attrs[-1].endswith('\n'):
             all_attrs[-1] = all_attrs[-1][:-1]
 
@@ -336,12 +336,12 @@ class FeatureSet:
             return select_attributes
         return attributes
 
-    def _enrichment_get_reference(self, biotype, background_genes, ref_path):
+    def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
         gene_set = self.gene_set
         try:
-            big_table = general.load_csv(ref_path, 0, drop_gene_names=False)
+            big_table = general.load_csv(attr_ref_path, 0, drop_gene_names=False)
         except:
-            raise ValueError(f"Invalid or nonexistent reference table path! path:'{ref_path}'")
+            raise ValueError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
 
         assert (isinstance(biotype, (str, list, set, tuple)))
 
@@ -366,12 +366,12 @@ class FeatureSet:
             if len(big_table.index) < len(background_genes):
                 warnings.warn(
                     f"{len(background_genes) - len(big_table.index)} indices from the requested "
-                    f"background genes do not appear in the reference table, and are therefore ignored. \n"
+                    f"background genes do not appear in the Attribute Reference Table, and are therefore ignored. \n"
                     f"This leaves a total of {len(big_table.index)} background genes. ")
         if biotype == 'all':
             pass
         else:
-            biotype_ref = general.load_csv(__gene_names_and_biotype__, 0, drop_gene_names=False)
+            biotype_ref = general.load_csv(biotype_ref_path, 0, drop_gene_names=False)
             if isinstance(biotype, (list, tuple, set)):
                 mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values, dtype=bool), biotype_ref['bioType'].index,
                                  name='bioType')
@@ -394,10 +394,11 @@ class FeatureSet:
 
     def enrich_randomization_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                                       biotype: str = 'protein_coding', background_genes: set = None,
-                                      ref_path: str = 'predefined', save_csv: bool = False, fname=None):
+                                      attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                                      save_csv: bool = False, fname=None):
         """
         Calculates enrichment scores, p-values and q-values \
-        for enrichment and depletion of selected attributes from a reference table using parallel processing. \
+        for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing. \
         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization. \
         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session(). \
         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
@@ -411,15 +412,15 @@ class FeatureSet:
 
        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'
        :param attributes: An iterable of attribute names or attribute numbers \
-       (according to their order in the reference table). \
-       If 'all', all of the attributes in the reference table will be used. \
+       (according to their order in the Attribute Reference Table). \
+       If 'all', all of the attributes in the Attribute Reference Table will be used. \
        If None, a manual input prompt will be raised.
        :type fdr: float between 0 and 1
        :param fdr: Indicates the FDR threshold for significance.
        :type reps: int larger than 0
        :param reps: How many repetitions to run the randomization for. \
        10,000 is the default. Recommended 10,000 or higher.
-       :param ref_path: the path of the Big Table file to be used as reference.
+       :param attr_ref_path: the path of the Big Table file to be used as reference.
        :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
        :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
        'protein_coding' will include only protein-coding genes in the reference, etc. \
@@ -442,10 +443,12 @@ class FeatureSet:
 
           Example plot of big table enrichment
        """
-        ref_path = FeatureSet._get_attr_ref_path(ref_path)
-        attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
+        attr_ref_path = FeatureSet._get_attr_ref_path(attr_ref_path)
+        biotype_ref_path = FeatureSet._get_biotype_ref_path(biotype_ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
-                                                             ref_path=ref_path)
+                                                             attr_ref_path=attr_ref_path,
+                                                             biotype_ref_path=biotype_ref_path)
         if attributes == ['all']:
             attributes = big_table.columns[:-1]
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
@@ -480,10 +483,11 @@ class FeatureSet:
 
     def enrich_randomization(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                              biotype: str = 'protein_coding', background_genes: set = None,
-                             ref_path: str = 'predefined', save_csv: bool = False, fname=None):
+                             attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                             save_csv: bool = False, fname=None):
         """
         Calculates enrichment scores, p-values and q-values \
-        for enrichment and depletion of selected attributes from a reference table. \
+        for enrichment and depletion of selected attributes from an Attribute Reference Table. \
         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
         P-values are corrected for multiple comparisons using \
         the Benjamini–Hochberg step-up procedure (original FDR method). \
@@ -496,16 +500,16 @@ class FeatureSet:
 
         :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
         :param attributes: An iterable of attribute names or attribute numbers \
-        (according to their order in the reference table). \
-        If 'all', all of the attributes in the reference table will be used. \
+        (according to their order in the Attribute Reference Table). \
+        If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
         :type fdr: float between 0 and 1
         :param fdr: Indicates the FDR threshold for significance.
         :type reps: int larger than 0
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
-        :type ref_path: 'predefined' (default), str or pathlib.Path
-        :param ref_path: the path of the reference table file to be used as reference.
+        :type attr_ref_path: 'predefined' (default), str or pathlib.Path
+        :param attr_ref_path: the path of the Attribute Reference Table file to be used as reference.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
         :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
@@ -529,10 +533,12 @@ class FeatureSet:
 
            Example plot of enrich_randomization
         """
-        ref_path = FeatureSet._get_attr_ref_path(ref_path)
-        attributes = self._enrichment_get_attrs(attributes=attributes, ref_path=ref_path)
+        attr_ref_path = FeatureSet._get_attr_ref_path(attr_ref_path)
+        biotype_ref_path = FeatureSet._get_biotype_ref_path(biotype_ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
-                                                             ref_path=ref_path)
+                                                             attr_ref_path=attr_ref_path,
+                                                             biotype_ref_path=biotype_ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
@@ -642,12 +648,16 @@ class FeatureSet:
         plt.show()
         return bar
 
-    def biotypes(self, ref: str = __gene_names_and_biotype__):
+    def biotypes(self, ref: str = 'predefined'):
         """
         Returns a DataFrame of the biotypes in the gene set and their count.
 
-        :param ref: Name of the reference file used to determine biotype. Default is ce11 (included in the package).
+        :type ref: str or pathlib.Path
+        :param ref: Path of the reference file used to determine biotype. \
+        Default is the path predefined in the settings file.
         """
+
+        ref = FeatureSet._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
         ref_df['WBGene'] = ref_df.index
         ref_df = ref_df.iloc[:, [0, -1]]
