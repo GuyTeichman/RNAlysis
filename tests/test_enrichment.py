@@ -319,13 +319,11 @@ def test_randomization_int_index_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['attribute1', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs([1, 3, 4], 'attr_ref_table_for_tests.csv',
-                                     biotype_ref_path='biotype_ref_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs([1, 3, 4], 'attr_ref_table_for_tests.csv')
     assert attrs == attrs_truth
 
     attr_truth_single = ['attribute4']
-    attr = en._enrichment_get_attrs(4, 'attr_ref_table_for_tests.csv',
-                                    biotype_ref_path='biotype_ref_table_for_tests.csv')
+    attr = en._enrichment_get_attrs(4, 'attr_ref_table_for_tests.csv')
     assert attr == attr_truth_single
 
 
@@ -334,6 +332,5 @@ def test_randomization_all_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['bioType', 'attribute1', 'attribute2', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs('all', 'attr_ref_table_for_tests.csv',
-                                     biotype_ref_path='biotype_ref_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs('all', 'attr_ref_table_for_tests.csv')
     assert attrs == attrs_truth
