@@ -1,14 +1,8 @@
 import pytest
-from rnalysis import general, filtering
+from rnalysis import general
 
 general.start_parallel_session()
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import matplotlib
-from pathlib import Path
-import statsmodels.stats.multitest as multitest
-import time
 from rnalysis.enrichment import *
 
 matplotlib.use('Agg')
@@ -113,12 +107,13 @@ def test_biotypes():
 
 
 def test_enrichment_get_ref_biotype():
-    truth = general.load_csv('big_table_for_tests_biotype.csv', 0)
+    truth = general.load_csv('attr_ref_table_for_tests_biotype.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     res, _ = en._enrichment_get_reference(biotype='protein_coding', background_genes=None,
-                                          ref_path='big_table_for_tests.csv')
+                                          attr_ref_path='attr_ref_table_for_tests.csv',
+                                          biotype_ref_path='biotype_ref_table_for_tests.csv')
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
 
@@ -133,7 +128,7 @@ def test_enrichment_get_ref_biotype():
 
 
 def test_enrichment_get_ref_custom_background():
-    truth = general.load_csv('big_table_for_tests_specified_bg.csv', 0)
+    truth = general.load_csv('attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -143,7 +138,8 @@ def test_enrichment_get_ref_custom_background():
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
     res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_genes,
-                                          ref_path='big_table_for_tests.csv')
+                                          attr_ref_path='attr_ref_table_for_tests.csv',
+                                          biotype_ref_path='biotype_ref_table_for_tests.csv')
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
 
@@ -156,7 +152,7 @@ def test_enrichment_get_ref_custom_background():
 
 
 def test_enrichment_get_ref_custom_background_from_featureset_object():
-    truth = general.load_csv('big_table_for_tests_specified_bg.csv', 0)
+    truth = general.load_csv('attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -166,20 +162,22 @@ def test_enrichment_get_ref_custom_background_from_featureset_object():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     bg_en = FeatureSet(bg_genes, 'background genes')
     res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_en,
-                                          ref_path='big_table_for_tests.csv')
+                                          attr_ref_path='attr_ref_table_for_tests.csv',
+                                          biotype_ref_path='biotype_ref_table_for_tests.csv')
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
 
 
 def test_enrichment_get_ref_custom_background_from_filter_object():
-    truth = general.load_csv('big_table_for_tests_specified_bg.csv', 0)
+    truth = general.load_csv('attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = filtering.CountFilter(r'test_bg_genes_from_filter_object.csv')
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
     res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_genes,
-                                          ref_path='big_table_for_tests.csv')
+                                          attr_ref_path='attr_ref_table_for_tests.csv',
+                                          biotype_ref_path='biotype_ref_table_for_tests.csv')
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
 
@@ -206,7 +204,8 @@ def tests_enrichment_randomization_api():
              'WBGene00000859', 'WBGene00268189'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.enrich_randomization(attrs, reps=1, biotype='all', ref_path='big_table_for_tests.csv')
+    _ = en.enrich_randomization(attrs, reps=1, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
+                                biotype_ref_path='biotype_ref_table_for_tests.csv')
 
 
 def test_enrichment_randomization_reliability():
@@ -216,9 +215,12 @@ def test_enrichment_randomization_reliability():
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
     for i in range(5):
-        res1 = en.enrich_randomization(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
-        res2 = en.enrich_randomization(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
-        res3 = en.enrich_randomization(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
+        res1 = en.enrich_randomization(attrs, reps=5000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
+                                       biotype_ref_path='biotype_ref_table_for_tests.csv')
+        res2 = en.enrich_randomization(attrs, reps=5000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
+                                       biotype_ref_path='biotype_ref_table_for_tests.csv')
+        res3 = en.enrich_randomization(attrs, reps=5000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
+                                       biotype_ref_path='biotype_ref_table_for_tests.csv')
 
         for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
             assert np.all(res1[col] == res2[col])
@@ -237,7 +239,8 @@ def test_enrichment_randomization_validity():
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
-    res = en.enrich_randomization(attrs, reps=100000, biotype='all', ref_path='big_table_for_tests.csv')
+    res = en.enrich_randomization(attrs, reps=100000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
+                                  biotype_ref_path='biotype_ref_table_for_tests.csv')
 
     for col in ['samples', 'n obs', 'significant']:
         assert np.all(res[col] == truth[col])
@@ -258,7 +261,8 @@ def test_enrichment_parallel_api():
              'WBGene00000859', 'WBGene00268189'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.enrich_randomization_parallel(attrs, reps=1, biotype='all', ref_path='big_table_for_tests.csv')
+    _ = en.enrich_randomization_parallel(attrs, reps=1, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
+                                         biotype_ref_path='biotype_ref_table_for_tests.csv')
 
 
 def test_enrichment_randomization_parallel_reliability():
@@ -268,9 +272,15 @@ def test_enrichment_randomization_parallel_reliability():
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
     for i in range(5):
-        res1 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
-        res2 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
-        res3 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all', ref_path='big_table_for_tests.csv')
+        res1 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
+                                                attr_ref_path='attr_ref_table_for_tests.csv',
+                                                biotype_ref_path='biotype_ref_table_for_tests.csv')
+        res2 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
+                                                attr_ref_path='attr_ref_table_for_tests.csv',
+                                                biotype_ref_path='biotype_ref_table_for_tests.csv')
+        res3 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
+                                                attr_ref_path='attr_ref_table_for_tests.csv',
+                                                biotype_ref_path='biotype_ref_table_for_tests.csv')
 
         for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
             assert np.all(res1[col] == res2[col])
@@ -289,7 +299,9 @@ def test_enrichment_parallel_validity():
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
-    res = en.enrich_randomization_parallel(attrs, reps=100000, biotype='all', ref_path='big_table_for_tests.csv')
+    res = en.enrich_randomization_parallel(attrs, reps=100000, biotype='all',
+                                           attr_ref_path='attr_ref_table_for_tests.csv',
+                                           biotype_ref_path='biotype_ref_table_for_tests.csv')
 
     for col in ['samples', 'n obs', 'significant']:
         assert np.all(res[col] == truth[col])
@@ -307,11 +319,13 @@ def test_randomization_int_index_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['attribute1', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs([1, 3, 4], 'big_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs([1, 3, 4], 'attr_ref_table_for_tests.csv',
+                                     biotype_ref_path='biotype_ref_table_for_tests.csv')
     assert attrs == attrs_truth
 
     attr_truth_single = ['attribute4']
-    attr = en._enrichment_get_attrs(4, 'big_table_for_tests.csv')
+    attr = en._enrichment_get_attrs(4, 'attr_ref_table_for_tests.csv',
+                                    biotype_ref_path='biotype_ref_table_for_tests.csv')
     assert attr == attr_truth_single
 
 
@@ -320,5 +334,6 @@ def test_randomization_all_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['bioType', 'attribute1', 'attribute2', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs('all', 'big_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs('all', 'attr_ref_table_for_tests.csv',
+                                     biotype_ref_path='biotype_ref_table_for_tests.csv')
     assert attrs == attrs_truth

@@ -65,8 +65,8 @@ def test_htcount_filter_biotype():
     truth_protein_coding = general.load_csv('all_expr_biotype_protein_coding.csv', 0)
     truth_pirna = general.load_csv('all_expr_biotype_piRNA.csv', 0)
     h = CountFilter("all_expr_biotype.csv")
-    protein_coding = h.filter_biotype(ref='big_table_for_tests.csv', inplace=False)
-    pirna = h.filter_biotype('piRNA', ref='big_table_for_tests.csv', inplace=False)
+    protein_coding = h.filter_biotype(ref='attr_ref_table_for_tests.csv', inplace=False)
+    pirna = h.filter_biotype('piRNA', ref='attr_ref_table_for_tests.csv', inplace=False)
     pirna.df.sort_index(inplace=True)
     protein_coding.df.sort_index(inplace=True)
     truth_protein_coding.sort_index(inplace=True)
@@ -88,7 +88,7 @@ def test_filter_by_ref_table_attr_union():
     union_truth = general.load_csv(r'all_expr_filter_by_bigtable_union_truth.csv', 0)
     h = CountFilter('all_expr_filter_by_bigtable.csv')
     union = h.filter_by_ref_table_attr(['attribute1', 'attribute2'], mode='union',
-                                       ref='big_table_for_tests.csv', inplace=False)
+                                       ref='attr_ref_table_for_tests.csv', inplace=False)
     union.df.sort_index(inplace=True)
     union_truth.sort_index(inplace=True)
     assert np.all(union.df == union_truth)
@@ -98,7 +98,7 @@ def test_filter_by_ref_table_attr_intersection():
     intersection_truth = general.load_csv(r'all_expr_filter_by_bigtable_intersect_truth.csv', 0)
     h = CountFilter('all_expr_filter_by_bigtable.csv')
     intersection = h.filter_by_ref_table_attr(['attribute1', 'attribute2'], mode='intersection',
-                                              ref='big_table_for_tests.csv',
+                                              ref='attr_ref_table_for_tests.csv',
                                               inplace=False)
     intersection.df.sort_index(inplace=True)
     intersection_truth.sort_index(inplace=True)
@@ -327,7 +327,7 @@ def test_split_by_percentile():
 def test_htcount_filter_biotype_multiple():
     truth = general.load_csv('all_expr_biotype_piRNA_protein_coding.csv', 0)
     h = CountFilter("all_expr_biotype.csv")
-    both = h.filter_biotype(['protein_coding', 'piRNA'], ref='big_table_for_tests.csv', inplace=False)
+    both = h.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False)
     both.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == both.df)
@@ -336,7 +336,7 @@ def test_htcount_filter_biotype_multiple():
 def test_htcount_filter_biotype_multiple_opposite():
     truth = general.load_csv('all_expr_biotype_piRNA_protein_coding_opposite.csv', 0)
     h = CountFilter("all_expr_biotype.csv")
-    neither = h.filter_biotype(['protein_coding', 'piRNA'], ref='big_table_for_tests.csv', inplace=False, opposite=True)
+    neither = h.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False, opposite=True)
     neither.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == neither.df)
@@ -346,8 +346,8 @@ def test_deseq_filter_biotype():
     truth_protein_coding = general.load_csv('test_deseq_biotype_protein_coding.csv', 0)
     truth_pirna = general.load_csv('test_deseq_biotype_piRNA.csv', 0)
     d = DESeqFilter("test_deseq_biotype.csv")
-    protein_coding = d.filter_biotype(ref='big_table_for_tests.csv', inplace=False)
-    pirna = d.filter_biotype('piRNA', ref='big_table_for_tests.csv', inplace=False)
+    protein_coding = d.filter_biotype(ref='attr_ref_table_for_tests.csv', inplace=False)
+    pirna = d.filter_biotype('piRNA', ref='attr_ref_table_for_tests.csv', inplace=False)
     pirna.df.sort_index(inplace=True)
     protein_coding.df.sort_index(inplace=True)
     truth_protein_coding.sort_index(inplace=True)
@@ -368,7 +368,7 @@ def test_deseq_filter_biotype_opposite():
 def test_deseq_filter_biotype_multiple():
     truth = general.load_csv('test_deseq_biotype_piRNA_protein_coding.csv', 0)
     d = DESeqFilter("test_deseq_biotype.csv")
-    both = d.filter_biotype(['protein_coding', 'piRNA'], ref='big_table_for_tests.csv', inplace=False)
+    both = d.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False)
     both.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == both.df)
@@ -377,7 +377,7 @@ def test_deseq_filter_biotype_multiple():
 def test_deseq_filter_biotype_multiple_opposite():
     truth = general.load_csv('test_deseq_biotype_piRNA_protein_coding_opposite.csv', 0)
     d = DESeqFilter("test_deseq_biotype.csv")
-    neither = d.filter_biotype(['protein_coding', 'piRNA'], ref='big_table_for_tests.csv', inplace=False, opposite=True)
+    neither = d.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False, opposite=True)
     neither.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == neither.df)
