@@ -11,6 +11,7 @@ History
 * Enrichment randomization tests now support non-WBGene indexing.
 * Changed argument order and default values in filtering.CountFilter.from_folder()
 * Added Filter.sort(), and upgraded the functionality of Filter.filter_top_n()
+* Added UpSet plots to enrichment module
 * Various bug fixes
 
 1.3.2 (2019-12-11)
