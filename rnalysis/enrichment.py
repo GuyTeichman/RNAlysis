@@ -17,6 +17,7 @@ from pathlib import Path
 import statsmodels.stats.multitest as multitest
 from ipyparallel import Client
 from itertools import repeat
+import upsetplot as upset
 import warnings
 
 
@@ -78,19 +79,7 @@ class FeatureSet:
         else:
             return FeatureSet(gene_set)
 
-    @staticmethod
-    def _get_biotype_ref_path(ref):
-        if ref == 'predefined':
-            return general.read_biotype_ref_table_path()
-        else:
-            return ref
 
-    @staticmethod
-    def _get_attr_ref_path(ref):
-        if ref == 'predefined':
-            return general.read_attr_ref_table_path()
-        else:
-            return ref
 
     def save_txt(self, fname):
         """
@@ -443,8 +432,8 @@ class FeatureSet:
 
           Example plot of big table enrichment
        """
-        attr_ref_path = FeatureSet._get_attr_ref_path(attr_ref_path)
-        biotype_ref_path = FeatureSet._get_biotype_ref_path(biotype_ref_path)
+        attr_ref_path = general._get_attr_ref_path(attr_ref_path)
+        biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              attr_ref_path=attr_ref_path,
@@ -533,8 +522,8 @@ class FeatureSet:
 
            Example plot of enrich_randomization
         """
-        attr_ref_path = FeatureSet._get_attr_ref_path(attr_ref_path)
-        biotype_ref_path = FeatureSet._get_biotype_ref_path(biotype_ref_path)
+        attr_ref_path = general._get_attr_ref_path(attr_ref_path)
+        biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                              attr_ref_path=attr_ref_path,
@@ -657,11 +646,14 @@ class FeatureSet:
         Default is the path predefined in the settings file.
         """
 
-        ref = FeatureSet._get_biotype_ref_path(ref)
+        ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
         ref_df['WBGene'] = ref_df.index
         ref_df = ref_df.iloc[:, [0, -1]]
         return ref_df.loc[self.gene_set].groupby('bioType').count()
 
+
+
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
+

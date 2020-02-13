@@ -69,20 +69,6 @@ class Filter:
         """
         return type(self)((self.fname, self.df.copy(deep=True)))
 
-    @staticmethod
-    def _get_biotype_ref_path(ref):
-        if ref == 'predefined':
-            return general.read_biotype_ref_table_path()
-        else:
-            return ref
-
-    @staticmethod
-    def _get_attr_ref_path(ref):
-        if ref == 'predefined':
-            return general.read_attr_ref_table_path()
-        else:
-            return ref
-
     def _inplace(self, new_df: pd.DataFrame, opposite: bool, inplace: bool, suffix: str):
         """
         Executes the user's choice whether to filter in-place or create a new instance of the Filter object.
@@ -250,7 +236,7 @@ class Filter:
         for bio in biotype:
             assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
 
-        ref = self._get_biotype_ref_path(ref)
+        ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
         suffix = f"_{'_'.join(biotype)}"
 
@@ -295,7 +281,7 @@ class Filter:
         :return:
         If 'inplace' is False, returns a new and filtered instance of the Filter object.
         """
-        ref = self._get_attr_ref_path(ref)
+        ref = general._get_attr_ref_path(ref)
         if attributes is None:
             attributes = self._from_string(
                 "Please insert attributes separated by newline "
@@ -338,7 +324,7 @@ class Filter:
         appear in the list in the same order the Big Table attributes were given in.
         """
         assert isinstance(attributes, (tuple, list, set))
-        ref = self._get_attr_ref_path(ref)
+        ref = general._get_attr_ref_path(ref)
         return [self.filter_by_ref_table_attr(attributes=[att], mode='union', ref=ref, inplace=False) for att in
                 attributes]
 
@@ -403,7 +389,7 @@ class Filter:
 
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
         """
-        ref = self._get_biotype_ref_path(ref)
+        ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
         ref_df['WBGene'] = ref_df.index
         ref_df = ref_df.iloc[:, [0, -1]]

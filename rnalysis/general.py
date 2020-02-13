@@ -136,7 +136,7 @@ def read_biotype_ref_table_path():
 
 
 def read_attr_ref_table_path():
-    pth =  read_path_from_settings(__attr_file_key__)
+    pth = read_path_from_settings(__attr_file_key__)
     print(f'Attribute reference table used: {pth}')
     return pth
 
@@ -230,3 +230,17 @@ def filter_low_rpm(df: pd.DataFrame, threshold: float = 5):
     A filtered DataFrame
     """
     return df.loc[[True if max(vals) > threshold else False for gene, vals in df.iterrows()]]
+
+
+def _get_biotype_ref_path(ref):
+    if ref == 'predefined':
+        return read_biotype_ref_table_path()
+    else:
+        return ref
+
+
+def _get_attr_ref_path(ref):
+    if ref == 'predefined':
+        return read_attr_ref_table_path()
+    else:
+        return ref
