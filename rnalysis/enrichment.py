@@ -16,7 +16,7 @@ from matplotlib.cm import ScalarMappable
 from pathlib import Path
 import statsmodels.stats.multitest as multitest
 from ipyparallel import Client
-from itertools import repeat
+from itertools import repeat, compress
 import upsetplot as upset
 import warnings
 
@@ -78,8 +78,6 @@ class FeatureSet:
             self.gene_set = gene_set
         else:
             return FeatureSet(gene_set)
-
-
 
     def save_txt(self, fname):
         """
@@ -653,7 +651,46 @@ class FeatureSet:
         return ref_df.loc[self.gene_set].groupby('bioType').count()
 
 
+def upset_plot(objs: dict, ref: str = 'predefined'):
+    for obj in objs:
+        if isinstance(objs[obj], set):
+            pass
+        elif issubclass(objs[obj].__class__, filtering.Filter):
+            objs[obj] = obj.index_set
+        elif isinstance(objs[obj], FeatureSet):
+            objs[obj] = obj.gene_set
+        elif isinstance(objs[obj], str):
+            try:
+                attr_table
+            except NameError:
+                pth = general._get_attr_ref_path(ref)
+                attr_table = general.load_csv(pth, 0, drop_gene_names=False)
+            attr = objs[obj]
+            myset = set(attr_table[attr].loc[attr_table[attr].notna()].index)
+            objs[obj] = myset
+        else:
+            raise TypeError
+
+    upset_df = _generate_upset_srs(objs)
+    return upset.plot(upset_df)
+
+
+def _generate_upset_srs(objs: dict):
+    """
+
+    :param objs:
+    :type objs: dict of sets
+    :return:
+    :rtype:
+    """
+    names = list(objs.keys())
+    multi_ind = pd.MultiIndex.from_product([[True, False] for i in range(len(names))], names=names)[:-1]
+    srs = pd.Series(index=multi_ind)
+    for ind in multi_ind:
+        sets = list(compress(names, ind))
+        group_size = len(set.intersection(*[objs[s] for s in sets]))
+        srs.loc[ind] = group_size
+    return srs
 
 # TODO: other types of plots
 # TODO: heat map plot of multiple DESEQ files
-
