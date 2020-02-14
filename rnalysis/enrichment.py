@@ -691,7 +691,8 @@ def upset_plot(objs: dict, ref: str = 'predefined'):
 
 
 def venn_diagram(objs: dict, ref: str = 'predefined', title: str = 'default', set_colors: tuple = ('r', 'g', 'b'),
-                 alpha: float = 0.4, lines: bool = True, linecolor: str = 'black', linestyle='solid', linewidth=2.0,
+                 alpha: float = 0.4, weighted: bool = True, lines: bool = True, linecolor: str = 'black',
+                 linestyle='solid', linewidth=2.0,
                  normalize_to: float = 1.0):
     """
 
@@ -705,6 +706,8 @@ def venn_diagram(objs: dict, ref: str = 'predefined', title: str = 'default', se
     :type set_colors:
     :param alpha:
     :type alpha:
+    :param weighted:
+    :type weighted:
     :param lines:
     :type lines:
     :param linecolor:
@@ -723,18 +726,21 @@ def venn_diagram(objs: dict, ref: str = 'predefined', title: str = 'default', se
     assert isinstance(title, str), f'Title must be a string. Instead got {type(title)}'
     objs = _fetch_sets(objs=objs, ref=ref)
     if len(objs) == 2:
-        func = vn.venn2
+        func = vn.venn2 if weighted else vn.venn2_unweighted
         func_circles = vn.venn2_circles
         set_colors = set_colors[0:2]
     else:
-        func = vn.venn3
+        func = vn.venn3 if weighted else vn.venn3_unweighted
         func_circles = vn.venn3_circles
     fig = plt.figure()
     plot_obj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=alpha,
                     normalize_to=normalize_to)
-    if lines:
+    if lines and weighted:
         circle_obj = func_circles(tuple(objs.values()), color=linecolor, linestyle=linestyle, linewidth=linewidth,
                                   normalize_to=normalize_to)
+    elif lines and not weighted:
+        warnings.warn('Cannot draw lines on an unweighted venn diagram. ')
+        circle_obj = None
     else:
         circle_obj = None
     if title == 'default':
