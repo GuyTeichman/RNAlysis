@@ -18,6 +18,7 @@ import statsmodels.stats.multitest as multitest
 from ipyparallel import Client
 from itertools import repeat, compress
 import upsetplot as upset
+import matplotlib_venn as vn
 import warnings
 
 
@@ -651,7 +652,8 @@ class FeatureSet:
         return ref_df.loc[self.gene_set].groupby('bioType').count()
 
 
-def upset_plot(objs: dict, ref: str = 'predefined'):
+def _fetch_sets(objs: dict, ref: str = 'predefined'):
+    assert isinstance(objs, dict), f"objs must be a dictionary. Instaed got {type(objs)}"
     for obj in objs:
         if isinstance(objs[obj], set):
             pass
@@ -670,9 +672,75 @@ def upset_plot(objs: dict, ref: str = 'predefined'):
             objs[obj] = myset
         else:
             raise TypeError
+    return objs
 
-    upset_df = _generate_upset_srs(objs)
+
+def upset_plot(objs: dict, ref: str = 'predefined'):
+    """
+
+    :param objs:
+    :type objs:
+    :param ref:
+    :type ref:
+    :return:
+    :rtype:
+    """
+
+    upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
     return upset.plot(upset_df)
+
+
+def venn_diagram(objs: dict, ref: str = 'predefined', title: str = 'default', set_colors: tuple = ('r', 'g', 'b'),
+                 alpha: float = 0.4, lines: bool = True, linecolor: str = 'black', linestyle='solid', linewidth=2.0,
+                 normalize_to: float = 1.0):
+    """
+
+    :param objs:
+    :type objs:
+    :param ref:
+    :type ref:
+    :param title:
+    :type title:
+    :param set_colors:
+    :type set_colors:
+    :param alpha:
+    :type alpha:
+    :param lines:
+    :type lines:
+    :param linecolor:
+    :type linecolor:
+    :param linestyle:
+    :type linestyle:
+    :param linewidth:
+    :type linewidth:
+    :param normalize_to:
+    :type normalize_to:
+    :return:
+    :rtype:
+    """
+    if len(objs) > 3 or len(objs) < 2:
+        raise ValueError(f'Venn can only accept between 2 and 3 sets. Instead got {len(objs)}')
+    assert isinstance(title, str), f'Title must be a string. Instead got {type(title)}'
+    objs = _fetch_sets(objs=objs, ref=ref)
+    if len(objs) == 2:
+        func = vn.venn2
+        func_circles = vn.venn2_circles
+        set_colors = set_colors[0:2]
+    else:
+        func = vn.venn3
+        func_circles = vn.venn3_circles
+    fig = plt.figure()
+    plot_obj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=alpha,
+                    normalize_to=normalize_to)
+    if lines:
+        circle_obj = func_circles(tuple(objs.values()), color=linecolor, linestyle=linestyle, linewidth=linewidth,
+                                  normalize_to=normalize_to)
+    else:
+        circle_obj = None
+    if title == 'default':
+        title = 'Venn diagram of ' + ''.join([name + ' ' for name in objs.keys()])
+    plt.title(title)
+    return plot_obj, circle_obj
 
 
 def _generate_upset_srs(objs: dict):
