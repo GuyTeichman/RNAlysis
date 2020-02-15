@@ -1485,7 +1485,7 @@ class CountFilter(Filter):
         if xlabel is None:
             xlabel = f'log10(reads per million + 1) from library {sample1}'
         if ylabel is None:
-            ylabel = f'log10(reads per million + 1) from library {sample2}'
+            ylabel = f'log10(reads per million + 1) from sample {sample2}'
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
         ax.set_xlabel(xlabel, fontsize=15)
