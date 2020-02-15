@@ -205,18 +205,22 @@ class FeatureSet:
             fname = str(Path)
         general.save_to_csv(df, filename=fname + '.csv')
 
-    def go_enrichment(self, mode: str = 'go', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
+    def go_enrichment(self, mode: str = 'all', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
         """
         Analyzes GO, Tissue and/or Phenotype enrichment of the given group of features. \
         Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans. \
         Corrected p-values are calculated using hypergeometric statistics. \
         For more details see GitHub page of the developers: https://github.com/dangeles/TissueEnrichmentAnalysis
 
+        :type mode: 'go', 'tissue', 'phenotype' or 'all' (default 'all')
         :param mode: the enrichment you wish to perform. 'go' for gene ontology enrichment, \
-        'tissue' for tissue enrichment, 'phenotype' for phenotype enrichment.
-        :param alpha: float. Significance threshold. Default is 0.05
-        :param save_csv: bool. False by default. If True, save the result to a csv.
-        :param fname: Name and path in which to save the results. Must be filled if save_csv is True.
+        'tissue' for tissue enrichment, 'phenotype' for phenotype enrichment, or 'all' for all three.
+        :type alpha: float between 0 and 1 (default 0.05)
+        :param alpha: Significance threshold.
+        :type save_csv: bool (default False)
+        :param save_csv: If True, save the result to a csv.
+        :type fname: str or pathlib.Path
+        :param fname: Name and path in which to save the results. Must be specified if save_csv is True.
         :return:
         a DataFrame which contains the significant enrichmenet terms
 
