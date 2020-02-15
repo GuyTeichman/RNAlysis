@@ -87,11 +87,16 @@ class Filter:
             suffix += 'opposite'
 
         new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}{suffix}{self.fname.suffix}")
-
+        printout = f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
+                   f"of the original {self.df.shape[0]} features. "
         if inplace:
+            printout += ' Filtered inplace.'
+            print(printout)
             self.df, self.fname = new_df, new_fname
             self.shape = self.df.shape
         else:
+            printout += ' Filtering result saved to new object.'
+            print(printout)
             tmp_df, tmp_fname = self.df, self.fname
             self.df, self.fname = new_df, new_fname
             new_obj = self.__copy__()
@@ -382,7 +387,7 @@ class Filter:
         """
         print(self.index_string)
 
-# TODO: fix biotypes for a reference table that isn't based on WBGene!!!!
+    # TODO: fix biotypes for a reference table that isn't based on WBGene!!!!
     def biotypes(self, ref: str = 'predefined'):
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
