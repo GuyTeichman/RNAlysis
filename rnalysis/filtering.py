@@ -1064,7 +1064,8 @@ class CountFilter(Filter):
         srs = (self.df[numerator].mean(axis=1) + 1) / (self.df[denominator].mean(axis=1) + 1)
         numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
         denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
-        new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}{'_fold_change'}{self.fname.suffix}")
+        new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}'_fold_change_'"
+            f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
 
         fcfilt = FoldChangeFilter((new_fname, srs), numerator_name=numer_name, denominator_name=denom_name)
 
