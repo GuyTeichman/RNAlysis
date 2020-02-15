@@ -20,6 +20,7 @@ Changed
 * Changed default title in scatter_sample_vs_sample()
 * Changed default filename in CountFilter.fold_change()
 * Settings are now saved in a .yaml format. Reading and writing of settings have been modified.
+* Changed argument name 'deseq_highlight' to 'highlight' in scatter_sample_vs_sample(). It can now accept any Filter object.
 
 
 Fixed

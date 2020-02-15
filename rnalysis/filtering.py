@@ -1450,7 +1450,7 @@ class CountFilter(Filter):
         return ax
 
     def scatter_sample_vs_sample(self, sample1: str, sample2: str, xlabel: str = None, ylabel: str = None,
-                                 deseq_highlight=None):
+                                 highlight=None):
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.
@@ -1461,8 +1461,8 @@ class CountFilter(Filter):
         If sample2 is a list, they will be averaged as replicates.
         :param xlabel: optional. If not specified, sample1 will be used as xlabel.
         :param ylabel: optional. If not specified, sample2 will be used as ylabel.
-        :param deseq_highlight: DESeqFilter object or iterable of WBGene indices(optional). \
-        If specified, the points in the scatter corresponding to the WBGene indices in deseq_highlight will be \
+        :param highlight: DESeqFilter object or iterable of WBGene indices(optional). \
+        If specified, the points in the scatter corresponding to the WBGene indices in highlight will be \
         highlighted in red.
         :return:
         a matplotlib axis object.
@@ -1493,9 +1493,9 @@ class CountFilter(Filter):
         ax.set_title(f'{sample1} vs {sample2}', fontsize=20)
         ax.scatter(xvals, yvals, s=3, c='#6d7178')
 
-        if deseq_highlight is not None:
-            highlight_features = deseq_highlight.index_set if isinstance(deseq_highlight,
-                                                                         DESeqFilter) else deseq_highlight
+        if highlight is not None:
+            highlight_features = highlight.index_set if issubclass(highlight.__class__,
+                                                                         Filter) else highlight
             highlight_intersection = highlight_features.intersection(self.index_set)
             if len(highlight_intersection) < len(highlight_features):
                 warnings.warn(
