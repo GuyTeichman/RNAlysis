@@ -3,19 +3,37 @@ History
 =======
 1.3.3 (2020-02-25)
 ------------------
-
 * First stable release on PyPI.
-* User-defined biotype reference tables can now be used.
-* Settings are now saved in a .yaml format. Reading and writing of settings have been modified.
-* Removed the 'feature_name_to_wbgene' module from RNAlysis.
-* Enrichment randomization tests now support non-WBGene indexing.
-* Changed argument order and default values in filtering.CountFilter.from_folder()
+
+Added
+++++++
 * Added Filter.sort(), and upgraded the functionality of Filter.filter_top_n()
 * Added UpSet plots and Venn diagrams to enrichment module
+* User-defined biotype reference tables can now be used.
 * Filter operations now print out the result of the operation
+* Enrichment randomization tests now also support non-WBGene indexing.
+
+
+Changed
++++++++
+* Changed argument order and default values in filtering.CountFilter.from_folder()
 * Changed default title in scatter_sample_vs_sample()
-* changed default filename in CountFilter.fold_change()
+* Changed default filename in CountFilter.fold_change()
+* Settings are now saved in a .yaml format. Reading and writing of settings have been modified.
+
+
+Fixed
+++++++
 * Various bug fixes
+
+Removed
+++++++++
+* Removed the 'feature_name_to_wbgene' module from RNAlysis.
+
+
+
+
+
 
 1.3.2 (2019-12-11)
 ------------------
