@@ -662,9 +662,9 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
         if isinstance(objs[obj], set):
             pass
         elif issubclass(objs[obj].__class__, filtering.Filter):
-            objs[obj] = obj.index_set
+            objs[obj] = objs[obj].index_set
         elif isinstance(objs[obj], FeatureSet):
-            objs[obj] = obj.gene_set
+            objs[obj] = objs[obj].gene_set
         elif isinstance(objs[obj], str):
             try:
                 attr_table
