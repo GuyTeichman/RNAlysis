@@ -97,6 +97,8 @@ def get_settings_path():
 
 def load_settings():
     settings_pth = get_settings_path()
+    if not settings_pth.exists():
+        return dict()
     with open(settings_pth) as f:
         settings = yaml.safe_load(f)
         if settings is None:
@@ -126,6 +128,7 @@ def read_path_from_settings(key):
     settings = load_settings()
     if key not in settings:
         update_settings(input(f'Please insert the full path of {key}:\n'), key)
+        settings=load_settings()
     return settings[key]
 
 
