@@ -650,10 +650,13 @@ class FeatureSet:
         """
 
         ref = general._get_biotype_ref_path(ref)
-        ref_df = general.load_csv(ref, 0)
-        ref_df['WBGene'] = ref_df.index
-        ref_df = ref_df.iloc[:, [0, -1]]
-        return ref_df.loc[self.gene_set].groupby('bioType').count()
+        ref_df = general.load_csv(ref)
+        not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
+        if len(not_in_ref) > 0:
+            warnings.warn(
+                f'{len(not_in_ref)} of the features in the Filter object do not appear in the biotype reference file. ')
+            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'bioType': 'not_in_biotype_reference'}))
+        return ref_df.set_index('gene', drop=False).loc[self.gene_set].groupby('bioType').count()
 
 
 def _fetch_sets(objs: dict, ref: str = 'predefined'):

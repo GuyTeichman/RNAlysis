@@ -97,7 +97,8 @@ def test_biotypes():
     truth = general.load_csv('biotypes_truth.csv', 0)
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
-             'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105'}
+             'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105',
+             'index_that_is_not_in_biotype_ref_table'}
 
     en = FeatureSet(genes)
     df = en.biotypes()
