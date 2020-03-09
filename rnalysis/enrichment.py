@@ -331,7 +331,7 @@ class FeatureSet:
     def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
         gene_set = self.gene_set
         try:
-            big_table = general.load_csv(attr_ref_path, 0, drop_gene_names=False)
+            big_table = general.load_csv(attr_ref_path, 0)
         except:
             raise ValueError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
 
@@ -363,7 +363,7 @@ class FeatureSet:
         if biotype == 'all':
             pass
         else:
-            biotype_ref = general.load_csv(biotype_ref_path, 0, drop_gene_names=False)
+            biotype_ref = general.load_csv(biotype_ref_path, 0)
             if isinstance(biotype, (list, tuple, set)):
                 mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values, dtype=bool), biotype_ref['bioType'].index,
                                  name='bioType')
@@ -673,7 +673,7 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
                 attr_table
             except NameError:
                 pth = general._get_attr_ref_path(ref)
-                attr_table = general.load_csv(pth, 0, drop_gene_names=False)
+                attr_table = general.load_csv(pth, 0)
             attr = objs[obj]
             myset = set(attr_table[attr].loc[attr_table[attr].notna()].index)
             objs[obj] = myset

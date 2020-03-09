@@ -128,7 +128,7 @@ def read_path_from_settings(key):
     settings = load_settings()
     if key not in settings:
         update_settings(input(f'Please insert the full path of {key}:\n'), key)
-        settings=load_settings()
+        settings = load_settings()
     return settings[key]
 
 
@@ -144,7 +144,7 @@ def read_attr_ref_table_path():
     return pth
 
 
-def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, squeeze=False, comment: str = None):
+def load_csv(filename: str, idx_col: int = None, drop_columns: bool = False, squeeze=False, comment: str = None):
     """
     loads a csv df into a pandas dataframe.
 
@@ -152,8 +152,8 @@ def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, s
     :param filename: name of the csv file to be loaded
     :type idx_col: int, default None
     :param idx_col: number of column to be used as index. default is None, meaning no column will be used as index.
-    :type drop_gene_names: bool, default True
-    :param drop_gene_names: bool. If True, tries to drop the 'genes' column from the DataFrame (useful for filtering).
+    :type drop_columns: str, list of str, or False (default False)
+    :param drop_columns: bool. If True, tries to drop the 'genes' column from the DataFrame (useful for filtering).
     :type squeeze: bool, default False
     :param squeeze: If the parsed data only contains one column then return a Series.
     :type comment: str (optional)
@@ -161,16 +161,24 @@ def load_csv(filename: str, idx_col: int = None, drop_gene_names: bool = True, s
     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
     :return: a pandas dataframe of the csv file
     """
-    assert isinstance(filename, (str, Path))
-    # with open(filename) as f:
+    assert isinstance(filename,
+                      (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
     encoding = 'ISO-8859-1'
     if idx_col is not None:
         df = pd.read_csv(filename, index_col=idx_col, encoding=encoding, squeeze=squeeze, comment=comment)
     else:
         df = pd.read_csv(filename, encoding=encoding, squeeze=squeeze, comment=comment)
-    if drop_gene_names:
-        if 'genes' in df:
-            df.drop('genes', axis=1, inplace=True)
+    if drop_columns:
+        if isinstance(drop_columns, str):
+            drop_columns = [drop_columns]
+            assert isinstance(drop_columns,
+                              list), f"'drop_columns' must be str, list, or False; is instead {type(drop_columns)}."
+            for i in drop_columns:
+                assert isinstance(i, str), f"'drop_columns' must contain strings only. Member {i} is of type {type(i)}."
+                if i in df:
+                    df.drop('genes', axis=1, inplace=True)
+                else:
+                    raise IndexError(f"The argument {i} in 'drop_columns' is not a column in the loaded csv file!")
     return df
 
 

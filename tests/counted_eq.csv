@@ -1,4 +1,4 @@
-WBGene,genes,cond1,cond2,cond3,cond4
-WBGene00044951,2RSSE.3,0,0,0,1
-WBGene00077502,AC3.11,0,0,0,0
-WBGene00077504,AC3.13,0,0,0,0
+,cond1,cond2,cond3,cond4
+WBGene00044951,0,0,0,1
+WBGene00077502,0,0,0,0
+WBGene00077504,0,0,0,0

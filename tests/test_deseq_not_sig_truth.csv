@@ -1,3 +1,3 @@
-WBGene,genes,baseMean,log2FoldChange,lfcSE,stat,pvalue,padj
-WBGene00044478,K06B9.6,851.0732552,5.488316092,0.201591092,27.22499317,3.29E-163,5.10E-02
-WBGene00021375,Y37E11B.2,nan,nan,nan,nan,nan,nan
+,baseMean,log2FoldChange,lfcSE,stat,pvalue,padj
+WBGene00044478,851.0732552,5.488316092,0.201591092,27.22499317,3.29E-163,5.10E-02
+WBGene00021375,nan,nan,nan,nan,nan,nan

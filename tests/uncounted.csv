@@ -1,4 +1,4 @@
-feature,cond1,cond2,cond3,cond4
+,cond1,cond2,cond3,cond4
 __alignment_not_unique,51,105,0,2
 __ambiguous,4460,3903,3127,3140
 __no_feature,768762,703960,816809,687362
