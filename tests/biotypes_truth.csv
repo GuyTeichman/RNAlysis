@@ -1,5 +1,6 @@
 ,gene
 ncRNA,3
+not_in_biotype_reference,1
 piRNA,3
 protein_coding,5
 pseudogene,3
