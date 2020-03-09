@@ -228,7 +228,7 @@ def save_to_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool
     else:
         assert isinstance(suffix, str), "'suffix' must be either str or None!"
     new_fname = Path(f"{str(fname.parent)}\\{fname.stem}{suffix}{fname.suffix}")
-    df.to_csv(new_fname)
+    df.to_csv(new_fname, header=True)
 
 
 def filter_low_rpm(df: pd.DataFrame, threshold: float = 5):
