@@ -1553,8 +1553,8 @@ class CountFilter(Filter):
     # TODO: add ranksum test
 
     @staticmethod
-    def from_folder(folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, save_reads_fname: str = None,
-                    save_not_counted_fname: str = None, input_format: str = '.txt'):
+    def from_folder(folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, counted_fname: str = None,
+                    uncounted_fname: str = None, input_format: str = '.txt'):
         """
         Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table. \
         Can also save the count data table and the uncounted data table to .csv files, and normalize the CountFilter \
@@ -1569,11 +1569,11 @@ class CountFilter(Filter):
         htcount .txt files, and NOT normalized data.
         :param save_csv: bool. If True, the joint DataFrame of count data and uncounted data will be saved \
         to two separate .csv files. The files will be saved in 'folder_path', and named according to the parameters \
-        'save_reads_fname' for the count data, and 'save_not_counted_fname' for the uncounted data (unaligned, \
+        'counted_fname' for the count data, and 'uncounted_fname' for the uncounted data (unaligned, \
         alignment not unique, etc).
-        :param save_reads_fname: str. Name under which to save the combined count data table. Does not need to include \
+        :param counted_fname: str. Name under which to save the combined count data table. Does not need to include \
         the '.csv' suffix.
-        :param save_not_counted_fname: save_reads_fname: str. Name under which to save the combined uncounted data. \
+        :param uncounted_fname: counted_fname: str. Name under which to save the combined uncounted data. \
         Does not need to include the '.csv' suffix.
         :param input_format: the file format of the input files. Default is '.txt'.
         :return:
@@ -1582,16 +1582,16 @@ class CountFilter(Filter):
         """
         file_suffix = '.csv'
         if save_csv:
-            assert isinstance(save_reads_fname, str)
-            assert isinstance(save_not_counted_fname, str)
+            assert isinstance(counted_fname, str)
+            assert isinstance(uncounted_fname, str)
 
-            if not save_reads_fname.endswith(file_suffix):
-                save_reads_fname += file_suffix
-            if not save_not_counted_fname.endswith(file_suffix):
-                save_not_counted_fname += file_suffix
+            if not counted_fname.endswith(file_suffix):
+                counted_fname += file_suffix
+            if not uncounted_fname.endswith(file_suffix):
+                uncounted_fname += file_suffix
 
-            save_reads_fname = f"{folder_path}\\{save_reads_fname}"
-            save_not_counted_fname = f"{folder_path}\\{save_not_counted_fname}"
+            counted_fname = f"{folder_path}\\{counted_fname}"
+            uncounted_fname = f"{folder_path}\\{uncounted_fname}"
 
         folder = Path(folder_path)
         df = pd.DataFrame()
@@ -1605,10 +1605,10 @@ class CountFilter(Filter):
         counts = df.drop(uncounted.index, inplace=False)
 
         if save_csv:
-            general.save_to_csv(df=counts, filename=save_reads_fname)
-            general.save_to_csv(df=uncounted, filename=save_not_counted_fname)
+            general.save_to_csv(df=counts, filename=counted_fname)
+            general.save_to_csv(df=uncounted, filename=uncounted_fname)
 
-        fname = save_reads_fname if save_csv else folder.name + file_suffix
+        fname = counted_fname if save_csv else folder.name + file_suffix
         h = CountFilter((Path(fname), counts))
         if norm_to_rpm:
             h.norm_reads_to_rpm(uncounted)
