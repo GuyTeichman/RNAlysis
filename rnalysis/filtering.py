@@ -45,7 +45,7 @@ class Filter:
         A string of all feature indices in the current DataFrame separated by newline.
     """
 
-    def __init__(self, fname: str):
+    def __init__(self, fname: str, drop_columns=False):
         if isinstance(fname, tuple):
             assert isinstance(fname[1], (pd.DataFrame, pd.Series)) and isinstance(fname[0], (str, Path))
             self.fname = fname[0]
@@ -53,7 +53,7 @@ class Filter:
         else:
             assert isinstance(fname, (str, Path))
             self.fname = Path(fname)
-            self.df = general.load_csv(fname, 0, squeeze=True)
+            self.df = general.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same WBGene index.")
         self.shape = self.df.shape
