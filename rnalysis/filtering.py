@@ -234,15 +234,17 @@ class Filter:
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of Filter object.
         """
-        legal_inputs = ('protein_coding', 'pseudogene', 'piRNA', 'miRNA', 'ncRNA', 'lincRNA', 'rRNA', 'snRNA', 'snoRNA')
         assert isinstance(biotype, (str, list)), "biotype must be a string or a list!"
         if isinstance(biotype, str):
             biotype = [biotype]
-        for bio in biotype:
-            assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
 
         ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
+        legal_inputs = set(ref_df['bioType'].unique())
+
+        for bio in biotype:
+            assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
+
         suffix = f"_{'_'.join(biotype)}"
 
         mask = pd.Series(np.zeros_like(ref_df['bioType'], dtype=bool), index=ref_df['bioType'].index, name='bioType')
@@ -1065,7 +1067,7 @@ class CountFilter(Filter):
         numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
         denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
         new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}'_fold_change_'"
-            f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
+                         f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
 
         fcfilt = FoldChangeFilter((new_fname, srs), numerator_name=numer_name, denominator_name=denom_name)
 
@@ -1495,7 +1497,7 @@ class CountFilter(Filter):
 
         if highlight is not None:
             highlight_features = highlight.index_set if issubclass(highlight.__class__,
-                                                                         Filter) else highlight
+                                                                   Filter) else highlight
             highlight_intersection = highlight_features.intersection(self.index_set)
             if len(highlight_intersection) < len(highlight_features):
                 warnings.warn(
