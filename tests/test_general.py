@@ -57,14 +57,14 @@ def test_load_csv():
 
 
 def test_remove_unindexed_rows():
-    truth = load_csv("all_expr_missing_rows_deleted.csv", 0)
-    missing = load_csv("all_expr_missing_rows.csv", 0)
+    truth = load_csv("counted_missing_rows_deleted.csv", 0)
+    missing = load_csv("counted_missing_rows.csv", 0)
     assert (truth == remove_unindexed_rows(missing)).all().all()
 
 
 def test_filter_low_rpm():
-    truth = load_csv("all_expr_low_rpm_truth.csv", 0)
-    lowrpm = load_csv("all_expr_low_rpm.csv", 0)
+    truth = load_csv("counted_low_rpm_truth.csv", 0)
+    lowrpm = load_csv("counted_low_rpm.csv", 0)
     assert np.isclose(truth, filter_low_rpm(lowrpm, threshold=5)).all()
 
 
