@@ -389,10 +389,13 @@ class Filter:
         """
         print(self.index_string)
 
-    def biotypes(self, ref: str = 'predefined'):
+    def biotypes(self, format: str = 'short', ref: str = 'predefined'):
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
-
+        :type format: 'short' or 'long' (default 'short')
+        :param format: 'short' returns a short-form DataFrame, which states the biotypes \
+        in the Filter object and their count. 'long' returns a long-form DataFrame,
+        which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
         """
         ref = general._get_biotype_ref_path(ref)
@@ -402,7 +405,15 @@ class Filter:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the biotype reference file. ')
             ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'bioType': 'not_in_biotype_reference'}))
-        return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('bioType').count()
+        if format == 'short':
+            return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('bioType').count()
+        elif format == 'long':
+            self_df = self.df.__deepcopy__()
+            self_df['bioType'] = ref_df.set_index('gene').loc[self.df.index]
+            return self_df.groupby('bioType').describe()
+
+        else:
+            raise ValueError(f'Invalid format "{format}"')
 
     def number_filters(self, column: str, operator: str, value, opposite=False, inplace=True):
         """
