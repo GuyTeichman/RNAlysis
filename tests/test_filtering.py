@@ -336,7 +336,8 @@ def test_htcount_filter_biotype_multiple():
 def test_htcount_filter_biotype_multiple_opposite():
     truth = general.load_csv('counted_biotype_piRNA_protein_coding_opposite.csv', 0)
     h = CountFilter("counted_biotype.csv")
-    neither = h.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False, opposite=True)
+    neither = h.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False,
+                               opposite=True)
     neither.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == neither.df)
@@ -377,7 +378,8 @@ def test_deseq_filter_biotype_multiple():
 def test_deseq_filter_biotype_multiple_opposite():
     truth = general.load_csv('test_deseq_biotype_piRNA_protein_coding_opposite.csv', 0)
     d = DESeqFilter("test_deseq_biotype.csv")
-    neither = d.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False, opposite=True)
+    neither = d.filter_biotype(['protein_coding', 'piRNA'], ref='attr_ref_table_for_tests.csv', inplace=False,
+                               opposite=True)
     neither.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == neither.df)
@@ -663,21 +665,38 @@ def test_filter_by_row_sum():
     assert np.all(h.df == truth)
 
 
-def sort_inplace():
-    assert False
+def test_sort_inplace():
+    c = CountFilter('counted.csv')
+    c.sort(by='cond3', ascending=True, inplace=True)
+    assert c.df['cond3'].is_monotonic_increasing
 
 
-def sort_not_inplace():
-    assert False
+def test_sort_not_inplace():
+    c = CountFilter('counted.csv')
+    c_copy = general.load_csv('counted.csv', 0)
+    c_sorted = c.sort(by='cond3', ascending=True, inplace=False)
+    assert c_sorted.df['cond3'].is_monotonic_increasing
+    assert np.all(c.df == c_copy)
 
 
-def sort_by_multiple_columns():
-    assert False
+def test_sort_by_multiple_columns():
+    truth = general.load_csv('counted_sorted_multiple_truth.csv', 0)
+    c = CountFilter('counted.csv')
+    c.sort(by=['cond3', 'cond4', 'cond1', 'cond2'], ascending=[True, False, True, False], inplace=True)
+    assert np.all(truth == c.df)
 
 
-def sort_with_na_first():
-    assert False
+def test_sort_with_na_first():
+    truth_first = general.load_csv('test_deseq_with_nan_sorted_nanfirst_truth.csv', 0)
+    truth_last = general.load_csv('test_deseq_with_nan_sorted_nanlast_truth.csv', 0)
+    c = CountFilter('test_deseq_with_nan.csv')
+    c.sort(by='padj', ascending=True, na_position='first', inplace=True)
+    assert truth_first.equals(c.df)
+    c.sort(by='padj', ascending=True, na_position='last', inplace=True)
+    assert truth_last.equals(c.df)
 
 
-def sort_descending():
-    assert False
+def test_sort_descending():
+    c = CountFilter('counted.csv')
+    c.sort(by='cond3', ascending=False, inplace=True)
+    assert c.df['cond3'].is_monotonic_decreasing
