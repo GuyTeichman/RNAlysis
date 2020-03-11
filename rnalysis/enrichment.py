@@ -694,13 +694,16 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
 
 def upset_plot(objs: dict, ref: str = 'predefined'):
     """
+    Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
 
-    :param objs:
-    :type objs:
-    :param ref:
-    :type ref:
-    :return:
-    :rtype:
+    :param objs: the FeatureSets, python sets or user-defined attributes to plot.
+    :type objs: a dictionary with 2 or more entries, where the keys are the names of the sets, and the values are either \
+    a FeatureSet, a python set of feature indices, or a name of a column in the Attribute Reference Table. \
+    For example: \
+    {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
+    :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
+    if such attributes are included in 'objs'.
+    :type ref: str or pathlib.Path (default 'predefined')
     """
 
     upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
@@ -712,31 +715,35 @@ def venn_diagram(objs: dict, ref: str = 'predefined', title: str = 'default', se
                  linestyle='solid', linewidth=2.0,
                  normalize_to: float = 1.0):
     """
+    Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 
-    :param objs:
-    :type objs:
-    :param ref:
-    :type ref:
-    :param title:
-    :type title:
-    :param set_colors:
-    :type set_colors:
-    :param alpha:
-    :type alpha:
-    :param weighted:
-    :type weighted:
-    :param lines:
-    :type lines:
-    :param linecolor:
-    :type linecolor:
-    :param linestyle:
-    :type linestyle:
-    :param linewidth:
-    :type linewidth:
+    :param objs: the FeatureSets, python sets or user-defined attributes to plot.
+    :type objs: a dictionary with 2-3 entries, where the keys are the names of the sets, and the values are either \
+    a FeatureSet, a python set of feature indices, or a name of a column in the Attribute Reference Table. \
+    For example: \
+    {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
+    :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
+    if such attributes are included in 'objs'.
+    :type ref: str or pathlib.Path (default 'predefined')
+    :param title: determines the title of the plot.
+    :type title: str
+    :param set_colors: determines the colors of the circles in the diagram.
+    :type set_colors: tuple of matplotlib-format colors, the same size as 'objs'
+    :param alpha: determines the opacity of the circles.
+    :type alpha: a float between 0 and 1
+    :param weighted: if True, the plot will be area-weighted.
+    :type weighted: bool (default True)
+    :param lines: if True, adds an outline to the circles.
+    :type lines: bool (default True)
+    :param linecolor: Determines the color of the circles' outline.
+    :type linecolor: matplotlib-format color (default 'black')
+    :param linestyle: the style of the circles' outline.
+    :type linestyle: 'solid' or 'dashed' (default 'solid')
+    :param linewidth: the widdth of the circles' outlines.
+    :type linewidth: float (default 2.0)
     :param normalize_to:
-    :type normalize_to:
-    :return:
-    :rtype:
+    :type normalize_to: float (default 1.0)
+    :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.
     """
     if len(objs) > 3 or len(objs) < 2:
         raise ValueError(f'Venn can only accept between 2 and 3 sets. Instead got {len(objs)}')
