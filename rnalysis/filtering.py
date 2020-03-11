@@ -218,10 +218,10 @@ class Filter:
     def filter_biotype(self, biotype='protein_coding',
                        ref: str = 'predefined', opposite: bool = False, inplace: bool = True):
         """
-        Filters out all features that do not match the indicated biotype. \
+        Filters out all features that do not match the indicated biotype/biotypes. \
         Legal inputs: 'protein_coding','pseudogene','piRNA','miRNA','ncRNA','lincRNA','rRNA','snRNA','snoRNA'.
 
-        :type biotype: str or list
+        :type biotype: str or list of str
         :param biotype: the biotypes which will not be filtered out.
         :param ref: Name of the biotype reference file used to determine biotypes. \
         Default is the path defined by the user in the settings.yaml file.
