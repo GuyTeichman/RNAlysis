@@ -29,7 +29,6 @@ Individual Modules
   rnalysis.filtering
   rnalysis.enrichment
   rnalysis.general
-  rnalysis.feature_name_to_wbgene
 
 
 
