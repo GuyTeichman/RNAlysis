@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use sRNA analysis pipeline in a project::
+To use the RNAlysis pipeline in a project::
 
-    import srnalysis
+    from rnalysis import general, filtering, enrichment

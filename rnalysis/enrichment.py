@@ -207,7 +207,7 @@ class FeatureSet:
 
     def go_enrichment(self, mode: str = 'all', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
         """
-        Analyzes GO, Tissue and/or Phenotype enrichment of the given group of features. \
+        Analyzes GO, Tissue and/or Phenotype enrichment for the given group of genomic features. \
         Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans. \
         Corrected p-values are calculated using hypergeometric statistics. \
         For more details see GitHub page of the developers: https://github.com/dangeles/TissueEnrichmentAnalysis
