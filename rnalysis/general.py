@@ -134,13 +134,13 @@ def read_path_from_settings(key):
 
 def read_biotype_ref_table_path():
     pth = read_path_from_settings(__biotype_file_key__)
-    print(f'Biotype reference table used: {pth}')
+    print(f'Biotype Reference Table used: {pth}')
     return pth
 
 
 def read_attr_ref_table_path():
     pth = read_path_from_settings(__attr_file_key__)
-    print(f'Attribute reference table used: {pth}')
+    print(f'Attribute Reference Table used: {pth}')
     return pth
 
 
