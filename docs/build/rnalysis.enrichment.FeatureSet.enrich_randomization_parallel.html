@@ -210,32 +210,41 @@
 <dt class="field-even">param reps</dt>
 <dd class="field-even"><p>How many repetitions to run the randomization for.        10,000 is the default. Recommended 10,000 or higher.</p>
 </dd>
-<dt class="field-odd">param attr_ref_path</dt>
-<dd class="field-odd"><p>the path of the Big Table file to be used as reference.</p>
+<dt class="field-odd">type attr_ref_path</dt>
+<dd class="field-odd"><p>str or pathlib.Path (default ‘predefined’)</p>
 </dd>
-<dt class="field-even">type biotype</dt>
-<dd class="field-even"><p>str specifying a specific biotype, or ‘all’. Default ‘protein_coding’.</p>
+<dt class="field-even">param attr_ref_path</dt>
+<dd class="field-even"><p>the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p>
 </dd>
-<dt class="field-odd">param biotype</dt>
-<dd class="field-odd"><p>the biotype you want your background genes to have. ‘all’ will include all biotypes,        ‘protein_coding’ will include only protein-coding genes in the reference, etc.        Cannot be specified together with ‘background_genes’.</p>
+<dt class="field-odd">type biotype_ref_path</dt>
+<dd class="field-odd"><p>str or pathlib.Path (default ‘predefined’)</p>
 </dd>
-<dt class="field-even">type background_genes</dt>
-<dd class="field-even"><p>set of feature indices, filtering.Filter object, or enrichment.FeatureSet object</p>
+<dt class="field-even">param biotype_ref_path</dt>
+<dd class="field-even"><p>the path of the Biotype Reference Table.        Will be used to generate background set if ‘biotype’ is specified.</p>
 </dd>
-<dt class="field-odd">param background_genes</dt>
-<dd class="field-odd"><p>a set of specific feature indices to be used as background genes.        Cannot be specified together with ‘biotype’.</p>
+<dt class="field-odd">type biotype</dt>
+<dd class="field-odd"><p>str specifying a specific biotype, or ‘all’. Default ‘protein_coding’.</p>
 </dd>
-<dt class="field-even">type save_csv</dt>
-<dd class="field-even"><p>bool, default False</p>
+<dt class="field-even">param biotype</dt>
+<dd class="field-even"><p>the biotype you want your background genes to have. ‘all’ will include all biotypes,        ‘protein_coding’ will include only protein-coding genes in the reference, etc.        Cannot be specified together with ‘background_genes’.</p>
 </dd>
-<dt class="field-odd">param save_csv</dt>
-<dd class="field-odd"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+<dt class="field-odd">type background_genes</dt>
+<dd class="field-odd"><p>set of feature indices, filtering.Filter object, or enrichment.FeatureSet object</p>
 </dd>
-<dt class="field-even">type fname</dt>
-<dd class="field-even"><p>str or pathlib.Path</p>
+<dt class="field-even">param background_genes</dt>
+<dd class="field-even"><p>a set of specific feature indices to be used as background genes.        Cannot be specified together with ‘biotype’.</p>
 </dd>
-<dt class="field-odd">param fname</dt>
-<dd class="field-odd"><p>The full path and name of the file to which to save the results. For example:        r’C:dir</p>
+<dt class="field-odd">type save_csv</dt>
+<dd class="field-odd"><p>bool, default False</p>
+</dd>
+<dt class="field-even">param save_csv</dt>
+<dd class="field-even"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+</dd>
+<dt class="field-odd">type fname</dt>
+<dd class="field-odd"><p>str or pathlib.Path</p>
+</dd>
+<dt class="field-even">param fname</dt>
+<dd class="field-even"><p>The full path and name of the file to which to save the results. For example:        r’C:dir</p>
 </dd>
 </dl>
 </div></blockquote>

@@ -645,14 +645,14 @@ User-annotated biotypes should be defined in a Biotype Reference Table csv file.
 
 Set a Reference Table as default
 ----------------------------------
-Once we have an attribute reference table, we can set it to be the default attribute reference table for all future uses of RNAlysis::
+Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default attribute reference table for all future uses of RNAlysis::
 
     from rnalysis import general
     general.set_reference_table_path('path/to/my/reference/table.csv')
     #TODO: update me!!!
 
-This will create a file called 'settings.yaml', which will store the full path of your attribute reference table file.
-Whenever RNAlysis needs to use am attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+This will create a file called 'settings.yaml', which will store the full paths of your reference tables.
+Whenever RNAlysis needs to use an attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
 The saved path can be changed any time using the general.set_reference_table_path() function.
 
 Load the default Attribute Reference Table path

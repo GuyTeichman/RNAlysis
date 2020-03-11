@@ -209,10 +209,16 @@
 <dd class="field-even"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
 </dd>
 <dt class="field-odd">type attr_ref_path</dt>
-<dd class="field-odd"><p>‘predefined’ (default), str or pathlib.Path</p>
+<dd class="field-odd"><p>str or pathlib.Path (default ‘predefined’)</p>
 </dd>
 <dt class="field-even">param attr_ref_path</dt>
-<dd class="field-even"><p>the path of the Attribute Reference Table file to be used as reference.</p>
+<dd class="field-even"><p>the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p>
+</dd>
+<dt class="field-odd">type biotype_ref_path</dt>
+<dd class="field-odd"><p>str or pathlib.Path (default ‘predefined’)</p>
+</dd>
+<dt class="field-even">param biotype_ref_path</dt>
+<dd class="field-even"><p>the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p>
 </dd>
 <dt class="field-odd">type biotype</dt>
 <dd class="field-odd"><p>str specifying a specific biotype, list/set of strings each specifying a biotype, or ‘all’.         Default ‘protein_coding’.</p>

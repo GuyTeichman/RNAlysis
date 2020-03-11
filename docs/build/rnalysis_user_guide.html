@@ -1068,14 +1068,14 @@ User-annotated biotypes should be defined in a Biotype Reference Table csv file.
 </div>
 <div class="section" id="set-a-reference-table-as-default">
 <h4>Set a Reference Table as default<a class="headerlink" href="#set-a-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
-<p>Once we have an attribute reference table, we can set it to be the default attribute reference table for all future uses of RNAlysis:</p>
+<p>Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default attribute reference table for all future uses of RNAlysis:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">set_reference_table_path</span><span class="p">(</span><span class="s1">&#39;path/to/my/reference/table.csv&#39;</span><span class="p">)</span>
 <span class="c1">#TODO: update me!!!</span>
 </pre></div>
 </div>
-<p>This will create a file called ‘settings.yaml’, which will store the full path of your attribute reference table file.
-Whenever RNAlysis needs to use am attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+<p>This will create a file called ‘settings.yaml’, which will store the full paths of your reference tables.
+Whenever RNAlysis needs to use an attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
 The saved path can be changed any time using the general.set_reference_table_path() function.</p>
 </div>
 <div class="section" id="load-the-default-attribute-reference-table-path">
