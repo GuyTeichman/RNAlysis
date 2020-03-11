@@ -397,17 +397,18 @@ class Filter:
         """
         ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref)
+        ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:
             warnings.warn(
-                f'{len(not_in_ref)} of the features in the Filter object do not appear in the biotype reference file. ')
-            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'bioType': 'not_in_biotype_reference'}))
+                f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
+            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': 'not_in_biotype_reference'}))
         if format == 'short':
-            return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('bioType').count()
+            return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
         elif format == 'long':
             self_df = self.df.__deepcopy__()
-            self_df['bioType'] = ref_df.set_index('gene').loc[self.df.index]
-            return self_df.groupby('bioType').describe()
+            self_df['biotype'] = ref_df.set_index('gene').loc[self.df.index]
+            return self_df.groupby('biotype').describe()
 
         else:
             raise ValueError(f'Invalid format "{format}"')
