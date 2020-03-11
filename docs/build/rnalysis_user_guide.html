@@ -93,7 +93,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#filtering-operations">Filtering operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-on-multiple-filter-objects">Performing set operations on multiple Filter objects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#saving-filter-results">Saving Filter results</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#using-an-attribute-reference-table-for-filter-operations">Using an attribute reference table for filter operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-an-attribute-reference-table-for-filter-operations">Using an Attribute Reference Table for filter operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-a-biotype-reference-table-for-filter-operations">Using a Biotype Reference Table for filter operations</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#filtering-deseq2-output-files-with-filtering-deseqfilter">Filtering DESeq2 output files with filtering.DESeqFilter</a><ul>
@@ -130,9 +131,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module">RNAlysis general module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#start-and-stop-a-parallel-processing-session">Start and stop a parallel processing session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#what-is-a-reference-table">What is a Reference Table?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#set-an-attribute-reference-table-as-default">Set an attribute reference table as default</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#load-the-default-attribute-reference-table-path">Load the default attribute reference table path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#what-is-an-attribute-reference-table">What is an Attribute Reference Table?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#what-is-a-biotype-reference-table">What is a Biotype Reference Table?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#set-a-reference-table-as-default">Set a Reference Table as default</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load-the-default-attribute-reference-table-path">Load the default Attribute Reference Table path</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions">Parse <em>C. elegans</em> gene names, WBGene indices and sequence names using regular expressions</a></li>
@@ -321,11 +323,28 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 <p>Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).</p>
 </div>
 <div class="section" id="using-an-attribute-reference-table-for-filter-operations">
-<h4>Using an attribute reference table for filter operations<a class="headerlink" href="#using-an-attribute-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
-<p>A Reference Table contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
-You can read more about Reference Table format and loading a Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
+<h4>Using an Attribute Reference Table for filter operations<a class="headerlink" href="#using-an-attribute-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
+<p>An Attribute Reference Table contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
+You can read more about the Attribute Reference Table format and loading an Attribute Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
 Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">(</span><span class="s1">&#39;genes_that_have_a_paralog&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-a-biotype-reference-table-for-filter-operations">
+<h4>Using a Biotype Reference Table for filter operations<a class="headerlink" href="#using-a-biotype-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
+<p>A Biotype Reference Table contains annotations of the biotype of each genomic features (‘protein_coding’, ‘piRNAs’, ‘lincRNAs’, ‘pseudogenes’, etc).
+You can read more about the Biotype Reference Table format and loading a Biotype Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
+Using the function Filter.filter_biotype(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes():</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Or view more elaborated descriptive statistics for eahc biotype by specifying format=’long’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -967,10 +986,10 @@ By default, the parallel session will use all available processors on the machin
 </div>
 <div class="section" id="set-and-load-a-reference-table">
 <span id="reference-table-ref"></span><h3>Set and load a Reference Table<a class="headerlink" href="#set-and-load-a-reference-table" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="what-is-a-reference-table">
-<h4>What is a Reference Table?<a class="headerlink" href="#what-is-a-reference-table" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="what-is-an-attribute-reference-table">
+<h4>What is an Attribute Reference Table?<a class="headerlink" href="#what-is-an-attribute-reference-table" title="Permalink to this headline">¶</a></h4>
 <p>You can perform enrichment analysis or filtering operations based on user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’).
-User-defined attributes should be defined in a Reference Table csv file. The format of the attribute reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an attribute reference table below:</p>
+User-defined attributes should be defined in an Attribute Reference Table csv file. The format of the Attribute Reference Table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an Attribute Reference Table below:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 29%" />
@@ -1014,11 +1033,45 @@ User-defined attributes should be defined in a Reference Table csv file. The for
 </tbody>
 </table>
 </div>
-<div class="section" id="set-an-attribute-reference-table-as-default">
-<h4>Set an attribute reference table as default<a class="headerlink" href="#set-an-attribute-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="what-is-a-biotype-reference-table">
+<h4>What is a Biotype Reference Table?<a class="headerlink" href="#what-is-a-biotype-reference-table" title="Permalink to this headline">¶</a></h4>
+<p>You can perform filtering operations or generate background-sets for enrichment analysis based on user-annotated biotypes (such as ‘protein_coding’, ‘pseudogene’, ‘piRNA’, etc).
+User-annotated biotypes should be defined in a Biotype Reference Table csv file. The format of the Biotype Reference Table is one row for each gene/genomic feature, and a column titled ‘biotype’ (case insensitive). See example for a Biotype Reference Table below:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>feature_indices</p></th>
+<th class="head"><p>biotype</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>WBGene0000001</p></td>
+<td><p>protein_coding</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene0000002</p></td>
+<td><p>protein_coding</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene0000003</p></td>
+<td><p>pseudogene</p></td>
+</tr>
+<tr class="row-odd"><td><p>WBGene0000004</p></td>
+<td><p>piRNA</p></td>
+</tr>
+<tr class="row-even"><td><p>WBGene0000005</p></td>
+<td><p>lincRNA</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="set-a-reference-table-as-default">
+<h4>Set a Reference Table as default<a class="headerlink" href="#set-a-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
 <p>Once we have an attribute reference table, we can set it to be the default attribute reference table for all future uses of RNAlysis:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">set_reference_table_path</span><span class="p">(</span><span class="s1">&#39;path/to/my/reference/table.csv&#39;</span><span class="p">)</span>
+<span class="c1">#TODO: update me!!!</span>
 </pre></div>
 </div>
 <p>This will create a file called ‘settings.yaml’, which will store the full path of your attribute reference table file.
@@ -1026,10 +1079,10 @@ Whenever RNAlysis needs to use am attribute reference table and no other path is
 The saved path can be changed any time using the general.set_reference_table_path() function.</p>
 </div>
 <div class="section" id="load-the-default-attribute-reference-table-path">
-<h4>Load the default attribute reference table path<a class="headerlink" href="#load-the-default-attribute-reference-table-path" title="Permalink to this headline">¶</a></h4>
+<h4>Load the default Attribute Reference Table path<a class="headerlink" href="#load-the-default-attribute-reference-table-path" title="Permalink to this headline">¶</a></h4>
 <p>You can load the saved path from the settings file using the read_reference_table_path function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="n">general</span><span class="o">.</span><span class="n">read_reference_table_path</span><span class="p">()</span>
+<span class="c1">#TODO: update me!</span>
 </pre></div>
 </div>
 <p>If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.</p>

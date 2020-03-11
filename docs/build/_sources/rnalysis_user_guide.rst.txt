@@ -124,14 +124,32 @@ Instead of directly saving the results to a file, you can also get them as a set
 Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).
 
 
-Using an attribute reference table for filter operations
-----------------------------------------------
+Using an Attribute Reference Table for filter operations
+---------------------------------------------------------
 
-A Reference Table contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
-You can read more about Reference Table format and loading a Reference Table in the :ref:`reference-table-ref` section.
+An Attribute Reference Table contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
+You can read more about the Attribute Reference Table format and loading an Attribute Reference Table in the :ref:`reference-table-ref` section.
 Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table::
 
     d.filter_by_attribute('genes_that_have_a_paralog')
+
+Using a Biotype Reference Table for filter operations
+--------------------------------------------------------
+
+A Biotype Reference Table contains annotations of the biotype of each genomic features ('protein_coding', 'piRNAs', 'lincRNAs', 'pseudogenes', etc).
+You can read more about the Biotype Reference Table format and loading a Biotype Reference Table in the :ref:`reference-table-ref` section.
+Using the function Filter.filter_biotype(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table::
+
+    d.filter_biotype('protein_coding')
+
+You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes()::
+
+    d.biotypes()
+
+Or view more elaborated descriptive statistics for eahc biotype by specifying format='long'::
+
+    d.biotypes(format='long')
+
 
 Filtering DESeq2 output files with filtering.DESeqFilter
 =========================================================
@@ -585,10 +603,10 @@ start_parallel_session() will automatically close the previous parallel session,
 Set and load a Reference Table
 ===============================
 
-What is a Reference Table?
-----------------------------
+What is an Attribute Reference Table?
+----------------------------------------
 You can perform enrichment analysis or filtering operations based on user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs').
-User-defined attributes should be defined in a Reference Table csv file. The format of the attribute reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an attribute reference table below:
+User-defined attributes should be defined in an Attribute Reference Table csv file. The format of the Attribute Reference Table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an Attribute Reference Table below:
 
 +----------------+--------------+-------------+-------------+
 | feature_indices| attribute1   | attribute2  | attribute3  |
@@ -604,24 +622,45 @@ User-defined attributes should be defined in a Reference Table csv file. The for
 | WBGene0000005  |      1       |     NaN     |     21.5    |
 +----------------+--------------+-------------+-------------+
 
+What is a Biotype Reference Table?
+---------------------------------------
+You can perform filtering operations or generate background-sets for enrichment analysis based on user-annotated biotypes (such as 'protein_coding', 'pseudogene', 'piRNA', etc).
+User-annotated biotypes should be defined in a Biotype Reference Table csv file. The format of the Biotype Reference Table is one row for each gene/genomic feature, and a column titled 'biotype' (case insensitive). See example for a Biotype Reference Table below:
 
-Set an attribute reference table as default
----------------------------------
++----------------+----------------+
+| feature_indices|    biotype     |
++================+================+
+| WBGene0000001  | protein_coding |
++----------------+----------------+
+| WBGene0000002  | protein_coding |
++----------------+----------------+
+| WBGene0000003  |   pseudogene   |
++----------------+----------------+
+| WBGene0000004  |     piRNA      |
++----------------+----------------+
+| WBGene0000005  |    lincRNA     |
++----------------+----------------+
+
+
+
+Set a Reference Table as default
+----------------------------------
 Once we have an attribute reference table, we can set it to be the default attribute reference table for all future uses of RNAlysis::
 
     from rnalysis import general
     general.set_reference_table_path('path/to/my/reference/table.csv')
+    #TODO: update me!!!
 
 This will create a file called 'settings.yaml', which will store the full path of your attribute reference table file.
 Whenever RNAlysis needs to use am attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
 The saved path can be changed any time using the general.set_reference_table_path() function.
 
-Load the default attribute reference table path
---------------------------------------
+Load the default Attribute Reference Table path
+-------------------------------------------------
 You can load the saved path from the settings file using the read_reference_table_path function::
 
     from rnalysis import general
-    general.read_reference_table_path()
+    #TODO: update me!
 
 If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.
 
