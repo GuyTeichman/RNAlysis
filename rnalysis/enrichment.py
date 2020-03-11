@@ -670,6 +670,18 @@ class FeatureSet:
 
 
 def _fetch_sets(objs: dict, ref: str = 'predefined'):
+    """
+    Receives the 'objs' input from enrichment.upset_plot() and enrichment.venn_diagram(), and turns the values in it \
+    into python sets.
+
+    :param objs: the 'objs' input given to the function enrichment.upset_plot() or enrichment.venn_diagram().
+    :type objs: a dictionary, where the keys are names of sets, and the values are either\
+     python sets, FeatureSets or names of columns in the Attribute Reference Table.
+    :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
+    if such attributes are included in 'objs'.
+    :type ref: str or pathlib.Path (default 'predefined')
+    :return: a dictionary, where the keys are names of sets and the values are python sets of feature indices.
+    """
     assert isinstance(objs, dict), f"objs must be a dictionary. Instaed got {type(objs)}"
     for obj in objs:
         if isinstance(objs[obj], set):
@@ -775,11 +787,13 @@ def venn_diagram(objs: dict, ref: str = 'predefined', title: str = 'default', se
 
 def _generate_upset_srs(objs: dict):
     """
+    Receives a dictionary of sets from enrichment._fetch_sets(), \
+    and reformats it as a pandas Series to be used by the python package 'upsetplot'.
 
-    :param objs:
+    :param objs: the output of the enrichment._fetch_sets() function.
     :type objs: dict of sets
-    :return:
-    :rtype:
+    :return: a pandas Series in the format requested by the 'upsetplot' package.
+
     """
     names = list(objs.keys())
     multi_ind = pd.MultiIndex.from_product([[True, False] for i in range(len(names))], names=names)[:-1]
