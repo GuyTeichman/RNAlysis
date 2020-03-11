@@ -324,8 +324,8 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 <h4>Using an attribute reference table for filter operations<a class="headerlink" href="#using-an-attribute-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
 <p>A Reference Table contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
 You can read more about Reference Table format and loading a Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
-Using the function Filter.filter_by_ref_table_attr(), you can filter your genomic features by one of the user-defined attributes in the Reference Table:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">filter_by_ref_table_attr</span><span class="p">(</span><span class="s1">&#39;genes_that_have_a_paralog&#39;</span><span class="p">)</span>
+Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">(</span><span class="s1">&#39;genes_that_have_a_paralog&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -772,7 +772,7 @@ We would then supply the normalization function with the path to the special cou
 To perform a randomization test you need two FoldChangeFilter objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;pre_existing_fold_change_file.csv&#39;</span> <span class="p">,</span> <span class="s1">&#39;numerator&#39;</span> <span class="p">,</span> <span class="s1">&#39;denominator&#39;</span><span class="p">)</span>
 <span class="n">f_background</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1">#keep only protein-coding genes as reference)</span>
-<span class="n">f_test</span> <span class="o">=</span> <span class="n">f_background</span><span class="o">.</span><span class="n">filter_by_ref_table_attr</span><span class="p">(</span><span class="s1">&#39;epigenetic_genes&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">f_test</span> <span class="o">=</span> <span class="n">f_background</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">(</span><span class="s1">&#39;epigenetic_genes&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="n">rand_test_res</span> <span class="o">=</span> <span class="n">f_test</span><span class="o">.</span><span class="n">randomization_test</span><span class="p">(</span><span class="n">f_background</span><span class="p">)</span>
 </pre></div>

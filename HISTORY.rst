@@ -27,6 +27,8 @@ Changed
 * Updated the signature and function of general.load_csv() to be clearer and more predictable.
 * Changed argument names in CountFilter.from_folder().
 * Modified names and signatures of .csv test files functions to make them more comprehensible.
+* Renamed 'Filter.filter_by_ref_table_attr()' to 'Filter.filter_by_attribute()'.
+* Renamed 'Filter.split_by_ref_table_attr()' to 'Filter.split_by_attribute()'.
 
 Fixed
 ++++++

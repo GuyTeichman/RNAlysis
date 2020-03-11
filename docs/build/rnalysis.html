@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="rnalysis.general" href="rnalysis.general.html" /> 
+    <link rel="prev" title="rnalysis.general.update_settings" href="rnalysis.general.update_settings.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -284,17 +284,16 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_by_ref_table_attr</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">mode='union'</em>, <em class="sig-param">inclusion: bool = True</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes.         When multiple attributes are given, filtering can be done in ‘union’ mode         (where features that belong to at least one attribute are not filtered out), or in ‘intersection’ mode         (where only features that belong to ALL attributes are not filtered out).</p>
+<code class="sig-name descname">filter_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">mode='union'</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters features according to user-defined attributes from an Attribute Reference Table.         When multiple attributes are given, filtering can be done in ‘union’ mode         (where features that belong to at least one attribute are not filtered out), or in ‘intersection’ mode         (where only features that belong to ALL attributes are not filtered out).         To learn more about user-defined attributes and Attribute Reference Tables, read the user guide.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
-<li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – ‘union’ or ‘intersection’. If ‘union’, filters out every feature that does not match at least one         of the indicated Big Table attributes. If ‘intersection’,         filters out every feature that does not match all of the indicated Big Table attributes.</p></li>
-<li><p><strong>inclusion</strong> – boolean. If True (default), features will be filtered by inclusion in the specified criteria         (meaning features that  belong to the attributes are kept         and features that don’t belong to the attributes are filtered out).         If False, features will be filtered out by exclusion from the specified criteria         (meaning features that DON’T belong to the attributes         are kept, and features that do belong to the attributes are filtered out).</p></li>
-<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
+<li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -682,6 +681,24 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p>
 <dl class="field-list simple">
@@ -711,24 +728,6 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>A tuple containing two CountFilter objects: the first has only highly-expressed features,         and the second has only lowly-expressed features.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">split_by_ref_table_attr</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
-<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
 </dd></dl>
 
 <dl class="method">
@@ -944,17 +943,16 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_by_ref_table_attr</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">mode='union'</em>, <em class="sig-param">inclusion: bool = True</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes.         When multiple attributes are given, filtering can be done in ‘union’ mode         (where features that belong to at least one attribute are not filtered out), or in ‘intersection’ mode         (where only features that belong to ALL attributes are not filtered out).</p>
+<code class="sig-name descname">filter_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">mode='union'</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters features according to user-defined attributes from an Attribute Reference Table.         When multiple attributes are given, filtering can be done in ‘union’ mode         (where features that belong to at least one attribute are not filtered out), or in ‘intersection’ mode         (where only features that belong to ALL attributes are not filtered out).         To learn more about user-defined attributes and Attribute Reference Tables, read the user guide.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
-<li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – ‘union’ or ‘intersection’. If ‘union’, filters out every feature that does not match at least one         of the indicated Big Table attributes. If ‘intersection’,         filters out every feature that does not match all of the indicated Big Table attributes.</p></li>
-<li><p><strong>inclusion</strong> – boolean. If True (default), features will be filtered by inclusion in the specified criteria         (meaning features that  belong to the attributes are kept         and features that don’t belong to the attributes are filtered out).         If False, features will be filtered out by exclusion from the specified criteria         (meaning features that DON’T belong to the attributes         are kept, and features that do belong to the attributes are filtered out).</p></li>
-<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
+<li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1172,6 +1170,24 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p>
 <dl class="field-list simple">
@@ -1186,24 +1202,6 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>a list of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">split_by_ref_table_attr</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
-<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1428,17 +1426,16 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_by_ref_table_attr</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">mode='union'</em>, <em class="sig-param">inclusion: bool = True</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes.         When multiple attributes are given, filtering can be done in ‘union’ mode         (where features that belong to at least one attribute are not filtered out), or in ‘intersection’ mode         (where only features that belong to ALL attributes are not filtered out).</p>
+<code class="sig-name descname">filter_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">mode='union'</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Filters features according to user-defined attributes from an Attribute Reference Table.         When multiple attributes are given, filtering can be done in ‘union’ mode         (where features that belong to at least one attribute are not filtered out), or in ‘intersection’ mode         (where only features that belong to ALL attributes are not filtered out).         To learn more about user-defined attributes and Attribute Reference Tables, read the user guide.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
-<li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – ‘union’ or ‘intersection’. If ‘union’, filters out every feature that does not match at least one         of the indicated Big Table attributes. If ‘intersection’,         filters out every feature that does not match all of the indicated Big Table attributes.</p></li>
-<li><p><strong>inclusion</strong> – boolean. If True (default), features will be filtered by inclusion in the specified criteria         (meaning features that  belong to the attributes are kept         and features that don’t belong to the attributes are filtered out).         If False, features will be filtered out by exclusion from the specified criteria         (meaning features that DON’T belong to the attributes         are kept, and features that do belong to the attributes are filtered out).</p></li>
-<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
+<li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1688,6 +1685,24 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p>
 <dl class="field-list simple">
@@ -1702,24 +1717,6 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>a list of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">split_by_ref_table_attr</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
-<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1829,7 +1826,7 @@ which also provides descriptive statistics of each column per biotype.
 <dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2333,7 +2330,7 @@ a set of the WBGene indices that appear in the given string.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="rnalysis.general.html" class="btn btn-neutral float-left" title="rnalysis.general" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.general.update_settings.html" class="btn btn-neutral float-left" title="rnalysis.general.update_settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

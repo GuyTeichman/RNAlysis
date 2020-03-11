@@ -257,25 +257,29 @@ class Filter:
 
     # TODO: add 'remove unindexed rows' to here!
 
-    def filter_by_ref_table_attr(self, attributes: list = None, mode='union', ref: str = 'predefined',
-                                 opposite: bool = False, inplace: bool = True):
+    def filter_by_attribute(self, attributes: list = None, mode='union', ref: str = 'predefined',
+                            opposite: bool = False, inplace: bool = True):
         """
-        Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes. \
+        Filters features according to user-defined attributes from an Attribute Reference Table. \
         When multiple attributes are given, filtering can be done in 'union' mode \
         (where features that belong to at least one attribute are not filtered out), or in 'intersection' mode \
-        (where only features that belong to ALL attributes are not filtered out).
+        (where only features that belong to ALL attributes are not filtered out). \
+        To learn more about user-defined attributes and Attribute Reference Tables, read the user guide.
 
-        :param attributes: list of Big Table attributes to filter by.
+        :type attributes: string or list of strings, \
+        which are column titles in the user-defined Attribute Reference Table.
+        :param attributes: attributes to filter by.
         :type mode: 'union' or 'intersection'.
-        :param mode: 'union' or 'intersection'. If 'union', filters out every feature that does not match at least one \
-        of the indicated Big Table attributes. If 'intersection', \
-        filters out every feature that does not match all of the indicated Big Table attributes.
+        :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
+        of the indicated attributes. If 'intersection', \
+        filters out every genomic feature that does not belong to ALL of the indicated attributes.
+        :type ref: str or pathlib.Path (default 'predefined')
         :param ref: filename/path of the attribute reference table to be used as reference.
-        :type opposite: bool
+        :type opposite: bool (default False)
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return:
@@ -310,7 +314,7 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_ref_table_attr(self, attributes: tuple = None,
+    def split_by_attribute(self, attributes: tuple = None,
                                 ref: str = 'predefined'):
         """
         Splits the Filter object into multiple Filter objects, \
@@ -325,7 +329,7 @@ class Filter:
         """
         assert isinstance(attributes, (tuple, list, set))
         ref = general._get_attr_ref_path(ref)
-        return [self.filter_by_ref_table_attr(attributes=[att], mode='union', ref=ref, inplace=False) for att in
+        return [self.filter_by_attribute(attributes=[att], mode='union', ref=ref, inplace=False) for att in
                 attributes]
 
     def describe(self, percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]):
@@ -1278,6 +1282,7 @@ class CountFilter(Filter):
         :type linkage: 'single', 'average', 'complete', 'weighted', 'centroid', 'median' or 'ward'.
         :param linkage: the linkage method to use in the clustergram. \
         For all possible inputs and their meaning see scipy.cluster.hierarchy.linkage documentation online.
+
         :return:
         A seaborn clustermap object.
 

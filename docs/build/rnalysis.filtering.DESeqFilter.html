@@ -101,7 +101,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html">rnalysis.filtering.DESeqFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html">rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html">rnalysis.filtering.DESeqFilter.filter_biotype</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr.html">rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_attribute.html">rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html">rnalysis.filtering.DESeqFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_percentile.html">rnalysis.filtering.DESeqFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html">rnalysis.filtering.DESeqFilter.filter_significant</a></li>
@@ -112,7 +112,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.print_features.html">rnalysis.filtering.DESeqFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.save_csv.html">rnalysis.filtering.DESeqFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_percentile.html">rnalysis.filtering.DESeqFilter.split_by_percentile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_ref_table_attr.html">rnalysis.filtering.DESeqFilter.split_by_ref_table_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_attribute.html">rnalysis.filtering.DESeqFilter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_fold_change_direction.html">rnalysis.filtering.DESeqFilter.split_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.symmetric_difference.html">rnalysis.filtering.DESeqFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.tail.html">rnalysis.filtering.DESeqFilter.tail</a></li>
@@ -247,8 +247,8 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html#rnalysis.filtering.DESeqFilter.filter_biotype" title="rnalysis.filtering.DESeqFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_biotype</span></code></a>([biotype, ref, opposite, inplace])</p></td>
 <td><p>Filters out all features that do not match the indicated biotype.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr.html#rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr" title="rnalysis.filtering.DESeqFilter.filter_by_ref_table_attr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_ref_table_attr</span></code></a>([attributes, mode, …])</p></td>
-<td><p>Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_attribute.html#rnalysis.filtering.DESeqFilter.filter_by_attribute" title="rnalysis.filtering.DESeqFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_attribute</span></code></a>([attributes, mode, ref, …])</p></td>
+<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html#rnalysis.filtering.DESeqFilter.filter_fold_change_direction" title="rnalysis.filtering.DESeqFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_fold_change_direction</span></code></a>([direction, …])</p></td>
 <td><p>Filters out features according to the direction in which they changed between the two conditions.</p></td>
@@ -280,7 +280,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_percentile.html#rnalysis.filtering.DESeqFilter.split_by_percentile" title="rnalysis.filtering.DESeqFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
 <td><p>Splits the Filter object into two Filter objects:         above and below the specified percentile in the spcfieid column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_ref_table_attr.html#rnalysis.filtering.DESeqFilter.split_by_ref_table_attr" title="rnalysis.filtering.DESeqFilter.split_by_ref_table_attr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_ref_table_attr</span></code></a>([attributes, ref])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_by_attribute.html#rnalysis.filtering.DESeqFilter.split_by_attribute" title="rnalysis.filtering.DESeqFilter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_attribute</span></code></a>([attributes, ref])</p></td>
 <td><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.split_fold_change_direction.html#rnalysis.filtering.DESeqFilter.split_fold_change_direction" title="rnalysis.filtering.DESeqFilter.split_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_fold_change_direction</span></code></a>()</p></td>
