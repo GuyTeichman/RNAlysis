@@ -173,18 +173,13 @@
 <dl class="function">
 <dt id="rnalysis.enrichment.upset_plot">
 <code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">upset_plot</code><span class="sig-paren">(</span><em class="sig-param">objs: dict</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.upset_plot" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>objs</strong> – </p></li>
-<li><p><strong>ref</strong> – </p></li>
+<li><p><strong>objs</strong> (<em>a dictionary with 2</em><em> or </em><em>more entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p></p>
 </dd>
 </dl>
 </dd></dl>
