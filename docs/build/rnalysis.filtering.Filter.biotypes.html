@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -121,7 +121,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
@@ -197,13 +196,12 @@
 <h1>rnalysis.filtering.Filter.biotypes<a class="headerlink" href="#rnalysis-filtering-filter-biotypes" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.Filter.biotypes">
-<code class="sig-prename descclassname">Filter.</code><code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.biotypes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p>
-</dd>
-</dl>
+<code class="sig-prename descclassname">Filter.</code><code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">format: str = 'short'</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.biotypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
+:type format: ‘short’ or ‘long’ (default ‘short’)
+:param format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
+which also provides descriptive statistics of each column per biotype.
+:param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).</p>
 </dd></dl>
 
 </div>

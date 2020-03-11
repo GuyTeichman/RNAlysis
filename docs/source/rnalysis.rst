@@ -29,12 +29,3 @@ rnalysis.general module
    :noindex:
    :undoc-members:
    :show-inheritance:
-
-rnalysis.feature\_name\_to\_wbgene module
------------------------------------------
-
-.. automodule:: rnalysis.feature_name_to_wbgene
-   :members:
-   :noindex:
-   :undoc-members:
-   :show-inheritance:

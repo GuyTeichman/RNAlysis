@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -134,7 +134,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
@@ -210,7 +209,7 @@
 <h1>rnalysis.filtering.CountFilter.scatter_sample_vs_sample<a class="headerlink" href="#rnalysis-filtering-countfilter-scatter-sample-vs-sample" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.CountFilter.scatter_sample_vs_sample">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">deseq_highlight=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.scatter_sample_vs_sample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">highlight=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.scatter_sample_vs_sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -219,7 +218,7 @@
 <li><p><strong>sample2</strong> – str/list. Name of the second sample from the CountFilter object.         If sample2 is a list, they will be averaged as replicates.</p></li>
 <li><p><strong>xlabel</strong> – optional. If not specified, sample1 will be used as xlabel.</p></li>
 <li><p><strong>ylabel</strong> – optional. If not specified, sample2 will be used as ylabel.</p></li>
-<li><p><strong>deseq_highlight</strong> – DESeqFilter object or iterable of WBGene indices(optional).         If specified, the points in the scatter corresponding to the WBGene indices in deseq_highlight will be         highlighted in red.</p></li>
+<li><p><strong>highlight</strong> – DESeqFilter object or iterable of WBGene indices(optional).         If specified, the points in the scatter corresponding to the WBGene indices in highlight will be         highlighted in red.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

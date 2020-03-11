@@ -5,63 +5,63 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>RNAlysis user guide &mdash; RNAlysis 1.0 documentation</title>
+  
 
-  <title>RNAlysis user guide &mdash; RNAlysis 1.3.3 documentation</title>
+  
+  
+  
+  
 
-
-
-
-
-
-
-
+  
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-
-
+  
+    
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
+    
 
-
-
+  
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contributing" href="contributing.html" />
-    <link rel="prev" title="Usage" href="usage.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
-
+   
   <div class="wy-grid-for-nav">
-
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
 
-
-
+          
             <a href="index.html" class="icon icon-home"> RNAlysis
+          
 
-
-
+          
           </a>
 
+          
+            
+            
+          
 
-
-
-
-
-
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -70,19 +70,19 @@
   </form>
 </div>
 
-
+          
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-
-
-
-
-
-
+          
+            
+            
+              
+            
+            
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">RNAlysis user guide</a><ul>
@@ -93,7 +93,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#filtering-operations">Filtering operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-on-multiple-filter-objects">Performing set operations on multiple Filter objects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#saving-filter-results">Saving Filter results</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#using-a-reference-table-for-filter-operations">Using a reference table for filter operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-an-attribute-reference-table-for-filter-operations">Using an attribute reference table for filter operations</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#filtering-deseq2-output-files-with-filtering-deseqfilter">Filtering DESeq2 output files with filtering.DESeqFilter</a><ul>
@@ -131,8 +131,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#start-and-stop-a-parallel-processing-session">Start and stop a parallel processing session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-a-reference-table">What is a Reference Table?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#set-a-reference-table-as-default">Set a Reference Table as default</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#load-the-default-reference-table-path">Load the default Reference Table path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#set-an-attribute-reference-table-as-default">Set an attribute reference table as default</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load-the-default-attribute-reference-table-path">Load the default attribute reference table path</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions">Parse <em>C. elegans</em> gene names, WBGene indices and sequence names using regular expressions</a></li>
@@ -148,34 +148,33 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
 </ul>
 
-
-
+            
+          
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-
+      
       <nav class="wy-nav-top" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-
+        
       </nav>
 
 
       <div class="wy-nav-content">
-
+        
         <div class="rst-content">
-
-
+        
+          
 
 
 
@@ -194,28 +193,28 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-
+    
       <li><a href="index.html">Docs</a> &raquo;</li>
-
+        
       <li>RNAlysis user guide</li>
-
-
+    
+    
       <li class="wy-breadcrumbs-aside">
-
-
+        
+            
             <a href="_sources/rnalysis_user_guide.rst.txt" rel="nofollow"> View page source</a>
-
-
+          
+        
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+            
   <div class="section" id="rnalysis-user-guide">
 <h1>RNAlysis user guide<a class="headerlink" href="#rnalysis-user-guide" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="rnalysis-filtering-module">
@@ -229,7 +228,7 @@ and share many of the same functions and features. Each of them also has specifi
 <div class="section" id="initialize-a-filter-object">
 <h4>Initialize a Filter object<a class="headerlink" href="#initialize-a-filter-object" title="Permalink to this headline">¶</a></h4>
 <p>We will start by importing the filtering module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 </pre></div>
 </div>
 <p>We can now, for example, create a DESeqFilter object from a DESeq2 csv output file (see more details about DESeqFilter in sections below).</p>
@@ -321,8 +320,8 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 </div>
 <p>Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).</p>
 </div>
-<div class="section" id="using-a-reference-table-for-filter-operations">
-<h4>Using a reference table for filter operations<a class="headerlink" href="#using-a-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="using-an-attribute-reference-table-for-filter-operations">
+<h4>Using an attribute reference table for filter operations<a class="headerlink" href="#using-an-attribute-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
 <p>A Reference Table contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
 You can read more about Reference Table format and loading a Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
 Using the function Filter.filter_by_ref_table_attr(), you can filter your genomic features by one of the user-defined attributes in the Reference Table:</p>
@@ -816,7 +815,7 @@ To perform a randomization test you need two FoldChangeFilter objects: one which
 <div class="section" id="initialize-an-featureset-object">
 <h4>Initialize an FeatureSet object<a class="headerlink" href="#initialize-an-featureset-object" title="Permalink to this headline">¶</a></h4>
 <p>We will start by importing the enrichment module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">enrichment</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 </pre></div>
 </div>
 <p>An FeatureSet object can now be initialized by one of three methods.
@@ -917,7 +916,7 @@ enrich_randomization performs the number of randomizations specified by the user
 The p values specified in ‘pval’ are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
 <p>If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
 To use it, you must first start a parallel session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -952,14 +951,14 @@ Afterwards, enrich_randomization_parallel is used exactly like enrich_randomizat
 <span id="parallel-ref"></span><h3>Start and stop a parallel processing session<a class="headerlink" href="#start-and-stop-a-parallel-processing-session" title="Permalink to this headline">¶</a></h3>
 <p>Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: <a class="reference external" href="https://ipyparallel.readthedocs.io/en/latest/">https://ipyparallel.readthedocs.io/en/latest/</a>
 To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Your python console will then become unavailable for 30 seconds while the ipcluster is being started.
 By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.</p>
 <p>start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">start_ipcluster</span><span class="p">()</span>
 <span class="c1">#perform parallel processing here</span>
 <span class="n">general</span><span class="o">.</span><span class="n">stop_ipcluster</span><span class="p">()</span>
@@ -971,7 +970,7 @@ By default, the parallel session will use all available processors on the machin
 <div class="section" id="what-is-a-reference-table">
 <h4>What is a Reference Table?<a class="headerlink" href="#what-is-a-reference-table" title="Permalink to this headline">¶</a></h4>
 <p>You can perform enrichment analysis or filtering operations based on user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’).
-User-defined attributes should be defined in a Reference Table csv file. The format of the reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for a Reference Table below:</p>
+User-defined attributes should be defined in a Reference Table csv file. The format of the attribute reference table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an attribute reference table below:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 29%" />
@@ -1015,32 +1014,32 @@ User-defined attributes should be defined in a Reference Table csv file. The for
 </tbody>
 </table>
 </div>
-<div class="section" id="set-a-reference-table-as-default">
-<h4>Set a Reference Table as default<a class="headerlink" href="#set-a-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
-<p>Once we have a Reference Table, we can set it to be the default Reference Table for all future uses of RNAlysis:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<div class="section" id="set-an-attribute-reference-table-as-default">
+<h4>Set an attribute reference table as default<a class="headerlink" href="#set-an-attribute-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
+<p>Once we have an attribute reference table, we can set it to be the default attribute reference table for all future uses of RNAlysis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">set_reference_table_path</span><span class="p">(</span><span class="s1">&#39;path/to/my/reference/table.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This will create a file called ‘settings.ini’, which will store the full path of your Reference Table file.
-Whenever RNAlysis needs to use a Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+<p>This will create a file called ‘settings.yaml’, which will store the full path of your attribute reference table file.
+Whenever RNAlysis needs to use am attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
 The saved path can be changed any time using the general.set_reference_table_path() function.</p>
 </div>
-<div class="section" id="load-the-default-reference-table-path">
-<h4>Load the default Reference Table path<a class="headerlink" href="#load-the-default-reference-table-path" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="load-the-default-attribute-reference-table-path">
+<h4>Load the default attribute reference table path<a class="headerlink" href="#load-the-default-attribute-reference-table-path" title="Permalink to this headline">¶</a></h4>
 <p>You can load the saved path from the settings file using the read_reference_table_path function:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="n">general</span><span class="o">.</span><span class="n">read_reference_table_path</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>If a Reference Table path was not previously defined, you will be requested to define it when you run this function.</p>
+<p>If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.</p>
 </div>
 </div>
 <div class="section" id="parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions">
 <h3>Parse <em>C. elegans</em> gene names, WBGene indices and sequence names using regular expressions<a class="headerlink" href="#parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions" title="Permalink to this headline">¶</a></h3>
 <p>The general module includes functions which can parse <em>C. elegans</em> gene names (like <em>daf-2</em> or <em>lin-15B</em>), WBGene indices (like WBGene00023495) and sequence names (like Y55D5A.5 or T23G5.6).
 For example, we could extract all WBGene indices from the following string:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="k">import</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="n">my_string</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;WBGene00000001 and WBGene00000002WBGene00000003</span>
 
 <span class="s1">WBGene00000004g</span>
@@ -1058,19 +1057,19 @@ For example, we could extract all WBGene indices from the following string:</p>
 
 
            </div>
-
+           
           </div>
           <footer>
-
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-
+      
         <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-
-
+      
+      
         <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-
+      
     </div>
-
+  
 
   <hr/>
 
@@ -1080,7 +1079,7 @@ For example, we could extract all WBGene indices from the following string:</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1090,7 +1089,7 @@ For example, we could extract all WBGene indices from the following string:</p>
     </section>
 
   </div>
-
+  
 
 
   <script type="text/javascript">
@@ -1099,10 +1098,10 @@ For example, we could extract all WBGene indices from the following string:</p>
       });
   </script>
 
-
-
-
-
+  
+  
+    
+   
 
 </body>
 </html>

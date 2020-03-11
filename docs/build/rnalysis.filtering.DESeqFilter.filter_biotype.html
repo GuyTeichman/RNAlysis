@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -126,7 +126,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
@@ -202,13 +201,13 @@
 <h1>rnalysis.filtering.DESeqFilter.filter_biotype<a class="headerlink" href="#rnalysis-filtering-deseqfilter-filter-biotype" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.filter_biotype">
-<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.filter_biotype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.filter_biotype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filters out all features that do not match the indicated biotype.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is ce11 (included in the package).</p></li>
+<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is the path defined by the user in the settings.yaml file.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>

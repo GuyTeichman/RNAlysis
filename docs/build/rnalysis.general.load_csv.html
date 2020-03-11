@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -80,7 +80,7 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - <em>C. elegans</em> RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis_user_guide.html">RNAlysis user guide</a></li>
@@ -92,7 +92,6 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
@@ -164,14 +163,14 @@
 <h1>rnalysis.general.load_csv<a class="headerlink" href="#rnalysis-general-load-csv" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="rnalysis.general.load_csv">
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_gene_names: bool = True</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.load_csv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_columns: bool = False</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.load_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>loads a csv df into a pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the csv file to be loaded</p></li>
 <li><p><strong>idx_col</strong> (<em>int</em><em>, </em><em>default None</em>) – number of column to be used as index. default is None, meaning no column will be used as index.</p></li>
-<li><p><strong>drop_gene_names</strong> (<em>bool</em><em>, </em><em>default True</em>) – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>False</em><em> (</em><em>default False</em><em>)</em>) – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
 <li><p><strong>squeeze</strong> (<em>bool</em><em>, </em><em>default False</em>) – If the parsed data only contains one column then return a Series.</p></li>
 <li><p><strong>comment</strong> (<em>str</em><em> (</em><em>optional</em><em>)</em>) – Indicates remainder of line should not be parsed.     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.</p></li>
 </ul>

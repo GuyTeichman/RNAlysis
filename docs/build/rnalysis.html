@@ -5,62 +5,62 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  
   <title>rnalysis package &mdash; RNAlysis 1.0 documentation</title>
+  
 
+  
+  
+  
+  
 
-
-
-
-
-
-
+  
   <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-
-
+  
+    
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
+    
 
-
-
+  
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" />
+    <link rel="prev" title="rnalysis.general" href="rnalysis.general.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
-
+   
   <div class="wy-grid-for-nav">
-
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
+          
 
-
-
+          
             <a href="index.html" class="icon icon-home"> RNAlysis
+          
 
-
-
+          
           </a>
 
+          
+            
+            
+          
 
-
-
-
-
-
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -69,16 +69,16 @@
   </form>
 </div>
 
-
+          
         </div>
 
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-
-
-
-
-
-
+          
+            
+            
+              
+            
+            
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
@@ -93,40 +93,38 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">rnalysis package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-filtering-module">rnalysis.filtering module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">rnalysis.enrichment module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module">rnalysis.general module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rnalysis-feature-name-to-wbgene-module">rnalysis.feature_name_to_wbgene module</a></li>
 </ul>
 </li>
 </ul>
 
-
-
+            
+          
         </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-
+      
       <nav class="wy-nav-top" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-
+        
       </nav>
 
 
       <div class="wy-nav-content">
-
+        
         <div class="rst-content">
-
-
+        
+          
 
 
 
@@ -145,28 +143,28 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-
+    
       <li><a href="index.html">Docs</a> &raquo;</li>
-
+        
       <li>rnalysis package</li>
-
-
+    
+    
       <li class="wy-breadcrumbs-aside">
-
-
+        
+            
             <a href="_sources/rnalysis.rst.txt" rel="nofollow"> View page source</a>
-
-
+          
+        
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+            
   <div class="section" id="rnalysis-package">
 <h1>rnalysis package<a class="headerlink" href="#rnalysis-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="rnalysis-filtering-module">
@@ -174,7 +172,7 @@
 <p>This module can import HTCount and DESeq .csv files, perform various filtering operations on them,  perform set operations (union, intersection, etc), run basic exploratory analyses and plots (such as PCA, clustergram, violin plots, scatter, etc), save the filtered files to the computer, and return set of features that appear in an imported DESeq file. When a filtered/modified DESeq/HTCount is saved back to disk, its new name will include by default  all of the operations performed on it, in the order they were performed, to allow easy traceback of analyses.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">CountFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">CountFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">drop_columns=False</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
 <p>A class that receives a count matrix and can filter it according to various characteristics.</p>
 <p><strong>Attributes</strong></p>
@@ -196,13 +194,12 @@
 </dl>
 <dl class="method">
 <dt>
-<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p>
-</dd>
-</dl>
+<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">format: str = 'short'</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
+:type format: ‘short’ or ‘long’ (default ‘short’)
+:param format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
+which also provides descriptive statistics of each column per biotype.
+:param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).</p>
 </dd></dl>
 
 <dl class="method">
@@ -268,13 +265,13 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Filters out all features that do not match the indicated biotype.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is ce11 (included in the package).</p></li>
+<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is the path defined by the user in the settings.yaml file.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -641,7 +638,7 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">deseq_highlight=None</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">highlight=None</em><span class="sig-paren">)</span></dt>
 <dd><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -650,7 +647,7 @@
 <li><p><strong>sample2</strong> – str/list. Name of the second sample from the CountFilter object.         If sample2 is a list, they will be averaged as replicates.</p></li>
 <li><p><strong>xlabel</strong> – optional. If not specified, sample1 will be used as xlabel.</p></li>
 <li><p><strong>ylabel</strong> – optional. If not specified, sample2 will be used as ylabel.</p></li>
-<li><p><strong>deseq_highlight</strong> – DESeqFilter object or iterable of WBGene indices(optional).         If specified, the points in the scatter corresponding to the WBGene indices in deseq_highlight will be         highlighted in red.</p></li>
+<li><p><strong>highlight</strong> – DESeqFilter object or iterable of WBGene indices(optional).         If specified, the points in the scatter corresponding to the WBGene indices in highlight will be         highlighted in red.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -841,7 +838,7 @@
 
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">DESeqFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">DESeqFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">drop_columns=False</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
 <p>A class that receives a DESeq output file and can filter it according to various characteristics.</p>
 <p><strong>Attributes</strong></p>
@@ -861,13 +858,12 @@
 </dl>
 <dl class="method">
 <dt>
-<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p>
-</dd>
-</dl>
+<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">format: str = 'short'</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
+:type format: ‘short’ or ‘long’ (default ‘short’)
+:param format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
+which also provides descriptive statistics of each column per biotype.
+:param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).</p>
 </dd></dl>
 
 <dl class="method">
@@ -929,13 +925,13 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Filters out all features that do not match the indicated biotype.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is ce11 (included in the package).</p></li>
+<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is the path defined by the user in the settings.yaml file.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -1346,13 +1342,12 @@
 </dl>
 <dl class="method">
 <dt>
-<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p>
-</dd>
-</dl>
+<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">format: str = 'short'</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
+:type format: ‘short’ or ‘long’ (default ‘short’)
+:param format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
+which also provides descriptive statistics of each column per biotype.
+:param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).</p>
 </dd></dl>
 
 <dl class="method">
@@ -1414,13 +1409,13 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param">biotype='protein_coding'</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Filters out all features that do not match the indicated biotype.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>biotype</strong> (<em>str</em><em> or </em><em>list</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is ce11 (included in the package).</p></li>
+<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is the path defined by the user in the settings.yaml file.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -1830,11 +1825,11 @@
 <p>receives a filtered gene set and preforms various enrichment analyses</p>
 <dl class="method">
 <dt>
-<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1859,15 +1854,15 @@
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">background_genes: set = None</em>, <em class="sig-param">ref_path: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">background_genes: set = None</em>, <em class="sig-param">attr_ref_path: str = 'predefined'</em>, <em class="sig-param">biotype_ref_path: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
 <dd class="field-odd"><p>str, int, iterable (list, tuple, set, etc) of str/int, or ‘all’.</p>
 </dd>
 <dt class="field-even">param attributes</dt>
-<dd class="field-even"><p>An iterable of attribute names or attribute numbers         (according to their order in the reference table).         If ‘all’, all of the attributes in the reference table will be used.         If None, a manual input prompt will be raised.</p>
+<dd class="field-even"><p>An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p>
 </dd>
 <dt class="field-odd">type fdr</dt>
 <dd class="field-odd"><p>float between 0 and 1</p>
@@ -1881,11 +1876,11 @@
 <dt class="field-even">param reps</dt>
 <dd class="field-even"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
 </dd>
-<dt class="field-odd">type ref_path</dt>
+<dt class="field-odd">type attr_ref_path</dt>
 <dd class="field-odd"><p>‘predefined’ (default), str or pathlib.Path</p>
 </dd>
-<dt class="field-even">param ref_path</dt>
-<dd class="field-even"><p>the path of the reference table file to be used as reference.</p>
+<dt class="field-even">param attr_ref_path</dt>
+<dd class="field-even"><p>the path of the Attribute Reference Table file to be used as reference.</p>
 </dd>
 <dt class="field-odd">type biotype</dt>
 <dd class="field-odd"><p>str specifying a specific biotype, list/set of strings each specifying a biotype, or ‘all’.         Default ‘protein_coding’.</p>
@@ -1930,17 +1925,17 @@ and ‘pvalue’.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">background_genes: set = None</em>, <em class="sig-param">ref_path: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: list = None</em>, <em class="sig-param">fdr: float = 0.05</em>, <em class="sig-param">reps=10000</em>, <em class="sig-param">biotype: str = 'protein_coding'</em>, <em class="sig-param">background_genes: set = None</em>, <em class="sig-param">attr_ref_path: str = 'predefined'</em>, <em class="sig-param">biotype_ref_path: str = 'predefined'</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname=None</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from a reference table using parallel processing.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
 <dd class="field-odd"><p>str, int, iterable (list, tuple, set, etc) of str/int, or ‘all’</p>
 </dd>
 <dt class="field-even">param attributes</dt>
-<dd class="field-even"><p>An iterable of attribute names or attribute numbers        (according to their order in the reference table).        If ‘all’, all of the attributes in the reference table will be used.        If None, a manual input prompt will be raised.</p>
+<dd class="field-even"><p>An iterable of attribute names or attribute numbers        (according to their order in the Attribute Reference Table).        If ‘all’, all of the attributes in the Attribute Reference Table will be used.        If None, a manual input prompt will be raised.</p>
 </dd>
 <dt class="field-odd">type fdr</dt>
 <dd class="field-odd"><p>float between 0 and 1</p>
@@ -1954,7 +1949,7 @@ and ‘pvalue’.</p>
 <dt class="field-even">param reps</dt>
 <dd class="field-even"><p>How many repetitions to run the randomization for.        10,000 is the default. Recommended 10,000 or higher.</p>
 </dd>
-<dt class="field-odd">param ref_path</dt>
+<dt class="field-odd">param attr_ref_path</dt>
 <dd class="field-odd"><p>the path of the Big Table file to be used as reference.</p>
 </dd>
 <dt class="field-even">type biotype</dt>
@@ -2000,15 +1995,15 @@ and ‘pvalue’.</p>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">go_enrichment</code><span class="sig-paren">(</span><em class="sig-param">mode: str = 'go'</em>, <em class="sig-param">alpha: float = 0.05</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname: str = None</em><span class="sig-paren">)</span></dt>
-<dd><p>Analyzes GO, Tissue and/or Phenotype enrichment of the given group of features.         Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans.         Corrected p-values are calculated using hypergeometric statistics.         For more details see GitHub page of the developers: <a class="reference external" href="https://github.com/dangeles/TissueEnrichmentAnalysis">https://github.com/dangeles/TissueEnrichmentAnalysis</a></p>
+<code class="sig-name descname">go_enrichment</code><span class="sig-paren">(</span><em class="sig-param">mode: str = 'all'</em>, <em class="sig-param">alpha: float = 0.05</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname: str = None</em><span class="sig-paren">)</span></dt>
+<dd><p>Analyzes GO, Tissue and/or Phenotype enrichment for the given group of genomic features.         Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans.         Corrected p-values are calculated using hypergeometric statistics.         For more details see GitHub page of the developers: <a class="reference external" href="https://github.com/dangeles/TissueEnrichmentAnalysis">https://github.com/dangeles/TissueEnrichmentAnalysis</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mode</strong> – the enrichment you wish to perform. ‘go’ for gene ontology enrichment,         ‘tissue’ for tissue enrichment, ‘phenotype’ for phenotype enrichment.</p></li>
-<li><p><strong>alpha</strong> – float. Significance threshold. Default is 0.05</p></li>
-<li><p><strong>save_csv</strong> – bool. False by default. If True, save the result to a csv.</p></li>
-<li><p><strong>fname</strong> – Name and path in which to save the results. Must be filled if save_csv is True.</p></li>
+<li><p><strong>mode</strong> (<em>'go'</em><em>, </em><em>'tissue'</em><em>, </em><em>'phenotype'</em><em> or </em><em>'all'</em><em> (</em><em>default 'all'</em><em>)</em>) – the enrichment you wish to perform. ‘go’ for gene ontology enrichment,         ‘tissue’ for tissue enrichment, ‘phenotype’ for phenotype enrichment, or ‘all’ for all three.</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default 0.05</em><em>)</em>) – Significance threshold.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, save the result to a csv.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Name and path in which to save the results. Must be specified if save_csv is True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2095,6 +2090,53 @@ and ‘pvalue’.</p>
 
 </dd></dl>
 
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">upset_plot</code><span class="sig-paren">(</span><em class="sig-param">objs: dict</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>objs</strong> – </p></li>
+<li><p><strong>ref</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">venn_diagram</code><span class="sig-paren">(</span><em class="sig-param">objs: dict</em>, <em class="sig-param">ref: str = 'predefined'</em>, <em class="sig-param">title: str = 'default'</em>, <em class="sig-param">set_colors: tuple = ('r'</em>, <em class="sig-param">'g'</em>, <em class="sig-param">'b')</em>, <em class="sig-param">alpha: float = 0.4</em>, <em class="sig-param">weighted: bool = True</em>, <em class="sig-param">lines: bool = True</em>, <em class="sig-param">linecolor: str = 'black'</em>, <em class="sig-param">linestyle='solid'</em>, <em class="sig-param">linewidth=2.0</em>, <em class="sig-param">normalize_to: float = 1.0</em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>objs</strong> – </p></li>
+<li><p><strong>ref</strong> – </p></li>
+<li><p><strong>title</strong> – </p></li>
+<li><p><strong>set_colors</strong> – </p></li>
+<li><p><strong>alpha</strong> – </p></li>
+<li><p><strong>weighted</strong> – </p></li>
+<li><p><strong>lines</strong> – </p></li>
+<li><p><strong>linecolor</strong> – </p></li>
+<li><p><strong>linestyle</strong> – </p></li>
+<li><p><strong>linewidth</strong> – </p></li>
+<li><p><strong>normalize_to</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="rnalysis-general-module">
 <h2>rnalysis.general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline">¶</a></h2>
@@ -2133,29 +2175,19 @@ and ‘pvalue’.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">is_reference_table_defined</code><span class="sig-paren">(</span><em class="sig-param">settings_start_phrase='reference_table_path='</em><span class="sig-paren">)</span></dt>
-<dd><p>Check whether a reference table path is defined.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>settings_start_phrase</strong> – The key phrase to look for in settings.ini (‘reference_table_path=’).</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-<p>True if defined, False if not defined.</p>
-</dd></dl>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">get_settings_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_gene_names: bool = True</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_columns: bool = False</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span></dt>
 <dd><p>loads a csv df into a pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the csv file to be loaded</p></li>
 <li><p><strong>idx_col</strong> (<em>int</em><em>, </em><em>default None</em>) – number of column to be used as index. default is None, meaning no column will be used as index.</p></li>
-<li><p><strong>drop_gene_names</strong> (<em>bool</em><em>, </em><em>default True</em>) – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>False</em><em> (</em><em>default False</em><em>)</em>) – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
 <li><p><strong>squeeze</strong> (<em>bool</em><em>, </em><em>default False</em>) – If the parsed data only contains one column then return a Series.</p></li>
 <li><p><strong>comment</strong> (<em>str</em><em> (</em><em>optional</em><em>)</em>) – Indicates remainder of line should not be parsed.     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.</p></li>
 </ul>
@@ -2165,6 +2197,11 @@ and ‘pvalue’.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt>
@@ -2198,11 +2235,24 @@ a set of the WBGene indices that appear in the given string.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_reference_table_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Attempt to read the reference table path from settings.ini.     If the path was not previously defined, will prompt user to define it.</p>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_attr_ref_table_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_biotype_ref_table_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_path_from_settings</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span></dt>
+<dd><p>Attempt to read the reference table path from settings.yaml.     If the path was not previously defined, will prompt user to define it.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – the key in the settings file whose path to read.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
 </dd>
 </dl>
 <p>The path of the reference table.</p>
@@ -2240,17 +2290,6 @@ a set of the WBGene indices that appear in the given string.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">set_reference_table_path</code><span class="sig-paren">(</span><em class="sig-param">path: str = None</em><span class="sig-paren">)</span></dt>
-<dd><p>Set the path for a user-defined reference table for filtering and enrichment analyses.     The path will be saved in a settings.ini file that will persist through sessions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The full path and name of the .csv reference file.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">start_ipcluster</code><span class="sig-paren">(</span><em class="sig-param">n_engines: int = 'default'</em><span class="sig-paren">)</span></dt>
 <dd><p>Start an ipyparallel ipcluster in order to perform parallelized computation.</p>
 <dl class="field-list simple">
@@ -2277,81 +2316,27 @@ a set of the WBGene indices that appear in the given string.</p>
 <dd><p>Stop a previously started ipyparallel ipcluster.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="rnalysis-feature-name-to-wbgene-module">
-<h2>rnalysis.feature_name_to_wbgene module<a class="headerlink" href="#rnalysis-feature-name-to-wbgene-module" title="Permalink to this headline">¶</a></h2>
-<p>This module can append WBGene indices to feature names in a DESeq/HTCount .csv file, according to a reference table (such as the Big Table).</p>
-<dl class="class">
-<dt>
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.feature_name_to_wbgene.</code><code class="sig-name descname">GeneNameTranslator</code><span class="sig-paren">(</span><em class="sig-param">target_filename</em>, <em class="sig-param">reference_filename: str = 'C:\Users\Guy_Teichman\PycharmProjects\RNAlysis\rnalysis\gene_names_and_biotype.csv'</em>, <em class="sig-param">ref_wbgene_col: str = 'gene'</em>, <em class="sig-param">ref_gene_col: str = 'gene ID'</em>, <em class="sig-param">ref_seq_col: str = 'Sequence ID'</em>, <em class="sig-param">ref_other_col: str = 'Other IDs'</em>, <em class="sig-param">target_gene_col: str = 'genes'</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A class that takes a file with gene names that does not have WBGene indices, and a reference file that includes
-gene names and their corresponding WBGene indices, and adds WBGene indices to the original file.</p>
-<dl class="method">
-<dt>
-<code class="sig-name descname">generate_target_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Generate the feature name to WBGene dictionary,
-and translate the imported pandas DataFrame feature names to WBGene.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">import_target</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>import the target filename into a pandas DataFrame</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">read_reference</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>load the reference file into a pandas DataFrame</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">rewrite_target</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>save the target file as a csv with the suffix “_WBGene”.</p>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>load the specified file, translate its feature names to WBGenes, and save it as a csv with the “_WBGene” suffix.</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.feature_name_to_wbgene.</code><code class="sig-name descname">name_to_wbgene_folder</code><span class="sig-paren">(</span><em class="sig-param">pth: str</em><span class="sig-paren">)</span></dt>
-<dd><p>iterate over all files in a directory, translate their feature names to WBGene
-and save them as csv in the same folder.
-:param pth: path of the folder on which to iterate
-:return:
-a list of all GeneNameTranslator objects</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.feature_name_to_wbgene.</code><code class="sig-name descname">run_all</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span></dt>
-<dd><p>run the translator on a list of files</p>
-</dd></dl>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">update_settings</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">key</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
 
 </div>
 </div>
 
 
            </div>
-
+           
           </div>
           <footer>
-
+  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-
-
-        <a href="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run.html" class="btn btn-neutral float-left" title="rnalysis.feature_name_to_wbgene.GeneNameTranslator.run" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-
+      
+      
+        <a href="rnalysis.general.html" class="btn btn-neutral float-left" title="rnalysis.general" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
-
+  
 
   <hr/>
 
@@ -2361,7 +2346,7 @@ a list of all GeneNameTranslator objects</p>
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -2371,7 +2356,7 @@ a list of all GeneNameTranslator objects</p>
     </section>
 
   </div>
-
+  
 
 
   <script type="text/javascript">
@@ -2380,10 +2365,10 @@ a list of all GeneNameTranslator objects</p>
       });
   </script>
 
-
-
-
-
+  
+  
+    
+   
 
 </body>
 </html>

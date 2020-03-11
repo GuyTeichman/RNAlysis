@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -109,7 +109,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
@@ -185,15 +184,15 @@
 <h1>rnalysis.enrichment.FeatureSet.go_enrichment<a class="headerlink" href="#rnalysis-enrichment-featureset-go-enrichment" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.enrichment.FeatureSet.go_enrichment">
-<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">go_enrichment</code><span class="sig-paren">(</span><em class="sig-param">mode: str = 'go'</em>, <em class="sig-param">alpha: float = 0.05</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.go_enrichment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Analyzes GO, Tissue and/or Phenotype enrichment of the given group of features.         Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans.         Corrected p-values are calculated using hypergeometric statistics.         For more details see GitHub page of the developers: <a class="reference external" href="https://github.com/dangeles/TissueEnrichmentAnalysis">https://github.com/dangeles/TissueEnrichmentAnalysis</a></p>
+<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">go_enrichment</code><span class="sig-paren">(</span><em class="sig-param">mode: str = 'all'</em>, <em class="sig-param">alpha: float = 0.05</em>, <em class="sig-param">save_csv: bool = False</em>, <em class="sig-param">fname: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.go_enrichment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyzes GO, Tissue and/or Phenotype enrichment for the given group of genomic features.         Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans.         Corrected p-values are calculated using hypergeometric statistics.         For more details see GitHub page of the developers: <a class="reference external" href="https://github.com/dangeles/TissueEnrichmentAnalysis">https://github.com/dangeles/TissueEnrichmentAnalysis</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mode</strong> – the enrichment you wish to perform. ‘go’ for gene ontology enrichment,         ‘tissue’ for tissue enrichment, ‘phenotype’ for phenotype enrichment.</p></li>
-<li><p><strong>alpha</strong> – float. Significance threshold. Default is 0.05</p></li>
-<li><p><strong>save_csv</strong> – bool. False by default. If True, save the result to a csv.</p></li>
-<li><p><strong>fname</strong> – Name and path in which to save the results. Must be filled if save_csv is True.</p></li>
+<li><p><strong>mode</strong> (<em>'go'</em><em>, </em><em>'tissue'</em><em>, </em><em>'phenotype'</em><em> or </em><em>'all'</em><em> (</em><em>default 'all'</em><em>)</em>) – the enrichment you wish to perform. ‘go’ for gene ontology enrichment,         ‘tissue’ for tissue enrichment, ‘phenotype’ for phenotype enrichment, or ‘all’ for all three.</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default 0.05</em><em>)</em>) – Significance threshold.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, save the result to a csv.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Name and path in which to save the results. Must be specified if save_csv is True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

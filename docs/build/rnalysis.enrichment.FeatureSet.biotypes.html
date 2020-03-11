@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -109,7 +109,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.feature_name_to_wbgene.html">rnalysis.feature_name_to_wbgene</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.html">rnalysis package</a></li>
@@ -185,11 +184,11 @@
 <h1>rnalysis.enrichment.FeatureSet.biotypes<a class="headerlink" href="#rnalysis-enrichment-featureset-biotypes" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.enrichment.FeatureSet.biotypes">
-<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'C:\\Users\\Guy_Teichman\\PycharmProjects\\RNAlysis\\rnalysis\\gene_names_and_biotype.csv'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.biotypes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.biotypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> – Name of the reference file used to determine biotype. Default is ce11 (included in the package).</p>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
 </dd>
 </dl>
 </dd></dl>
