@@ -277,7 +277,7 @@ class Filter:
         If False, features will be filtered out by exclusion from the specified criteria \
         (meaning features that DON'T belong to the attributes \
         are kept, and features that do belong to the attributes are filtered out).
-        :param ref: filename/path of the reference table to be used as reference.
+        :param ref: filename/path of the attribute reference table to be used as reference.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \

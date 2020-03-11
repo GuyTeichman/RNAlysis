@@ -644,7 +644,7 @@ class FeatureSet:
         """
         Returns a DataFrame of the biotypes in the gene set and their count.
 
-        :type ref: str or pathlib.Path
+        :type ref: str or pathlib.Path (default 'predefined')
         :param ref: Path of the reference file used to determine biotype. \
         Default is the path predefined in the settings file.
         """
