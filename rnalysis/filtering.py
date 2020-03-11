@@ -257,8 +257,7 @@ class Filter:
 
     # TODO: add 'remove unindexed rows' to here!
 
-    def filter_by_ref_table_attr(self, attributes: list = None, mode='union', inclusion: bool = True,
-                                 ref: str = 'predefined',
+    def filter_by_ref_table_attr(self, attributes: list = None, mode='union', ref: str = 'predefined',
                                  opposite: bool = False, inplace: bool = True):
         """
         Filters features by inclusion in or exclusion from a Big Table attribute, or multiple Big Table attributes. \
@@ -271,12 +270,6 @@ class Filter:
         :param mode: 'union' or 'intersection'. If 'union', filters out every feature that does not match at least one \
         of the indicated Big Table attributes. If 'intersection', \
         filters out every feature that does not match all of the indicated Big Table attributes.
-        :param inclusion: boolean. If True (default), features will be filtered by inclusion in the specified criteria \
-        (meaning features that  belong to the attributes are kept \
-        and features that don't belong to the attributes are filtered out). \
-        If False, features will be filtered out by exclusion from the specified criteria \
-        (meaning features that DON'T belong to the attributes \
-        are kept, and features that do belong to the attributes are filtered out).
         :param ref: filename/path of the attribute reference table to be used as reference.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
