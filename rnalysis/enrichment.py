@@ -270,11 +270,11 @@ class FeatureSet:
         return df_comb
 
     @staticmethod
-    def _single_enrichment(gene_set, attributes, big_table: pd.DataFrame, fraction, reps):
+    def _single_enrichment(gene_set, attributes, attr_ref_df: pd.DataFrame, fraction, reps):
         attributes = [attributes] if not isinstance(attributes, list) else attributes
         for attribute in attributes:
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-            df = big_table[[attribute, 'int_index']]
+            df = attr_ref_df[[attribute, 'int_index']]
             srs = df[attribute]
             srs_int = (df.set_index('int_index', inplace=False))[attribute]
             obs_srs = srs.loc[gene_set]
@@ -331,7 +331,7 @@ class FeatureSet:
     def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
         gene_set = self.gene_set
         try:
-            big_table = general.load_csv(attr_ref_path, 0)
+            attr_ref_df = general.load_csv(attr_ref_path, 0)
         except:
             raise ValueError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
 
@@ -354,35 +354,37 @@ class FeatureSet:
                     "both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")
                 biotype = 'all'
 
-            big_table = big_table.loc[background_genes.intersection(set(big_table.index))]
-            if len(big_table.index) < len(background_genes):
+            attr_ref_df = attr_ref_df.loc[background_genes.intersection(set(attr_ref_df.index))]
+            if len(attr_ref_df.index) < len(background_genes):
                 warnings.warn(
-                    f"{len(background_genes) - len(big_table.index)} indices from the requested "
+                    f"{len(background_genes) - len(attr_ref_df.index)} indices from the requested "
                     f"background genes do not appear in the Attribute Reference Table, and are therefore ignored. \n"
-                    f"This leaves a total of {len(big_table.index)} background genes. ")
+                    f"This leaves a total of {len(attr_ref_df.index)} background genes. ")
         if biotype == 'all':
             pass
         else:
-            biotype_ref = general.load_csv(biotype_ref_path, 0)
+            biotype_ref_df = general.load_csv(biotype_ref_path, 0)
+            biotype_ref_df.columns = biotype_ref_df.columns.str.lower()
             if isinstance(biotype, (list, tuple, set)):
-                mask = pd.Series(np.zeros_like(biotype_ref['bioType'].values, dtype=bool), biotype_ref['bioType'].index,
-                                 name='bioType')
+                mask = pd.Series(np.zeros_like(biotype_ref_df['biotype'].values, dtype=bool),
+                                 biotype_ref_df['biotype'].index,
+                                 name='biotype')
                 for bio in biotype:
-                    mask = mask | (biotype_ref['bioType'] == bio)
+                    mask = mask | (biotype_ref_df['biotype'] == bio)
             else:
-                biotype_ref = biotype_ref.loc[biotype_ref.index.intersection(big_table.index)]
-                mask = biotype_ref['bioType'] == biotype
-            big_table = big_table.loc[biotype_ref[mask].index]
-        big_table.sort_index(inplace=True)
-        big_table['int_index'] = [i for i in range(len(big_table.index))]
-        print(f"{len(big_table.index)} background genes are used. ")
+                biotype_ref_df = biotype_ref_df.loc[biotype_ref_df.index.intersection(attr_ref_df.index)]
+                mask = biotype_ref_df['biotype'] == biotype
+            attr_ref_df = attr_ref_df.loc[biotype_ref_df[mask].index]
+        attr_ref_df.sort_index(inplace=True)
+        attr_ref_df['int_index'] = [i for i in range(len(attr_ref_df.index))]
+        print(f"{len(attr_ref_df.index)} background genes are used. ")
 
-        not_in_bg = gene_set.difference(set(big_table.index))
+        not_in_bg = gene_set.difference(set(attr_ref_df.index))
         if len(not_in_bg) > 0:
             gene_set = gene_set.difference(not_in_bg)
             warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the background genes. \n"
                           f"Enrichment will be run on the remaining {len(gene_set)}.")
-        return big_table, gene_set
+        return attr_ref_df, gene_set
 
     def enrich_randomization_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000,
                                       biotype: str = 'protein_coding', background_genes: set = None,
@@ -412,7 +414,11 @@ class FeatureSet:
        :type reps: int larger than 0
        :param reps: How many repetitions to run the randomization for. \
        10,000 is the default. Recommended 10,000 or higher.
-       :param attr_ref_path: the path of the Big Table file to be used as reference.
+       :type attr_ref_path: str or pathlib.Path (default 'predefined')
+       :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
+       :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+       :param biotype_ref_path: the path of the Biotype Reference Table. \
+       Will be used to generate background set if 'biotype' is specified.
        :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
        :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
        'protein_coding' will include only protein-coding genes in the reference, etc. \
@@ -438,11 +444,11 @@ class FeatureSet:
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
-        big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
-                                                             attr_ref_path=attr_ref_path,
-                                                             biotype_ref_path=biotype_ref_path)
+        attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
+                                                               attr_ref_path=attr_ref_path,
+                                                               biotype_ref_path=biotype_ref_path)
         if attributes == ['all']:
-            attributes = big_table.columns[:-1]
+            attributes = attr_ref_df.columns[:-1]
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         client = Client()
         dview = client[:]
@@ -450,11 +456,11 @@ class FeatureSet:
               import pandas as pd""")
         k = len(attributes)
         gene_set_rep = list(repeat(gene_set, k))
-        big_table_rep = list(repeat(big_table, k))
+        attr_ref_df_rep = list(repeat(attr_ref_df, k))
         fraction_rep = list(repeat(fraction, k))
         reps_rep = list(repeat(reps, k))
 
-        res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, big_table_rep, fraction_rep,
+        res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, fraction_rep,
                         reps_rep)
         enriched_list = res.result()
         res_df = pd.DataFrame(enriched_list,
@@ -500,8 +506,11 @@ class FeatureSet:
         :type reps: int larger than 0
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
-        :type attr_ref_path: 'predefined' (default), str or pathlib.Path
-        :param attr_ref_path: the path of the Attribute Reference Table file to be used as reference.
+        :type attr_ref_path: str or pathlib.Path (default 'predefined')
+        :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
+        :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+        :param biotype_ref_path: the path of the Biotype Reference Table. \
+        Will be used to generate background set if 'biotype' is specified.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
         :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
@@ -528,15 +537,15 @@ class FeatureSet:
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
-        big_table, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
-                                                             attr_ref_path=attr_ref_path,
-                                                             biotype_ref_path=biotype_ref_path)
+        attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
+                                                               attr_ref_path=attr_ref_path,
+                                                               biotype_ref_path=biotype_ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             print(f"Finished {k} attributes out of {len(attributes)}")
-            df = big_table[[attribute, 'int_index']]
+            df = attr_ref_df[[attribute, 'int_index']]
             srs = df[attribute]
             srs_int = (df.set_index('int_index', inplace=False))[attribute]
             obs_srs = srs.loc[gene_set]
