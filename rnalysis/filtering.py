@@ -240,16 +240,17 @@ class Filter:
 
         ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref, 0)
-        legal_inputs = set(ref_df['bioType'].unique())
+        ref_df.columns = ref_df.columns.str.lower()
+        legal_inputs = set(ref_df['biotype'].unique())
 
         for bio in biotype:
             assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
 
         suffix = f"_{'_'.join(biotype)}"
 
-        mask = pd.Series(np.zeros_like(ref_df['bioType'], dtype=bool), index=ref_df['bioType'].index, name='bioType')
+        mask = pd.Series(np.zeros_like(ref_df['biotype'], dtype=bool), index=ref_df['biotype'].index, name='biotype')
         for bio in biotype:
-            mask = mask | (ref_df['bioType'] == bio)
+            mask = mask | (ref_df['biotype'] == bio)
 
         gene_names = ref_df[mask].index.intersection(self.df.index)
         new_df = self.df.loc[gene_names]
