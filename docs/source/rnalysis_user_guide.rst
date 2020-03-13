@@ -99,7 +99,7 @@ Another useful option is to perform an opposite filter. When we specify the para
 For example, if we now wanted to remove the rows which are below the 25% percentile in the 'log2FoldChange' column, we will use the following code::
 
     >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True)
-    #TODO: Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
+    Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
 
 Calling this function without the 'opposite' parameter would have removed all values except the bottom 25% of the 'log2FoldChange' column. When specifying 'opposite', we instead throw out the bottom 25% of the 'log2FoldChange' column and keep the rest.
 
@@ -177,9 +177,10 @@ An Attribute Reference Table contains various user-defined attributes (such as '
 You can read more about the Attribute Reference Table format and loading an Attribute Reference Table in the :ref:`reference-table-ref` section.
 Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table::
 
-    >>> d.filter_by_attribute('genes_that_have_a_paralog')
-    #TODO: Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
-    #TODO: update to current file and current attributes
+    >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+    >>> d.filter_by_attribute('attribute1', ref='tests/attr_ref_table_for_examples.csv')
+    Filtered 27 features, leaving 1 of the original 28 features. Filtered inplace.
+
 Using a Biotype Reference Table for filter operations
 --------------------------------------------------------
 
@@ -195,12 +196,25 @@ You can also view the number of genomic features belonging to each biotype using
 
     >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
     >>> d.biotypes()
-    #TODO:
+                    gene
+    biotype
+    protein_coding    26
+    pseudogene         1
+    unknown            1
 
 Or view more elaborated descriptive statistics for eahc biotype by specifying format='long'::
 
-    >>> d.biotypes(format='long')
-    #TODO:
+    >>> d.biotypes(format='long', ref='tests/biotype_ref_table_for_tests.csv')
+
+                   baseMean               ...           padj
+                      count         mean  ...            75%            max
+    biotype                               ...
+    protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68
+    pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94
+    unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152
+
+    [3 rows x 48 columns]
+
 
 Filtering DESeq2 output files with filtering.DESeqFilter
 =========================================================
@@ -237,7 +251,7 @@ Loading from a .csv file
 ------------------------
 Loading a file into a DESeqFilter works as explained above for any Filter object::
 
-    >>> d = filtering.DESeqFilter('my_file.csv')
+    >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
 
 Filtering operations unique to DESeqFilter
 ------------------------------------------
@@ -297,17 +311,22 @@ An HTSeq-count output file would follow the following format:
 
 When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
-    >>> c = filtering.CountFilter.from_folder('my_folder_path', counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_unmapped_reads_csv_file')
+    >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder')
 
-By deault, 'from_folder' saves the generated tables as .csv files. However, you can avoid that by specifying 'save_csv=False'.
-It is also possible to automatically normalize the reads in the new CountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'.
+By deault, 'from_folder' does not save the generated tables as .csv files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
+
+    >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file')
+
+It is also possible to automatically normalize the reads in the new CountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'::
+
+        >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', norm_to_rpm=True)
 
 
 Loading from a pre-made .csv file
 ----------------------------------
 If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an CountFilter object as you would any other Filter object::
 
-    >>> c = filtering.CountFilter('my_csv_file.csv')
+    >>> c = filtering.CountFilter('tests/counted.csv')
 
 A correct input to a CountFilter object would follow the following format:
 
@@ -360,7 +379,7 @@ To normalize a CountFilter that originated from HTSeq-count to reads per million
 Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
 We would then supply the normalization function with the path to the special counter file::
 
-    >>> c = filtering.CountFilter('path_to_my_count_file.csv')
+    >>> c = filtering.CountFilter('tests/counted.csv')
     >>> c.norm_reads_to_rpm('path_to_my_special_counter_table.csv')
 
 The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
@@ -377,7 +396,7 @@ To normalize a CountFilter with size factors, we need a .csv table with the size
 
 We would then supply the function with the path to the size factor file::
 
-    >>> c = filtering.CountFilter('path_to_my_count_file.csv')
+    >>> c = filtering.CountFilter('tests/counted.csv')
     >>> c.norm_reads_with_size_factor('path_to_my_size_factor_table.csv')
 
 The resulting CountFilter object will be normalized with the size factors (dividing the value of each column by the value of the corresponding size factor).
@@ -435,7 +454,7 @@ Loading fold change data from a .csv file
 
 Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated .csv file into a FoldChangeFilter object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition::
 
-    f = filtering.FoldChangeFilter('path_to_file.csv','name of numerator condition', 'name of denominator condition')
+    >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','name of numerator condition', 'name of denominator condition')
 
 The names of the conditions are saved in the object attributes 'numerator' and 'denominator'::
 
@@ -453,7 +472,7 @@ Generating fold change data from an existing CountFilter object
 
 Alternatively, you can generate a FoldChangeFilter object from count data in a CountFilter object. We will start by loading a CountFilter object::
 
-    >>> c = filtering.CountFilter('path_of_my_count_matrix.csv')
+    >>> c = filtering.CountFilter('tests/counted_fold_change.csv')
 
 The CountFilter has the following columns::
 
@@ -479,19 +498,24 @@ Performing randomization tests on a FoldChangeFilter object
 You can perform a randomization test to examine whether the fold change of a group of specific genomic features (for example, genes with a specific biological function) is significantly different than the fold change of a background set of genomic features.
 To perform a randomization test you need two FoldChangeFilter objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example::
 
-    >>> f = filtering.FoldChangeFilter('pre_existing_fold_change_file.csv' , 'numerator' , 'denominator')
-    >>> f_background = f.filter_biotype('protein_coding', inplace=False) #keep only protein-coding genes as reference)
-    #TODO: Filtered 0 features, leaving 13 of the original 13 features. Filtering result saved to new object.
-    >>> f_test = f_background.filter_by_attribute('epigenetic_genes', inplace=False)
-    #TODO: Filtered 0 features, leaving 13 of the original 13 features. Filtering result saved to new object.
+    >>> f = filtering.FoldChangeFilter('tests/fc_1.csv' , 'numerator' , 'denominator')
+    >>> f_background = f.filter_biotype('protein_coding', ref='tests/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
+    Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.
+    >>> f_test = f_background.filter_by_attribute('attribute1', ref='tests/attr_ref_table_for_examples.csv', inplace=False)
+    Filtered 6 features, leaving 7 of the original 13 features. Filtering result saved to new object.
     >>> rand_test_res = f_test.randomization_test(f_background)
+    Calculating...
+       group size  observed fold change  ...      pval  significant
+    0           7              2.806873  ...  0.360264        False
+
+    [1 rows x 5 columns]
 
 The output table would look like this:
 
 +------------+----------------------+----------------------+--------+-------------+
 | group size | observed fold change | expected fold change | pval   | significant |
 +============+======================+======================+========+=============+
-| 220        | 2.271681             | 0.825341             | 0.0001 | TRUE        |
+|   7        |       2.806873       |  2.51828             |0.36026 | False       |
 +------------+----------------------+----------------------+--------+-------------+
 
 
@@ -516,7 +540,7 @@ We will start by importing the enrichment module::
 An FeatureSet object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
 
-    >>> c = filtering.CountFilter('path_to_my_file.csv')
+    >>> c = filtering.CountFilter('tests/counted.csv')
     >>> en = enrichment.FeatureSet(filt, 'a name for my set')
 
 The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'index_set'::
