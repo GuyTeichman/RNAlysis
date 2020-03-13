@@ -21,12 +21,12 @@ Initialize a Filter object
 
 We will start by importing the filtering module::
 
-    from rnalysis import filtering
+    >>> from rnalysis import filtering
 
 We can now, for example, create a DESeqFilter object from a DESeq2 csv output file (see more details about DESeqFilter in sections below).
 ::
 
-    d = filtering.DESeqFilter('D:\myfolder\my_deseq2_output.csv')
+    >>> d = filtering.DESeqFilter('D:/myfolder/my_deseq2_output.csv')
 
 View a Filter object
 --------------------
@@ -36,15 +36,14 @@ By default 'head' will show the first 5 rows of the file, and 'tail' will show t
 but you can specify a specific number of lines to show.
 ::
 
-    d.head()
-    d.tail(8)
+    >>> d.head()
+    #TODO: output
+    >>> d.tail(8)
+    #TODO: output2
 
 We can also see the total number of rows and columns by accessing the 'shape' attribute::
 
-    d.shape
-
-which will return the following output::
-
+    >>> d.shape
     (23735, 6)
 
 meaning there are 23735 rows and 6 columns in the file.
@@ -56,27 +55,27 @@ Now we can start filtering the entries in the file according to parameters of ou
 Various filtering operations are applied directly to the Filter object. Those operations do not affect the original csv file, but its representation within the Filter object.
 For example, we can the function 'filter_percentile' to remove all rows that are above the specified percentile (in our example, 75% percentile) in the specified column (in our example, 'log2FoldChange')::
 
-    d.filter_percentile(0.75,'log2FoldChange')
+    >>> d.filter_percentile(0.75,'log2FoldChange')
+    Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
 
 If we now look at the shape of d, we will see that 5954 rows have been filtered out of the object, and we remain with 17781 rows.
 ::
 
-    d.shape
-
-::
-
+    >>> d.shape
     (17781, 6)
 
 By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within RNAlysis. For example::
 
-    d_filtered = d.filter_percentile(0.75,'log2FoldChange',inplace=False)
+    >>> d_filtered = d.filter_percentile(0.75,'log2FoldChange',inplace=False)
+    #TODO: Filtered 0 features, leaving 13 of the original 13 features. Filtering result saved to new object.
 
 In this case, the object 'd' will remain unchanged, while 'd_filtered' will be a new Filter object which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using 'inplace=False' to create a new object at any point.
 
 Another useful option is to perform an opposite filter. When we specify the parameter 'opposite=True' to any filtering function within RNAlysis, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
 For example, if we now wanted to remove the rows which are below the 25% percentile in the 'log2FoldChange' column, we will use the following code::
 
-    d.filter_percentile(0.25,'log2FoldChange',opposite=True)
+    >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True)
+    #TODO: Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
 
 Calling this function without the 'opposite' parameter would have removed all values except the bottom 25% of the 'log2FoldChange' column. When specifying 'opposite', we instead throw out the bottom 25% of the 'log2FoldChange' column and keep the rest.
 
@@ -88,10 +87,10 @@ Performing set operations on multiple Filter objects
 
 In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an CountFilter object and a python set::
 
-    d = filtering.DESeqFilter('deseqfile.csv')
-    c = filtering.CountFilter('htseq_count_file.csv')
-    s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
-    union_result = d.union(h, s)
+    >>> d = filtering.DESeqFilter('deseqfile.csv')
+    >>> c = filtering.CountFilter('htseq_count_file.csv')
+    >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+    >>> union_result = d.union(h, s)
 
 When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as 'head' and 'save_csv' on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first Filter object.
 
@@ -101,25 +100,22 @@ Saving Filter results
 
 At any point we can save the current result of our filtering to a new csv file, by using the 'save_csv' function::
 
-    d.save_csv()
+    >>> d.save_csv()
 
 If no filename is specified, the file is given a name automatically based on the filtering operations performed on it, their order and their parameters.
 We can view the current automatic filename by looking at the 'fname' attribute::
 
-    d.fname
-
-In this example, the automatic filename is::
-
+    >>> d.fname
     'D:/myfolder/my_deseq2_output_below0.75percentile_below0.25percentileopposite.csv'
 
 Alternatively, you can specify a filename::
 
-    d.save_csv('alt_filename')
+    >>> d.save_csv('alt_filename')
 
 Instead of directly saving the results to a file, you can also get them as a set or string of genomic feature indices::
 
-    set_output = d.index_set
-    str_output = d.index_string
+    >>> set_output = d.index_set
+    >>> str_output = d.index_string
 
 Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).
 
@@ -131,7 +127,8 @@ An Attribute Reference Table contains various user-defined attributes (such as '
 You can read more about the Attribute Reference Table format and loading an Attribute Reference Table in the :ref:`reference-table-ref` section.
 Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table::
 
-    d.filter_by_attribute('genes_that_have_a_paralog')
+    >>> d.filter_by_attribute('genes_that_have_a_paralog')
+    #TODO: Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
 
 Using a Biotype Reference Table for filter operations
 --------------------------------------------------------
@@ -140,16 +137,18 @@ A Biotype Reference Table contains annotations of the biotype of each genomic fe
 You can read more about the Biotype Reference Table format and loading a Biotype Reference Table in the :ref:`reference-table-ref` section.
 Using the function Filter.filter_biotype(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table::
 
-    d.filter_biotype('protein_coding')
+    >>> d.filter_biotype('protein_coding')
+    #TODO: Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
 
 You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes()::
 
-    d.biotypes()
+    >>> d.biotypes()
+    #TODO:
 
 Or view more elaborated descriptive statistics for eahc biotype by specifying format='long'::
 
-    d.biotypes(format='long')
-
+    >>> d.biotypes(format='long')
+    #TODO:
 
 Filtering DESeq2 output files with filtering.DESeqFilter
 =========================================================
@@ -186,7 +185,7 @@ Loading from a .csv file
 ------------------------
 Loading a file into a DESeqFilter works as explained above for any Filter object::
 
-    d = filtering.DESeqFilter('my_file.csv')
+    >>> d = filtering.DESeqFilter('my_file.csv')
 
 Filtering operations unique to DESeqFilter
 ------------------------------------------
@@ -246,7 +245,7 @@ An HTSeq-count output file would follow the following format:
 
 When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
-    c = filtering.CountFilter.from_folder('my_folder_path', counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_unmapped_reads_csv_file')
+    >>> c = filtering.CountFilter.from_folder('my_folder_path', counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_unmapped_reads_csv_file')
 
 By deault, 'from_folder' saves the generated tables as .csv files. However, you can avoid that by specifying 'save_csv=False'.
 It is also possible to automatically normalize the reads in the new CountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'.
@@ -256,7 +255,7 @@ Loading from a pre-made .csv file
 ----------------------------------
 If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an CountFilter object as you would any other Filter object::
 
-    c = filtering.CountFilter('my_csv_file.csv')
+    >>> c = filtering.CountFilter('my_csv_file.csv')
 
 A correct input to a CountFilter object would follow the following format:
 
@@ -309,8 +308,8 @@ To normalize a CountFilter that originated from HTSeq-count to reads per million
 Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
 We would then supply the normalization function with the path to the special counter file::
 
-    c = filtering.CountFilter('path_to_my_count_file.csv')
-    c.norm_reads_to_rpm('path_to_my_special_counter_table.csv')
+    >>> c = filtering.CountFilter('path_to_my_count_file.csv')
+    >>> c.norm_reads_to_rpm('path_to_my_special_counter_table.csv')
 
 The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
@@ -326,8 +325,8 @@ To normalize a CountFilter with size factors, we need a .csv table with the size
 
 We would then supply the function with the path to the size factor file::
 
-    c = filtering.CountFilter('path_to_my_count_file.csv')
-    c.norm_reads_with_size_factor('path_to_my_size_factor_table.csv')
+    >>> c = filtering.CountFilter('path_to_my_count_file.csv')
+    >>> c.norm_reads_with_size_factor('path_to_my_size_factor_table.csv')
 
 The resulting CountFilter object will be normalized with the size factors (dividing the value of each column by the value of the corresponding size factor).
 
@@ -388,11 +387,10 @@ Like with other objects from the Filter family, you can simply load a pre-existi
 
 The names of the conditions are saved in the object attributes 'numerator' and 'denominator'::
 
-    print(f.numerator,'|',f.denominator)
-
-::
-
-    name of numerator condition | name of denominator condition
+    >>> f.numerator
+    'name of numerator condition'
+    >>> f.denominator
+    'name of denominator condition'
 
 .. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.
 
@@ -403,27 +401,23 @@ Generating fold change data from an existing CountFilter object
 
 Alternatively, you can generate a FoldChangeFilter object from count data in a CountFilter object. We will start by loading a CountFilter object::
 
-    c = filtering.CountFilter('path_of_my_count_matrix.csv')
+    >>> c = filtering.CountFilter('path_of_my_count_matrix.csv')
 
 The CountFilter has the following columns::
 
-    c.columns
-
-::
-
+    >>> c.columns
     ['cond1_rep1','cond1_rep2','cond2_rep1','cond2_rep2','cond3_rep1','cond3_rep2']
 
 We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list::
 
-    f = c.fold_change(['cond1_rep1','cond1_rep2'],['cond2_rep1','cond2_rep2'])
+    >>> f = c.fold_change(['cond1_rep1','cond1_rep2'],['cond2_rep1','cond2_rep2'])
 
 In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically::
 
-    print(f.numerator,'|',f.denominator)
-
-::
-
-    Mean of ['cond1_rep1','cond1_rep2'] | Mean of ['cond2_rep1','cond2_rep2']
+    >>> f.numerator
+    "Mean of ['cond1_rep1','cond1_rep2']"
+    >>> f.denominator
+    "Mean of ['cond2_rep1','cond2_rep2']"
 
 We now have a FoldChangeFilter object that we can perform further filtering operations on.
 
@@ -433,11 +427,12 @@ Performing randomization tests on a FoldChangeFilter object
 You can perform a randomization test to examine whether the fold change of a group of specific genomic features (for example, genes with a specific biological function) is significantly different than the fold change of a background set of genomic features.
 To perform a randomization test you need two FoldChangeFilter objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example::
 
-    f = filtering.FoldChangeFilter('pre_existing_fold_change_file.csv' , 'numerator' , 'denominator')
-    f_background = f.filter_biotype('protein_coding', inplace=False) #keep only protein-coding genes as reference)
-    f_test = f_background.filter_by_attribute('epigenetic_genes', inplace=False)
-
-    rand_test_res = f_test.randomization_test(f_background)
+    >>> f = filtering.FoldChangeFilter('pre_existing_fold_change_file.csv' , 'numerator' , 'denominator')
+    >>> f_background = f.filter_biotype('protein_coding', inplace=False) #keep only protein-coding genes as reference)
+    #TODO: Filtered 0 features, leaving 13 of the original 13 features. Filtering result saved to new object.
+    >>> f_test = f_background.filter_by_attribute('epigenetic_genes', inplace=False)
+    #TODO: Filtered 0 features, leaving 13 of the original 13 features. Filtering result saved to new object.
+    >>> rand_test_res = f_test.randomization_test(f_background)
 
 The output table would look like this:
 
@@ -464,24 +459,24 @@ Initialize an FeatureSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
-    from rnalysis import enrichment
+    >>> from rnalysis import enrichment
 
 An FeatureSet object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
 
-    c = filtering.CountFilter('path_to_my_file.csv')
-    en = enrichment.FeatureSet(filt, 'a name for my set')
+    >>> c = filtering.CountFilter('path_to_my_file.csv')
+    >>> en = enrichment.FeatureSet(filt, 'a name for my set')
 
 The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'index_set'::
 
-    myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
-    en = enrichment.FeatureSet(myset, 'a name for my set')
+    >>> myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
+    >>> en = enrichment.FeatureSet(myset, 'a name for my set')
     # alternatively, using 'index_set' on an existing Filter object:
-    en2 = enrichment.FeatureSet(filt.index_set,' a name for my set')
+    >>> en2 = enrichment.FeatureSet(filt.index_set,' a name for my set')
 
 The third method is not to specify a gene set at all::
 
-    en = enrichment.FeatureSet(set_name = 'a name for my set')
+    >>> en = enrichment.FeatureSet(set_name = 'a name for my set')
 
 At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.
 
@@ -494,8 +489,8 @@ Using the enrichment module, you can perform enrichment analysis for user-define
 
 Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
-    c = filtering.CountFilter('path_to_my_file.csv')
-    en = enrichment.FeatureSet(h.index_set, 'my set')
+    >>> c = filtering.CountFilter('path_to_my_file.csv')
+    >>> en = enrichment.FeatureSet(h.index_set, 'my set')
 
 Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
@@ -507,15 +502,15 @@ There are two methods of changing the default background set:
 
 The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
 
-    en.enrich_randomization(['attribute1','attribute2'], biotype='all')
+    >>> en.enrich_randomization(['attribute1','attribute2'], biotype='all')
 
 In this example, instead of using all of the protein-coding genes in the Reference Table as background, we use all of the genomic features in the Reference Table as background.
 When specifying a biotype, an internal reference file is used to categorize different genomic features into different biotypes.
 
 The second method of changing the background set is to define a specific set of genomic features to be used as background::
 
-    my_background_set = {'feature1','feature2','feature3'}
-    en.enrich_randomization(['attribute1','attribute2'], background_genes=my_background_set)
+    >>> my_background_set = {'feature1','feature2','feature3'}
+    >>> en.enrich_randomization(['attribute1','attribute2'], background_genes=my_background_set)
 
 In this example, our background set consists of feature1, feature2 and feature3.
 
@@ -541,8 +536,8 @@ The p values specified in 'pval' are calculated as (sucesses+1)/(repetitions+1).
 If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
 To use it, you must first start a parallel session::
 
-    from rnalysis import enrichment, general
-    general.start_parallel_session()
+    >>> from rnalysis import enrichment, general
+    >>> general.start_parallel_session()
 
 To read more about parallel sessions, visit the :ref:`parallel-ref` section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.
@@ -552,10 +547,10 @@ Performing set operations on multiple FeatureSet objects
 
 Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of an FeatureSet object and a python set::
 
-    en = enrichment.FeatureSet({'WBGene00003002','WBGene00004201','WBGene00300139'})
+    >>> en = enrichment.FeatureSet({'WBGene00003002','WBGene00004201','WBGene00300139'})
 
-    s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
-    union_result = en.union(s)
+    >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+    >>> union_result = en.union(s)
 
 When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.
 
@@ -565,8 +560,7 @@ Saving indices from FeatureSet to a .txt file
 
 It is possible to save the feature indices from an FeatureSet object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the 'save_txt' function::
 
-    en.save_txt('D:\path\filename')
-
+    >>> en.save_txt('D:\path\filename')
 
 The feature indices will be saved to the text file in the specified path, separated by newline ('\n').
 
@@ -584,19 +578,18 @@ Start and stop a parallel processing session
 Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: https://ipyparallel.readthedocs.io/en/latest/
 To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function::
 
-    from rnalysis import general
-    general.start_parallel_session()
+    >>> from rnalysis import general
+    >>> general.start_parallel_session()
 
 Your python console will then become unavailable for 30 seconds while the ipcluster is being started.
 By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.
 
 start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period::
 
-    from rnalysis import general
-    general.start_ipcluster()
+    >>> from rnalysis import general
+    >>> general.start_ipcluster()
     #perform parallel processing here
-    general.stop_ipcluster()
-
+    >>> general.stop_ipcluster()
 
 .. _reference-table-ref:
 
@@ -647,8 +640,8 @@ Set a Reference Table as default
 ----------------------------------
 Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default attribute reference table for all future uses of RNAlysis::
 
-    from rnalysis import general
-    general.set_reference_table_path('path/to/my/reference/table.csv')
+    >>> from rnalysis import general
+    >>> general.set_reference_table_path('path/to/my/reference/table.csv')
     #TODO: update me!!!
 
 This will create a file called 'settings.yaml', which will store the full paths of your reference tables.
@@ -659,7 +652,7 @@ Load the default Attribute Reference Table path
 -------------------------------------------------
 You can load the saved path from the settings file using the read_reference_table_path function::
 
-    from rnalysis import general
+    >>> from rnalysis import general
     #TODO: update me!
 
 If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.
@@ -670,14 +663,11 @@ Parse *C. elegans* gene names, WBGene indices and sequence names using regular e
 The general module includes functions which can parse *C. elegans* gene names (like *daf-2* or *lin-15B*), WBGene indices (like WBGene00023495) and sequence names (like Y55D5A.5 or T23G5.6).
 For example, we could extract all WBGene indices from the following string::
 
-    from rnalysis import general
-    my_string='''WBGene00000001 and WBGene00000002WBGene00000003
+    >>> from rnalysis import general
+    >>> my_string='''WBGene00000001 and WBGene00000002WBGene00000003
 
-    WBGene00000004g
-    '''
-    indices = general.parse_wbgene_string(my_string)
-
-And the output would be the following set::
-
+            WBGene00000004g
+            '''
+    >>> general.parse_wbgene_string(my_string)
     {'WBGene00000001','WBGene000000002','WBGene00000003','WBGene00000004'}
 
