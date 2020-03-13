@@ -421,7 +421,7 @@ class Filter:
         :type column: str
         :param column: name of the column to filter by
         :type operator: str: 'gt'/'greater than'/'>'. 'eq'/'equal'/'=', 'lt'/'lesser than'/'<'
-        :param operator: the operator to filter the column by (larger than, equal or smaller than)
+        :param operator: the operator to filter the column by (greater than, equal or lesser than)
         :type value: number (int or float)
         :param value: the value to filter by
         :type opposite: bool
