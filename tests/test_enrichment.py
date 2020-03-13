@@ -120,7 +120,6 @@ def test_enrichment_get_ref_biotype():
 
     assert np.all(res.index == truth.index)
     assert np.all(res.columns == truth.columns)
-    assert np.all(res.bioType == truth.bioType)
     assert np.all(res.attribute1.isna() == truth.attribute1.isna())
     assert np.all(res.attribute2.isna() == truth.attribute2.isna())
     print(res.int_index)
@@ -146,7 +145,6 @@ def test_enrichment_get_ref_custom_background():
 
     assert np.all(res.index == truth.index)
     assert np.all(res.columns == truth.columns)
-    assert np.all(res.bioType == truth.bioType)
     assert np.all(res.attribute1.isna() == truth.attribute1.isna())
     assert np.all(res.attribute2.isna() == truth.attribute2.isna())
     assert np.all(res.int_index == truth.int_index)
@@ -184,14 +182,12 @@ def test_enrichment_get_ref_custom_background_from_filter_object():
 
     assert np.all(res.index == truth.index)
     assert np.all(res.columns == truth.columns)
-    assert np.all(res.bioType == truth.bioType)
     assert np.all(res.attribute1.isna() == truth.attribute1.isna())
     assert np.all(res.attribute2.isna() == truth.attribute2.isna())
     assert np.all(res.int_index == truth.int_index)
 
     assert np.all(res.index == truth.index)
     assert np.all(res.columns == truth.columns)
-    assert np.all(res.bioType == truth.bioType)
     assert np.all(res.attribute1.isna() == truth.attribute1.isna())
     assert np.all(res.attribute2.isna() == truth.attribute2.isna())
     assert np.all(res.int_index == truth.int_index)
@@ -333,11 +329,11 @@ def test_randomization_int_index_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['attribute1', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs([1, 3, 4], 'attr_ref_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs([0, 2, 3], 'attr_ref_table_for_tests.csv')
     assert attrs == attrs_truth
 
     attr_truth_single = ['attribute4']
-    attr = en._enrichment_get_attrs(4, 'attr_ref_table_for_tests.csv')
+    attr = en._enrichment_get_attrs(3, 'attr_ref_table_for_tests.csv')
     assert attr == attr_truth_single
 
 
@@ -345,6 +341,6 @@ def test_randomization_all_attributes():
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    attrs_truth = ['bioType', 'attribute1', 'attribute2', 'attribute3', 'attribute4']
+    attrs_truth = ['attribute1', 'attribute2', 'attribute3', 'attribute4']
     attrs = en._enrichment_get_attrs('all', 'attr_ref_table_for_tests.csv')
     assert attrs == attrs_truth
