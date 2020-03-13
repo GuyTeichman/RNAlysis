@@ -466,12 +466,12 @@ def test_difference_inplace():
 
 
 def test_htcount_fold_change():
-    truth_num_name = f"Mean of {['cond1', 'cond2']}"
-    truth_denom_name = f"Mean of {['cond3', 'cond4']}"
+    truth_num_name = f"Mean of {['cond1_rep1', 'cond1_rep2']}"
+    truth_denom_name = f"Mean of {['cond2_rep1', 'cond2_rep2']}"
     truth = general.load_csv(r'counted_fold_change_truth.csv', 0)
     truth = truth.squeeze()
     h = CountFilter(r'counted_fold_change.csv')
-    fc = h.fold_change(['cond1', 'cond2'], ['cond3', 'cond4'])
+    fc = h.fold_change(['cond1_rep1', 'cond1_rep2'], ['cond2_rep1', 'cond2_rep2'])
     assert truth_num_name == fc.numerator
     assert truth_denom_name == fc.denominator
     assert np.all(np.isclose(fc.df, truth))
