@@ -90,12 +90,12 @@ class Filter:
         printout = f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
                    f"of the original {self.df.shape[0]} features. "
         if inplace:
-            printout += ' Filtered inplace.'
+            printout += 'Filtered inplace.'
             print(printout)
             self.df, self.fname = new_df, new_fname
             self.shape = self.df.shape
         else:
-            printout += ' Filtering result saved to new object.'
+            printout += 'Filtering result saved to new object.'
             print(printout)
             tmp_df, tmp_fname = self.df, self.fname
             self.df, self.fname = new_df, new_fname
