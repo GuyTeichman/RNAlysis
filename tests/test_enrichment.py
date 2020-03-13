@@ -101,7 +101,7 @@ def test_biotypes():
              'index_that_is_not_in_biotype_ref_table'}
 
     en = FeatureSet(genes)
-    df = en.biotypes()
+    df = en.biotypes(ref='biotype_ref_table_for_tests.csv')
     df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(df == truth)
