@@ -650,7 +650,7 @@ def test_count_filter_from_folder():
 
 def test_biotypes():
     truth = general.load_csv('biotypes_truth.csv', 0)
-    df = CountFilter(r'counted_biotype.csv').biotypes()
+    df = CountFilter(r'counted_biotype.csv').biotypes(ref='biotype_ref_table_for_tests.csv')
     truth.sort_index(inplace=True)
     df.sort_index(inplace=True)
     assert np.all(df == truth)

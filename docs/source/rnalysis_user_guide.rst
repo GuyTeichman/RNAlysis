@@ -26,7 +26,7 @@ We will start by importing the filtering module::
 We can now, for example, create a DESeqFilter object from a DESeq2 csv output file (see more details about DESeqFilter in sections below).
 ::
 
-    >>> d = filtering.DESeqFilter('D:/myfolder/my_deseq2_output.csv')
+    >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
 
 View a Filter object
 --------------------
@@ -37,16 +37,33 @@ but you can specify a specific number of lines to show.
 ::
 
     >>> d.head()
-    #TODO: output
+                   baseMean  log2FoldChange  ...         pvalue           padj
+    WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
+    WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
+    WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
+    WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225
+    WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213
+
+    [5 rows x 6 columns]
     >>> d.tail(8)
-    #TODO: output2
+                   baseMean  log2FoldChange  ...         pvalue           padj
+    WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94
+    WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90
+    WBGene00000024   221.925724        4.801676  ...  1.230000e-84  9.820000e-82
+    WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
+    WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
+    WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
+    WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
+    WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
+
+    [8 rows x 6 columns]
 
 We can also see the total number of rows and columns by accessing the 'shape' attribute::
 
     >>> d.shape
-    (23735, 6)
+    (28, 6)
 
-meaning there are 23735 rows and 6 columns in the file.
+meaning there are 28 rows and 6 columns in the file.
 
 Filtering operations
 --------------------
@@ -56,26 +73,33 @@ Various filtering operations are applied directly to the Filter object. Those op
 For example, we can the function 'filter_percentile' to remove all rows that are above the specified percentile (in our example, 75% percentile) in the specified column (in our example, 'log2FoldChange')::
 
     >>> d.filter_percentile(0.75,'log2FoldChange')
-    Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
+    Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
 
 If we now look at the shape of d, we will see that 5954 rows have been filtered out of the object, and we remain with 17781 rows.
 ::
 
     >>> d.shape
-    (17781, 6)
+    (21, 6)
 
 By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within RNAlysis. For example::
 
+    >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+    >>> d.shape
+    (28, 6)
     >>> d_filtered = d.filter_percentile(0.75,'log2FoldChange',inplace=False)
-    #TODO: Filtered 0 features, leaving 13 of the original 13 features. Filtering result saved to new object.
+    Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.
+    >>> d_filtered.shape
+    (21, 6)
+    >>> d.shape
+    (28, 6)
 
-In this case, the object 'd' will remain unchanged, while 'd_filtered' will be a new Filter object which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using 'inplace=False' to create a new object at any point.
+In this case, the object 'd' remained unchanged, while 'd_filtered' became a new Filter object which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using 'inplace=False' to create a new object at any point.
 
 Another useful option is to perform an opposite filter. When we specify the parameter 'opposite=True' to any filtering function within RNAlysis, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
 For example, if we now wanted to remove the rows which are below the 25% percentile in the 'log2FoldChange' column, we will use the following code::
 
     >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True)
-    #TODO: Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
+    #TODO: Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
 
 Calling this function without the 'opposite' parameter would have removed all values except the bottom 25% of the 'log2FoldChange' column. When specifying 'opposite', we instead throw out the bottom 25% of the 'log2FoldChange' column and keep the rest.
 
@@ -87,10 +111,14 @@ Performing set operations on multiple Filter objects
 
 In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an CountFilter object and a python set::
 
-    >>> d = filtering.DESeqFilter('deseqfile.csv')
-    >>> c = filtering.CountFilter('htseq_count_file.csv')
-    >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
-    >>> union_result = d.union(h, s)
+    >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+    >>> counts = filtering.CountFilter('tests/counted.csv')
+    >>> a_set = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+    >>> d.difference(counts, a_set)
+    {'WBGene00007063', 'WBGene00007064', 'WBGene00007066', 'WBGene00007067', 'WBGene00007069', 'WBGene00007071',
+     'WBGene00007074', 'WBGene00007075', 'WBGene00007076', 'WBGene00007077', 'WBGene00007078', 'WBGene00007079',
+     'WBGene00014997', 'WBGene00043987', 'WBGene00043988', 'WBGene00043989', 'WBGene00043990', 'WBGene00044022',
+     'WBGene00044951', 'WBGene00077502', 'WBGene00077503', 'WBGene00077504'}
 
 When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as 'head' and 'save_csv' on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first Filter object.
 
@@ -105,17 +133,39 @@ At any point we can save the current result of our filtering to a new csv file, 
 If no filename is specified, the file is given a name automatically based on the filtering operations performed on it, their order and their parameters.
 We can view the current automatic filename by looking at the 'fname' attribute::
 
+    >>> d.filter_percentile(0.75,'log2FoldChange')
+    Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
+    >>> d.number_filters('baseMean','greater than',500)
+    Filtered 6 features, leaving 15 of the original 21 features. Filtered inplace.
     >>> d.fname
-    'D:/myfolder/my_deseq2_output_below0.75percentile_below0.25percentileopposite.csv'
+    'D:/myfolder/test_deseq_below0.75baseMeangt500.csv'
 
 Alternatively, you can specify a filename::
 
-    >>> d.save_csv('alt_filename')
+    >>> d.save_csv('alternative_filename')
 
 Instead of directly saving the results to a file, you can also get them as a set or string of genomic feature indices::
 
-    >>> set_output = d.index_set
-    >>> str_output = d.index_string
+    >>> print(d.index_set)
+    {'WBGene00000005', 'WBGene00000006', 'WBGene00000008', 'WBGene00000009', 'WBGene00000010', 'WBGene00000011',
+     'WBGene00000012', 'WBGene00000014', 'WBGene00000015', 'WBGene00000017', 'WBGene00000019', 'WBGene00000021',
+     'WBGene00000023', 'WBGene00000025', 'WBGene00000029'}
+    >>> print(d.index_string)
+    WBGene00000010
+    WBGene00000012
+    WBGene00000021
+    WBGene00000023
+    WBGene00000017
+    WBGene00000015
+    WBGene00000025
+    WBGene00000008
+    WBGene00000011
+    WBGene00000014
+    WBGene00000029
+    WBGene00000006
+    WBGene00000009
+    WBGene00000005
+    WBGene00000019
 
 Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).
 
@@ -129,7 +179,7 @@ Using the function Filter.filter_by_attribute(), you can filter your genomic fea
 
     >>> d.filter_by_attribute('genes_that_have_a_paralog')
     #TODO: Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
-
+    #TODO: update to current file and current attributes
 Using a Biotype Reference Table for filter operations
 --------------------------------------------------------
 
@@ -137,11 +187,13 @@ A Biotype Reference Table contains annotations of the biotype of each genomic fe
 You can read more about the Biotype Reference Table format and loading a Biotype Reference Table in the :ref:`reference-table-ref` section.
 Using the function Filter.filter_biotype(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table::
 
-    >>> d.filter_biotype('protein_coding')
-    #TODO: Filtered 5954 features, leaving 17781 of the original 23735 features. Filtered inplace.
+    >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+    >>> d.filter_biotype('protein_coding', ref='tests/biotype_ref_table_for_tests.csv')
+    Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
 
 You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes()::
 
+    >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
     >>> d.biotypes()
     #TODO:
 
