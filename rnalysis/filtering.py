@@ -1030,13 +1030,23 @@ class FoldChangeFilter(Filter):
     def split_fold_change_direction(self):
         """
         Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping \
-        FoldChangeFilter objects, based on the direction of their log2foldchange. \
-        The first object will contain only features with a positive log2foldchange, \
-        the second object will contain only features with a negative log2foldchange.
+        FoldChangeFilter objects, based on the direction of their log2(fold change). \
+        The first object will contain only features with a positive log2(fold change), \
+        the second object will contain only features with a negative log2(fold change). \
+        Features with log2(fold change) = 0 will be ignored.
 
         :return:
         a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change, \
         and the other has only features with negative log2 fold change.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
+            >>> pos, neg = f.split_fold_change_direction()
+            Filtered 10 features, leaving 12 of the original 22 features.  Filtering result saved to new object.
+            Filtered 14 features, leaving 8 of the original 22 features.  Filtering result saved to new object.
         """
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
             direction='neg', inplace=False)
