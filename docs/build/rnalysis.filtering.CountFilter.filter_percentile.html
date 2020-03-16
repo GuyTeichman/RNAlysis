@@ -225,6 +225,17 @@
 </dd>
 </dl>
 <p>If inplace is False, returns a new and filtered instance of the Filter object.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span> <span class="c1"># keep only the rows whose value in the column &#39;log2FoldChange&#39; is below the 75th percentile</span>
+<span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># keep only the rows vulse value in the column &#39;log2FoldChange&#39; is above the 25th percentile</span>
+<span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

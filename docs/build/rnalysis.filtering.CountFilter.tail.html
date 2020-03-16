@@ -216,10 +216,39 @@
 <dd class="field-odd"><p><strong>n</strong> (<em>int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>returns the last n rows of the Filter object.</p>
 </dd>
 </dl>
-<p>returns the last n rows of the Filter object.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+
+<span class="go">                   baseMean  log2FoldChange  ...        pvalue          padj</span>
+<span class="go">WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78</span>
+<span class="go">WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72</span>
+<span class="go">WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71</span>
+<span class="go">WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69</span>
+<span class="go">WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68</span>
+
+<span class="go">[5 rows x 6 columns]</span>
+
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="c1"># returns the last 8 rows</span>
+
+<span class="go">                   baseMean  log2FoldChange  ...        pvalue          padj</span>
+<span class="go">WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94</span>
+<span class="go">WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90</span>
+<span class="go">WBGene00000024   221.925724        4.801676  ...  1.230000e-84  9.820000e-82</span>
+<span class="go">WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78</span>
+<span class="go">WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72</span>
+<span class="go">WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71</span>
+<span class="go">WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69</span>
+<span class="go">WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68</span>
+
+<span class="go">[8 rows x 6 columns]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

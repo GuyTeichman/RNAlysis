@@ -46,6 +46,17 @@ class Filter:
     """
 
     def __init__(self, fname: str, drop_columns=False):
+        """
+
+        :param fname:
+        :type fname:
+        :param drop_columns:
+        :type drop_columns:
+
+        **Examples**::
+
+            >>> d = filtering.Filter("tests/counted.csv")
+        """
         if isinstance(fname, tuple):
             assert isinstance(fname[1], (pd.DataFrame, pd.Series)) and isinstance(fname[0], (str, Path))
             self.fname = fname[0]
@@ -157,8 +168,28 @@ class Filter:
 
         :type n: int, default 5
         :param n: Number of rows to show.
-        :return:
-        returns the first n rows of the Filter object.
+        :return: returns the first n rows of the Filter object.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> d.head()
+                           baseMean  log2FoldChange  ...         pvalue           padj
+            WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
+            WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
+            WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
+            WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225
+            WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213
+
+
+            >>> d.head(3) # return only the first 3 rows
+                           baseMean  log2FoldChange  ...         pvalue           padj
+            WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
+            WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
+            WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
+
         """
         return self.df.head(n)
 
@@ -168,8 +199,39 @@ class Filter:
 
         :type n: int, default 5
         :param n: Number of rows to show.
-        :return:
-        returns the last n rows of the Filter object.
+        :return: returns the last n rows of the Filter object.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> d.tail()
+
+                               baseMean  log2FoldChange  ...        pvalue          padj
+            WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
+            WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
+            WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
+            WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
+            WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
+
+            [5 rows x 6 columns]
+
+
+            >>> d.tail(8) # returns the last 8 rows
+
+                               baseMean  log2FoldChange  ...        pvalue          padj
+            WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94
+            WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90
+            WBGene00000024   221.925724        4.801676  ...  1.230000e-84  9.820000e-82
+            WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
+            WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
+            WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
+            WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
+            WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
+
+            [8 rows x 6 columns]
+
         """
         return self.df.tail(n)
 
@@ -192,6 +254,19 @@ class Filter:
         the function will return a new Filter instance and the current instance will not be affected.
         :return:
         If inplace is False, returns a new and filtered instance of the Filter object.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> d.filter_percentile(0.75,'log2FoldChange') # keep only the rows whose value in the column 'log2FoldChange' is below the 75th percentile
+            Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
+
+            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True) # keep only the rows vulse value in the column 'log2FoldChange' is above the 25th percentile
+            Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
+
         """
         assert isinstance(percentile, float), "percentile must be a float between 0 and 1!"
         assert isinstance(column, str) and column in self.df, "Invalid column name!"
@@ -211,6 +286,11 @@ class Filter:
         :return:
         a list of two Filter objects: the first contains all of the features below the specified percentile, \
         and the second contains all of the features above and equal to the specified percentile.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         return [self.filter_percentile(percentile=percentile, column=column, opposite=False, inplace=False),
                 self.filter_percentile(percentile=percentile, column=column, opposite=True, inplace=False)]
@@ -233,6 +313,11 @@ class Filter:
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of Filter object.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         assert isinstance(biotype, (str, list)), "biotype must be a string or a list!"
         if isinstance(biotype, str):
@@ -285,6 +370,11 @@ class Filter:
         the function will return a new Filter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new and filtered instance of the Filter object.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         ref = general._get_attr_ref_path(ref)
         if attributes is None:
@@ -316,7 +406,7 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def split_by_attribute(self, attributes: tuple = None,
-                                ref: str = 'predefined'):
+                           ref: str = 'predefined'):
         """
         Splits the Filter object into multiple Filter objects, \
         each corresponding to one of the specified Big Table attributes. \
@@ -327,6 +417,11 @@ class Filter:
         :return:
         A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects \
         appear in the list in the same order the Big Table attributes were given in.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         assert isinstance(attributes, (tuple, list, set))
         ref = general._get_attr_ref_path(ref)
@@ -346,6 +441,11 @@ class Filter:
         :return:
         Summary statistics of the dataset.
         :rtype: Series or DataFrame
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         return self.df.describe(percentiles=percentiles)
 
@@ -359,6 +459,11 @@ class Filter:
 
         :return:
         A set of WBGene names.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         if self.df.index.has_duplicates:
             warnings.warn(" this filter object contains multiple rows with the same WBGene index. When "
@@ -378,12 +483,22 @@ class Filter:
         :return:
         A string of WBGene indices separated by newlines (\\n). \
         For example, "WBGene00000001\\nWBGene00000003\\nWBGene12345678".
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         return "\n".join(self.index_set)
 
     def print_features(self):
         """
         Print the feature indices in the Filter object, separated by newline.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         print(self.index_string)
 
@@ -395,6 +510,14 @@ class Filter:
         in the Filter object and their count. 'long' returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
+        :rtype: pandas.DataFrame
+        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        as well as additional descriptive statistics of format=='long'.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref)
@@ -434,8 +557,14 @@ class Filter:
         :return:
         If 'inplace' is False, returns a new instance of the Filter object.
 
-        Example usage: filt.number_filter('baseMean','gt',57, inplace=False) \
-        will return a Filter object in which all rows have a value greater than 57 in the column 'baseMean'.
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> filt = filtering.Filter('tests/test_deseq.csv')
+            >>> filt.number_filters('baseMean','gt',5900) #keep only rows that have a value greater than 5900 in the column 'baseMean'.
+            Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
+
         """
         operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'lt': 'lt',
                          'lesser than': 'lt', '<': 'lt', 'equal': 'eq'}
@@ -477,8 +606,13 @@ class Filter:
         :return:
         If 'inplace' is False, returns a new instance of the Filter object.
 
-        Example usage: filt.text_filters('name','sw','pseudo', inplace=False) \
-        will return a Filter object in which all rows have a value that starts with 'pseudo' in the column 'name'.
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> filt = filtering.Filter('tests/text_filters.csv')
+            >>> filt.text_filters('name','sw','AC3') # keep only rows that have a value that starts with 'AC3' in the column 'name'.
+            Filtered 17 features, leaving 5 of the original 22 features.  Filtered inplace.
         """
         operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'sw': 'sw',
                          'starts with': 'sw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq', 'begins with': 'sw'}
@@ -517,6 +651,11 @@ class Filter:
         :param inplace: If True, perform operation in-place. \
         Otherwise, returns a sorted copy of the Filter object without modifying the original.
         :return: None if inplace=True, a sorted Filter object otherwise.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         if inplace:
             self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=True, na_position=na_position)
@@ -547,6 +686,11 @@ class Filter:
         the function will return a new Filter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of Filter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         assert isinstance(n, int), "n must be an integer!"
         assert n > 0, "n must be a positive integer!"
@@ -609,6 +753,11 @@ class Filter:
         :rtype: set or str
         :return:
         If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         if inplace:
             suffix = f"_intersection"
@@ -631,6 +780,11 @@ class Filter:
         :rtype: set or str
         :return:
          a set/string of the WBGene indices that exist in at least one of the Filter objects.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         return self._set_ops(others, return_type, set.union)
 
@@ -652,6 +806,11 @@ class Filter:
         :return:
         If inplace=False, returns a set/string of the WBGene indices\
          that exist only in the first Filter object/set (set difference).
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
 
         if inplace:
@@ -675,6 +834,11 @@ class Filter:
         :rtype: set or str
         :return:
         a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
         return self._set_ops([other], return_type, set.symmetric_difference)
 
@@ -746,6 +910,11 @@ class FoldChangeFilter(Filter):
         :return:
         A Dataframe with the number of given genes, the observed fold change for the given group of genes, \
         the expected fold change for a group of genes of that size and the p value for the comparison.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
         """
 
         obs_fc = self.df.mean(axis=0)
@@ -798,6 +967,14 @@ class FoldChangeFilter(Filter):
         the function will return a new FoldChangeFilter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of FoldChangeFilter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
+            >>> f.filter_abs_log2_fold_change(2) # keep only rows whose log2(fold change) is >=2 or <=-2
+            Filtered 18 features, leaving 4 of the original 22 features.  Filtered inplace.
         """
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
@@ -820,6 +997,22 @@ class FoldChangeFilter(Filter):
         the function will return a new FoldChangeFilter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of FoldChangeFilter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
+            >>> f.filter_fold_change_direction('pos') # keep only rows with a positive log2(fold change) value
+            Filtered 10 features, leaving 12 of the original 22 features.  Filtered inplace.
+
+            >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
+            >>> f.filter_fold_change_direction('neg') # keep only rows with a negative log2(fold change) value
+            Filtered 14 features, leaving 8 of the original 22 features.  Filtered inplace.
+
+            >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
+            >>> f.filter_fold_change_direction('pos', opposite=False) # keep only rows with a non-positive log2(fold change) value
+            Filtered 12 features, leaving 10 of the original 22 features.  Filtered inplace.
         """
         assert isinstance(direction, str), \
             "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
