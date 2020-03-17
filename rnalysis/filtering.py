@@ -1886,6 +1886,16 @@ class CountFilter(Filter):
         :return:
         an CountFilter object containing the combined count data from all individual htcount .txt files in the \
         specified folder.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder')
+
+            >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', norm_to_rpm=True) # This will also normalize the CountFilter to reads-per-million (RPM).
+
+            >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file') # This will also save the counted reads and uncounted reads as separate .csv files
         """
         file_suffix = '.csv'
         if save_csv:
