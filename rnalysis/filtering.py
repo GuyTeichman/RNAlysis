@@ -1011,7 +1011,7 @@ class FoldChangeFilter(Filter):
             Filtered 14 features, leaving 8 of the original 22 features.  Filtered inplace.
 
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
-            >>> f.filter_fold_change_direction('pos', opposite=False) # keep only rows with a non-positive log2(fold change) value
+            >>> f.filter_fold_change_direction('pos', opposite=True) # keep only rows with a non-positive log2(fold change) value
             Filtered 12 features, leaving 10 of the original 22 features.  Filtered inplace.
         """
         assert isinstance(direction, str), \
@@ -1090,6 +1090,18 @@ class DESeqFilter(Filter):
         the function will return a new DESeqFilter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of DESeqFilter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
+            >>> d.filter_significant(0.1) # keep only rows whose adjusted p-value is <=0.1
+            Filtered 4 features, leaving 25 of the original 29 features. Filtered inplace.
+
+             >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
+            >>> d.filter_significant(0.1, opposite=True) # keep only rows whose adjusted p-value is >0.1
+            Filtered 25 features, leaving 4 of the original 29 features. Filtered inplace.
         """
         assert isinstance(alpha, float), "alpha must be a float!"
         new_df = self.df[self.df['padj'] <= alpha]
@@ -1113,6 +1125,14 @@ class DESeqFilter(Filter):
         the function will return a new DESeqFilter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of DESeqFilter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
+            >>> d.filter_abs_log2_fold_change(2) # keep only rows whose log2(fold change) is >=2 or <=-2
+            Filtered 1 features, leaving 28 of the original 29 features. Filtered inplace.
         """
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
@@ -1135,6 +1155,22 @@ class DESeqFilter(Filter):
         the function will return a new DESeqFilter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of DESeqFilter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
+            >>> d.filter_fold_change_direction('pos') # keep only rows with a positive log2(fold change) value
+            Filtered 3 features, leaving 26 of the original 29 features. Filtered inplace.
+
+            >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
+            >>> d.filter_fold_change_direction('neg') # keep only rows with a negative log2(fold change) value
+            Filtered 27 features, leaving 2 of the original 29 features. Filtered inplace.
+
+            >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
+            >>> d.filter_fold_change_direction('pos', opposite=True) # keep only rows with a non-positive log2(fold change) value
+            Filtered 26 features, leaving 3 of the original 29 features. Filtered inplace.
         """
         assert isinstance(direction, str), \
             "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
@@ -1158,6 +1194,13 @@ class DESeqFilter(Filter):
         :return:
         a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change, \
         and the other has only features with negative log2 fold change.
+
+
+        >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter('tests/test_deseq.csv')
+            >>> pos, neg = d.split_fold_change_direction()
+            Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
+            Filtered 26 features, leaving 2 of the original 28 features. Filtering result saved to new object.
         """
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
             direction='neg', inplace=False)
@@ -1224,6 +1267,13 @@ class CountFilter(Filter):
         Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates. \
         For example, if counts.columns is ['A_rep1','A_rep2','A_rep3','B_rep1','B_rep2',_B_rep3'], then \
         counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
+
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+
         """
 
         mltplr = 3
@@ -1254,6 +1304,12 @@ class CountFilter(Filter):
         :rtype: FoldChangeFilter
         :return:
         A new instance of FoldChangeFilter
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>>
         """
         assert isinstance(numerator, (str, list, tuple)), "numerator must be a string or a list!"
         assert isinstance(denominator, (str, list, tuple)), "denominator must be a string or a list!"
@@ -1367,6 +1423,12 @@ class CountFilter(Filter):
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
         If inplace is False, returns a new instance of the Filter object.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>>
         """
         suffix = '_rpm'
         new_df = self.df.copy()
@@ -1395,6 +1457,12 @@ class CountFilter(Filter):
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
         If inplace is False, returns a new instance of the Filter object.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>>
         """
         suffix = '_sizefactor'
         new_df = self.df.copy()
@@ -1425,6 +1493,14 @@ class CountFilter(Filter):
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of CountFilter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter('tests/counted.csv')
+            >>> c.filter_low_reads(5) # remove all rows whose values in all columns are all <5
+            Filtered 6 features, leaving 16 of the original 22 features. Filtered inplace.
         """
         self._rpm_assertions(threshold=threshold)
         new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
@@ -1444,6 +1520,15 @@ class CountFilter(Filter):
         :return:
         A tuple containing two CountFilter objects: the first has only highly-expressed features, \
         and the second has only lowly-expressed features.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter('tests/counted.csv')
+            >>> low_expr,high_expr = c.split_by_reads(5)
+            Filtered 6 features, leaving 16 of the original 22 features. Filtering result saved to new object.
+            Filtered 16 features, leaving 6 of the original 22 features. Filtering result saved to new object.
         """
         self._rpm_assertions(threshold=threshold)
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
@@ -1466,6 +1551,14 @@ class CountFilter(Filter):
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
         If 'inplace' is False, returns a new instance of CountFilter.
+
+
+        **Examples**::
+
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter('tests/counted.csv')
+            >>> c.filter_by_row_sum(5) # remove all rows whose sum is <5
+            Filtered 4 features, leaving 18 of the original 22 features. Filtered inplace.
         """
         self._rpm_assertions(threshold=threshold)
         new_df = self.df.loc[self.df.sum(axis=1) >= threshold]

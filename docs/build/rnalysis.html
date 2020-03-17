@@ -342,6 +342,13 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>If ‘inplace’ is False, returns a new instance of CountFilter.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">filter_by_row_sum</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="c1"># remove all rows whose sum is &lt;5</span>
+<span class="go">Filtered 4 features, leaving 18 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -361,6 +368,13 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>If ‘inplace’ is False, returns a new instance of CountFilter.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">filter_low_reads</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="c1"># remove all rows whose values in all columns are all &lt;5</span>
+<span class="go">Filtered 6 features, leaving 16 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -439,6 +453,11 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>A new instance of FoldChangeFilter</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -575,6 +594,11 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>If inplace is False, returns a new instance of the Filter object.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -593,6 +617,11 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>If inplace is False, returns a new instance of the Filter object.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -813,6 +842,14 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>A tuple containing two CountFilter objects: the first has only highly-expressed features,         and the second has only lowly-expressed features.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">low_expr</span><span class="p">,</span><span class="n">high_expr</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">split_by_reads</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">Filtered 6 features, leaving 16 of the original 22 features. Filtering result saved to new object.</span>
+<span class="go">Filtered 16 features, leaving 6 of the original 22 features. Filtering result saved to new object.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -916,6 +953,10 @@ which also provides descriptive statistics of each column per biotype.
 <dt>
 <em class="property">property </em><code class="sig-name descname">triplicates</code></dt>
 <dd><p>Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates.         For example, if counts.columns is [‘A_rep1’,’A_rep2’,’A_rep3’,’B_rep1’,’B_rep2’,_B_rep3’], then         counts.triplicates will be  [[‘A_rep1’,’A_rep2’,’A_rep3’],[‘B_rep1’,’B_rep2’,_B_rep3’]]</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1062,6 +1103,13 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>If ‘inplace’ is False, returns a new instance of DESeqFilter.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/sample_deseq.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_abs_log2_fold_change</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># keep only rows whose log2(fold change) is &gt;=2 or &lt;=-2</span>
+<span class="go">Filtered 1 features, leaving 28 of the original 29 features. Filtered inplace.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1129,6 +1177,21 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>If ‘inplace’ is False, returns a new instance of DESeqFilter.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/sample_deseq.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span> <span class="c1"># keep only rows with a positive log2(fold change) value</span>
+<span class="go">Filtered 3 features, leaving 26 of the original 29 features. Filtered inplace.</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/sample_deseq.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;neg&#39;</span><span class="p">)</span> <span class="c1"># keep only rows with a negative log2(fold change) value</span>
+<span class="go">Filtered 27 features, leaving 2 of the original 29 features. Filtered inplace.</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/sample_deseq.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># keep only rows with a non-positive log2(fold change) value</span>
+<span class="go">Filtered 26 features, leaving 3 of the original 29 features. Filtered inplace.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1179,6 +1242,17 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>If ‘inplace’ is False, returns a new instance of DESeqFilter.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/sample_deseq.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_significant</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span> <span class="c1"># keep only rows whose adjusted p-value is &lt;=0.1</span>
+<span class="go">Filtered 4 features, leaving 25 of the original 29 features. Filtered inplace.</span>
+
+<span class="go"> &gt;&gt;&gt; d = filtering.DESeqFilter(&#39;tests/sample_deseq.csv&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_significant</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># keep only rows whose adjusted p-value is &gt;0.1</span>
+<span class="go">Filtered 25 features, leaving 4 of the original 29 features. Filtered inplace.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1427,6 +1501,13 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 <p>a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="go">    &gt;&gt;&gt; d = filtering.DESeqFilter(&#39;tests/test_deseq.csv&#39;)</span>
+<span class="go">    &gt;&gt;&gt; pos, neg = d.split_fold_change_direction()</span>
+<span class="go">    Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.</span>
+<span class="go">    Filtered 26 features, leaving 2 of the original 28 features. Filtering result saved to new object.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1758,7 +1839,7 @@ which also provides descriptive statistics of each column per biotype.
 <span class="go">Filtered 14 features, leaving 8 of the original 22 features.  Filtered inplace.</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span><span class="p">,</span><span class="s1">&#39;numerator name&#39;</span><span class="p">,</span><span class="s1">&#39;denominator name&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="n">opposite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># keep only rows with a non-positive log2(fold change) value</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># keep only rows with a non-positive log2(fold change) value</span>
 <span class="go">Filtered 12 features, leaving 10 of the original 22 features.  Filtered inplace.</span>
 </pre></div>
 </div>
