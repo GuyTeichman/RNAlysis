@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rnalysis.general.load_csv &mdash; RNAlysis 1.0 documentation</title>
+  <title>rnalysis.general.load_csv &mdash; RNAlysis 1.3.3 documentation</title>
   
 
   
@@ -193,7 +193,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the csv file to be loaded</p></li>
 <li><p><strong>idx_col</strong> (<em>int</em><em>, </em><em>default None</em>) – number of column to be used as index. default is None, meaning no column will be used as index.</p></li>
-<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>False</em><em> (</em><em>default False</em><em>)</em>) – bool. If True, tries to drop the ‘genes’ column from the DataFrame (useful for filtering).</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>False</em><em> (</em><em>default False</em><em>)</em>) – if a string or list of strings are specified,     the columns of the same name/s will be dropped from the loaded DataFrame.</p></li>
 <li><p><strong>squeeze</strong> (<em>bool</em><em>, </em><em>default False</em>) – If the parsed data only contains one column then return a Series.</p></li>
 <li><p><strong>comment</strong> (<em>str</em><em> (</em><em>optional</em><em>)</em>) – Indicates remainder of line should not be parsed.     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.</p></li>
 </ul>

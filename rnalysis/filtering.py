@@ -8,7 +8,6 @@ When a filtered/modified DESeq/HTCount is saved back to disk, its new name will 
 
 """
 
-import os
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -19,6 +18,7 @@ from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
 from grid_strategy import strategies
+from typing import Union, List, Set, Dict, Tuple
 
 
 class Filter:
@@ -45,16 +45,17 @@ class Filter:
         A string of all feature indices in the current DataFrame separated by newline.
     """
 
-    def __init__(self, fname: str, drop_columns=False):
+    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str], False] = False):
         """
 
-        :param fname:
-        :type fname:
-        :param drop_columns:
-        :type drop_columns:
+        :param fname: full path/filename of the .csv file to be loaded into the Filter object
+        :type fname: Union[str, Path]
+        :param drop_columns: if a string or list of strings are specified, \
+        the columns of the same name/s will be dropped from the loaded DataFrame.
+        :type drop_columns: str, list of str, or False (default False)
 
-        **Examples**::
-
+        :Examples:
+            >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/counted.csv")
         """
         if isinstance(fname, tuple):
@@ -114,12 +115,14 @@ class Filter:
             self.df, self.fname = tmp_df, tmp_fname
             return new_obj
 
-    def save_csv(self, alt_filename=None):
+    def save_csv(self, alt_filename: Union[None, str, Path] = None):
         """
         Saves the current filtered data to a .csv file.
 
-        :param alt_filename: If None, file name will be generated automatically according to the filtering methods used. \
-        if string, will be the name of the saved file. Example input: 'myfilename'
+        :param alt_filename: If None, file name will be generated automatically \
+        according to the filtering methods used. \
+        If it's a string, it will be used as the name of the saved file. Example input: 'myfilename'
+        :type alt_filename: str, pathlib.Path, or None (default)
         """
         if alt_filename is None:
             alt_filename = self.fname
@@ -162,19 +165,18 @@ class Filter:
             split = split[:-1]
         return split
 
-    def head(self, n=5):
+    def head(self, n: int = 5):
         """
         Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.
 
-        :type n: int, default 5
+        :type n: positive int, default 5
         :param n: Number of rows to show.
         :return: returns the first n rows of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
-            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> d = filtering.Filter("tests/test_deseq.csv")
             >>> d.head()
                            baseMean  log2FoldChange  ...         pvalue           padj
             WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
@@ -193,19 +195,18 @@ class Filter:
         """
         return self.df.head(n)
 
-    def tail(self, n=5):
+    def tail(self, n: int = 5):
         """
         Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.
 
-        :type n: int, default 5
+        :type n: positive int, default 5
         :param n: Number of rows to show.
         :return: returns the last n rows of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
-            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> d = filtering.Filter("tests/test_deseq.csv")
             >>> d.tail()
 
                                baseMean  log2FoldChange  ...        pvalue          padj
@@ -256,15 +257,16 @@ class Filter:
         If inplace is False, returns a new and filtered instance of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
-            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
-            >>> d.filter_percentile(0.75,'log2FoldChange') # keep only the rows whose value in the column 'log2FoldChange' is below the 75th percentile
+            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> # keep only the rows whose value in the column 'log2FoldChange' is below the 75th percentile
+            >>> d.filter_percentile(0.75,'log2FoldChange')
             Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
 
-            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
-            >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True) # keep only the rows vulse value in the column 'log2FoldChange' is above the 25th percentile
+            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> # keep only the rows vulse value in the column 'log2FoldChange' is above the 25th percentile
+            >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True)
             Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
 
         """
@@ -277,7 +279,7 @@ class Filter:
     def split_by_percentile(self, percentile: float, column: str):
         """
         Splits the Filter object into two Filter objects: \
-        above and below the specified percentile in the spcfieid column.
+        below and above the specified percentile in the spcfieid column.
 
         :type percentile: float between 0 and 1
         :param percentile: The percentile that all features above it will be filtered out.
@@ -288,20 +290,23 @@ class Filter:
         and the second contains all of the features above and equal to the specified percentile.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
+            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> below, above = d.split_by_percentile(0.75,'log2FoldChange')
+            Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.
+            Filtered 21 features, leaving 7 of the original 28 features. Filtering result saved to new object.
         """
         return [self.filter_percentile(percentile=percentile, column=column, opposite=False, inplace=False),
                 self.filter_percentile(percentile=percentile, column=column, opposite=True, inplace=False)]
 
-    def filter_biotype(self, biotype='protein_coding',
+    def filter_biotype(self, biotype: Union[str, List[str]] = 'protein_coding',
                        ref: str = 'predefined', opposite: bool = False, inplace: bool = True):
         """
         Filters out all features that do not match the indicated biotype/biotypes. \
         Legal inputs: 'protein_coding','pseudogene','piRNA','miRNA','ncRNA','lincRNA','rRNA','snRNA','snoRNA'.
 
-        :type biotype: str or list of str
+        :type biotype: string or list of strings
         :param biotype: the biotypes which will not be filtered out.
         :param ref: Name of the biotype reference file used to determine biotypes. \
         Default is the path defined by the user in the settings.yaml file.
@@ -315,9 +320,17 @@ class Filter:
         :return: If 'inplace' is False, returns a new instance of Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only rows whose biotype is 'protein_coding'
+            >>> counts.filter_biotype('protein_coding',ref='tests/biotype_ref_table_for_tests.csv')
+            Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.
+
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only rows whose biotype is 'protein_coding' or 'pseudogene'
+            >>> counts.filter_biotype(['protein_coding','pseudogene'],ref='tests/biotype_ref_table_for_tests.csv')
+            Filtered 0 features, leaving 22 of the original 22 features. Filtered inplace.
         """
         assert isinstance(biotype, (str, list)), "biotype must be a string or a list!"
         if isinstance(biotype, str):
@@ -343,7 +356,7 @@ class Filter:
 
     # TODO: add 'remove unindexed rows' to here!
 
-    def filter_by_attribute(self, attributes: list = None, mode='union', ref: str = 'predefined',
+    def filter_by_attribute(self, attributes: Union[str, List[str]] = None, mode='union', ref: str = 'predefined',
                             opposite: bool = False, inplace: bool = True):
         """
         Filters features according to user-defined attributes from an Attribute Reference Table. \
@@ -372,9 +385,22 @@ class Filter:
         If 'inplace' is False, returns a new and filtered instance of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only rows that belong to the attribute 'attribute1'
+            >>> counts.filter_by_attribute('attribute1',ref='tests/attr_ref_table_for_examples.csv')
+            Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.
+
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only rows that belong to the attributes 'attribute1' OR 'attribute3'
+            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv')
+            Filtered 13 features, leaving 9 of the original 22 features. Filtered inplace.
+
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only rows that belong to the attribute 'attribute1'
+            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv')
+            Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.
         """
         ref = general._get_attr_ref_path(ref)
         if attributes is None:
@@ -419,8 +445,7 @@ class Filter:
         appear in the list in the same order the Big Table attributes were given in.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         assert isinstance(attributes, (tuple, list, set))
@@ -443,8 +468,7 @@ class Filter:
         :rtype: Series or DataFrame
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         return self.df.describe(percentiles=percentiles)
@@ -461,8 +485,7 @@ class Filter:
         A set of WBGene names.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         if self.df.index.has_duplicates:
@@ -485,8 +508,7 @@ class Filter:
         For example, "WBGene00000001\\nWBGene00000003\\nWBGene12345678".
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         return "\n".join(self.index_set)
@@ -496,8 +518,7 @@ class Filter:
         Print the feature indices in the Filter object, separated by newline.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         print(self.index_string)
@@ -515,8 +536,7 @@ class Filter:
         as well as additional descriptive statistics of format=='long'.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         ref = general._get_biotype_ref_path(ref)
@@ -558,8 +578,7 @@ class Filter:
         If 'inplace' is False, returns a new instance of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> filt = filtering.Filter('tests/test_deseq.csv')
             >>> filt.number_filters('baseMean','gt',5900) #keep only rows that have a value greater than 5900 in the column 'baseMean'.
@@ -607,8 +626,7 @@ class Filter:
         If 'inplace' is False, returns a new instance of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> filt = filtering.Filter('tests/text_filters.csv')
             >>> filt.text_filters('name','sw','AC3') # keep only rows that have a value that starts with 'AC3' in the column 'name'.
@@ -653,8 +671,7 @@ class Filter:
         :return: None if inplace=True, a sorted Filter object otherwise.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         if inplace:
@@ -688,8 +705,7 @@ class Filter:
         If 'inplace' is False, returns a new instance of Filter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         assert isinstance(n, int), "n must be an integer!"
@@ -755,8 +771,7 @@ class Filter:
         If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         if inplace:
@@ -782,8 +797,7 @@ class Filter:
          a set/string of the WBGene indices that exist in at least one of the Filter objects.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         return self._set_ops(others, return_type, set.union)
@@ -808,8 +822,7 @@ class Filter:
          that exist only in the first Filter object/set (set difference).
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
 
@@ -836,8 +849,7 @@ class Filter:
         a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
         return self._set_ops([other], return_type, set.symmetric_difference)
@@ -912,8 +924,7 @@ class FoldChangeFilter(Filter):
         the expected fold change for a group of genes of that size and the p value for the comparison.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
         """
 
@@ -969,8 +980,7 @@ class FoldChangeFilter(Filter):
         If 'inplace' is False, returns a new instance of FoldChangeFilter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>> f.filter_abs_log2_fold_change(2) # keep only rows whose log2(fold change) is >=2 or <=-2
@@ -999,8 +1009,7 @@ class FoldChangeFilter(Filter):
         If 'inplace' is False, returns a new instance of FoldChangeFilter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>> f.filter_fold_change_direction('pos') # keep only rows with a positive log2(fold change) value
@@ -1040,8 +1049,7 @@ class FoldChangeFilter(Filter):
         and the other has only features with negative log2 fold change.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>> pos, neg = f.split_fold_change_direction()
@@ -1092,8 +1100,7 @@ class DESeqFilter(Filter):
         If 'inplace' is False, returns a new instance of DESeqFilter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
             >>> d.filter_significant(0.1) # keep only rows whose adjusted p-value is <=0.1
@@ -1127,8 +1134,7 @@ class DESeqFilter(Filter):
         If 'inplace' is False, returns a new instance of DESeqFilter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
             >>> d.filter_abs_log2_fold_change(2) # keep only rows whose log2(fold change) is >=2 or <=-2
@@ -1157,8 +1163,7 @@ class DESeqFilter(Filter):
         If 'inplace' is False, returns a new instance of DESeqFilter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> d = filtering.DESeqFilter('tests/sample_deseq.csv')
             >>> d.filter_fold_change_direction('pos') # keep only rows with a positive log2(fold change) value
@@ -1270,8 +1275,7 @@ class CountFilter(Filter):
 
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
 
         """
@@ -1306,8 +1310,7 @@ class CountFilter(Filter):
         A new instance of FoldChangeFilter
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>>
         """
@@ -1425,8 +1428,7 @@ class CountFilter(Filter):
         If inplace is False, returns a new instance of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>>
         """
@@ -1459,8 +1461,7 @@ class CountFilter(Filter):
         If inplace is False, returns a new instance of the Filter object.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>>
         """
@@ -1495,8 +1496,7 @@ class CountFilter(Filter):
         If 'inplace' is False, returns a new instance of CountFilter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter('tests/counted.csv')
             >>> c.filter_low_reads(5) # remove all rows whose values in all columns are all <5
@@ -1522,8 +1522,7 @@ class CountFilter(Filter):
         and the second has only lowly-expressed features.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter('tests/counted.csv')
             >>> low_expr,high_expr = c.split_by_reads(5)
@@ -1553,8 +1552,7 @@ class CountFilter(Filter):
         If 'inplace' is False, returns a new instance of CountFilter.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter('tests/counted.csv')
             >>> c.filter_by_row_sum(5) # remove all rows whose sum is <5
@@ -1888,8 +1886,7 @@ class CountFilter(Filter):
         specified folder.
 
 
-        **Examples**::
-
+        :Examples:
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder')
 

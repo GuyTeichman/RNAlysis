@@ -153,7 +153,8 @@ def load_csv(filename: str, idx_col: int = None, drop_columns: bool = False, squ
     :type idx_col: int, default None
     :param idx_col: number of column to be used as index. default is None, meaning no column will be used as index.
     :type drop_columns: str, list of str, or False (default False)
-    :param drop_columns: bool. If True, tries to drop the 'genes' column from the DataFrame (useful for filtering).
+    :param drop_columns: if a string or list of strings are specified, \
+    the columns of the same name/s will be dropped from the loaded DataFrame.
     :type squeeze: bool, default False
     :param squeeze: If the parsed data only contains one column then return a Series.
     :type comment: str (optional)

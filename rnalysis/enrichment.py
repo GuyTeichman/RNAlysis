@@ -20,6 +20,7 @@ from itertools import repeat, compress
 import upsetplot as upset
 import matplotlib_venn as vn
 import warnings
+from typing import Union, List, Set, Dict, Tuple
 
 
 class FeatureSet:
@@ -722,7 +723,8 @@ def upset_plot(objs: dict, ref: str = 'predefined'):
     return upset.plot(upset_df)
 
 
-def venn_diagram(objs: dict, ref: str = 'predefined', title: str = 'default', set_colors: tuple = ('r', 'g', 'b'),
+def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], ref: str = 'predefined', title: str = 'default',
+                 set_colors: tuple = ('r', 'g', 'b'),
                  alpha: float = 0.4, weighted: bool = True, lines: bool = True, linecolor: str = 'black',
                  linestyle='solid', linewidth=2.0,
                  normalize_to: float = 1.0):

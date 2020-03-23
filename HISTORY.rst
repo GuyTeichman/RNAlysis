@@ -14,6 +14,7 @@ Added
 * Enrichment randomization tests now also support non-WBGene indexing.
 * Filter.biotypes() and FeatureSet.biotypes() now report genes that don't appear in the biotype reference table.
 * Filter.biotypes() can now give a long-form report with descriptive statistics of all columns, grouped by biotype.
+* Added code examples to the user guide and to the docstrings of most functions.
 
 
 Changed
