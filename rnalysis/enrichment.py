@@ -705,7 +705,7 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     return objs
 
 
-def upset_plot(objs: dict, ref: str = 'predefined'):
+def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], ref: str = 'predefined'):
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
 

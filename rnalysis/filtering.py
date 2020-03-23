@@ -393,14 +393,27 @@ class Filter:
             Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/counted.csv')
-            >>> # keep only rows that belong to the attributes 'attribute1' OR 'attribute3'
+            >>> # keep only rows that belong to the attributes 'attribute1' OR 'attribute3' (union)
             >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv')
             Filtered 13 features, leaving 9 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/counted.csv')
-            >>> # keep only rows that belong to the attribute 'attribute1'
-            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv')
-            Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.
+            >>> # keep only rows that belong to both attributes 'attribute1' AND 'attribute3' (intersection)
+            >>> counts.filter_by_attribute(['attribute1','attribute3'],mode='intersection',
+            ... ref='tests/attr_ref_table_for_examples.csv')
+            Filtered 19 features, leaving 3 of the original 22 features. Filtered inplace.
+
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only rows that DON'T belong to either 'attribute1','attribute3' or both
+            >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv',
+            ... opposite=True)
+            Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.
+
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only rows that DON'T belong to both 'attribute1' AND 'attribute3'
+            >>> counts.filter_by_attribute(['attribute1','attribute3'],mode='intersection',
+            ... ref='tests/attr_ref_table_for_examples.csv',opposite=True)
+            Filtered 3 features, leaving 19 of the original 22 features. Filtered inplace.
         """
         ref = general._get_attr_ref_path(ref)
         if attributes is None:
@@ -431,14 +444,14 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_attribute(self, attributes: tuple = None,
-                           ref: str = 'predefined'):
+    def split_by_attribute(self, attributes: List[str], ref: str = 'predefined'):
         """
         Splits the Filter object into multiple Filter objects, \
-        each corresponding to one of the specified Big Table attributes. \
-        Each object contains only features that match its indicated Big Table attribute.
+        each corresponding to one of the specified Attribute Reference Table attributes. \
+        Each object contains only features that match its Attribute Reference Table attribute.
 
-        :param attributes: list of Big Table attributes to filter by.
+        :param attributes: list of attribute names from the Attribute Reference Table to filter by.
+        :type attributes: list of strings
         :param ref: filename/path of the reference table to be used as reference.
         :return:
         A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects \
@@ -448,9 +461,9 @@ class Filter:
         :Examples:
             >>> from rnalysis import filtering
         """
-        assert isinstance(attributes, (tuple, list, set))
+        assert isinstance(attributes, list)
         ref = general._get_attr_ref_path(ref)
-        return [self.filter_by_attribute(attributes=[att], mode='union', ref=ref, inplace=False) for att in
+        return [self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
                 attributes]
 
     def describe(self, percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]):
