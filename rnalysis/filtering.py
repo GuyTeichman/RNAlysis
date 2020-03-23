@@ -45,7 +45,7 @@ class Filter:
         A string of all feature indices in the current DataFrame separated by newline.
     """
 
-    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str], False] = False):
+    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = False):
         """
 
         :param fname: full path/filename of the .csv file to be loaded into the Filter object

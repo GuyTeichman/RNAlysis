@@ -34,7 +34,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.enrichment.FeatureSet.__init__" href="rnalysis.enrichment.FeatureSet.__init__.html" />
+    <link rel="prev" title="rnalysis.enrichment" href="rnalysis.enrichment.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -88,9 +90,26 @@
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.__init__.html">rnalysis.enrichment.FeatureSet.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes.html">rnalysis.enrichment.FeatureSet.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization.html">rnalysis.enrichment.FeatureSet.enrich_randomization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization_parallel.html">rnalysis.enrichment.FeatureSet.enrich_randomization_parallel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html">rnalysis.enrichment.FeatureSet.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html">rnalysis.enrichment.FeatureSet.save_txt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference.html">rnalysis.enrichment.FeatureSet.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html">rnalysis.enrichment.FeatureSet.union</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.venn_diagram.html">rnalysis.enrichment.venn_diagram</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
 </ul>
 <ul>
@@ -140,6 +159,8 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
+          <li><a href="rnalysis.enrichment.html">rnalysis.enrichment</a> &raquo;</li>
+        
       <li>rnalysis.enrichment.FeatureSet</li>
     
     
@@ -161,6 +182,57 @@
             
   <div class="section" id="rnalysis-enrichment-featureset">
 <h1>rnalysis.enrichment.FeatureSet<a class="headerlink" href="#rnalysis-enrichment-featureset" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="rnalysis.enrichment.FeatureSet">
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">FeatureSet</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>receives a filtered gene set and preforms various enrichment analyses</p>
+<dl class="method">
+<dt id="rnalysis.enrichment.FeatureSet.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.__init__.html#rnalysis.enrichment.FeatureSet.__init__" title="rnalysis.enrichment.FeatureSet.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([gene_set, set_name])</p></td>
+<td><p>Initialize self.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes.html#rnalysis.enrichment.FeatureSet.biotypes" title="rnalysis.enrichment.FeatureSet.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">biotypes</span></code></a>([ref])</p></td>
+<td><p>Returns a DataFrame of the biotypes in the gene set and their count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html#rnalysis.enrichment.FeatureSet.difference" title="rnalysis.enrichment.FeatureSet.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, inplace])</p></td>
+<td><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization.html#rnalysis.enrichment.FeatureSet.enrich_randomization" title="rnalysis.enrichment.FeatureSet.enrich_randomization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enrich_randomization</span></code></a>([attributes, fdr, …])</p></td>
+<td><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization_parallel.html#rnalysis.enrichment.FeatureSet.enrich_randomization_parallel" title="rnalysis.enrichment.FeatureSet.enrich_randomization_parallel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enrich_randomization_parallel</span></code></a>([attributes, …])</p></td>
+<td><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html#rnalysis.enrichment.FeatureSet.go_enrichment" title="rnalysis.enrichment.FeatureSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">go_enrichment</span></code></a>([mode, alpha, save_csv, fname])</p></td>
+<td><p>Analyzes GO, Tissue and/or Phenotype enrichment for the given group of genomic features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html#rnalysis.enrichment.FeatureSet.intersection" title="rnalysis.enrichment.FeatureSet.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, inplace])</p></td>
+<td><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html#rnalysis.enrichment.FeatureSet.save_txt" title="rnalysis.enrichment.FeatureSet.save_txt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_txt</span></code></a>(fname)</p></td>
+<td><p>Save the list of features in the FeatureSet object under the specified filename and path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference.html#rnalysis.enrichment.FeatureSet.symmetric_difference" title="rnalysis.enrichment.FeatureSet.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, inplace])</p></td>
+<td><p>Calculates the set symmetric difference of the indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html#rnalysis.enrichment.FeatureSet.union" title="rnalysis.enrichment.FeatureSet.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, inplace])</p></td>
+<td><p>Calculates the set union of the indices from multipple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -168,6 +240,15 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rnalysis.enrichment.FeatureSet.__init__.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.FeatureSet.__init__" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rnalysis.enrichment.html" class="btn btn-neutral float-left" title="rnalysis.enrichment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

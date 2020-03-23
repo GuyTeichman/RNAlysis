@@ -34,7 +34,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.general" href="rnalysis.general.html" />
+    <link rel="prev" title="rnalysis.enrichment.upset_plot" href="rnalysis.enrichment.upset_plot.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -88,9 +90,14 @@
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.enrichment.venn_diagram</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
 </ul>
 <ul>
@@ -140,6 +147,8 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
+          <li><a href="rnalysis.enrichment.html">rnalysis.enrichment</a> &raquo;</li>
+        
       <li>rnalysis.enrichment.venn_diagram</li>
     
     
@@ -161,6 +170,32 @@
             
   <div class="section" id="rnalysis-enrichment-venn-diagram">
 <h1>rnalysis.enrichment.venn_diagram<a class="headerlink" href="#rnalysis-enrichment-venn-diagram" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="rnalysis.enrichment.venn_diagram">
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">venn_diagram</code><span class="sig-paren">(</span><em class="sig-param">objs: Dict[str, Union[str, rnalysis.enrichment.FeatureSet, Set[str]]], ref: str = 'predefined', title: str = 'default', set_colors: tuple = ('r', 'g', 'b'), alpha: float = 0.4, weighted: bool = True, lines: bool = True, linecolor: str = 'black', linestyle='solid', linewidth=2.0, normalize_to: float = 1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.venn_diagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>objs</strong> (<em>a dictionary with 2-3 entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – determines the title of the plot.</p></li>
+<li><p><strong>set_colors</strong> (<em>tuple of matplotlib-format colors</em><em>, </em><em>the same size as 'objs'</em>) – determines the colors of the circles in the diagram.</p></li>
+<li><p><strong>alpha</strong> (<em>a float between 0 and 1</em>) – determines the opacity of the circles.</p></li>
+<li><p><strong>weighted</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, the plot will be area-weighted.</p></li>
+<li><p><strong>lines</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, adds an outline to the circles.</p></li>
+<li><p><strong>linecolor</strong> (<em>matplotlib-format color</em><em> (</em><em>default 'black'</em><em>)</em>) – Determines the color of the circles’ outline.</p></li>
+<li><p><strong>linestyle</strong> (<em>'solid'</em><em> or </em><em>'dashed'</em><em> (</em><em>default 'solid'</em><em>)</em>) – the style of the circles’ outline.</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em> (</em><em>default 2.0</em><em>)</em>) – the widdth of the circles’ outlines.</p></li>
+<li><p><strong>normalize_to</strong> (<em>float</em><em> (</em><em>default 1.0</em><em>)</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 
@@ -168,6 +203,15 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rnalysis.general.html" class="btn btn-neutral float-right" title="rnalysis.general" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rnalysis.enrichment.upset_plot.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.upset_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
