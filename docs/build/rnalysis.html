@@ -205,8 +205,27 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># short-form view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">()</span>
+<span class="go">                gene</span>
+<span class="go">biotype</span>
+<span class="go">protein_coding    26</span>
+<span class="go">pseudogene         1</span>
+<span class="go">unknown            1</span>
 </pre></div>
 </div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># long-form view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="go">               baseMean               ...           padj</span>
+<span class="go">                  count         mean  ...            75%            max</span>
+<span class="go">biotype                               ...</span>
+<span class="go">protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68</span>
+<span class="go">pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94</span>
+<span class="go">unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152</span>
+</pre></div>
+</div>
+<p>[3 rows x 48 columns]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -251,6 +270,38 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">1%         0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">25%        6.000000      6.250000      1.250000      0.250000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">75%     2637.000000   2479.000000   6030.500000   4669.750000</span>
+<span class="go">99%    15054.950000  12714.290000  21955.390000  15603.510000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">10%        0.000000      0.200000      0.000000      0.000000</span>
+<span class="go">20%        1.400000      3.200000      1.000000      0.000000</span>
+<span class="go">30%       15.000000     15.700000      2.600000      1.000000</span>
+<span class="go">40%       28.400000     26.800000     14.000000      9.000000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">60%       82.000000    106.800000     44.000000     33.000000</span>
+<span class="go">70%      484.200000    395.500000    305.000000    302.500000</span>
+<span class="go">80%     3398.600000   3172.600000   7981.400000   6213.000000</span>
+<span class="go">90%     8722.100000   7941.800000  16449.500000  12129.900000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
 </pre></div>
 </div>
 </dd>
@@ -280,8 +331,20 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate difference and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">a_set</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00007063&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00007069&#39;, &#39;WBGene00007071&#39;,</span>
+<span class="go"> &#39;WBGene00007074&#39;, &#39;WBGene00007075&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00007077&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00007079&#39;,</span>
+<span class="go"> &#39;WBGene00014997&#39;, &#39;WBGene00043987&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00044022&#39;,</span>
+<span class="go"> &#39;WBGene00044951&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00077504&#39;}</span>
 </pre></div>
 </div>
+<p># calculate difference and filter in-place
+&gt;&gt;&gt; d.difference(counts, a_set, inplace=True)
+Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -349,15 +412,30 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39; (union)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
 <span class="go">Filtered 13 features, leaving 9 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attribute &#39;attribute1&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
-<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to both attributes &#39;attribute1&#39; AND &#39;attribute3&#39; (intersection)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 19 features, leaving 3 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to either &#39;attribute1&#39;,&#39;attribute3&#39; or both</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to both &#39;attribute1&#39; AND &#39;attribute3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">Filtered 3 features, leaving 19 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -461,12 +539,12 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True, na_position: str = 'last', opposite: bool = False, inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type by</dt>
-<dd class="field-odd"><p>str or list of str</p>
+<dd class="field-odd"><p>string or list of strings</p>
 </dd>
 <dt class="field-even">param by</dt>
 <dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
@@ -597,6 +675,13 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myset</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">index_set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">myset</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00044022&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00007069&#39;, &#39;WBGene00007063&#39;,</span>
+<span class="go">&#39;WBGene00007067&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;,</span>
+<span class="go">&#39;WBGene00007077&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00007074&#39;,</span>
+<span class="go">&#39;WBGene00043987&#39;, &#39;WBGene00007071&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00007075&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -621,6 +706,31 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mystring</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">index_string</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mystring</span><span class="p">)</span>
+<span class="go">WBGene00044022</span>
+<span class="go">WBGene00077504</span>
+<span class="go">WBGene00007079</span>
+<span class="go">WBGene00007069</span>
+<span class="go">WBGene00007063</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00077503</span>
+<span class="go">WBGene00007078</span>
+<span class="go">WBGene00007064</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00044951</span>
+<span class="go">WBGene00007077</span>
+<span class="go">WBGene00007066</span>
+<span class="go">WBGene00007076</span>
+<span class="go">WBGene00014997</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007074</span>
+<span class="go">WBGene00043987</span>
+<span class="go">WBGene00007071</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00007075</span>
 </pre></div>
 </div>
 </dd>
@@ -650,8 +760,16 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate intersection and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">a_set</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;}</span>
 </pre></div>
 </div>
+<p># calculate intersection and filter in-place
+&gt;&gt;&gt; d.intersection(a_set, inplace=True)
+Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -731,7 +849,8 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_deseq.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span> <span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span>
 <span class="go">Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.</span>
 </pre></div>
 </div>
@@ -810,6 +929,30 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">print_features</span><span class="p">()</span>
+<span class="go">WBGene00044022</span>
+<span class="go">WBGene00077504</span>
+<span class="go">WBGene00007079</span>
+<span class="go">WBGene00007069</span>
+<span class="go">WBGene00007063</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00077503</span>
+<span class="go">WBGene00007078</span>
+<span class="go">WBGene00007064</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00044951</span>
+<span class="go">WBGene00007077</span>
+<span class="go">WBGene00007066</span>
+<span class="go">WBGene00007076</span>
+<span class="go">WBGene00014997</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007074</span>
+<span class="go">WBGene00043987</span>
+<span class="go">WBGene00007071</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00007075</span>
 </pre></div>
 </div>
 </dd>
@@ -870,6 +1013,22 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="go">                cond1  cond2  cond3  cond4</span>
+<span class="go">WBGene00007063    633    451    365    388</span>
+<span class="go">WBGene00007064     60     57     20     23</span>
+<span class="go">WBGene00044951      0      0      0      1</span>
+<span class="go">WBGene00007066     55    266     46     39</span>
+<span class="go">WBGene00007067     15     13      1      0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;cond1&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="go">                cond1  cond2  cond3  cond4</span>
+<span class="go">WBGene00044951      0      0      0      1</span>
+<span class="go">WBGene00077504      0      0      0      0</span>
+<span class="go">WBGene00007069      0      2      1      0</span>
+<span class="go">WBGene00077502      0      0      0      0</span>
+<span class="go">WBGene00077503      1      4      2      0</span>
 </pre></div>
 </div>
 </dd>
@@ -878,12 +1037,12 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: List[str], ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>attributes</strong> (<em>list of strings</em>) – list of attribute names from the Attribute Reference Table to filter by.</p></li>
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
@@ -895,6 +1054,11 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.</span>
+<span class="go">Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.</span>
 </pre></div>
 </div>
 </dd>
@@ -978,6 +1142,19 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate difference and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000017&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00000024&#39;, &#39;WBGene00000010&#39;, &#39;WBGene00000020&#39;,</span>
+<span class="go">&#39;WBGene00007069&#39;, &#39;WBGene00007063&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00000029&#39;, &#39;WBGene00000006&#39;,</span>
+<span class="go">&#39;WBGene00007064&#39;, &#39;WBGene00000019&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00000023&#39;,</span>
+<span class="go">&#39;WBGene00007074&#39;, &#39;WBGene00000025&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00000014&#39;, &#39;WBGene00000027&#39;,</span>
+<span class="go">&#39;WBGene00000021&#39;, &#39;WBGene00044022&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00000012&#39;, &#39;WBGene00000005&#39;, &#39;WBGene00077503&#39;,</span>
+<span class="go">&#39;WBGene00000026&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000002&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;, &#39;WBGene00007077&#39;,</span>
+<span class="go">&#39;WBGene00000007&#39;, &#39;WBGene00000008&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00000013&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00043987&#39;,</span>
+<span class="go">&#39;WBGene00007071&#39;, &#39;WBGene00000011&#39;, &#39;WBGene00000015&#39;, &#39;WBGene00000018&#39;, &#39;WBGene00000016&#39;, &#39;WBGene00000028&#39;,</span>
+<span class="go">&#39;WBGene00007075&#39;, &#39;WBGene00000022&#39;, &#39;WBGene00000009&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -1052,7 +1229,8 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/text_filters.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">text_filters</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;sw&#39;</span><span class="p">,</span><span class="s1">&#39;AC3&#39;</span><span class="p">)</span> <span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">text_filters</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;sw&#39;</span><span class="p">,</span><span class="s1">&#39;AC3&#39;</span><span class="p">)</span>
 <span class="go">Filtered 17 features, leaving 5 of the original 22 features.  Filtered inplace.</span>
 </pre></div>
 </div>
@@ -1092,6 +1270,19 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate union and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000017&#39;, &#39;WBGene00000021&#39;, &#39;WBGene00044022&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00000012&#39;,</span>
+<span class="go">&#39;WBGene00000024&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00000010&#39;, &#39;WBGene00000020&#39;, &#39;WBGene00000005&#39;, &#39;WBGene00007069&#39;,</span>
+<span class="go">&#39;WBGene00007063&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00000026&#39;, &#39;WBGene00000029&#39;,</span>
+<span class="go">&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000006&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;,</span>
+<span class="go">&#39;WBGene00000007&#39;, &#39;WBGene00000008&#39;, &#39;WBGene00000019&#39;, &#39;WBGene00007077&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00007066&#39;,</span>
+<span class="go">&#39;WBGene00007076&#39;, &#39;WBGene00000013&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00000023&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00007074&#39;,</span>
+<span class="go">&#39;WBGene00000025&#39;, &#39;WBGene00000011&#39;, &#39;WBGene00043987&#39;, &#39;WBGene00007071&#39;, &#39;WBGene00000015&#39;, &#39;WBGene00000018&#39;,</span>
+<span class="go">&#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00000014&#39;, &#39;WBGene00000016&#39;, &#39;WBGene00000027&#39;, &#39;WBGene00000028&#39;,</span>
+<span class="go">&#39;WBGene00007075&#39;, &#39;WBGene00000022&#39;, &#39;WBGene00000009&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -1152,8 +1343,27 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># short-form view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">()</span>
+<span class="go">                gene</span>
+<span class="go">biotype</span>
+<span class="go">protein_coding    26</span>
+<span class="go">pseudogene         1</span>
+<span class="go">unknown            1</span>
 </pre></div>
 </div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># long-form view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="go">               baseMean               ...           padj</span>
+<span class="go">                  count         mean  ...            75%            max</span>
+<span class="go">biotype                               ...</span>
+<span class="go">protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68</span>
+<span class="go">pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94</span>
+<span class="go">unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152</span>
+</pre></div>
+</div>
+<p>[3 rows x 48 columns]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1175,6 +1385,38 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">1%         0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">25%        6.000000      6.250000      1.250000      0.250000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">75%     2637.000000   2479.000000   6030.500000   4669.750000</span>
+<span class="go">99%    15054.950000  12714.290000  21955.390000  15603.510000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">10%        0.000000      0.200000      0.000000      0.000000</span>
+<span class="go">20%        1.400000      3.200000      1.000000      0.000000</span>
+<span class="go">30%       15.000000     15.700000      2.600000      1.000000</span>
+<span class="go">40%       28.400000     26.800000     14.000000      9.000000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">60%       82.000000    106.800000     44.000000     33.000000</span>
+<span class="go">70%      484.200000    395.500000    305.000000    302.500000</span>
+<span class="go">80%     3398.600000   3172.600000   7981.400000   6213.000000</span>
+<span class="go">90%     8722.100000   7941.800000  16449.500000  12129.900000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
 </pre></div>
 </div>
 </dd>
@@ -1204,8 +1446,20 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate difference and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">a_set</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00007063&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00007069&#39;, &#39;WBGene00007071&#39;,</span>
+<span class="go"> &#39;WBGene00007074&#39;, &#39;WBGene00007075&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00007077&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00007079&#39;,</span>
+<span class="go"> &#39;WBGene00014997&#39;, &#39;WBGene00043987&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00044022&#39;,</span>
+<span class="go"> &#39;WBGene00044951&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00077504&#39;}</span>
 </pre></div>
 </div>
+<p># calculate difference and filter in-place
+&gt;&gt;&gt; d.difference(counts, a_set, inplace=True)
+Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1302,15 +1556,30 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39; (union)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
 <span class="go">Filtered 13 features, leaving 9 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attribute &#39;attribute1&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
-<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to both attributes &#39;attribute1&#39; AND &#39;attribute3&#39; (intersection)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 19 features, leaving 3 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to either &#39;attribute1&#39;,&#39;attribute3&#39; or both</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to both &#39;attribute1&#39; AND &#39;attribute3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">Filtered 3 features, leaving 19 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -1431,12 +1700,12 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True, na_position: str = 'last', opposite: bool = False, inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type by</dt>
-<dd class="field-odd"><p>str or list of str</p>
+<dd class="field-odd"><p>string or list of strings</p>
 </dd>
 <dt class="field-even">param by</dt>
 <dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
@@ -1500,6 +1769,13 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myset</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">index_set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">myset</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00044022&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00007069&#39;, &#39;WBGene00007063&#39;,</span>
+<span class="go">&#39;WBGene00007067&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;,</span>
+<span class="go">&#39;WBGene00007077&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00007074&#39;,</span>
+<span class="go">&#39;WBGene00043987&#39;, &#39;WBGene00007071&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00007075&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -1524,6 +1800,31 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mystring</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">index_string</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mystring</span><span class="p">)</span>
+<span class="go">WBGene00044022</span>
+<span class="go">WBGene00077504</span>
+<span class="go">WBGene00007079</span>
+<span class="go">WBGene00007069</span>
+<span class="go">WBGene00007063</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00077503</span>
+<span class="go">WBGene00007078</span>
+<span class="go">WBGene00007064</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00044951</span>
+<span class="go">WBGene00007077</span>
+<span class="go">WBGene00007066</span>
+<span class="go">WBGene00007076</span>
+<span class="go">WBGene00014997</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007074</span>
+<span class="go">WBGene00043987</span>
+<span class="go">WBGene00007071</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00007075</span>
 </pre></div>
 </div>
 </dd>
@@ -1553,8 +1854,16 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate intersection and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">a_set</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;}</span>
 </pre></div>
 </div>
+<p># calculate intersection and filter in-place
+&gt;&gt;&gt; d.intersection(a_set, inplace=True)
+Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1582,7 +1891,8 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_deseq.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span> <span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span>
 <span class="go">Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.</span>
 </pre></div>
 </div>
@@ -1597,6 +1907,30 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">print_features</span><span class="p">()</span>
+<span class="go">WBGene00044022</span>
+<span class="go">WBGene00077504</span>
+<span class="go">WBGene00007079</span>
+<span class="go">WBGene00007069</span>
+<span class="go">WBGene00007063</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00077503</span>
+<span class="go">WBGene00007078</span>
+<span class="go">WBGene00007064</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00044951</span>
+<span class="go">WBGene00007077</span>
+<span class="go">WBGene00007066</span>
+<span class="go">WBGene00007076</span>
+<span class="go">WBGene00014997</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007074</span>
+<span class="go">WBGene00043987</span>
+<span class="go">WBGene00007071</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00007075</span>
 </pre></div>
 </div>
 </dd>
@@ -1632,6 +1966,22 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="go">                cond1  cond2  cond3  cond4</span>
+<span class="go">WBGene00007063    633    451    365    388</span>
+<span class="go">WBGene00007064     60     57     20     23</span>
+<span class="go">WBGene00044951      0      0      0      1</span>
+<span class="go">WBGene00007066     55    266     46     39</span>
+<span class="go">WBGene00007067     15     13      1      0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;cond1&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="go">                cond1  cond2  cond3  cond4</span>
+<span class="go">WBGene00044951      0      0      0      1</span>
+<span class="go">WBGene00077504      0      0      0      0</span>
+<span class="go">WBGene00007069      0      2      1      0</span>
+<span class="go">WBGene00077502      0      0      0      0</span>
+<span class="go">WBGene00077503      1      4      2      0</span>
 </pre></div>
 </div>
 </dd>
@@ -1640,12 +1990,12 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: List[str], ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>attributes</strong> (<em>list of strings</em>) – list of attribute names from the Attribute Reference Table to filter by.</p></li>
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
@@ -1657,6 +2007,11 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.</span>
+<span class="go">Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.</span>
 </pre></div>
 </div>
 </dd>
@@ -1733,6 +2088,19 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate difference and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000017&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00000024&#39;, &#39;WBGene00000010&#39;, &#39;WBGene00000020&#39;,</span>
+<span class="go">&#39;WBGene00007069&#39;, &#39;WBGene00007063&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00000029&#39;, &#39;WBGene00000006&#39;,</span>
+<span class="go">&#39;WBGene00007064&#39;, &#39;WBGene00000019&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00000023&#39;,</span>
+<span class="go">&#39;WBGene00007074&#39;, &#39;WBGene00000025&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00000014&#39;, &#39;WBGene00000027&#39;,</span>
+<span class="go">&#39;WBGene00000021&#39;, &#39;WBGene00044022&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00000012&#39;, &#39;WBGene00000005&#39;, &#39;WBGene00077503&#39;,</span>
+<span class="go">&#39;WBGene00000026&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000002&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;, &#39;WBGene00007077&#39;,</span>
+<span class="go">&#39;WBGene00000007&#39;, &#39;WBGene00000008&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00000013&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00043987&#39;,</span>
+<span class="go">&#39;WBGene00007071&#39;, &#39;WBGene00000011&#39;, &#39;WBGene00000015&#39;, &#39;WBGene00000018&#39;, &#39;WBGene00000016&#39;, &#39;WBGene00000028&#39;,</span>
+<span class="go">&#39;WBGene00007075&#39;, &#39;WBGene00000022&#39;, &#39;WBGene00000009&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -1807,7 +2175,8 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/text_filters.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">text_filters</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;sw&#39;</span><span class="p">,</span><span class="s1">&#39;AC3&#39;</span><span class="p">)</span> <span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">text_filters</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;sw&#39;</span><span class="p">,</span><span class="s1">&#39;AC3&#39;</span><span class="p">)</span>
 <span class="go">Filtered 17 features, leaving 5 of the original 22 features.  Filtered inplace.</span>
 </pre></div>
 </div>
@@ -1834,6 +2203,19 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate union and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000017&#39;, &#39;WBGene00000021&#39;, &#39;WBGene00044022&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00000012&#39;,</span>
+<span class="go">&#39;WBGene00000024&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00000010&#39;, &#39;WBGene00000020&#39;, &#39;WBGene00000005&#39;, &#39;WBGene00007069&#39;,</span>
+<span class="go">&#39;WBGene00007063&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00000026&#39;, &#39;WBGene00000029&#39;,</span>
+<span class="go">&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000006&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;,</span>
+<span class="go">&#39;WBGene00000007&#39;, &#39;WBGene00000008&#39;, &#39;WBGene00000019&#39;, &#39;WBGene00007077&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00007066&#39;,</span>
+<span class="go">&#39;WBGene00007076&#39;, &#39;WBGene00000013&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00000023&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00007074&#39;,</span>
+<span class="go">&#39;WBGene00000025&#39;, &#39;WBGene00000011&#39;, &#39;WBGene00043987&#39;, &#39;WBGene00007071&#39;, &#39;WBGene00000015&#39;, &#39;WBGene00000018&#39;,</span>
+<span class="go">&#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00000014&#39;, &#39;WBGene00000016&#39;, &#39;WBGene00000027&#39;, &#39;WBGene00000028&#39;,</span>
+<span class="go">&#39;WBGene00007075&#39;, &#39;WBGene00000022&#39;, &#39;WBGene00000009&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -1897,8 +2279,27 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># short-form view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">()</span>
+<span class="go">                gene</span>
+<span class="go">biotype</span>
+<span class="go">protein_coding    26</span>
+<span class="go">pseudogene         1</span>
+<span class="go">unknown            1</span>
 </pre></div>
 </div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># long-form view</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="go">               baseMean               ...           padj</span>
+<span class="go">                  count         mean  ...            75%            max</span>
+<span class="go">biotype                               ...</span>
+<span class="go">protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68</span>
+<span class="go">pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94</span>
+<span class="go">unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152</span>
+</pre></div>
+</div>
+<p>[3 rows x 48 columns]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1920,6 +2321,38 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">1%         0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">25%        6.000000      6.250000      1.250000      0.250000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">75%     2637.000000   2479.000000   6030.500000   4669.750000</span>
+<span class="go">99%    15054.950000  12714.290000  21955.390000  15603.510000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">10%        0.000000      0.200000      0.000000      0.000000</span>
+<span class="go">20%        1.400000      3.200000      1.000000      0.000000</span>
+<span class="go">30%       15.000000     15.700000      2.600000      1.000000</span>
+<span class="go">40%       28.400000     26.800000     14.000000      9.000000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">60%       82.000000    106.800000     44.000000     33.000000</span>
+<span class="go">70%      484.200000    395.500000    305.000000    302.500000</span>
+<span class="go">80%     3398.600000   3172.600000   7981.400000   6213.000000</span>
+<span class="go">90%     8722.100000   7941.800000  16449.500000  12129.900000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
 </pre></div>
 </div>
 </dd>
@@ -1949,8 +2382,20 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate difference and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">a_set</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00007063&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00007069&#39;, &#39;WBGene00007071&#39;,</span>
+<span class="go"> &#39;WBGene00007074&#39;, &#39;WBGene00007075&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00007077&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00007079&#39;,</span>
+<span class="go"> &#39;WBGene00014997&#39;, &#39;WBGene00043987&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00044022&#39;,</span>
+<span class="go"> &#39;WBGene00044951&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00077504&#39;}</span>
 </pre></div>
 </div>
+<p># calculate difference and filter in-place
+&gt;&gt;&gt; d.difference(counts, a_set, inplace=True)
+Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2047,15 +2492,30 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39; (union)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
 <span class="go">Filtered 13 features, leaving 9 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attribute &#39;attribute1&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
-<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to both attributes &#39;attribute1&#39; AND &#39;attribute3&#39; (intersection)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 19 features, leaving 3 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to either &#39;attribute1&#39;,&#39;attribute3&#39; or both</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to both &#39;attribute1&#39; AND &#39;attribute3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">Filtered 3 features, leaving 19 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -2140,12 +2600,12 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True, na_position: str = 'last', opposite: bool = False, inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type by</dt>
-<dd class="field-odd"><p>str or list of str</p>
+<dd class="field-odd"><p>string or list of strings</p>
 </dd>
 <dt class="field-even">param by</dt>
 <dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
@@ -2209,6 +2669,13 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">myset</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">index_set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">myset</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00044022&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00007069&#39;, &#39;WBGene00007063&#39;,</span>
+<span class="go">&#39;WBGene00007067&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;,</span>
+<span class="go">&#39;WBGene00007077&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00007074&#39;,</span>
+<span class="go">&#39;WBGene00043987&#39;, &#39;WBGene00007071&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00007075&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -2233,6 +2700,31 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mystring</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">index_string</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">mystring</span><span class="p">)</span>
+<span class="go">WBGene00044022</span>
+<span class="go">WBGene00077504</span>
+<span class="go">WBGene00007079</span>
+<span class="go">WBGene00007069</span>
+<span class="go">WBGene00007063</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00077503</span>
+<span class="go">WBGene00007078</span>
+<span class="go">WBGene00007064</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00044951</span>
+<span class="go">WBGene00007077</span>
+<span class="go">WBGene00007066</span>
+<span class="go">WBGene00007076</span>
+<span class="go">WBGene00014997</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007074</span>
+<span class="go">WBGene00043987</span>
+<span class="go">WBGene00007071</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00007075</span>
 </pre></div>
 </div>
 </dd>
@@ -2262,8 +2754,16 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate intersection and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">a_set</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;}</span>
 </pre></div>
 </div>
+<p># calculate intersection and filter in-place
+&gt;&gt;&gt; d.intersection(a_set, inplace=True)
+Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2291,7 +2791,8 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_deseq.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span> <span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span>
 <span class="go">Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.</span>
 </pre></div>
 </div>
@@ -2306,6 +2807,30 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">print_features</span><span class="p">()</span>
+<span class="go">WBGene00044022</span>
+<span class="go">WBGene00077504</span>
+<span class="go">WBGene00007079</span>
+<span class="go">WBGene00007069</span>
+<span class="go">WBGene00007063</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00077503</span>
+<span class="go">WBGene00007078</span>
+<span class="go">WBGene00007064</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00044951</span>
+<span class="go">WBGene00007077</span>
+<span class="go">WBGene00007066</span>
+<span class="go">WBGene00007076</span>
+<span class="go">WBGene00014997</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007074</span>
+<span class="go">WBGene00043987</span>
+<span class="go">WBGene00007071</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00007075</span>
 </pre></div>
 </div>
 </dd>
@@ -2399,6 +2924,22 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="go">                cond1  cond2  cond3  cond4</span>
+<span class="go">WBGene00007063    633    451    365    388</span>
+<span class="go">WBGene00007064     60     57     20     23</span>
+<span class="go">WBGene00044951      0      0      0      1</span>
+<span class="go">WBGene00007066     55    266     46     39</span>
+<span class="go">WBGene00007067     15     13      1      0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;cond1&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="go">                cond1  cond2  cond3  cond4</span>
+<span class="go">WBGene00044951      0      0      0      1</span>
+<span class="go">WBGene00077504      0      0      0      0</span>
+<span class="go">WBGene00007069      0      2      1      0</span>
+<span class="go">WBGene00077502      0      0      0      0</span>
+<span class="go">WBGene00077503      1      4      2      0</span>
 </pre></div>
 </div>
 </dd>
@@ -2407,12 +2948,12 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: List[str], ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>attributes</strong> (<em>list of strings</em>) – list of attribute names from the Attribute Reference Table to filter by.</p></li>
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
@@ -2424,6 +2965,11 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.</span>
+<span class="go">Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.</span>
 </pre></div>
 </div>
 </dd>
@@ -2504,6 +3050,19 @@ which also provides descriptive statistics of each column per biotype.
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate difference and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000017&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00000024&#39;, &#39;WBGene00000010&#39;, &#39;WBGene00000020&#39;,</span>
+<span class="go">&#39;WBGene00007069&#39;, &#39;WBGene00007063&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00000029&#39;, &#39;WBGene00000006&#39;,</span>
+<span class="go">&#39;WBGene00007064&#39;, &#39;WBGene00000019&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00000023&#39;,</span>
+<span class="go">&#39;WBGene00007074&#39;, &#39;WBGene00000025&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00000014&#39;, &#39;WBGene00000027&#39;,</span>
+<span class="go">&#39;WBGene00000021&#39;, &#39;WBGene00044022&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00000012&#39;, &#39;WBGene00000005&#39;, &#39;WBGene00077503&#39;,</span>
+<span class="go">&#39;WBGene00000026&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000002&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;, &#39;WBGene00007077&#39;,</span>
+<span class="go">&#39;WBGene00000007&#39;, &#39;WBGene00000008&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00000013&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00043987&#39;,</span>
+<span class="go">&#39;WBGene00007071&#39;, &#39;WBGene00000011&#39;, &#39;WBGene00000015&#39;, &#39;WBGene00000018&#39;, &#39;WBGene00000016&#39;, &#39;WBGene00000028&#39;,</span>
+<span class="go">&#39;WBGene00007075&#39;, &#39;WBGene00000022&#39;, &#39;WBGene00000009&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -2578,7 +3137,8 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/text_filters.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">text_filters</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;sw&#39;</span><span class="p">,</span><span class="s1">&#39;AC3&#39;</span><span class="p">)</span> <span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">text_filters</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;sw&#39;</span><span class="p">,</span><span class="s1">&#39;AC3&#39;</span><span class="p">)</span>
 <span class="go">Filtered 17 features, leaving 5 of the original 22 features.  Filtered inplace.</span>
 </pre></div>
 </div>
@@ -2605,6 +3165,19 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate union and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000017&#39;, &#39;WBGene00000021&#39;, &#39;WBGene00044022&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00000012&#39;,</span>
+<span class="go">&#39;WBGene00000024&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00000010&#39;, &#39;WBGene00000020&#39;, &#39;WBGene00000005&#39;, &#39;WBGene00007069&#39;,</span>
+<span class="go">&#39;WBGene00007063&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00000026&#39;, &#39;WBGene00000029&#39;,</span>
+<span class="go">&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000006&#39;, &#39;WBGene00007064&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;,</span>
+<span class="go">&#39;WBGene00000007&#39;, &#39;WBGene00000008&#39;, &#39;WBGene00000019&#39;, &#39;WBGene00007077&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00007066&#39;,</span>
+<span class="go">&#39;WBGene00007076&#39;, &#39;WBGene00000013&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00000023&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00007074&#39;,</span>
+<span class="go">&#39;WBGene00000025&#39;, &#39;WBGene00000011&#39;, &#39;WBGene00043987&#39;, &#39;WBGene00007071&#39;, &#39;WBGene00000015&#39;, &#39;WBGene00000018&#39;,</span>
+<span class="go">&#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00000014&#39;, &#39;WBGene00000016&#39;, &#39;WBGene00000027&#39;, &#39;WBGene00000028&#39;,</span>
+<span class="go">&#39;WBGene00007075&#39;, &#39;WBGene00000022&#39;, &#39;WBGene00000009&#39;}</span>
 </pre></div>
 </div>
 </dd>
@@ -2906,7 +3479,7 @@ and ‘pvalue’.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">upset_plot</code><span class="sig-paren">(</span><em class="sig-param">objs: dict</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">upset_plot</code><span class="sig-paren">(</span><em class="sig-param">objs: Dict[str, Union[str, rnalysis.enrichment.FeatureSet, Set[str]]], ref: str = 'predefined'</em><span class="sig-paren">)</span></dt>
 <dd><p>Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

@@ -217,7 +217,8 @@
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_deseq.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span> <span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#keep only rows that have a value greater than 5900 in the column &#39;baseMean&#39;.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">number_filters</span><span class="p">(</span><span class="s1">&#39;baseMean&#39;</span><span class="p">,</span><span class="s1">&#39;gt&#39;</span><span class="p">,</span><span class="mi">5900</span><span class="p">)</span>
 <span class="go">Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.</span>
 </pre></div>
 </div>

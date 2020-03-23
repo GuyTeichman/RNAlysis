@@ -209,12 +209,12 @@
 <h1>rnalysis.filtering.CountFilter.filter_top_n<a class="headerlink" href="#rnalysis-filtering-countfilter-filter-top-n" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.CountFilter.filter_top_n">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: str</em>, <em class="sig-param">n: int = 100</em>, <em class="sig-param">ascending: bool = True</em>, <em class="sig-param">na_position: str = 'last'</em>, <em class="sig-param">opposite: bool = False</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.filter_top_n" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True, na_position: str = 'last', opposite: bool = False, inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.filter_top_n" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type by</dt>
-<dd class="field-odd"><p>str or list of str</p>
+<dd class="field-odd"><p>string or list of strings</p>
 </dd>
 <dt class="field-even">param by</dt>
 <dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>

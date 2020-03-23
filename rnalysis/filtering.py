@@ -460,6 +460,11 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> attribute1,attribute2 = counts.split_by_attribute(['attribute1','attribute2'],
+            ... ref='tests/attr_ref_table_for_examples.csv')
+            Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.
+            Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
         """
         assert isinstance(attributes, list)
         ref = general._get_attr_ref_path(ref)
@@ -483,6 +488,37 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> counts.describe()
+                          cond1         cond2         cond3         cond4
+            count     22.000000     22.000000     22.000000     22.000000
+            mean    2515.590909   2209.227273   4230.227273   3099.818182
+            std     4820.512674   4134.948493   7635.832664   5520.394522
+            min        0.000000      0.000000      0.000000      0.000000
+            1%         0.000000      0.000000      0.000000      0.000000
+            25%        6.000000      6.250000      1.250000      0.250000
+            50%       57.500000     52.500000     23.500000     21.000000
+            75%     2637.000000   2479.000000   6030.500000   4669.750000
+            99%    15054.950000  12714.290000  21955.390000  15603.510000
+            max    15056.000000  12746.000000  22027.000000  15639.000000
+
+            >>> # show the deciles (10%, 20%, 30%... 90%) of the columns
+            >>> counts.describe(percentiles=[i/10 for i in range(1,10)])
+                          cond1         cond2         cond3         cond4
+            count     22.000000     22.000000     22.000000     22.000000
+            mean    2515.590909   2209.227273   4230.227273   3099.818182
+            std     4820.512674   4134.948493   7635.832664   5520.394522
+            min        0.000000      0.000000      0.000000      0.000000
+            10%        0.000000      0.200000      0.000000      0.000000
+            20%        1.400000      3.200000      1.000000      0.000000
+            30%       15.000000     15.700000      2.600000      1.000000
+            40%       28.400000     26.800000     14.000000      9.000000
+            50%       57.500000     52.500000     23.500000     21.000000
+            60%       82.000000    106.800000     44.000000     33.000000
+            70%      484.200000    395.500000    305.000000    302.500000
+            80%     3398.600000   3172.600000   7981.400000   6213.000000
+            90%     8722.100000   7941.800000  16449.500000  12129.900000
+            max    15056.000000  12746.000000  22027.000000  15639.000000
         """
         return self.df.describe(percentiles=percentiles)
 
@@ -500,6 +536,13 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> myset = counts.index_set
+            >>> print(myset)
+            {'WBGene00044022', 'WBGene00077504', 'WBGene00007079', 'WBGene00007069', 'WBGene00007063',
+            'WBGene00007067', 'WBGene00077503', 'WBGene00007078', 'WBGene00007064', 'WBGene00077502', 'WBGene00044951',
+            'WBGene00007077', 'WBGene00007066', 'WBGene00007076', 'WBGene00014997', 'WBGene00043990', 'WBGene00007074',
+            'WBGene00043987', 'WBGene00007071', 'WBGene00043989', 'WBGene00043988', 'WBGene00007075'}
         """
         if self.df.index.has_duplicates:
             warnings.warn(" this filter object contains multiple rows with the same WBGene index. When "
@@ -523,6 +566,31 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> mystring = counts.index_string
+            >>> print(mystring)
+            WBGene00044022
+            WBGene00077504
+            WBGene00007079
+            WBGene00007069
+            WBGene00007063
+            WBGene00007067
+            WBGene00077503
+            WBGene00007078
+            WBGene00007064
+            WBGene00077502
+            WBGene00044951
+            WBGene00007077
+            WBGene00007066
+            WBGene00007076
+            WBGene00014997
+            WBGene00043990
+            WBGene00007074
+            WBGene00043987
+            WBGene00007071
+            WBGene00043989
+            WBGene00043988
+            WBGene00007075
         """
         return "\n".join(self.index_set)
 
@@ -533,6 +601,30 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> counts.print_features()
+            WBGene00044022
+            WBGene00077504
+            WBGene00007079
+            WBGene00007069
+            WBGene00007063
+            WBGene00007067
+            WBGene00077503
+            WBGene00007078
+            WBGene00007064
+            WBGene00077502
+            WBGene00044951
+            WBGene00007077
+            WBGene00007066
+            WBGene00007076
+            WBGene00014997
+            WBGene00043990
+            WBGene00007074
+            WBGene00043987
+            WBGene00007071
+            WBGene00043989
+            WBGene00043988
+            WBGene00007075
         """
         print(self.index_string)
 
@@ -551,6 +643,25 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> # short-form view
+            >>> d.biotypes()
+                            gene
+            biotype
+            protein_coding    26
+            pseudogene         1
+            unknown            1
+
+            >>> # long-form view
+            >>> d.biotypes(format='long', ref='tests/biotype_ref_table_for_tests.csv')
+                           baseMean               ...           padj
+                              count         mean  ...            75%            max
+            biotype                               ...
+            protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68
+            pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94
+            unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152
+
+            [3 rows x 48 columns]
         """
         ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref)
@@ -594,7 +705,8 @@ class Filter:
         :Examples:
             >>> from rnalysis import filtering
             >>> filt = filtering.Filter('tests/test_deseq.csv')
-            >>> filt.number_filters('baseMean','gt',5900) #keep only rows that have a value greater than 5900 in the column 'baseMean'.
+            >>> #keep only rows that have a value greater than 5900 in the column 'baseMean'.
+            >>> filt.number_filters('baseMean','gt',5900)
             Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
 
         """
@@ -642,7 +754,8 @@ class Filter:
         :Examples:
             >>> from rnalysis import filtering
             >>> filt = filtering.Filter('tests/text_filters.csv')
-            >>> filt.text_filters('name','sw','AC3') # keep only rows that have a value that starts with 'AC3' in the column 'name'.
+            >>> # keep only rows that have a value that starts with 'AC3' in the column 'name'.
+            >>> filt.text_filters('name','sw','AC3')
             Filtered 17 features, leaving 5 of the original 22 features.  Filtered inplace.
         """
         operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'sw': 'sw',
@@ -686,6 +799,22 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> counts.head()
+                            cond1  cond2  cond3  cond4
+            WBGene00007063    633    451    365    388
+            WBGene00007064     60     57     20     23
+            WBGene00044951      0      0      0      1
+            WBGene00007066     55    266     46     39
+            WBGene00007067     15     13      1      0
+            >>> counts.sort(by='cond1',ascending=True)
+            >>> counts.head()
+                            cond1  cond2  cond3  cond4
+            WBGene00044951      0      0      0      1
+            WBGene00077504      0      0      0      0
+            WBGene00007069      0      2      1      0
+            WBGene00077502      0      0      0      0
+            WBGene00077503      1      4      2      0
         """
         if inplace:
             self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=True, na_position=na_position)
@@ -693,16 +822,16 @@ class Filter:
             new_df = self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=False, na_position=na_position)
             return self._inplace(new_df, False, inplace, '')
 
-    def filter_top_n(self, by: str, n: int = 100, ascending: bool = True, na_position: str = 'last',
-                     opposite: bool = False, inplace: bool = True, ):
+    def filter_top_n(self, by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True,
+                     na_position: str = 'last', opposite: bool = False, inplace: bool = True, ):
         """
         Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.
 
-        :type by: str or list of str
+        :type by: string or list of strings
         :param by: Names of the column or columns to sort and then filter by.
         :type n: int
         :param n: How many features to keep in the Filter object.
-       :type ascending: bool or list of bool, default True
+       :type ascending: bool or list of bools (default True)
         :param ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
         If this is a list of bools, it must have the same length as 'by'.
         :type na_position: 'first' or 'last', default 'last'
@@ -720,6 +849,16 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only the 10 rows with the highest values in the columns 'cond1'
+            >>> counts.filter_top_n(by='cond1',n=10, ascending=False)
+            Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.
+
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # keep only the 10 rows which have the lowest values in the columns 'cond1'
+            >>> # and then the highest values in the column 'cond2'
+            >>> counts.filter_top_n(by=['cond1','cond2'],n=10, ascending=[True,False])
+            Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.
         """
         assert isinstance(n, int), "n must be an integer!"
         assert n > 0, "n must be a positive integer!"
@@ -786,6 +925,15 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> a_set = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+            >>> # calculate intersection and return a set
+            >>> d.intersection(a_set)
+            {'WBGene00000002', 'WBGene00000003'}
+
+            # calculate intersection and filter in-place
+            >>> d.intersection(a_set, inplace=True)
+            Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.
         """
         if inplace:
             suffix = f"_intersection"
@@ -812,6 +960,19 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> counts = filtering.Filter('tests/counted.csv')
+            >>> # calculate union and return a set
+            >>> d.union(counts)
+            {'WBGene00000017', 'WBGene00000021', 'WBGene00044022', 'WBGene00077504', 'WBGene00000012',
+            'WBGene00000024', 'WBGene00007079', 'WBGene00000010', 'WBGene00000020', 'WBGene00000005', 'WBGene00007069',
+            'WBGene00007063', 'WBGene00007067', 'WBGene00077503', 'WBGene00007078', 'WBGene00000026', 'WBGene00000029',
+            'WBGene00000002', 'WBGene00000003', 'WBGene00000006', 'WBGene00007064', 'WBGene00077502', 'WBGene00044951',
+            'WBGene00000007', 'WBGene00000008', 'WBGene00000019', 'WBGene00007077', 'WBGene00000004', 'WBGene00007066',
+            'WBGene00007076', 'WBGene00000013', 'WBGene00014997', 'WBGene00000023', 'WBGene00043990', 'WBGene00007074',
+            'WBGene00000025', 'WBGene00000011', 'WBGene00043987', 'WBGene00007071', 'WBGene00000015', 'WBGene00000018',
+            'WBGene00043989', 'WBGene00043988', 'WBGene00000014', 'WBGene00000016', 'WBGene00000027', 'WBGene00000028',
+            'WBGene00007075', 'WBGene00000022', 'WBGene00000009'}
         """
         return self._set_ops(others, return_type, set.union)
 
@@ -837,6 +998,19 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> counts = filtering.CountFilter('tests/counted.csv')
+            >>> a_set = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+            >>> # calculate difference and return a set
+            >>> d.difference(counts, a_set)
+            {'WBGene00007063', 'WBGene00007064', 'WBGene00007066', 'WBGene00007067', 'WBGene00007069', 'WBGene00007071',
+             'WBGene00007074', 'WBGene00007075', 'WBGene00007076', 'WBGene00007077', 'WBGene00007078', 'WBGene00007079',
+             'WBGene00014997', 'WBGene00043987', 'WBGene00043988', 'WBGene00043989', 'WBGene00043990', 'WBGene00044022',
+             'WBGene00044951', 'WBGene00077502', 'WBGene00077503', 'WBGene00077504'}
+
+            # calculate difference and filter in-place
+            >>> d.difference(counts, a_set, inplace=True)
+            Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
         """
 
         if inplace:
@@ -864,6 +1038,19 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
+            >>> counts = filtering.CountFilter('tests/counted.csv')
+            >>> # calculate difference and return a set
+            >>> d.symmetric_difference(counts)
+            {'WBGene00000017', 'WBGene00077504', 'WBGene00000024', 'WBGene00000010', 'WBGene00000020',
+            'WBGene00007069', 'WBGene00007063', 'WBGene00007067', 'WBGene00007078', 'WBGene00000029', 'WBGene00000006',
+            'WBGene00007064', 'WBGene00000019', 'WBGene00000004', 'WBGene00007066', 'WBGene00014997', 'WBGene00000023',
+            'WBGene00007074', 'WBGene00000025', 'WBGene00043989', 'WBGene00043988', 'WBGene00000014', 'WBGene00000027',
+            'WBGene00000021', 'WBGene00044022', 'WBGene00007079', 'WBGene00000012', 'WBGene00000005', 'WBGene00077503',
+            'WBGene00000026', 'WBGene00000003', 'WBGene00000002', 'WBGene00077502', 'WBGene00044951', 'WBGene00007077',
+            'WBGene00000007', 'WBGene00000008', 'WBGene00007076', 'WBGene00000013', 'WBGene00043990', 'WBGene00043987',
+            'WBGene00007071', 'WBGene00000011', 'WBGene00000015', 'WBGene00000018', 'WBGene00000016', 'WBGene00000028',
+            'WBGene00007075', 'WBGene00000022', 'WBGene00000009'}
         """
         return self._set_ops([other], return_type, set.symmetric_difference)
 

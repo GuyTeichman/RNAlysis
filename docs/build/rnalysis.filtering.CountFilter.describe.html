@@ -224,6 +224,38 @@
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">1%         0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">25%        6.000000      6.250000      1.250000      0.250000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">75%     2637.000000   2479.000000   6030.500000   4669.750000</span>
+<span class="go">99%    15054.950000  12714.290000  21955.390000  15603.510000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="go">              cond1         cond2         cond3         cond4</span>
+<span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
+<span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
+<span class="go">std     4820.512674   4134.948493   7635.832664   5520.394522</span>
+<span class="go">min        0.000000      0.000000      0.000000      0.000000</span>
+<span class="go">10%        0.000000      0.200000      0.000000      0.000000</span>
+<span class="go">20%        1.400000      3.200000      1.000000      0.000000</span>
+<span class="go">30%       15.000000     15.700000      2.600000      1.000000</span>
+<span class="go">40%       28.400000     26.800000     14.000000      9.000000</span>
+<span class="go">50%       57.500000     52.500000     23.500000     21.000000</span>
+<span class="go">60%       82.000000    106.800000     44.000000     33.000000</span>
+<span class="go">70%      484.200000    395.500000    305.000000    302.500000</span>
+<span class="go">80%     3398.600000   3172.600000   7981.400000   6213.000000</span>
+<span class="go">90%     8722.100000   7941.800000  16449.500000  12129.900000</span>
+<span class="go">max    15056.000000  12746.000000  22027.000000  15639.000000</span>
 </pre></div>
 </div>
 </dd>

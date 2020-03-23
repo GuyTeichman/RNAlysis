@@ -201,12 +201,12 @@
 <h1>rnalysis.filtering.DESeqFilter.split_by_ref_table_attr<a class="headerlink" href="#rnalysis-filtering-deseqfilter-split-by-ref-table-attr" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.split_by_attribute">
-<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: tuple = None</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.split_by_attribute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Big Table attributes.         Each object contains only features that match its indicated Big Table attribute.</p>
+<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param">attributes: List[str], ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.split_by_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>attributes</strong> – list of Big Table attributes to filter by.</p></li>
+<li><p><strong>attributes</strong> (<em>list of strings</em>) – list of attribute names from the Attribute Reference Table to filter by.</p></li>
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
@@ -218,6 +218,11 @@
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.</span>
+<span class="go">Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.</span>
 </pre></div>
 </div>
 </dd>

@@ -216,6 +216,19 @@
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate difference and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000017&#39;, &#39;WBGene00077504&#39;, &#39;WBGene00000024&#39;, &#39;WBGene00000010&#39;, &#39;WBGene00000020&#39;,</span>
+<span class="go">&#39;WBGene00007069&#39;, &#39;WBGene00007063&#39;, &#39;WBGene00007067&#39;, &#39;WBGene00007078&#39;, &#39;WBGene00000029&#39;, &#39;WBGene00000006&#39;,</span>
+<span class="go">&#39;WBGene00007064&#39;, &#39;WBGene00000019&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00007066&#39;, &#39;WBGene00014997&#39;, &#39;WBGene00000023&#39;,</span>
+<span class="go">&#39;WBGene00007074&#39;, &#39;WBGene00000025&#39;, &#39;WBGene00043989&#39;, &#39;WBGene00043988&#39;, &#39;WBGene00000014&#39;, &#39;WBGene00000027&#39;,</span>
+<span class="go">&#39;WBGene00000021&#39;, &#39;WBGene00044022&#39;, &#39;WBGene00007079&#39;, &#39;WBGene00000012&#39;, &#39;WBGene00000005&#39;, &#39;WBGene00077503&#39;,</span>
+<span class="go">&#39;WBGene00000026&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000002&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00044951&#39;, &#39;WBGene00007077&#39;,</span>
+<span class="go">&#39;WBGene00000007&#39;, &#39;WBGene00000008&#39;, &#39;WBGene00007076&#39;, &#39;WBGene00000013&#39;, &#39;WBGene00043990&#39;, &#39;WBGene00043987&#39;,</span>
+<span class="go">&#39;WBGene00007071&#39;, &#39;WBGene00000011&#39;, &#39;WBGene00000015&#39;, &#39;WBGene00000018&#39;, &#39;WBGene00000016&#39;, &#39;WBGene00000028&#39;,</span>
+<span class="go">&#39;WBGene00007075&#39;, &#39;WBGene00000022&#39;, &#39;WBGene00000009&#39;}</span>
 </pre></div>
 </div>
 </dd>
