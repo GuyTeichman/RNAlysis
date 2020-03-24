@@ -162,9 +162,13 @@ class FeatureSet:
 
         :Examples:
             >>> from rnalysis import enrichment
-            >>> en = enrichment.FeatureSet({'WBGene00003002','WBGene00004201','WBGene00300139'})
+            >>> en = enrichment.FeatureSet({'WBGene00000004','WBGene00000005','WBGene00000006'}, 'set name')
+            >>> en2 = enrichment.FeatureSet({'WBGene00000004','WBGene00000001'})
             >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
-            >>> en.union(s)
+            >>> en.union(s, en2)
+            >>> print(en)
+            FeatureSet: set name
+            {'WBGene00000003', 'WBGene00000004', 'WBGene00000001', 'WBGene00000002', 'WBGene00000006', 'WBGene00000005'}
         """
         return self._inplace(self._set_ops(others, set.union), inplace)
 
@@ -180,7 +184,17 @@ class FeatureSet:
         If False, returns a new instance of FeatureSet.
         :return:
         if inplace is False, returns a new instance of FeatureSet.
-                """
+
+        :Examples:
+            >>> from rnalysis import enrichment
+            >>> en = enrichment.FeatureSet({'WBGene00000001','WBGene00000002','WBGene00000006'}, 'set name')
+            >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+            >>> en2 = enrichment.FeatureSet({'WBGene00000004','WBGene00000001'})
+            >>> en.intersection(s, en2)
+            >>> print(en)
+            FeatureSet: set name
+            {'WBGene00000001'}
+        """
         return self._inplace(self._set_ops(others, set.intersection), inplace)
 
     def difference(self, *others, inplace: bool = True):
@@ -195,6 +209,16 @@ class FeatureSet:
         If False, returns a new instance of FeatureSet.
         :return:
         if inplace is False, returns a new instance of FeatureSet.
+
+        :Examples:
+            >>> from rnalysis import enrichment
+            >>> en = enrichment.FeatureSet({'WBGene00000001','WBGene00000002','WBGene00000006'}, 'set name')
+            >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+            >>> en2 = enrichment.FeatureSet({'WBGene00000004','WBGene00000001'})
+            >>> en.difference(s, en2)
+            >>> print(en)
+            FeatureSet: set name
+            {'WBGene00000006'}
         """
         return self._inplace(self._set_ops(others, set.difference), inplace)
 
@@ -211,6 +235,15 @@ class FeatureSet:
         If False, returns a new instance of FeatureSet.
         :return:
         if inplace is False, returns a new instance of FeatureSet.
+
+        :Examples:
+            >>> from rnalysis import enrichment
+            >>> en = enrichment.FeatureSet({'WBGene00000001','WBGene00000002','WBGene00000006'}, 'set name')
+            >>> en2 = enrichment.FeatureSet({'WBGene00000004','WBGene00000001'})
+            >>> en.symmetric_difference(en2)
+            >>> print(en)
+            FeatureSet: set name
+            {'WBGene00000002', 'WBGene00000006', 'WBGene00000004'}
         """
         return self._inplace(self._set_ops([other], set.symmetric_difference), inplace)
 
