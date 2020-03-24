@@ -109,7 +109,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html">rnalysis.filtering.CountFilter.intersection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html">rnalysis.filtering.CountFilter.norm_reads_to_rpm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html">rnalysis.filtering.CountFilter.normalize_to_rpm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html">rnalysis.filtering.CountFilter.normalize_with_scaling_factors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html">rnalysis.filtering.CountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html">rnalysis.filtering.CountFilter.pairplot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.run_pca</a></li>
@@ -221,7 +222,7 @@
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+<p>A tuple of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
