@@ -59,6 +59,9 @@ class FeatureSet:
         self.gene_set = gene_set
         self.set_name = set_name
 
+    def __repr__(self):
+        return f"FeatureSet: {self.set_name}\n" + self.gene_set.__repr__()
+
     @staticmethod
     def _from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
         """
