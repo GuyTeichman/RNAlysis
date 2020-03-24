@@ -255,7 +255,7 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = (0.01</em>, <em class="sig-param">0.25</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.75</em>, <em class="sig-param">0.99)</em><span class="sig-paren">)</span></dt>
 <dd><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.         For more information see the documentation of pandas.DataFrame.describe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -286,7 +286,7 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">decile</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">decile</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
 <span class="go">              cond1         cond2         cond3         cond4</span>
 <span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
 <span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
@@ -1374,7 +1374,7 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = (0.01</em>, <em class="sig-param">0.25</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.75</em>, <em class="sig-param">0.99)</em><span class="sig-paren">)</span></dt>
 <dd><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.         For more information see the documentation of pandas.DataFrame.describe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1405,7 +1405,7 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">decile</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">decile</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
 <span class="go">              cond1         cond2         cond3         cond4</span>
 <span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
 <span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
@@ -2249,7 +2249,7 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: Union[str, pathlib.Path], numerator_name: str, denominator_name: str</em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnalysis.filtering.Filter</span></code></a></p>
 <dl class="simple">
 <dt>A class that contains a single column, representing the gene-specific fold change between two conditions. </dt><dd><p>this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
@@ -2314,7 +2314,7 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = (0.01</em>, <em class="sig-param">0.25</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.75</em>, <em class="sig-param">0.99)</em><span class="sig-paren">)</span></dt>
 <dd><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.         For more information see the documentation of pandas.DataFrame.describe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2345,7 +2345,7 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">decile</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">decile</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
 <span class="go">              cond1         cond2         cond3         cond4</span>
 <span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
 <span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>
@@ -3663,7 +3663,7 @@ and ‘pvalue’.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_columns: bool = False</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_columns: Union[str</em>, <em class="sig-param">List[str]] = False</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span></dt>
 <dd><p>loads a csv df into a pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

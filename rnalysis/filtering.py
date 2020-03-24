@@ -471,7 +471,7 @@ class Filter:
         return tuple([self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
                       attributes])
 
-    def describe(self, percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]):
+    def describe(self, percentiles: list = (0.01, 0.25, 0.5, 0.75, 0.99)):
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
         of the dataset’s distribution, excluding NaN values. \
@@ -503,7 +503,7 @@ class Filter:
             max    15056.000000  12746.000000  22027.000000  15639.000000
 
             >>> # show the deciles (10%, 20%, 30%... 90%) of the columns
-            >>> counts.describe(percentiles=[i/10 for i in range(1,10)])
+            >>> counts.describe(percentiles=[decile/10 for decile in range(1,10)])
                           cond1         cond2         cond3         cond4
             count     22.000000     22.000000     22.000000     22.000000
             mean    2515.590909   2209.227273   4230.227273   3099.818182
@@ -1086,7 +1086,7 @@ class FoldChangeFilter(Filter):
         Name of the denominator used to calculate the fold change.
     """
 
-    def __init__(self, fname: str, numerator_name: str, denominator_name: str):
+    def __init__(self, fname: Union[str,Path], numerator_name: str, denominator_name: str):
         super().__init__(fname)
         self.numerator = numerator_name
         self.denominator = denominator_name

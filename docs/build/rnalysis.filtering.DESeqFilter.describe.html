@@ -201,7 +201,7 @@
 <h1>rnalysis.filtering.DESeqFilter.describe<a class="headerlink" href="#rnalysis-filtering-deseqfilter-describe" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.DESeqFilter.describe">
-<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.describe" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param">percentiles: list = (0.01</em>, <em class="sig-param">0.25</em>, <em class="sig-param">0.5</em>, <em class="sig-param">0.75</em>, <em class="sig-param">0.99)</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.describe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.         For more information see the documentation of pandas.DataFrame.describe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -232,7 +232,7 @@
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">decile</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">decile</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
 <span class="go">              cond1         cond2         cond3         cond4</span>
 <span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
 <span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>

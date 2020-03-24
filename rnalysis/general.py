@@ -10,6 +10,7 @@ import re
 import time
 import subprocess
 import yaml
+from typing import Union, List, Set, Dict, Tuple
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
 
@@ -144,7 +145,8 @@ def read_attr_ref_table_path():
     return pth
 
 
-def load_csv(filename: str, idx_col: int = None, drop_columns: bool = False, squeeze=False, comment: str = None):
+def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
+             comment: str = None):
     """
     loads a csv df into a pandas dataframe.
 

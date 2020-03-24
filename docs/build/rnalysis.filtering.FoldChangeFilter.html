@@ -198,7 +198,7 @@
 <h1>rnalysis.filtering.FoldChangeFilter<a class="headerlink" href="#rnalysis-filtering-foldchangefilter" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="rnalysis.filtering.FoldChangeFilter">
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: Union[str, pathlib.Path], numerator_name: str, denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>A class that contains a single column, representing the gene-specific fold change between two conditions. </dt><dd><p>this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
 </dd>
@@ -224,7 +224,7 @@
 </dl>
 <dl class="method">
 <dt id="rnalysis.filtering.FoldChangeFilter.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: str</em>, <em class="sig-param">numerator_name: str</em>, <em class="sig-param">denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: Union[str, pathlib.Path], numerator_name: str, denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
