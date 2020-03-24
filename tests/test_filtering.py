@@ -26,17 +26,17 @@ def test_countfilter_api():
     h = CountFilter('counted.csv')
 
 
-def test_countfilter_norm_reads_to_rpm():
+def test_countfilter_normalize_to_rpm():
     truth = general.load_csv(r"test_norm_reads_rpm.csv", 0)
     h = CountFilter(r"counted.csv")
-    h.norm_reads_to_rpm(r"uncounted.csv")
+    h.normalize_to_rpm(r"uncounted.csv")
     assert np.isclose(truth, h.df).all()
 
 
-def test_countfilter_norm_reads_with_size_factor():
-    truth = general.load_csv(r"test_norm_size_factor.csv", 0)
+def test_countfilter_norm_reads_with_scaling_factors():
+    truth = general.load_csv(r"test_norm_scaling_factors.csv", 0)
     h = CountFilter(r"counted.csv")
-    h.norm_reads_with_size_factor(r"size_factors.csv")
+    h.normalize_with_scaling_factors(r"scaling_factors.csv")
     assert np.isclose(truth, h.df).all()
 
 

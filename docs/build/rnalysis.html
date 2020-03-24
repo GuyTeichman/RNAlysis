@@ -784,7 +784,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">norm_reads_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">special_counter_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">normalize_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">special_counter_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
 <dd><p>Normalizes the reads in the CountFilter to reads per million (RPM).         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq’s output.         Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -801,7 +801,8 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/uncounted.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -810,12 +811,12 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">norm_reads_with_size_factor</code><span class="sig-paren">(</span><em class="sig-param">size_factor_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span></dt>
-<dd><p>Normalizes the reads in the CountFilter using pre-calculated size factors.         Such size factors can be calculated using DESeq2’s median of ratios method.         Receives a table of sample names and their corresponding size factors,         and divides each column in the CountFilter object dataframe by the corresponding size factor.</p>
+<code class="sig-name descname">normalize_with_scaling_factors</code><span class="sig-paren">(</span><em class="sig-param">scaling_factor_fname: Union[str, pathlib.Path], inplace: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Normalizes the reads in the CountFilter using pre-calculated scaling factors.         Receives a table of sample names and their corresponding size factors,         and divides each column in the CountFilter by the corresponding scaling factor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>size_factor_fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – the .csv file which contains size factors for the different libraries.</p></li>
+<li><p><strong>scaling_factor_fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – the .csv file which contains size factors for the different libraries.</p></li>
 <li><p><strong>inplace</strong> – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
@@ -827,7 +828,8 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">normalize_with_scaling_factors</span><span class="p">(</span><span class="s2">&quot;tests/scaling_factors.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>

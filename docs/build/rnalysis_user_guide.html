@@ -527,7 +527,7 @@ However, some DESeqFilter functions (such as ‘filter_significant’ and ‘fil
 <h3>Filtering HTSeq-count output files with filtering.CountFilter<a class="headerlink" href="#filtering-htseq-count-output-files-with-filtering-countfilter" title="Permalink to this headline">¶</a></h3>
 <p>You can read more about HTSeq-count here:
 <a class="reference external" href="https://htseq.readthedocs.io/en/release_0.11.1/count.html">https://htseq.readthedocs.io/en/release_0.11.1/count.html</a></p>
-<p>In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as ‘norm_reads_to_rpm’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
+<p>In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as ‘normalize_to_rpm’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
 <div class="section" id="generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files">
 <span id="from-folder-ref"></span><h4>Generating an CountFilter object from a folder of HTSeq-count output .txt files<a class="headerlink" href="#generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files" title="Permalink to this headline">¶</a></h4>
 <p>HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature).
@@ -739,7 +739,7 @@ An HTSeq-count output file would follow the following format:</p>
 <p>Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="#from-folder-ref"><span class="std std-ref">Generating an CountFilter object from a folder of HTSeq-count output .txt files</span></a>).
 We would then supply the normalization function with the path to the special counter file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">norm_reads_to_rpm</span><span class="p">(</span><span class="s1">&#39;path_to_my_special_counter_table.csv&#39;</span><span class="p">)</span> <span class="c1"># TODO: fix me!!!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s1">&#39;path_to_my_special_counter_table.csv&#39;</span><span class="p">)</span> <span class="c1"># TODO: fix me!!!</span>
 </pre></div>
 </div>
 <p>The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)</p>

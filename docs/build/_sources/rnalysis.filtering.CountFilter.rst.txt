@@ -29,7 +29,7 @@ rnalysis.filtering.CountFilter
       ~CountFilter.from_folder
       ~CountFilter.head
       ~CountFilter.intersection
-      ~CountFilter.norm_reads_to_rpm
+      ~CountFilter.normalize_to_rpm
       ~CountFilter.norm_reads_with_size_factor
       ~CountFilter.number_filters
       ~CountFilter.pairplot

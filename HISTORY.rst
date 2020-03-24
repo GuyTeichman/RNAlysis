@@ -30,10 +30,14 @@ Changed
 * Modified names and signatures of .csv test files functions to make them more comprehensible.
 * Renamed 'Filter.filter_by_ref_table_attr()' to 'Filter.filter_by_attribute()'.
 * Renamed 'Filter.split_by_ref_table_attr()' to 'Filter.split_by_attribute()'.
+* Renamed 'Filter.norm_reads_with_size_factor()' to 'Filter.normalize_with_scaling_factors()'. It can now use any set of scaling factors to normalize libraries.
+* Renamed 'Filter.norm_reads_to_rpm()' to 'Filter.normalize_to_rpm()'.
+
 
 Fixed
 ++++++
 * Various bug fixes
+
 
 Removed
 ++++++++

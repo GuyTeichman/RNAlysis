@@ -109,8 +109,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html">rnalysis.filtering.CountFilter.intersection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.norm_reads_to_rpm.html">rnalysis.filtering.CountFilter.norm_reads_to_rpm</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.norm_reads_with_size_factor.html">rnalysis.filtering.CountFilter.norm_reads_with_size_factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html">rnalysis.filtering.CountFilter.norm_reads_to_rpm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html">rnalysis.filtering.CountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html">rnalysis.filtering.CountFilter.pairplot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.run_pca</a></li>
@@ -302,11 +301,11 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html#rnalysis.filtering.CountFilter.intersection" title="rnalysis.filtering.CountFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, return_type, inplace])</p></td>
 <td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.norm_reads_to_rpm.html#rnalysis.filtering.CountFilter.norm_reads_to_rpm" title="rnalysis.filtering.CountFilter.norm_reads_to_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm_reads_to_rpm</span></code></a>(special_counter_fname[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html#rnalysis.filtering.CountFilter.normalize_to_rpm" title="rnalysis.filtering.CountFilter.normalize_to_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_to_rpm</span></code></a>(special_counter_fname[, …])</p></td>
 <td><p>Normalizes the reads in the CountFilter to reads per million (RPM).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.norm_reads_with_size_factor.html#rnalysis.filtering.CountFilter.norm_reads_with_size_factor" title="rnalysis.filtering.CountFilter.norm_reads_with_size_factor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">norm_reads_with_size_factor</span></code></a>(size_factor_fname)</p></td>
-<td><p>Normalizes the reads in the CountFilter using pre-calculated size factors.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.norm_reads_with_size_factor</span></code></p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html#rnalysis.filtering.CountFilter.number_filters" title="rnalysis.filtering.CountFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_filters</span></code></a>(column, operator, value[, …])</p></td>
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>

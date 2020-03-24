@@ -1631,7 +1631,7 @@ class CountFilter(Filter):
 
         return samples_df
 
-    def norm_reads_to_rpm(self, special_counter_fname: str, inplace: bool = True):
+    def normalize_to_rpm(self, special_counter_fname: str, inplace: bool = True):
         """
         Normalizes the reads in the CountFilter to reads per million (RPM). \
         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq's output. \
@@ -1647,7 +1647,8 @@ class CountFilter(Filter):
 
         :Examples:
             >>> from rnalysis import filtering
-            >>>
+            >>> h = CountFilter("tests/counted.csv")
+            >>> h.normalize_to_rpm("tests/uncounted.csv")
         """
         suffix = '_rpm'
         new_df = self.df.copy()
@@ -1663,15 +1664,14 @@ class CountFilter(Filter):
             new_df[column] /= norm_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
 
-    def norm_reads_with_size_factor(self, size_factor_fname: str, inplace: bool = True):
+    def normalize_with_scaling_factors(self, scaling_factor_fname: Union[str, Path], inplace: bool = True):
         """
-        Normalizes the reads in the CountFilter using pre-calculated size factors. \
-        Such size factors can be calculated using DESeq2's median of ratios method. \
+        Normalizes the reads in the CountFilter using pre-calculated scaling factors. \
         Receives a table of sample names and their corresponding size factors, \
-        and divides each column in the CountFilter object dataframe by the corresponding size factor.
+        and divides each column in the CountFilter by the corresponding scaling factor.
 
-        :type size_factor_fname: str or pathlib.Path
-        :param size_factor_fname: the .csv file which contains size factors for the different libraries.
+        :type scaling_factor_fname: str or pathlib.Path
+        :param scaling_factor_fname: the .csv file which contains size factors for the different libraries.
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return:
@@ -1680,16 +1680,17 @@ class CountFilter(Filter):
 
         :Examples:
             >>> from rnalysis import filtering
-            >>>
+            >>> h = CountFilter("tests/counted.csv")
+            >>> h.normalize_with_scaling_factors("tests/scaling_factors.csv")
         """
         suffix = '_sizefactor'
         new_df = self.df.copy()
-        if isinstance(size_factor_fname, (str, Path)):
-            size_factors = general.load_csv(size_factor_fname)
-        elif isinstance(size_factor_fname, pd.DataFrame):
-            size_factors = size_factor_fname
+        if isinstance(scaling_factor_fname, (str, Path)):
+            size_factors = general.load_csv(scaling_factor_fname)
+        elif isinstance(scaling_factor_fname, pd.DataFrame):
+            size_factors = scaling_factor_fname
         else:
-            raise TypeError("Invalid type for 'size_factor_fname'!")
+            raise TypeError("Invalid type for 'scaling_factor_fname'!")
         for column in new_df.columns:
             norm_factor = size_factors[column].values
             new_df[column] /= norm_factor
@@ -2142,7 +2143,7 @@ class CountFilter(Filter):
         fname = counted_fname if save_csv else folder.name + file_suffix
         h = CountFilter((Path(fname), counts))
         if norm_to_rpm:
-            h.norm_reads_to_rpm(uncounted)
+            h.normalize_to_rpm(uncounted)
         return h
 
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rnalysis.filtering.CountFilter.norm_reads_with_size_factor &mdash; RNAlysis 1.3.3 documentation</title>
+  <title>rnalysis.filtering.CountFilter.norm_reads_to_rpm &mdash; RNAlysis 1.3.3 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.number_filters" href="rnalysis.filtering.CountFilter.number_filters.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.norm_reads_to_rpm" href="rnalysis.filtering.CountFilter.norm_reads_to_rpm.html" /> 
+    <link rel="prev" title="rnalysis.filtering.CountFilter.intersection" href="rnalysis.filtering.CountFilter.intersection.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -109,8 +109,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html">rnalysis.filtering.CountFilter.intersection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.norm_reads_to_rpm.html">rnalysis.filtering.CountFilter.norm_reads_to_rpm</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.norm_reads_with_size_factor</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.norm_reads_to_rpm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html">rnalysis.filtering.CountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html">rnalysis.filtering.CountFilter.pairplot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.run_pca</a></li>
@@ -186,13 +185,13 @@
         
           <li><a href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a> &raquo;</li>
         
-      <li>rnalysis.filtering.CountFilter.norm_reads_with_size_factor</li>
+      <li>rnalysis.filtering.CountFilter.norm_reads_to_rpm</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/rnalysis.filtering.CountFilter.norm_reads_with_size_factor.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rnalysis.filtering.CountFilter.normalize_to_rpm.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -205,16 +204,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rnalysis-filtering-countfilter-norm-reads-with-size-factor">
-<h1>rnalysis.filtering.CountFilter.norm_reads_with_size_factor<a class="headerlink" href="#rnalysis-filtering-countfilter-norm-reads-with-size-factor" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="rnalysis-filtering-countfilter-norm-reads-to-rpm">
+<h1>rnalysis.filtering.CountFilter.norm_reads_to_rpm<a class="headerlink" href="#rnalysis-filtering-countfilter-norm-reads-to-rpm" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
-<dt id="rnalysis.filtering.CountFilter.norm_reads_with_size_factor">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">norm_reads_with_size_factor</code><span class="sig-paren">(</span><em class="sig-param">size_factor_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.norm_reads_with_size_factor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Normalizes the reads in the CountFilter using pre-calculated size factors.         Such size factors can be calculated using DESeq2’s median of ratios method.         Receives a table of sample names and their corresponding size factors,         and divides each column in the CountFilter object dataframe by the corresponding size factor.</p>
+<dt id="rnalysis.filtering.CountFilter.normalize_to_rpm">
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">normalize_to_rpm</code><span class="sig-paren">(</span><em class="sig-param">special_counter_fname: str</em>, <em class="sig-param">inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.normalize_to_rpm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalizes the reads in the CountFilter to reads per million (RPM).         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq’s output.         Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>size_factor_fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – the .csv file which contains size factors for the different libraries.</p></li>
+<li><p><strong>special_counter_fname</strong> – the .csv file which contains feature information about the RNA library         (ambiguous, no feature, not aligned, etc).</p></li>
 <li><p><strong>inplace</strong> – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
@@ -226,7 +225,8 @@
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/uncounted.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -246,7 +246,7 @@
         <a href="rnalysis.filtering.CountFilter.number_filters.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.number_filters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.CountFilter.norm_reads_to_rpm.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.norm_reads_to_rpm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.CountFilter.intersection.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.intersection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

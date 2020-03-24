@@ -268,7 +268,7 @@ Filtering HTSeq-count output files with filtering.CountFilter
 You can read more about HTSeq-count here:
 https://htseq.readthedocs.io/en/release_0.11.1/count.html
 
-In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as 'norm_reads_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
+In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as 'normalize_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
 .. _from-folder-ref:
 
@@ -380,7 +380,7 @@ Such a .csv table is generated automatically when you create a CountFilter objec
 We would then supply the normalization function with the path to the special counter file::
 
     >>> c = filtering.CountFilter('tests/counted.csv')
-    >>> c.norm_reads_to_rpm('path_to_my_special_counter_table.csv') # TODO: fix me!!!
+    >>> c.normalize_to_rpm('path_to_my_special_counter_table.csv') # TODO: fix me!!!
 
 The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
