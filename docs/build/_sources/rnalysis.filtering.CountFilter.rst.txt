@@ -30,7 +30,7 @@ rnalysis.filtering.CountFilter
       ~CountFilter.head
       ~CountFilter.intersection
       ~CountFilter.normalize_to_rpm
-      ~CountFilter.norm_reads_with_size_factor
+      ~CountFilter.normalize_with_scaling_factors
       ~CountFilter.number_filters
       ~CountFilter.pairplot
       ~CountFilter.pca

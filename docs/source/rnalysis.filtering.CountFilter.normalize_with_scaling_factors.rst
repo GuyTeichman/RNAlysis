@@ -1,6 +1,6 @@
-rnalysis.filtering.CountFilter.norm\_reads\_with\_size\_factor
+rnalysis.filtering.CountFilter.normalize\_with\_scaling\_factors
 ================================================================
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: CountFilter.norm_reads_with_size_factor
+.. automethod:: CountFilter.normalize_with_scaling_factors

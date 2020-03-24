@@ -188,9 +188,22 @@
 <dt id="rnalysis.enrichment.FeatureSet.biotypes">
 <code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.biotypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="go">                gene</span>
+<span class="go">biotype</span>
+<span class="go">protein_coding    26</span>
+<span class="go">pseudogene         1</span>
+<span class="go">unknown            1</span>
+</pre></div>
+</div>
 </dd>
 </dl>
 </dd></dl>

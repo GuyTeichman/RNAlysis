@@ -172,14 +172,23 @@
 <h1>rnalysis.enrichment.upset_plot<a class="headerlink" href="#rnalysis-enrichment-upset-plot" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="rnalysis.enrichment.upset_plot">
-<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">upset_plot</code><span class="sig-paren">(</span><em class="sig-param">objs: Dict[str, Union[str, rnalysis.enrichment.FeatureSet, Set[str]]], ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.upset_plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">upset_plot</code><span class="sig-paren">(</span><em class="sig-param">objs: Dict[str, Union[str, rnalysis.enrichment.FeatureSet, Set[str]]], title: str = '', ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.upset_plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>objs</strong> (<em>a dictionary with 2</em><em> or </em><em>more entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – determines the title of the plot.</p></li>
 <li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>a dictionary of matplotlib axes, where the keys are ‘matrix’, ‘intersections’, ‘totals’, ‘shading’.</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</p>
 </dd>
 </dl>
 </dd></dl>

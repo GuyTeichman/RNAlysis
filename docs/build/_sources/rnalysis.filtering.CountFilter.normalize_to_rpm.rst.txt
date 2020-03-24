@@ -1,4 +1,4 @@
-rnalysis.filtering.CountFilter.norm\_reads\_to\_rpm
+rnalysis.filtering.CountFilter.normalize\_to\_rpm
 =====================================================
 
 .. currentmodule:: rnalysis.filtering

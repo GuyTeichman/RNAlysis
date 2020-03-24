@@ -20,7 +20,7 @@ from itertools import repeat, compress
 import upsetplot as upset
 import matplotlib_venn as vn
 import warnings
-from typing import Union, List, Set, Dict, Tuple
+from typing import Union, List, Set, Dict, Tuple, Iterable
 
 
 class FeatureSet:
@@ -445,8 +445,9 @@ class FeatureSet:
                           f"Enrichment will be run on the remaining {len(gene_set)}.")
         return attr_ref_df, gene_set
 
-    def enrich_randomization_parallel(self, attributes: list = None, fdr: float = 0.05, reps=10000,
-                                      biotype: str = 'protein_coding', background_genes: set = None,
+    def enrich_randomization_parallel(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+                                      fdr: float = 0.05, reps: int = 10000,
+                                      biotype: str = 'protein_coding', background_genes=None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                                       save_csv: bool = False, fname=None):
         """
@@ -538,8 +539,9 @@ class FeatureSet:
 
         return res_df
 
-    def enrich_randomization(self, attributes: list = None, fdr: float = 0.05, reps=10000,
-                             biotype: str = 'protein_coding', background_genes: set = None,
+    def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
+                             reps: int = 10000,
+                             biotype: str = 'protein_coding', background_genes=None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None):
         """
@@ -715,6 +717,17 @@ class FeatureSet:
         :type ref: str or pathlib.Path (default 'predefined')
         :param ref: Path of the reference file used to determine biotype. \
         Default is the path predefined in the settings file.
+
+        :Examples:
+            >>> from rnalysis import enrichment, filtering
+            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> en = enrichment.FeatureSet(d)
+            >>> en.biotypes(ref='tests/biotype_ref_table_for_tests.csv')
+                            gene
+            biotype
+            protein_coding    26
+            pseudogene         1
+            unknown            1
         """
 
         ref = general._get_biotype_ref_path(ref)
@@ -763,25 +776,38 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     return objs
 
 
-def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], ref: str = 'predefined'):
+def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '', ref: str = 'predefined'):
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
+
 
     :param objs: the FeatureSets, python sets or user-defined attributes to plot.
     :type objs: a dictionary with 2 or more entries, where the keys are the names of the sets, and the values are either \
     a FeatureSet, a python set of feature indices, or a name of a column in the Attribute Reference Table. \
     For example: \
     {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
+    :param title: determines the title of the plot.
+    :type title: str
     :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
     :type ref: str or pathlib.Path (default 'predefined')
+    :returns: a dictionary of matplotlib axes, where the keys are 'matrix', 'intersections', 'totals', 'shading'.
+
+
+        .. figure::  upsetplot.png
+           :align:   center
+           :scale: 70 %
+
+           Example plot of upset_plot()
     """
 
     upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
-    return upset.plot(upset_df)
+    upsetplot = upset.plot(upset_df)
+    plt.title(title)
+    return upsetplot
 
 
-def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], ref: str = 'predefined', title: str = 'default',
+def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default', ref: str = 'predefined',
                  set_colors: tuple = ('r', 'g', 'b'),
                  alpha: float = 0.4, weighted: bool = True, lines: bool = True, linecolor: str = 'black',
                  linestyle='solid', linewidth=2.0,
@@ -794,12 +820,12 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], ref: str = '
     a FeatureSet, a python set of feature indices, or a name of a column in the Attribute Reference Table. \
     For example: \
     {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
+    :type title: str
+    :param set_colors: determines the colors of the circles in the diagram.
     :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
     :type ref: str or pathlib.Path (default 'predefined')
     :param title: determines the title of the plot.
-    :type title: str
-    :param set_colors: determines the colors of the circles in the diagram.
     :type set_colors: tuple of matplotlib-format colors, the same size as 'objs'
     :param alpha: determines the opacity of the circles.
     :type alpha: a float between 0 and 1
@@ -816,6 +842,13 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], ref: str = '
     :param normalize_to:
     :type normalize_to: float (default 1.0)
     :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.
+
+
+        .. figure::  venn.png
+           :align:   center
+           :scale: 70 %
+
+           Example plot of venn_diagram()
     """
     if len(objs) > 3 or len(objs) < 2:
         raise ValueError(f'Venn can only accept between 2 and 3 sets. Instead got {len(objs)}')

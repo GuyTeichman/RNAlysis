@@ -285,7 +285,7 @@ class Filter:
         :type column: str
         :param column: Name of the DataFrame column according to which the filtering will be performed.
         :return:
-        a list of two Filter objects: the first contains all of the features below the specified percentile, \
+        a tuple of two Filter objects: the first contains all of the features below the specified percentile, \
         and the second contains all of the features above and equal to the specified percentile.
 
 
@@ -296,8 +296,9 @@ class Filter:
             Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.
             Filtered 21 features, leaving 7 of the original 28 features. Filtering result saved to new object.
         """
-        return [self.filter_percentile(percentile=percentile, column=column, opposite=False, inplace=False),
-                self.filter_percentile(percentile=percentile, column=column, opposite=True, inplace=False)]
+        return self.filter_percentile(percentile=percentile, column=column, opposite=False,
+                                      inplace=False), self.filter_percentile(percentile=percentile, column=column,
+                                                                             opposite=True, inplace=False)
 
     def filter_biotype(self, biotype: Union[str, List[str]] = 'protein_coding',
                        ref: str = 'predefined', opposite: bool = False, inplace: bool = True):
@@ -453,7 +454,7 @@ class Filter:
         :type attributes: list of strings
         :param ref: filename/path of the reference table to be used as reference.
         :return:
-        A list of Filter objects, each containing only features that match one Big Table attribute; the Filter objects \
+        A tuple of Filter objects, each containing only features that match one Big Table attribute; the Filter objects \
         appear in the list in the same order the Big Table attributes were given in.
 
 
@@ -467,8 +468,8 @@ class Filter:
         """
         assert isinstance(attributes, list)
         ref = general._get_attr_ref_path(ref)
-        return [self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
-                attributes]
+        return tuple([self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
+                attributes])
 
     def describe(self, percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]):
         """
@@ -644,7 +645,7 @@ class Filter:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_deseq.csv")
             >>> # short-form view
-            >>> d.biotypes()
+            >>> d.biotypes(ref='tests/biotype_ref_table_for_tests.csv')
                             gene
             biotype
             protein_coding    26

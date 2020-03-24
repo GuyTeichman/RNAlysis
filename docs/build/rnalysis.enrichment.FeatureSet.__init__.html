@@ -186,8 +186,25 @@
 <h1>rnalysis.enrichment.FeatureSet.__init__<a class="headerlink" href="#rnalysis-enrichment-featureset-init" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.enrichment.FeatureSet.__init__">
-<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">gene_set: set = None</em>, <em class="sig-param">set_name: str = ''</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">gene_set: Union[List[str], Set[str], rnalysis.filtering.Filter, rnalysis.filtering.CountFilter, rnalysis.filtering.DESeqFilter, rnalysis.filtering.FoldChangeFilter] = None, set_name: str = ''</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gene_set</strong> (<em>filtering.Filter object</em><em>, </em><em>set of strings</em><em> or </em><em>list of strings</em>) – the set of genomic features to be used in downstream analyses</p></li>
+<li><p><strong>set_name</strong> (<em>str</em>) – name of the FeatureSet</p></li>
+</ul>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;gene1&#39;</span><span class="p">,</span><span class="s1">&#39;gene2&#39;</span><span class="p">,</span><span class="s1">&#39;gene2&#39;</span><span class="p">},</span> <span class="s1">&#39;name of my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">filter_obj</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counts.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_other_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">filter_obj</span><span class="p">,</span> <span class="s1">&#39;name of my other set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
