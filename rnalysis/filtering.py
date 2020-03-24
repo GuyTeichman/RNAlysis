@@ -47,7 +47,6 @@ class Filter:
 
     def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = False):
         """
-
         :param fname: full path/filename of the .csv file to be loaded into the Filter object
         :type fname: Union[str, Path]
         :param drop_columns: if a string or list of strings are specified, \

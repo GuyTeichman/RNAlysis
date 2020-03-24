@@ -27,14 +27,30 @@ class FeatureSet:
     """ receives a filtered gene set and preforms various enrichment analyses"""
     _go_dicts = {}
 
-    def __init__(self, gene_set: set = None, set_name: str = ''):
+    def __init__(self, gene_set: Union[List[str], Set[
+        str], filtering.Filter, filtering.CountFilter, filtering.DESeqFilter, filtering.FoldChangeFilter] = None,
+                 set_name: str = ''):
+        """
+        :param gene_set: the set of genomic features to be used in downstream analyses
+        :type gene_set: filtering.Filter object, set of strings or list of strings
+        :param set_name: name of the FeatureSet
+        :type set_name: str
+
+
+        :Examples:
+            >>> from rnalysis import enrichment, filtering
+            >>> my_set = enrichment.FeatureSet({'gene1','gene2','gene2'}, 'name of my set')
+
+            >>> filter_obj = filtering.CountFilter('tests/counts.csv')
+            >>> my_other_set = enrichment.FeatureSet(filter_obj, 'name of my other set')
+        """
         if gene_set is None:
             self.gene_set = general.parse_wbgene_string(input(
                 "Please insert genomic features/indices separated by newline "
                 "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')"))
         elif isinstance(gene_set, set):
             pass
-        elif isinstance(gene_set, (list, tuple)):
+        elif isinstance(gene_set, list):
             gene_set = set(gene_set)
         elif issubclass(gene_set.__class__, filtering.Filter):
             gene_set = gene_set.index_set
@@ -81,11 +97,11 @@ class FeatureSet:
         else:
             return FeatureSet(gene_set)
 
-    def save_txt(self, fname):
+    def save_txt(self, fname: Union[str, Path]):
         """
         Save the list of features in the FeatureSet object under the specified filename and path.
 
-        :type fname: str, pathlib.Path
+        :type fname: str or pathlib.Path
         :param fname: full filename/path for the output file. Can include the '.txt' suffix but doesn't have to.
         """
         assert isinstance(fname, (str, Path)), "fname must be str or pathlib.Path!"
@@ -140,6 +156,12 @@ class FeatureSet:
         If False, returns a new instance of FeatureSet.
         :return:
         if inplace is False, returns a new instance of FeatureSet.
+
+        :Examples:
+            >>> from rnalysis import enrichment
+            >>> en = enrichment.FeatureSet({'WBGene00003002','WBGene00004201','WBGene00300139'})
+            >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+            >>> en.union(s)
         """
         return self._inplace(self._set_ops(others, set.union), inplace)
 
