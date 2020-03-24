@@ -1126,6 +1126,17 @@ class FoldChangeFilter(Filter):
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> f = filtering.FoldChangeFilter('tests/fc_1.csv' , 'numerator' , 'denominator')
+            >>> f_background = f.filter_biotype('protein_coding', ref='tests/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
+            Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.
+            >>> f_test = f_background.filter_by_attribute('attribute1', ref='tests/attr_ref_table_for_examples.csv', inplace=False)
+            Filtered 6 features, leaving 7 of the original 13 features. Filtering result saved to new object.
+            >>> rand_test_res = f_test.randomization_test(f_background)
+            Calculating...
+               group size  observed fold change  ...      pval  significant
+            0           7              2.806873  ...  0.360264        False
+
+            [1 rows x 5 columns]
         """
 
         obs_fc = self.df.mean(axis=0)
@@ -1212,15 +1223,18 @@ class FoldChangeFilter(Filter):
         :Examples:
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
-            >>> f.filter_fold_change_direction('pos') # keep only rows with a positive log2(fold change) value
+            >>> # keep only rows with a positive log2(fold change) value
+            >>> f.filter_fold_change_direction('pos')
             Filtered 10 features, leaving 12 of the original 22 features.  Filtered inplace.
 
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
-            >>> f.filter_fold_change_direction('neg') # keep only rows with a negative log2(fold change) value
+            >>>  # keep only rows with a negative log2(fold change) value
+            >>> f.filter_fold_change_direction('neg')
             Filtered 14 features, leaving 8 of the original 22 features.  Filtered inplace.
 
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
-            >>> f.filter_fold_change_direction('pos', opposite=True) # keep only rows with a non-positive log2(fold change) value
+            >>> # keep only rows with a non-positive log2(fold change) value
+            >>> f.filter_fold_change_direction('pos', opposite=True)
             Filtered 12 features, leaving 10 of the original 22 features.  Filtered inplace.
         """
         assert isinstance(direction, str), \
@@ -1252,7 +1266,7 @@ class FoldChangeFilter(Filter):
         :Examples:
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
-            >>> pos, neg = f.split_fold_change_direction()
+            >>> pos_log2fc, neg_log2fc = f.split_fold_change_direction()
             Filtered 10 features, leaving 12 of the original 22 features.  Filtering result saved to new object.
             Filtered 14 features, leaving 8 of the original 22 features.  Filtering result saved to new object.
         """
@@ -1401,7 +1415,8 @@ class DESeqFilter(Filter):
         and the other has only features with negative log2 fold change.
 
 
-        >>> from rnalysis import filtering
+        :Examples:
+            >>> from rnalysis import filtering
             >>> d = filtering.DESeqFilter('tests/test_deseq.csv')
             >>> pos, neg = d.split_fold_change_direction()
             Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
@@ -1472,12 +1487,6 @@ class CountFilter(Filter):
         Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates. \
         For example, if counts.columns is ['A_rep1','A_rep2','A_rep3','B_rep1','B_rep2',_B_rep3'], then \
         counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
-
-
-
-        :Examples:
-            >>> from rnalysis import filtering
-
         """
 
         mltplr = 3
@@ -1512,7 +1521,15 @@ class CountFilter(Filter):
 
         :Examples:
             >>> from rnalysis import filtering
-            >>>
+            >>> c = filtering.CountFilter('tests/counted_fold_change.csv')
+            >>> # calculate the fold change of mean(cond1_rep1,cond1_rep2)/mean(cond2_rep1,cond_2rep2)
+            >>> f = c.fold_change(['cond1_rep1','cond1_rep2'],['cond2_rep1','cond2_rep2'])
+            >>> f.numerator
+            "Mean of ['cond1_rep1','cond1_rep2']"
+            >>> f.denominator
+            "Mean of ['cond2_rep1','cond2_rep2']"
+            >>> type(f)
+            rnalysis.filtering.FoldChangeFilter
         """
         assert isinstance(numerator, (str, list, tuple)), "numerator must be a string or a list!"
         assert isinstance(denominator, (str, list, tuple)), "denominator must be a string or a list!"

@@ -380,7 +380,7 @@ Such a .csv table is generated automatically when you create a CountFilter objec
 We would then supply the normalization function with the path to the special counter file::
 
     >>> c = filtering.CountFilter('tests/counted.csv')
-    >>> c.norm_reads_to_rpm('path_to_my_special_counter_table.csv')
+    >>> c.norm_reads_to_rpm('path_to_my_special_counter_table.csv') # TODO: fix me!!!
 
 The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 

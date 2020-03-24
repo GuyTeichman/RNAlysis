@@ -209,13 +209,17 @@
 </dd>
 </dl>
 <p>a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="go">    &gt;&gt;&gt; d = filtering.DESeqFilter(&#39;tests/test_deseq.csv&#39;)</span>
-<span class="go">    &gt;&gt;&gt; pos, neg = d.split_fold_change_direction()</span>
-<span class="go">    Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.</span>
-<span class="go">    Filtered 26 features, leaving 2 of the original 28 features. Filtering result saved to new object.</span>
+<dl class="field-list">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_deseq.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pos</span><span class="p">,</span> <span class="n">neg</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_fold_change_direction</span><span class="p">()</span>
+<span class="go">Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.</span>
+<span class="go">Filtered 26 features, leaving 2 of the original 28 features. Filtering result saved to new object.</span>
 </pre></div>
 </div>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

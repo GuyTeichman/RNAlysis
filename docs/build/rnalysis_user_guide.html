@@ -739,7 +739,7 @@ An HTSeq-count output file would follow the following format:</p>
 <p>Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="#from-folder-ref"><span class="std std-ref">Generating an CountFilter object from a folder of HTSeq-count output .txt files</span></a>).
 We would then supply the normalization function with the path to the special counter file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">norm_reads_to_rpm</span><span class="p">(</span><span class="s1">&#39;path_to_my_special_counter_table.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">norm_reads_to_rpm</span><span class="p">(</span><span class="s1">&#39;path_to_my_special_counter_table.csv&#39;</span><span class="p">)</span> <span class="c1"># TODO: fix me!!!</span>
 </pre></div>
 </div>
 <p>The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)</p>
