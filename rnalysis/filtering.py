@@ -71,7 +71,7 @@ class Filter:
         if isinstance(self.df, pd.DataFrame):
             self.columns = list(self.df.columns)
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__} of file {self.fname}"
 
     def __copy__(self):
