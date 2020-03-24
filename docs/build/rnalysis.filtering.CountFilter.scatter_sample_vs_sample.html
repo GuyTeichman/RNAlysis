@@ -209,16 +209,17 @@
 <h1>rnalysis.filtering.CountFilter.scatter_sample_vs_sample<a class="headerlink" href="#rnalysis-filtering-countfilter-scatter-sample-vs-sample" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="rnalysis.filtering.CountFilter.scatter_sample_vs_sample">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">highlight=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.scatter_sample_vs_sample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: Union[str, List[str]], sample2: Union[str, List[str]], xlabel: str = None, ylabel: str = None, title: str = None, highlight=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.scatter_sample_vs_sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sample1</strong> – str/list. Name of the first sample from the CountFilter object.         If sample1 is a list, they will be avarged as replicates.</p></li>
-<li><p><strong>sample2</strong> – str/list. Name of the second sample from the CountFilter object.         If sample2 is a list, they will be averaged as replicates.</p></li>
-<li><p><strong>xlabel</strong> – optional. If not specified, sample1 will be used as xlabel.</p></li>
-<li><p><strong>ylabel</strong> – optional. If not specified, sample2 will be used as ylabel.</p></li>
-<li><p><strong>highlight</strong> – DESeqFilter object or iterable of WBGene indices(optional).         If specified, the points in the scatter corresponding to the WBGene indices in highlight will be         highlighted in red.</p></li>
+<li><p><strong>sample1</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Name of the first sample from the CountFilter object.         If sample1 is a list, they will be avarged as replicates.</p></li>
+<li><p><strong>sample2</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Name of the second sample from the CountFilter object.         If sample2 is a list, they will be averaged as replicates.</p></li>
+<li><p><strong>xlabel</strong> (<em>str</em>) – optional. If not specified, sample1 will be used as xlabel.</p></li>
+<li><p><strong>ylabel</strong> (<em>str</em>) – optional. If not specified, sample2 will be used as ylabel.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – optional. If not specified, a title will be generated automatically.</p></li>
+<li><p><strong>highlight</strong> (<em>Filter object</em><em> or </em><em>iterable of strings</em>) – If specified, the points in the scatter corresponding to the names/features in ‘highlight’         will be highlighted in red.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -227,7 +228,7 @@
 </dl>
 <p>a matplotlib axis object.</p>
 <div class="figure align-center" id="id1">
-<a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 525.6px; height: 550.8px;" /></a>
+<a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 480.0px; height: 477.59999999999997px;" /></a>
 <p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>

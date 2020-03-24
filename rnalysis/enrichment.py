@@ -495,11 +495,11 @@ class FeatureSet:
        a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
        and 'pvalue'.
 
-       .. figure::  bigtable_en.png
+       .. figure::  enrichment_randomization.png
           :align:   center
           :scale: 40 %
 
-          Example plot of big table enrichment
+          Example plot of enrich_randomization_parallel()
        """
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
@@ -589,11 +589,11 @@ class FeatureSet:
         a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
         and 'pvalue'.
 
-        .. figure::  bigtable_en.png
+        .. figure::  enrichment_randomization.png
            :align:   center
            :scale: 40 %
 
-           Example plot of enrich_randomization
+           Example plot of enrich_randomization()
         """
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)

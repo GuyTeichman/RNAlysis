@@ -982,16 +982,17 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: str</em>, <em class="sig-param">sample2: str</em>, <em class="sig-param">xlabel: str = None</em>, <em class="sig-param">ylabel: str = None</em>, <em class="sig-param">highlight=None</em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">scatter_sample_vs_sample</code><span class="sig-paren">(</span><em class="sig-param">sample1: Union[str, List[str]], sample2: Union[str, List[str]], xlabel: str = None, ylabel: str = None, title: str = None, highlight=None</em><span class="sig-paren">)</span></dt>
 <dd><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sample1</strong> – str/list. Name of the first sample from the CountFilter object.         If sample1 is a list, they will be avarged as replicates.</p></li>
-<li><p><strong>sample2</strong> – str/list. Name of the second sample from the CountFilter object.         If sample2 is a list, they will be averaged as replicates.</p></li>
-<li><p><strong>xlabel</strong> – optional. If not specified, sample1 will be used as xlabel.</p></li>
-<li><p><strong>ylabel</strong> – optional. If not specified, sample2 will be used as ylabel.</p></li>
-<li><p><strong>highlight</strong> – DESeqFilter object or iterable of WBGene indices(optional).         If specified, the points in the scatter corresponding to the WBGene indices in highlight will be         highlighted in red.</p></li>
+<li><p><strong>sample1</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Name of the first sample from the CountFilter object.         If sample1 is a list, they will be avarged as replicates.</p></li>
+<li><p><strong>sample2</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Name of the second sample from the CountFilter object.         If sample2 is a list, they will be averaged as replicates.</p></li>
+<li><p><strong>xlabel</strong> (<em>str</em>) – optional. If not specified, sample1 will be used as xlabel.</p></li>
+<li><p><strong>ylabel</strong> (<em>str</em>) – optional. If not specified, sample2 will be used as ylabel.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – optional. If not specified, a title will be generated automatically.</p></li>
+<li><p><strong>highlight</strong> (<em>Filter object</em><em> or </em><em>iterable of strings</em>) – If specified, the points in the scatter corresponding to the names/features in ‘highlight’         will be highlighted in red.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1000,7 +1001,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dl>
 <p>a matplotlib axis object.</p>
 <div class="figure align-center" id="id5">
-<a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 525.6px; height: 550.8px;" /></a>
+<a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 480.0px; height: 477.59999999999997px;" /></a>
 <p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
@@ -1060,7 +1061,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>A tuple of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+<p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -2006,7 +2007,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>A tuple of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+<p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -2981,7 +2982,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p></p>
 </dd>
 </dl>
-<p>A tuple of Filter objects, each containing only features that match one Big Table attribute; the Filter objects         appear in the list in the same order the Big Table attributes were given in.</p>
+<p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -3341,8 +3342,8 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 <p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
 and ‘pvalue’.</p>
 <div class="figure align-center" id="id8">
-<a class="reference internal image-reference" href="_images/bigtable_en.png"><img alt="_images/bigtable_en.png" src="_images/bigtable_en.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of enrich_randomization</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+<a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
 </div>
 </dd>
 </dl>
@@ -3420,8 +3421,8 @@ and ‘pvalue’.</p>
 <p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
 and ‘pvalue’.</p>
 <div class="figure align-center" id="id9">
-<a class="reference internal image-reference" href="_images/bigtable_en.png"><img alt="_images/bigtable_en.png" src="_images/bigtable_en.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of big table enrichment</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+<a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
 </div>
 </dd>
 </dl>

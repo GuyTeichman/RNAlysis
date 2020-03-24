@@ -151,7 +151,7 @@ class Filter:
         """
         Takes a manual string input from the user, and then splits it using a delimiter into a list of values. \
         Called when an FeatureSet instance is created without input, \
-        or when FeatureSet.enrich_big_table is called without input.
+        or when FeatureSet.enrich_randomization is called without input.
 
         :param msg: a promprt to be printed to the user
         :param delimiter: the delimiter used to separate the values. Default is '\n'
@@ -425,8 +425,8 @@ class Filter:
         else:
             assert isinstance(attributes, (list, tuple, set))
         assert isinstance(mode, str), "'mode' must be a string!"
-        big_table = general.load_csv(ref, 0)
-        sep_idx = [big_table[big_table[attr].notnull()].index for attr in attributes]
+        attr_ref_table = general.load_csv(ref, 0)
+        sep_idx = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
 
         if mode == 'intersection':
             suffix = '_reftableintersection'
@@ -454,8 +454,8 @@ class Filter:
         :type attributes: list of strings
         :param ref: filename/path of the reference table to be used as reference.
         :return:
-        A tuple of Filter objects, each containing only features that match one Big Table attribute; the Filter objects \
-        appear in the list in the same order the Big Table attributes were given in.
+        A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute; \
+        the Filter objects are returned in the same order the attributes were given in.
 
 
         :Examples:
@@ -469,7 +469,7 @@ class Filter:
         assert isinstance(attributes, list)
         ref = general._get_attr_ref_path(ref)
         return tuple([self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
-                attributes])
+                      attributes])
 
     def describe(self, percentiles: list = [0.01, 0.25, 0.5, 0.75, 0.99]):
         """
@@ -1970,21 +1970,27 @@ class CountFilter(Filter):
         ax.grid(True)
         return ax
 
-    def scatter_sample_vs_sample(self, sample1: str, sample2: str, xlabel: str = None, ylabel: str = None,
-                                 highlight=None):
+    def scatter_sample_vs_sample(self, sample1: Union[str, List[str]], sample2: Union[str, List[str]],
+                                 xlabel: str = None, ylabel: str = None, title: str = None, highlight=None):
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.
 
-        :param sample1: str/list. Name of the first sample from the CountFilter object. \
+        :param sample1: Name of the first sample from the CountFilter object. \
         If sample1 is a list, they will be avarged as replicates.
-        :param sample2: str/list. Name of the second sample from the CountFilter object. \
+        :type sample1: string or list of strings
+        :param sample2: Name of the second sample from the CountFilter object. \
         If sample2 is a list, they will be averaged as replicates.
+        :type sample2: string or list of strings
         :param xlabel: optional. If not specified, sample1 will be used as xlabel.
+        :type xlabel: str
         :param ylabel: optional. If not specified, sample2 will be used as ylabel.
-        :param highlight: DESeqFilter object or iterable of WBGene indices(optional). \
-        If specified, the points in the scatter corresponding to the WBGene indices in highlight will be \
-        highlighted in red.
+        :type ylabel: str
+        :param title: optional. If not specified, a title will be generated automatically.
+        :type title: str
+        :param highlight: If specified, the points in the scatter corresponding to the names/features in 'highlight' \
+        will be highlighted in red.
+        :type highlight: Filter object or iterable of strings
         :return:
         a matplotlib axis object.
 
@@ -2007,11 +2013,13 @@ class CountFilter(Filter):
             xlabel = f'log10(reads per million + 1) from library {sample1}'
         if ylabel is None:
             ylabel = f'log10(reads per million + 1) from sample {sample2}'
+        if title is None:
+            title = f'{sample1} vs {sample2}'
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
         ax.set_xlabel(xlabel, fontsize=15)
         ax.set_ylabel(ylabel, fontsize=15)
-        ax.set_title(f'{sample1} vs {sample2}', fontsize=20)
+        ax.set_title(title, fontsize=17)
         ax.scatter(xvals, yvals, s=3, c='#6d7178')
 
         if highlight is not None:
