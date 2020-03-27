@@ -180,8 +180,7 @@
 <dl class="function">
 <dt id="rnalysis.general.parse_wbgene_string">
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_wbgene_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.parse_wbgene_string" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Receives a string that contains WBGene indices. Parses the string into a set of WBGene indices.     The format of a WBGene index is ‘WBGene’ and exactly 8 digits.
+<dd><p>Receives a string that contains WBGene indices. Parses the string into a set of WBGene indices.     The format of a WBGene index is ‘WBGene’ and exactly 8 digits.
 :type string: str
 :param string: The string to be parsed. Can be any format of string.
 :return:
@@ -191,17 +190,13 @@ a set of the WBGene indices that appear in the given string.</p>
 <dd class="field-odd"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39; WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span>  <span class="s1">&#39;&#39;&#39;WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000&amp; the geneWBGene44444444daf-16A5gHB.5</span>
+<span class="gp">... </span><span class="s1">WBGene55555555&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parsed</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">parse_wbgene_string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+<span class="go">{&#39;WBGene12345678&#39;, &#39;WBGene44444444&#39;, &#39;WBGene98765432&#39;, &#39;WBGene55555555&#39;, &#39;WBGene00000000&#39;}</span>
 </pre></div>
 </div>
-</div></blockquote>
-<dl class="simple">
-<dt>the geneWBGene44444444daf-16</dt><dd><p>… A5gHB.5 /// WBGene55555555’’’
-&gt;&gt;&gt; parsed = general.parse_wbgene_string(string)
-&gt;&gt;&gt; print(parsed)
-{‘WBGene12345678’, ‘WBGene44444444’, ‘WBGene98765432’, ‘WBGene55555555’, ‘WBGene00000000’}</p>
-</dd>
-</dl>
 </dd></dl>
 
 </div>

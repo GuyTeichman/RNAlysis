@@ -66,8 +66,8 @@ def parse_wbgene_string(string):
 
     :Examples:
     >>> from rnalysis import general
-    >>> string = ''' WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000\n the geneWBGene44444444daf-16
-    ... A5gHB.5 /// WBGene55555555'''
+    >>> string =  '''WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000& the geneWBGene44444444daf-16A5gHB.5
+    ... WBGene55555555'''
     >>> parsed = general.parse_wbgene_string(string)
     >>> print(parsed)
     {'WBGene12345678', 'WBGene44444444', 'WBGene98765432', 'WBGene55555555', 'WBGene00000000'}
@@ -88,7 +88,7 @@ def parse_sequence_name_string(string):
 
     :Examples:
     >>> from rnalysis import general
-    >>> string = 'CELE_Y55D5A.5T23G5.6 /// WBGene00000000 daf-16\nZK662.4 '
+    >>> string = 'CELE_Y55D5A.5T23G5.6WBGene00000000 daf-16^^ZK662.4 '
     >>> parsed = general.parse_sequence_name_string(string)
     >>> print(parsed)
     {'Y55D5A.5', 'T23G5.6', 'ZK662.4'}
@@ -109,7 +109,7 @@ def parse_gene_name_string(string):
 
     :Examples:
     >>> from rnalysis import general
-    >>> string = 'saeg-2 \\\ lin-15B cyp-23A1lin-15A WBGene12345678\n GHF5H.3'
+    >>> string = 'saeg-2 lin-15B cyp-23A1lin-15A WBGene12345678%GHF5H.3'
     >>> parsed = general.parse_gene_name_string(string)
     >>> print(parsed)
     {'saeg-2', 'lin-15B', 'cyp-23A1', 'lin-15A'}

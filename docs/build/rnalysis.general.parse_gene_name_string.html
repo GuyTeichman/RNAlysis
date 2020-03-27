@@ -180,8 +180,7 @@
 <dl class="function">
 <dt id="rnalysis.general.parse_gene_name_string">
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_gene_name_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.parse_gene_name_string" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Receives a string that contains gene names (like ‘daf-2’ or ‘lin15B’).     Parses the string into a set of gene names.     The format of a gene name is a sequence consisting of the expression     ‘[a-z]{3,4}’, the character ‘-‘, and the expression ‘[A-Z,0-9]{1,4}’.
+<dd><p>Receives a string that contains gene names (like ‘daf-2’ or ‘lin15B’).     Parses the string into a set of gene names.     The format of a gene name is a sequence consisting of the expression     ‘[a-z]{3,4}’, the character ‘-‘, and the expression ‘[A-Z,0-9]{1,4}’.
 :type string: str
 :param string: The string to be parsed. Can be any format of string.
 :return:
@@ -191,18 +190,12 @@ a set of the WBGene indices that appear in the given string.</p>
 <dd class="field-odd"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;saeg-2 </span><span class="se">\\</span><span class="s1"> lin-15B cyp-23A1lin-15A WBGene12345678</span>
-</pre></div>
-</div>
-</div></blockquote>
-<dl>
-<dt>GHF5H.3’</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parsed</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">parse_gene_name_string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;saeg-2 lin-15B cyp-23A1lin-15A WBGene12345678</span><span class="si">%G</span><span class="s1">HF5H.3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parsed</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">parse_gene_name_string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
 <span class="go">{&#39;saeg-2&#39;, &#39;lin-15B&#39;, &#39;cyp-23A1&#39;, &#39;lin-15A&#39;}</span>
 </pre></div>
 </div>
-</dd>
-</dl>
 </dd></dl>
 
 </div>
