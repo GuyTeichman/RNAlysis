@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from rnalysis.general import *
+from rnalysis.general import _check_is_df,_remove_unindexed_rows
 
 
 def test_is_df_dataframe():
@@ -60,12 +61,6 @@ def test_remove_unindexed_rows():
     truth = load_csv("counted_missing_rows_deleted.csv", 0)
     missing = load_csv("counted_missing_rows.csv", 0)
     assert (truth == _remove_unindexed_rows(missing)).all().all()
-
-
-def test_filter_low_rpm():
-    truth = load_csv("counted_low_rpm_truth.csv", 0)
-    lowrpm = load_csv("counted_low_rpm.csv", 0)
-    assert np.isclose(truth, filter_low_rpm(lowrpm, threshold=5)).all()
 
 
 def test_parse_wbgene_string():

@@ -3623,7 +3623,7 @@ and ‘pvalue’.</p>
 </div>
 <div class="section" id="rnalysis-general-module">
 <h2>rnalysis.general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline">¶</a></h2>
-<p>This module contains general-purpose functions, such as loading and saving files, removing table rows with no WBGene  index, identifying type of input variables, etc. This module is used mainly by other modules.</p>
+<p>This module contains general-purpose functions, such as loading and saving files, reading and updating the settings file, identifying type of input variables, etc. This module is used mainly by other modules.</p>
 <dl class="function">
 <dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_columns: Union[str</em>, <em class="sig-param">List[str]] = False</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span></dt>
@@ -3647,31 +3647,84 @@ and ‘pvalue’.</p>
 <dl class="function">
 <dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_gene_name_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span></dt>
-<dd><p>Receives a string that contains gene names (like ‘daf-2’ or ‘lin15B’).     Parses the string into a set of gene names.     The format of a gene name is a sequence consisting of the expression     ‘[a-z]{3,4}’, the character ‘-‘, and the expression ‘[A-Z,0-9]{1,4}’.
+<dd><blockquote>
+<div><p>Receives a string that contains gene names (like ‘daf-2’ or ‘lin15B’).     Parses the string into a set of gene names.     The format of a gene name is a sequence consisting of the expression     ‘[a-z]{3,4}’, the character ‘-‘, and the expression ‘[A-Z,0-9]{1,4}’.
 :type string: str
 :param string: The string to be parsed. Can be any format of string.
 :return:
 a set of the WBGene indices that appear in the given string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;saeg-2 </span><span class="se">\\</span><span class="s1"> lin-15B cyp-23A1lin-15A WBGene12345678</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl>
+<dt>GHF5H.3’</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parsed</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">parse_gene_name_string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+<span class="go">{&#39;saeg-2&#39;, &#39;lin-15B&#39;, &#39;cyp-23A1&#39;, &#39;lin-15A&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_sequence_name_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span></dt>
-<dd><p>Receives a string that contains sequence names (such as ‘Y55D5A.5’).     Parses the string into a set of WBGene indices.     The format of a sequence name is a sequence consisting of the expression ‘[A-Z,0-9]{5,6}’,     the character ‘.’, and a digit.
+<dd><blockquote>
+<div><p>Receives a string that contains sequence names (such as ‘Y55D5A.5’).     Parses the string into a set of WBGene indices.     The format of a sequence name is a sequence consisting of the expression ‘[A-Z,0-9]{5,6}’,     the character ‘.’, and a digit.
 :type string: str
 :param string: The string to be parsed. Can be any format of string.
 :return:
 a set of the WBGene indices that appear in the given string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;CELE_Y55D5A.5T23G5.6 /// WBGene00000000 daf-16</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl>
+<dt>ZK662.4 ‘</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parsed</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">parse_sequence_name_string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+<span class="go">{&#39;Y55D5A.5&#39;, &#39;T23G5.6&#39;, &#39;ZK662.4&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_wbgene_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span></dt>
-<dd><p>Receives a string that contains WBGene indices. Parses the string into a set of WBGene indices.     The format of a WBGene index is ‘WBGene’ and exactly 8 digits.
+<dd><blockquote>
+<div><p>Receives a string that contains WBGene indices. Parses the string into a set of WBGene indices.     The format of a WBGene index is ‘WBGene’ and exactly 8 digits.
 :type string: str
 :param string: The string to be parsed. Can be any format of string.
 :return:
 a set of the WBGene indices that appear in the given string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39; WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="simple">
+<dt>the geneWBGene44444444daf-16</dt><dd><p>… A5gHB.5 /// WBGene55555555’’’
+&gt;&gt;&gt; parsed = general.parse_wbgene_string(string)
+&gt;&gt;&gt; print(parsed)
+{‘WBGene12345678’, ‘WBGene44444444’, ‘WBGene98765432’, ‘WBGene55555555’, ‘WBGene00000000’}</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -3685,7 +3738,14 @@ a set of the WBGene indices that appear in the given string.</p>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>str</p>
 </dd>
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
 </dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">read_attr_ref_table_path</span><span class="p">()</span>
+<span class="go">Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3699,7 +3759,14 @@ a set of the WBGene indices that appear in the given string.</p>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>str</p>
 </dd>
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
 </dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">read_biotype_ref_table_path</span><span class="p">()</span>
+<span class="go">Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3724,6 +3791,16 @@ a set of the WBGene indices that appear in the given string.</p>
 <dd><p>Defines/updates the Attribute Reference Table path in the settings file.
 :param path: the path you wish to set as the Attribute Reference Table path
 :type path: str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;the_new_attribute_reference_table_path&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">set_attr_ref_table_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="go">Attribute Reference Table path set as: the_new_attribute_reference_table_path</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3732,6 +3809,16 @@ a set of the WBGene indices that appear in the given string.</p>
 <dd><p>Defines/updates the Biotype Reference Table path in the settings file.
 :param path: the path you wish to set as the Biotype Reference Table path
 :type path: str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;the_new_biotype_reference_table_path&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">set_biotype_ref_table_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="go">Attribute Reference Table path set as: the_new_biotype_reference_table_path</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -3742,7 +3829,13 @@ a set of the WBGene indices that appear in the given string.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n_engines</strong> (<em>int</em><em> or </em><em>'default'</em>) – if ‘default’, will initiate the default amount of engines.     Otherwise, will initiate n_engines engines.</p>
 </dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><p></p></dd>
 </dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

@@ -1,6 +1,7 @@
 """
-This module contains general-purpose functions, such as loading and saving files, removing table rows with no WBGene \
- index, identifying type of input variables, etc. This module is used mainly by other modules.
+This module contains general-purpose functions, such as loading and saving files, \
+reading and updating the settings file, identifying type of input variables, etc. \
+This module is used mainly by other modules.
 """
 
 import pandas as pd
@@ -21,7 +22,6 @@ def _start_ipcluster(n_engines: int = 'default'):
     :type n_engines: int or 'default'
     :param n_engines: if 'default', will initiate the default amount of engines. \
     Otherwise, will initiate n_engines engines.
-
     """
     if n_engines == 'default':
         subprocess.Popen("ipcluster start")
@@ -45,6 +45,9 @@ def start_parallel_session(n_engines: int = 'default'):
     :param n_engines: if 'default', will initiate the default amount of engines. \
     Otherwise, will initiate n_engines engines.
 
+    :Examples:
+    >>> from rnalysis import general
+    >>> general.start_parallel_session()
     """
     _stop_ipcluster()
     time.sleep(2)
@@ -60,6 +63,14 @@ def parse_wbgene_string(string):
     :param string: The string to be parsed. Can be any format of string.
     :return:
     a set of the WBGene indices that appear in the given string.
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> string = ''' WBGene WBGenes WBGene12345678, WBGene98765432WBGene00000000\n the geneWBGene44444444daf-16
+    ... A5gHB.5 /// WBGene55555555'''
+    >>> parsed = general.parse_wbgene_string(string)
+    >>> print(parsed)
+    {'WBGene12345678', 'WBGene44444444', 'WBGene98765432', 'WBGene55555555', 'WBGene00000000'}
     """
     return set(re.findall('WBGene[0-9]{8}', string))
 
@@ -74,6 +85,13 @@ def parse_sequence_name_string(string):
     :param string: The string to be parsed. Can be any format of string.
     :return:
     a set of the WBGene indices that appear in the given string.
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> string = 'CELE_Y55D5A.5T23G5.6 /// WBGene00000000 daf-16\nZK662.4 '
+    >>> parsed = general.parse_sequence_name_string(string)
+    >>> print(parsed)
+    {'Y55D5A.5', 'T23G5.6', 'ZK662.4'}
     """
     return set(re.findall('[A-Z,0-9]{5,8}\.\d{1,2}', string))
 
@@ -88,6 +106,13 @@ def parse_gene_name_string(string):
     :param string: The string to be parsed. Can be any format of string.
     :return:
     a set of the WBGene indices that appear in the given string.
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> string = 'saeg-2 \\\ lin-15B cyp-23A1lin-15A WBGene12345678\n GHF5H.3'
+    >>> parsed = general.parse_gene_name_string(string)
+    >>> print(parsed)
+    {'saeg-2', 'lin-15B', 'cyp-23A1', 'lin-15A'}
     """
     return set(re.findall('[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
 
@@ -155,6 +180,11 @@ def read_biotype_ref_table_path():
 
     :returns: the path of the Biotype Reference Table that is saved in the settings file.
     :rtype: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> general.read_biotype_ref_table_path()
+    Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file
     """
     pth = _read_value_from_settings(__biotype_file_key__)
     print(f'Biotype Reference Table used: {pth}')
@@ -167,6 +197,11 @@ def read_attr_ref_table_path():
 
     :returns: the path of the Attribute Reference Table that is saved in the settings file.
     :rtype: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> path = general.read_attr_ref_table_path()
+    Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file
     """
     pth = _read_value_from_settings(__attr_file_key__)
     print(f'Attribute Reference Table used: {pth}')
@@ -178,6 +213,12 @@ def set_attr_ref_table_path(path: str = None):
     Defines/updates the Attribute Reference Table path in the settings file.
     :param path: the path you wish to set as the Attribute Reference Table path
     :type path: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> path="the_new_attribute_reference_table_path"
+    >>> general.set_attr_ref_table_path(path)
+    Attribute Reference Table path set as: the_new_attribute_reference_table_path
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
@@ -190,6 +231,12 @@ def set_biotype_ref_table_path(path: str = None):
     Defines/updates the Biotype Reference Table path in the settings file.
     :param path: the path you wish to set as the Biotype Reference Table path
     :type path: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> path="the_new_biotype_reference_table_path"
+    >>> general.set_biotype_ref_table_path(path)
+    Attribute Reference Table path set as: the_new_biotype_reference_table_path
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")

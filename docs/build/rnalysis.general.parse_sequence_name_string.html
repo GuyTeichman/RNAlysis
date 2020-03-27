@@ -180,11 +180,29 @@
 <dl class="function">
 <dt id="rnalysis.general.parse_sequence_name_string">
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">parse_sequence_name_string</code><span class="sig-paren">(</span><em class="sig-param">string</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.parse_sequence_name_string" title="Permalink to this definition">¶</a></dt>
-<dd><p>Receives a string that contains sequence names (such as ‘Y55D5A.5’).     Parses the string into a set of WBGene indices.     The format of a sequence name is a sequence consisting of the expression ‘[A-Z,0-9]{5,6}’,     the character ‘.’, and a digit.
+<dd><blockquote>
+<div><p>Receives a string that contains sequence names (such as ‘Y55D5A.5’).     Parses the string into a set of WBGene indices.     The format of a sequence name is a sequence consisting of the expression ‘[A-Z,0-9]{5,6}’,     the character ‘.’, and a digit.
 :type string: str
 :param string: The string to be parsed. Can be any format of string.
 :return:
 a set of the WBGene indices that appear in the given string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">string</span> <span class="o">=</span> <span class="s1">&#39;CELE_Y55D5A.5T23G5.6 /// WBGene00000000 daf-16</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl>
+<dt>ZK662.4 ‘</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parsed</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">parse_sequence_name_string</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+<span class="go">{&#39;Y55D5A.5&#39;, &#39;T23G5.6&#39;, &#39;ZK662.4&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
