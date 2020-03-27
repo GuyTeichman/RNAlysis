@@ -122,7 +122,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#working-with-featureset-objects">Working with FeatureSet objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-an-featureset-object">Initialize an FeatureSet object</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#randomization-test-enrichment-analysis-for-user-defined-attributes">Randomization test enrichment analysis for user-defined attributes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-on-multiple-featureset-objects">Performing set operations on multiple FeatureSet objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-and-visualisation-on-multiple-featureset-objects">Performing set operations and visualisation on multiple FeatureSet objects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#saving-indices-from-featureset-to-a-txt-file">Saving indices from FeatureSet to a .txt file</a></li>
 </ul>
 </li>
@@ -685,7 +685,19 @@ An HTSeq-count output file would follow the following format:</p>
 </div>
 <div class="section" id="normalizing-reads-with-countfilter">
 <h4>Normalizing reads with CountFilter<a class="headerlink" href="#normalizing-reads-with-countfilter" title="Permalink to this headline">¶</a></h4>
-<p>CountFilter offers two methods for normalizing reads: reads per million (RPM) and DESeq2’s size factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.</p>
+<p>CountFilter offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.</p>
+<p>To normalize a CountFilter with user-generated scaling factors, we need a .csv table with the size factor for each sample:
++—————-+—————-+—————-+—————-+
+|    sample1     |    sample2     |    sample3     |    sample4     |
++================+================+================+================+
+|      0.96      |       1        |      0.78      |      1.23      |
++—————-+—————-+—————-+—————-+</p>
+<p>We would then supply the function with the path to the scaling factors file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize</span> <span class="n">with_scaling_factors</span><span class="p">(</span><span class="s1">&#39;scaling_factors.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The resulting CountFilter object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).</p>
 <p>To normalize a CountFilter that originated from HTSeq-count to reads per million, we need a .csv table with the special counters that appear in HTSeq-count output:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -738,40 +750,11 @@ An HTSeq-count output file would follow the following format:</p>
 </table>
 <p>Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="#from-folder-ref"><span class="std std-ref">Generating an CountFilter object from a folder of HTSeq-count output .txt files</span></a>).
 We would then supply the normalization function with the path to the special counter file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s1">&#39;path_to_my_special_counter_table.csv&#39;</span><span class="p">)</span> <span class="c1"># TODO: fix me!!!</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/uncounted.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)</p>
-<p>To normalize a CountFilter with size factors, we need a .csv table with the size factor for each sample:</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-<col style="width: 25%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>sample1</p></th>
-<th class="head"><p>sample2</p></th>
-<th class="head"><p>sample3</p></th>
-<th class="head"><p>sample4</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>0.96</p></td>
-<td><p>1</p></td>
-<td><p>0.78</p></td>
-<td><p>1.23</p></td>
-</tr>
-</tbody>
-</table>
-<p>We would then supply the function with the path to the size factor file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">norm_reads_with_size_factor</span><span class="p">(</span><span class="s1">&#39;path_to_my_size_factor_table.csv&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The resulting CountFilter object will be normalized with the size factors (dividing the value of each column by the value of the corresponding size factor).</p>
 </div>
 <div class="section" id="data-visualization-and-clustering-analysis-with-countfilter">
 <h4>Data visualization and clustering analysis with CountFilter<a class="headerlink" href="#data-visualization-and-clustering-analysis-with-countfilter" title="Permalink to this headline">¶</a></h4>
@@ -943,8 +926,8 @@ The first method is to specify an existing Filter object:</p>
 </div>
 <p>Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
-If our Reference Table is set to be the default Reference Table (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) we do not need to specify it when calling enrich_randomization. Otherwise, we need to specify our Reference Table’s path.
-The names of the attributes we want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
+If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables’ path.
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 <p>Next, we need to determine the set of genes to be used as background. Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, enrich_randomization uses all of the protein-coding genes that appear in the Reference Table as a background set.
 There are two methods of changing the default background set:</p>
 <p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
@@ -1018,8 +1001,8 @@ To use it, you must first start a parallel session:</p>
 <p>To read more about parallel sessions, visit the <a class="reference internal" href="#parallel-ref"><span class="std std-ref">Start and stop a parallel processing session</span></a> section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.</p>
 </div>
-<div class="section" id="performing-set-operations-on-multiple-featureset-objects">
-<h4>Performing set operations on multiple FeatureSet objects<a class="headerlink" href="#performing-set-operations-on-multiple-featureset-objects" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="performing-set-operations-and-visualisation-on-multiple-featureset-objects">
+<h4>Performing set operations and visualisation on multiple FeatureSet objects<a class="headerlink" href="#performing-set-operations-and-visualisation-on-multiple-featureset-objects" title="Permalink to this headline">¶</a></h4>
 <p>Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of an FeatureSet object and a python set:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00003002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00004201&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00300139&#39;</span><span class="p">})</span>
 
@@ -1028,6 +1011,22 @@ Afterwards, enrich_randomization_parallel is used exactly like enrich_randomizat
 </pre></div>
 </div>
 <p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.</p>
+<p>In addition, the enrichment module includes functions for visualisation of sets and overlap, such as enrichment.venn_diagram() and enrichment.upset_plot().
+Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the Attribute Reference Table (you can read more about attributes in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
+Venn diagrams are limited to 2-3 sets:</p>
+<blockquote>
+<div><div class="figure align-center" id="id5">
+<a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+</div></blockquote>
+<p>While UpSet plots can include any number of sets:</p>
+<blockquote>
+<div><div class="figure align-center" id="id6">
+<a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+</div></blockquote>
 </div>
 <div class="section" id="saving-indices-from-featureset-to-a-txt-file">
 <h4>Saving indices from FeatureSet to a .txt file<a class="headerlink" href="#saving-indices-from-featureset-to-a-txt-file" title="Permalink to this headline">¶</a></h4>
@@ -1054,9 +1053,9 @@ To use parallel processing features, you must first start an ipyparallel ipclust
 By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.</p>
 <p>start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">start_ipcluster</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">_start_ipcluster</span><span class="p">()</span>
 <span class="go">#perform parallel processing here</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">stop_ipcluster</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">_stop_ipcluster</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>

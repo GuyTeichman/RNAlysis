@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="rnalysis.general.update_settings" href="rnalysis.general.update_settings.html" /> 
+    <link rel="prev" title="rnalysis.general.start_parallel_session" href="rnalysis.general.start_parallel_session.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -801,8 +801,8 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/uncounted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/uncounted.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -3626,43 +3626,6 @@ and ‘pvalue’.</p>
 <p>This module contains general-purpose functions, such as loading and saving files, removing table rows with no WBGene  index, identifying type of input variables, etc. This module is used mainly by other modules.</p>
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">check_is_df</code><span class="sig-paren">(</span><em class="sig-param">inp</em><span class="sig-paren">)</span></dt>
-<dd><p>checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object     of a .csv file, or an invalid input.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inp</strong> – the input we wish to test</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if pandas DataFrame, False if a string/Path object that leads to a .csv file.    Raises ValueError otherwise.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">filter_low_rpm</code><span class="sig-paren">(</span><em class="sig-param">df: pandas.core.frame.DataFrame</em>, <em class="sig-param">threshold: float = 5</em><span class="sig-paren">)</span></dt>
-<dd><p>remove all features which have less then ‘threshold’ reads per million in all conditions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>df</strong> – pandas DataFrame to be filtered</p></li>
-<li><p><strong>threshold</strong> – float. The minimal rpm a feature needs to have in at least one sample in order not to be filtered out.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-<p>A filtered DataFrame</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">get_settings_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_columns: Union[str</em>, <em class="sig-param">List[str]] = False</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span></dt>
 <dd><p>loads a csv df into a pandas dataframe.</p>
 <dl class="field-list simple">
@@ -3680,11 +3643,6 @@ and ‘pvalue’.</p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt>
@@ -3719,38 +3677,27 @@ a set of the WBGene indices that appear in the given string.</p>
 <dl class="function">
 <dt>
 <code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_attr_ref_table_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_biotype_ref_table_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_path_from_settings</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span></dt>
-<dd><p>Attempt to read the reference table path from settings.yaml.     If the path was not previously defined, will prompt user to define it.</p>
+<dd><p>Reads the Attribute Reference Table path from the settings file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – the key in the settings file whose path to read.</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the path of the Attribute Reference Table that is saved in the settings file.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
-<p>The path of the reference table.</p>
 </dd></dl>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">remove_unindexed_rows</code><span class="sig-paren">(</span><em class="sig-param">df: pandas.core.frame.DataFrame</em><span class="sig-paren">)</span></dt>
-<dd><p>removes rows which have no WBGene index.</p>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">read_biotype_ref_table_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Reads the Biotype Reference Table path from the settings file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>df</strong> – a DataFrame with WBGene indices</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the path of the Biotype Reference Table that is saved in the settings file.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a new DataFrame in which all rows with no WBGene index are removed</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3773,13 +3720,18 @@ a set of the WBGene indices that appear in the given string.</p>
 
 <dl class="function">
 <dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">start_ipcluster</code><span class="sig-paren">(</span><em class="sig-param">n_engines: int = 'default'</em><span class="sig-paren">)</span></dt>
-<dd><p>Start an ipyparallel ipcluster in order to perform parallelized computation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n_engines</strong> (<em>int</em><em> or </em><em>'default'</em>) – if ‘default’, will initiate the default amount of engines.     Otherwise, will initiate n_engines engines.</p>
-</dd>
-</dl>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">set_attr_ref_table_path</code><span class="sig-paren">(</span><em class="sig-param">path: str = None</em><span class="sig-paren">)</span></dt>
+<dd><p>Defines/updates the Attribute Reference Table path in the settings file.
+:param path: the path you wish to set as the Attribute Reference Table path
+:type path: str</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">set_biotype_ref_table_path</code><span class="sig-paren">(</span><em class="sig-param">path: str = None</em><span class="sig-paren">)</span></dt>
+<dd><p>Defines/updates the Biotype Reference Table path in the settings file.
+:param path: the path you wish to set as the Biotype Reference Table path
+:type path: str</p>
 </dd></dl>
 
 <dl class="function">
@@ -3793,17 +3745,6 @@ a set of the WBGene indices that appear in the given string.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">stop_ipcluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Stop a previously started ipyparallel ipcluster.</p>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">update_settings</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">key</em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
-
 </div>
 </div>
 
@@ -3816,7 +3757,7 @@ a set of the WBGene indices that appear in the given string.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="rnalysis.general.update_settings.html" class="btn btn-neutral float-left" title="rnalysis.general.update_settings" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.general.start_parallel_session.html" class="btn btn-neutral float-left" title="rnalysis.general.start_parallel_session" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

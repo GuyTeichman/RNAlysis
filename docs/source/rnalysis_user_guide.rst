@@ -358,7 +358,22 @@ There are a few filtering operations unique to CountFilter. Those include 'filte
 
 Normalizing reads with CountFilter
 ------------------------------------
-CountFilter offers two methods for normalizing reads: reads per million (RPM) and DESeq2's size factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
+CountFilter offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
+
+To normalize a CountFilter with user-generated scaling factors, we need a .csv table with the size factor for each sample:
++----------------+----------------+----------------+----------------+
+|    sample1     |    sample2     |    sample3     |    sample4     |
++================+================+================+================+
+|      0.96      |       1        |      0.78      |      1.23      |
++----------------+----------------+----------------+----------------+
+
+We would then supply the function with the path to the scaling factors file::
+
+    >>> c = filtering.CountFilter('tests/counted.csv')
+    >>> c.normalize with_scaling_factors('scaling_factors.csv')
+
+The resulting CountFilter object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
+
 
 To normalize a CountFilter that originated from HTSeq-count to reads per million, we need a .csv table with the special counters that appear in HTSeq-count output:
 
@@ -379,27 +394,11 @@ To normalize a CountFilter that originated from HTSeq-count to reads per million
 Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
 We would then supply the normalization function with the path to the special counter file::
 
-    >>> c = filtering.CountFilter('tests/counted.csv')
-    >>> c.normalize_to_rpm('path_to_my_special_counter_table.csv') # TODO: fix me!!!
+    >>> h = CountFilter("tests/counted.csv")
+    >>> h.normalize_to_rpm("tests/uncounted.csv")
 
 The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
-
-
-To normalize a CountFilter with size factors, we need a .csv table with the size factor for each sample:
-
-+----------------+----------------+----------------+----------------+
-|    sample1     |    sample2     |    sample3     |    sample4     |
-+================+================+================+================+
-|      0.96      |       1        |      0.78      |      1.23      |
-+----------------+----------------+----------------+----------------+
-
-We would then supply the function with the path to the size factor file::
-
-    >>> c = filtering.CountFilter('tests/counted.csv')
-    >>> c.norm_reads_with_size_factor('path_to_my_size_factor_table.csv')
-
-The resulting CountFilter object will be normalized with the size factors (dividing the value of each column by the value of the corresponding size factor).
 
 Data visualization and clustering analysis with CountFilter
 -------------------------------------------------------------
@@ -570,8 +569,8 @@ Enrichment analysis is performed using either FeatureSet.enrich_randomization or
 
 Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
-If our Reference Table is set to be the default Reference Table (as explained in :ref:`reference-table-ref`) we do not need to specify it when calling enrich_randomization. Otherwise, we need to specify our Reference Table's path.
-The names of the attributes we want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
+If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables' path.
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
 
 Next, we need to determine the set of genes to be used as background. Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, enrich_randomization uses all of the protein-coding genes that appear in the Reference Table as a background set.
 There are two methods of changing the default background set:
@@ -618,8 +617,8 @@ To use it, you must first start a parallel session::
 To read more about parallel sessions, visit the :ref:`parallel-ref` section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.
 
-Performing set operations on multiple FeatureSet objects
--------------------------------------------------------------------
+Performing set operations and visualisation on multiple FeatureSet objects
+-------------------------------------------------------------------------------
 
 Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of an FeatureSet object and a python set::
 
@@ -629,6 +628,24 @@ Similarly to Filter objects, it is possible to use set operations such as union,
     >>> union_result = en.union(s)
 
 When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.
+
+In addition, the enrichment module includes functions for visualisation of sets and overlap, such as enrichment.venn_diagram() and enrichment.upset_plot().
+Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the Attribute Reference Table (you can read more about attributes in :ref:`reference-table-ref`).
+Venn diagrams are limited to 2-3 sets:
+
+       .. figure::  venn.png
+           :align:   center
+           :scale: 70 %
+
+           Example plot of venn_diagram()
+
+While UpSet plots can include any number of sets:
+
+        .. figure::  upsetplot.png
+           :align:   center
+           :scale: 70 %
+
+           Example plot of upset_plot()
 
 
 Saving indices from FeatureSet to a .txt file
@@ -663,9 +680,9 @@ By default, the parallel session will use all available processors on the machin
 start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period::
 
     >>> from rnalysis import general
-    >>> general.start_ipcluster()
+    >>> general._start_ipcluster()
     #perform parallel processing here
-    >>> general.stop_ipcluster()
+    >>> general._stop_ipcluster()
 
 .. _reference-table-ref:
 

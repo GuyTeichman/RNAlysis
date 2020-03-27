@@ -3,4 +3,4 @@ rnalysis.general.check\_is\_df
 
 .. currentmodule:: rnalysis.general
 
-.. autofunction:: check_is_df
+.. autofunction:: _check_is_df
