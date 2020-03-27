@@ -180,7 +180,7 @@ def set_attr_ref_table_path(path: str = None):
     :type path: str
     """
     if path is None:
-        path=input("Please write the new Attribute Reference Table Path:\n")
+        path = input("Please write the new Attribute Reference Table Path:\n")
     _update_settings_file(path, __attr_file_key__)
     print(f'Attribute Reference Table path set as: {path}')
 
@@ -192,7 +192,7 @@ def set_biotype_ref_table_path(path: str = None):
     :type path: str
     """
     if path is None:
-        path=input("Please write the new Attribute Reference Table Path:\n")
+        path = input("Please write the new Attribute Reference Table Path:\n")
     _update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
 

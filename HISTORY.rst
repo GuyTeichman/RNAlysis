@@ -32,6 +32,7 @@ Changed
 * Renamed 'Filter.split_by_ref_table_attr()' to 'Filter.split_by_attribute()'.
 * Renamed 'Filter.norm_reads_with_size_factor()' to 'Filter.normalize_with_scaling_factors()'. It can now use any set of scaling factors to normalize libraries.
 * Renamed 'Filter.norm_reads_to_rpm()' to 'Filter.normalize_to_rpm()'.
+* Made some functions in the general module hidden.
 
 
 Fixed
