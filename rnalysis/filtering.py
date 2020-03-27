@@ -1647,8 +1647,8 @@ class CountFilter(Filter):
 
         :Examples:
             >>> from rnalysis import filtering
-            >>> h = CountFilter("tests/counted.csv")
-            >>> h.normalize_to_rpm("tests/uncounted.csv")
+            >>> c = CountFilter("tests/counted.csv")
+            >>> c.normalize_to_rpm("tests/uncounted.csv")
         """
         suffix = '_rpm'
         new_df = self.df.copy()

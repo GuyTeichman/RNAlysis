@@ -7,40 +7,40 @@ from rnalysis.general import *
 
 def test_is_df_dataframe():
     my_df = pd.DataFrame()
-    assert (check_is_df(my_df))
+    assert (_check_is_df(my_df))
 
 
 def test_is_df_str():
     correct_path = "myfile.csv"
     correct_path_2 = r"myfolder\anotherfile.csv"
-    assert (not check_is_df(correct_path))
-    assert (not check_is_df(correct_path_2))
+    assert (not _check_is_df(correct_path))
+    assert (not _check_is_df(correct_path_2))
 
 
 def test_is_df_pathobj():
     correct_pathobj = Path("all_feature_96_new.csv")
-    assert (not check_is_df(correct_pathobj))
+    assert (not _check_is_df(correct_pathobj))
 
 
 def test_is_df_str_notcsv():
     incorrect_pth = "myfile.xlsx"
     incorrect_pth2 = "all_feature_96_new"
     with pytest.raises(ValueError):
-        check_is_df(incorrect_pth)
+        _check_is_df(incorrect_pth)
     with pytest.raises(ValueError):
-        check_is_df(incorrect_pth2)
+        _check_is_df(incorrect_pth2)
 
 
 def test_is_df_pathobj_notcsv():
     incorrect_pathobj = Path("test_general.py")
     with pytest.raises(ValueError):
-        check_is_df(incorrect_pathobj)
+        _check_is_df(incorrect_pathobj)
 
 
 def test_is_df_invalid_type():
     invalid_type = 67
     with pytest.raises(ValueError):
-        check_is_df(invalid_type)
+        _check_is_df(invalid_type)
 
 
 def test_load_csv_bad_input():
@@ -59,7 +59,7 @@ def test_load_csv():
 def test_remove_unindexed_rows():
     truth = load_csv("counted_missing_rows_deleted.csv", 0)
     missing = load_csv("counted_missing_rows.csv", 0)
-    assert (truth == remove_unindexed_rows(missing)).all().all()
+    assert (truth == _remove_unindexed_rows(missing)).all().all()
 
 
 def test_filter_low_rpm():

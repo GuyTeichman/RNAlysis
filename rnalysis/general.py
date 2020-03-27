@@ -14,7 +14,7 @@ from typing import Union, List, Set, Dict, Tuple
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
 
-def start_ipcluster(n_engines: int = 'default'):
+def _start_ipcluster(n_engines: int = 'default'):
     """
     Start an ipyparallel ipcluster in order to perform parallelized computation.
 
@@ -29,7 +29,7 @@ def start_ipcluster(n_engines: int = 'default'):
         subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)])
 
 
-def stop_ipcluster():
+def _stop_ipcluster():
     """
     Stop a previously started ipyparallel ipcluster.
 
@@ -46,9 +46,9 @@ def start_parallel_session(n_engines: int = 'default'):
     Otherwise, will initiate n_engines engines.
 
     """
-    stop_ipcluster()
+    _stop_ipcluster()
     time.sleep(2)
-    start_ipcluster(n_engines)
+    _start_ipcluster(n_engines)
     time.sleep(30)
 
 
@@ -92,12 +92,21 @@ def parse_gene_name_string(string):
     return set(re.findall('[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
 
 
-def get_settings_path():
+def _get_settings_file_path():
+    """
+    Generates the full path of the settings.yaml file.
+    :returns: the path of the settings.yaml file.
+    :rtype: pathlib.Path
+    """
     return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
 
 
-def load_settings():
-    settings_pth = get_settings_path()
+def _load_settings_file():
+    """
+    loads and parses the settings.yaml file into a dictionary.
+    :rtype: dict
+    """
+    settings_pth = _get_settings_file_path()
     if not settings_pth.exists():
         return dict()
     with open(settings_pth) as f:
@@ -107,42 +116,85 @@ def load_settings():
         return settings
 
 
-def update_settings(path: str, key):
-    settings_pth = get_settings_path()
-    out = load_settings()
-    out[key] = path
+def _update_settings_file(value: str, key: str):
+    """
+    Receives a key and a value, and updates/adds the key and value to the settings.yaml file.
+    :param value: the value to be added/updated (such as Reference Table path)
+    :type value: str
+    :param key: the key to be added/updated (such as __attr_file_key__)
+    :type key: str
+    """
+    settings_pth = _get_settings_file_path()
+    out = _load_settings_file()
+    out[key] = value
     with open(settings_pth, 'w') as f:
         yaml.safe_dump(out, f)
 
 
-def read_path_from_settings(key):
+def _read_value_from_settings(key):
     """
-    Attempt to read the reference table path from settings.yaml. \
-    If the path was not previously defined, will prompt user to define it.
+    Attempt to read the value corresponding to a given key from the settings.yaml file. \
+    If the key was not previously defined, the user will be prompted to define it.
 
     :type key: str
-    :param key: the key in the settings file whose path to read.
+    :param key: the key in the settings file whose value to read.
 
     :return:
     The path of the reference table.
     """
-    settings = load_settings()
+    settings = _load_settings_file()
     if key not in settings:
-        update_settings(input(f'Please insert the full path of {key}:\n'), key)
-        settings = load_settings()
+        _update_settings_file(input(f'Please insert the full path of {key}:\n'), key)
+        settings = _load_settings_file()
     return settings[key]
 
 
 def read_biotype_ref_table_path():
-    pth = read_path_from_settings(__biotype_file_key__)
+    """
+    Reads the Biotype Reference Table path from the settings file.
+
+    :returns: the path of the Biotype Reference Table that is saved in the settings file.
+    :rtype: str
+    """
+    pth = _read_value_from_settings(__biotype_file_key__)
     print(f'Biotype Reference Table used: {pth}')
     return pth
 
 
 def read_attr_ref_table_path():
-    pth = read_path_from_settings(__attr_file_key__)
+    """
+    Reads the Attribute Reference Table path from the settings file.
+
+    :returns: the path of the Attribute Reference Table that is saved in the settings file.
+    :rtype: str
+    """
+    pth = _read_value_from_settings(__attr_file_key__)
     print(f'Attribute Reference Table used: {pth}')
     return pth
+
+
+def set_attr_ref_table_path(path: str = None):
+    """
+    Defines/updates the Attribute Reference Table path in the settings file.
+    :param path: the path you wish to set as the Attribute Reference Table path
+    :type path: str
+    """
+    if path is None:
+        path=input("Please write the new Attribute Reference Table Path:\n")
+    _update_settings_file(path, __attr_file_key__)
+    print(f'Attribute Reference Table path set as: {path}')
+
+
+def set_biotype_ref_table_path(path: str = None):
+    """
+    Defines/updates the Biotype Reference Table path in the settings file.
+    :param path: the path you wish to set as the Biotype Reference Table path
+    :type path: str
+    """
+    if path is None:
+        path=input("Please write the new Attribute Reference Table Path:\n")
+    _update_settings_file(path, __biotype_file_key__)
+    print(f'Biotype Reference Table path set as: {path}')
 
 
 def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
@@ -185,7 +237,7 @@ def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[s
     return df
 
 
-def remove_unindexed_rows(df: pd.DataFrame):
+def _remove_unindexed_rows(df: pd.DataFrame):
     """
     removes rows which have no WBGene index.
 
@@ -195,7 +247,7 @@ def remove_unindexed_rows(df: pd.DataFrame):
     return df[[not i for i in df.index.isna()]]
 
 
-def check_is_df(inp):
+def _check_is_df(inp):
     """
     checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object \
     of a .csv file, or an invalid input.
@@ -234,19 +286,17 @@ def save_to_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool
     df.to_csv(new_fname, header=True)
 
 
-def filter_low_rpm(df: pd.DataFrame, threshold: float = 5):
+def _get_biotype_ref_path(ref: Union[str, Path]):
     """
-    remove all features which have less then 'threshold' reads per million in all conditions.
+    Returns the predefined Biotype Reference Table path from the settings file if ref='predefined', \
+    otherwise returns 'ref' unchanged.
 
-    :param df: pandas DataFrame to be filtered
-    :param threshold: float. The minimal rpm a feature needs to have in at least one sample in order not to be filtered out.
-    :return:
-    A filtered DataFrame
+    :param ref: the 'ref' argument from a filtering module/enrichment module function
+    :type ref: str, pathlib.Path or 'predefined'
+    :returns: if ref is 'predefined', returns the predefined Biotype Reference Table path from the same file. \
+    Otherwise, returns 'ref'.
+    :rtype: str
     """
-    return df.loc[[True if max(vals) > threshold else False for gene, vals in df.iterrows()]]
-
-
-def _get_biotype_ref_path(ref):
     if ref == 'predefined':
         return read_biotype_ref_table_path()
     else:
@@ -254,6 +304,16 @@ def _get_biotype_ref_path(ref):
 
 
 def _get_attr_ref_path(ref):
+    """
+    Returns the predefined Attribute Reference Table path from the settings file if ref='predefined', \
+    otherwise returns 'ref' unchanged.
+
+    :param ref: the 'ref' argument from a filtering module/enrichment module function
+    :type ref: str, pathlib.Path or 'predefined'
+    :returns: if ref is 'predefined', returns the predefined Attribute Reference Table path from the same file. \
+    Otherwise, returns 'ref'.
+    :rtype: str
+    """
     if ref == 'predefined':
         return read_attr_ref_table_path()
     else:
