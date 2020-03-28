@@ -453,6 +453,8 @@ class FeatureSet:
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing. \
+        Background set is determined by either the input variable 'background_genes', \
+        or by the input variable 'biotype' and a Biotype Reference Table. \
         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization. \
         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session(). \
         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
@@ -480,8 +482,9 @@ class FeatureSet:
        :param biotype_ref_path: the path of the Biotype Reference Table. \
        Will be used to generate background set if 'biotype' is specified.
        :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
-       :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
-       'protein_coding' will include only protein-coding genes in the reference, etc. \
+       :param biotype: determines the background gene set by biotype. Requires specifying a Biotype Reference Table. \
+        'all' will include all genomic features in the reference table, \
+       'protein_coding' will include only protein-coding genes from the reference table, etc. \
        Cannot be specified together with 'background_genes'.
        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
        :param background_genes: a set of specific feature indices to be used as background genes. \
@@ -547,6 +550,8 @@ class FeatureSet:
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table. \
+        Background set is determined by either the input variable 'background_genes', \
+        or by the input variable 'biotype' and a Biotype Reference Table. \
         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
         P-values are corrected for multiple comparisons using \
         the Benjamini–Hochberg step-up procedure (original FDR method). \
@@ -574,8 +579,9 @@ class FeatureSet:
         Will be used to generate background set if 'biotype' is specified.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
-        :param biotype: the biotype you want your background genes to have. 'all' will include all biotypes, \
-        'protein_coding' will include only protein-coding genes in the reference, etc. \
+        :param biotype: determines the background gene set by biotype. Requires specifying a Biotype Reference Table. \
+        'all' will include all genomic features in the reference table, \
+        'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
         :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
         :param background_genes: a set of specific feature indices to be used as background genes. \

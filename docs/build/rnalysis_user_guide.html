@@ -1143,21 +1143,30 @@ User-annotated biotypes should be defined in a Biotype Reference Table csv file.
 </div>
 <div class="section" id="set-a-reference-table-as-default">
 <h4>Set a Reference Table as default<a class="headerlink" href="#set-a-reference-table-as-default" title="Permalink to this headline">¶</a></h4>
-<p>Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default attribute reference table for all future uses of RNAlysis:</p>
+<p>Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of RNAlysis:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">set_reference_table_path</span><span class="p">(</span><span class="s1">&#39;path/to/my/reference/table.csv&#39;</span><span class="p">)</span>
-<span class="go">#TODO: update me!!!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;the_new_attribute_reference_table_path&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">set_attr_ref_table_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="go">Attribute Reference Table path set as: the_new_attribute_reference_table_path</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;the_new_biotype_reference_table_path&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">set_biotype_ref_table_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="go">Attribute Reference Table path set as: the_new_biotype_reference_table_path</span>
 </pre></div>
 </div>
 <p>This will create a file called ‘settings.yaml’, which will store the full paths of your reference tables.
-Whenever RNAlysis needs to use an attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
-The saved path can be changed any time using the general.set_reference_table_path() function.</p>
+Whenever RNAlysis needs to use an Attribute/Biotype Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+The saved path can be changed any time using the general.set_attr_ref_table_path() and general.set_biotype_ref_table_path() functions.</p>
 </div>
 <div class="section" id="load-the-default-attribute-reference-table-path">
 <h4>Load the default Attribute Reference Table path<a class="headerlink" href="#load-the-default-attribute-reference-table-path" title="Permalink to this headline">¶</a></h4>
-<p>You can load the saved path from the settings file using the read_reference_table_path function:</p>
+<p>You can read the saved path from the settings file using the general.read_attr_ref_table_path() and general.read_biotype_ref_table_path() functions:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="go">#TODO: update me!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attr_table_path</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">read_attr_ref_table_path</span><span class="p">()</span>
+<span class="go">Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">biotype_table_path</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">read_biotype_ref_table_path</span><span class="p">()</span>
+<span class="go">Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file</span>
 </pre></div>
 </div>
 <p>If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.</p>

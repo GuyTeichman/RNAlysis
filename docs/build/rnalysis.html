@@ -627,6 +627,7 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">norm_to_rpm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># This will also normalize the CountFilter to reads-per-million (RPM).</span>
+<span class="go">Normalized the values of 10 features. Normalized inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">save_csv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">uncounted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_uncounted_reads_csv_file&#39;</span><span class="p">)</span> <span class="c1"># This will also save the counted reads and uncounted reads as separate .csv files</span>
@@ -801,8 +802,9 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/uncounted.csv&quot;</span><span class="p">)</span>
+<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -828,8 +830,9 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">normalize_with_scaling_factors</span><span class="p">(</span><span class="s2">&quot;tests/scaling_factors.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_with_scaling_factors</span><span class="p">(</span><span class="s2">&quot;tests/scaling_factors.csv&quot;</span><span class="p">)</span>
+<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -3276,7 +3279,7 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 <dt>
 <code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param">attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding', background_genes=None, attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined', save_csv: bool = False, fname=None</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
 <dd class="field-odd"><p>str, int, iterable (list, tuple, set, etc) of str/int, or ‘all’.</p>
@@ -3312,7 +3315,7 @@ WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
 <dd class="field-odd"><p>str specifying a specific biotype, list/set of strings each specifying a biotype, or ‘all’.         Default ‘protein_coding’.</p>
 </dd>
 <dt class="field-even">param biotype</dt>
-<dd class="field-even"><p>the biotype you want your background genes to have. ‘all’ will include all biotypes,         ‘protein_coding’ will include only protein-coding genes in the reference, etc.         Cannot be specified together with ‘background_genes’.</p>
+<dd class="field-even"><p>determines the background gene set by biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p>
 </dd>
 <dt class="field-odd">type background_genes</dt>
 <dd class="field-odd"><p>set of feature indices, filtering.Filter object, or enrichment.FeatureSet object</p>
@@ -3354,7 +3357,7 @@ and ‘pvalue’.</p>
 <code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding', background_genes=None, attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined', save_csv: bool = False, fname=None</em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
@@ -3391,7 +3394,7 @@ and ‘pvalue’.</p>
 <dd class="field-odd"><p>str specifying a specific biotype, or ‘all’. Default ‘protein_coding’.</p>
 </dd>
 <dt class="field-even">param biotype</dt>
-<dd class="field-even"><p>the biotype you want your background genes to have. ‘all’ will include all biotypes,        ‘protein_coding’ will include only protein-coding genes in the reference, etc.        Cannot be specified together with ‘background_genes’.</p>
+<dd class="field-even"><p>determines the background gene set by biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,        ‘protein_coding’ will include only protein-coding genes from the reference table, etc.        Cannot be specified together with ‘background_genes’.</p>
 </dd>
 <dt class="field-odd">type background_genes</dt>
 <dd class="field-odd"><p>set of feature indices, filtering.Filter object, or enrichment.FeatureSet object</p>
@@ -3815,6 +3818,7 @@ a set of the WBGene indices that appear in the given string.</p>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
+<span class="go">Parallel session started successfully</span>
 </pre></div>
 </div>
 </dd></dl>
