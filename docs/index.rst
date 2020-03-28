@@ -1,5 +1,5 @@
-Welcome to sRNA analysis pipeline's documentation!
-======================================
+Welcome to RNAlysis 1.3.3 documentation!
+========================================================
 
 .. toctree::
    :maxdepth: 2
@@ -7,9 +7,7 @@ Welcome to sRNA analysis pipeline's documentation!
 
    readme
    installation
-   usage
-   modules
-   contributing
+   user_guide
    authors
    history
 

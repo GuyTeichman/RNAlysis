@@ -14,9 +14,7 @@ https://github.com/GuyTeichman/RNAlysis
 
    readme
    installation
-   usage
-   rnalysis_user_guide
-   contributing
+   user_guide
    authors
    history
 
@@ -32,17 +30,4 @@ Individual Modules
 
 
 
-Alphabetical index
-==================
-
-* :ref:`genindex`
-
-
-
-All documentation
-=================
-
-.. toctree::
-   :maxdepth: 2
-
-   rnalysis
+Alphabetical :ref:`genindex`
