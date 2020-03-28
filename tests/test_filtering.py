@@ -4,8 +4,7 @@ import pandas as pd
 from pathlib import Path
 from rnalysis import general
 from rnalysis.filtering import *
-from os import remove
-
+import os
 
 def test_deseqfilter_api():
     d = DESeqFilter('test_deseq_biotype.csv')
