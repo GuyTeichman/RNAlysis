@@ -1,5 +1,5 @@
 """
-This module contains general-purpose functions, such as loading and saving files, \
+This module contains general-purpose functions. Those include loading and saving files, \
 reading and updating the settings file, identifying type of input variables, etc. \
 This module is used mainly by other modules.
 """

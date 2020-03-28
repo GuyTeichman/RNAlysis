@@ -1,10 +1,12 @@
 """
-This module can import HTCount and DESeq .csv files, perform various filtering operations on them,  \
-perform set operations (union, intersection, etc), run basic exploratory analyses and plots (such as PCA, clustergram, \
-violin plots, scatter, etc), save the filtered files to the computer, and return set of features that appear in an \
-imported DESeq file. \
-When a filtered/modified DESeq/HTCount is saved back to disk, its new name will include by default \
- all of the operations performed on it, in the order they were performed, to allow easy traceback of analyses.
+This module can filter, normalize, intersect and visualize tabular data such as read counts and differential expression data.
+Any tabular data saved in a csv format can be imported. \
+Use this module to perform various filtering operations on your data,  normalize your data, \
+perform set operations (union, intersection, etc), run basic exploratory analyses and plots \
+(such as PCA, clustergram, violin plots, scatter, etc), \
+save the filtered data to your computer, and more.
+When you save filtered/modified data, its new file name will include by default \
+ all of the operations performed on it, in the order they were performed, to allow easy traceback of your analyses.
 
 """
 

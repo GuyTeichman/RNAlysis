@@ -1,8 +1,7 @@
 """
-This module receives a set of feature names, and can perform various enrichment analyses on them, such as \
-GO enrichment, tissue/phenotype enrichment, enrichment and depletion of Reference Table attributes, etc. \
-Furthermore, set operations (union, intersect, difference, symmetric difference) can be performed on two \
-FeatureSet objects. \
+This module can perform enrichment analyses on a given set of genomic features and visualize their intersections. \
+These include gene ontology/tissue/phenotype enrichment, enrichment for user-defined attributes, \
+set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
 import random
