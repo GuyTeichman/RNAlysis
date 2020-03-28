@@ -482,7 +482,7 @@ class FeatureSet:
        :param biotype_ref_path: the path of the Biotype Reference Table. \
        Will be used to generate background set if 'biotype' is specified.
        :type biotype: str specifying a specific biotype, or 'all'. Default 'protein_coding'.
-       :param biotype: determines the background gene set by biotype. Requires specifying a Biotype Reference Table. \
+       :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
         'all' will include all genomic features in the reference table, \
        'protein_coding' will include only protein-coding genes from the reference table, etc. \
        Cannot be specified together with 'background_genes'.
@@ -579,7 +579,7 @@ class FeatureSet:
         Will be used to generate background set if 'biotype' is specified.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
-        :param biotype: determines the background gene set by biotype. Requires specifying a Biotype Reference Table. \
+        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
         'all' will include all genomic features in the reference table, \
         'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
