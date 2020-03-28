@@ -24,9 +24,9 @@ def _start_ipcluster(n_engines: int = 'default'):
     Otherwise, will initiate n_engines engines.
     """
     if n_engines == 'default':
-        subprocess.Popen("ipcluster start")
+        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE)
     else:
-        subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)])
+        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE)
 
 
 def _stop_ipcluster():
@@ -34,7 +34,7 @@ def _stop_ipcluster():
     Stop a previously started ipyparallel ipcluster.
 
     """
-    subprocess.Popen("ipcluster stop")
+    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE)
 
 
 def start_parallel_session(n_engines: int = 'default'):
@@ -48,11 +48,17 @@ def start_parallel_session(n_engines: int = 'default'):
     :Examples:
     >>> from rnalysis import general
     >>> general.start_parallel_session()
+    Parallel session started successfully
     """
     _stop_ipcluster()
-    time.sleep(2)
-    _start_ipcluster(n_engines)
-    time.sleep(30)
+    time.sleep(1)
+    stream = _start_ipcluster(n_engines)
+    time.sleep(1)
+    while True:
+        line = stream.stderr.readline()
+        if 'Engines appear to have started successfully' in str(line):
+            break
+    print('Parallel session started successfully')
 
 
 def parse_wbgene_string(string):
