@@ -731,22 +731,31 @@ User-annotated biotypes should be defined in a Biotype Reference Table csv file.
 
 Set a Reference Table as default
 ----------------------------------
-Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default attribute reference table for all future uses of RNAlysis::
+Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of RNAlysis::
 
     >>> from rnalysis import general
-    >>> general.set_reference_table_path('path/to/my/reference/table.csv')
-    #TODO: update me!!!
+    >>> path="the_new_attribute_reference_table_path"
+    >>> general.set_attr_ref_table_path(path)
+    Attribute Reference Table path set as: the_new_attribute_reference_table_path
+
+    >>> path="the_new_biotype_reference_table_path"
+    >>> general.set_biotype_ref_table_path(path)
+    Attribute Reference Table path set as: the_new_biotype_reference_table_path
 
 This will create a file called 'settings.yaml', which will store the full paths of your reference tables.
-Whenever RNAlysis needs to use an attribute reference table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
-The saved path can be changed any time using the general.set_reference_table_path() function.
+Whenever RNAlysis needs to use an Attribute/Biotype Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+The saved path can be changed any time using the general.set_attr_ref_table_path() and general.set_biotype_ref_table_path() functions.
 
 Load the default Attribute Reference Table path
 -------------------------------------------------
-You can load the saved path from the settings file using the read_reference_table_path function::
+You can read the saved path from the settings file using the general.read_attr_ref_table_path() and general.read_biotype_ref_table_path() functions::
 
     >>> from rnalysis import general
-    #TODO: update me!
+    >>> attr_table_path = general.read_attr_ref_table_path()
+    Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file
+
+    >>> biotype_table_path = general.read_biotype_ref_table_path()
+    Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file
 
 If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.
 
