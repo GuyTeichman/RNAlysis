@@ -54,6 +54,18 @@ Use the following command in the python prompt::
 Credits
 -------
 
+Development Lead
+******************
+
+* Guy Teichman <guyteichman@gmail.com>
+
+Contributors
+*************
+
+* Or Ganon
+* Netta Dunsky
+* Shachar Shani
+
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
