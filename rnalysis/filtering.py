@@ -80,7 +80,8 @@ class Filter:
         """
         return type(self)((self.fname, self.df.copy(deep=True)))
 
-    def _inplace(self, new_df: pd.DataFrame, opposite: bool, inplace: bool, suffix: str):
+    def _inplace(self, new_df: pd.DataFrame, opposite: bool, inplace: bool, suffix: str,
+                 printout_operation: str = 'filter'):
         """
         Executes the user's choice whether to filter in-place or create a new instance of the Filter object.
 
@@ -93,20 +94,33 @@ class Filter:
         """
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
+        assert printout_operation.lower() in ['filter', 'normalize'], \
+            f"Invalid input for variable 'printout_operation': {printout_operation}"
         if opposite:
             new_df = self.df.loc[self.df.index.difference(new_df.index)]
             suffix += 'opposite'
 
         new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}{suffix}{self.fname.suffix}")
-        printout = f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
-                   f"of the original {self.df.shape[0]} features. "
+
+        printout = ''
+        if printout_operation.lower() == 'filter':
+            printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
+                        f"of the original {self.df.shape[0]} features. "
+        elif printout_operation.lower() == 'normalize':
+            printout += f"Normalized the values of {new_df.shape[0]} features. "
         if inplace:
-            printout += 'Filtered inplace.'
+            if printout_operation.lower() == 'filter':
+                printout += 'Filtered inplace.'
+            elif printout_operation.lower() == 'normalize':
+                printout += 'Normalized inplace. '
             print(printout)
             self.df, self.fname = new_df, new_fname
             self.shape = self.df.shape
         else:
-            printout += 'Filtering result saved to new object.'
+            if printout_operation.lower() == 'filter':
+                printout += 'Filtering result saved to new object.'
+            elif printout_operation.lower() == 'normalize':
+                printout += 'Normalization result saved to a new object. '
             print(printout)
             tmp_df, tmp_fname = self.df, self.fname
             self.df, self.fname = new_df, new_fname
@@ -1086,7 +1100,7 @@ class FoldChangeFilter(Filter):
         Name of the denominator used to calculate the fold change.
     """
 
-    def __init__(self, fname: Union[str,Path], numerator_name: str, denominator_name: str):
+    def __init__(self, fname: Union[str, Path], numerator_name: str, denominator_name: str):
         super().__init__(fname)
         self.numerator = numerator_name
         self.denominator = denominator_name
@@ -1647,8 +1661,9 @@ class CountFilter(Filter):
 
         :Examples:
             >>> from rnalysis import filtering
-            >>> c = CountFilter("tests/counted.csv")
+            >>> c = filtering.CountFilter("tests/counted.csv")
             >>> c.normalize_to_rpm("tests/uncounted.csv")
+            Normalized the values of 22 features. Normalized inplace.
         """
         suffix = '_rpm'
         new_df = self.df.copy()
@@ -1662,7 +1677,7 @@ class CountFilter(Filter):
             norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
                 r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
             new_df[column] /= norm_factor
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize')
 
     def normalize_with_scaling_factors(self, scaling_factor_fname: Union[str, Path], inplace: bool = True):
         """
@@ -1680,8 +1695,9 @@ class CountFilter(Filter):
 
         :Examples:
             >>> from rnalysis import filtering
-            >>> h = CountFilter("tests/counted.csv")
-            >>> h.normalize_with_scaling_factors("tests/scaling_factors.csv")
+            >>> c = filtering.CountFilter("tests/counted.csv")
+            >>> c.normalize_with_scaling_factors("tests/scaling_factors.csv")
+            Normalized the values of 22 features. Normalized inplace.
         """
         suffix = '_sizefactor'
         new_df = self.df.copy()
@@ -1694,7 +1710,7 @@ class CountFilter(Filter):
         for column in new_df.columns:
             norm_factor = size_factors[column].values
             new_df[column] /= norm_factor
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix)
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize')
 
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
         """
@@ -2117,6 +2133,7 @@ class CountFilter(Filter):
             >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder')
 
             >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', norm_to_rpm=True) # This will also normalize the CountFilter to reads-per-million (RPM).
+            Normalized the values of 10 features. Normalized inplace.
 
             >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file') # This will also save the counted reads and uncounted reads as separate .csv files
         """
