@@ -703,7 +703,7 @@ class Filter:
 
         :type column: str
         :param column: name of the column to filter by
-        :type operator: str: 'gt'/'greater than'/'>'. 'eq'/'equal'/'=', 'lt'/'lesser than'/'<'
+        :type operator: str: 'gt' / 'greater than' / '>', 'eq' / 'equals' / '=', 'lt' / 'lesser than' / '<'
         :param operator: the operator to filter the column by (greater than, equal or lesser than)
         :type value: number (int or float)
         :param value: the value to filter by
@@ -725,6 +725,15 @@ class Filter:
             >>> filt.number_filters('baseMean','gt',5900)
             Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
 
+            >>> filt = filtering.Filter('tests/test_deseq.csv')
+            >>> #keep only rows that have a value greater than 5900 in the column 'baseMean'.
+            >>> filt.number_filters('baseMean','greater than',5900)
+            Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
+
+            >>> filt = filtering.Filter('tests/test_deseq.csv')
+            >>> #keep only rows that have a value greater than 5900 in the column 'baseMean'.
+            >>> filt.number_filters('baseMean','>',5900)
+            Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
         """
         operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'lt': 'lt',
                          'lesser than': 'lt', '<': 'lt', 'equal': 'eq'}
@@ -752,7 +761,7 @@ class Filter:
 
         :type column: str
         :param column: name of the column to filter by
-        :type operator: str: 'eq'/'equal'/'=', 'ct'/'contains'/'in', 'bw'/'begins with', 'ew'/'ends with'
+        :type operator: str: 'eq' / 'equals' / '=', 'ct' / 'contains' / 'in', 'bw' / 'begins with', 'ew' / 'ends with'
         :param operator: the operator to filter the column by (equals, contains, starts with, ends with)
         :type value: number (int or float)
         :param value: the value to filter by
