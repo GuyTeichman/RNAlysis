@@ -1,18 +1,19 @@
 =======
 History
 =======
+
 1.3.4 (2020-04-07)
 ------------------
 * This version fixed a bug that prevented installation of the package.
 
 
 Changed
-+++++++
+*******
 * Updated docstrings and printouts of several functions
 
 
 Fixed
-++++++
+******
 * Fixed a bug with installation of the previous version
 
 
@@ -24,8 +25,9 @@ Fixed
 ------------------
 * First stable release on PyPI.
 
+
 Added
-++++++
+******
 * Added Filter.sort(), and upgraded the functionality of Filter.filter_top_n().
 * Added UpSet plots and Venn diagrams to enrichment module.
 * User-defined biotype reference tables can now be used.
@@ -37,7 +39,7 @@ Added
 
 
 Changed
-+++++++
+*******
 * Changed argument order and default values in filtering.CountFilter.from_folder().
 * Changed default title in scatter_sample_vs_sample().
 * Changed default filename in CountFilter.fold_change().
@@ -55,12 +57,12 @@ Changed
 
 
 Fixed
-++++++
+******
 * Various bug fixes
 
 
 Removed
-++++++++
+********
 * Removed the 'feature_name_to_wbgene' module from RNAlysis.
 
 
