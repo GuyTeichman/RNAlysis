@@ -44,8 +44,8 @@ Dependencies
 * grid_strategy
 * Distance
 * pyyaml
-* matplotlib_venn
-* upsetplot
+* matplotlib-venn
+* UpSetPlot
 
 Where to get it
 ---------------
