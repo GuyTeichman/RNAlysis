@@ -1,4 +1,4 @@
-Welcome to RNAlysis 1.3.3 documentation!
+Welcome to RNAlysis 1.3.4 documentation!
 ========================================================
 
 .. toctree::

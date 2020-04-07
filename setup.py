@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels', 'scikit-learn',
-                'ipyparallel', 'grid_strategy', 'Distance', 'yaml', 'upsetplot','matplotlib_venn']
+                'ipyparallel', 'grid_strategy', 'Distance', 'pyyaml', 'upsetplot', 'matplotlib_venn']
 # requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels',
 # 'scikit-learn', 'matplotlib-venn', 'simple-venn']
 
@@ -53,6 +53,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/GuyTeichman/RNAlysis',
-    version='1.3.3',
+    version='1.3.4',
     zip_safe=False,
 )

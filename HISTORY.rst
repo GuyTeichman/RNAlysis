@@ -1,6 +1,25 @@
 =======
 History
 =======
+1.3.4 (2020-04-07)
+------------------
+* This version fixed a bug that prevented installation of the package.
+
+
+Changed
++++++++
+* Updated docstrings and printouts of several functions
+
+
+Fixed
+++++++
+* Fixed a bug with installation of the previous version
+
+
+
+
+
+
 1.3.3 (2020-03-28)
 ------------------
 * First stable release on PyPI.

@@ -43,6 +43,9 @@ Dependencies
 * ipyparallel
 * grid_strategy
 * Distance
+* pyyaml
+* matplotlib_venn
+* upsetplot
 
 Where to get it
 ---------------

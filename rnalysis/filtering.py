@@ -1629,7 +1629,7 @@ class CountFilter(Filter):
         assert isinstance(threshold, (float, int)), "Threshold must be a number!"
         assert threshold >= 0, "Threshold must be zero or larger!"
         if 'rpm' not in str(self.fname) and 'sizefactor' not in str(self.fname):
-            warnings.warn(" using a function meant for normalized values on potentially unnormalized values!")
+            warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
 
     def _avg_subsamples(self, sample_list: list):
         """
@@ -1725,7 +1725,7 @@ class CountFilter(Filter):
 
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
         """
-        remove all features which have less then 'threshold' reads per million in all conditions.
+        remove features which have less then 'threshold' reads all columns.
 
         :type threshold: float
         :param threshold: The minimal number of reads (counts, rpm, rpkm, tpm, etc) a feature should have \
@@ -1782,7 +1782,7 @@ class CountFilter(Filter):
 
     def filter_by_row_sum(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
         """
-        remove all features which have less then 'threshold' reads per million in all conditions.
+        Removes features/rows whose sum is belove 'threshold'.
 
         :type threshold: float
         :param threshold: The minimal sum a row should have in order not to be filtered out.
