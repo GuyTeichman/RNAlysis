@@ -2187,7 +2187,7 @@ class CountFilter(Filter):
 
 class Pipeline:
     def __init__(self, filter_type: Union[
-        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 
