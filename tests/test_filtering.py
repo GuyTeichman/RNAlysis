@@ -6,6 +6,7 @@ from rnalysis import general
 from rnalysis.filtering import *
 import os
 
+
 def test_deseqfilter_api():
     d = DESeqFilter('test_deseq_biotype.csv')
 
@@ -87,7 +88,7 @@ def test_filter_by_attribute_union():
     union_truth = general.load_csv(r'counted_filter_by_bigtable_union_truth.csv', 0)
     h = CountFilter('counted_filter_by_bigtable.csv')
     union = h.filter_by_attribute(['attribute1', 'attribute2'], mode='union',
-                                       ref='attr_ref_table_for_tests.csv', inplace=False)
+                                  ref='attr_ref_table_for_tests.csv', inplace=False)
     union.df.sort_index(inplace=True)
     union_truth.sort_index(inplace=True)
     assert np.all(union.df == union_truth)
@@ -97,8 +98,8 @@ def test_filter_by_attribute_intersection():
     intersection_truth = general.load_csv(r'counted_filter_by_bigtable_intersect_truth.csv', 0)
     h = CountFilter('counted_filter_by_bigtable.csv')
     intersection = h.filter_by_attribute(['attribute1', 'attribute2'], mode='intersection',
-                                              ref='attr_ref_table_for_tests.csv',
-                                              inplace=False)
+                                         ref='attr_ref_table_for_tests.csv',
+                                         inplace=False)
     intersection.df.sort_index(inplace=True)
     intersection_truth.sort_index(inplace=True)
     assert np.all(intersection.df == intersection_truth)
@@ -699,3 +700,75 @@ def test_sort_descending():
     c = CountFilter('counted.csv')
     c.sort(by='cond3', ascending=False, inplace=True)
     assert c.df['cond3'].is_monotonic_decreasing
+
+
+def test_pipeline_api():
+    assert False
+
+
+def test_pipeline_add_function():
+    assert False
+
+
+def test_pipeline_add_multiple_functions():
+    assert False
+
+
+def test_pipeline_remove_last_function():
+    assert False
+
+
+def test_pipeline_remove_last_from_empty_pipeline():
+    assert False
+
+
+def test_pipeline_apply_empty_pipeline():
+    assert False
+
+
+def test_pipeline_apply_to():
+    assert False
+
+
+def test_pipeline_apply_to_invalid_object():
+    assert False
+
+
+def test_pipeline_init_invalid_filter_type():
+    assert False
+
+
+def test_pipeline_add_function_out_of_module():
+    assert False
+
+
+def test_pipeline_add_function_invalid_type():
+    assert False
+
+
+def test_pipeline_add_function_mismatch_filter_type():
+    assert False
+
+
+def test_pipeline_apply_to_not_inplace():
+    assert False
+
+
+def test_pipeline_apply_to_with_plot_inplace():
+    assert False
+
+
+def test_pipeline_apply_to_with_plot_not_inplace():
+    assert False
+
+
+def test_pipeline_apply_to_with_split_function():
+    assert False
+
+
+def test_pipeline_apply_to_with_split_function_inplace_raise_error():
+    assert False
+
+
+def test_pipeline_malicious_string():
+    assert False
