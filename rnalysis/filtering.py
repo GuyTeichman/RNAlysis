@@ -806,7 +806,8 @@ class Filter:
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def sort(self, by: str, ascending: bool = True, na_position: str = 'last', inplace: bool = True):
+    def sort(self, by: Union[str, List[str]], ascending: Union[bool, List[bool]] = True, na_position: str = 'last',
+             inplace: bool = True):
         """
         Sort the rows by the values of specified column or columns.
 
@@ -2186,7 +2187,7 @@ class CountFilter(Filter):
 
 class Pipeline:
     def __init__(self, filter_type: Union[
-            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 
