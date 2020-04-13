@@ -2,6 +2,33 @@
 History
 =======
 
+1.3.5 (2020-??-??)
+------------------
+
+Added
+******
+* Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.
+
+
+Changed
+*******
+
+
+
+Fixed
+******
+* Updated type-hinting of specific functions.
+* Various bug fixes.
+
+
+Removed
+********
+
+
+
+
+
+
 1.3.4 (2020-04-07)
 ------------------
 * This version fixed a bug that prevented installation of the package.
