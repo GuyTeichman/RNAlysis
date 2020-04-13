@@ -2222,7 +2222,7 @@ class Pipeline:
 
         if inplace:
             for func, kwargs in zip(self.functions, self.params):
-                func_str = f"func(filter_object, {self._param_string(kwargs)}, inplace=True)"
+                func_str = f"func(filter_object, {self._param_string(kwargs)})"
                 try:
                     eval(func_str)
                 except (ValueError, AssertionError, TypeError) as e:
