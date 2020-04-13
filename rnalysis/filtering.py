@@ -20,7 +20,8 @@ from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
 from grid_strategy import strategies
-from typing import Union, List, Set, Dict, Tuple
+from typing import Union, List, Set, Dict, Tuple, Type
+import types
 
 
 class Filter:
@@ -2182,5 +2183,63 @@ class CountFilter(Filter):
             h.normalize_to_rpm(uncounted)
         return h
 
+
+class Pipeline:
+    def __init__(self, filter_type: Union[
+            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+        self.functions = []
+        self.params = []
+
+        filter_types = {'filter': Filter, 'deseqfilter': DESeqFilter, 'foldchangefilter': FoldChangeFilter,
+                        'countfilter': CountFilter}
+        assert isinstance(filter_type,
+                          (type, str)), f"'filter_type' must be type of a Filter object, is instead {type(filter_type)}"
+        if isinstance(filter_type, str):
+            assert filter_type.lower() in filter_types, f"Invalid filter_type {filter_type}. "
+            filter_type = filter_types[filter_type.lower()]
+        else:
+            assert filter_type in filter_types.values(), f"Invalid filter_type {filter_type}"
+        self.filter_type = filter_type
+
+    @staticmethod
+    def _param_string(kwargs):
+        return ', '.join([f"{key}='{arg}'" if isinstance(arg, str) else f"{key}={arg}" for key, arg in kwargs.items()])
+
+    def add_function(self, func, **kwargs):
+        assert isinstance(func, types.FunctionType), f"'func' must be a function, is {type(func)} instead. "
+        assert hasattr(self.filter_type,
+                       func.__name__), f"Function {func.__name__} does not exist for filter_type {self.filter_type}. "
+
+        self.functions.append(func)
+        self.params.append(kwargs)
+        print(f"Added function {func.__name__} with parameters [{self._param_string(kwargs)}] to the pipeline. ")
+
+    def apply_to(self, filter_object, inplace: bool = True):
+        # noinspection PyTypeHints
+        assert issubclass(filter_object.__class__,
+                          self.filter_type), f"Supplied filter object of type {type(filter_object)} " \
+                                             f"mismatches the specified filter_type {self.filter_type}. "
+
+        if inplace:
+            for func, kwargs in zip(self.functions, self.params):
+                func_str = f"func(filter_object, {self._param_string(kwargs)}, inplace=True)"
+                try:
+                    eval(func_str)
+                except (ValueError, AssertionError, TypeError) as e:
+                    raise e.__class__(f"Invalid function signature {func_str}")
+
+        else:
+            for func, kwargs in zip(self.functions, self.params):
+                func_str = f"func(filter_object, {self._param_string(kwargs)}, inplace=False)"
+                try:
+                    filter_object = eval(func_str)
+                except (ValueError, AssertionError, TypeError) as e:
+                    raise e.__class__(f"Invalid function signature {func_str}")
+            return filter_object
+
+    def remove_last_function(self):
+        func = self.functions.pop(-1)
+        kwargs = self.params.pop(-1)
+        print(f"Removed function {func.__name__} with parameters [{self._param_string(kwargs)}] from the pipeline. ")
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
