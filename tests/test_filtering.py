@@ -703,23 +703,54 @@ def test_sort_descending():
 
 
 def test_pipeline_api():
-    assert False
+    pl = Pipeline()
+
+    pl_count = Pipeline('countfilter')
+
+    pl_deseq = Pipeline(DESeqFilter)
+
+    pl = Pipeline(filter_type='FoldChangeFilter')
 
 
 def test_pipeline_add_function():
+    pl = Pipeline()
+    pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding')
+    assert len(pl.functions) == 1 and len(pl.params) == 1
+    assert pl.functions[0] == DESeqFilter.filter_biotype and pl.params[0] == {'biotype': 'protein_coding'}
+
+    pl_deseq = Pipeline('DEseqFilter')
+    pl_deseq.add_function(Filter.number_filters, column='log2FoldChange', operator='>', value=5)
+    assert len(pl_deseq.functions) == 1 and len(pl_deseq.params) == 1
+    assert pl_deseq.functions[0] == DESeqFilter.number_filters and pl_deseq.params[0] == {'column': 'log2FoldChange',
+                                                                                          'operator': '>', 'value': 5}
+
+
+def test_pipeline_add_function_inplace_argument():
     assert False
 
 
 def test_pipeline_add_multiple_functions():
-    assert False
+    pl_deseq = Pipeline('DEseqFilter')
+    pl_deseq.add_function(Filter.number_filters, column='log2FoldChange', operator='>', value=5)
+    pl_deseq.add_function(DESeqFilter.filter_significant)
+    pl_deseq.add_function(Filter.sort, by='log2FoldChange')
+
+    assert len(pl_deseq.functions) == 3 and len(pl_deseq.params) == 3
+    assert pl_deseq.functions == [DESeqFilter.number_filters, DESeqFilter.filter_significant, DESeqFilter.sort]
+    assert pl_deseq.params == [{'column': 'log2FoldChange', 'operator': '>', 'value': 5}, {}, {'by': 'log2FoldChange'}]
 
 
 def test_pipeline_remove_last_function():
-    assert False
+    pl = Pipeline()
+    pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding')
+    pl.remove_last_function()
+    assert len(pl.functions) == 0 and len(pl.params) == 0
 
 
 def test_pipeline_remove_last_from_empty_pipeline():
-    assert False
+    pl = Pipeline()
+    with pytest.raises(AssertionError):
+        pl.remove_last_function()
 
 
 def test_pipeline_apply_empty_pipeline():
@@ -727,6 +758,10 @@ def test_pipeline_apply_empty_pipeline():
 
 
 def test_pipeline_apply_to():
+    assert False
+
+
+def test_pipeline_apply_to_with_multiple_functions():
     assert False
 
 
@@ -739,15 +774,25 @@ def test_pipeline_init_invalid_filter_type():
 
 
 def test_pipeline_add_function_out_of_module():
-    assert False
+    pl = Pipeline()
+    with pytest.raises(AssertionError):
+        pl.add_function(len)
+
+    with pytest.raises(AssertionError):
+        pl.add_function(np.sort, arg='val')
 
 
 def test_pipeline_add_function_invalid_type():
-    assert False
+    pl = Pipeline()
+    with pytest.raises(AssertionError):
+        pl.add_function('string', arg='val')
 
 
 def test_pipeline_add_function_mismatch_filter_type():
-    assert False
+    pl_deseq = Pipeline('DESeqFilter')
+    pl_deseq.add_function(CountFilter.filter_biotype, biotype='protein_coding')
+    with pytest.raises(AssertionError):
+        pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
 
 
 def test_pipeline_apply_to_not_inplace():
@@ -767,8 +812,4 @@ def test_pipeline_apply_to_with_split_function():
 
 
 def test_pipeline_apply_to_with_split_function_inplace_raise_error():
-    assert False
-
-
-def test_pipeline_malicious_string():
     assert False

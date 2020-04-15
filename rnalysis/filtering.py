@@ -2239,6 +2239,7 @@ class Pipeline:
             return filter_object
 
     def remove_last_function(self):
+        assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
         func = self.functions.pop(-1)
         kwargs = self.params.pop(-1)
         print(f"Removed function {func.__name__} with parameters [{self._param_string(kwargs)}] from the pipeline. ")
