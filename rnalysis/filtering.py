@@ -2187,7 +2187,7 @@ class CountFilter(Filter):
 
 class Pipeline:
     def __init__(self, filter_type: Union[
-            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 
@@ -2221,21 +2221,21 @@ class Pipeline:
                           self.filter_type), f"Supplied filter object of type {type(filter_object)} " \
                                              f"mismatches the specified filter_type {self.filter_type}. "
 
-        if inplace:
-            for func, kwargs in zip(self.functions, self.params):
+        for func, kwargs in zip(self.functions, self.params):
+            if not inplace:
+                kwargs['inplace'] = False
                 func_str = f"func(filter_object, {self._param_string(kwargs)})"
                 try:
-                    eval(func_str)
+                    filter_object = func(filter_object, **kwargs)
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
-
-        else:
-            for func, kwargs in zip(self.functions, self.params):
-                func_str = f"func(filter_object, {self._param_string(kwargs)}, inplace=False)"
+            else:
+                func_str = f"func(filter_object, {self._param_string(kwargs)})"
                 try:
-                    filter_object = eval(func_str)
+                    func(filter_object, **kwargs)
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
+        if not inplace:
             return filter_object
 
     def remove_last_function(self):
