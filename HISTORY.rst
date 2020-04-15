@@ -4,6 +4,7 @@ History
 
 1.3.5 (2020-??-??)
 ------------------
+* This version introduces Pipelines - a quicker and more convenient way to apply a similar analysis pipeline to multiple Filter objects.
 
 Added
 ******
