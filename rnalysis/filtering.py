@@ -1904,7 +1904,7 @@ class CountFilter(Filter):
         f.tight_layout()
         plt.show()
 
-    def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None):
+    def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None, labels:bool = True):
         """
         runs and plots a PCA for a given set of samples.
 
@@ -1953,12 +1953,12 @@ class CountFilter(Filter):
         for graph in range(graphs):
             axes.append(CountFilter._plot_pca(
                 final_df=final_df[['Principal component 1', f'Principal component {2 + graph}', 'lib']],
-                pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=sample_grouping))
+                pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=sample_grouping, labels=labels))
 
         return pca_obj, axes
 
     @staticmethod
-    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list):
+    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels:bool):
         """
         Internal method, used to plot the results from CountFilter.pca. Static class method.
 
@@ -1992,10 +1992,11 @@ class CountFilter(Filter):
         colors = [color_opts[i - 1] for i in sample_grouping]
 
         ax.scatter(final_df.iloc[:, 0], final_df.iloc[:, 1], c=colors, s=50)
-        for _, row in final_df.iterrows():
-            row[0] += 1
-            row[1] += 1
-            ax.text(*row)
+        if labels:
+            for _, row in final_df.iterrows():
+                row[0] += 1
+                row[1] += 1
+                ax.text(*row)
         ax.grid(True)
         return ax
 
@@ -2187,7 +2188,7 @@ class CountFilter(Filter):
 
 class Pipeline:
     def __init__(self, filter_type: Union[
-        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 
