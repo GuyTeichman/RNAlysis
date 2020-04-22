@@ -2072,7 +2072,7 @@ class CountFilter(Filter):
         plt.show()
         return ax
 
-    def violin_plot(self, samples='all', ylabel: str = 'log10(RPM)'):
+    def violin_plot(self, samples='all', ylabel: str = 'log10(RPM + 1)'):
         """
         Generates a violin plot of the specified samples in the CountFilter object. \
         Can plot both single samples and average multiple replicates. \
@@ -2085,7 +2085,7 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :type ylabel: str (default 'Log10(RPM))
+        :type ylabel: str (default 'Log10(RPM + 1)')
         :param ylabel: the label of the Y axis.
         :return:
         a seaborn violin object.
