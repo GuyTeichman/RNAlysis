@@ -1904,7 +1904,7 @@ class CountFilter(Filter):
         f.tight_layout()
         plt.show()
 
-    def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None, labels:bool = True):
+    def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None, labels: bool = True):
         """
         runs and plots a PCA for a given set of samples.
 
@@ -1958,7 +1958,7 @@ class CountFilter(Filter):
         return pca_obj, axes
 
     @staticmethod
-    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels:bool):
+    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool):
         """
         Internal method, used to plot the results from CountFilter.pca. Static class method.
 
@@ -2072,7 +2072,7 @@ class CountFilter(Filter):
         plt.show()
         return ax
 
-    def violin_plot(self, samples='all'):
+    def violin_plot(self, samples='all', ylabel: str = 'log10(RPM)'):
         """
         Generates a violin plot of the specified samples in the CountFilter object. \
         Can plot both single samples and average multiple replicates. \
@@ -2085,6 +2085,8 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
+        :type ylabel: str (default 'Log10(RPM))
+        :param ylabel: the label of the Y axis.
         :return:
         a seaborn violin object.
 
@@ -2107,7 +2109,7 @@ class CountFilter(Filter):
         violin = sns.violinplot(data=samples_df)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
-        plt.ylabel("Log10 RPM")
+        plt.ylabel(ylabel)
         plt.show()
         return violin
 
@@ -2188,7 +2190,7 @@ class CountFilter(Filter):
 
 class Pipeline:
     def __init__(self, filter_type: Union[
-            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 

@@ -13,7 +13,8 @@ Added
 
 Changed
 *******
-
+* CountFilter.pca() can now be plotted without labeled points.
+* CountFilter.violin_plot() now accepts a y_title argument.
 
 
 Fixed
