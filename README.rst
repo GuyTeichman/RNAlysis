@@ -18,7 +18,8 @@ It has the ability to save or load your progress at any given phase,
 Wand document the order of operations you performed in the saved file names.
 
 RNAlysis works with sequencing count matrices and differential expression output files in general, and integrates in particular with python's HTSeq-count and R's DESeq2.
-* Documentation: https://guyteichman.github.io/RNAlysis
+
+Documentation: https://guyteichman.github.io/RNAlysis
 
 
 Main Features
