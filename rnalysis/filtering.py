@@ -2072,15 +2072,99 @@ class CountFilter(Filter):
         plt.show()
         return ax
 
+    def box_plot(self, samples='all', scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
+        """
+        Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
+        Can plot both single samples and average multiple replicates. \
+        It is recommended to use this function on normalized values and not on absolute read values. \
+        The box indicates 25% and 75% percentiles, and the white dot indicates the median.
+
+        :type samples: 'all' or list.
+        :param samples: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the CountFilter object. \
+        To average multiple replicates of the same condition, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
+        :type ylabel: str (default 'Log10(RPM + 1)')
+        :param ylabel: the label of the Y axis.
+        :return:
+        a seaborn box plot object.
+
+        .. figure::  ???.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of box_plot()
+        """
+        self._rpm_assertions()
+        if samples == 'all':
+            samples_df = self.df
+        else:
+            samples_df = self._avg_subsamples(samples)
+
+        samples_df = np.log10(samples_df + 1)
+        fig = plt.figure(figsize=(8, 8))
+
+        box = sns.boxplot(data=samples_df)
+        if scatter:
+            scat = sns.stripplot(data=samples_df, color='gray', size=2)
+        plt.style.use('seaborn-whitegrid')
+        plt.xlabel("Samples")
+        plt.ylabel(ylabel)
+        plt.show()
+        return box
+
+    def enhanced_box_plot(self, samples='all', scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
+        """
+        Generates an enhanced box plot of the specified samples in the CountFilter object in log10 scale. \
+        Can plot both single samples and average multiple replicates. \
+        It is recommended to use this function on normalized values and not on absolute read values. \
+        The box indicates 25% and 75% percentiles, and the white dot indicates the median.
+
+        :type samples: 'all' or list.
+        :param samples: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the CountFilter object. \
+        To average multiple replicates of the same condition, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
+        :type ylabel: str (default 'Log10(RPM + 1)')
+        :param ylabel: the label of the Y axis.
+        :return:
+        a seaborn enhanced box plot object.
+
+        .. figure::  ???.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of enhanced_box_plot()
+        """
+        self._rpm_assertions()
+        if samples == 'all':
+            samples_df = self.df
+        else:
+            samples_df = self._avg_subsamples(samples)
+
+        samples_df = np.log10(samples_df + 1)
+        fig = plt.figure(figsize=(8, 8))
+
+        boxen = sns.boxenplot(data=samples_df)
+        if scatter:
+            scat = sns.stripplot(data=samples_df, color='gray', size=2)
+        plt.style.use('seaborn-whitegrid')
+        plt.xlabel("Samples")
+        plt.ylabel(ylabel)
+        plt.show()
+        return boxen
+
     def violin_plot(self, samples='all', ylabel: str = 'log10(RPM + 1)'):
         """
-        Generates a violin plot of the specified samples in the CountFilter object. \
+        Generates a violin plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
         It is recommended to use this function on normalized values and not on absolute read values. \
         Box inside the violin plot indicates 25% and 75% percentiles, and the white dot indicates the median.
 
         :type samples: 'all' or list.
-        :param samples: A list of the sample names and/or grouped sample names to be plotted in the violin plot. \
+        :param samples: A list of the sample names and/or grouped sample names to be plotted. \
         All specified samples must be present in the CountFilter object. \
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
