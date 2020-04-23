@@ -9,12 +9,14 @@ History
 Added
 ******
 * Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.
+* Added more visualization functions, such as CountFilter.box_plot() and CountFilter.enhanced_box_plot().
 
 
 Changed
 *******
 * CountFilter.pca() can now be plotted without labeled points.
 * CountFilter.violin_plot() now accepts a y_title argument.
+* Added more optional arguments to visualization functions such as CountFilter.violin_plot() and CountFilter.clustergram().
 
 
 Fixed
