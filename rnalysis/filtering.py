@@ -1848,7 +1848,7 @@ class CountFilter(Filter):
         print('Calculating clustergram...')
         plt.style.use('seaborn-whitegrid')
         clustering = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
-                                    cmap=sns.color_palette("RdBu_r", 10), yticklabels=False)
+                                    cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
         plt.show()
         return clustering
 
