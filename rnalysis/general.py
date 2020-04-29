@@ -162,6 +162,18 @@ def _update_settings_file(value: str, key: str):
         yaml.safe_dump(out, f)
 
 
+def reset_settings_file():
+    """
+    Resets the local settings by deleting the local settings file. Warning: this action is irreversible!
+    """
+    settings_pth = _get_settings_file_path()
+    if not settings_pth.exists():
+        print("No local settings file exists. ")
+    else:
+        settings_pth.unlink()
+        print(f"Local settings file was deleted. ")
+
+
 def _read_value_from_settings(key):
     """
     Attempt to read the value corresponding to a given key from the settings.yaml file. \
