@@ -738,6 +738,7 @@ class FeatureSet:
 
         ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref)
+        general._biotype_table_assertions(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
         if len(not_in_ref) > 0:
