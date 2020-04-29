@@ -47,6 +47,8 @@ class Filter:
     index_string: string
         A string of all feature indices in the current DataFrame separated by newline.
     """
+    __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data', 'shape': '(rows, columns)',
+                 'columns': 'list of column names'}
 
     def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = False):
         """
@@ -1113,6 +1115,7 @@ class FoldChangeFilter(Filter):
     denominator: str
         Name of the denominator used to calculate the fold change.
     """
+    __slots__ = {'numerator': 'name of the numerator', 'denominator': 'name of the denominator'}
 
     def __init__(self, fname: Union[str, Path], numerator_name: str, denominator_name: str):
         super().__init__(fname)
@@ -2274,6 +2277,9 @@ class CountFilter(Filter):
 
 
 class Pipeline:
+    __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters',
+                 'filter_type': 'type of filter objects to which the Pipeline will be applied'}
+
     def __init__(self, filter_type: Union[
         Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []

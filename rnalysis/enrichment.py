@@ -24,6 +24,7 @@ from typing import Union, List, Set, Dict, Tuple, Iterable
 
 class FeatureSet:
     """ receives a filtered gene set and preforms various enrichment analyses"""
+    __slots__ = {'gene_set': 'set of feature names/indices', 'set_name': 'name of the FeatureSet'}
     _go_dicts = {}
 
     def __init__(self, gene_set: Union[List[str], Set[
