@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from rnalysis.general import *
-from rnalysis.general import _check_is_df,_remove_unindexed_rows
+from rnalysis.general import _check_is_df, _remove_unindexed_rows
 
 
 def test_is_df_dataframe():
@@ -80,3 +80,11 @@ def test_parse_gene_name_string():
     string = 'saeg-2 \\\ lin-15B cyp-23A1lin-15A WBGene12345678\n GHF5H.3'
     truth = {'saeg-2', 'lin-15B', 'cyp-23A1', 'lin-15A'}
     assert truth == parse_gene_name_string(string)
+
+
+def test_biotype_table_assertions():
+    assert False
+
+
+def test_attr_table_assertions():
+    assert False
