@@ -22,6 +22,7 @@ Changed
 Fixed
 ******
 * Updated type-hinting of specific functions.
+* Filter.biotypes() and FeatureSet.biotypes() now support Biotype Reference Tables with different column names.
 * Various bug fixes.
 
 

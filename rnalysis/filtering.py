@@ -645,11 +645,11 @@ class Filter:
         """
         print(self.index_string)
 
-    def biotypes(self, format: str = 'short', ref: str = 'predefined'):
+    def biotypes(self, return_format: str = 'short', ref: str = 'predefined'):
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
-        :type format: 'short' or 'long' (default 'short')
-        :param format: 'short' returns a short-form DataFrame, which states the biotypes \
+        :type return_format: 'short' or 'long' (default 'short')
+        :param return_format: 'short' returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. 'long' returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
@@ -682,21 +682,22 @@ class Filter:
         """
         ref = general._get_biotype_ref_path(ref)
         ref_df = general.load_csv(ref)
+        general._biotype_table_assertions(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
             ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': 'not_in_biotype_reference'}))
-        if format == 'short':
+        if return_format == 'short':
             return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
-        elif format == 'long':
+        elif return_format == 'long':
             self_df = self.df.__deepcopy__()
             self_df['biotype'] = ref_df.set_index('gene').loc[self.df.index]
             return self_df.groupby('biotype').describe()
 
         else:
-            raise ValueError(f'Invalid format "{format}"')
+            raise ValueError(f'Invalid format "{return_format}"')
 
     def number_filters(self, column: str, operator: str, value, opposite=False, inplace=True):
         """
