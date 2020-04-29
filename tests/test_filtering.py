@@ -770,7 +770,20 @@ def test_pipeline_apply_to_invalid_object():
 
 
 def test_pipeline_init_invalid_filter_type():
-    assert False
+    with pytest.raises(AssertionError):
+        pl = Pipeline(filter_type='otherFilter')
+
+    class otherFilter:
+        def __init__(self):
+            self.value = 'value'
+            self.othervalue = 'othervalue'
+
+    with pytest.raises(AssertionError):
+        pl = Pipeline(filter_type=otherFilter)
+    with pytest.raises(AssertionError):
+        pl = Pipeline(filter_type=max)
+    with pytest.raises(AssertionError):
+        pl = Pipeline(filter_type=5)
 
 
 def test_pipeline_add_function_out_of_module():
