@@ -397,4 +397,19 @@ def _biotype_table_assertions(ref_df: pd.DataFrame):
     """
     assert ref_df.shape[
                1] == 2, f"Invalid number of columns in Biotype Reference Table: found {ref_df.shape[1]} columns instead of 2!"
+    assert ref_df.shape[
+               0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
     ref_df.rename(columns={ref_df.columns[0]: 'gene', ref_df.columns[1]: 'biotype'}, inplace=True)
+
+
+def _attr_table_assertions(ref_df: pd.DataFrame):
+    """
+    Assert legality of Attribute Reference Table.
+    :param ref_df:
+    :type ref_df:
+
+    """
+    assert ref_df.shape[
+               1] >= 2, f"Attribute Reference Table must have at least two columns, found only  {ref_df.shape[1]}!"
+    assert ref_df.shape[
+               0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
