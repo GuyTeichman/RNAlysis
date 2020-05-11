@@ -538,12 +538,12 @@ class FeatureSet:
         res_df['significant'] = significant
         res_df.set_index('name', inplace=True)
 
-        self._plot_enrich_randomization(res_df, title=self.set_name)
+        fig = self._plot_enrich_randomization(res_df, title=self.set_name)
 
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        return res_df
+        return res_df, fig
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000,
@@ -647,12 +647,12 @@ class FeatureSet:
         res_df['significant'] = significant
         res_df.set_index('name', inplace=True)
 
-        self._plot_enrich_randomization(res_df, title=self.set_name)
+        fig = self._plot_enrich_randomization(res_df, title=self.set_name)
 
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        return res_df
+        return res_df, fig
 
     @staticmethod
     def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):

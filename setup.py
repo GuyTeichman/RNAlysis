@@ -13,8 +13,6 @@ with open('HISTORY.rst') as history_file:
 
 requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels', 'scikit-learn',
                 'ipyparallel', 'grid_strategy', 'Distance', 'pyyaml', 'UpSetPlot', 'matplotlib-venn']
-# requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels',
-# 'scikit-learn', 'matplotlib-venn', 'simple-venn']
 
 setup_requirements = ['pytest-runner', ]
 

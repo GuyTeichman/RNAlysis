@@ -25,11 +25,12 @@ Documentation: https://guyteichman.github.io/RNAlysis
 Main Features
 -------------
 
-* Filtering of count matrices, fold changes and differential expression tables.
-* Normalization of count matrices
-* Exploratory data analysis and visualisation
-* Enrichment analysis for custom attributes
-* Clustering and dimentionality reduction
+* Filter your read count matrices, fold change data, differential expression tables, and tabular data in general.
+* Normalize your read count data
+* Visualise, explore and describe your sequencing data
+* Find global relationships between sample expression profiles with clustering and dimensionality reduction
+* Create and share analysis pipelines
+* Perform enrichment analysis with pre-determined Gene Ontology terms, or with used-defined attributes
 
 Dependencies
 ------------
@@ -40,13 +41,13 @@ Dependencies
 * seaborn
 * tissue_enrichment_analysis
 * statsmodels
-* sklearn
+* scikit-learn
 * ipyparallel
 * grid_strategy
 * Distance
 * pyyaml
-* matplotlib-venn
 * UpSetPlot
+* matplotlib-venn
 
 Where to get it
 ---------------
