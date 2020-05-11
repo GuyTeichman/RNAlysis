@@ -12,6 +12,7 @@ import tissue_enrichment_analysis as tea
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
+from matplotlib.figure import Figure
 from pathlib import Path
 import statsmodels.stats.multitest as multitest
 from ipyparallel import Client
@@ -389,10 +390,10 @@ class FeatureSet:
 
     def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
         gene_set = self.gene_set
-        try:
-            attr_ref_df = general.load_csv(attr_ref_path, 0)
-        except:
-            raise ValueError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
+
+        attr_ref_df = general.load_csv(attr_ref_path)
+        general._attr_table_assertions(attr_ref_df)
+        attr_ref_df.set_index('gene', inplace=True)
 
         assert (isinstance(biotype, (str, list, set, tuple)))
 
@@ -422,7 +423,9 @@ class FeatureSet:
         if biotype == 'all':
             pass
         else:
-            biotype_ref_df = general.load_csv(biotype_ref_path, 0)
+            biotype_ref_df = general.load_csv(biotype_ref_path)
+            general._biotype_table_assertions(biotype_ref_df)
+            biotype_ref_df.set_index('gene', inplace=True)
             biotype_ref_df.columns = biotype_ref_df.columns.str.lower()
             if isinstance(biotype, (list, tuple, set)):
                 mask = pd.Series(np.zeros_like(biotype_ref_df['biotype'].values, dtype=bool),
@@ -449,7 +452,7 @@ class FeatureSet:
                                       fdr: float = 0.05, reps: int = 10000,
                                       biotype: str = 'protein_coding', background_genes=None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                                      save_csv: bool = False, fname=None):
+                                      save_csv: bool = False, fname=None) -> Tuple[pd.DataFrame, Figure]:
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing. \
@@ -494,9 +497,10 @@ class FeatureSet:
        :type fname: str or pathlib.Path
        :param fname: The full path and name of the file to which to save the results. For example: \
        r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+       :rtype: Tuple[pd.DataFrame, matplotlib.figure.Figure]
        :return:
        a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
-       and 'pvalue'.
+       and 'pvalue'; and a matplotlib Figure.
 
        .. figure::  enrichment_randomization.png
           :align:   center
@@ -506,12 +510,11 @@ class FeatureSet:
        """
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
-        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                                attr_ref_path=attr_ref_path,
                                                                biotype_ref_path=biotype_ref_path)
-        if attributes == ['all']:
-            attributes = attr_ref_df.columns[:-1]
+
+        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         client = Client()
         dview = client[:]
@@ -546,7 +549,7 @@ class FeatureSet:
                              reps: int = 10000,
                              biotype: str = 'protein_coding', background_genes=None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                             save_csv: bool = False, fname=None):
+                             save_csv: bool = False, fname=None) -> Tuple[pd.DataFrame, Figure]:
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table. \
@@ -591,9 +594,10 @@ class FeatureSet:
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :rtype: Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return:
         a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
-        and 'pvalue'.
+        and 'pvalue'; and a matplotlib Figure.
 
         .. figure::  enrichment_randomization.png
            :align:   center
@@ -603,10 +607,10 @@ class FeatureSet:
         """
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
-        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                                attr_ref_path=attr_ref_path,
                                                                biotype_ref_path=biotype_ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
         for k, attribute in enumerate(attributes):
@@ -689,6 +693,7 @@ class FeatureSet:
         bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors, edgecolor='black',
                      linewidth=1)
         bar.tick_labels = enrichment_names
+        ax.artists.append(bar)
         # add horizontal line
         ax.axhline(color='black', linewidth=1)
         # add colorbar
@@ -698,7 +703,7 @@ class FeatureSet:
         cbar.set_label('Colorbar', fontsize=12)
         # apply xticks
         ax.set_xticks(range(len(enrichment_names)))
-        ax.set_xticklabels( enrichment_names, fontsize=13, rotation=45)
+        ax.set_xticklabels(enrichment_names, fontsize=13, rotation=45)
         # ylabel and title
         ax.set_ylabel(r"$\log_2$(Fold Enrichment)", fontsize=14)
         ax.set_title(title, fontsize=16)
@@ -723,7 +728,7 @@ class FeatureSet:
 
         sns.despine()
         plt.show()
-        return bar
+        return fig
 
     def biotypes(self, ref: str = 'predefined'):
         """
