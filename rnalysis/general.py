@@ -392,8 +392,7 @@ def _biotype_table_assertions(ref_df: pd.DataFrame):
     Assert legality of Biotype Reference Table, and rename column names to standard names ('gene' and 'biotype').
     :param ref_df:
     :type ref_df:
-    :return:
-    :rtype:
+
     """
     assert ref_df.shape[
                1] == 2, f"Invalid number of columns in Biotype Reference Table: found {ref_df.shape[1]} columns instead of 2!"
