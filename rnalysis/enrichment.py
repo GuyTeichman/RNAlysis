@@ -664,7 +664,10 @@ class FeatureSet:
         a matplotlib.pyplot.bar instance
         """
         plt.style.use('seaborn-white')
+
         enrichment_names = df.index.values.tolist()
+        enrichment_pvalue = df['padj']
+        # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
         enrichment_scores = df['log2_fold_enrichment'].values.copy()
         scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
@@ -672,47 +675,53 @@ class FeatureSet:
         for i in range(len(enrichment_scores)):
             if enrichment_scores[i] == -np.inf:
                 enrichment_scores[i] = min(scores_no_inf)
-        enrichment_pvalue = df['padj']
-        abs_enrichment_scores = [abs(i) for i in enrichment_scores]
+
+        # get color values for bars
         data_color = [(i / 3) * 127.5 for i in enrichment_scores]
         data_color_norm = [i + 127.5 for i in data_color]
         data_color_norm_256 = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for i
                                in data_color_norm]
         my_cmap = plt.cm.get_cmap('coolwarm')
         colors = my_cmap(data_color_norm_256)
-        fig, ax = plt.subplots()
-        # ax.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
-        bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors)
+
+        # generate bar plot
+        fig, ax = plt.subplots(constrained_layout=True, figsize=[6.4, 5.6])
+        bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors, edgecolor='black',
+                     linewidth=1)
         bar.tick_labels = enrichment_names
-        # sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*ax.get_ylim()))
-        # absmax = max([abs(i) for i in ax.get_ylim()])
+        # add horizontal line
+        ax.axhline(color='black', linewidth=1)
+        # add colorbar
         sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(3, -3))
         sm.set_array([])
         cbar = fig.colorbar(sm)
-        cbar.set_label('', rotation=90, labelpad=25, fontsize=26)
-        plt.xticks(range(len(enrichment_names)), enrichment_names, fontsize=13, rotation='vertical')
-        plt.ylabel("Log2 Fold Enrichment", fontsize=26)
+        cbar.set_label('Colorbar', fontsize=12)
+        # apply xticks
+        ax.set_xticks(range(len(enrichment_names)))
+        ax.set_xticklabels( enrichment_names, fontsize=13, rotation=45)
+        # ylabel and title
+        ax.set_ylabel(r"$\log_2$(Fold Enrichment)", fontsize=14)
+        ax.set_title(title, fontsize=16)
+        # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
-            fontsize = 21
+            fontweight = 'bold'
             if sig < 0.0001:
-                asterisks = '****'
+                asterisks = u'\u2217' * 4
             elif sig < 0.001:
-                asterisks = '***'
+                asterisks = u'\u2217' * 3
             elif sig < 0.01:
-                asterisks = '**'
+                asterisks = u'\u2217' * 2
             elif sig < 0.05:
-                asterisks = '*'
+                asterisks = u'\u2217'
             else:
                 asterisks = 'ns'
-                fontsize = 16
-            plt.text(x=col.xy[0] + 0.5 * col._width,
-                     y=col._height + (max(enrichment_scores) - min(enrichment_scores)) / 50 * np.sign(col._height),
-                     s=asterisks,
-                     fontsize=fontsize, horizontalalignment='center', verticalalignment='center')
+                fontweight = 'normal'
+            valign = 'bottom' if np.sign(col._height) == 1 else 'top'
+            ax.text(x=col.xy[0] + 0.5 * col._width,
+                    y=col._height, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight,
+                    fontsize=12, horizontalalignment='center', verticalalignment=valign)
 
         sns.despine()
-        plt.title(title)
-        plt.tight_layout()
         plt.show()
         return bar
 
