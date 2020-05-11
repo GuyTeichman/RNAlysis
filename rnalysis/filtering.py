@@ -356,7 +356,9 @@ class Filter:
             biotype = [biotype]
 
         ref = general._get_biotype_ref_path(ref)
-        ref_df = general.load_csv(ref, 0)
+        ref_df = general.load_csv(ref)
+        general._biotype_table_assertions(ref_df)
+        ref_df.set_index('gene', inplace=True)
         ref_df.columns = ref_df.columns.str.lower()
         legal_inputs = set(ref_df['biotype'].unique())
 
@@ -434,7 +436,6 @@ class Filter:
             ... ref='tests/attr_ref_table_for_examples.csv',opposite=True)
             Filtered 3 features, leaving 19 of the original 22 features. Filtered inplace.
         """
-        ref = general._get_attr_ref_path(ref)
         if attributes is None:
             attributes = self._from_string(
                 "Please insert attributes separated by newline "
@@ -444,7 +445,10 @@ class Filter:
         else:
             assert isinstance(attributes, (list, tuple, set))
         assert isinstance(mode, str), "'mode' must be a string!"
-        attr_ref_table = general.load_csv(ref, 0)
+        ref = general._get_attr_ref_path(ref)
+        attr_ref_table = general.load_csv(ref)
+        general._attr_table_assertions(attr_ref_table)
+        attr_ref_table.set_index('gene', inplace=True)
         sep_idx = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
 
         if mode == 'intersection':
@@ -486,7 +490,6 @@ class Filter:
             Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
         """
         assert isinstance(attributes, list)
-        ref = general._get_attr_ref_path(ref)
         return tuple([self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
                       attributes])
 
