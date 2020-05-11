@@ -613,6 +613,8 @@ To use it, you must first start a parallel session::
 
     >>> from rnalysis import enrichment, general
     >>> general.start_parallel_session()
+    Starting parallel session...
+    Parallel session started successfully
 
 To read more about parallel sessions, visit the :ref:`parallel-ref` section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.

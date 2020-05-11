@@ -48,8 +48,10 @@ def start_parallel_session(n_engines: int = 'default'):
     :Examples:
     >>> from rnalysis import general
     >>> general.start_parallel_session()
+    Starting parallel session...
     Parallel session started successfully
     """
+    print("Starting parallel session...")
     _stop_ipcluster()
     time.sleep(1)
     stream = _start_ipcluster(n_engines)
