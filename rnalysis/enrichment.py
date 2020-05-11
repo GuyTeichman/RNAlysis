@@ -452,7 +452,7 @@ class FeatureSet:
                                       fdr: float = 0.05, reps: int = 10000,
                                       biotype: str = 'protein_coding', background_genes=None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                                      save_csv: bool = False, fname=None) -> Tuple[pd.DataFrame, Figure]:
+                                      save_csv: bool = False, fname=None, return_fig: bool = False):
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing. \
@@ -497,10 +497,12 @@ class FeatureSet:
        :type fname: str or pathlib.Path
        :param fname: The full path and name of the file to which to save the results. For example: \
        r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-       :rtype: Tuple[pd.DataFrame, matplotlib.figure.Figure]
+       :type return_fig: bool (default False)
+       :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+       :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
        :return:
        a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
-       and 'pvalue'; and a matplotlib Figure.
+       and 'pvalue'; and a matplotlib Figure, if 'return_figure' is set to True.
 
        .. figure::  enrichment_randomization.png
           :align:   center
@@ -543,13 +545,13 @@ class FeatureSet:
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        return res_df, fig
+        return res_df, fig if return_fig else res_df
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000,
                              biotype: str = 'protein_coding', background_genes=None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                             save_csv: bool = False, fname=None) -> Tuple[pd.DataFrame, Figure]:
+                             save_csv: bool = False, fname=None, return_fig: bool = False):
         """
         Calculates enrichment scores, p-values and q-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table. \
@@ -594,10 +596,12 @@ class FeatureSet:
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :rtype: Tuple[pd.DataFrame, matplotlib.figure.Figure]
+       :type return_fig: bool (default False)
+       :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return:
         a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
-        and 'pvalue'; and a matplotlib Figure.
+        and 'pvalue'; and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure::  enrichment_randomization.png
            :align:   center
@@ -652,7 +656,7 @@ class FeatureSet:
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        return res_df, fig
+        return res_df, fig if return_fig else res_df
 
     @staticmethod
     def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):
