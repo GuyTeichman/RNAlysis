@@ -720,7 +720,7 @@ def test_pipeline_add_function():
     assert pl.params[0] == ((), {'biotype': 'protein_coding'})
 
     pl = Pipeline()
-    pl.add_function(Filter.filter_biotype, 'piRNA')
+    pl.add_function('filter_biotype', 'piRNA')
     assert len(pl.functions) == 1 and len(pl.params) == 1
     assert pl.functions[0] == Filter.filter_biotype
     assert pl.params[0] == (('piRNA',), {})
@@ -736,7 +736,7 @@ def test_pipeline_add_multiple_functions():
     pl_deseq = Pipeline('DEseqFilter')
     pl_deseq.add_function(Filter.number_filters, 'log2FoldChange', operator='>', value=5)
     pl_deseq.add_function(DESeqFilter.filter_significant)
-    pl_deseq.add_function(Filter.sort, by='log2FoldChange')
+    pl_deseq.add_function('sort', by='log2FoldChange')
 
     assert len(pl_deseq.functions) == 3 and len(pl_deseq.params) == 3
     assert pl_deseq.functions == [DESeqFilter.number_filters, DESeqFilter.filter_significant, DESeqFilter.sort]
@@ -766,7 +766,7 @@ def test_pipeline_apply_empty_pipeline():
 
 def test_pipeline_apply_to():
     pl = Pipeline('deseqfilter')
-    pl.add_function(DESeqFilter.filter_significant, 10 ** -70, opposite=True)
+    pl.add_function('filter_significant', 10 ** -70, opposite=True)
     deseq = DESeqFilter('test_deseq.csv')
     deseq_truth = deseq.__copy__()
     deseq_truth.filter_significant(10 ** -70, opposite=True)
