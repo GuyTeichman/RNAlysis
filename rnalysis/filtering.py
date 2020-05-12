@@ -2302,6 +2302,15 @@ class Pipeline:
 
     @staticmethod
     def _param_string(args, kwargs):
+        """
+
+        :param args:
+        :type args:
+        :param kwargs:
+        :type kwargs:
+        :return:
+        :rtype:
+        """
         args_str = ', '.join([f"'{arg}'" if isinstance(arg, str) else f"{arg}" for arg in args])
         kwargs_str = ', '.join(
             [f"{key}='{arg}'" if isinstance(arg, str) else f"{key}={arg}" for key, arg in kwargs.items()])
@@ -2312,10 +2321,29 @@ class Pipeline:
         else:
             return f"{args_str}, {kwargs_str}"
 
-    def add_function(self, func, *args, **kwargs):
-        assert isinstance(func, types.FunctionType), f"'func' must be a function, is {type(func)} instead. "
-        assert hasattr(self.filter_type, func.__name__) and getattr(self.filter_type,func.__name__)==func, \
-            f"Function {func.__name__} does not exist for filter_type {self.filter_type}. "
+    def add_function(self, func: Union[types.FunctionType, str], *args, **kwargs):
+        """
+        Add a function to the pipeline. Arguments can be stated with or without the correspoding keywords. \
+        For example: Pipeline.add_function('sort', 'columnName', ascending=False, na_position='first'). \
+        Pipelines support virtually all functions in the filtering module, including \
+        filtering functions, normalization functions, splitting functions and plotting functions. \
+        Do not include the 'inplace' argument when adding functions to a pipeline; instead, \
+        include it when applying the pipeline to a Filter object using Pipeline.apply_to(). \
+
+        :param func: function to be added
+        :type func: function or name of function from the filtering module
+        :param args: unkeyworded arguments for the added function in their natural order. For example: 0.1, True
+        :param kwargs: keyworded arguments for the added function. For example: opposite=True
+        """
+        assert isinstance(func, (str, types.FunctionType)), f"'func' must be a function, is {type(func)} instead. "
+        if isinstance(func, str):
+            func = func.lower()  # function names are always expected to be lowercase. This prevents capitalized typos.
+            assert hasattr(self.filter_type, func), \
+                f"Function {func} does not exist for filter_type {self.filter_type}. "
+            func = getattr(self.filter_type, func)
+        else:
+            assert hasattr(self.filter_type, func.__name__) and getattr(self.filter_type, func.__name__) == func, \
+                f"Function {func.__name__} does not exist for filter_type {self.filter_type}. "
         if 'inplace' in kwargs:
             warnings.warn(
                 'The "inplace" argument supplied to this function will be ignored. '
