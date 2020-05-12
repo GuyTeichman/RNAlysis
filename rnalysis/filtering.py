@@ -2318,22 +2318,59 @@ class Pipeline:
                           self.filter_type), f"Supplied filter object of type {type(filter_object)} " \
                                              f"mismatches the specified filter_type {self.filter_type}. "
 
+        other_outputs = dict()
+        other_cnt = 1
+        # iterate over all functions and arguments
         for func, kwargs in zip(self.functions, self.params):
-            if not inplace:
-                kwargs['inplace'] = False
-                func_str = f"func(filter_object, {self._param_string(kwargs)})"
+            func_str = f"func(filter_object, {self._param_string(kwargs)})"
+            if 'filter' in func.__name__ or func.__name__.startswith('normalize'):
+                if not inplace:
+                    kwargs = kwargs.copy()
+                    kwargs['inplace'] = False
+                    try:
+                        if isinstance(filter_object, tuple):
+                            temp_object = []
+                            for obj in filter_object:
+                                temp_object.append(func(obj, **kwargs))
+                            filter_object = tuple(temp_object)
+                        else:
+                            filter_object = func(filter_object, **kwargs)
+                    except (ValueError, AssertionError, TypeError) as e:
+                        raise e.__class__(f"Invalid function signature {func_str}")
+                else:
+                    try:
+                        if isinstance(filter_object, tuple):
+                            for obj in filter_object:
+                                func(obj, **kwargs)
+                        else:
+                            func(filter_object, **kwargs)
+                    except (ValueError, AssertionError, TypeError) as e:
+                        raise e.__class__(f"Invalid function signature {func_str}")
+            elif func.__name__.startswith('split'):
                 try:
-                    filter_object = func(filter_object, **kwargs)
+                    if isinstance(filter_object, tuple):
+                        temp_object = []
+                        for obj in filter_object:
+                            temp_object.append(*func(obj, **kwargs))
+                        if not inplace:
+                            filter_object = tuple(temp_object)
+                    else:
+                        filter_object = func(filter_object, **kwargs)
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
             else:
-                func_str = f"func(filter_object, {self._param_string(kwargs)})"
                 try:
-                    func(filter_object, **kwargs)
+                    other_outputs[f"{func.__name__}_{other_cnt}"] = func(filter_object, **kwargs)
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
-        if not inplace:
+                other_cnt += 1
+
+        if not inplace or isinstance(filter_object, tuple):
+            if len(other_outputs) > 0:
+                return filter_object, other_outputs
             return filter_object
+        if len(other_outputs) > 0:
+            return other_outputs
 
     def remove_last_function(self):
         assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
