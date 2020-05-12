@@ -716,28 +716,32 @@ def test_pipeline_add_function():
     pl = Pipeline()
     pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding')
     assert len(pl.functions) == 1 and len(pl.params) == 1
-    assert pl.functions[0] == DESeqFilter.filter_biotype and pl.params[0] == {'biotype': 'protein_coding'}
+    assert pl.functions[0] == DESeqFilter.filter_biotype
+    assert pl.params[0] == ((), {'biotype': 'protein_coding'})
+
+    pl = Pipeline()
+    pl.add_function(Filter.filter_biotype, 'piRNA')
+    assert len(pl.functions) == 1 and len(pl.params) == 1
+    assert pl.functions[0] == Filter.filter_biotype
+    assert pl.params[0] == (('piRNA',), {})
 
     pl_deseq = Pipeline('DEseqFilter')
-    pl_deseq.add_function(Filter.number_filters, column='log2FoldChange', operator='>', value=5)
+    pl_deseq.add_function(Filter.number_filters, 'log2FoldChange', operator='>', value=5)
     assert len(pl_deseq.functions) == 1 and len(pl_deseq.params) == 1
-    assert pl_deseq.functions[0] == DESeqFilter.number_filters and pl_deseq.params[0] == {'column': 'log2FoldChange',
-                                                                                          'operator': '>', 'value': 5}
-
-
-def test_pipeline_add_function_inplace_argument():
-    assert False
+    assert pl_deseq.functions[0] == DESeqFilter.number_filters
+    assert pl_deseq.params[0] == (('log2FoldChange',), {'operator': '>', 'value': 5})
 
 
 def test_pipeline_add_multiple_functions():
     pl_deseq = Pipeline('DEseqFilter')
-    pl_deseq.add_function(Filter.number_filters, column='log2FoldChange', operator='>', value=5)
+    pl_deseq.add_function(Filter.number_filters, 'log2FoldChange', operator='>', value=5)
     pl_deseq.add_function(DESeqFilter.filter_significant)
     pl_deseq.add_function(Filter.sort, by='log2FoldChange')
 
     assert len(pl_deseq.functions) == 3 and len(pl_deseq.params) == 3
     assert pl_deseq.functions == [DESeqFilter.number_filters, DESeqFilter.filter_significant, DESeqFilter.sort]
-    assert pl_deseq.params == [{'column': 'log2FoldChange', 'operator': '>', 'value': 5}, {}, {'by': 'log2FoldChange'}]
+    assert pl_deseq.params == [(('log2FoldChange',), {'operator': '>', 'value': 5}), ((), {}),
+                               ((), {'by': 'log2FoldChange'})]
 
 
 def test_pipeline_remove_last_function():
@@ -754,15 +758,18 @@ def test_pipeline_remove_last_from_empty_pipeline():
 
 
 def test_pipeline_apply_empty_pipeline():
-    assert False
+    pl = Pipeline()
+    d = DESeqFilter('test_deseq.csv')
+    with pytest.raises(AssertionError):
+        pl.apply_to(d)
 
 
 def test_pipeline_apply_to():
     pl = Pipeline('deseqfilter')
-    pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
+    pl.add_function(DESeqFilter.filter_significant, 10 ** -70, opposite=True)
     deseq = DESeqFilter('test_deseq.csv')
     deseq_truth = deseq.__copy__()
-    deseq_truth.filter_significant(10 ** -70)
+    deseq_truth.filter_significant(10 ** -70, opposite=True)
     deseq_pipelined = pl.apply_to(deseq, inplace=False)
     pl.apply_to(deseq)
     deseq.sort('log2FoldChange')
@@ -790,7 +797,11 @@ def test_pipeline_apply_to_with_multiple_functions():
 
 
 def test_pipeline_apply_to_invalid_object():
-    assert False
+    pl = Pipeline('deseqfilter')
+    pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
+    cnt = general.load_csv('counted.csv', 0)
+    with pytest.raises(AssertionError):
+        pl.apply_to(cnt)
 
 
 def test_pipeline_init_invalid_filter_type():
