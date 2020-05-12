@@ -2353,6 +2353,15 @@ class Pipeline:
         print(f"Added function {func.__name__} with parameters [{self._param_string(args, kwargs)}] to the pipeline. ")
 
     def apply_to(self, filter_object, inplace: bool = True):
+        """
+
+        :param filter_object:
+        :type filter_object:
+        :param inplace:
+        :type inplace:
+        :return:
+        :rtype:
+        """
         # noinspection PyTypeHints
         assert issubclass(filter_object.__class__,
                           self.filter_type), f"Supplied filter object of type {type(filter_object)} " \
@@ -2415,6 +2424,9 @@ class Pipeline:
             return other_outputs
 
     def remove_last_function(self):
+        """
+        Removes from the Pipeline the last function that was added to it. Removal is in-place.
+        """
         assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
         func = self.functions.pop(-1)
         args, kwargs = self.params.pop(-1)
