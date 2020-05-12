@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 from grid_strategy import strategies
 from typing import Union, List, Set, Dict, Tuple, Type
 import types
+import inspect
 
 
 class Filter:
@@ -2300,50 +2301,63 @@ class Pipeline:
         self.filter_type = filter_type
 
     @staticmethod
-    def _param_string(kwargs):
-        return ', '.join([f"{key}='{arg}'" if isinstance(arg, str) else f"{key}={arg}" for key, arg in kwargs.items()])
+    def _param_string(args, kwargs):
+        args_str = ', '.join([f"'{arg}'" if isinstance(arg, str) else f"{arg}" for arg in args])
+        kwargs_str = ', '.join(
+            [f"{key}='{arg}'" if isinstance(arg, str) else f"{key}={arg}" for key, arg in kwargs.items()])
+        if len(args_str) == 0:
+            return kwargs_str
+        elif len(kwargs_str) == 0:
+            return args_str
+        else:
+            return f"{args_str}, {kwargs_str}"
 
-    def add_function(self, func, **kwargs):
+    def add_function(self, func, *args, **kwargs):
         assert isinstance(func, types.FunctionType), f"'func' must be a function, is {type(func)} instead. "
-        assert hasattr(self.filter_type,
-                       func.__name__), f"Function {func.__name__} does not exist for filter_type {self.filter_type}. "
-
+        assert hasattr(self.filter_type, func.__name__) and getattr(self.filter_type,func.__name__)==func, \
+            f"Function {func.__name__} does not exist for filter_type {self.filter_type}. "
+        if 'inplace' in kwargs:
+            warnings.warn(
+                'The "inplace" argument supplied to this function will be ignored. '
+                'To apply the pipeline inplace, state "inplace=True" when calling Pipeline.apply_to(). ')
         self.functions.append(func)
-        self.params.append(kwargs)
-        print(f"Added function {func.__name__} with parameters [{self._param_string(kwargs)}] to the pipeline. ")
+        self.params.append((args, kwargs))
+        print(f"Added function {func.__name__} with parameters [{self._param_string(args, kwargs)}] to the pipeline. ")
 
     def apply_to(self, filter_object, inplace: bool = True):
         # noinspection PyTypeHints
         assert issubclass(filter_object.__class__,
                           self.filter_type), f"Supplied filter object of type {type(filter_object)} " \
                                              f"mismatches the specified filter_type {self.filter_type}. "
+        assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
 
         other_outputs = dict()
         other_cnt = 1
         # iterate over all functions and arguments
-        for func, kwargs in zip(self.functions, self.params):
-            func_str = f"func(filter_object, {self._param_string(kwargs)})"
+        for func, (args, kwargs) in zip(self.functions, self.params):
+            func_str = f"func(filter_object, {self._param_string(args, kwargs)})"
             if 'filter' in func.__name__ or func.__name__.startswith('normalize'):
+                kwargs = kwargs.copy()
                 if not inplace:
-                    kwargs = kwargs.copy()
                     kwargs['inplace'] = False
                     try:
                         if isinstance(filter_object, tuple):
                             temp_object = []
                             for obj in filter_object:
-                                temp_object.append(func(obj, **kwargs))
+                                temp_object.append(func(obj, *args, **kwargs))
                             filter_object = tuple(temp_object)
                         else:
-                            filter_object = func(filter_object, **kwargs)
+                            filter_object = func(filter_object, *args, **kwargs)
                     except (ValueError, AssertionError, TypeError) as e:
                         raise e.__class__(f"Invalid function signature {func_str}")
                 else:
+                    kwargs['inplace'] = True
                     try:
                         if isinstance(filter_object, tuple):
                             for obj in filter_object:
-                                func(obj, **kwargs)
+                                func(obj, *args, **kwargs)
                         else:
-                            func(filter_object, **kwargs)
+                            func(filter_object, *args, **kwargs)
                     except (ValueError, AssertionError, TypeError) as e:
                         raise e.__class__(f"Invalid function signature {func_str}")
             elif func.__name__.startswith('split'):
@@ -2351,16 +2365,16 @@ class Pipeline:
                     if isinstance(filter_object, tuple):
                         temp_object = []
                         for obj in filter_object:
-                            temp_object.append(*func(obj, **kwargs))
+                            temp_object.append(*func(obj, *args, **kwargs))
                         if not inplace:
                             filter_object = tuple(temp_object)
                     else:
-                        filter_object = func(filter_object, **kwargs)
+                        filter_object = func(filter_object, *args, **kwargs)
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
             else:
                 try:
-                    other_outputs[f"{func.__name__}_{other_cnt}"] = func(filter_object, **kwargs)
+                    other_outputs[f"{func.__name__}_{other_cnt}"] = func(filter_object, *args, **kwargs)
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
                 other_cnt += 1
@@ -2375,7 +2389,8 @@ class Pipeline:
     def remove_last_function(self):
         assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
         func = self.functions.pop(-1)
-        kwargs = self.params.pop(-1)
-        print(f"Removed function {func.__name__} with parameters [{self._param_string(kwargs)}] from the pipeline. ")
+        args, kwargs = self.params.pop(-1)
+        print(
+            f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline. ")
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
