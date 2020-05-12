@@ -545,7 +545,9 @@ class FeatureSet:
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        return res_df, fig if return_fig else res_df
+        if return_fig:
+            return res_df, fig
+        return res_df
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000,
@@ -656,7 +658,9 @@ class FeatureSet:
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        return res_df, fig if return_fig else res_df
+        if return_fig:
+            return res_df, fig
+        return res_df
 
     @staticmethod
     def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):
@@ -697,7 +701,6 @@ class FeatureSet:
         bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors, edgecolor='black',
                      linewidth=1)
         bar.tick_labels = enrichment_names
-        ax.artists.append(bar)
         # add horizontal line
         ax.axhline(color='black', linewidth=1)
         # add colorbar
