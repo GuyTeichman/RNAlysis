@@ -758,7 +758,31 @@ def test_pipeline_apply_empty_pipeline():
 
 
 def test_pipeline_apply_to():
-    assert False
+    pl = Pipeline('deseqfilter')
+    pl.add_function(DESeqFilter.filter_significant, alpha=10 ** -70)
+    deseq = DESeqFilter('test_deseq.csv')
+    deseq_truth = deseq.__copy__()
+    deseq_truth.filter_significant(10 ** -70)
+    deseq_pipelined = pl.apply_to(deseq, inplace=False)
+    pl.apply_to(deseq)
+    deseq.sort('log2FoldChange')
+    deseq_truth.sort('log2FoldChange')
+    deseq_pipelined.sort('log2FoldChange')
+    assert np.all(deseq.df == deseq_truth.df)
+    assert np.all(deseq_pipelined.df == deseq_truth.df)
+
+    pl2 = Pipeline('countfilter')
+    pl2.add_function(Filter.filter_biotype, biotype='protein_coding')
+    cnt = CountFilter('counted.csv')
+    cnt_truth = cnt.__copy__()
+    cnt_truth.filter_biotype('protein_coding')
+    cnt_pipelined = pl2.apply_to(cnt, inplace=False)
+    pl2.apply_to(cnt, inplace=True)
+    cnt.sort(cnt.columns[0])
+    cnt_truth.sort(cnt.columns[0])
+    cnt_pipelined.sort(cnt.columns[0])
+    assert np.all(cnt.df == cnt_truth.df)
+    assert np.all(cnt_pipelined.df == cnt_truth.df)
 
 
 def test_pipeline_apply_to_with_multiple_functions():
@@ -808,10 +832,6 @@ def test_pipeline_add_function_mismatch_filter_type():
         pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
 
 
-def test_pipeline_apply_to_not_inplace():
-    assert False
-
-
 def test_pipeline_apply_to_with_plot_inplace():
     assert False
 
@@ -825,4 +845,12 @@ def test_pipeline_apply_to_with_split_function():
 
 
 def test_pipeline_apply_to_with_split_function_inplace_raise_error():
+    assert False
+
+
+def test_pipeline_apply_to_multiple_splits():
+    assert False
+
+
+def test_pipeline_apply_to_filter_split_plot():
     assert False
