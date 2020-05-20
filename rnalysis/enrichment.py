@@ -7,6 +7,7 @@ Results of enrichment analyses can be saved to .csv files.
 import random
 import numpy as np
 import pandas as pd
+from scipy.stats import hypergeom
 from rnalysis import general, filtering
 import tissue_enrichment_analysis as tea
 import seaborn as sns
@@ -661,6 +662,79 @@ class FeatureSet:
         if return_fig:
             return res_df, fig
         return res_df
+
+    def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
+                              biotype: str = 'protein_coding', background_genes=None,
+                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                              save_csv: bool = False, fname=None, return_fig: bool = False):
+        attr_ref_path = general._get_attr_ref_path(attr_ref_path)
+        biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
+        attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
+                                                               attr_ref_path=attr_ref_path,
+                                                               biotype_ref_path=biotype_ref_path)
+        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
+        fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
+        enriched_list = []
+        for k, attribute in enumerate(attributes):
+            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
+            print(f"Finished {k} attributes out of {len(attributes)}")
+            df = attr_ref_df[[attribute, 'int_index']]
+            srs = df[attribute]
+            obs_srs = srs.loc[gene_set]
+            n = obs_srs.shape[0]
+            expected_fraction = fraction(srs)
+            observed_fraction = fraction(obs_srs)
+            log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
+            pval = self._calc_hypergeometric_pval(bg_size=srs.shape[0], go_size=srs.notna().sum(),
+                                                  de_size=obs_srs.shape[0], go_de_size=obs_srs.notna().sum())
+
+            enriched_list.append(
+                (attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval))
+
+        res_df = pd.DataFrame(enriched_list,
+                              columns=['name', 'samples', 'n obs', 'n exp', 'log2_fold_enrichment',
+                                       'pval'])
+        res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_fold_enrichment'].values)))
+        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
+        res_df['padj'] = padj
+        res_df['significant'] = significant
+        res_df.set_index('name', inplace=True)
+
+        fig = self._plot_enrich_randomization(res_df, title=self.set_name)
+
+        if save_csv:
+            self._enrichment_save_csv(res_df, fname)
+
+        if return_fig:
+            return res_df, fig
+        return res_df
+
+    @staticmethod
+    def _calc_hypergeometric_pval(bg_size: int, go_size: int, de_size: int, go_de_size: int):
+        """
+        Performs a hypergeometric test on the given enrichment set. \
+        Given M genes in the background set, n genes in the test set, \
+        with N genes from the background set belonging to a specific attribute (or 'success') \
+        and X genes from the test set belonging to that attribute. \
+        If we were to randomly draw n genes from the background set (without replacement), \
+        what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) \
+        genes belonging to the given attribute?
+
+        :param bg_size: size of the background set. Usually denoted as 'M'.
+        :type bg_size: positive int
+        :param go_size: number of features in the background set corresponding to the attribute, \
+        or number of successes in the population. Usually denoted as 'n'.
+        :type go_size: positive int
+        :param de_size: size of the differentially-expressed set, or size of test set. usually denoted as 'N'.
+        :type de_size: positive int
+        :param go_de_size: or number of successes in the test set. Usually denoted as 'x' or 'k'. s
+        :type go_de_size: non-negative int
+        :return: p-value of the hypergeometric test.
+        :rtype: float between 0 and 1
+        """
+        if go_de_size / de_size < go_size / bg_size:
+            return hypergeom.cdf(go_de_size, bg_size, go_size, de_size)
+        return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
 
     @staticmethod
     def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):
