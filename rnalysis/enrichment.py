@@ -666,6 +666,66 @@ class FeatureSet:
                               biotype: str = 'protein_coding', background_genes=None,
                               attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                               save_csv: bool = False, fname=None, return_fig: bool = False):
+        """
+                Calculates enrichment scores, p-values and adjusted p-values \
+                for enrichment and depletion of selected attributes from an Attribute Reference Table, \
+                based on a hypergeometric test. \
+                Background set is determined by either the input variable 'background_genes', \
+                or by the input variable 'biotype' and a Biotype Reference Table. \
+                P-values are calculated using a hypergeometric test: \
+                Given M genes in the background set, n genes in the test set, \
+                with N genes from the background set belonging to a specific attribute (or 'success') \
+                and X genes from the test set belonging to that attribute. \
+                If we were to randomly draw n genes from the background set (without replacement), \
+                what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) \
+                genes belonging to the given attribute? \
+                P-values are corrected for multiple comparisons using \
+                the Benjamini–Hochberg step-up procedure (original FDR method). \
+                Enrichment/depletion is determined automatically by the calculated enrichment score: \
+                if log2(enrichment score) is positive then enrichment is assumed, \
+                and if log2(enrichment score) is negative then depletion is assumed. \
+                In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+                appears with the smallest value in the scale.
+
+                :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
+                :param attributes: An iterable of attribute names or attribute numbers \
+                (according to their order in the Attribute Reference Table). \
+                If 'all', all of the attributes in the Attribute Reference Table will be used. \
+                If None, a manual input prompt will be raised.
+                :type fdr: float between 0 and 1
+                :param fdr: Indicates the FDR threshold for significance.
+                :type attr_ref_path: str or pathlib.Path (default 'predefined')
+                :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
+                :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+                :param biotype_ref_path: the path of the Biotype Reference Table. \
+                Will be used to generate background set if 'biotype' is specified.
+                :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
+                Default 'protein_coding'.
+                :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
+                'all' will include all genomic features in the reference table, \
+                'protein_coding' will include only protein-coding genes from the reference table, etc. \
+                Cannot be specified together with 'background_genes'.
+                :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+                :param background_genes: a set of specific feature indices to be used as background genes. \
+                Cannot be specified together with 'biotype'.
+                :type save_csv: bool, default False
+                :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+                :type fname: str or pathlib.Path
+                :param fname: The full path and name of the file to which to save the results. For example: \
+                r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+               :type return_fig: bool (default False)
+               :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+                :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+                :return:
+                a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
+                and 'pvalue'; and a matplotlib Figure, if 'return_figure' is set to True.
+
+                .. figure::  enrichment_randomization.png
+                   :align:   center
+                   :scale: 40 %
+
+                   Example plot of enrich_randomization()
+                """
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
         attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
