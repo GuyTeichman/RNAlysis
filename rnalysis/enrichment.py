@@ -724,7 +724,7 @@ class FeatureSet:
                    :align:   center
                    :scale: 40 %
 
-                   Example plot of enrich_randomization()
+                   Example plot of enrich_hypergeometric()
                 """
         attr_ref_path = general._get_attr_ref_path(attr_ref_path)
         biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
