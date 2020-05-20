@@ -569,7 +569,6 @@ class FeatureSet:
         In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
-
         :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
         :param attributes: An iterable of attribute names or attribute numbers \
         (according to their order in the Attribute Reference Table). \
