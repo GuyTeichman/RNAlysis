@@ -344,3 +344,36 @@ def test_randomization_all_attributes():
     attrs_truth = ['attribute1', 'attribute2', 'attribute3', 'attribute4']
     attrs = en._enrichment_get_attrs('all', 'attr_ref_table_for_tests.csv')
     assert attrs == attrs_truth
+
+
+def test_enrich_hypergeom_api():
+    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
+             'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
+             'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
+             'WBGene00003864', 'WBGene00000019', 'WBGene00014208', 'WBGene00002074', 'WBGene00000106', 'WBGene00000137',
+             'WBGene00000859', 'WBGene00268189'}
+    attrs = ['attribute1', 'attribute2']
+    en = FeatureSet(gene_set=genes, set_name='test_set')
+    _ = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
+                                 biotype_ref_path='biotype_ref_table_for_tests.csv')
+
+
+def test_enrich_hypergeom_pvalues():
+    assert False
+
+
+def test_calc_hypergeom_pvalues():
+    [M, n, N, X] = [13588, 59, 611, 19]
+    truth = 4.989682834519698 * 10 ** -12
+    pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)
+    assert np.isclose(truth, pval, atol=0, rtol=0.00001)
+
+    [M, n, N, X] = [20000, 430, 700, 6]
+    truth = 0.006249179131697138
+    pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)
+    assert np.isclose(truth, pval, atol=0, rtol=0.00001)
+
+    [M, n, N, X] = [20000, 43, 300, 3]
+    truth = 0.0265186938062861
+    pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)
+    assert np.isclose(truth, pval, atol=0, rtol=0.00001)
