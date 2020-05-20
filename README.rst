@@ -37,6 +37,7 @@ Dependencies
 
 * numpy
 * pandas
+* scipy
 * matplotlib
 * seaborn
 * tissue_enrichment_analysis

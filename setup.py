@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels', 'scikit-learn',
-                'ipyparallel', 'grid_strategy', 'Distance', 'pyyaml', 'UpSetPlot', 'matplotlib-venn']
+                'ipyparallel', 'grid_strategy', 'Distance', 'pyyaml', 'UpSetPlot', 'matplotlib-venn', 'scipy']
 
 setup_requirements = ['pytest-runner', ]
 
