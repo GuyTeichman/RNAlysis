@@ -455,7 +455,7 @@ class FeatureSet:
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                                       save_csv: bool = False, fname=None, return_fig: bool = False):
         """
-        Calculates enrichment scores, p-values and q-values \
+        Calculates enrichment scores, p-values and adjusted p-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing. \
         Background set is determined by either the input variable 'background_genes', \
         or by the input variable 'biotype' and a Biotype Reference Table. \
@@ -556,7 +556,7 @@ class FeatureSet:
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None, return_fig: bool = False):
         """
-        Calculates enrichment scores, p-values and q-values \
+        Calculates enrichment scores, p-values and adjusted p-values \
         for enrichment and depletion of selected attributes from an Attribute Reference Table. \
         Background set is determined by either the input variable 'background_genes', \
         or by the input variable 'biotype' and a Biotype Reference Table. \
