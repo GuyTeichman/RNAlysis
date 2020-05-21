@@ -1,0 +1,6 @@
+rnalysis.filtering.CountFilter.df
+=================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: CountFilter.df

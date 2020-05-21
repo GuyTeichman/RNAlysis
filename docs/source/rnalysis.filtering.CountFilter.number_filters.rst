@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.number\_filters
-================================================
+==============================================
 
 .. currentmodule:: rnalysis.filtering
 

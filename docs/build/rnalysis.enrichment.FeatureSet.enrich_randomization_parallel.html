@@ -92,9 +92,9 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.__init__.html">rnalysis.enrichment.FeatureSet.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes.html">rnalysis.enrichment.FeatureSet.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_hypergeometric.html">rnalysis.enrichment.FeatureSet.enrich_hypergeometric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization.html">rnalysis.enrichment.FeatureSet.enrich_randomization</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet.enrich_randomization_parallel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
@@ -179,12 +179,12 @@
             
   <div class="section" id="rnalysis-enrichment-featureset-enrich-randomization-parallel">
 <h1>rnalysis.enrichment.FeatureSet.enrich_randomization_parallel<a class="headerlink" href="#rnalysis-enrichment-featureset-enrich-randomization-parallel" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.enrichment.FeatureSet.enrich_randomization_parallel">
-<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param">attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding', background_genes=None, attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined', save_csv: bool = False, fname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.enrich_randomization_parallel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.enrich_randomization_parallel" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and adjusted p-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
@@ -245,11 +245,20 @@
 </div></blockquote>
 <dl>
 <dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
+<dt class="field-odd">type return_fig</dt>
+<dd class="field-odd"><p>bool (default False)</p>
+</dd>
+<dt class="field-even">param return_fig</dt>
+<dd class="field-even"><p>if True, returns a matplotlib Figure object in addition to the results DataFrame.</p>
+</dd>
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p>pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p></p></dd>
 </dl>
 <p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
-and ‘pvalue’.</p>
+and ‘pvalue’; and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 <div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
 <p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>

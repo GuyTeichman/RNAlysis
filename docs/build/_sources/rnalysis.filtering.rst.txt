@@ -1,25 +1,28 @@
 rnalysis.filtering
 ==================
 
+.. rubric:: Description
+
 .. automodule:: rnalysis.filtering
 
+.. currentmodule:: rnalysis.filtering
 
 
+.. rubric:: Classes
 
-
-
-
-   .. rubric:: Classes
-
-   .. autosummary::
-    :toctree:
-
-      Filter
-      CountFilter
-      DESeqFilter
-      FoldChangeFilter
-
-
+.. autosummary::
+    :toctree: .
+    
+    CountFilter
+    
+    DESeqFilter
+    
+    Filter
+    
+    FoldChangeFilter
+    
+    Pipeline
+    
 
 
 

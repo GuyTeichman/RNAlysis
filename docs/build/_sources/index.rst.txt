@@ -19,8 +19,7 @@ RNAlysis documentation
    authors
    history
 
-Individual Modules
-==================
+.. rubric:: Modules
 
 .. autosummary::
   :toctree:

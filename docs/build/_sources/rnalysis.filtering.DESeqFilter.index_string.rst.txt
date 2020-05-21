@@ -1,0 +1,6 @@
+rnalysis.filtering.DESeqFilter.index\_string
+============================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoproperty:: DESeqFilter.index_string

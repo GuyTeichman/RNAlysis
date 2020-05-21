@@ -1,0 +1,6 @@
+rnalysis.enrichment.FeatureSet.set\_name
+========================================
+
+.. currentmodule:: rnalysis.enrichment
+
+.. autoattribute:: FeatureSet.set_name

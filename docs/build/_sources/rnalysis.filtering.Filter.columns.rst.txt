@@ -1,0 +1,6 @@
+rnalysis.filtering.Filter.columns
+=================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: Filter.columns

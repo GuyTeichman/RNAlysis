@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.biotypes
-=================================================
+=======================================
 
 .. currentmodule:: rnalysis.enrichment
 

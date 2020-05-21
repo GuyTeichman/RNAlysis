@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.save\_txt
-==================================================
+========================================
 
 .. currentmodule:: rnalysis.enrichment
 

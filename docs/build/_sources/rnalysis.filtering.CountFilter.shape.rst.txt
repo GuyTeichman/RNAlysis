@@ -1,0 +1,6 @@
+rnalysis.filtering.CountFilter.shape
+====================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: CountFilter.shape

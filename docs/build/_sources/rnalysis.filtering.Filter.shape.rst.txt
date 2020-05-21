@@ -1,0 +1,6 @@
+rnalysis.filtering.Filter.shape
+===============================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: Filter.shape

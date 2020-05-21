@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.go\_enrichment
-=======================================================
+=============================================
 
 .. currentmodule:: rnalysis.enrichment
 

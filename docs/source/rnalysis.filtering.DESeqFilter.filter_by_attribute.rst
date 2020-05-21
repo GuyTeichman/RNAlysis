@@ -1,5 +1,5 @@
-rnalysis.filtering.DESeqFilter.filter\_by\_ref\_table\_attr
-===========================================================
+rnalysis.filtering.DESeqFilter.filter\_by\_attribute
+====================================================
 
 .. currentmodule:: rnalysis.filtering
 

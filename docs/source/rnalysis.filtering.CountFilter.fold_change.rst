@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.fold\_change
-=============================================
+===========================================
 
 .. currentmodule:: rnalysis.filtering
 

@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.intersection
-=====================================================
+===========================================
 
 .. currentmodule:: rnalysis.enrichment
 

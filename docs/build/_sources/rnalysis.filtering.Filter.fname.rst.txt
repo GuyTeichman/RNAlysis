@@ -1,0 +1,6 @@
+rnalysis.filtering.Filter.fname
+===============================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: Filter.fname

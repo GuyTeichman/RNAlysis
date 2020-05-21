@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.scatter\_sample\_vs\_sample
-============================================================
+==========================================================
 
 .. currentmodule:: rnalysis.filtering
 

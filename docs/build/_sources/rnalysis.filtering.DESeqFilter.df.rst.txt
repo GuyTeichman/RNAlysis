@@ -1,0 +1,6 @@
+rnalysis.filtering.DESeqFilter.df
+=================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: DESeqFilter.df

@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.describe" href="rnalysis.filtering.CountFilter.describe.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.biotypes" href="rnalysis.filtering.CountFilter.biotypes.html" /> 
+    <link rel="prev" title="rnalysis.filtering.CountFilter.box_plot" href="rnalysis.filtering.CountFilter.box_plot.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,13 +90,13 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.__init__.html">rnalysis.filtering.CountFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes.html">rnalysis.filtering.CountFilter.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html">rnalysis.filtering.CountFilter.box_plot</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.clustergram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype.html">rnalysis.filtering.CountFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html">rnalysis.filtering.CountFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html">rnalysis.filtering.CountFilter.filter_by_row_sum</a></li>
@@ -111,14 +111,15 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html">rnalysis.filtering.CountFilter.normalize_with_scaling_factors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html">rnalysis.filtering.CountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html">rnalysis.filtering.CountFilter.pairplot</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.run_pca</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.pca</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.plot_expression.html">rnalysis.filtering.CountFilter.plot_expression</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.print_features.html">rnalysis.filtering.CountFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.save_csv.html">rnalysis.filtering.CountFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.scatter_sample_vs_sample.html">rnalysis.filtering.CountFilter.scatter_sample_vs_sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.sort.html">rnalysis.filtering.CountFilter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_attribute.html">rnalysis.filtering.CountFilter.split_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html">rnalysis.filtering.CountFilter.split_by_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html">rnalysis.filtering.CountFilter.split_by_reads</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_attribute.html">rnalysis.filtering.CountFilter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html">rnalysis.filtering.CountFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html">rnalysis.filtering.CountFilter.tail</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.text_filters.html">rnalysis.filtering.CountFilter.text_filters</a></li>
@@ -127,7 +128,9 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -202,9 +205,9 @@
             
   <div class="section" id="rnalysis-filtering-countfilter-clustergram">
 <h1>rnalysis.filtering.CountFilter.clustergram<a class="headerlink" href="#rnalysis-filtering-countfilter-clustergram" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.filtering.CountFilter.clustergram">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">clustergram</code><span class="sig-paren">(</span><em class="sig-param">sample_names: list = 'all'</em>, <em class="sig-param">metric: str = 'euclidean'</em>, <em class="sig-param">linkage: str = 'average'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.clustergram" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">clustergram</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample_names</span><span class="p">:</span> <span class="n">list</span> <span class="o">=</span> <span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'euclidean'</span></em>, <em class="sig-param"><span class="n">linkage</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'average'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.clustergram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -215,10 +218,9 @@
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>A seaborn clustermap object.</p>
 </dd>
 </dl>
-<p>A seaborn clustermap object.</p>
 <div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <p class="caption"><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
@@ -238,7 +240,7 @@
         <a href="rnalysis.filtering.CountFilter.describe.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.describe" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.CountFilter.biotypes.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.biotypes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.CountFilter.box_plot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.box_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

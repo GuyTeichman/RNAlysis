@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.clustergram
-============================================
+==========================================
 
 .. currentmodule:: rnalysis.filtering
 

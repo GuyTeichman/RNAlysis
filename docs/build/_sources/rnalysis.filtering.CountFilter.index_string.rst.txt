@@ -1,0 +1,6 @@
+rnalysis.filtering.CountFilter.index\_string
+============================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoproperty:: CountFilter.index_string

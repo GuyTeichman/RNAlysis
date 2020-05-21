@@ -1,0 +1,6 @@
+rnalysis.filtering.FoldChangeFilter.index\_string
+=================================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoproperty:: FoldChangeFilter.index_string

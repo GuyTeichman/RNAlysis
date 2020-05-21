@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.intersection
-=============================================
+===========================================
 
 .. currentmodule:: rnalysis.filtering
 

@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.difference
-===========================================
+=========================================
 
 .. currentmodule:: rnalysis.filtering
 

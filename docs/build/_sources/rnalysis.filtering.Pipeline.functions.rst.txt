@@ -1,0 +1,6 @@
+rnalysis.filtering.Pipeline.functions
+=====================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: Pipeline.functions

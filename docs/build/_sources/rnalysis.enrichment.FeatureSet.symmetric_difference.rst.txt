@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.symmetric\_difference
-==============================================================
+====================================================
 
 .. currentmodule:: rnalysis.enrichment
 

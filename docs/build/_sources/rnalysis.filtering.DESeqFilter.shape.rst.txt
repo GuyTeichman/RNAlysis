@@ -1,0 +1,6 @@
+rnalysis.filtering.DESeqFilter.shape
+====================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: DESeqFilter.shape

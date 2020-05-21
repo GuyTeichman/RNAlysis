@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.enrich\_randomization
-==============================================================
+====================================================
 
 .. currentmodule:: rnalysis.enrichment
 

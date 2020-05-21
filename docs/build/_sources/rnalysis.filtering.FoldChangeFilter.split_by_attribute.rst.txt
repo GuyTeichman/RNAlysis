@@ -1,5 +1,5 @@
-rnalysis.filtering.FoldChangeFilter.split\_by\_ref\_table\_attr
-===============================================================
+rnalysis.filtering.FoldChangeFilter.split\_by\_attribute
+========================================================
 
 .. currentmodule:: rnalysis.filtering
 

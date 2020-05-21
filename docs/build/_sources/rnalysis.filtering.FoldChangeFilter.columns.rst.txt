@@ -1,0 +1,6 @@
+rnalysis.filtering.FoldChangeFilter.columns
+===========================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: FoldChangeFilter.columns

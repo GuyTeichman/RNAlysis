@@ -1,0 +1,6 @@
+rnalysis.filtering.DESeqFilter.columns
+======================================
+
+.. currentmodule:: rnalysis.filtering
+
+.. autoattribute:: DESeqFilter.columns

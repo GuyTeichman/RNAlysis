@@ -98,6 +98,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.parse_wbgene_string.html">rnalysis.general.parse_wbgene_string</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.read_attr_ref_table_path.html">rnalysis.general.read_attr_ref_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.read_biotype_ref_table_path.html">rnalysis.general.read_biotype_ref_table_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.reset_settings_file.html">rnalysis.general.reset_settings_file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.save_to_csv.html">rnalysis.general.save_to_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_attr_ref_table_path.html">rnalysis.general.set_attr_ref_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_biotype_ref_table_path.html">rnalysis.general.set_biotype_ref_table_path</a></li>
@@ -168,9 +169,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-rnalysis.general">
-<span id="rnalysis-general"></span><h1>rnalysis.general<a class="headerlink" href="#module-rnalysis.general" title="Permalink to this headline">¶</a></h1>
-<p>This module contains general-purpose functions. Those include loading and saving files, reading and updating the settings file, identifying type of input variables, etc. This module is used mainly by other modules.</p>
+  <div class="section" id="rnalysis-general">
+<h1>rnalysis.general<a class="headerlink" href="#rnalysis-general" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Description</p>
+<span class="target" id="module-rnalysis.general"></span><p>This module contains general-purpose functions. Those include loading and saving files, reading and updating the settings file, identifying type of input variables, etc. This module is used mainly by other modules.</p>
 <p class="rubric">Functions</p>
 <table class="longtable docutils align-default">
 <colgroup>
@@ -196,16 +198,19 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.read_biotype_ref_table_path.html#rnalysis.general.read_biotype_ref_table_path" title="rnalysis.general.read_biotype_ref_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_biotype_ref_table_path</span></code></a>()</p></td>
 <td><p>Reads the Biotype Reference Table path from the settings file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.save_to_csv.html#rnalysis.general.save_to_csv" title="rnalysis.general.save_to_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_to_csv</span></code></a>(df, filename[, suffix, index])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.reset_settings_file.html#rnalysis.general.reset_settings_file" title="rnalysis.general.reset_settings_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_settings_file</span></code></a>()</p></td>
+<td><p>Resets the local settings by deleting the local settings file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.save_to_csv.html#rnalysis.general.save_to_csv" title="rnalysis.general.save_to_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_to_csv</span></code></a>(df, filename[, suffix, index])</p></td>
 <td><p>save a pandas DataFrame to csv.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.set_attr_ref_table_path.html#rnalysis.general.set_attr_ref_table_path" title="rnalysis.general.set_attr_ref_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_attr_ref_table_path</span></code></a>([path])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.set_attr_ref_table_path.html#rnalysis.general.set_attr_ref_table_path" title="rnalysis.general.set_attr_ref_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_attr_ref_table_path</span></code></a>([path])</p></td>
 <td><p>Defines/updates the Attribute Reference Table path in the settings file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.set_biotype_ref_table_path.html#rnalysis.general.set_biotype_ref_table_path" title="rnalysis.general.set_biotype_ref_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_biotype_ref_table_path</span></code></a>([path])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.set_biotype_ref_table_path.html#rnalysis.general.set_biotype_ref_table_path" title="rnalysis.general.set_biotype_ref_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_biotype_ref_table_path</span></code></a>([path])</p></td>
 <td><p>Defines/updates the Biotype Reference Table path in the settings file.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.start_parallel_session.html#rnalysis.general.start_parallel_session" title="rnalysis.general.start_parallel_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_parallel_session</span></code></a>([n_engines])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.start_parallel_session.html#rnalysis.general.start_parallel_session" title="rnalysis.general.start_parallel_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_parallel_session</span></code></a>([n_engines])</p></td>
 <td><p>Stop previous ipyparallel ipcluster and start a new one in order to perform parallelized computation.</p></td>
 </tr>
 </tbody>
