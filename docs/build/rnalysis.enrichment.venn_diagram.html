@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rnalysis.enrichment.venn_diagram &mdash; RNAlysis 1.3.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.general" href="rnalysis.general.html" />
+    <link rel="prev" title="rnalysis.enrichment.upset_plot" href="rnalysis.enrichment.upset_plot.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> RNAlysis
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.enrichment.venn_diagram</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="rnalysis.enrichment.html">rnalysis.enrichment</a> &raquo;</li>
+        
+      <li>rnalysis.enrichment.venn_diagram</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/rnalysis.enrichment.venn_diagram.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rnalysis-enrichment-venn-diagram">
+<h1>rnalysis.enrichment.venn_diagram<a class="headerlink" href="#rnalysis-enrichment-venn-diagram" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="rnalysis.enrichment.venn_diagram">
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">venn_diagram</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">objs</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">rnalysis.enrichment.FeatureSet</a><span class="p">, </span>Set<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">title</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'default'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">set_colors</span><span class="p">:</span> <span class="n">tuple</span> <span class="o">=</span> <span class="default_value">'r', 'g', 'b'</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.4</span></em>, <em class="sig-param"><span class="n">weighted</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">lines</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">linecolor</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'black'</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'solid'</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">normalize_to</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.venn_diagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>objs</strong> (<em>a dictionary with 2-3 entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
+<li><p><strong>set_colors</strong> (<em>tuple of matplotlib-format colors</em><em>, </em><em>the same size as 'objs'</em>) – determines the colors of the circles in the diagram.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – determines the title of the plot.</p></li>
+<li><p><strong>alpha</strong> (<em>a float between 0 and 1</em>) – determines the opacity of the circles.</p></li>
+<li><p><strong>weighted</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, the plot will be area-weighted.</p></li>
+<li><p><strong>lines</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, adds an outline to the circles.</p></li>
+<li><p><strong>linecolor</strong> (<em>matplotlib-format color</em><em> (</em><em>default 'black'</em><em>)</em>) – Determines the color of the circles’ outline.</p></li>
+<li><p><strong>linestyle</strong> (<em>'solid'</em><em> or </em><em>'dashed'</em><em> (</em><em>default 'solid'</em><em>)</em>) – the style of the circles’ outline.</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em> (</em><em>default 2.0</em><em>)</em>) – the widdth of the circles’ outlines.</p></li>
+<li><p><strong>normalize_to</strong> (<em>float</em><em> (</em><em>default 1.0</em><em>)</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rnalysis.general.html" class="btn btn-neutral float-right" title="rnalysis.general" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rnalysis.enrichment.upset_plot.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.upset_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Guy Teichman
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
