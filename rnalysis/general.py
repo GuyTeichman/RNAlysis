@@ -195,40 +195,6 @@ def _read_value_from_settings(key):
     return settings[key]
 
 
-def read_biotype_ref_table_path():
-    """
-    Reads the Biotype Reference Table path from the settings file.
-
-    :returns: the path of the Biotype Reference Table that is saved in the settings file.
-    :rtype: str
-
-    :Examples:
-    >>> from rnalysis import general
-    >>> general.read_biotype_ref_table_path()
-    Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file
-    """
-    pth = _read_value_from_settings(__biotype_file_key__)
-    print(f'Biotype Reference Table used: {pth}')
-    return pth
-
-
-def read_attr_ref_table_path():
-    """
-    Reads the Attribute Reference Table path from the settings file.
-
-    :returns: the path of the Attribute Reference Table that is saved in the settings file.
-    :rtype: str
-
-    :Examples:
-    >>> from rnalysis import general
-    >>> path = general.read_attr_ref_table_path()
-    Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file
-    """
-    pth = _read_value_from_settings(__attr_file_key__)
-    print(f'Attribute Reference Table used: {pth}')
-    return pth
-
-
 def set_attr_ref_table_path(path: str = None):
     """
     Defines/updates the Attribute Reference Table path in the settings file.
@@ -237,9 +203,9 @@ def set_attr_ref_table_path(path: str = None):
 
     :Examples:
     >>> from rnalysis import general
-    >>> path="the_new_attribute_reference_table_path"
+    >>> path="my_attribute_reference_table_path"
     >>> general.set_attr_ref_table_path(path)
-    Attribute Reference Table path set as: the_new_attribute_reference_table_path
+    Attribute Reference Table path set as: my_attribute_reference_table_path
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
@@ -255,14 +221,48 @@ def set_biotype_ref_table_path(path: str = None):
 
     :Examples:
     >>> from rnalysis import general
-    >>> path="the_new_biotype_reference_table_path"
+    >>> path="my_biotype_reference_table_path"
     >>> general.set_biotype_ref_table_path(path)
-    Attribute Reference Table path set as: the_new_biotype_reference_table_path
+    Biotype Reference Table path set as: my_biotype_reference_table_path
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
     _update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
+
+
+def read_biotype_ref_table_path():
+    """
+    Reads the Biotype Reference Table path from the settings file.
+
+    :returns: the path of the Biotype Reference Table that is saved in the settings file.
+    :rtype: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> my_path = general.read_biotype_ref_table_path()
+    Biotype Reference Table used: my_biotype_reference_table_path
+    """
+    pth = _read_value_from_settings(__biotype_file_key__)
+    print(f'Biotype Reference Table used: {pth}')
+    return pth
+
+
+def read_attr_ref_table_path():
+    """
+    Reads the Attribute Reference Table path from the settings file.
+
+    :returns: the path of the Attribute Reference Table that is saved in the settings file.
+    :rtype: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> my_path = general.read_attr_ref_table_path()
+    Attribute Reference Table used: my_attribute_reference_table_path
+    """
+    pth = _read_value_from_settings(__attr_file_key__)
+    print(f'Attribute Reference Table used: {pth}')
+    return pth
 
 
 def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,

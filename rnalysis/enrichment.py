@@ -44,7 +44,7 @@ class FeatureSet:
             >>> from rnalysis import enrichment, filtering
             >>> my_set = enrichment.FeatureSet({'gene1','gene2','gene2'}, 'name of my set')
 
-            >>> filter_obj = filtering.CountFilter('tests/counts.csv')
+            >>> filter_obj = filtering.CountFilter('tests/counted.csv')
             >>> my_other_set = enrichment.FeatureSet(filter_obj, 'name of my other set')
 
         """

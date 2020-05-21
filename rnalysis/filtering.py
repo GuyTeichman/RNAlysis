@@ -123,7 +123,7 @@ class Filter:
             if printout_operation.lower() == 'filter':
                 printout += 'Filtered inplace.'
             elif printout_operation.lower() == 'normalize':
-                printout += 'Normalized inplace. '
+                printout += 'Normalized inplace.'
             print(printout)
             self.df, self.fname = new_df, new_fname
             self.shape = self.df.shape
@@ -131,7 +131,7 @@ class Filter:
             if printout_operation.lower() == 'filter':
                 printout += 'Filtering result saved to new object.'
             elif printout_operation.lower() == 'normalize':
-                printout += 'Normalization result saved to a new object. '
+                printout += 'Normalization result saved to a new object.'
             print(printout)
             tmp_df, tmp_fname = self.df, self.fname
             self.df, self.fname = new_df, new_fname
@@ -207,20 +207,22 @@ class Filter:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_deseq.csv")
             >>> d.head()
-                           baseMean  log2FoldChange  ...         pvalue           padj
+                               baseMean  log2FoldChange  ...         pvalue           padj
             WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
             WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
             WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
             WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225
             WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213
-
+            <BLANKLINE>
+            [5 rows x 6 columns]
 
             >>> d.head(3) # return only the first 3 rows
-                           baseMean  log2FoldChange  ...         pvalue           padj
+                               baseMean  log2FoldChange  ...         pvalue           padj
             WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
             WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
             WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
-
+            <BLANKLINE>
+            [3 rows x 6 columns]
 
         """
         return self.df.head(n)
@@ -240,19 +242,17 @@ class Filter:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_deseq.csv")
             >>> d.tail()
-
                                baseMean  log2FoldChange  ...        pvalue          padj
             WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
             WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
             WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
             WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
             WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
-
+            <BLANKLINE>
             [5 rows x 6 columns]
 
 
             >>> d.tail(8) # returns the last 8 rows
-
                                baseMean  log2FoldChange  ...        pvalue          padj
             WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94
             WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90
@@ -262,7 +262,7 @@ class Filter:
             WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
             WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
             WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
-
+            <BLANKLINE>
             [8 rows x 6 columns]
 
         """
@@ -434,7 +434,7 @@ class Filter:
             >>> counts = filtering.Filter('tests/counted.csv')
             >>> # keep only rows that belong to the attributes 'attribute1' OR 'attribute3' (union)
             >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv')
-            Filtered 13 features, leaving 9 of the original 22 features. Filtered inplace.
+            Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/counted.csv')
             >>> # keep only rows that belong to both attributes 'attribute1' AND 'attribute3' (intersection)
@@ -446,7 +446,7 @@ class Filter:
             >>> # keep only rows that DON'T belong to either 'attribute1','attribute3' or both
             >>> counts.filter_by_attribute(['attribute1','attribute3'],ref='tests/attr_ref_table_for_examples.csv',
             ... opposite=True)
-            Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.
+            Filtered 8 features, leaving 14 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/counted.csv')
             >>> # keep only rows that DON'T belong to both 'attribute1' AND 'attribute3'
@@ -700,14 +700,14 @@ class Filter:
             unknown            1
 
             >>> # long-form view
-            >>> d.biotypes(format='long', ref='tests/biotype_ref_table_for_tests.csv')
+            >>> d.biotypes(return_format='long', ref='tests/biotype_ref_table_for_tests.csv')
                            baseMean               ...           padj
                               count         mean  ...            75%            max
             biotype                               ...
             protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68
             pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94
             unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152
-\
+            <BLANKLINE>
             [3 rows x 48 columns]
 
         """
@@ -756,17 +756,17 @@ class Filter:
             >>> filt = filtering.Filter('tests/test_deseq.csv')
             >>> #keep only rows that have a value greater than 5900 in the column 'baseMean'.
             >>> filt.number_filters('baseMean','gt',5900)
-            Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
+            Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.
 
             >>> filt = filtering.Filter('tests/test_deseq.csv')
             >>> #keep only rows that have a value greater than 5900 in the column 'baseMean'.
             >>> filt.number_filters('baseMean','greater than',5900)
-            Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
+            Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.
 
             >>> filt = filtering.Filter('tests/test_deseq.csv')
             >>> #keep only rows that have a value greater than 5900 in the column 'baseMean'.
             >>> filt.number_filters('baseMean','>',5900)
-            Filtered 26 features, leaving 2 of the original 28 features.  Filtered inplace.
+            Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.
 
         """
         operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'lt': 'lt',
@@ -815,7 +815,7 @@ class Filter:
             >>> filt = filtering.Filter('tests/text_filters.csv')
             >>> # keep only rows that have a value that starts with 'AC3' in the column 'name'.
             >>> filt.text_filters('name','sw','AC3')
-            Filtered 17 features, leaving 5 of the original 22 features.  Filtered inplace.
+            Filtered 17 features, leaving 5 of the original 22 features. Filtered inplace.
 
         """
         operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'sw': 'sw',
@@ -1265,7 +1265,7 @@ class FoldChangeFilter(Filter):
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>> f.filter_abs_log2_fold_change(2) # keep only rows whose log2(fold change) is >=2 or <=-2
-            Filtered 18 features, leaving 4 of the original 22 features.  Filtered inplace.
+            Filtered 18 features, leaving 4 of the original 22 features. Filtered inplace.
 
         """
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
@@ -1296,17 +1296,17 @@ class FoldChangeFilter(Filter):
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>> # keep only rows with a positive log2(fold change) value
             >>> f.filter_fold_change_direction('pos')
-            Filtered 10 features, leaving 12 of the original 22 features.  Filtered inplace.
+            Filtered 10 features, leaving 12 of the original 22 features. Filtered inplace.
 
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>>  # keep only rows with a negative log2(fold change) value
             >>> f.filter_fold_change_direction('neg')
-            Filtered 14 features, leaving 8 of the original 22 features.  Filtered inplace.
+            Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.
 
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>> # keep only rows with a non-positive log2(fold change) value
             >>> f.filter_fold_change_direction('pos', opposite=True)
-            Filtered 12 features, leaving 10 of the original 22 features.  Filtered inplace.
+            Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.
 
         """
         assert isinstance(direction, str), \
@@ -1339,8 +1339,8 @@ class FoldChangeFilter(Filter):
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','numerator name','denominator name')
             >>> pos_log2fc, neg_log2fc = f.split_fold_change_direction()
-            Filtered 10 features, leaving 12 of the original 22 features.  Filtering result saved to new object.
-            Filtered 14 features, leaving 8 of the original 22 features.  Filtering result saved to new object.
+            Filtered 10 features, leaving 12 of the original 22 features. Filtering result saved to new object.
+            Filtered 14 features, leaving 8 of the original 22 features. Filtering result saved to new object.
 
         """
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
@@ -1606,9 +1606,9 @@ class CountFilter(Filter):
             >>> # calculate the fold change of mean(cond1_rep1,cond1_rep2)/mean(cond2_rep1,cond_2rep2)
             >>> f = c.fold_change(['cond1_rep1','cond1_rep2'],['cond2_rep1','cond2_rep2'])
             >>> f.numerator
-            "Mean of ['cond1_rep1','cond1_rep2']"
+            "Mean of ['cond1_rep1', 'cond1_rep2']"
             >>> f.denominator
-            "Mean of ['cond2_rep1','cond2_rep2']"
+            "Mean of ['cond2_rep1', 'cond2_rep2']"
             >>> type(f)
             rnalysis.filtering.FoldChangeFilter
 
