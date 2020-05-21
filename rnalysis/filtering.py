@@ -597,7 +597,8 @@ class Filter:
     @property
     def index_string(self) -> str:
         r"""
-        Returns a string of all feature indices in the current DataFrame separated by newline. \
+        Returns a string of all feature indices in the current DataFrame, \
+        sorted alphabetically and separated by newline. \
 
         This includes all of the feature indices which were not filtered out by previously-used filter methods. \
          if any duplicate features exist in the filter object (same index appears more than once), \
@@ -612,64 +613,66 @@ class Filter:
             >>> counts = filtering.Filter('tests/counted.csv')
             >>> mystring = counts.index_string
             >>> print(mystring)
-            WBGene00044022
-            WBGene00077504
-            WBGene00007079
-            WBGene00007069
             WBGene00007063
-            WBGene00007067
-            WBGene00077503
-            WBGene00007078
             WBGene00007064
-            WBGene00077502
-            WBGene00044951
-            WBGene00007077
             WBGene00007066
-            WBGene00007076
-            WBGene00014997
-            WBGene00043990
-            WBGene00007074
-            WBGene00043987
+            WBGene00007067
+            WBGene00007069
             WBGene00007071
-            WBGene00043989
-            WBGene00043988
+            WBGene00007074
             WBGene00007075
+            WBGene00007076
+            WBGene00007077
+            WBGene00007078
+            WBGene00007079
+            WBGene00014997
+            WBGene00043987
+            WBGene00043988
+            WBGene00043989
+            WBGene00043990
+            WBGene00044022
+            WBGene00044951
+            WBGene00077502
+            WBGene00077503
+            WBGene00077504
 
         """
-        return "\n".join(self.index_set)
+        ordered = list(self.index_set)
+        ordered.sort()
+        return "\n".join(ordered)
 
     def print_features(self):
 
         """
-        Print the feature indices in the Filter object, separated by newline.
+        Print the feature indices in the Filter object, sorted alphabetically and separated by newline.
 
 
         :Examples:
             >>> from rnalysis import filtering
             >>> counts = filtering.Filter('tests/counted.csv')
             >>> counts.print_features()
-            WBGene00044022
-            WBGene00077504
-            WBGene00007079
-            WBGene00007069
             WBGene00007063
-            WBGene00007067
-            WBGene00077503
-            WBGene00007078
             WBGene00007064
-            WBGene00077502
-            WBGene00044951
-            WBGene00007077
             WBGene00007066
-            WBGene00007076
-            WBGene00014997
-            WBGene00043990
-            WBGene00007074
-            WBGene00043987
+            WBGene00007067
+            WBGene00007069
             WBGene00007071
-            WBGene00043989
-            WBGene00043988
+            WBGene00007074
             WBGene00007075
+            WBGene00007076
+            WBGene00007077
+            WBGene00007078
+            WBGene00007079
+            WBGene00014997
+            WBGene00043987
+            WBGene00043988
+            WBGene00043989
+            WBGene00043990
+            WBGene00044022
+            WBGene00044951
+            WBGene00077502
+            WBGene00077503
+            WBGene00077504
 
         """
         print(self.index_string)

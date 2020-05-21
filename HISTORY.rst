@@ -19,6 +19,7 @@ Changed
 * CountFilter.pca() can now be plotted without labeled points.
 * CountFilter.violin_plot() now accepts a y_title argument.
 * Added more optional arguments to visualization functions such as CountFilter.violin_plot() and CountFilter.clustergram().
+* Filter.feature_string and Filter.print_features() now sort the feature string alphabetically.
 
 
 Fixed
