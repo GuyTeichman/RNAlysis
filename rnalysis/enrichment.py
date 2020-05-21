@@ -19,7 +19,7 @@ from itertools import repeat, compress
 import upsetplot as upset
 import matplotlib_venn as vn
 import warnings
-from typing import Union, List, Set, Dict, Tuple, Iterable
+from typing import Union, List, Set, Dict, Tuple, Iterable, Type, Callable
 
 
 class FeatureSet:
@@ -117,13 +117,13 @@ class FeatureSet:
             for gene in self.gene_set:
                 f.write(gene + '\n')
 
-    def _set_ops(self, others, op):
+    def _set_ops(self, others, op: Callable):
         """
         Performs a given set operation on self and on another object (FeatureSet or set).
         :type other: FeatureSet, set or str
         :param other: Other object to perform set operation with.
-        :param op: The set operation to be performed. \
-        set.union, set.intersection, set.difference or set.symmetric_difference.
+        :type: op: Callable (set.union, set.intersection, set.difference or set.symmetric difference)
+        :param op: The set operation to be performed.
         :return:
         A set resulting from the set operation.
         """
@@ -328,7 +328,7 @@ class FeatureSet:
         return df_comb
 
     @staticmethod
-    def _single_enrichment(gene_set, attributes, attr_ref_df: pd.DataFrame, fraction, reps):
+    def _single_enrichment(gene_set, attributes, attr_ref_df: pd.DataFrame, fraction: Callable, reps: int):
         attributes = [attributes] if not isinstance(attributes, list) else attributes
         for attribute in attributes:
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
