@@ -15,6 +15,7 @@ Changed
 *******
 * Updated docstrings and printouts of several functions.
 * Slightly improved speed and performance across the board.
+* Filter.feature_string() is now sorted alphabetically.
 
 
 Fixed
