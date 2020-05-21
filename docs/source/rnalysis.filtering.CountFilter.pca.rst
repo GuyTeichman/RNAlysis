@@ -1,5 +1,5 @@
-rnalysis.filtering.CountFilter.run\_pca
-=========================================
+rnalysis.filtering.CountFilter.pca
+==================================
 
 .. currentmodule:: rnalysis.filtering
 

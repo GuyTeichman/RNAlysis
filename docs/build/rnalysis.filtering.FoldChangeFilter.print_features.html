@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -90,17 +100,16 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.__init__.html">rnalysis.filtering.FoldChangeFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes.html">rnalysis.filtering.FoldChangeFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html">rnalysis.filtering.FoldChangeFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html">rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html">rnalysis.filtering.FoldChangeFilter.filter_biotype</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_ref_table_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
@@ -110,8 +119,9 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.randomization_test.html">rnalysis.filtering.FoldChangeFilter.randomization_test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_csv.html">rnalysis.filtering.FoldChangeFilter.save_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.sort.html">rnalysis.filtering.FoldChangeFilter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html">rnalysis.filtering.FoldChangeFilter.split_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html">rnalysis.filtering.FoldChangeFilter.split_by_percentile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html">rnalysis.filtering.FoldChangeFilter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.split_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.symmetric_difference.html">rnalysis.filtering.FoldChangeFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.tail.html">rnalysis.filtering.FoldChangeFilter.tail</a></li>
@@ -193,37 +203,37 @@
             
   <div class="section" id="rnalysis-filtering-foldchangefilter-print-features">
 <h1>rnalysis.filtering.FoldChangeFilter.print_features<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-print-features" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.filtering.FoldChangeFilter.print_features">
 <code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">print_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.print_features" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print the feature indices in the Filter object, separated by newline.</p>
+<dd><p>Print the feature indices in the Filter object, sorted alphabetically and separated by newline.</p>
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">print_features</span><span class="p">()</span>
-<span class="go">WBGene00044022</span>
-<span class="go">WBGene00077504</span>
-<span class="go">WBGene00007079</span>
-<span class="go">WBGene00007069</span>
 <span class="go">WBGene00007063</span>
-<span class="go">WBGene00007067</span>
-<span class="go">WBGene00077503</span>
-<span class="go">WBGene00007078</span>
 <span class="go">WBGene00007064</span>
-<span class="go">WBGene00077502</span>
-<span class="go">WBGene00044951</span>
-<span class="go">WBGene00007077</span>
 <span class="go">WBGene00007066</span>
-<span class="go">WBGene00007076</span>
-<span class="go">WBGene00014997</span>
-<span class="go">WBGene00043990</span>
-<span class="go">WBGene00007074</span>
-<span class="go">WBGene00043987</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00007069</span>
 <span class="go">WBGene00007071</span>
-<span class="go">WBGene00043989</span>
-<span class="go">WBGene00043988</span>
+<span class="go">WBGene00007074</span>
 <span class="go">WBGene00007075</span>
+<span class="go">WBGene00007076</span>
+<span class="go">WBGene00007077</span>
+<span class="go">WBGene00007078</span>
+<span class="go">WBGene00007079</span>
+<span class="go">WBGene00014997</span>
+<span class="go">WBGene00043987</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00044022</span>
+<span class="go">WBGene00044951</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00077503</span>
+<span class="go">WBGene00077504</span>
 </pre></div>
 </div>
 </dd>

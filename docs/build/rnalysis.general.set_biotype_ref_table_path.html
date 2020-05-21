@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -98,6 +108,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.parse_wbgene_string.html">rnalysis.general.parse_wbgene_string</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.read_attr_ref_table_path.html">rnalysis.general.read_attr_ref_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.read_biotype_ref_table_path.html">rnalysis.general.read_biotype_ref_table_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.reset_settings_file.html">rnalysis.general.reset_settings_file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.save_to_csv.html">rnalysis.general.save_to_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_attr_ref_table_path.html">rnalysis.general.set_attr_ref_table_path</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.general.set_biotype_ref_table_path</a></li>
@@ -172,9 +183,9 @@
             
   <div class="section" id="rnalysis-general-set-biotype-ref-table-path">
 <h1>rnalysis.general.set_biotype_ref_table_path<a class="headerlink" href="#rnalysis-general-set-biotype-ref-table-path" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+<dl class="py function">
 <dt id="rnalysis.general.set_biotype_ref_table_path">
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">set_biotype_ref_table_path</code><span class="sig-paren">(</span><em class="sig-param">path: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.set_biotype_ref_table_path" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">set_biotype_ref_table_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.set_biotype_ref_table_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines/updates the Biotype Reference Table path in the settings file.
 :param path: the path you wish to set as the Biotype Reference Table path
 :type path: str</p>
@@ -183,9 +194,9 @@
 <dd class="field-odd"><p></p></dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;the_new_biotype_reference_table_path&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;my_biotype_reference_table_path&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">set_biotype_ref_table_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-<span class="go">Attribute Reference Table path set as: the_new_biotype_reference_table_path</span>
+<span class="go">Biotype Reference Table path set as: my_biotype_reference_table_path</span>
 </pre></div>
 </div>
 </dd></dl>

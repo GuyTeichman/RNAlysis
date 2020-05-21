@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.normalize\_to\_rpm
-=====================================================
+=================================================
 
 .. currentmodule:: rnalysis.filtering
 

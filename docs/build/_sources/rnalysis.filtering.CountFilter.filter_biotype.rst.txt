@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.filter\_biotype
-================================================
+==============================================
 
 .. currentmodule:: rnalysis.filtering
 

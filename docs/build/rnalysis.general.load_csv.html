@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -98,6 +108,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.parse_wbgene_string.html">rnalysis.general.parse_wbgene_string</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.read_attr_ref_table_path.html">rnalysis.general.read_attr_ref_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.read_biotype_ref_table_path.html">rnalysis.general.read_biotype_ref_table_path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.reset_settings_file.html">rnalysis.general.reset_settings_file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.save_to_csv.html">rnalysis.general.save_to_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_attr_ref_table_path.html">rnalysis.general.set_attr_ref_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_biotype_ref_table_path.html">rnalysis.general.set_biotype_ref_table_path</a></li>
@@ -172,9 +183,9 @@
             
   <div class="section" id="rnalysis-general-load-csv">
 <h1>rnalysis.general.load_csv<a class="headerlink" href="#rnalysis-general-load-csv" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+<dl class="py function">
 <dt id="rnalysis.general.load_csv">
-<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">idx_col: int = None</em>, <em class="sig-param">drop_columns: Union[str</em>, <em class="sig-param">List[str]] = False</em>, <em class="sig-param">squeeze=False</em>, <em class="sig-param">comment: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.load_csv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rnalysis.general.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">idx_col</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_columns</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">squeeze</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">comment</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.general.load_csv" title="Permalink to this definition">¶</a></dt>
 <dd><p>loads a csv df into a pandas dataframe.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

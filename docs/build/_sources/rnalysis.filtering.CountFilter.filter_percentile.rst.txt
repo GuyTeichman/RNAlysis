@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.filter\_percentile
-===================================================
+=================================================
 
 .. currentmodule:: rnalysis.filtering
 

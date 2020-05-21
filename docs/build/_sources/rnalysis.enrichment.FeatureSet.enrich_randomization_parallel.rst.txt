@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.enrich\_randomization\_parallel
-========================================================================
+==============================================================
 
 .. currentmodule:: rnalysis.enrichment
 

@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -92,7 +102,6 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.__init__.html">rnalysis.enrichment.FeatureSet.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes.html">rnalysis.enrichment.FeatureSet.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet.enrich_randomization</a></li>
@@ -179,9 +188,9 @@
             
   <div class="section" id="rnalysis-enrichment-featureset-enrich-randomization">
 <h1>rnalysis.enrichment.FeatureSet.enrich_randomization<a class="headerlink" href="#rnalysis-enrichment-featureset-enrich-randomization" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.enrichment.FeatureSet.enrich_randomization">
-<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param">attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding', background_genes=None, attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined', save_csv: bool = False, fname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.enrich_randomization" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.enrich_randomization" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 <dl class="field-list simple">

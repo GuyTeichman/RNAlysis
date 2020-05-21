@@ -8,10 +8,12 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RNAlysis - RNA sequencing data analysis &mdash; RNAlysis 1.3.4 documentation</title>
+  <title>What is RNAlysis? &mdash; RNAlysis 1.3.4 documentation</title>
   
 
   
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
   
   
   
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,16 +88,13 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">RNAlysis - RNA sequencing data analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#what-is-it">What is it?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#main-features">Main Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#where-to-get-it">Where to get it</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#credits">Credits</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#development-lead">Development Lead</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#contributors">Contributors</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#credits">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributors">Contributors</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -148,7 +151,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>RNAlysis - RNA sequencing data analysis</li>
+      <li>What is RNAlysis?</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -167,72 +170,81 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rnalysis-rna-sequencing-data-analysis">
-<h1>RNAlysis - RNA sequencing data analysis<a class="headerlink" href="#rnalysis-rna-sequencing-data-analysis" title="Permalink to this headline">¶</a></h1>
-<a class="reference external image-reference" href="https://pypi.python.org/pypi/rnalysis"><img alt="https://img.shields.io/pypi/v/rnalysis.svg" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a>
-<div class="section" id="what-is-it">
-<h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this headline">¶</a></h2>
+  <div class="figure align-default">
+<a class="reference external image-reference" href="https://guyteichman.github.io/RNAlysis"><img alt="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png" src="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png" /></a>
+</div>
+<p><strong>Useful links:</strong> <a class="reference external" href="https://guyteichman.github.io/RNAlysis">Documentation</a> |
+<a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">Source code</a> |
+<a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues">Bug reports</a> | <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="pipimage" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a> | <a class="reference external" href="https://travis-ci.org/GuyTeichman/RNAlysis"><img alt="travisci" src="https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master" /></a> | <a class="reference external" href="https://pepy.tech/project/rnalysis"><img alt="downloads" src="https://pepy.tech/badge/rnalysis" /></a></p>
+<hr class="docutils" />
+<div class="section" id="what-is-rnalysis">
+<h1>What is RNAlysis?<a class="headerlink" href="#what-is-rnalysis" title="Permalink to this headline">¶</a></h1>
 <p>RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data.
 The package includes various filtering methods, data visualisation, clustering analyses, enrichment anslyses and
 exploratory analyses.</p>
 <p>RNAlysis allows you to perform filtering and analyses at any order you wish.
 It has the ability to save or load your progress at any given phase,
 Wand document the order of operations you performed in the saved file names.</p>
-<p>RNAlysis works with sequencing count matrices and differential expression output files in general, and integrates in particular with python’s HTSeq-count and R’s DESeq2.
-* Documentation: <a class="reference external" href="https://guyteichman.github.io/RNAlysis">https://guyteichman.github.io/RNAlysis</a></p>
+<p>RNAlysis works with sequencing count matrices and differential expression output files in general, and integrates in particular with python’s HTSeq-count and R’s DESeq2.</p>
 </div>
+<hr class="docutils" />
 <div class="section" id="main-features">
-<h2>Main Features<a class="headerlink" href="#main-features" title="Permalink to this headline">¶</a></h2>
+<h1>Main Features<a class="headerlink" href="#main-features" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><p>Filtering of count matrices, fold changes and differential expression tables.</p></li>
-<li><p>Normalization of count matrices</p></li>
-<li><p>Exploratory data analysis and visualisation</p></li>
-<li><p>Enrichment analysis for custom attributes</p></li>
-<li><p>Clustering and dimentionality reduction</p></li>
+<li><p>Filter your read count matrices, fold change data, differential expression tables, and tabular data in general.</p></li>
+<li><p>Normalize your read count data</p></li>
+<li><p>Visualise, explore and describe your sequencing data</p></li>
+<li><p>Find global relationships between sample expression profiles with clustering and dimensionality reduction</p></li>
+<li><p>Create and share analysis pipelines</p></li>
+<li><p>Perform enrichment analysis with pre-determined Gene Ontology terms, or with used-defined attributes</p></li>
 </ul>
 </div>
+<hr class="docutils" />
 <div class="section" id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<h1>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p>numpy</p></li>
 <li><p>pandas</p></li>
+<li><p>scipy</p></li>
 <li><p>matplotlib</p></li>
 <li><p>seaborn</p></li>
 <li><p>tissue_enrichment_analysis</p></li>
 <li><p>statsmodels</p></li>
-<li><p>sklearn</p></li>
+<li><p>scikit-learn</p></li>
 <li><p>ipyparallel</p></li>
 <li><p>grid_strategy</p></li>
 <li><p>Distance</p></li>
 <li><p>pyyaml</p></li>
-<li><p>matplotlib-venn</p></li>
 <li><p>UpSetPlot</p></li>
+<li><p>matplotlib-venn</p></li>
 </ul>
 </div>
+<hr class="docutils" />
 <div class="section" id="where-to-get-it">
-<h2>Where to get it<a class="headerlink" href="#where-to-get-it" title="Permalink to this headline">¶</a></h2>
+<h1>Where to get it<a class="headerlink" href="#where-to-get-it" title="Permalink to this headline">¶</a></h1>
 <p>Use the following command in the python prompt:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span>
 </pre></div>
 </div>
 </div>
+<hr class="docutils" />
 <div class="section" id="credits">
-<h2>Credits<a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h2>
+<h1>Credits<a class="headerlink" href="#credits" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="development-lead">
-<h3>Development Lead<a class="headerlink" href="#development-lead" title="Permalink to this headline">¶</a></h3>
+<h2>Development Lead<a class="headerlink" href="#development-lead" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Guy Teichman &lt;<a class="reference external" href="mailto:guyteichman&#37;&#52;&#48;gmail&#46;com">guyteichman<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</p></li>
+<li><p>Guy Teichman: <a class="reference external" href="mailto:guyteichman&#37;&#52;&#48;gmail&#46;com">guyteichman<span>&#64;</span>gmail<span>&#46;</span>com</a></p></li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h3>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h3>
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Or Ganon</p></li>
 <li><p>Netta Dunsky</p></li>
 <li><p>Shachar Shani</p></li>
 </ul>
+<hr class="docutils" />
 <p>This package was created with <a class="reference external" href="https://github.com/audreyr/cookiecutter">Cookiecutter</a> and the <a class="reference external" href="https://github.com/audreyr/cookiecutter-pypackage">audreyr/cookiecutter-pypackage</a> project template.</p>
-</div>
 </div>
 </div>
 

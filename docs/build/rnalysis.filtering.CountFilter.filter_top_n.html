@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -90,10 +100,9 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.__init__.html">rnalysis.filtering.CountFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes.html">rnalysis.filtering.CountFilter.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html">rnalysis.filtering.CountFilter.box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html">rnalysis.filtering.CountFilter.clustergram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
@@ -111,14 +120,15 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html">rnalysis.filtering.CountFilter.normalize_with_scaling_factors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html">rnalysis.filtering.CountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html">rnalysis.filtering.CountFilter.pairplot</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.run_pca</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html">rnalysis.filtering.CountFilter.pca</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.plot_expression.html">rnalysis.filtering.CountFilter.plot_expression</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.print_features.html">rnalysis.filtering.CountFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.save_csv.html">rnalysis.filtering.CountFilter.save_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.scatter_sample_vs_sample.html">rnalysis.filtering.CountFilter.scatter_sample_vs_sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.sort.html">rnalysis.filtering.CountFilter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_attribute.html">rnalysis.filtering.CountFilter.split_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html">rnalysis.filtering.CountFilter.split_by_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html">rnalysis.filtering.CountFilter.split_by_reads</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_attribute.html">rnalysis.filtering.CountFilter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html">rnalysis.filtering.CountFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html">rnalysis.filtering.CountFilter.tail</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.text_filters.html">rnalysis.filtering.CountFilter.text_filters</a></li>
@@ -127,6 +137,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 </ul>
 </li>
@@ -202,27 +213,40 @@
             
   <div class="section" id="rnalysis-filtering-countfilter-filter-top-n">
 <h1>rnalysis.filtering.CountFilter.filter_top_n<a class="headerlink" href="#rnalysis-filtering-countfilter-filter-top-n" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.filtering.CountFilter.filter_top_n">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param">by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True, na_position: str = 'last', opposite: bool = False, inplace: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.filter_top_n" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
-<dl class="field-list simple">
-<dt class="field-odd">type by</dt>
-<dd class="field-odd"><p>string or list of strings</p>
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">filter_top_n</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">by</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">n</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">100</span></em>, <em class="sig-param"><span class="n">ascending</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>List<span class="p">[</span>bool<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">na_position</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'last'</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.filter_top_n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>by</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Names of the column or columns to sort and then filter by.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+</ul>
 </dd>
-<dt class="field-even">param by</dt>
-<dd class="field-even"><p>Names of the column or columns to sort and then filter by.</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If ‘inplace’ is False, returns a new instance of Filter.</p>
 </dd>
-<dt class="field-odd">type n</dt>
-<dd class="field-odd"><p>int</p>
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only the 10 rows with the highest values in the columns &#39;cond1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_top_n</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;cond1&#39;</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only the 10 rows which have the lowest values in the columns &#39;cond1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># and then the highest values in the column &#39;cond2&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_top_n</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cond1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2&#39;</span><span class="p">],</span><span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span><span class="kc">False</span><span class="p">])</span>
+<span class="go">Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.</span>
+</pre></div>
+</div>
 </dd>
-<dt class="field-even">param n</dt>
-<dd class="field-even"><p>How many features to keep in the Filter object.</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="field-list simple">
 </dl>
 </dd></dl>
 

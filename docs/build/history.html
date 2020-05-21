@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,24 +88,34 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">1.3.4 (2020-04-07)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">1.3.5 (2020-05-27)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">1.3.3 (2020-03-28)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">1.3.4 (2020-04-07)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#id3">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#id4">Fixed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">1.3.3 (2020-03-28)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Fixed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#removed">Removed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id5">1.3.2 (2019-12-11)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">1.3.2 (2019-12-11)</a></li>
 </ul>
 </li>
 </ul>
@@ -174,30 +190,58 @@
   <div class="section" id="history">
 <h1>History<a class="headerlink" href="#history" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
-<h2>1.3.4 (2020-04-07)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>1.3.5 (2020-05-27)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>This version fixed a bug that prevented installation of the package.</p></li>
+<li><p>This version introduces minor bug fixes and a few more visualization options.</p></li>
 </ul>
+<div class="section" id="added">
+<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Added the visualization function CountFilter.box_plot().</p></li>
+</ul>
+</div>
 <div class="section" id="changed">
 <h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>Updated docstrings and printouts of several functions</p></li>
+<li><p>Updated docstrings and printouts of several functions.</p></li>
+<li><p>Slightly improved speed and performance across the board.</p></li>
+<li><p>Filter.feature_string() is now sorted alphabetically.</p></li>
 </ul>
 </div>
 <div class="section" id="fixed">
 <h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>Fixed a bug with installation of the previous version</p></li>
+<li><p>Fixed DepracationWarning on parsing functions from the general module.</p></li>
+<li><p>Fixed bug where saving csv files on Linux systems would save the files under the wrong directory.</p></li>
+<li><p>Fixed a bug where UTF-8-encoded Reference Tables won’t be loaded correctly</p></li>
 </ul>
 </div>
 </div>
 <div class="section" id="id2">
-<h2>1.3.3 (2020-03-28)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>1.3.4 (2020-04-07)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>This version fixed a bug that prevented installation of the package.</p></li>
+</ul>
+<div class="section" id="id3">
+<h3>Changed<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Updated docstrings and printouts of several functions</p></li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h3>Fixed<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed a bug with installation of the previous version</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>1.3.3 (2020-03-28)<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>First stable release on PyPI.</p></li>
 </ul>
-<div class="section" id="added">
-<h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Added<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added Filter.sort(), and upgraded the functionality of Filter.filter_top_n().</p></li>
 <li><p>Added UpSet plots and Venn diagrams to enrichment module.</p></li>
@@ -209,8 +253,8 @@
 <li><p>Added code examples to the user guide and to the docstrings of most functions.</p></li>
 </ul>
 </div>
-<div class="section" id="id3">
-<h3>Changed<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id7">
+<h3>Changed<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Changed argument order and default values in filtering.CountFilter.from_folder().</p></li>
 <li><p>Changed default title in scatter_sample_vs_sample().</p></li>
@@ -228,8 +272,8 @@
 <li><p>Made some functions in the general module hidden.</p></li>
 </ul>
 </div>
-<div class="section" id="id4">
-<h3>Fixed<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id8">
+<h3>Fixed<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Various bug fixes</p></li>
 </ul>
@@ -241,8 +285,8 @@
 </ul>
 </div>
 </div>
-<div class="section" id="id5">
-<h2>1.3.2 (2019-12-11)<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id9">
+<h2>1.3.2 (2019-12-11)<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>First beta release on PyPI.</p></li>
 </ul>

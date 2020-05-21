@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-filtering-module">RNAlysis filtering module</a><ul>
@@ -395,8 +405,8 @@ Using the function Filter.filter_biotype(), you can filter your genomic features
 <span class="go">unknown            1</span>
 </pre></div>
 </div>
-<p>Or view more elaborated descriptive statistics for eahc biotype by specifying format=’long’:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<p>Or view more elaborated descriptive statistics for eahc biotype by specifying return_format=’long’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="n">return_format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
 
 <span class="go">               baseMean               ...           padj</span>
 <span class="go">                  count         mean  ...            75%            max</span>
@@ -817,7 +827,7 @@ We would then supply the normalization function with the path to the special cou
 </div>
 <p>The CountFilter has the following columns:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">columns</span>
-<span class="go">[&#39;cond1_rep1&#39;,&#39;cond1_rep2&#39;,&#39;cond2_rep1&#39;,&#39;cond2_rep2&#39;,&#39;cond3_rep1&#39;,&#39;cond3_rep2&#39;]</span>
+<span class="go">[&#39;cond1_rep1&#39;, &#39;cond1_rep2&#39;, &#39;cond2_rep1&#39;, &#39;cond2_rep2&#39;, &#39;cond3_rep1&#39;, &#39;cond3_rep2&#39;]</span>
 </pre></div>
 </div>
 <p>We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list:</p>
@@ -826,9 +836,9 @@ We would then supply the normalization function with the path to the special cou
 </div>
 <p>In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">numerator</span>
-<span class="go">&quot;Mean of [&#39;cond1_rep1&#39;,&#39;cond1_rep2&#39;]&quot;</span>
+<span class="go">&quot;Mean of [&#39;cond1_rep1&#39;, &#39;cond1_rep2&#39;]&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">denominator</span>
-<span class="go">&quot;Mean of [&#39;cond2_rep1&#39;,&#39;cond2_rep2&#39;]&quot;</span>
+<span class="go">&quot;Mean of [&#39;cond2_rep1&#39;, &#39;cond2_rep2&#39;]&quot;</span>
 </pre></div>
 </div>
 <p>We now have a FoldChangeFilter object that we can perform further filtering operations on.</p>
@@ -1042,11 +1052,13 @@ Venn diagrams are limited to 2-3 sets:</p>
 To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
+<span class="go">Starting parallel session...</span>
+<span class="go">Parallel session started successfully</span>
 </pre></div>
 </div>
-<p>Your python console will then become unavailable for 30 seconds while the ipcluster is being started.
+<p>Your python console will  become unavailable for about 30 seconds while the ipcluster is being started.
 By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.</p>
-<p>start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period:</p>
+<p>start_parallel_session() will automatically close the previous parallel session, start a new session, and block the console while the ipcluster is being started. You can perform the same operations manually in order to skip the blocking period:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">_start_ipcluster</span><span class="p">()</span>
 <span class="go">#perform parallel processing here</span>

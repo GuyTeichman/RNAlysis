@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.filter\_top\_n
-===============================================
+=============================================
 
 .. currentmodule:: rnalysis.filtering
 

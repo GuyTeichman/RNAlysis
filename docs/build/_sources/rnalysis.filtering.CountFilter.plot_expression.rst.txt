@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.plot\_expression
-=================================================
+===============================================
 
 .. currentmodule:: rnalysis.filtering
 

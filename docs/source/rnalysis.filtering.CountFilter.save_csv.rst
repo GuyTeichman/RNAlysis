@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.save\_csv
-==========================================
+========================================
 
 .. currentmodule:: rnalysis.filtering
 

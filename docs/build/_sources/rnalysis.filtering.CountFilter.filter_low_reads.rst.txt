@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.filter\_low\_reads
-===================================================
+=================================================
 
 .. currentmodule:: rnalysis.filtering
 

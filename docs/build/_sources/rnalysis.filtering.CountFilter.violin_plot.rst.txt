@@ -1,5 +1,5 @@
 rnalysis.filtering.CountFilter.violin\_plot
-=============================================
+===========================================
 
 .. currentmodule:: rnalysis.filtering
 

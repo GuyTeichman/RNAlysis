@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -90,13 +100,14 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.__init__.html">rnalysis.filtering.Filter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html">rnalysis.filtering.Filter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html">rnalysis.filtering.Filter.filter_biotype</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_ref_table_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
@@ -104,16 +115,15 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html">rnalysis.filtering.Filter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html">rnalysis.filtering.Filter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html">rnalysis.filtering.Filter.save_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.sort.html">rnalysis.filtering.Filter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html">rnalysis.filtering.Filter.split_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_percentile.html">rnalysis.filtering.Filter.split_by_percentile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html">rnalysis.filtering.Filter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html">rnalysis.filtering.Filter.symmetric_difference</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.tail</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html">rnalysis.filtering.Filter.text_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.union.html">rnalysis.filtering.Filter.union</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 </ul>
 </li>
@@ -189,47 +199,48 @@
             
   <div class="section" id="rnalysis-filtering-filter-tail">
 <h1>rnalysis.filtering.Filter.tail<a class="headerlink" href="#rnalysis-filtering-filter-tail" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.filtering.Filter.tail">
-<code class="sig-prename descclassname">Filter.</code><code class="sig-name descname">tail</code><span class="sig-paren">(</span><em class="sig-param">n: int = 5</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.tail" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">Filter.</code><code class="sig-name descname">tail</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="headerlink" href="#rnalysis.filtering.Filter.tail" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>positive int</em><em>, </em><em>default 5</em>) – Number of rows to show.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>returns the last n rows of the Filter object.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>returns the last n rows of the Filter object.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+<span class="go">                   baseMean  log2FoldChange  ...        pvalue          padj</span>
+<span class="go">WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78</span>
+<span class="go">WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72</span>
+<span class="go">WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71</span>
+<span class="go">WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69</span>
+<span class="go">WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68</span>
+
+<span class="go">[5 rows x 6 columns]</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>baseMean  log2FoldChange  …        pvalue          padj</p>
-</div></blockquote>
-<p>WBGene00000025  2236.185837        2.477374  …  1.910000e-81  1.460000e-78
-WBGene00000026   343.648987       -4.037191  …  2.320000e-75  1.700000e-72
-WBGene00000027   175.142856        6.352044  …  1.580000e-74  1.120000e-71
-WBGene00000028   219.163200        3.913657  …  3.420000e-72  2.320000e-69
-WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
-<p>[5 rows x 6 columns]</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="c1"># returns the last 8 rows</span>
+<span class="go">                   baseMean  log2FoldChange  ...        pvalue          padj</span>
+<span class="go">WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94</span>
+<span class="go">WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90</span>
+<span class="go">WBGene00000024   221.925724        4.801676  ...  1.230000e-84  9.820000e-82</span>
+<span class="go">WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78</span>
+<span class="go">WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72</span>
+<span class="go">WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71</span>
+<span class="go">WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69</span>
+<span class="go">WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68</span>
+
+<span class="go">[8 rows x 6 columns]</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>baseMean  log2FoldChange  …        pvalue          padj</p>
-</div></blockquote>
-<p>WBGene00000022   365.813048        6.101303  …  2.740000e-97  2.400000e-94
-WBGene00000023  3168.566714        3.906719  …  1.600000e-93  1.340000e-90
-WBGene00000024   221.925724        4.801676  …  1.230000e-84  9.820000e-82
-WBGene00000025  2236.185837        2.477374  …  1.910000e-81  1.460000e-78
-WBGene00000026   343.648987       -4.037191  …  2.320000e-75  1.700000e-72
-WBGene00000027   175.142856        6.352044  …  1.580000e-74  1.120000e-71
-WBGene00000028   219.163200        3.913657  …  3.420000e-72  2.320000e-69
-WBGene00000029  1066.242402       -2.811281  …  1.420000e-70  9.290000e-68</p>
-<p>[8 rows x 6 columns]</p>
 </dd>
 </dl>
 </dd></dl>

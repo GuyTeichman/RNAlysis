@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -35,8 +38,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.__init__" href="rnalysis.filtering.FoldChangeFilter.__init__.html" />
-    <link rel="prev" title="rnalysis.filtering.DESeqFilter.volcano_plot" href="rnalysis.filtering.DESeqFilter.volcano_plot.html" /> 
+    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.biotypes" href="rnalysis.filtering.FoldChangeFilter.biotypes.html" />
+    <link rel="prev" title="rnalysis.filtering.Filter.union" href="rnalysis.filtering.Filter.union.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -90,17 +100,16 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.__init__.html">rnalysis.filtering.FoldChangeFilter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes.html">rnalysis.filtering.FoldChangeFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html">rnalysis.filtering.FoldChangeFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html">rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html">rnalysis.filtering.FoldChangeFilter.filter_biotype</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_ref_table_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
@@ -110,8 +119,9 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.print_features.html">rnalysis.filtering.FoldChangeFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.randomization_test.html">rnalysis.filtering.FoldChangeFilter.randomization_test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_csv.html">rnalysis.filtering.FoldChangeFilter.save_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.sort.html">rnalysis.filtering.FoldChangeFilter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html">rnalysis.filtering.FoldChangeFilter.split_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html">rnalysis.filtering.FoldChangeFilter.split_by_percentile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html">rnalysis.filtering.FoldChangeFilter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.split_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.symmetric_difference.html">rnalysis.filtering.FoldChangeFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.tail.html">rnalysis.filtering.FoldChangeFilter.tail</a></li>
@@ -191,9 +201,9 @@
             
   <div class="section" id="rnalysis-filtering-foldchangefilter">
 <h1>rnalysis.filtering.FoldChangeFilter<a class="headerlink" href="#rnalysis-filtering-foldchangefilter" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="rnalysis.filtering.FoldChangeFilter">
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param">fname: Union[str, pathlib.Path], numerator_name: str, denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">FoldChangeFilter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>pathlib.Path<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">numerator_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">denominator_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>A class that contains a single column, representing the gene-specific fold change between two conditions. </dt><dd><p>this class does not support ‘inf’ and ‘0’ values, and importing a file with such values could lead     to incorrect filtering and statistical analyses.</p>
 </dd>
@@ -217,9 +227,9 @@
 <dt>denominator: str</dt><dd><p>Name of the denominator used to calculate the fold change.</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.filtering.FoldChangeFilter.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">fname: Union[str, pathlib.Path], numerator_name: str, denominator_name: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>pathlib.Path<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">numerator_name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">denominator_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -236,91 +246,85 @@
 </dl>
 </dd></dl>
 
-<p class="rubric">Methods</p>
+</dd></dl>
+
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.__init__.html#rnalysis.filtering.FoldChangeFilter.__init__" title="rnalysis.filtering.FoldChangeFilter.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(fname, numerator_name, denominator_name)</p></td>
-<td><p><dl class="field-list simple">
-<dt class="field-odd">param fname</dt>
-<dd class="field-odd"><p>full path/filename of the .csv file to be loaded into the Filter object</p>
-</dd>
-</dl>
-</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes.html#rnalysis.filtering.FoldChangeFilter.biotypes" title="rnalysis.filtering.FoldChangeFilter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">biotypes</span></code></a>([format, ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.biotypes.html#rnalysis.filtering.FoldChangeFilter.biotypes" title="rnalysis.filtering.FoldChangeFilter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.biotypes</span></code></a>([return_format, ref])</p></td>
 <td><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html#rnalysis.filtering.FoldChangeFilter.describe" title="rnalysis.filtering.FoldChangeFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe</span></code></a>([percentiles])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html#rnalysis.filtering.FoldChangeFilter.describe" title="rnalysis.filtering.FoldChangeFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.describe</span></code></a>([percentiles])</p></td>
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html#rnalysis.filtering.FoldChangeFilter.difference" title="rnalysis.filtering.FoldChangeFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difference</span></code></a>(*others[, return_type, inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html#rnalysis.filtering.FoldChangeFilter.difference" title="rnalysis.filtering.FoldChangeFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.difference</span></code></a>(*others[, …])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_abs_log2_fold_change</span></code></a>([abslog2fc, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_abs_log2_fold_change</span></code></a>([…])</p></td>
 <td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html#rnalysis.filtering.FoldChangeFilter.filter_biotype" title="rnalysis.filtering.FoldChangeFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_biotype</span></code></a>([biotype, ref, opposite, inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html#rnalysis.filtering.FoldChangeFilter.filter_biotype" title="rnalysis.filtering.FoldChangeFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_biotype</span></code></a>([biotype, …])</p></td>
 <td><p>Filters out all features that do not match the indicated biotype/biotypes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html#rnalysis.filtering.FoldChangeFilter.filter_by_attribute" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_by_attribute</span></code></a>([attributes, mode, ref, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html#rnalysis.filtering.FoldChangeFilter.filter_by_attribute" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_by_attribute</span></code></a>([…])</p></td>
 <td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_fold_change_direction</span></code></a>([direction, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_fold_change_direction</span></code></a>([…])</p></td>
 <td><p>Filters out features according to the direction in which they changed between the two conditions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="rnalysis.filtering.FoldChangeFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_percentile</span></code></a>(percentile, column[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html#rnalysis.filtering.FoldChangeFilter.filter_percentile" title="rnalysis.filtering.FoldChangeFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_percentile</span></code></a>(…[, …])</p></td>
 <td><p>Removes all entries above the specified percentile in the specified column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html#rnalysis.filtering.FoldChangeFilter.filter_top_n" title="rnalysis.filtering.FoldChangeFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_top_n</span></code></a>(by[, n, ascending, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html#rnalysis.filtering.FoldChangeFilter.filter_top_n" title="rnalysis.filtering.FoldChangeFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.filter_top_n</span></code></a>(by[, n, …])</p></td>
 <td><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html#rnalysis.filtering.FoldChangeFilter.head" title="rnalysis.filtering.FoldChangeFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code></a>([n])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html#rnalysis.filtering.FoldChangeFilter.head" title="rnalysis.filtering.FoldChangeFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html#rnalysis.filtering.FoldChangeFilter.intersection" title="rnalysis.filtering.FoldChangeFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intersection</span></code></a>(*others[, return_type, inplace])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html#rnalysis.filtering.FoldChangeFilter.intersection" title="rnalysis.filtering.FoldChangeFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.intersection</span></code></a>(*others[, …])</p></td>
 <td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.number_filters.html#rnalysis.filtering.FoldChangeFilter.number_filters" title="rnalysis.filtering.FoldChangeFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_filters</span></code></a>(column, operator, value[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.number_filters.html#rnalysis.filtering.FoldChangeFilter.number_filters" title="rnalysis.filtering.FoldChangeFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.number_filters</span></code></a>(column, …)</p></td>
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.print_features.html#rnalysis.filtering.FoldChangeFilter.print_features" title="rnalysis.filtering.FoldChangeFilter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_features</span></code></a>()</p></td>
-<td><p>Print the feature indices in the Filter object, separated by newline.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.print_features.html#rnalysis.filtering.FoldChangeFilter.print_features" title="rnalysis.filtering.FoldChangeFilter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.print_features</span></code></a>()</p></td>
+<td><p>Print the feature indices in the Filter object, sorted alphabetically and separated by newline.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.randomization_test.html#rnalysis.filtering.FoldChangeFilter.randomization_test" title="rnalysis.filtering.FoldChangeFilter.randomization_test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">randomization_test</span></code></a>(ref[, alpha, reps, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.randomization_test.html#rnalysis.filtering.FoldChangeFilter.randomization_test" title="rnalysis.filtering.FoldChangeFilter.randomization_test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.randomization_test</span></code></a>(ref[, …])</p></td>
 <td><p>Perform a randomization test to examine whether the fold change of a group of specific genomic features         is significantly different than the fold change of a background set of genomic features.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_csv.html#rnalysis.filtering.FoldChangeFilter.save_csv" title="rnalysis.filtering.FoldChangeFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_csv</span></code></a>([alt_filename])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_csv.html#rnalysis.filtering.FoldChangeFilter.save_csv" title="rnalysis.filtering.FoldChangeFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.save_csv</span></code></a>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html#rnalysis.filtering.FoldChangeFilter.split_by_percentile" title="rnalysis.filtering.FoldChangeFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_percentile</span></code></a>(percentile, column)</p></td>
-<td><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.sort.html#rnalysis.filtering.FoldChangeFilter.sort" title="rnalysis.filtering.FoldChangeFilter.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.sort</span></code></a>(by[, ascending, …])</p></td>
+<td><p>Sort the rows by the values of specified column or columns.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html#rnalysis.filtering.FoldChangeFilter.split_by_attribute" title="rnalysis.filtering.FoldChangeFilter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_by_attribute</span></code></a>(attributes[, ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html#rnalysis.filtering.FoldChangeFilter.split_by_attribute" title="rnalysis.filtering.FoldChangeFilter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.split_by_attribute</span></code></a>(attributes)</p></td>
 <td><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.split_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_fold_change_direction</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html#rnalysis.filtering.FoldChangeFilter.split_by_percentile" title="rnalysis.filtering.FoldChangeFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.split_by_percentile</span></code></a>(…)</p></td>
+<td><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html#rnalysis.filtering.FoldChangeFilter.split_fold_change_direction" title="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.split_fold_change_direction</span></code></a>()</p></td>
 <td><p>Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping         FoldChangeFilter objects, based on the direction of their log2(fold change).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.symmetric_difference.html#rnalysis.filtering.FoldChangeFilter.symmetric_difference" title="rnalysis.filtering.FoldChangeFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">symmetric_difference</span></code></a>(other[, return_type])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.symmetric_difference.html#rnalysis.filtering.FoldChangeFilter.symmetric_difference" title="rnalysis.filtering.FoldChangeFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.symmetric_difference</span></code></a>(other)</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second,         but NOT in both (set symmetric difference).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.tail.html#rnalysis.filtering.FoldChangeFilter.tail" title="rnalysis.filtering.FoldChangeFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail</span></code></a>([n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.tail.html#rnalysis.filtering.FoldChangeFilter.tail" title="rnalysis.filtering.FoldChangeFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.tail</span></code></a>([n])</p></td>
 <td><p>Return the last n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.text_filters.html#rnalysis.filtering.FoldChangeFilter.text_filters" title="rnalysis.filtering.FoldChangeFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text_filters</span></code></a>(column, operator, value[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.text_filters.html#rnalysis.filtering.FoldChangeFilter.text_filters" title="rnalysis.filtering.FoldChangeFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.text_filters</span></code></a>(column, …[, …])</p></td>
 <td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.union.html#rnalysis.filtering.FoldChangeFilter.union" title="rnalysis.filtering.FoldChangeFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">union</span></code></a>(*others[, return_type])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.union.html#rnalysis.filtering.FoldChangeFilter.union" title="rnalysis.filtering.FoldChangeFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FoldChangeFilter.union</span></code></a>(*others[, return_type])</p></td>
 <td><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p></td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
 </div>
 
 
@@ -331,10 +335,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.FoldChangeFilter.__init__.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.__init__" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.FoldChangeFilter.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.DESeqFilter.volcano_plot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.DESeqFilter.volcano_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.Filter.union.html" class="btn btn-neutral float-left" title="rnalysis.filtering.Filter.union" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

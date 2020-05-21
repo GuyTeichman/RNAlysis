@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -165,9 +175,9 @@
             
   <div class="section" id="rnalysis-enrichment-venn-diagram">
 <h1>rnalysis.enrichment.venn_diagram<a class="headerlink" href="#rnalysis-enrichment-venn-diagram" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+<dl class="py function">
 <dt id="rnalysis.enrichment.venn_diagram">
-<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">venn_diagram</code><span class="sig-paren">(</span><em class="sig-param">objs: Dict[str, Union[str, rnalysis.enrichment.FeatureSet, Set[str]]], title: str = 'default', ref: str = 'predefined', set_colors: tuple = ('r', 'g', 'b'), alpha: float = 0.4, weighted: bool = True, lines: bool = True, linecolor: str = 'black', linestyle='solid', linewidth=2.0, normalize_to: float = 1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.venn_diagram" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">venn_diagram</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">objs</span><span class="p">:</span> <span class="n">Dict<span class="p">[</span>str<span class="p">, </span>Union<span class="p">[</span>str<span class="p">, </span><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">rnalysis.enrichment.FeatureSet</a><span class="p">, </span>Set<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">title</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'default'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">set_colors</span><span class="p">:</span> <span class="n">tuple</span> <span class="o">=</span> <span class="default_value">'r', 'g', 'b'</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.4</span></em>, <em class="sig-param"><span class="n">weighted</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">lines</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">linecolor</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'black'</span></em>, <em class="sig-param"><span class="n">linestyle</span><span class="o">=</span><span class="default_value">'solid'</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">2.0</span></em>, <em class="sig-param"><span class="n">normalize_to</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.venn_diagram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

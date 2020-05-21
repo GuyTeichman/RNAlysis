@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.union
-==============================================
+====================================
 
 .. currentmodule:: rnalysis.enrichment
 

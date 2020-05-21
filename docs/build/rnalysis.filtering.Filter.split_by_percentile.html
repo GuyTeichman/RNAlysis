@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -35,8 +38,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.Filter.split_by_ref_table_attr" href="rnalysis.filtering.Filter.split_by_attribute.html" />
-    <link rel="prev" title="rnalysis.filtering.Filter.save_csv" href="rnalysis.filtering.Filter.save_csv.html" /> 
+    <link rel="next" title="rnalysis.filtering.Filter.symmetric_difference" href="rnalysis.filtering.Filter.symmetric_difference.html" />
+    <link rel="prev" title="rnalysis.filtering.Filter.split_by_attribute" href="rnalysis.filtering.Filter.split_by_attribute.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -90,13 +100,14 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.__init__.html">rnalysis.filtering.Filter.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html">rnalysis.filtering.Filter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html">rnalysis.filtering.Filter.filter_biotype</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_ref_table_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
@@ -104,16 +115,15 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html">rnalysis.filtering.Filter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html">rnalysis.filtering.Filter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html">rnalysis.filtering.Filter.save_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.sort.html">rnalysis.filtering.Filter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html">rnalysis.filtering.Filter.split_by_attribute</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.split_by_percentile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html">rnalysis.filtering.Filter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html">rnalysis.filtering.Filter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.tail.html">rnalysis.filtering.Filter.tail</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html">rnalysis.filtering.Filter.text_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.union.html">rnalysis.filtering.Filter.union</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 </ul>
 </li>
@@ -189,25 +199,25 @@
             
   <div class="section" id="rnalysis-filtering-filter-split-by-percentile">
 <h1>rnalysis.filtering.Filter.split_by_percentile<a class="headerlink" href="#rnalysis-filtering-filter-split-by-percentile" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.filtering.Filter.split_by_percentile">
-<code class="sig-prename descclassname">Filter.</code><code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param">percentile: float</em>, <em class="sig-param">column: str</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.split_by_percentile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">Filter.</code><code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#rnalysis.filtering.Filter.split_by_percentile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>percentile</strong> (<em>float between 0 and 1</em>) – The percentile that all features above it will be filtered out.</p></li>
 <li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>, <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-</dl>
-<p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
-<dl class="field-list">
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">below</span><span class="p">,</span> <span class="n">above</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_by_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.</span>
@@ -228,10 +238,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.Filter.split_by_attribute.html" class="btn btn-neutral float-right" title="rnalysis.filtering.Filter.split_by_ref_table_attr" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.Filter.symmetric_difference.html" class="btn btn-neutral float-right" title="rnalysis.filtering.Filter.symmetric_difference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.Filter.save_csv.html" class="btn btn-neutral float-left" title="rnalysis.filtering.Filter.save_csv" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.Filter.split_by_attribute.html" class="btn btn-neutral float-left" title="rnalysis.filtering.Filter.split_by_attribute" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

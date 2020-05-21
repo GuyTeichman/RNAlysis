@@ -1,5 +1,5 @@
 rnalysis.enrichment.FeatureSet.difference
-===================================================
+=========================================
 
 .. currentmodule:: rnalysis.enrichment
 

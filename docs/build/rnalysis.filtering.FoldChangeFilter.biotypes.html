@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -25,6 +27,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
+        <script src="_static/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -36,7 +39,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.FoldChangeFilter.describe" href="rnalysis.filtering.FoldChangeFilter.describe.html" />
-    <link rel="prev" title="rnalysis.filtering.FoldChangeFilter.__init__" href="rnalysis.filtering.FoldChangeFilter.__init__.html" /> 
+    <link rel="prev" title="rnalysis.filtering.FoldChangeFilter" href="rnalysis.filtering.FoldChangeFilter.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -50,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -82,7 +88,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -90,17 +100,16 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.__init__.html">rnalysis.filtering.FoldChangeFilter.__init__</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.describe.html">rnalysis.filtering.FoldChangeFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.difference.html">rnalysis.filtering.FoldChangeFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html">rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html">rnalysis.filtering.FoldChangeFilter.filter_biotype</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_ref_table_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
@@ -110,8 +119,9 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.print_features.html">rnalysis.filtering.FoldChangeFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.randomization_test.html">rnalysis.filtering.FoldChangeFilter.randomization_test</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.save_csv.html">rnalysis.filtering.FoldChangeFilter.save_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.sort.html">rnalysis.filtering.FoldChangeFilter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html">rnalysis.filtering.FoldChangeFilter.split_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html">rnalysis.filtering.FoldChangeFilter.split_by_percentile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_by_attribute.html">rnalysis.filtering.FoldChangeFilter.split_by_ref_table_attr</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.split_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.symmetric_difference.html">rnalysis.filtering.FoldChangeFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.tail.html">rnalysis.filtering.FoldChangeFilter.tail</a></li>
@@ -193,12 +203,12 @@
             
   <div class="section" id="rnalysis-filtering-foldchangefilter-biotypes">
 <h1>rnalysis.filtering.FoldChangeFilter.biotypes<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-biotypes" title="Permalink to this headline">¶</a></h1>
-<dl class="method">
+<dl class="py method">
 <dt id="rnalysis.filtering.FoldChangeFilter.biotypes">
-<code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param">format: str = 'short'</em>, <em class="sig-param">ref: str = 'predefined'</em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.biotypes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'short'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.biotypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
-:type format: ‘short’ or ‘long’ (default ‘short’)
-:param format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
+:type return_format: ‘short’ or ‘long’ (default ‘short’)
+:param return_format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
 which also provides descriptive statistics of each column per biotype.
 :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
 :rtype: pandas.DataFrame
@@ -217,16 +227,17 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># long-form view</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="n">return_format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
 <span class="go">               baseMean               ...           padj</span>
 <span class="go">                  count         mean  ...            75%            max</span>
 <span class="go">biotype                               ...</span>
 <span class="go">protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68</span>
 <span class="go">pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94</span>
 <span class="go">unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152</span>
+
+<span class="go">[3 rows x 48 columns]</span>
 </pre></div>
 </div>
-<p>[3 rows x 48 columns]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -244,7 +255,7 @@ which also provides descriptive statistics of each column per biotype.
         <a href="rnalysis.filtering.FoldChangeFilter.describe.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.describe" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.FoldChangeFilter.__init__.html" class="btn btn-neutral float-left" title="rnalysis.filtering.FoldChangeFilter.__init__" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.FoldChangeFilter.html" class="btn btn-neutral float-left" title="rnalysis.filtering.FoldChangeFilter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
