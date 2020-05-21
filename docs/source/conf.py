@@ -32,7 +32,7 @@ release = '1.3.4'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary','sphinx.ext.doctest']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary', 'sphinx.ext.doctest']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -48,7 +48,7 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-#html_theme = 'default'
+# html_theme = 'default'
 # html_theme = 'alabaster'
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -60,4 +60,4 @@ html_static_path = ['_static']
 automodsumm_inherited_members = True
 automodapi_inheritance_diagram = False
 
-autosummary_generate=True
+autosummary_generate = True
