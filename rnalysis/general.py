@@ -12,7 +12,7 @@ import time
 import subprocess
 import yaml
 from typing import Union, List, Set, Dict, Tuple
-from rnalysis import __attr_file_key__, __biotype_file_key__
+from rnalysis import __path__, __attr_file_key__, __biotype_file_key__
 
 
 def _start_ipcluster(n_engines: int = 'default'):
@@ -131,7 +131,8 @@ def _get_settings_file_path():
     :returns: the path of the settings.yaml file.
     :rtype: pathlib.Path
     """
-    return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
+    # return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
+    return Path(os.path.join(__path__[0], 'settings.yaml'))
 
 
 def _load_settings_file():
