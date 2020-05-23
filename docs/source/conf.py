@@ -16,7 +16,7 @@
 import os
 import sys
 
-#sys.path.insert(0, os.path.abspath('rnalysis'))
+# sys.path.insert(0, os.path.abspath('rnalysis'))
 sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
@@ -48,6 +48,9 @@ def setup(app):
     app.add_js_file('copybutton.js')
 
 
+html_favicon = 'favicon.ico'
+html_logo = 'logo.png'
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -67,3 +70,9 @@ automodsumm_inherited_members = True
 automodapi_inheritance_diagram = False
 
 autosummary_generate = True
+
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+}
