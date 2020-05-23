@@ -215,19 +215,19 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span><span class="p">,</span><span class="s1">&#39;numerator name&#39;</span><span class="p">,</span><span class="s1">&#39;denominator name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows with a positive log2(fold change) value</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span>
-<span class="go">Filtered 10 features, leaving 12 of the original 22 features.  Filtered inplace.</span>
+<span class="go">Filtered 10 features, leaving 12 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span><span class="p">,</span><span class="s1">&#39;numerator name&#39;</span><span class="p">,</span><span class="s1">&#39;denominator name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span> <span class="c1"># keep only rows with a negative log2(fold change) value</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;neg&#39;</span><span class="p">)</span>
-<span class="go">Filtered 14 features, leaving 8 of the original 22 features.  Filtered inplace.</span>
+<span class="go">Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span><span class="p">,</span><span class="s1">&#39;numerator name&#39;</span><span class="p">,</span><span class="s1">&#39;denominator name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows with a non-positive log2(fold change) value</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_fold_change_direction</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">Filtered 12 features, leaving 10 of the original 22 features.  Filtered inplace.</span>
+<span class="go">Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 </dd>

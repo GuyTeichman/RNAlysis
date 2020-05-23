@@ -224,7 +224,7 @@
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39; (union)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
-<span class="go">Filtered 13 features, leaving 9 of the original 22 features. Filtered inplace.</span>
+<span class="go">Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
@@ -238,7 +238,7 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to either &#39;attribute1&#39;,&#39;attribute3&#39; or both</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span>
 <span class="gp">... </span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.</span>
+<span class="go">Filtered 8 features, leaving 14 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>

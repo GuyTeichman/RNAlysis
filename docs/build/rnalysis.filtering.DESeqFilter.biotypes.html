@@ -220,13 +220,14 @@ which also provides descriptive statistics of each column per biotype.
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># long-form view</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="n">return_format</span><span class="o">=</span><span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
 <span class="go">               baseMean               ...           padj</span>
 <span class="go">                  count         mean  ...            75%            max</span>
 <span class="go">biotype                               ...</span>
 <span class="go">protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68</span>
 <span class="go">pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94</span>
 <span class="go">unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152</span>
+
 <span class="go">[3 rows x 48 columns]</span>
 </pre></div>
 </div>

@@ -206,19 +206,23 @@
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-<span class="go">               baseMean  log2FoldChange  ...         pvalue           padj</span>
+<span class="go">                   baseMean  log2FoldChange  ...         pvalue           padj</span>
 <span class="go">WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00</span>
 <span class="go">WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298</span>
 <span class="go">WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233</span>
 <span class="go">WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225</span>
 <span class="go">WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213</span>
+
+<span class="go">[5 rows x 6 columns]</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="c1"># return only the first 3 rows</span>
-<span class="go">               baseMean  log2FoldChange  ...         pvalue           padj</span>
+<span class="go">                   baseMean  log2FoldChange  ...         pvalue           padj</span>
 <span class="go">WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00</span>
 <span class="go">WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298</span>
 <span class="go">WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233</span>
+
+<span class="go">[3 rows x 6 columns]</span>
 </pre></div>
 </div>
 </dd>
