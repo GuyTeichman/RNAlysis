@@ -1,6 +1,0 @@
-rnalysis.filtering.CountFilter.columns
-======================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: CountFilter.columns

@@ -1,6 +1,0 @@
-rnalysis.filtering.FoldChangeFilter.denominator
-===============================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: FoldChangeFilter.denominator

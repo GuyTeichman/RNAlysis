@@ -1,23 +1,16 @@
 .. figure:: logo.png
         :target: https://guyteichman.github.io/RNAlysis
 
-----
-
 .. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
         :target: https://pypi.python.org/pypi/rnalysis
 
-Useful links
----------------
 
-* current version: |pipimage|
-* Documentation: https://guyteichman.github.io/RNAlysis
-* Source code: https://github.com/GuyTeichman/RNAlysis
-* Bug reports: https://github.com/GuyTeichman/RNAlysis/issues
+**Useful links:** `Current version <https://pypi.python.org/pypi/rnalysis>`_ |pipimage| | `Documentation <https://guyteichman.github.io/RNAlysis>`_ | `Source code <https://github.com/GuyTeichman/RNAlysis>`_ | `Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_
 
 ----
 
-What is it?
------------
+What is RNAlysis?
+------------------
 
 RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data.
 The package includes various filtering methods, data visualisation, clustering analyses, enrichment anslyses and

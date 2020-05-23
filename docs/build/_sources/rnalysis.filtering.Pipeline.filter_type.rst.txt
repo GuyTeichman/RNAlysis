@@ -1,6 +1,0 @@
-rnalysis.filtering.Pipeline.filter\_type
-========================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: Pipeline.filter_type

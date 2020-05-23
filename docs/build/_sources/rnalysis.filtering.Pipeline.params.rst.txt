@@ -1,6 +1,0 @@
-rnalysis.filtering.Pipeline.params
-==================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: Pipeline.params

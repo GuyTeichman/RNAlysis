@@ -1,6 +1,0 @@
-rnalysis.filtering.Filter.index\_set
-====================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoproperty:: Filter.index_set

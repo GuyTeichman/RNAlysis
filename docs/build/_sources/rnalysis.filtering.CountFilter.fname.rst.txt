@@ -1,6 +1,0 @@
-rnalysis.filtering.CountFilter.fname
-====================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: CountFilter.fname

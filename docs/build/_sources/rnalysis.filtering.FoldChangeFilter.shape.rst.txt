@@ -1,6 +1,0 @@
-rnalysis.filtering.FoldChangeFilter.shape
-=========================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: FoldChangeFilter.shape

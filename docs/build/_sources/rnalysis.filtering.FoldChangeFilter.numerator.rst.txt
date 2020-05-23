@@ -1,6 +1,0 @@
-rnalysis.filtering.FoldChangeFilter.numerator
-=============================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: FoldChangeFilter.numerator

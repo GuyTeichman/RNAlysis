@@ -1,6 +1,0 @@
-rnalysis.filtering.Filter.index\_string
-=======================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoproperty:: Filter.index_string

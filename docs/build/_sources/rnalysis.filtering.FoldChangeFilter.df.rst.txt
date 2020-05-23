@@ -1,6 +1,0 @@
-rnalysis.filtering.FoldChangeFilter.df
-======================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: FoldChangeFilter.df

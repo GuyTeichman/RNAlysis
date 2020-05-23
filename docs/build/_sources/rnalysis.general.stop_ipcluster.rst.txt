@@ -1,6 +1,0 @@
-rnalysis.general.stop\_ipcluster
-================================
-
-.. currentmodule:: rnalysis.general
-
-.. autofunction:: _stop_ipcluster

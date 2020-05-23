@@ -1,6 +1,0 @@
-rnalysis.enrichment.FeatureSet.gene\_set
-========================================
-
-.. currentmodule:: rnalysis.enrichment
-
-.. autoattribute:: FeatureSet.gene_set

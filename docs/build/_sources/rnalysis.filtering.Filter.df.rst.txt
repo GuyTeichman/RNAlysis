@@ -1,6 +1,0 @@
-rnalysis.filtering.Filter.df
-============================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: Filter.df

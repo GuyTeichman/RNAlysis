@@ -1,6 +1,0 @@
-rnalysis.filtering.FoldChangeFilter.index\_set
-==============================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoproperty:: FoldChangeFilter.index_set

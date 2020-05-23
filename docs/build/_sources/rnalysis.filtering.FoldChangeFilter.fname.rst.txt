@@ -1,6 +1,0 @@
-rnalysis.filtering.FoldChangeFilter.fname
-=========================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. autoattribute:: FoldChangeFilter.fname
