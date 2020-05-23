@@ -1,4 +1,4 @@
-.. figure:: logo.png
+.. figure:: ../source/logo.png
         :target: https://guyteichman.github.io/RNAlysis
 
 .. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
