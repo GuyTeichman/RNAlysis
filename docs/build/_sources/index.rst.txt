@@ -3,31 +3,43 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-RNAlysis documentation
+RNAlysis |release| documentation
 ===================================
-`GitHub page`_
+.. toctree::
+   :maxdepth: 2
+   :caption: About RNAlysis:
 
-.. _Github page: https://github.com/GuyTeichman/RNAlysis
+   What is RNAlysis? <readme>
+   GitHub page <https://github.com/GuyTeichman/RNAlysis>
+   authors
+
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: Starting with RNAlysis:
 
-   readme
    installation
    user_guide
-   authors
+   glossary
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Change history:
+
    history
 
-.. rubric:: Modules
-
+Modules:
+---------
 .. autosummary::
   :toctree:
+  :caption: Modules:
 
   rnalysis.filtering
   rnalysis.enrichment
   rnalysis.general
 
 
-
-:ref:`genindex`
+Indices and tables:
+-------------------
+* :ref:`genindex`
+* :ref:`modindex`

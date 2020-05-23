@@ -7,12 +7,20 @@ Installation
 
 Stable release
 --------------
+.. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
+        :target: https://pypi.python.org/pypi/rnalysis
+
+current version: |pipimage|
 
 To install RNAlysis, run this command in your terminal:
 
 .. code-block:: console
 
     $ pip install rnalysis
+
+
+
+
 
 This is the preferred method to install sRNA analysis pipeline, as it will always install the most recent stable release.
 
@@ -26,7 +34,7 @@ you through the process.
 From sources
 ------------
 
-The sources for RNAlysis pipeline can be downloaded from the `Github repo`_.
+The source code for RNAlysis can be downloaded from the `Github repository`_.
 
 You can either clone the public repository:
 
@@ -47,5 +55,5 @@ Once you have a copy of the source, you can install it with:
     $ python setup.py install
 
 
-.. _Github repo: https://github.com/GuyTeichman/RNAlysis
+.. _Github repository: https://github.com/GuyTeichman/RNAlysis
 .. _tarball: https://github.com/GuyTeichman/RNAlysis/tarball/master

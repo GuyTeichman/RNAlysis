@@ -13,6 +13,8 @@
 
   
   
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
   
   
 
@@ -36,7 +38,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Credits" href="authors.html" />
+    <link rel="next" title="Glossary" href="glossary.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -51,9 +53,12 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> RNAlysis
+            <a href="index.html">
           
 
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -81,9 +86,19 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Useful links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-is-it">What is it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="readme.html">RNAlysis - RNA sequencing data analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-filtering-module">RNAlysis filtering module</a><ul>
@@ -98,20 +113,20 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#filtering-deseq2-output-files-with-filtering-deseqfilter">Filtering DESeq2 output files with filtering.DESeqFilter</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#loading-from-a-csv-file">Loading from a .csv file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-from-a-csv-file">Loading from a <cite>csv</cite> file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#filtering-operations-unique-to-deseqfilter">Filtering operations unique to DESeqFilter</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#filtering-htseq-count-output-files-with-filtering-countfilter">Filtering HTSeq-count output files with filtering.CountFilter</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files">Generating an CountFilter object from a folder of HTSeq-count output .txt files</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#loading-from-a-pre-made-csv-file">Loading from a pre-made .csv file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-from-a-pre-made-csv-file">Loading from a pre-made <cite>csv</cite> file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#filtering-operations-unique-to-countfilter">Filtering operations unique to CountFilter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#normalizing-reads-with-countfilter">Normalizing reads with CountFilter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#data-visualization-and-clustering-analysis-with-countfilter">Data visualization and clustering analysis with CountFilter</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#filtering-fold-change-data-of-features-using-filtering-foldchangefilter">Filtering fold-change data of features using filtering.FoldChangeFilter</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#loading-fold-change-data-from-a-csv-file">Loading fold change data from a .csv file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-fold-change-data-from-a-csv-file">Loading fold change data from a <cite>csv</cite> file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#generating-fold-change-data-from-an-existing-countfilter-object">Generating fold change data from an existing CountFilter object</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-randomization-tests-on-a-foldchangefilter-object">Performing randomization tests on a FoldChangeFilter object</a></li>
 </ul>
@@ -142,9 +157,13 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Change history:</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Modules:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -218,18 +237,18 @@
 <div class="section" id="rnalysis-filtering-module">
 <h2>RNAlysis filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this headline">¶</a></h2>
 <p>RNAlysis’s filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.</p>
-<p>The filtering module is built around Filter objects, which are containers for tabular sequencing data. You can use the different types of Filter objects to apply filtering operations to various types of tabular data. You will learn more about Filter objects in the next section.</p>
+<p>The filtering module is built around <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a>, which are containers for tabular sequencing data. You can use the different types of <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> to apply filtering operations to various types of tabular data. You will learn more about <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> in the next section.</p>
 <div class="section" id="working-with-filter-objects">
 <h3>Working with Filter objects<a class="headerlink" href="#working-with-filter-objects" title="Permalink to this headline">¶</a></h3>
-<p>All Filter objects (DESeqFilter, CountFilter, FoldChangeFilter) work on the same principles,
-and share many of the same functions and features. Each of them also has specific filtering, analysis and visualisation functions. In this section we will look into the general usage of Filter objects.</p>
+<p>All <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> (<a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a>, <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a>, <a class="reference internal" href="glossary.html#term-Filter"><span class="xref std std-term">Filter</span></a>, <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a>) work on the same principles,
+and share many of the same functions and features. Each of them also has specific filtering, analysis and visualisation functions. In this section we will look into the general usage of <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a>.</p>
 <div class="section" id="initialize-a-filter-object">
 <h4>Initialize a Filter object<a class="headerlink" href="#initialize-a-filter-object" title="Permalink to this headline">¶</a></h4>
 <p>We will start by importing the filtering module:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 </pre></div>
 </div>
-<p>We can now, for example, create a DESeqFilter object from a DESeq2 csv output file (see more details about DESeqFilter in sections below).</p>
+<p>We can now, for example, create a <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> object from a DESeq2 <cite>csv</cite> output file (see more details about <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> in sections below).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -272,7 +291,7 @@ but you can specify a specific number of lines to show.</p>
 <div class="section" id="filtering-operations">
 <h4>Filtering operations<a class="headerlink" href="#filtering-operations" title="Permalink to this headline">¶</a></h4>
 <p>Now we can start filtering the entries in the file according to parameters of our choosing.
-Various filtering operations are applied directly to the Filter object. Those operations do not affect the original csv file, but its representation within the Filter object.
+Various filtering operations are applied directly to the <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a>. Those operations do not affect the original <cite>csv</cite> file, but its representation within the <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a>.
 For example, we can the function ‘filter_percentile’ to remove all rows that are above the specified percentile (in our example, 75% percentile) in the specified column (in our example, ‘log2FoldChange’):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
@@ -283,7 +302,7 @@ For example, we can the function ‘filter_percentile’ to remove all rows that
 <span class="go">(21, 6)</span>
 </pre></div>
 </div>
-<p>By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument ‘inplace=False’ to any filtering function within RNAlysis. For example:</p>
+<p>By default, filtering operations on <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> are performed in-place, meaning the original object is modified. However, we can save the results into a new <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> and leave the current object unaffected by passing the argument ‘inplace=False’ to any filtering function within RNAlysis. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(28, 6)</span>
@@ -295,7 +314,7 @@ For example, we can the function ‘filter_percentile’ to remove all rows that
 <span class="go">(28, 6)</span>
 </pre></div>
 </div>
-<p>In this case, the object ‘d’ remained unchanged, while ‘d_filtered’ became a new Filter object which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using ‘inplace=False’ to create a new object at any point.</p>
+<p>In this case, the object ‘d’ remained unchanged, while ‘d_filtered’ became a new <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using ‘inplace=False’ to create a new object at any point.</p>
 <p>Another useful option is to perform an opposite filter. When we specify the parameter ‘opposite=True’ to any filtering function within RNAlysis, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
 For example, if we now wanted to remove the rows which are below the 25% percentile in the ‘log2FoldChange’ column, we will use the following code:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -303,11 +322,11 @@ For example, if we now wanted to remove the rows which are below the 25% percent
 </pre></div>
 </div>
 <p>Calling this function without the ‘opposite’ parameter would have removed all values except the bottom 25% of the ‘log2FoldChange’ column. When specifying ‘opposite’, we instead throw out the bottom 25% of the ‘log2FoldChange’ column and keep the rest.</p>
-<p>There are many different filtering functions within the filtering module. Some of them are subtype-specific (such as ‘filter_low_reads’ for CountFilter objects and ‘filter_significant’ for DESeqFilter objects), while others can be applied to any Filter object. You can read more about the different functions and their usage in the project’s documentation.</p>
+<p>There are many different filtering functions within the filtering module. Some of them are subtype-specific (such as ‘filter_low_reads’ for <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> objects and ‘filter_significant’ for <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> objects), while others can be applied to any <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a>. You can read more about the different functions and their usage in the project’s documentation.</p>
 </div>
 <div class="section" id="performing-set-operations-on-multiple-filter-objects">
 <h4>Performing set operations on multiple Filter objects<a class="headerlink" href="#performing-set-operations-on-multiple-filter-objects" title="Permalink to this headline">¶</a></h4>
-<p>In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an CountFilter object and a python set:</p>
+<p>In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a>. Those set operations can be applied to any Filter object, as well as to python sets. The objects don’t have to be of the same subtype - you can, for example, look at the union of a <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> object, an <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object and a python set:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
@@ -318,11 +337,11 @@ For example, if we now wanted to remove the rows which are below the 25% percent
 <span class="go"> &#39;WBGene00044951&#39;, &#39;WBGene00077502&#39;, &#39;WBGene00077503&#39;, &#39;WBGene00077504&#39;}</span>
 </pre></div>
 </div>
-<p>When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as ‘head’ and ‘save_csv’ on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first Filter object.</p>
+<p>When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> functions such as ‘head’ and ‘save_csv’ on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a>.</p>
 </div>
 <div class="section" id="saving-filter-results">
 <h4>Saving Filter results<a class="headerlink" href="#saving-filter-results" title="Permalink to this headline">¶</a></h4>
-<p>At any point we can save the current result of our filtering to a new csv file, by using the ‘save_csv’ function:</p>
+<p>At any point we can save the current result of our filtering to a new <cite>csv</cite> file, by using the ‘save_csv’ function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">save_csv</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -367,8 +386,8 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 </div>
 <div class="section" id="using-an-attribute-reference-table-for-filter-operations">
 <h4>Using an Attribute Reference Table for filter operations<a class="headerlink" href="#using-an-attribute-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
-<p>An Attribute Reference Table contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
-You can read more about the Attribute Reference Table format and loading an Attribute Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
+<p>An <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
+You can read more about the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> format and loading an <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
 Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">(</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
@@ -378,8 +397,8 @@ Using the function Filter.filter_by_attribute(), you can filter your genomic fea
 </div>
 <div class="section" id="using-a-biotype-reference-table-for-filter-operations">
 <h4>Using a Biotype Reference Table for filter operations<a class="headerlink" href="#using-a-biotype-reference-table-for-filter-operations" title="Permalink to this headline">¶</a></h4>
-<p>A Biotype Reference Table contains annotations of the biotype of each genomic features (‘protein_coding’, ‘piRNAs’, ‘lincRNAs’, ‘pseudogenes’, etc).
-You can read more about the Biotype Reference Table format and loading a Biotype Reference Table in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
+<p>A <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> contains annotations of the biotype of each genomic features (‘protein_coding’, ‘piRNAs’, ‘lincRNAs’, ‘pseudogenes’, etc).
+You can read more about the <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> format and loading a <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
 Using the function Filter.filter_biotype(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
@@ -413,11 +432,13 @@ Using the function Filter.filter_biotype(), you can filter your genomic features
 </div>
 <div class="section" id="filtering-deseq2-output-files-with-filtering-deseqfilter">
 <h3>Filtering DESeq2 output files with filtering.DESeqFilter<a class="headerlink" href="#filtering-deseq2-output-files-with-filtering-deseqfilter" title="Permalink to this headline">¶</a></h3>
-<p>DESeqFilter objects are built to easily filter the output of R’s DESeq2 package. This package is meant to analyze differential expression of genomic features in sequencing data. You can read more about it here: {}
-Like other filter objects, filtering operations on DESeqFilter are performed in-place by default,meaning the original object is modified.</p>
-<p>In principle, any .csv file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter.
-However, some DESeqFilter functions (such as ‘filter_significant’ and ‘filter_abs_log2_fold_change’) may only work on DESeq2 output files, and other unintended interactions may occur.</p>
-<p>A correct input to a DESeqFilter object would follow the following format:</p>
+<p><a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> objects are built to easily filter the output of R’s DESeq2 package. This package is meant to analyze differential expression of genomic features in sequencing data. You can read more about it here: {}
+Like other filter objects, filtering operations on <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> are performed in-place by default,meaning the original object is modified.</p>
+<p>You can read more about DESeq2 here:
+<a class="reference external" href="https://doi.org/doi:10.18129/B9.bioc.DESeq2">https://doi.org/doi:10.18129/B9.bioc.DESeq2</a></p>
+<p>In principle, any <cite>csv</cite> file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter.
+However, some <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> functions (such as ‘filter_significant’ and ‘filter_abs_log2_fold_change’) may only work on DESeq2 output files, and other unintended interactions may occur.</p>
+<p>A correct input to a <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> object would follow the following format:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -506,16 +527,16 @@ However, some DESeqFilter functions (such as ‘filter_significant’ and ‘fil
 </tbody>
 </table>
 <div class="section" id="loading-from-a-csv-file">
-<h4>Loading from a .csv file<a class="headerlink" href="#loading-from-a-csv-file" title="Permalink to this headline">¶</a></h4>
-<p>Loading a file into a DESeqFilter works as explained above for any Filter object:</p>
+<h4>Loading from a <cite>csv</cite> file<a class="headerlink" href="#loading-from-a-csv-file" title="Permalink to this headline">¶</a></h4>
+<p>Loading a file into a <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> works as explained above for any Filter object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="filtering-operations-unique-to-deseqfilter">
 <h4>Filtering operations unique to DESeqFilter<a class="headerlink" href="#filtering-operations-unique-to-deseqfilter" title="Permalink to this headline">¶</a></h4>
-<p>There are a few filtering operations unique to DESeqFilter. Those include ‘filter_significant’, which removes statistically-insignificant rows according to a specified threshold; ‘filter_abs_log2_fold_change’, removes rows whose absolute value log2 fold change is below the specified threshold; ‘filter_fold_change_direction’ which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) rows; and ‘split_fold_change_direction’ which returns a DESeqFilter object with only up-regulated features and a DESeqFilter object with only down-regulated features.</p>
-<p>The unique DESeqFilter filter operations expect specific column names (the column names automatically generated by DESeq2), and will not work with other column names:
+<p>There are a few filtering operations unique to DESeqFilter. Those include ‘filter_significant’, which removes statistically-insignificant rows according to a specified threshold; ‘filter_abs_log2_fold_change’, removes rows whose absolute value log2 fold change is below the specified threshold; ‘filter_fold_change_direction’ which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) rows; and ‘split_fold_change_direction’ which returns a <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> object with only up-regulated features and a <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> object with only down-regulated features.</p>
+<p>The unique <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> filter operations expect specific column names (the column names automatically generated by DESeq2), and will not work with other column names:
 ‘log2FoldChange’,’pval’,’padj’.</p>
 </div>
 </div>
@@ -523,7 +544,7 @@ However, some DESeqFilter functions (such as ‘filter_significant’ and ‘fil
 <h3>Filtering HTSeq-count output files with filtering.CountFilter<a class="headerlink" href="#filtering-htseq-count-output-files-with-filtering-countfilter" title="Permalink to this headline">¶</a></h3>
 <p>You can read more about HTSeq-count here:
 <a class="reference external" href="https://htseq.readthedocs.io/en/release_0.11.1/count.html">https://htseq.readthedocs.io/en/release_0.11.1/count.html</a></p>
-<p>In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as ‘normalize_to_rpm’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
+<p>In principle, any <cite>csv</cite> file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> functions (such as ‘normalize_to_rpm’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
 <div class="section" id="generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files">
 <span id="from-folder-ref"></span><h4>Generating an CountFilter object from a folder of HTSeq-count output .txt files<a class="headerlink" href="#generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files" title="Permalink to this headline">¶</a></h4>
 <p>HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature).
@@ -581,26 +602,26 @@ An HTSeq-count output file would follow the following format:</p>
 </tr>
 </tbody>
 </table>
-<p>When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
+<p>When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two <cite>csv</cite> tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_count_from_folder&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>By deault, ‘from_folder’ does not save the generated tables as .csv files. However, you can choose to save them by specifying ‘save_csv=True’, and specifying their filenames in the arguments ‘counted_fname’ and ‘uncounted_fname’:</p>
+<p>By deault, ‘from_folder’ does not save the generated tables as <cite>csv</cite> files. However, you can choose to save them by specifying ‘save_csv=True’, and specifying their filenames in the arguments ‘counted_fname’ and ‘uncounted_fname’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">save_csv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">uncounted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_uncounted_reads_csv_file&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>It is also possible to automatically normalize the reads in the new CountFilter object to reads per million (RPM) using the unmapped reads data by specifying ‘norm_to_rpm=True’:</p>
+<p>It is also possible to automatically normalize the reads in the new <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object to reads per million (RPM) using the unmapped reads data by specifying ‘norm_to_rpm=True’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">norm_to_rpm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="loading-from-a-pre-made-csv-file">
-<h4>Loading from a pre-made .csv file<a class="headerlink" href="#loading-from-a-pre-made-csv-file" title="Permalink to this headline">¶</a></h4>
-<p>If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an CountFilter object as you would any other Filter object:</p>
+<h4>Loading from a pre-made <cite>csv</cite> file<a class="headerlink" href="#loading-from-a-pre-made-csv-file" title="Permalink to this headline">¶</a></h4>
+<p>If you have previously generated a <cite>csv</cite> file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this <cite>csv</cite> file into an <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object as you would any other Filter object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>A correct input to a CountFilter object would follow the following format:</p>
+<p>A correct input to a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object would follow the following format:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 36%" />
@@ -681,8 +702,8 @@ An HTSeq-count output file would follow the following format:</p>
 </div>
 <div class="section" id="normalizing-reads-with-countfilter">
 <h4>Normalizing reads with CountFilter<a class="headerlink" href="#normalizing-reads-with-countfilter" title="Permalink to this headline">¶</a></h4>
-<p>CountFilter offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.</p>
-<p>To normalize a CountFilter with user-generated scaling factors, we need a .csv table with the size factor for each sample:
+<p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.</p>
+<p>To normalize a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> with user-generated scaling factors, we need a <cite>csv</cite> table with the size factor for each sample:
 +—————-+—————-+—————-+—————-+
 |    sample1     |    sample2     |    sample3     |    sample4     |
 +================+================+================+================+
@@ -693,8 +714,8 @@ An HTSeq-count output file would follow the following format:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize</span> <span class="n">with_scaling_factors</span><span class="p">(</span><span class="s1">&#39;scaling_factors.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The resulting CountFilter object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).</p>
-<p>To normalize a CountFilter that originated from HTSeq-count to reads per million, we need a .csv table with the special counters that appear in HTSeq-count output:</p>
+<p>The resulting <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).</p>
+<p>To normalize a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> that originated from HTSeq-count to reads per million, we need a <cite>csv</cite> table with the special counters that appear in HTSeq-count output:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 40%" />
@@ -744,17 +765,17 @@ An HTSeq-count output file would follow the following format:</p>
 </tr>
 </tbody>
 </table>
-<p>Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="#from-folder-ref"><span class="std std-ref">Generating an CountFilter object from a folder of HTSeq-count output .txt files</span></a>).
+<p>Such a <cite>csv</cite> table is generated automatically when you create a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="#from-folder-ref"><span class="std std-ref">Generating an CountFilter object from a folder of HTSeq-count output .txt files</span></a>).
 We would then supply the normalization function with the path to the special counter file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">h</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/uncounted.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)</p>
+<p>The resulting <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)</p>
 </div>
 <div class="section" id="data-visualization-and-clustering-analysis-with-countfilter">
 <h4>Data visualization and clustering analysis with CountFilter<a class="headerlink" href="#data-visualization-and-clustering-analysis-with-countfilter" title="Permalink to this headline">¶</a></h4>
-<p>CountFilter includes multiple methods for visualization and clustering of count data.</p>
+<p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> includes multiple methods for visualization and clustering of count data.</p>
 <p>With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:</p>
 <div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
@@ -785,16 +806,16 @@ We would then supply the normalization function with the path to the special cou
 </div>
 <div class="section" id="filtering-fold-change-data-of-features-using-filtering-foldchangefilter">
 <h3>Filtering fold-change data of features using filtering.FoldChangeFilter<a class="headerlink" href="#filtering-fold-change-data-of-features-using-filtering-foldchangefilter" title="Permalink to this headline">¶</a></h3>
-<p>FoldChangeFilter objects can perform filtering operations and randomization tests on fold change values between two conditions.</p>
-<p>A FoldChangeFilter object can be calculated from a CountFilter object (you can read more about it in the <a class="reference internal" href="#fold-change-from-count-ref"><span class="std std-ref">Generating fold change data from an existing CountFilter object</span></a>), or imported from a .csv file like other Filter objects.</p>
+<p><a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> objects can perform filtering operations and randomization tests on fold change values between two conditions.</p>
+<p>A <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> object can be calculated from a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object (you can read more about it in the <a class="reference internal" href="#fold-change-from-count-ref"><span class="std std-ref">Generating fold change data from an existing CountFilter object</span></a>), or imported from a <cite>csv</cite> file like other <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>by default, FoldChangeFilter assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.</p>
+<p>by default, <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a <cite>csv</cite> file which contains 0 and/or inf values into a <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> object, unintended results and interactions may occur.</p>
 </div>
 <p>Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.</p>
 <div class="section" id="loading-fold-change-data-from-a-csv-file">
-<h4>Loading fold change data from a .csv file<a class="headerlink" href="#loading-fold-change-data-from-a-csv-file" title="Permalink to this headline">¶</a></h4>
-<p>Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated .csv file into a FoldChangeFilter object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition:</p>
+<h4>Loading fold change data from a <cite>csv</cite> file<a class="headerlink" href="#loading-fold-change-data-from-a-csv-file" title="Permalink to this headline">¶</a></h4>
+<p>Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated <cite>csv</cite> file into a <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span><span class="p">,</span><span class="s1">&#39;name of numerator condition&#39;</span><span class="p">,</span> <span class="s1">&#39;name of denominator condition&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -807,16 +828,16 @@ We would then supply the normalization function with the path to the special cou
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>by default, FoldChangeFilter assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.</p>
+<p>by default, <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a <cite>csv</cite> file which contains 0 and/or inf values into a <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> object, unintended results and interactions may occur.</p>
 </div>
 </div>
 <div class="section" id="generating-fold-change-data-from-an-existing-countfilter-object">
 <span id="fold-change-from-count-ref"></span><h4>Generating fold change data from an existing CountFilter object<a class="headerlink" href="#generating-fold-change-data-from-an-existing-countfilter-object" title="Permalink to this headline">¶</a></h4>
-<p>Alternatively, you can generate a FoldChangeFilter object from count data in a CountFilter object. We will start by loading a CountFilter object:</p>
+<p>Alternatively, you can generate a <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> object from count data in a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object. We will start by loading a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted_fold_change.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The CountFilter has the following columns:</p>
+<p>The <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> has the following columns:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">columns</span>
 <span class="go">[&#39;cond1_rep1&#39;, &#39;cond1_rep2&#39;, &#39;cond2_rep1&#39;, &#39;cond2_rep2&#39;, &#39;cond3_rep1&#39;, &#39;cond3_rep2&#39;]</span>
 </pre></div>
@@ -832,12 +853,12 @@ We would then supply the normalization function with the path to the special cou
 <span class="go">&quot;Mean of [&#39;cond2_rep1&#39;, &#39;cond2_rep2&#39;]&quot;</span>
 </pre></div>
 </div>
-<p>We now have a FoldChangeFilter object that we can perform further filtering operations on.</p>
+<p>We now have a <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> object that we can perform further filtering operations on.</p>
 </div>
 <div class="section" id="performing-randomization-tests-on-a-foldchangefilter-object">
 <h4>Performing randomization tests on a FoldChangeFilter object<a class="headerlink" href="#performing-randomization-tests-on-a-foldchangefilter-object" title="Permalink to this headline">¶</a></h4>
 <p>You can perform a randomization test to examine whether the fold change of a group of specific genomic features (for example, genes with a specific biological function) is significantly different than the fold change of a background set of genomic features.
-To perform a randomization test you need two FoldChangeFilter objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example:</p>
+To perform a randomization test you need two <a class="reference internal" href="glossary.html#term-FoldChangeFilter"><span class="xref std std-term">FoldChangeFilter</span></a> objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span> <span class="p">,</span> <span class="s1">&#39;numerator&#39;</span> <span class="p">,</span> <span class="s1">&#39;denominator&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f_background</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1">#keep only protein-coding genes as reference</span>
 <span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.</span>
@@ -898,7 +919,7 @@ The first method is to specify an existing Filter object:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">filt</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function ‘index_set’:</p>
+<p>The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> (see above for more information about <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> and the filtering module) using the function ‘index_set’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">myset</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene0245200&#39;</span><span class="p">,</span><span class="s1">&#39; WBGene00402029&#39;</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">myset</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
 <span class="go"># alternatively, using &#39;index_set&#39; on an existing Filter object:</span>
@@ -920,7 +941,7 @@ The first method is to specify an existing Filter object:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
+<p>Our attributes should be defined in a Reference Table <cite>csv</cite> file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
 If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables’ path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
@@ -1010,7 +1031,7 @@ Afterwards, enrich_randomization_parallel is used exactly like enrich_randomizat
 </div>
 <p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.</p>
 <p>In addition, the enrichment module includes functions for visualisation of sets and overlap, such as enrichment.venn_diagram() and enrichment.upset_plot().
-Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the Attribute Reference Table (you can read more about attributes in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
+Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> (you can read more about attributes in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
 Venn diagrams are limited to 2-3 sets:</p>
 <blockquote>
 <div><div class="figure align-center" id="id5">
@@ -1064,7 +1085,7 @@ By default, the parallel session will use all available processors on the machin
 <div class="section" id="what-is-an-attribute-reference-table">
 <h4>What is an Attribute Reference Table?<a class="headerlink" href="#what-is-an-attribute-reference-table" title="Permalink to this headline">¶</a></h4>
 <p>You can perform enrichment analysis or filtering operations based on user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’).
-User-defined attributes should be defined in an Attribute Reference Table csv file. The format of the Attribute Reference Table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an Attribute Reference Table below:</p>
+User-defined attributes should be defined in an <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> <cite>csv</cite> file. The format of the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute ‘genes that have paralogs’) should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute ‘genes that have paralogs’) should have any value other than NaN. The value could be either a boolean value (in our example, ‘True’ or ‘1’ for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> below:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 29%" />
@@ -1111,7 +1132,7 @@ User-defined attributes should be defined in an Attribute Reference Table csv fi
 <div class="section" id="what-is-a-biotype-reference-table">
 <h4>What is a Biotype Reference Table?<a class="headerlink" href="#what-is-a-biotype-reference-table" title="Permalink to this headline">¶</a></h4>
 <p>You can perform filtering operations or generate background-sets for enrichment analysis based on user-annotated biotypes (such as ‘protein_coding’, ‘pseudogene’, ‘piRNA’, etc).
-User-annotated biotypes should be defined in a Biotype Reference Table csv file. The format of the Biotype Reference Table is one row for each gene/genomic feature, and a column titled ‘biotype’ (case insensitive). See example for a Biotype Reference Table below:</p>
+User-annotated biotypes should be defined in a <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> <cite>csv</cite> file. The format of the <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> is one row for each gene/genomic feature, and a column titled ‘biotype’ (case insensitive). See example for a Biotype Reference Table below:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 50%" />
@@ -1169,7 +1190,7 @@ The saved path can be changed any time using the general.set_attr_ref_table_path
 <span class="go">Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file</span>
 </pre></div>
 </div>
-<p>If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.</p>
+<p>If an <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> path was not previously defined, you will be requested to define it when you run this function.</p>
 </div>
 </div>
 <div class="section" id="parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions">
@@ -1197,7 +1218,7 @@ For example, we could extract all WBGene indices from the following string:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="authors.html" class="btn btn-neutral float-right" title="Credits" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="glossary.html" class="btn btn-neutral float-right" title="Glossary" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
