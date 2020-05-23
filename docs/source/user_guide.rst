@@ -43,7 +43,7 @@ but you can specify a specific number of lines to show.
     WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
     WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225
     WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213
-
+    <BLANKLINE>
     [5 rows x 6 columns]
     >>> d.tail(8)
                    baseMean  log2FoldChange  ...         pvalue           padj
@@ -55,7 +55,7 @@ but you can specify a specific number of lines to show.
     WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
     WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
     WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
-
+    <BLANKLINE>
     [8 rows x 6 columns]
 
 We can also see the total number of rows and columns by accessing the 'shape' attribute::
@@ -202,9 +202,9 @@ You can also view the number of genomic features belonging to each biotype using
     pseudogene         1
     unknown            1
 
-Or view more elaborated descriptive statistics for eahc biotype by specifying format='long'::
+Or view more elaborated descriptive statistics for eahc biotype by specifying return_format='long'::
 
-    >>> d.biotypes(format='long', ref='tests/biotype_ref_table_for_tests.csv')
+    >>> d.biotypes(return_format='long', ref='tests/biotype_ref_table_for_tests.csv')
 
                    baseMean               ...           padj
                       count         mean  ...            75%            max
@@ -212,7 +212,7 @@ Or view more elaborated descriptive statistics for eahc biotype by specifying fo
     protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68
     pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94
     unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152
-
+    <BLANKLINE>
     [3 rows x 48 columns]
 
 
@@ -476,7 +476,7 @@ Alternatively, you can generate a FoldChangeFilter object from count data in a C
 The CountFilter has the following columns::
 
     >>> c.columns
-    ['cond1_rep1','cond1_rep2','cond2_rep1','cond2_rep2','cond3_rep1','cond3_rep2']
+    ['cond1_rep1', 'cond1_rep2', 'cond2_rep1', 'cond2_rep2', 'cond3_rep1', 'cond3_rep2']
 
 We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list::
 
@@ -485,9 +485,9 @@ We will now calculate the fold change between the mean of condition1 and conditi
 In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically::
 
     >>> f.numerator
-    "Mean of ['cond1_rep1','cond1_rep2']"
+    "Mean of ['cond1_rep1', 'cond1_rep2']"
     >>> f.denominator
-    "Mean of ['cond2_rep1','cond2_rep2']"
+    "Mean of ['cond2_rep1', 'cond2_rep2']"
 
 We now have a FoldChangeFilter object that we can perform further filtering operations on.
 
@@ -506,7 +506,7 @@ To perform a randomization test you need two FoldChangeFilter objects: one which
     Calculating...
        group size  observed fold change  ...      pval  significant
     0           7              2.806873  ...  0.360264        False
-
+    <BLANKLINE>
     [1 rows x 5 columns]
 
 The output table would look like this:
@@ -675,11 +675,13 @@ To use parallel processing features, you must first start an ipyparallel ipclust
 
     >>> from rnalysis import general
     >>> general.start_parallel_session()
+    Starting parallel session...
+    Parallel session started successfully
 
-Your python console will then become unavailable for 30 seconds while the ipcluster is being started.
+Your python console will  become unavailable for about 30 seconds while the ipcluster is being started.
 By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.
 
-start_parallel_session() will automatically close the previous parallel session, start a new session, and sleep for 30 seconds while the ipcluster is being started. You can perform the same operations manually in order to skip the sleep period::
+start_parallel_session() will automatically close the previous parallel session, start a new session, and block the console while the ipcluster is being started. You can perform the same operations manually in order to skip the blocking period::
 
     >>> from rnalysis import general
     >>> general._start_ipcluster()
