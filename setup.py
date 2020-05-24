@@ -11,8 +11,9 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels', 'scikit-learn',
-                'ipyparallel', 'grid_strategy', 'Distance', 'pyyaml', 'UpSetPlot', 'matplotlib-venn', 'scipy']
+requirements = ['numpy', 'pandas>=1.0.1', 'matplotlib', 'seaborn>=0.10.0', 'tissue_enrichment_analysis', 'statsmodels',
+                'scikit-learn>=0.22', 'ipyparallel', 'grid_strategy', 'pyyaml', 'UpSetPlot', 'matplotlib-venn', 'scipy',
+                'goatools', 'wget', 'hdbscan']
 
 setup_requirements = ['pytest-runner', ]
 
@@ -27,8 +28,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -37,9 +36,10 @@ setup(
         'Topic :: Scientific/Engineering :: Visualization',
     ],
     description='RNAlysis provides a modular analysis pipeline for RNA sequencing data. '
-                'The package includes various methods for filtering, data visualisation, exploratory analyses, '
+                'RNAlysis includes various methods for filtering, data visualisation, exploratory analyses, '
                 'enrichment anslyses and clustering.',
     install_requires=requirements,
+    python_requires='>3.6',
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
