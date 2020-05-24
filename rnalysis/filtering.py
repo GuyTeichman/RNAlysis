@@ -15,14 +15,18 @@ import pandas as pd
 from pathlib import Path
 import warnings
 from rnalysis import general
+from scipy.stats import sem
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_samples, silhouette_score
+import hdbscan
 import seaborn as sns
 import matplotlib.pyplot as plt
 from grid_strategy import strategies
-from typing import Union, List, Set, Dict, Tuple, Type
+from typing import Union, List, Set, Dict, Tuple, Type, Iterable
 import types
-import inspect
+from itertools import tee
 
 
 class Filter:
@@ -1876,6 +1880,103 @@ class CountFilter(Filter):
         new_df = self.df.loc[self.df.sum(axis=1) >= threshold]
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
+
+    def _plot_clustering(self, n_clusters: int, data, labels: np.ndarray, centers: np.ndarray, title: str,
+                         plot_style: str):
+        grid = strategies.SquareStrategy()
+        subplots = grid.get_grid(n_clusters)
+        plt.close()
+        fig = plt.figure(figsize=(14, 9))
+        fig.suptitle(title, fontsize=18)
+        axes = []
+        min_y, max_y = 0, 0
+        color_generator = CountFilter._color_gen()
+        for i, subplot in enumerate(subplots):
+            axes.append(fig.add_subplot(subplot))
+            mean = centers[i, :]
+            stdev = data[labels == i, :].T.std(axis=1, ddof=1)
+            x = np.arange(self.shape[1]) + 0.5
+            color = next(color_generator)
+            max_y = max(max_y, np.max(stdev + mean))
+            min_y = min(min_y, np.min(mean - stdev))
+            axes[-1].axhline(color='grey', linewidth=2, linestyle='--')
+            if plot_style.lower() == 'std_area':
+                axes[-1].plot(x, mean, marker='o', linewidth=2, color=color, markeredgecolor='black')
+                axes[-1].fill_between(x, mean + stdev, mean - stdev, alpha=0.2, color=color)
+            else:
+                axes[-1].errorbar(x, mean, marker='o', linewidth=2, color=color, yerr=stdev, markeredgecolor='black')
+                if plot_style.lower() == 'all':
+                    vals = data[labels == i, :].T
+                    axes[-1].plot(x, vals, color=color, alpha=0.05, linewidth=0.35)
+
+            axes[-1].set_title(f"Cluster number {i + 1} ({np.count_nonzero(labels == i)} genes)")
+            axes[-1].set_ylabel('Standardized expression')
+            axes[-1].set_xticks(x)
+            axes[-1].set_xticklabels(self.columns, fontsize=5)
+        for ax in axes:
+            ax.set_ylim((min_y, max_y))
+        fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.show()
+        return fig, axes
+
+    def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
+                     max_iter: int = 1000, plot_style: str = 'all'):
+        assert plot_style.lower() in {'all', 'std_bar', 'std_area'}, f"Invalid value for 'plot_style': '{plot_style}'. "
+
+        if isinstance(k, str) and k.lower() == 'silhouette':
+            pass  # TODO: silouhette width k selection
+        else:
+            if not isinstance(k, Iterable):
+                k = [k]
+            k, k_copy = tee(k)
+
+            assert np.all((isinstance(item, int) for item in k_copy)), \
+                f"Invalid value for k: '{k}'. k must be an integer, Iterable of integers, " f"or 'silhouette'"
+
+        data = StandardScaler().fit_transform(self.df)
+        clusterers = []
+        filt_obj_tuples = []
+        for this_k in k:
+            this_k = int(this_k)
+            clusterers.append(KMeans(init='k-means++', n_clusters=this_k, n_init=n_init, max_iter=max_iter,
+                                     random_state=random_state).fit(data))
+
+            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterers[-1].labels_,
+                                  centers=clusterers[-1].cluster_centers_,
+                                  title=f"Results of K-Means Clustering for K={this_k}", plot_style=plot_style)
+
+            filt_obj_tuples.append(
+                tuple([self._inplace(self.df.loc[clusterers[-1].labels_ == i], opposite=False, inplace=False,
+                                     suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
+        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+
+    def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
+                      cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
+                      plot_style: str = 'all', return_prob: bool = False) -> Union[tuple, Tuple[tuple, np.ndarray]]:
+        data = StandardScaler().fit_transform(self.df)
+        clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples,
+                                    cluster_selection_epsilon=cluster_selection_epsilon, metric=metric,
+                                    cluster_selection_method=cluster_selection_method)
+        clusterer.fit(data)
+
+        n_clusters = clusterer.labels_.max() + 1
+        probabilities = clusterer.probabilities_
+        unclustered = np.count_nonzero(clusterer.labels_ == -1)
+        print(
+            f"Found {n_clusters} clusters of average size {(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
+            f"Number of unclustered genes is {unclustered}, "
+            f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
+
+        means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
+
+        self._plot_clustering(n_clusters=n_clusters, data=data, labels=clusterer.labels_, centers=means,
+                              title=f"Results of HDBSCAN Clustering for min_cluster_size={min_cluster_size}, "
+                                    f"min_samples = {min_samples}, epsilon={cluster_selection_epsilon} "
+                                    f"and metric='{metric}'", plot_style=plot_style)
+
+        filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
+                                         suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
+        return filt_objs, probabilities if return_prob else filt_objs
 
     def clustergram(self, sample_names: list = 'all', metric: str = 'euclidean', linkage: str = 'average'):
 

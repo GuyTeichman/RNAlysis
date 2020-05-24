@@ -865,3 +865,11 @@ def test_pipeline_apply_to_multiple_splits():
 
 def test_pipeline_apply_to_filter_split_plot():
     assert False
+
+
+def test_split_kmeans():
+    assert False
+
+
+def test_split_hdbscan():
+    assert False
