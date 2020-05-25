@@ -17,7 +17,7 @@ import warnings
 from rnalysis import general
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, PowerTransformer
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.metrics import silhouette_score
 from sklearn_extra.cluster import KMedoids
 import hdbscan
@@ -1982,6 +1982,21 @@ class CountFilter(Filter):
         return best_k, fig
 
     def _silhouette(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, max_clusters: int = 20):
+        """
+
+        :param clusterer_class:
+        :type clusterer_class:
+        :param random_state:
+        :type random_state:
+        :param n_init:
+        :type n_init:
+        :param max_iter:
+        :type max_iter:
+        :param max_clusters:
+        :type max_clusters:
+        :return:
+        :rtype:
+        """
         print(f"Calculating optimal k using the Silhouette method in range {2}:{max_clusters}...")
         data = self._standard_box_cox(self.df)
         sil_scores = []
@@ -2007,10 +2022,34 @@ class CountFilter(Filter):
 
     @staticmethod
     def _standard_box_cox(data: Union[pd.DataFrame, np.ndarray]):
+        """
+
+        :param data:
+        :type data:
+        :return:
+        :rtype:
+        """
         return StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
 
     def _parse_k(self, k: Union[int, List[int], str], clusterer_class: type, random_state: int, n_init: int,
                  max_iter: int, max_clusters: int):
+        """
+
+        :param k:
+        :type k:
+        :param clusterer_class:
+        :type clusterer_class:
+        :param random_state:
+        :type random_state:
+        :param n_init:
+        :type n_init:
+        :param max_iter:
+        :type max_iter:
+        :param max_clusters:
+        :type max_clusters:
+        :return:
+        :rtype:
+        """
         max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
             best_k, _ = self._silhouette(clusterer_class=clusterer_class, random_state=random_state, n_init=n_init,
@@ -2029,10 +2068,27 @@ class CountFilter(Filter):
                 f"Invalid value for k: '{k}'. k must be an integer, Iterable of integers, 'gap', or 'silhouette'. "
         return k
 
-    def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
+    def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
                      max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
-        k = self._parse_k(k=k, clusterer_class=KMeans, random_state=random_state, n_init=n_init, max_iter=max_iter,
-                          max_clusters=max_clusters)
+        """
+
+        :param k:
+        :type k:
+        :param random_state:
+        :type random_state:
+        :param n_init:
+        :type n_init:
+        :param max_iter:
+        :type max_iter:
+        :param plot_style:
+        :type plot_style:
+        :param max_clusters:
+        :type max_clusters:
+        :return:
+        :rtype:
+        """
+        k = self._parse_k(k=k, clusterer_class=MiniBatchKMeans, random_state=random_state, n_init=n_init,
+                          max_iter=max_iter, max_clusters=max_clusters)
         filt_obj_tuples = []
         data = self._standard_box_cox(self.df)
         for this_k in k:
@@ -2049,8 +2105,25 @@ class CountFilter(Filter):
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
+    def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
                        max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
+        """
+
+        :param k:
+        :type k:
+        :param random_state:
+        :type random_state:
+        :param n_init:
+        :type n_init:
+        :param max_iter:
+        :type max_iter:
+        :param plot_style:
+        :type plot_style:
+        :param max_clusters:
+        :type max_clusters:
+        :return:
+        :rtype:
+        """
         k = self._parse_k(k=k, clusterer_class=_KMedoidsIter, random_state=random_state, n_init=n_init,
                           max_iter=max_iter, max_clusters=max_clusters)
         filt_obj_tuples = []
@@ -2071,7 +2144,26 @@ class CountFilter(Filter):
 
     def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
-                      plot_style: str = 'all', return_prob: bool = False) -> Union[tuple, Tuple[tuple, np.ndarray]]:
+                      plot_style: str = 'all', return_prob: bool = False):
+        """
+
+        :param min_cluster_size:
+        :type min_cluster_size:
+        :param min_samples:
+        :type min_samples:
+        :param metric:
+        :type metric:
+        :param cluster_selection_epsilon:
+        :type cluster_selection_epsilon:
+        :param cluster_selection_method:
+        :type cluster_selection_method:
+        :param plot_style:
+        :type plot_style:
+        :param return_prob:
+        :type return_prob:
+        :return:
+        :rtype:
+        """
 
         data = self._standard_box_cox(self.df)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples,
@@ -2099,7 +2191,7 @@ class CountFilter(Filter):
 
         filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                          suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
-        return filt_objs, probabilities if return_prob else filt_objs
+        return [filt_objs, probabilities] if return_prob else filt_objs
 
     def clustergram(self, sample_names: list = 'all', metric: str = 'euclidean', linkage: str = 'average'):
 
