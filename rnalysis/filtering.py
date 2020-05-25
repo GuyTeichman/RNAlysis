@@ -15,7 +15,6 @@ import pandas as pd
 from pathlib import Path
 import warnings
 from rnalysis import general
-
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, PowerTransformer
 from sklearn.cluster import KMeans
@@ -1912,7 +1911,7 @@ class CountFilter(Filter):
                     axes[-1].plot(x, vals, color=color, alpha=0.05, linewidth=0.35)
 
             axes[-1].set_title(f"Cluster number {i + 1} ({np.count_nonzero(labels == i)} genes)")
-            axes[-1].set_ylabel('Standardized expression')
+            axes[-1].set_ylabel('Standardized\npower-transformed expression')
             axes[-1].set_xticks(x)
             axes[-1].set_xticklabels(self.columns, fontsize=5)
         for ax in axes:
@@ -1923,26 +1922,22 @@ class CountFilter(Filter):
 
     def _gap_statistic(self, random_state: int, n_init: int, max_iter: int, n_refs: int = 10, max_clusters: int = 20):
         print(f"Calculating optimal k using the Gap Statistic method in range {2}:{max_clusters}...")
-        data = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(self.df.values + 1))
-        # data = self.df.values
+        data = self._standard_box_cox(self.df.values)
         a, b = self.df.values.min(axis=0, keepdims=True), self.df.values.max(axis=0, keepdims=True)
         k_range = list(range(2, max_clusters + 1))
         log_inertia_obs = np.zeros((len(k_range)))
         log_inertia_exp = np.zeros((len(k_range)))
         gap_scores = np.zeros((len(k_range)))
         gap_err = np.zeros((len(k_range)))
+
         for ind, n_clusters in enumerate(k_range):
+            clusterer = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
+                               max_iter=max_iter)
             ref_disps = np.zeros(n_refs)
             for i in range(n_refs):
-                ref = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(
-                    np.random.random_sample(size=data.shape) * (b - a) + a + 1))
-                # ref = np.random.random_sample(size=data.shape) * (b - a) + a
-                clusterer = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
-                                   max_iter=max_iter).fit(ref)
-                ref_disps[i] = clusterer.inertia_
-            clusterer = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
-                               max_iter=max_iter).fit(data)
-            disp = clusterer.inertia_
+                ref = self._standard_box_cox(np.random.random_sample(size=data.shape) * (b - a) + a)
+                ref_disps[i] = clusterer.fit(ref).inertia_
+            disp = clusterer.fit(data).inertia_
             ref_log_inertia = np.mean(np.log(ref_disps))
             log_inertia_exp[ind] = ref_log_inertia
             log_inertia_obs[ind] = np.log(disp)
@@ -1980,7 +1975,7 @@ class CountFilter(Filter):
 
     def _silhouette(self, random_state: int, n_init: int, max_iter: int, max_clusters: int = 20):
         print(f"Calculating optimal k using the Silhouette method in range {2}:{max_clusters}...")
-        data = StandardScaler().fit_transform(PowerTransformer().fit_transform(self.df.values + 1))
+        data = self._standard_box_cox(self.df)
         sil_scores = []
         k_range = list(range(2, max_clusters + 1))
         for n_clusters in k_range:
@@ -2001,10 +1996,13 @@ class CountFilter(Filter):
         print(f"Using the Silhouette method, {best_k} was chosen as the best number of clusters (k).")
         return best_k, fig
 
+    @staticmethod
+    def _standard_box_cox(data: Union[pd.DataFrame, np.ndarray]):
+        return StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
+
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
                      max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
-        data = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(self.df + 1))
-        max_clusters = min(20, self.shape[0]//4) if max_clusters == 'default' else max_clusters
+        max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
             best_k, _ = self._silhouette(random_state=random_state, n_init=n_init, max_iter=max_iter,
                                          max_clusters=max_clusters)
@@ -2023,6 +2021,7 @@ class CountFilter(Filter):
 
         clusterers = []
         filt_obj_tuples = []
+        data = self._standard_box_cox(self.df)
         for this_k in k:
             this_k = int(this_k)
             clusterers.append(KMeans(init='k-means++', n_clusters=this_k, n_init=n_init, max_iter=max_iter,
@@ -2041,7 +2040,7 @@ class CountFilter(Filter):
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
                       plot_style: str = 'all', return_prob: bool = False) -> Union[tuple, Tuple[tuple, np.ndarray]]:
 
-        data = StandardScaler().fit_transform(self.df)
+        data = self._standard_box_cox(self.df)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples,
                                     cluster_selection_epsilon=cluster_selection_epsilon, metric=metric,
                                     cluster_selection_method=cluster_selection_method)
