@@ -849,7 +849,7 @@ class FeatureSet:
         colors = my_cmap(data_color_norm_256)
 
         # generate bar plot
-        fig, ax = plt.subplots(constrained_layout=True, figsize=[6.4, 5.6])
+        fig, ax = plt.subplots(constrained_layout=True, figsize=[6.4 * 0.5 + 0.5 * df.shape[0], 5.6])
         bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors, edgecolor='black',
                      linewidth=1)
         bar.tick_labels = enrichment_names
