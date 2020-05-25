@@ -15,11 +15,11 @@ import pandas as pd
 from pathlib import Path
 import warnings
 from rnalysis import general
-from scipy.stats import sem
+
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, PowerTransformer
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics import silhouette_score
 import hdbscan
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -1883,6 +1883,8 @@ class CountFilter(Filter):
 
     def _plot_clustering(self, n_clusters: int, data, labels: np.ndarray, centers: np.ndarray, title: str,
                          plot_style: str):
+        assert plot_style.lower() in {'all', 'std_bar', 'std_area'}, \
+            f"Invalid value for 'plot_style': '{plot_style}'. 'plot_style' must be 'all', 'std_bar' or 'std_area'. "
         grid = strategies.SquareStrategy()
         subplots = grid.get_grid(n_clusters)
         plt.close()
@@ -1919,21 +1921,106 @@ class CountFilter(Filter):
         plt.show()
         return fig, axes
 
-    def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
-                     max_iter: int = 1000, plot_style: str = 'all'):
-        assert plot_style.lower() in {'all', 'std_bar', 'std_area'}, f"Invalid value for 'plot_style': '{plot_style}'. "
+    def _gap_statistic(self, random_state: int, n_init: int, max_iter: int, n_refs: int = 10, max_clusters: int = 20):
+        print(f"Calculating optimal k using the Gap Statistic method in range {2}:{max_clusters}...")
+        data = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(self.df.values + 1))
+        # data = self.df.values
+        a, b = self.df.values.min(axis=0, keepdims=True), self.df.values.max(axis=0, keepdims=True)
+        k_range = list(range(2, max_clusters + 1))
+        log_inertia_obs = np.zeros((len(k_range)))
+        log_inertia_exp = np.zeros((len(k_range)))
+        gap_scores = np.zeros((len(k_range)))
+        gap_err = np.zeros((len(k_range)))
+        for ind, n_clusters in enumerate(k_range):
+            ref_disps = np.zeros(n_refs)
+            for i in range(n_refs):
+                ref = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(
+                    np.random.random_sample(size=data.shape) * (b - a) + a + 1))
+                # ref = np.random.random_sample(size=data.shape) * (b - a) + a
+                clusterer = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
+                                   max_iter=max_iter).fit(ref)
+                ref_disps[i] = clusterer.inertia_
+            clusterer = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
+                               max_iter=max_iter).fit(data)
+            disp = clusterer.inertia_
+            ref_log_inertia = np.mean(np.log(ref_disps))
+            log_inertia_exp[ind] = ref_log_inertia
+            log_inertia_obs[ind] = np.log(disp)
+            gap_scores[ind] = ref_log_inertia - log_inertia_obs[ind]
+            stdev = np.sqrt(np.mean((np.log(ref_disps) - ref_log_inertia) ** 2.0))
+            gap_err[ind] = stdev * np.sqrt(1 + (1 / n_refs))
 
+        for ind, n_clusters in enumerate(k_range):
+            if ind + 1 == len(k_range):
+                best_k = n_clusters
+                break
+            ind_argmax = ind + 1 + np.argmax(gap_scores[ind + 1::])
+            if gap_scores[ind] >= gap_scores[ind_argmax] - gap_err[ind_argmax]:
+                best_k = n_clusters
+                break
+
+        fig, (ax_inertia, ax) = plt.subplots(1, 2)
+        ax_inertia.plot(k_range, log_inertia_obs, '-o')
+        ax_inertia.plot(k_range, log_inertia_exp, '-o')
+        ax_inertia.legend(['Observed', 'Expected'])
+        ax_inertia.set_ylabel("Log(inertia)")
+        ax_inertia.set_xlabel("Number of clusters (k)")
+        ax.errorbar(k_range, gap_scores, yerr=gap_err, marker='o', color='r')
+        ax.set_title("Gap Statistic method for optimal k selection")
+        ax.set_ylabel('Gap Value')
+        ax.set_xlabel("Number of clusters (k)")
+        ax.annotate(f'Best k={best_k}', xy=(best_k, gap_scores[ind] - gap_err[ind]),
+                    xytext=(best_k, max(gap_scores) * 0.75),
+                    arrowprops=dict(facecolor='black', shrink=0.15))
+        ax.set_xticks(k_range)
+        sns.despine()
+        plt.show()
+        print(f"Using the Gap Statistic method, {best_k} was chosen as the best number of clusters (k).")
+        return best_k, fig
+
+    def _silhouette(self, random_state: int, n_init: int, max_iter: int, max_clusters: int = 20):
+        print(f"Calculating optimal k using the Silhouette method in range {2}:{max_clusters}...")
+        data = StandardScaler().fit_transform(PowerTransformer().fit_transform(self.df.values + 1))
+        sil_scores = []
+        k_range = list(range(2, max_clusters + 1))
+        for n_clusters in k_range:
+            clusterer = KMeans(n_clusters=n_clusters, n_init=n_init, max_iter=max_iter, random_state=random_state)
+            sil_scores.append(silhouette_score(data, clusterer.fit_predict(data)))
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(k_range, sil_scores, '--o', color='r')
+        ax.set_ylim(-1.0, 1.0)
+        ax.set_title("Silhouette method for optimal k selection")
+        ax.set_ylabel('Average silhouette score')
+        ax.set_xlabel("Number of clusters (k)")
+        ax.axhline(0, color='grey', linewidth=2, linestyle='--')
+        best_k = k_range[int(np.argmax(sil_scores))]
+        ax.annotate(f'Best k={best_k}', xy=(best_k, max(sil_scores)), xytext=(best_k + 1, 0.75),
+                    arrowprops=dict(facecolor='black', shrink=0.15))
+        ax.set_xticks(k_range)
+        print(f"Using the Silhouette method, {best_k} was chosen as the best number of clusters (k).")
+        return best_k, fig
+
+    def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
+                     max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
+        data = StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(self.df + 1))
+        max_clusters = min(20, self.shape[0]//4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
-            pass  # TODO: silouhette width k selection
+            best_k, _ = self._silhouette(random_state=random_state, n_init=n_init, max_iter=max_iter,
+                                         max_clusters=max_clusters)
+            k = [best_k]
+        elif isinstance(k, str) and k.lower() == 'gap':
+            best_k, _ = self._gap_statistic(random_state=random_state, n_init=n_init, max_iter=max_iter,
+                                            max_clusters=max_clusters)
+            k = [best_k]
         else:
             if not isinstance(k, Iterable):
                 k = [k]
             k, k_copy = tee(k)
 
             assert np.all((isinstance(item, int) for item in k_copy)), \
-                f"Invalid value for k: '{k}'. k must be an integer, Iterable of integers, " f"or 'silhouette'"
+                f"Invalid value for k: '{k}'. k must be an integer, Iterable of integers, 'gap', or 'silhouette'. "
 
-        data = StandardScaler().fit_transform(self.df)
         clusterers = []
         filt_obj_tuples = []
         for this_k in k:
@@ -1953,6 +2040,7 @@ class CountFilter(Filter):
     def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
                       plot_style: str = 'all', return_prob: bool = False) -> Union[tuple, Tuple[tuple, np.ndarray]]:
+
         data = StandardScaler().fit_transform(self.df)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples,
                                     cluster_selection_epsilon=cluster_selection_epsilon, metric=metric,
@@ -1962,17 +2050,20 @@ class CountFilter(Filter):
         n_clusters = clusterer.labels_.max() + 1
         probabilities = clusterer.probabilities_
         unclustered = np.count_nonzero(clusterer.labels_ == -1)
-        print(
-            f"Found {n_clusters} clusters of average size {(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
-            f"Number of unclustered genes is {unclustered}, "
-            f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
+        if n_clusters == 0:
+            print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
+        else:
+            print(
+                f"Found {n_clusters} clusters of average size {(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
+                f"Number of unclustered genes is {unclustered}, "
+                f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
 
-        means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
+            means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
 
-        self._plot_clustering(n_clusters=n_clusters, data=data, labels=clusterer.labels_, centers=means,
-                              title=f"Results of HDBSCAN Clustering for min_cluster_size={min_cluster_size}, "
-                                    f"min_samples = {min_samples}, epsilon={cluster_selection_epsilon} "
-                                    f"and metric='{metric}'", plot_style=plot_style)
+            self._plot_clustering(n_clusters=n_clusters, data=data, labels=clusterer.labels_, centers=means,
+                                  title=f"Results of HDBSCAN Clustering for min_cluster_size={min_cluster_size}, "
+                                        f"min_samples = {min_samples}, epsilon={cluster_selection_epsilon} "
+                                        f"and metric='{metric}'", plot_style=plot_style)
 
         filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                          suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
