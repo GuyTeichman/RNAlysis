@@ -19,6 +19,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, PowerTransformer
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from sklearn_extra.cluster import KMedoids
 import hdbscan
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -1855,7 +1856,7 @@ class CountFilter(Filter):
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in self.df.iterrows()]]
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), \
-            self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
+               self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
 
     def filter_by_row_sum(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
@@ -1926,7 +1927,8 @@ class CountFilter(Filter):
         plt.show()
         return fig, axes
 
-    def _gap_statistic(self, random_state: int, n_init: int, max_iter: int, n_refs: int = 10, max_clusters: int = 20):
+    def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 10,
+                       max_clusters: int = 20):
         print(f"Calculating optimal k using the Gap Statistic method in range {2}:{max_clusters}...")
         data = self._standard_box_cox(self.df.values)
         a, b = self.df.values.min(axis=0, keepdims=True), self.df.values.max(axis=0, keepdims=True)
@@ -1937,8 +1939,8 @@ class CountFilter(Filter):
         gap_err = np.zeros((len(k_range)))
 
         for ind, n_clusters in enumerate(k_range):
-            clusterer = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
-                               max_iter=max_iter)
+            clusterer = clusterer_class(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
+                                        max_iter=max_iter)
             ref_disps = np.zeros(n_refs)
             for i in range(n_refs):
                 ref = self._standard_box_cox(np.random.random_sample(size=data.shape) * (b - a) + a)
@@ -1960,7 +1962,7 @@ class CountFilter(Filter):
                 best_k = n_clusters
                 break
 
-        fig, (ax_inertia, ax) = plt.subplots(1, 2)
+        fig, (ax_inertia, ax) = plt.subplots(1, 2, figsize=(14, 9))
         ax_inertia.plot(k_range, log_inertia_obs, '-o')
         ax_inertia.plot(k_range, log_inertia_exp, '-o')
         ax_inertia.legend(['Observed', 'Expected'])
@@ -1979,15 +1981,16 @@ class CountFilter(Filter):
         print(f"Using the Gap Statistic method, {best_k} was chosen as the best number of clusters (k).")
         return best_k, fig
 
-    def _silhouette(self, random_state: int, n_init: int, max_iter: int, max_clusters: int = 20):
+    def _silhouette(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, max_clusters: int = 20):
         print(f"Calculating optimal k using the Silhouette method in range {2}:{max_clusters}...")
         data = self._standard_box_cox(self.df)
         sil_scores = []
         k_range = list(range(2, max_clusters + 1))
         for n_clusters in k_range:
-            clusterer = KMeans(n_clusters=n_clusters, n_init=n_init, max_iter=max_iter, random_state=random_state)
+            clusterer = clusterer_class(n_clusters=n_clusters, n_init=n_init, max_iter=max_iter,
+                                        random_state=random_state)
             sil_scores.append(silhouette_score(data, clusterer.fit_predict(data)))
-        fig = plt.figure()
+        fig = plt.figure(figsize=(7, 9))
         ax = fig.add_subplot(111)
         ax.plot(k_range, sil_scores, '--o', color='r')
         ax.set_ylim(-1.0, 1.0)
@@ -2006,15 +2009,16 @@ class CountFilter(Filter):
     def _standard_box_cox(data: Union[pd.DataFrame, np.ndarray]):
         return StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
 
-    def _parse_k(self, k: Union[int, List[int], str], random_state: int, n_init: int, max_iter: int, max_clusters: int):
+    def _parse_k(self, k: Union[int, List[int], str], clusterer_class: type, random_state: int, n_init: int,
+                 max_iter: int, max_clusters: int):
         max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
-            best_k, _ = self._silhouette(random_state=random_state, n_init=n_init, max_iter=max_iter,
-                                         max_clusters=max_clusters)
+            best_k, _ = self._silhouette(clusterer_class=clusterer_class, random_state=random_state, n_init=n_init,
+                                         max_iter=max_iter, max_clusters=max_clusters)
             k = [best_k]
         elif isinstance(k, str) and k.lower() == 'gap':
-            best_k, _ = self._gap_statistic(random_state=random_state, n_init=n_init, max_iter=max_iter,
-                                            max_clusters=max_clusters)
+            best_k, _ = self._gap_statistic(clusterer_class=clusterer_class, random_state=random_state, n_init=n_init,
+                                            max_iter=max_iter, max_clusters=max_clusters)
             k = [best_k]
         else:
             if not isinstance(k, Iterable):
@@ -2027,7 +2031,8 @@ class CountFilter(Filter):
 
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
                      max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
-        k = self._parse_k(k=k, random_state=random_state, n_init=n_init, max_iter=max_iter, max_clusters=max_clusters)
+        k = self._parse_k(k=k, clusterer_class=KMeans, random_state=random_state, n_init=n_init, max_iter=max_iter,
+                          max_clusters=max_clusters)
         filt_obj_tuples = []
         data = self._standard_box_cox(self.df)
         for this_k in k:
@@ -2038,6 +2043,26 @@ class CountFilter(Filter):
             self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
                                   title=f"Results of K-Means Clustering for K={this_k}", plot_style=plot_style)
+
+            filt_obj_tuples.append(
+                tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
+                                     suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
+        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+
+    def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
+                       max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
+        k = self._parse_k(k=k, clusterer_class=_KMedoidsIter, random_state=random_state, n_init=n_init,
+                          max_iter=max_iter, max_clusters=max_clusters)
+        filt_obj_tuples = []
+        data = self._standard_box_cox(self.df)
+        for this_k in k:
+            this_k = int(this_k)
+            clusterer = _KMedoidsIter(init='k-medoids++', n_clusters=this_k, n_init=n_init, max_iter=max_iter,
+                                      random_state=random_state).fit(data)
+
+            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
+                                  centers=clusterer.cluster_centers_,
+                                  title=f"Results of K-Medoids Clustering for K={this_k}", plot_style=plot_style)
 
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
@@ -2707,5 +2732,43 @@ class Pipeline:
         args, kwargs = self.params.pop(-1)
         print(
             f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline. ")
+
+
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
+
+class _KMedoidsIter:
+    def __init__(self, n_clusters: int, init: str = 'k-medoids++', max_iter: int = 300, random_state: int = None,
+                 n_init: int = 10):
+        assert isinstance(n_init, int), f"n_init must be an integer, is {type(n_init)} instead. "
+        assert n_init > 0, f"n_init must be a positive integer. Input {n_init} is invalid. "
+        self.n_clusters = n_clusters
+        self.n_init = n_init
+        self.init = init
+        self.max_iter = max_iter
+        self.random_state = random_state
+        self.clusterer = None
+        self.inertia_ = None
+        self.cluster_centers_ = None
+        self.labels_ = None
+
+    def fit(self, x):
+        inertias = np.zeros(self.n_init)
+        clusterers = []
+        for i in range(self.n_init):
+            clusterers.append(KMedoids(n_clusters=self.n_clusters, init=self.init, max_iter=self.max_iter,
+                                       random_state=self.random_state + i).fit(x))
+            inertias[i] = clusterers[i].inertia_
+        best_clusterer = clusterers[int(np.argmax(inertias))]
+        self.clusterer = best_clusterer
+        self.inertia_ = self.clusterer.inertia_
+        self.cluster_centers_ = self.clusterer.cluster_centers_
+        self.labels_ = self.clusterer.labels_
+        return self
+
+    def predict(self, x):
+        return self.clusterer.predict(x)
+
+    def fit_predict(self, x):
+        self.fit(x)
+        return self.predict(x)
