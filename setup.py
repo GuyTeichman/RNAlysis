@@ -11,9 +11,9 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['numpy', 'pandas>=1.0.1', 'matplotlib', 'seaborn>=0.10.0', 'tissue_enrichment_analysis', 'statsmodels',
+requirements = ['numpy>=1.18.1', 'pandas>=1.0.1', 'matplotlib', 'seaborn>=0.10.0', 'tissue_enrichment_analysis', 'statsmodels',
                 'scikit-learn>=0.22', 'ipyparallel', 'grid_strategy', 'pyyaml', 'UpSetPlot', 'matplotlib-venn', 'scipy',
-                'goatools', 'wget', 'hdbscan']
+                'goatools', 'wget', 'hdbscan>=0.8', 'scikit-learn-extra']
 
 setup_requirements = ['pytest-runner', ]
 
