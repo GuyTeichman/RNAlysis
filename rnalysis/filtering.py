@@ -312,7 +312,7 @@ class Filter:
         new_df = self.df[self.df[column] < self.df[column].quantile(percentile)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_percentile(self, percentile: float, column: str):
+    def split_by_percentile(self, percentile: float, column: str) -> tuple:
 
         """
         Splits the Filter object into two Filter objects: \
@@ -322,6 +322,7 @@ class Filter:
         :param percentile: The percentile that all features above it will be filtered out.
         :type column: str
         :param column: Name of the DataFrame column according to which the filtering will be performed.
+        :rtype: Tuple[filtering.Filter, filtering.Filter]
         :return: a tuple of two Filter objects: the first contains all of the features below the specified percentile, \
         and the second contains all of the features above and equal to the specified percentile.
 
@@ -489,7 +490,7 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_attribute(self, attributes: List[str], ref: str = 'predefined'):
+    def split_by_attribute(self, attributes: List[str], ref: str = 'predefined') -> tuple:
 
         """
         Splits the Filter object into multiple Filter objects, \
@@ -499,6 +500,7 @@ class Filter:
         :param attributes: list of attribute names from the Attribute Reference Table to filter by.
         :type attributes: list of strings
         :param ref: filename/path of the reference table to be used as reference.
+        :rtype: Tuple[filtering.Filter]
         :return: A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute; \
         the Filter objects are returned in the same order the attributes were given in.
 
@@ -1328,7 +1330,7 @@ class FoldChangeFilter(Filter):
                 "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_fold_change_direction(self):
+    def split_fold_change_direction(self) -> tuple:
 
         """
         Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping \
@@ -1337,6 +1339,7 @@ class FoldChangeFilter(Filter):
         the second object will contain only features with a negative log2(fold change). \
         Features with log2(fold change) = 0 will be ignored.
 
+        :rtype: Tuple[filtering.FoldChangeFilter, filtering.FoldChangeFilter]
         :return: a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change, \
         and the other has only features with negative log2 fold change.
 
@@ -1486,13 +1489,14 @@ class DESeqFilter(Filter):
                 "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_fold_change_direction(self):
+    def split_fold_change_direction(self) -> tuple:
 
         """
         Splits the features in the current DESeqFilter object into two complementary, non-overlapping DESeqFilter \
         objects, based on the direction of their log2foldchange. The first object will contain only features with a \
         positive log2foldchange, the second object will contain only features with a negative log2foldchange.
 
+        :rtype: Tuple[filtering.DESeqFilter, filteirng.DESeqFilter]
         :return: a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change, \
         and the other has only features with negative log2 fold change.
 
@@ -1822,7 +1826,7 @@ class CountFilter(Filter):
         suffix = f"_filt{threshold}reads"
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_reads(self, threshold: float = 5):
+    def split_by_reads(self, threshold: float = 5) -> tuple:
 
         """
         Splits the features in the current CountFilter object into two complementary, non-overlapping CountFilter \
@@ -1830,9 +1834,11 @@ class CountFilter(Filter):
          features (which have reads over the specified threshold in at least one sample). The second object will \
          contain only lowly-expressed features (which have reads below the specified threshold in all samples).
 
-        :param threshold: A float. The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have \
+        :param threshold: The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have \
         in at least one sample in order to be \
         included in the "highly expressed" object and no the "lowly expressed" object.
+        :type threshold: float (default 5)
+        :rtype: Tuple[filtering.CountFilter, filtering.CountFilter]
         :return: A tuple containing two CountFilter objects: the first has only highly-expressed features, \
         and the second has only lowly-expressed features.
 
@@ -1849,7 +1855,7 @@ class CountFilter(Filter):
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in self.df.iterrows()]]
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), \
-               self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
+            self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
 
     def filter_by_row_sum(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
@@ -2000,8 +2006,7 @@ class CountFilter(Filter):
     def _standard_box_cox(data: Union[pd.DataFrame, np.ndarray]):
         return StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
 
-    def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
-                     max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
+    def _parse_k(self, k: Union[int, List[int], str], random_state: int, n_init: int, max_iter: int, max_clusters: int):
         max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
             best_k, _ = self._silhouette(random_state=random_state, n_init=n_init, max_iter=max_iter,
@@ -2018,21 +2023,24 @@ class CountFilter(Filter):
 
             assert np.all((isinstance(item, int) for item in k_copy)), \
                 f"Invalid value for k: '{k}'. k must be an integer, Iterable of integers, 'gap', or 'silhouette'. "
+        return k
 
-        clusterers = []
+    def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 10,
+                     max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
+        k = self._parse_k(k=k, random_state=random_state, n_init=n_init, max_iter=max_iter, max_clusters=max_clusters)
         filt_obj_tuples = []
         data = self._standard_box_cox(self.df)
         for this_k in k:
             this_k = int(this_k)
-            clusterers.append(KMeans(init='k-means++', n_clusters=this_k, n_init=n_init, max_iter=max_iter,
-                                     random_state=random_state).fit(data))
+            clusterer = KMeans(init='k-means++', n_clusters=this_k, n_init=n_init, max_iter=max_iter,
+                               random_state=random_state).fit(data)
 
-            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterers[-1].labels_,
-                                  centers=clusterers[-1].cluster_centers_,
+            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
+                                  centers=clusterer.cluster_centers_,
                                   title=f"Results of K-Means Clustering for K={this_k}", plot_style=plot_style)
 
             filt_obj_tuples.append(
-                tuple([self._inplace(self.df.loc[clusterers[-1].labels_ == i], opposite=False, inplace=False,
+                tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
