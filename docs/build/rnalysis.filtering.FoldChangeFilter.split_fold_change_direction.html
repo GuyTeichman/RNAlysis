@@ -215,14 +215,17 @@
 <h1>rnalysis.filtering.FoldChangeFilter.split_fold_change_direction<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-split-fold-change-direction" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction">
-<code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.split_fold_change_direction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.split_fold_change_direction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping         FoldChangeFilter objects, based on the direction of their log2(fold change).         The first object will contain only features with a positive log2(fold change),         the second object will contain only features with a negative log2(fold change).         Features with log2(fold change) = 0 will be ignored.</p>
 <dl class="field-list">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">filtering.FoldChangeFilter</a>, <a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">filtering.FoldChangeFilter</a>]</p>
 </dd>
-<dt class="field-even">Examples</dt>
-<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+</dd>
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span><span class="p">,</span><span class="s1">&#39;numerator name&#39;</span><span class="p">,</span><span class="s1">&#39;denominator name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pos_log2fc</span><span class="p">,</span> <span class="n">neg_log2fc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">split_fold_change_direction</span><span class="p">()</span>
 <span class="go">Filtered 10 features, leaving 12 of the original 22 features. Filtering result saved to new object.</span>

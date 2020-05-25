@@ -216,14 +216,17 @@
 <h1>rnalysis.filtering.DESeqFilter.split_fold_change_direction<a class="headerlink" href="#rnalysis-filtering-deseqfilter-split-fold-change-direction" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="rnalysis.filtering.DESeqFilter.split_fold_change_direction">
-<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.split_fold_change_direction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#rnalysis.filtering.DESeqFilter.split_fold_change_direction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Splits the features in the current DESeqFilter object into two complementary, non-overlapping DESeqFilter         objects, based on the direction of their log2foldchange. The first object will contain only features with a         positive log2foldchange, the second object will contain only features with a negative log2foldchange.</p>
 <dl class="field-list">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter">filtering.DESeqFilter</a>, filteirng.DESeqFilter]</p>
 </dd>
-<dt class="field-even">Examples</dt>
-<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+</dd>
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_deseq.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pos</span><span class="p">,</span> <span class="n">neg</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_fold_change_direction</span><span class="p">()</span>
 <span class="go">Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.</span>

@@ -1116,7 +1116,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -1125,11 +1125,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
 <span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
@@ -1143,7 +1146,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -1152,11 +1155,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>, <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">below</span><span class="p">,</span> <span class="n">above</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_by_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.</span>
@@ -1169,17 +1175,20 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_reads</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_reads</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the features in the current CountFilter object into two complementary, non-overlapping CountFilter         objects, based on the their maximum expression level. The first object will contain only highly-expressed          features (which have reads over the specified threshold in at least one sample). The second object will          contain only lowly-expressed features (which have reads below the specified threshold in all samples).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>threshold</strong> – A float. The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have         in at least one sample in order to be         included in the “highly expressed” object and no the “lowly expressed” object.</p>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em><em> (</em><em>default 5</em><em>)</em>) – The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have         in at least one sample in order to be         included in the “highly expressed” object and no the “lowly expressed” object.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple containing two CountFilter objects: the first has only highly-expressed features,         and the second has only lowly-expressed features.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter">filtering.CountFilter</a>, <a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter">filtering.CountFilter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A tuple containing two CountFilter objects: the first has only highly-expressed features,         and the second has only lowly-expressed features.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">low_expr</span><span class="p">,</span><span class="n">high_expr</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">split_by_reads</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">Filtered 6 features, leaving 16 of the original 22 features. Filtering result saved to new object.</span>
@@ -1189,6 +1198,21 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">split_hdbscan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_cluster_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em>, <em class="sig-param"><span class="n">min_samples</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em>, <em class="sig-param"><span class="n">cluster_selection_epsilon</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">cluster_selection_method</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'eom'</span></em>, <em class="sig-param"><span class="n">plot_style</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">return_prob</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span>tuple<span class="p">, </span>Tuple<span class="p">[</span>tuple<span class="p">, </span>numpy.ndarray<span class="p">]</span><span class="p">]</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">split_kmeans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>List<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">random_state</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_init</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">300</span></em>, <em class="sig-param"><span class="n">plot_style</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">max_clusters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">'default'</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">split_kmedoids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>List<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">random_state</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_init</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">300</span></em>, <em class="sig-param"><span class="n">plot_style</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">max_clusters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">'default'</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt>
@@ -2076,7 +2100,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -2085,11 +2109,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
 <span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
@@ -2103,7 +2130,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -2112,11 +2139,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>, <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">below</span><span class="p">,</span> <span class="n">above</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_by_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.</span>
@@ -2129,14 +2159,17 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the features in the current DESeqFilter object into two complementary, non-overlapping DESeqFilter         objects, based on the direction of their log2foldchange. The first object will contain only features with a         positive log2foldchange, the second object will contain only features with a negative log2foldchange.</p>
 <dl class="field-list">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter">filtering.DESeqFilter</a>, filteirng.DESeqFilter]</p>
 </dd>
-<dt class="field-even">Examples</dt>
-<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple containing two DESeqFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+</dd>
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_deseq.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pos</span><span class="p">,</span> <span class="n">neg</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_fold_change_direction</span><span class="p">()</span>
 <span class="go">Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.</span>
@@ -2926,7 +2959,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -2935,11 +2968,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
 <span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
@@ -2953,7 +2989,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -2962,11 +2998,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>, <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">below</span><span class="p">,</span> <span class="n">above</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_by_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.</span>
@@ -3887,7 +3926,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_attribute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -3896,11 +3935,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
 <span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
@@ -3914,7 +3956,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_by_percentile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentile</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -3923,11 +3965,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>column</strong> (<em>str</em>) – Name of the DataFrame column according to which the filtering will be performed.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>, <a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a tuple of two Filter objects: the first contains all of the features below the specified percentile,         and the second contains all of the features above and equal to the specified percentile.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">below</span><span class="p">,</span> <span class="n">above</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">split_by_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.</span>
@@ -3940,14 +3985,17 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">split_fold_change_direction</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; tuple</dt>
 <dd><p>Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping         FoldChangeFilter objects, based on the direction of their log2(fold change).         The first object will contain only features with a positive log2(fold change),         the second object will contain only features with a negative log2(fold change).         Features with log2(fold change) = 0 will be ignored.</p>
 <dl class="field-list">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">filtering.FoldChangeFilter</a>, <a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">filtering.FoldChangeFilter</a>]</p>
 </dd>
-<dt class="field-even">Examples</dt>
-<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple containing two FoldChangeFilter objects: the first has only features with positive log2 fold change,         and the other has only features with negative log2 fold change.</p>
+</dd>
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span><span class="p">,</span><span class="s1">&#39;numerator name&#39;</span><span class="p">,</span><span class="s1">&#39;denominator name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pos_log2fc</span><span class="p">,</span> <span class="n">neg_log2fc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">split_fold_change_direction</span><span class="p">()</span>
 <span class="go">Filtered 10 features, leaving 12 of the original 22 features. Filtering result saved to new object.</span>

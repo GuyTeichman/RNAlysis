@@ -14,15 +14,10 @@ rnalysis.filtering
     :toctree: .
     
     CountFilter
-    
     DESeqFilter
-    
     Filter
-    
     FoldChangeFilter
-    
     Pipeline
-    
 
 
 

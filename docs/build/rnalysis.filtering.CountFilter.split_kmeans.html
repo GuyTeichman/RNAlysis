@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rnalysis.filtering.CountFilter.filter_biotype &mdash; RNAlysis 1.3.4 documentation</title>
+  <title>rnalysis.filtering.CountFilter.split_kmeans &mdash; RNAlysis 1.3.4 documentation</title>
   
 
   
@@ -38,8 +38,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.CountFilter.filter_by_attribute" href="rnalysis.filtering.CountFilter.filter_by_attribute.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.enhanced_box_plot" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html" /> 
+    <link rel="next" title="rnalysis.filtering.CountFilter.split_kmedoids" href="rnalysis.filtering.CountFilter.split_kmedoids.html" />
+    <link rel="prev" title="rnalysis.filtering.CountFilter.split_hdbscan" href="rnalysis.filtering.CountFilter.split_hdbscan.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -116,7 +116,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.filter_biotype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype.html">rnalysis.filtering.CountFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html">rnalysis.filtering.CountFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html">rnalysis.filtering.CountFilter.filter_by_row_sum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html">rnalysis.filtering.CountFilter.filter_low_reads</a></li>
@@ -140,7 +140,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html">rnalysis.filtering.CountFilter.split_by_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html">rnalysis.filtering.CountFilter.split_by_reads</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_hdbscan.html">rnalysis.filtering.CountFilter.split_hdbscan</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmeans.html">rnalysis.filtering.CountFilter.split_kmeans</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.split_kmeans</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmedoids.html">rnalysis.filtering.CountFilter.split_kmedoids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html">rnalysis.filtering.CountFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html">rnalysis.filtering.CountFilter.tail</a></li>
@@ -206,13 +206,13 @@
         
           <li><a href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a> &raquo;</li>
         
-      <li>rnalysis.filtering.CountFilter.filter_biotype</li>
+      <li>rnalysis.filtering.CountFilter.split_kmeans</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/rnalysis.filtering.CountFilter.filter_biotype.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rnalysis.filtering.CountFilter.split_kmeans.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -225,41 +225,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rnalysis-filtering-countfilter-filter-biotype">
-<h1>rnalysis.filtering.CountFilter.filter_biotype<a class="headerlink" href="#rnalysis-filtering-countfilter-filter-biotype" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="rnalysis-filtering-countfilter-split-kmeans">
+<h1>rnalysis.filtering.CountFilter.split_kmeans<a class="headerlink" href="#rnalysis-filtering-countfilter-split-kmeans" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
-<dt id="rnalysis.filtering.CountFilter.filter_biotype">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.filter_biotype" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters out all features that do not match the indicated biotype/biotypes.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
-<dl class="field-list">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>biotype</strong> (<em>string</em><em> or </em><em>list of strings</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is the path defined by the user in the settings.yaml file.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>If ‘inplace’ is False, returns a new instance of Filter object.</p>
-</dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows whose biotype is &#39;protein_coding&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
-<span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows whose biotype is &#39;protein_coding&#39; or &#39;pseudogene&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">([</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span><span class="s1">&#39;pseudogene&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
-<span class="go">Filtered 0 features, leaving 22 of the original 22 features. Filtered inplace.</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</dd></dl>
+<dt id="rnalysis.filtering.CountFilter.split_kmeans">
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">split_kmeans</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>List<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">random_state</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_init</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">300</span></em>, <em class="sig-param"><span class="n">plot_style</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">max_clusters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">'default'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.split_kmeans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 
@@ -271,10 +242,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.CountFilter.filter_by_attribute.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.filter_by_attribute" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.CountFilter.split_kmedoids.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.split_kmedoids" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.CountFilter.enhanced_box_plot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.enhanced_box_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.CountFilter.split_hdbscan.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.split_hdbscan" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

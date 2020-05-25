@@ -45,6 +45,9 @@ rnalysis.filtering.CountFilter
     CountFilter.split_by_attribute
     CountFilter.split_by_percentile
     CountFilter.split_by_reads
+    CountFilter.split_hdbscan
+    CountFilter.split_kmeans
+    CountFilter.split_kmedoids
     CountFilter.symmetric_difference
     CountFilter.tail
     CountFilter.text_filters
