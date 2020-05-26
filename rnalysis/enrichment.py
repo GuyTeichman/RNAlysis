@@ -463,10 +463,10 @@ class FeatureSet:
         return attr_ref_df, gene_set
 
     def enrich_randomization_parallel(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                                      fdr: float = 0.05, reps: int = 10000,
-                                      biotype: str = 'protein_coding', background_genes=None,
-                                      attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                                      save_csv: bool = False, fname=None, return_fig: bool = False):
+                                      fdr: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding',
+                                      background_genes=None, attr_ref_path: str = 'predefined',
+                                      biotype_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
+                                      return_fig: bool = False, random_seed: int = None):
 
         """
         Calculates enrichment scores, p-values and adjusted p-values \
@@ -537,6 +537,10 @@ class FeatureSet:
         dview = client[:]
         dview.execute("""import numpy as np
               import pandas as pd""")
+        if random_seed is not None:
+            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
+                                                                      f"Value {random_seed} invalid."
+            dview.execute(f"np.random.seed({random_seed})")
         k = len(attributes)
         gene_set_rep = list(repeat(gene_set, k))
         attr_ref_df_rep = list(repeat(attr_ref_df, k))
@@ -565,10 +569,9 @@ class FeatureSet:
         return res_df
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
-                             reps: int = 10000,
-                             biotype: str = 'protein_coding', background_genes=None,
+                             reps: int = 10000, biotype: str = 'protein_coding', background_genes=None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                             save_csv: bool = False, fname=None, return_fig: bool = False):
+                             save_csv: bool = False, fname=None, return_fig: bool = False, random_seed: int = None):
 
         """
         Calculates enrichment scores, p-values and adjusted p-values \
@@ -634,6 +637,11 @@ class FeatureSet:
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         fraction = lambda mysrs: (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
         enriched_list = []
+        if random_seed is not None:
+            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
+                                                                      f"Value {random_seed} invalid."
+            random.seed(random_seed)
+
         for k, attribute in enumerate(attributes):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             print(f"Finished {k} attributes out of {len(attributes)}")

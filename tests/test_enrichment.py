@@ -210,15 +210,16 @@ def test_enrichment_randomization_reliability():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     attrs = ['attribute1', 'attribute2', 'attribute4']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    random_state = random.getstate()
+    random_seed = 42
 
     for i in range(5):
         res1 = en.enrich_randomization(attrs, reps=5000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
-                                       biotype_ref_path='biotype_ref_table_for_tests.csv')
+                                       biotype_ref_path='biotype_ref_table_for_tests.csv', random_seed=random_seed)
         res2 = en.enrich_randomization(attrs, reps=5000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
-                                       biotype_ref_path='biotype_ref_table_for_tests.csv')
+                                       biotype_ref_path='biotype_ref_table_for_tests.csv', random_seed=random_seed + 1)
         res3 = en.enrich_randomization(attrs, reps=5000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
-                                       biotype_ref_path='biotype_ref_table_for_tests.csv')
+                                       biotype_ref_path='biotype_ref_table_for_tests.csv', random_seed=random_seed + 2)
+        random_seed += 3
         try:
             for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
                 assert np.all(res1[col] == res2[col])
@@ -232,28 +233,27 @@ def test_enrichment_randomization_reliability():
             raise AssertionError(f'Enrichment test failed with the random state: \n{random_state}')
 
 
+def _enrichment_validity(res, truth):
+    for col in ['samples', 'n obs', 'significant']:
+        assert np.all(res[col] == truth[col])
+    for closecol in ['n exp', 'log2_fold_enrichment']:
+        assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
+    for randcol in ['pval']:
+        assert np.isclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25).all()
+    pvals = res['pval'].values
+    _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
+    assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
+
+
 def test_enrichment_randomization_validity():
     truth = general.load_csv('enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    random_state = random.getstate()
     res = en.enrich_randomization(attrs, reps=100000, biotype='all', attr_ref_path='attr_ref_table_for_tests.csv',
-                                  biotype_ref_path='biotype_ref_table_for_tests.csv')
-
-    try:
-        for col in ['samples', 'n obs', 'significant']:
-            assert np.all(res[col] == truth[col])
-        for closecol in ['n exp', 'log2_fold_enrichment']:
-            assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
-        for randcol in ['pval']:
-            assert np.isclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25).all()
-        pvals = res['pval'].values
-        _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
-        assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
-    except AssertionError:
-        raise AssertionError(f'Enrichment test failed with the random state: \n{random_state}')
+                                  biotype_ref_path='biotype_ref_table_for_tests.csv', random_seed=0)
+    _enrichment_validity(res, truth)
 
 
 def test_enrichment_parallel_api():
@@ -273,19 +273,23 @@ def test_enrichment_randomization_parallel_reliability():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     attrs = ['attribute1', 'attribute2', 'attribute4']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    random_state = np.random.get_state()
+    random_seed = 0
 
     try:
         for i in range(5):
             res1 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
                                                     attr_ref_path='attr_ref_table_for_tests.csv',
-                                                    biotype_ref_path='biotype_ref_table_for_tests.csv')
+                                                    biotype_ref_path='biotype_ref_table_for_tests.csv',
+                                                    random_seed=random_seed)
             res2 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
                                                     attr_ref_path='attr_ref_table_for_tests.csv',
-                                                    biotype_ref_path='biotype_ref_table_for_tests.csv')
+                                                    biotype_ref_path='biotype_ref_table_for_tests.csv',
+                                                    random_seed=random_seed + 1)
             res3 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
                                                     attr_ref_path='attr_ref_table_for_tests.csv',
-                                                    biotype_ref_path='biotype_ref_table_for_tests.csv')
+                                                    biotype_ref_path='biotype_ref_table_for_tests.csv',
+                                                    random_seed=random_seed + 2)
+            random_seed += 3
 
         for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
             assert np.all(res1[col] == res2[col])
@@ -305,23 +309,11 @@ def test_enrichment_parallel_validity():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    random_state = np.random.get_state()
     res = en.enrich_randomization_parallel(attrs, reps=100000, biotype='all',
                                            attr_ref_path='attr_ref_table_for_tests.csv',
-                                           biotype_ref_path='biotype_ref_table_for_tests.csv')
+                                           biotype_ref_path='biotype_ref_table_for_tests.csv', random_seed=0)
 
-    try:
-        for col in ['samples', 'n obs', 'significant']:
-            assert np.all(res[col] == truth[col])
-        for closecol in ['n exp', 'log2_fold_enrichment']:
-            assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
-        for randcol in ['pval']:
-            assert np.isclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25).all()
-        pvals = res['pval'].values
-        _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
-        assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
-    except AssertionError:
-        raise AssertionError(f'Enrichment test failed with the numpy.random state: \n{random_state}')
+    _enrichment_validity(res, truth)
 
 
 def test_randomization_int_index_attributes():
