@@ -245,6 +245,18 @@ def _enrichment_validity(res, truth):
     assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
 
 
+def _enrichment_validity(res, truth):
+    for col in ['samples', 'n obs', 'significant']:
+        assert np.all(res[col] == truth[col])
+    for closecol in ['n exp', 'log2_fold_enrichment']:
+        assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
+    for randcol in ['pval']:
+        assert np.isclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25).all()
+    pvals = res['pval'].values
+    _, padj_truth = multitest.fdrcorrection(pvals, 0.1)
+    assert np.isclose(res['padj'].values, padj_truth, atol=0.0).all()
+
+
 def test_enrichment_randomization_validity():
     truth = general.load_csv('enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
