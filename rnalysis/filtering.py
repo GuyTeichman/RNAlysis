@@ -2461,7 +2461,7 @@ class CountFilter(Filter):
         plt.show()
         return ax
 
-    def box_plot(self, samples='all', scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
+    def box_plot(self, samples='all', notch: bool = True, scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
 
         """
         Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
@@ -2496,9 +2496,9 @@ class CountFilter(Filter):
         samples_df = np.log10(samples_df + 1)
         fig = plt.figure(figsize=(8, 8))
 
-        box = sns.boxplot(data=samples_df)
+        box = sns.boxplot(data=np.log10(samples_df + 1), notch=notch)
         if scatter:
-            scat = sns.stripplot(data=samples_df, color='gray', size=2)
+            scat = sns.stripplot(data=np.log10(samples_df + 1), color='gray', size=2)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
