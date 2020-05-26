@@ -639,6 +639,11 @@ def test_count_filter_from_folder():
 
     h_norm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=True, save_csv=False)
     assert np.all(np.isclose(h_norm.df, truth_norm))
+    for item in h_norm.fname.parent.iterdir():
+        print(item)
+        if item.is_dir():
+            for subitem in item.iterdir():
+                print('\t', subitem)
 
     all_feature = general.load_csv('test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
     all_feature.sort_index(inplace=True)
