@@ -12,7 +12,7 @@ import time
 import subprocess
 import yaml
 from typing import Union, List, Set, Dict, Tuple
-from rnalysis import __attr_file_key__, __biotype_file_key__
+from rnalysis import __path__, __attr_file_key__, __biotype_file_key__
 
 
 def _start_ipcluster(n_engines: int = 'default'):
@@ -23,10 +23,15 @@ def _start_ipcluster(n_engines: int = 'default'):
     :param n_engines: if 'default', will initiate the default amount of engines. \
     Otherwise, will initiate n_engines engines.
     """
+    assert (isinstance(n_engines,
+                       int) and n_engines > 0) or n_engines == 'default', f"Invalid number of engines {n_engines}"
+    envvar = {k: os.environ[k] for k in os.environ.keys()}
+    print(envvar)
+    subprocess.Popen("ipcluster --version", shell=True)
     if n_engines == 'default':
-        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE)
+        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE, shell=True)
     else:
-        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE)
+        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE, shell=True)
 
 
 def _stop_ipcluster():
@@ -34,7 +39,7 @@ def _stop_ipcluster():
     Stop a previously started ipyparallel ipcluster.
 
     """
-    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE)
+    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE, shell=True)
 
 
 def start_parallel_session(n_engines: int = 'default'):
@@ -48,8 +53,10 @@ def start_parallel_session(n_engines: int = 'default'):
     :Examples:
     >>> from rnalysis import general
     >>> general.start_parallel_session()
+    Starting parallel session...
     Parallel session started successfully
     """
+    print("Starting parallel session...")
     _stop_ipcluster()
     time.sleep(1)
     stream = _start_ipcluster(n_engines)
@@ -129,7 +136,8 @@ def _get_settings_file_path():
     :returns: the path of the settings.yaml file.
     :rtype: pathlib.Path
     """
-    return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
+    # return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
+    return Path(os.path.join(__path__[0], 'settings.yaml'))
 
 
 def _load_settings_file():
@@ -162,6 +170,18 @@ def _update_settings_file(value: str, key: str):
         yaml.safe_dump(out, f)
 
 
+def reset_settings_file():
+    """
+    Resets the local settings by deleting the local settings file. Warning: this action is irreversible!
+    """
+    settings_pth = _get_settings_file_path()
+    if not settings_pth.exists():
+        print("No local settings file exists. ")
+    else:
+        settings_pth.unlink()
+        print(f"Local settings file was deleted. ")
+
+
 def _read_value_from_settings(key):
     """
     Attempt to read the value corresponding to a given key from the settings.yaml file. \
@@ -180,40 +200,6 @@ def _read_value_from_settings(key):
     return settings[key]
 
 
-def read_biotype_ref_table_path():
-    """
-    Reads the Biotype Reference Table path from the settings file.
-
-    :returns: the path of the Biotype Reference Table that is saved in the settings file.
-    :rtype: str
-
-    :Examples:
-    >>> from rnalysis import general
-    >>> general.read_biotype_ref_table_path()
-    Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file
-    """
-    pth = _read_value_from_settings(__biotype_file_key__)
-    print(f'Biotype Reference Table used: {pth}')
-    return pth
-
-
-def read_attr_ref_table_path():
-    """
-    Reads the Attribute Reference Table path from the settings file.
-
-    :returns: the path of the Attribute Reference Table that is saved in the settings file.
-    :rtype: str
-
-    :Examples:
-    >>> from rnalysis import general
-    >>> path = general.read_attr_ref_table_path()
-    Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file
-    """
-    pth = _read_value_from_settings(__attr_file_key__)
-    print(f'Attribute Reference Table used: {pth}')
-    return pth
-
-
 def set_attr_ref_table_path(path: str = None):
     """
     Defines/updates the Attribute Reference Table path in the settings file.
@@ -222,9 +208,9 @@ def set_attr_ref_table_path(path: str = None):
 
     :Examples:
     >>> from rnalysis import general
-    >>> path="the_new_attribute_reference_table_path"
+    >>> path="my_attribute_reference_table_path"
     >>> general.set_attr_ref_table_path(path)
-    Attribute Reference Table path set as: the_new_attribute_reference_table_path
+    Attribute Reference Table path set as: my_attribute_reference_table_path
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
@@ -240,14 +226,48 @@ def set_biotype_ref_table_path(path: str = None):
 
     :Examples:
     >>> from rnalysis import general
-    >>> path="the_new_biotype_reference_table_path"
+    >>> path="my_biotype_reference_table_path"
     >>> general.set_biotype_ref_table_path(path)
-    Attribute Reference Table path set as: the_new_biotype_reference_table_path
+    Biotype Reference Table path set as: my_biotype_reference_table_path
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
     _update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
+
+
+def read_biotype_ref_table_path():
+    """
+    Reads the Biotype Reference Table path from the settings file.
+
+    :returns: the path of the Biotype Reference Table that is saved in the settings file.
+    :rtype: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> my_path = general.read_biotype_ref_table_path()
+    Biotype Reference Table used: my_biotype_reference_table_path
+    """
+    pth = _read_value_from_settings(__biotype_file_key__)
+    print(f'Biotype Reference Table used: {pth}')
+    return pth
+
+
+def read_attr_ref_table_path():
+    """
+    Reads the Attribute Reference Table path from the settings file.
+
+    :returns: the path of the Attribute Reference Table that is saved in the settings file.
+    :rtype: str
+
+    :Examples:
+    >>> from rnalysis import general
+    >>> my_path = general.read_attr_ref_table_path()
+    Attribute Reference Table used: my_attribute_reference_table_path
+    """
+    pth = _read_value_from_settings(__attr_file_key__)
+    print(f'Attribute Reference Table used: {pth}')
+    return pth
 
 
 def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
@@ -371,3 +391,31 @@ def _get_attr_ref_path(ref):
         return read_attr_ref_table_path()
     else:
         return ref
+
+
+def _biotype_table_assertions(ref_df: pd.DataFrame):
+    """
+    Assert legality of Biotype Reference Table, and rename column names to standard names ('gene' and 'biotype').
+    :param ref_df: the loaded Biotype Reference Table
+    :type ref_df: pandas DataFrame
+
+    """
+    assert ref_df.shape[
+               1] == 2, f"Invalid number of columns in Biotype Reference Table: found {ref_df.shape[1]} columns instead of 2!"
+    assert ref_df.shape[
+               0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
+    ref_df.rename(columns={ref_df.columns[0]: 'gene', ref_df.columns[1]: 'biotype'}, inplace=True)
+
+
+def _attr_table_assertions(ref_df: pd.DataFrame):
+    """
+    Assert legality of Attribute Reference Table, and renames the first column to standard name ('gene').
+    :param ref_df:
+    :type ref_df: pandas DataFrame
+
+    """
+    assert ref_df.shape[
+               1] >= 2, f"Attribute Reference Table must have at least two columns, found only  {ref_df.shape[1]}!"
+    assert ref_df.shape[
+               0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
+    ref_df.rename(columns={ref_df.columns[0]: 'gene'}, inplace=True)
