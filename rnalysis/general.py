@@ -23,10 +23,11 @@ def _start_ipcluster(n_engines: int = 'default'):
     :param n_engines: if 'default', will initiate the default amount of engines. \
     Otherwise, will initiate n_engines engines.
     """
+    envvar = {k: os.environ[k] for k in os.environ.keys()}
     if n_engines == 'default':
-        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE)
+        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE, env=envvar)
     else:
-        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE)
+        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE, env=envvar)
 
 
 def _stop_ipcluster():
@@ -34,7 +35,8 @@ def _stop_ipcluster():
     Stop a previously started ipyparallel ipcluster.
 
     """
-    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE)
+    envvar = {k: os.environ[k] for k in os.environ.keys()}
+    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE, env=envvar)
 
 
 def start_parallel_session(n_engines: int = 'default'):
