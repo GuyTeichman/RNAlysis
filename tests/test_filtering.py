@@ -6,6 +6,7 @@ from rnalysis import general
 from rnalysis.filtering import *
 import os
 
+
 def test_deseqfilter_api():
     d = DESeqFilter('test_deseq_biotype.csv')
 
@@ -87,7 +88,7 @@ def test_filter_by_attribute_union():
     union_truth = general.load_csv(r'counted_filter_by_bigtable_union_truth.csv', 0)
     h = CountFilter('counted_filter_by_bigtable.csv')
     union = h.filter_by_attribute(['attribute1', 'attribute2'], mode='union',
-                                       ref='attr_ref_table_for_tests.csv', inplace=False)
+                                  ref='attr_ref_table_for_tests.csv', inplace=False)
     union.df.sort_index(inplace=True)
     union_truth.sort_index(inplace=True)
     assert np.all(union.df == union_truth)
@@ -97,8 +98,8 @@ def test_filter_by_attribute_intersection():
     intersection_truth = general.load_csv(r'counted_filter_by_bigtable_intersect_truth.csv', 0)
     h = CountFilter('counted_filter_by_bigtable.csv')
     intersection = h.filter_by_attribute(['attribute1', 'attribute2'], mode='intersection',
-                                              ref='attr_ref_table_for_tests.csv',
-                                              inplace=False)
+                                         ref='attr_ref_table_for_tests.csv',
+                                         inplace=False)
     intersection.df.sort_index(inplace=True)
     intersection_truth.sort_index(inplace=True)
     assert np.all(intersection.df == intersection_truth)
@@ -630,6 +631,7 @@ def test_count_filter_from_folder():
     h_notnorm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=False, save_csv=True,
                                         counted_fname='__allexpr_temporary_testfile.csv',
                                         uncounted_fname='__allfeature_temporary_testfile.csv')
+
     os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
     assert np.all(np.isclose(h_notnorm.df, truth_all_expr))
 
@@ -639,13 +641,9 @@ def test_count_filter_from_folder():
     all_feature = general.load_csv('test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
     all_feature.sort_index(inplace=True)
     truth_all_feature.sort_index(inplace=True)
-    try:
-        assert np.all(np.isclose(all_feature, truth_all_feature))
-    except AssertionError:
-        os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
-        raise AssertionError
-    os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
 
+    os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+    assert np.all(np.isclose(all_feature, truth_all_feature))
 
 def test_biotypes():
     truth = general.load_csv('biotypes_truth.csv', 0)

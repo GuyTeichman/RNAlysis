@@ -82,7 +82,7 @@ def parse_wbgene_string(string):
     >>> print(parsed)
     {'WBGene12345678', 'WBGene44444444', 'WBGene98765432', 'WBGene55555555', 'WBGene00000000'}
     """
-    return set(re.findall('WBGene[0-9]{8}', string))
+    return set(re.findall(r'WBGene[0-9]{8}', string))
 
 
 def parse_sequence_name_string(string):
@@ -124,7 +124,7 @@ def parse_gene_name_string(string):
     >>> print(parsed)
     {'saeg-2', 'lin-15B', 'cyp-23A1', 'lin-15A'}
     """
-    return set(re.findall('[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
+    return set(re.findall(r'[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
 
 
 def _get_settings_file_path():
