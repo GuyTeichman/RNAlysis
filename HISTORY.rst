@@ -2,6 +2,27 @@
 History
 =======
 
+
+1.3.5 (2020-05-27)
+------------------
+* This version introduces minor bug fixes.
+
+
+Changed
+*******
+* Updated docstrings and printouts of several functions
+
+
+Fixed
+******
+* Fixed DepracationWarning on parsing functions from the general module.
+* Fixed bug where saving csv files on Linux systems would save the files under the wrong directory.
+
+
+
+
+
+
 1.3.4 (2020-04-07)
 ------------------
 * This version fixed a bug that prevented installation of the package.
