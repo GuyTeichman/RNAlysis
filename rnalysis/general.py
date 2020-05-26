@@ -106,7 +106,7 @@ def parse_sequence_name_string(string):
     >>> print(parsed)
     {'Y55D5A.5', 'T23G5.6', 'ZK662.4'}
     """
-    return set(re.findall('[A-Z,0-9]{5,8}\.\d{1,2}', string))
+    return set(re.findall(r'[A-Z,0-9]{5,8}\.\d{1,2}', string))
 
 
 def parse_gene_name_string(string):
@@ -355,7 +355,7 @@ def save_to_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool
         suffix = ''
     else:
         assert isinstance(suffix, str), "'suffix' must be either str or None!"
-    new_fname = Path(f"{str(fname.parent)}\\{fname.stem}{suffix}{fname.suffix}")
+    new_fname = Path(f"{str(fname.parent.absolute())}/{fname.stem}{suffix}{fname.suffix}")
     df.to_csv(new_fname, header=True)
 
 

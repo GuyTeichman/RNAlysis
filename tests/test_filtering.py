@@ -631,19 +631,11 @@ def test_count_filter_from_folder():
     h_notnorm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=False, save_csv=True,
                                         counted_fname='__allexpr_temporary_testfile.csv',
                                         uncounted_fname='__allfeature_temporary_testfile.csv')
-    try:
-        os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
-    except FileNotFoundError:
-        pass
+    os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
     assert np.all(np.isclose(h_notnorm.df, truth_all_expr))
 
     h_norm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=True, save_csv=False)
     assert np.all(np.isclose(h_norm.df, truth_norm))
-    for item in h_norm.fname.parent.iterdir():
-        print(item)
-        if item.is_dir():
-            for subitem in item.iterdir():
-                print('\t', subitem)
 
     all_feature = general.load_csv('test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
     all_feature.sort_index(inplace=True)
@@ -651,15 +643,9 @@ def test_count_filter_from_folder():
     try:
         assert np.all(np.isclose(all_feature, truth_all_feature))
     except AssertionError:
-        try:
-            os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
-        except FileNotFoundError:
-            pass
-        raise AssertionError
-    try:
         os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
-    except FileNotFoundError:
-        pass
+        raise AssertionError
+    os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
 
 
 def test_biotypes():
