@@ -52,7 +52,10 @@ def start_parallel_session(n_engines: int = 'default'):
     Parallel session started successfully
     """
     print("Starting parallel session...")
-    _stop_ipcluster()
+    try:
+        _stop_ipcluster()
+    except FileNotFoundError:
+        pass
     time.sleep(1)
     stream = _start_ipcluster(n_engines)
     time.sleep(1)
