@@ -5,22 +5,23 @@ History
 
 1.3.5 (2020-05-27)
 ------------------
-* This version introduces minor bug fixes.
+* This version introduces minor bug fixes and a few more visualization options.
 
 Added
 ******
-* CountFilter.box_plot() can now accept a 'notch' argument.
+* Added the visualization function CountFilter.box_plot().
 
 Changed
 *******
-* Updated docstrings and printouts of several functions
+* Updated docstrings and printouts of several functions.
+* Slightly improved speed and performance across the board.
 
 
 Fixed
 ******
 * Fixed DepracationWarning on parsing functions from the general module.
 * Fixed bug where saving csv files on Linux systems would save the files under the wrong directory.
-
+* Fixed a bug where UTF-8-encoded Reference Tables won't be loaded correctly
 
 
 
