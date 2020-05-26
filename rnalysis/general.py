@@ -356,7 +356,9 @@ def save_to_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool
     else:
         assert isinstance(suffix, str), "'suffix' must be either str or None!"
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{suffix}{fname.suffix}")
-    df.to_csv(new_fname, header=True)
+    print(new_fname, fname.stem)
+    with open(new_fname, "w") as f:
+        df.to_csv(f, header=True)
 
 
 def _get_biotype_ref_path(ref: Union[str, Path]):
