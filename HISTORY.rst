@@ -7,6 +7,9 @@ History
 ------------------
 * This version introduces minor bug fixes.
 
+Added
+******
+* CountFilter.box_plot() can now accept a 'notch' argument.
 
 Changed
 *******
