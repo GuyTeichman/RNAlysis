@@ -3,9 +3,15 @@
 
 .. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
         :target: https://pypi.python.org/pypi/rnalysis
+.. |downloads| image:: https://pepy.tech/badge/rnalysis
+        :target: https://pepy.tech/project/rnalysis
 
+..  |travisci| image:: https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master
+    :target: https://travis-ci.org/GuyTeichman/RNAlysis
 
-**Useful links:** `Current version <https://pypi.python.org/pypi/rnalysis>`_ |pipimage| | `Documentation <https://guyteichman.github.io/RNAlysis>`_ | `Source code <https://github.com/GuyTeichman/RNAlysis>`_ | `Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_
+**Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
+`Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
+`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |travisci| | |downloads|
 
 ----
 
