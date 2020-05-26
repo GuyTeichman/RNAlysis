@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import warnings
+import os
 from rnalysis import general
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, PowerTransformer
@@ -2641,8 +2642,8 @@ class CountFilter(Filter):
             if not uncounted_fname.endswith(file_suffix):
                 uncounted_fname += file_suffix
 
-            counted_fname = f"{folder_path}\\{counted_fname}"
-            uncounted_fname = f"{folder_path}\\{uncounted_fname}"
+            counted_fname = os.path.join(folder_path, counted_fname)
+            uncounted_fname = os.path.join(folder_path, uncounted_fname)
 
         folder = Path(folder_path)
         df = pd.DataFrame()
