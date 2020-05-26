@@ -8,6 +8,8 @@ rnalysis.enrichment.FeatureSet
    
    
    
+    .. automethod:: __init__
+    
     
 
    
@@ -16,6 +18,7 @@ rnalysis.enrichment.FeatureSet
     
     FeatureSet.biotypes
     FeatureSet.difference
+    FeatureSet.enrich_hypergeometric
     FeatureSet.enrich_randomization
     FeatureSet.enrich_randomization_parallel
     FeatureSet.go_enrichment

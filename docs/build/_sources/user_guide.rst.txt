@@ -8,13 +8,13 @@ RNAlysis filtering module
 ****************************
 RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
 
-The filtering module is built around Filter objects, which are containers for tabular sequencing data. You can use the different types of Filter objects to apply filtering operations to various types of tabular data. You will learn more about Filter objects in the next section.
+The filtering module is built around :term:`Filter objects`, which are containers for tabular sequencing data. You can use the different types of :term:`Filter objects` to apply filtering operations to various types of tabular data. You will learn more about :term:`Filter objects` in the next section.
 
 Working with Filter objects
 ============================
 
-All Filter objects (DESeqFilter, CountFilter, FoldChangeFilter) work on the same principles,
-and share many of the same functions and features. Each of them also has specific filtering, analysis and visualisation functions. In this section we will look into the general usage of Filter objects.
+All :term:`Filter objects` (:term:`CountFilter`, :term:`DESeqFilter`, :term:`Filter`, :term:`FoldChangeFilter`) work on the same principles,
+and share many of the same functions and features. Each of them also has specific filtering, analysis and visualisation functions. In this section we will look into the general usage of :term:`Filter objects`.
 
 Initialize a Filter object
 --------------------------
@@ -23,7 +23,7 @@ We will start by importing the filtering module::
 
     >>> from rnalysis import filtering
 
-We can now, for example, create a DESeqFilter object from a DESeq2 csv output file (see more details about DESeqFilter in sections below).
+We can now, for example, create a :term:`DESeqFilter` object from a DESeq2 `csv` output file (see more details about :term:`DESeqFilter` in sections below).
 ::
 
     >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
@@ -69,7 +69,7 @@ Filtering operations
 --------------------
 
 Now we can start filtering the entries in the file according to parameters of our choosing.
-Various filtering operations are applied directly to the Filter object. Those operations do not affect the original csv file, but its representation within the Filter object.
+Various filtering operations are applied directly to the :term:`Filter object`. Those operations do not affect the original `csv` file, but its representation within the :term:`Filter object`.
 For example, we can the function 'filter_percentile' to remove all rows that are above the specified percentile (in our example, 75% percentile) in the specified column (in our example, 'log2FoldChange')::
 
     >>> d.filter_percentile(0.75,'log2FoldChange')
@@ -81,7 +81,7 @@ If we now look at the shape of d, we will see that 5954 rows have been filtered 
     >>> d.shape
     (21, 6)
 
-By default, filtering operations on Filter objects are performed in-place, meaning the original object is modified. However, we can save the results into a new Filter object and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within RNAlysis. For example::
+By default, filtering operations on :term:`Filter objects` are performed in-place, meaning the original object is modified. However, we can save the results into a new :term:`Filter object` and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within RNAlysis. For example::
 
     >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
     >>> d.shape
@@ -93,7 +93,7 @@ By default, filtering operations on Filter objects are performed in-place, meani
     >>> d.shape
     (28, 6)
 
-In this case, the object 'd' remained unchanged, while 'd_filtered' became a new Filter object which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using 'inplace=False' to create a new object at any point.
+In this case, the object 'd' remained unchanged, while 'd_filtered' became a new :term:`Filter object` which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using 'inplace=False' to create a new object at any point.
 
 Another useful option is to perform an opposite filter. When we specify the parameter 'opposite=True' to any filtering function within RNAlysis, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
 For example, if we now wanted to remove the rows which are below the 25% percentile in the 'log2FoldChange' column, we will use the following code::
@@ -103,13 +103,13 @@ For example, if we now wanted to remove the rows which are below the 25% percent
 
 Calling this function without the 'opposite' parameter would have removed all values except the bottom 25% of the 'log2FoldChange' column. When specifying 'opposite', we instead throw out the bottom 25% of the 'log2FoldChange' column and keep the rest.
 
-There are many different filtering functions within the filtering module. Some of them are subtype-specific (such as 'filter_low_reads' for CountFilter objects and 'filter_significant' for DESeqFilter objects), while others can be applied to any Filter object. You can read more about the different functions and their usage in the project's documentation.
+There are many different filtering functions within the filtering module. Some of them are subtype-specific (such as 'filter_low_reads' for :term:`CountFilter` objects and 'filter_significant' for :term:`DESeqFilter` objects), while others can be applied to any :term:`Filter object`. You can read more about the different functions and their usage in the project's documentation.
 
 
 Performing set operations on multiple Filter objects
 ----------------------------------------------------
 
-In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple Filter objects. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a DESeqFilter object, an CountFilter object and a python set::
+In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple :term:`Filter objects`. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a :term:`DESeqFilter` object, an :term:`CountFilter` object and a python set::
 
     >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
     >>> counts = filtering.CountFilter('tests/counted.csv')
@@ -120,13 +120,13 @@ In addition to using regular filters, it is also possible to use set operations 
      'WBGene00014997', 'WBGene00043987', 'WBGene00043988', 'WBGene00043989', 'WBGene00043990', 'WBGene00044022',
      'WBGene00044951', 'WBGene00077502', 'WBGene00077503', 'WBGene00077504'}
 
-When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use Filter object functions such as 'head' and 'save_csv' on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first Filter object.
+When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use :term:`Filter object` functions such as 'head' and 'save_csv' on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first :term:`Filter object`.
 
 
 Saving Filter results
 ---------------------
 
-At any point we can save the current result of our filtering to a new csv file, by using the 'save_csv' function::
+At any point we can save the current result of our filtering to a new `csv` file, by using the 'save_csv' function::
 
     >>> d.save_csv()
 
@@ -173,8 +173,8 @@ Sets of genomic feature indices can be used later for enrichment analysis using 
 Using an Attribute Reference Table for filter operations
 ---------------------------------------------------------
 
-An Attribute Reference Table contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
-You can read more about the Attribute Reference Table format and loading an Attribute Reference Table in the :ref:`reference-table-ref` section.
+An :term:`Attribute Reference Table` contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
+You can read more about the :term:`Attribute Reference Table` format and loading an :term:`Attribute Reference Table` in the :ref:`reference-table-ref` section.
 Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table::
 
     >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
@@ -184,8 +184,8 @@ Using the function Filter.filter_by_attribute(), you can filter your genomic fea
 Using a Biotype Reference Table for filter operations
 --------------------------------------------------------
 
-A Biotype Reference Table contains annotations of the biotype of each genomic features ('protein_coding', 'piRNAs', 'lincRNAs', 'pseudogenes', etc).
-You can read more about the Biotype Reference Table format and loading a Biotype Reference Table in the :ref:`reference-table-ref` section.
+A :term:`Biotype Reference Table` contains annotations of the biotype of each genomic features ('protein_coding', 'piRNAs', 'lincRNAs', 'pseudogenes', etc).
+You can read more about the :term:`Biotype Reference Table` format and loading a :term:`Biotype Reference Table` in the :ref:`reference-table-ref` section.
 Using the function Filter.filter_biotype(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table::
 
     >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
@@ -219,13 +219,16 @@ Or view more elaborated descriptive statistics for eahc biotype by specifying re
 Filtering DESeq2 output files with filtering.DESeqFilter
 =========================================================
 
-DESeqFilter objects are built to easily filter the output of R's DESeq2 package. This package is meant to analyze differential expression of genomic features in sequencing data. You can read more about it here: {}
-Like other filter objects, filtering operations on DESeqFilter are performed in-place by default,meaning the original object is modified.
+:term:`DESeqFilter` objects are built to easily filter the output of R's DESeq2 package. This package is meant to analyze differential expression of genomic features in sequencing data. You can read more about it here: {}
+Like other filter objects, filtering operations on :term:`DESeqFilter` are performed in-place by default,meaning the original object is modified.
 
-In principle, any .csv file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter.
-However, some DESeqFilter functions (such as 'filter_significant' and 'filter_abs_log2_fold_change') may only work on DESeq2 output files, and other unintended interactions may occur.
+You can read more about DESeq2 here:
+https://doi.org/doi:10.18129/B9.bioc.DESeq2
 
-A correct input to a DESeqFilter object would follow the following format:
+In principle, any `csv` file that contains differential expression analysis data with log2 fold change and adjusted p values can be used as input for DESeqFilter.
+However, some :term:`DESeqFilter` functions (such as 'filter_significant' and 'filter_abs_log2_fold_change') may only work on DESeq2 output files, and other unintended interactions may occur.
+
+A correct input to a :term:`DESeqFilter` object would follow the following format:
 
 +----------------+----------+----------------+----------+----------+----------+----------+
 |                | baseMean | log2FoldChange | lfcSE    | stat     | pvalue   | padj     |
@@ -247,18 +250,18 @@ A correct input to a DESeqFilter object would follow the following format:
 | WBGene00000028 | 219.1632 | 3.913657       | 0.217802 | 17.96885 | 3.42E-72 | 2.32E-69 |
 +----------------+----------+----------------+----------+----------+----------+----------+
 
-Loading from a .csv file
-------------------------
-Loading a file into a DESeqFilter works as explained above for any Filter object::
+Loading from a `csv` file
+----------------------------
+Loading a file into a :term:`DESeqFilter` works as explained above for any Filter object::
 
     >>> d = filtering.DESeqFilter("tests/test_deseq.csv")
 
 Filtering operations unique to DESeqFilter
 ------------------------------------------
 
-There are a few filtering operations unique to DESeqFilter. Those include 'filter_significant', which removes statistically-insignificant rows according to a specified threshold; 'filter_abs_log2_fold_change', removes rows whose absolute value log2 fold change is below the specified threshold; 'filter_fold_change_direction' which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) rows; and 'split_fold_change_direction' which returns a DESeqFilter object with only up-regulated features and a DESeqFilter object with only down-regulated features.
+There are a few filtering operations unique to DESeqFilter. Those include 'filter_significant', which removes statistically-insignificant rows according to a specified threshold; 'filter_abs_log2_fold_change', removes rows whose absolute value log2 fold change is below the specified threshold; 'filter_fold_change_direction' which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) rows; and 'split_fold_change_direction' which returns a :term:`DESeqFilter` object with only up-regulated features and a :term:`DESeqFilter` object with only down-regulated features.
 
-The unique DESeqFilter filter operations expect specific column names (the column names automatically generated by DESeq2), and will not work with other column names:
+The unique :term:`DESeqFilter` filter operations expect specific column names (the column names automatically generated by DESeq2), and will not work with other column names:
 'log2FoldChange','pval','padj'.
 
 
@@ -268,7 +271,7 @@ Filtering HTSeq-count output files with filtering.CountFilter
 You can read more about HTSeq-count here:
 https://htseq.readthedocs.io/en/release_0.11.1/count.html
 
-In principle, any .csv file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some CountFilter functions (such as 'normalize_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
+In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some :term:`CountFilter` functions (such as 'normalize_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
 .. _from-folder-ref:
 
@@ -309,26 +312,26 @@ An HTSeq-count output file would follow the following format:
 | __alignment_not_unique | 100 |
 +------------------------+-----+
 
-When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two .csv tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
+When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two `csv` tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
     >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder')
 
-By deault, 'from_folder' does not save the generated tables as .csv files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
+By deault, 'from_folder' does not save the generated tables as `csv` files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
 
     >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file')
 
-It is also possible to automatically normalize the reads in the new CountFilter object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'::
+It is also possible to automatically normalize the reads in the new :term:`CountFilter` object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'::
 
         >>> c = filtering.CountFilter.from_folder('tests/test_count_from_folder', norm_to_rpm=True)
 
 
-Loading from a pre-made .csv file
+Loading from a pre-made `csv` file
 ----------------------------------
-If you have previously generated a .csv file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this .csv file into an CountFilter object as you would any other Filter object::
+If you have previously generated a `csv` file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this `csv` file into an :term:`CountFilter` object as you would any other Filter object::
 
     >>> c = filtering.CountFilter('tests/counted.csv')
 
-A correct input to a CountFilter object would follow the following format:
+A correct input to a :term:`CountFilter` object would follow the following format:
 
 +----------------+-------+-------+-------+-------+
 |                | cond1 | cond2 | cond3 | cond4 |
@@ -358,9 +361,9 @@ There are a few filtering operations unique to CountFilter. Those include 'filte
 
 Normalizing reads with CountFilter
 ------------------------------------
-CountFilter offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
+:term:`CountFilter` offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
 
-To normalize a CountFilter with user-generated scaling factors, we need a .csv table with the size factor for each sample:
+To normalize a :term:`CountFilter` with user-generated scaling factors, we need a `csv` table with the size factor for each sample:
 +----------------+----------------+----------------+----------------+
 |    sample1     |    sample2     |    sample3     |    sample4     |
 +================+================+================+================+
@@ -372,10 +375,10 @@ We would then supply the function with the path to the scaling factors file::
     >>> c = filtering.CountFilter('tests/counted.csv')
     >>> c.normalize with_scaling_factors('scaling_factors.csv')
 
-The resulting CountFilter object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
+The resulting :term:`CountFilter` object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
 
 
-To normalize a CountFilter that originated from HTSeq-count to reads per million, we need a .csv table with the special counters that appear in HTSeq-count output:
+To normalize a :term:`CountFilter` that originated from HTSeq-count to reads per million, we need a `csv` table with the special counters that appear in HTSeq-count output:
 
 +------------------------+---------+---------+---------+---------+
 |                        | sample1 | sample2 | sample3 | sample4 |
@@ -391,18 +394,18 @@ To normalize a CountFilter that originated from HTSeq-count to reads per million
 | __not_aligned          | 109853  | 277653  | 88653   | 96012   |
 +------------------------+---------+---------+---------+---------+
 
-Such a .csv table is generated automatically when you create a CountFilter object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
+Such a `csv` table is generated automatically when you create a :term:`CountFilter` object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
 We would then supply the normalization function with the path to the special counter file::
 
     >>> h = CountFilter("tests/counted.csv")
     >>> h.normalize_to_rpm("tests/uncounted.csv")
 
-The resulting CountFilter object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
+The resulting :term:`CountFilter` object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
 
 Data visualization and clustering analysis with CountFilter
 -------------------------------------------------------------
-CountFilter includes multiple methods for visualization and clustering of count data.
+:term:`CountFilter` includes multiple methods for visualization and clustering of count data.
 
 
 With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
@@ -440,18 +443,18 @@ With CountFilter.plot_expression, you can examine the average expression of spec
 Filtering fold-change data of features using filtering.FoldChangeFilter
 =======================================================================
 
-FoldChangeFilter objects can perform filtering operations and randomization tests on fold change values between two conditions.
+:term:`FoldChangeFilter` objects can perform filtering operations and randomization tests on fold change values between two conditions.
 
-A FoldChangeFilter object can be calculated from a CountFilter object (you can read more about it in the :ref:`fold-change-from-count-ref`), or imported from a .csv file like other Filter objects.
+A :term:`FoldChangeFilter` object can be calculated from a :term:`CountFilter` object (you can read more about it in the :ref:`fold-change-from-count-ref`), or imported from a `csv` file like other :term:`Filter objects`.
 
-.. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.
+.. warning:: by default, :term:`FoldChangeFilter` assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a `csv` file which contains 0 and/or inf values into a :term:`FoldChangeFilter` object, unintended results and interactions may occur.
 
 Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.
 
-Loading fold change data from a .csv file
------------------------------------------
+Loading fold change data from a `csv` file
+------------------------------------------------
 
-Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated .csv file into a FoldChangeFilter object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition::
+Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated `csv` file into a :term:`FoldChangeFilter` object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition::
 
     >>> f = filtering.FoldChangeFilter('tests/fc_1.csv','name of numerator condition', 'name of denominator condition')
 
@@ -462,18 +465,18 @@ The names of the conditions are saved in the object attributes 'numerator' and '
     >>> f.denominator
     'name of denominator condition'
 
-.. warning:: by default, FoldChangeFilter assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a .csv file which contains 0 and/or inf values into a FoldChangeFilter object, unintended results and interactions may occur.
+.. warning:: by default, :term:`FoldChangeFilter` assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a `csv` file which contains 0 and/or inf values into a :term:`FoldChangeFilter` object, unintended results and interactions may occur.
 
 .. _fold-change-from-count-ref:
 
 Generating fold change data from an existing CountFilter object
 -----------------------------------------------------------------
 
-Alternatively, you can generate a FoldChangeFilter object from count data in a CountFilter object. We will start by loading a CountFilter object::
+Alternatively, you can generate a :term:`FoldChangeFilter` object from count data in a :term:`CountFilter` object. We will start by loading a :term:`CountFilter` object::
 
     >>> c = filtering.CountFilter('tests/counted_fold_change.csv')
 
-The CountFilter has the following columns::
+The :term:`CountFilter` has the following columns::
 
     >>> c.columns
     ['cond1_rep1', 'cond1_rep2', 'cond2_rep1', 'cond2_rep2', 'cond3_rep1', 'cond3_rep2']
@@ -489,13 +492,13 @@ In this example we did not specify names for the numerator and denominator, and 
     >>> f.denominator
     "Mean of ['cond2_rep1', 'cond2_rep2']"
 
-We now have a FoldChangeFilter object that we can perform further filtering operations on.
+We now have a :term:`FoldChangeFilter` object that we can perform further filtering operations on.
 
 Performing randomization tests on a FoldChangeFilter object
 ------------------------------------------------------------
 
 You can perform a randomization test to examine whether the fold change of a group of specific genomic features (for example, genes with a specific biological function) is significantly different than the fold change of a background set of genomic features.
-To perform a randomization test you need two FoldChangeFilter objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example::
+To perform a randomization test you need two :term:`FoldChangeFilter` objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example::
 
     >>> f = filtering.FoldChangeFilter('tests/fc_1.csv' , 'numerator' , 'denominator')
     >>> f_background = f.filter_biotype('protein_coding', ref='tests/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
@@ -542,7 +545,7 @@ The first method is to specify an existing Filter object::
     >>> c = filtering.CountFilter('tests/counted.csv')
     >>> en = enrichment.FeatureSet(filt, 'a name for my set')
 
-The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing Filter object (see above for more information about Filter objects and the filtering module) using the function 'index_set'::
+The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing :term:`Filter object` (see above for more information about :term:`Filter objects` and the filtering module) using the function 'index_set'::
 
     >>> myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
     >>> en = enrichment.FeatureSet(myset, 'a name for my set')
@@ -567,7 +570,7 @@ Enrichment analysis is performed using either FeatureSet.enrich_randomization or
     >>> c = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(h.index_set, 'my set')
 
-Our attributes should be defined in a Reference Table csv file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
+Our attributes should be defined in a Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
 If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables' path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
@@ -630,7 +633,7 @@ Similarly to Filter objects, it is possible to use set operations such as union,
 When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.
 
 In addition, the enrichment module includes functions for visualisation of sets and overlap, such as enrichment.venn_diagram() and enrichment.upset_plot().
-Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the Attribute Reference Table (you can read more about attributes in :ref:`reference-table-ref`).
+Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the :term:`Attribute Reference Table` (you can read more about attributes in :ref:`reference-table-ref`).
 Venn diagrams are limited to 2-3 sets:
 
        .. figure::  venn.png
@@ -694,7 +697,7 @@ Set and load a Reference Table
 What is an Attribute Reference Table?
 ----------------------------------------
 You can perform enrichment analysis or filtering operations based on user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs').
-User-defined attributes should be defined in an Attribute Reference Table csv file. The format of the Attribute Reference Table is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an Attribute Reference Table below:
+User-defined attributes should be defined in an :term:`Attribute Reference Table` `csv` file. The format of the :term:`Attribute Reference Table` is one row for each gene/genomic feature, and one column for each attribute. Features that are negative for the attribute (for example, genes that have no paralogs under the attribute 'genes that have paralogs') should have the value NaN specified for the attribute, and features that are positive for the attribute (for example, genes that have paralogs under the attribute 'genes that have paralogs') should have any value other than NaN. The value could be either a boolean value (in our example, 'True' or '1' for genes that have paralogs), a number (in our example, the number of paralogs the gene has or the genomic distance to the nearest paralog), or any other value which is not NaN. See example for an :term:`Attribute Reference Table` below:
 
 +----------------+--------------+-------------+-------------+
 | feature_indices| attribute1   | attribute2  | attribute3  |
@@ -713,7 +716,7 @@ User-defined attributes should be defined in an Attribute Reference Table csv fi
 What is a Biotype Reference Table?
 ---------------------------------------
 You can perform filtering operations or generate background-sets for enrichment analysis based on user-annotated biotypes (such as 'protein_coding', 'pseudogene', 'piRNA', etc).
-User-annotated biotypes should be defined in a Biotype Reference Table csv file. The format of the Biotype Reference Table is one row for each gene/genomic feature, and a column titled 'biotype' (case insensitive). See example for a Biotype Reference Table below:
+User-annotated biotypes should be defined in a :term:`Biotype Reference Table` `csv` file. The format of the :term:`Biotype Reference Table` is one row for each gene/genomic feature, and a column titled 'biotype' (case insensitive). See example for a Biotype Reference Table below:
 
 +----------------+----------------+
 | feature_indices|    biotype     |
@@ -759,7 +762,7 @@ You can read the saved path from the settings file using the general.read_attr_r
     >>> biotype_table_path = general.read_biotype_ref_table_path()
     Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file
 
-If an attribute reference table path was not previously defined, you will be requested to define it when you run this function.
+If an :term:`Attribute Reference Table` path was not previously defined, you will be requested to define it when you run this function.
 
 Parse *C. elegans* gene names, WBGene indices and sequence names using regular expressions
 ===========================================================================================

@@ -16,6 +16,8 @@ Changed
 * Updated docstrings and printouts of several functions.
 * Slightly improved speed and performance across the board.
 * Filter.feature_string() is now sorted alphabetically.
+* Enrichment randomization functions in the enrichment module now accept a 'random_seed' argument, to be able to generate consistent results over multiple sessions.
+* Enrichment randomization functions can now return the matplotlib Figure object, in addition to the results table.
 
 
 Fixed

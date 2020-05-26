@@ -98,6 +98,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Change history:</span></p>
 <ul>
@@ -3338,7 +3339,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt>
 <code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">others</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
@@ -3346,11 +3347,8 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd>
-</dl>
-<p>if inplace is False, returns a new instance of FeatureSet.</p>
-<dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
@@ -3368,9 +3366,85 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">enrich_hypergeometric</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and adjusted p-values         for enrichment and depletion of selected attributes from an Attribute Reference Table,         based on a hypergeometric test.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         P-values are calculated using a hypergeometric test:         Given M genes in the background set, n genes in the test set,         with N genes from the background set belonging to a specific attribute (or ‘success’)         and X genes from the test set belonging to that attribute.         If we were to randomly draw n genes from the background set (without replacement),         what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion)         genes belonging to the given attribute?         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">type attributes</dt>
+<dd class="field-odd"><p>str, int, iterable (list, tuple, set, etc) of str/int, or ‘all’.</p>
+</dd>
+<dt class="field-even">param attributes</dt>
+<dd class="field-even"><p>An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p>
+</dd>
+<dt class="field-odd">type fdr</dt>
+<dd class="field-odd"><p>float between 0 and 1</p>
+</dd>
+<dt class="field-even">param fdr</dt>
+<dd class="field-even"><p>Indicates the FDR threshold for significance.</p>
+</dd>
+<dt class="field-odd">type attr_ref_path</dt>
+<dd class="field-odd"><p>str or pathlib.Path (default ‘predefined’)</p>
+</dd>
+<dt class="field-even">param attr_ref_path</dt>
+<dd class="field-even"><p>the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p>
+</dd>
+<dt class="field-odd">type biotype_ref_path</dt>
+<dd class="field-odd"><p>str or pathlib.Path (default ‘predefined’)</p>
+</dd>
+<dt class="field-even">param biotype_ref_path</dt>
+<dd class="field-even"><p>the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p>
+</dd>
+<dt class="field-odd">type biotype</dt>
+<dd class="field-odd"><p>str specifying a specific biotype, list/set of strings each specifying a biotype, or ‘all’.         Default ‘protein_coding’.</p>
+</dd>
+<dt class="field-even">param biotype</dt>
+<dd class="field-even"><p>determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p>
+</dd>
+<dt class="field-odd">type background_genes</dt>
+<dd class="field-odd"><p>set of feature indices, filtering.Filter object, or enrichment.FeatureSet object</p>
+</dd>
+<dt class="field-even">param background_genes</dt>
+<dd class="field-even"><p>a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p>
+</dd>
+<dt class="field-odd">type save_csv</dt>
+<dd class="field-odd"><p>bool, default False</p>
+</dd>
+<dt class="field-even">param save_csv</dt>
+<dd class="field-even"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
+</dd>
+<dt class="field-odd">type fname</dt>
+<dd class="field-odd"><p>str or pathlib.Path</p>
+</dd>
+<dt class="field-even">param fname</dt>
+<dd class="field-even"><p>The full path and name of the file to which to save the results. For example:         r’C:dir</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl>
+<dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list">
+<dt class="field-odd">type return_fig</dt>
+<dd class="field-odd"><p>bool (default False)</p>
+</dd>
+<dt class="field-even">param return_fig</dt>
+<dd class="field-even"><p>if True, returns a matplotlib Figure object in addition to the results DataFrame.
+:rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+:return:         a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
+and ‘pvalue’; and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
+<div class="figure align-center" id="id9">
+<a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_seed</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Calculates enrichment scores, p-values and adjusted p-values         for enrichment and depletion of selected attributes from an Attribute Reference Table.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
 <dd class="field-odd"><p>str, int, iterable (list, tuple, set, etc) of str/int, or ‘all’.</p>
@@ -3429,26 +3503,31 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dl>
 </div></blockquote>
 <dl>
-<dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
-and ‘pvalue’.</p>
-<div class="figure align-center" id="id9">
+<dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list">
+<dt class="field-odd">type return_fig</dt>
+<dd class="field-odd"><p>bool (default False)</p>
+</dd>
+<dt class="field-even">param return_fig</dt>
+<dd class="field-even"><p>if True, returns a matplotlib Figure object in addition to the results DataFrame.
+:rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+:return: a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
+and ‘pvalue’; and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
+<div class="figure align-center" id="id10">
 <a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
 </div>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt>
-<code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_seed</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
 <dd><blockquote>
 <div><blockquote>
-<div><p>Calculates enrichment scores, p-values and q-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<div><p>Calculates enrichment scores, p-values and adjusted p-values         for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing.         Background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         To use it you must first start a parallel session, using rnalysis.general.start_parallel_session().         P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1).         P-values are corrected for multiple comparisons using         the Benjamini–Hochberg step-up procedure (original FDR method).         Enrichment/depletion is determined automatically by the calculated enrichment score:         if log2(enrichment score) is positive then enrichment is assumed,         and if log2(enrichment score) is negative then depletion is assumed.         In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">type attributes</dt>
@@ -3509,17 +3588,32 @@ and ‘pvalue’.</p>
 </div></blockquote>
 <dl>
 <dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list simple">
-<dt class="field-odd">return</dt>
-<dd class="field-odd"><p></p></dd>
+<dt class="field-odd">type return_fig</dt>
+<dd class="field-odd"><p>bool (default False)</p>
+</dd>
+<dt class="field-even">param return_fig</dt>
+<dd class="field-even"><p>if True, returns a matplotlib Figure object in addition to the results DataFrame.</p>
+</dd>
+<dt class="field-odd">rtype</dt>
+<dd class="field-odd"><p>pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]</p>
+</dd>
+<dt class="field-even">return</dt>
+<dd class="field-even"><p></p></dd>
 </dl>
 <p>a pandas DataFrame with the indicated attribute names as rows/index, and the columns ‘log2_fold_enrichment’
-and ‘pvalue’.</p>
-<div class="figure align-center" id="id10">
+and ‘pvalue’; and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
+<div class="figure align-center" id="id11">
 <a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
 </div>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">gene_set</code></dt>
+<dd><p>set of feature names/indices</p>
 </dd></dl>
 
 <dl class="py method">
@@ -3536,17 +3630,16 @@ and ‘pvalue’.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>a DataFrame which contains the significant enrichmenet terms</p>
 </dd>
 </dl>
-<p>a DataFrame which contains the significant enrichmenet terms</p>
-<div class="figure align-center" id="id11">
-<a class="reference internal image-reference" href="_images/go_en.png"><img alt="_images/go_en.png" src="_images/go_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of GO enrichment</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
-</div>
 <div class="figure align-center" id="id12">
+<a class="reference internal image-reference" href="_images/go_en.png"><img alt="_images/go_en.png" src="_images/go_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of GO enrichment</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id13">
 <a class="reference internal image-reference" href="_images/tissue_en.png"><img alt="_images/tissue_en.png" src="_images/tissue_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of Tissue enrichment</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of Tissue enrichment</span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
 </div>
 </dd></dl>
 
@@ -3554,7 +3647,7 @@ and ‘pvalue’.</p>
 <dt>
 <code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">others</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
@@ -3562,11 +3655,8 @@ and ‘pvalue’.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd>
-</dl>
-<p>if inplace is False, returns a new instance of FeatureSet.</p>
-<dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
@@ -3593,11 +3683,17 @@ and ‘pvalue’.</p>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt>
+<code class="sig-name descname">set_name</code></dt>
+<dd><p>name of the FeatureSet</p>
+</dd></dl>
+
 <dl class="py method">
 <dt>
 <code class="sig-name descname">symmetric_difference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Calculates the set symmetric difference of the indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – A second  object against which the current object will be compared.</p></li>
@@ -3605,11 +3701,8 @@ and ‘pvalue’.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd>
-</dl>
-<p>if inplace is False, returns a new instance of FeatureSet.</p>
-<dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
@@ -3630,7 +3723,7 @@ and ‘pvalue’.</p>
 <dd><blockquote>
 <div><p>Calculates the set union of the indices from multipple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p>
 </div></blockquote>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
@@ -3638,11 +3731,8 @@ and ‘pvalue’.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>if inplace is False, returns a new instance of FeatureSet.</p>
 </dd>
-</dl>
-<p>if inplace is False, returns a new instance of FeatureSet.</p>
-<dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000005&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
@@ -3674,9 +3764,9 @@ and ‘pvalue’.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a dictionary of matplotlib axes, where the keys are ‘matrix’, ‘intersections’, ‘totals’, ‘shading’.</p>
-<div class="figure align-center" id="id13">
+<div class="figure align-center" id="id14">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
 </div>
 </p>
 </dd>
@@ -3705,9 +3795,9 @@ and ‘pvalue’.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
-<div class="figure align-center" id="id14">
+<div class="figure align-center" id="id15">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
 </div>
 </p>
 </dd>
