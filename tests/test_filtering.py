@@ -873,3 +873,19 @@ def test_split_kmeans():
 
 def test_split_hdbscan():
     assert False
+
+
+def test_split_kmedoids():
+    assert False
+
+
+def test_gap_statistic():
+    assert False
+
+
+def test_silhouette_method():
+    assert False
+
+
+def test_parse_k():
+    assert False
