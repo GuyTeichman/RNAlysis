@@ -25,9 +25,6 @@ def _start_ipcluster(n_engines: int = 'default'):
     """
     assert (isinstance(n_engines,
                        int) and n_engines > 0) or n_engines == 'default', f"Invalid number of engines {n_engines}"
-    envvar = {k: os.environ[k] for k in os.environ.keys()}
-    print(envvar)
-    subprocess.Popen("ipcluster --version", shell=True)
     if n_engines == 'default':
         return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE, shell=True)
     else:
