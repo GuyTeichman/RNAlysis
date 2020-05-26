@@ -23,13 +23,15 @@ def _start_ipcluster(n_engines: int = 'default'):
     :param n_engines: if 'default', will initiate the default amount of engines. \
     Otherwise, will initiate n_engines engines.
     """
+    assert (isinstance(n_engines,
+                       int) and n_engines > 0) or n_engines == 'default', f"Invalid number of engines {n_engines}"
     envvar = {k: os.environ[k] for k in os.environ.keys()}
     print(envvar)
-    subprocess.Popen("ipcluster --version")
+    subprocess.Popen("ipcluster --version", shell=True)
     if n_engines == 'default':
-        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE, env=envvar)
+        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE, shell=True)
     else:
-        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE, env=envvar)
+        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE, shell=True)
 
 
 def _stop_ipcluster():
@@ -37,8 +39,7 @@ def _stop_ipcluster():
     Stop a previously started ipyparallel ipcluster.
 
     """
-    envvar = {k: os.environ[k] for k in os.environ.keys()}
-    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE, env=envvar)
+    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE, shell=True)
 
 
 def start_parallel_session(n_engines: int = 'default'):
@@ -402,7 +403,8 @@ def _biotype_table_assertions(ref_df: pd.DataFrame):
     :type ref_df: pandas DataFrame
 
     """
-    assert ref_df.shape[1] == 2, f"Invalid number of columns in Biotype Reference Table: found {ref_df.shape[1]} columns instead of 2!"
+    assert ref_df.shape[
+               1] == 2, f"Invalid number of columns in Biotype Reference Table: found {ref_df.shape[1]} columns instead of 2!"
     assert ref_df.shape[
                0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
     ref_df.rename(columns={ref_df.columns[0]: 'gene', ref_df.columns[1]: 'biotype'}, inplace=True)
