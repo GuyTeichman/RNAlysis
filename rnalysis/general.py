@@ -352,7 +352,7 @@ def save_to_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool
         suffix = ''
     else:
         assert isinstance(suffix, str), "'suffix' must be either str or None!"
-    new_fname = Path(f"{str(fname.parent.absolute())}/{fname.stem}{suffix}{fname.suffix}")
+    new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{suffix}{fname.suffix}")
     df.to_csv(new_fname, header=True)
 
 
