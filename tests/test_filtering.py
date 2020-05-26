@@ -631,7 +631,10 @@ def test_count_filter_from_folder():
     h_notnorm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=False, save_csv=True,
                                         counted_fname='__allexpr_temporary_testfile.csv',
                                         uncounted_fname='__allfeature_temporary_testfile.csv')
-    os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
+    try:
+        os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
+    except FileNotFoundError:
+        pass
     assert np.all(np.isclose(h_notnorm.df, truth_all_expr))
 
     h_norm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=True, save_csv=False)
@@ -643,9 +646,15 @@ def test_count_filter_from_folder():
     try:
         assert np.all(np.isclose(all_feature, truth_all_feature))
     except AssertionError:
-        os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+        try:
+            os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+        except FileNotFoundError:
+            pass
         raise AssertionError
-    os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+    try:
+        os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+    except FileNotFoundError:
+        pass
 
 
 def test_biotypes():
@@ -746,7 +755,7 @@ def test_pipeline_add_multiple_functions():
 
 def test_pipeline_remove_last_function():
     pl = Pipeline()
-    pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding')
+    pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding', ref='biotype_ref_table_for_tests.csv')
     pl.remove_last_function()
     assert len(pl.functions) == 0 and len(pl.params) == 0
 
@@ -779,10 +788,10 @@ def test_pipeline_apply_to():
     assert np.all(deseq_pipelined.df == deseq_truth.df)
 
     pl2 = Pipeline('countfilter')
-    pl2.add_function(Filter.filter_biotype, biotype='protein_coding')
+    pl2.add_function(Filter.filter_biotype, biotype='protein_coding', ref='biotype_ref_table_for_tests.csv')
     cnt = CountFilter('counted.csv')
     cnt_truth = cnt.__copy__()
-    cnt_truth.filter_biotype('protein_coding')
+    cnt_truth.filter_biotype('protein_coding', ref='biotype_ref_table_for_tests.csv')
     cnt_pipelined = pl2.apply_to(cnt, inplace=False)
     pl2.apply_to(cnt, inplace=True)
     cnt.sort(cnt.columns[0])
@@ -838,7 +847,7 @@ def test_pipeline_add_function_invalid_type():
 
 def test_pipeline_add_function_mismatch_filter_type():
     pl_deseq = Pipeline('DESeqFilter')
-    pl_deseq.add_function(CountFilter.filter_biotype, biotype='protein_coding')
+    pl_deseq.add_function(CountFilter.filter_biotype, biotype='protein_coding', ref='biotype_ref_table_for_tests.csv')
     with pytest.raises(AssertionError):
         pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
 
