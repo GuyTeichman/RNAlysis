@@ -312,7 +312,7 @@ def test_enrichment_randomization_parallel_reliability():
             assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
             assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.25).all()
     except AssertionError:
-        raise AssertionError(f'Enrichment test failed with the numpy.random state: \n')
+        raise AssertionError(f'Enrichment test failed. ')
 
 
 def test_enrichment_parallel_validity():
