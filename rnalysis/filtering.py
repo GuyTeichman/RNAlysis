@@ -178,8 +178,6 @@ class Filter:
 
         """
         Takes a manual string input from the user, and then splits it using a delimiter into a list of values. \
-        Called when an FeatureSet instance is created without input, \
-        or when FeatureSet.enrich_randomization is called without input.
 
         :param msg: a promprt to be printed to the user
         :param delimiter: the delimiter used to separate the values. Default is '\n'
