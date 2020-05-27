@@ -10,10 +10,13 @@ python:
 install:
     - pip install -U tox-travis
     - pip install coverage
-    - pip install tox-travis
+    - pip install codecov
 
 # Command to run tests, e.g. python setup.py test
-script: tox
+script:
+  - tox
 
 
-after_success: bash <(curl -s https://codecov.io/bash)
+after_success:
+  - codecov
+  - bash <(curl -s https://codecov.io/bash)
