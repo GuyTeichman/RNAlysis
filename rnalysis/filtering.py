@@ -25,7 +25,7 @@ import hdbscan
 import seaborn as sns
 import matplotlib.pyplot as plt
 from grid_strategy import strategies
-from typing import Union, List, Set, Dict, Tuple, Type, Iterable
+from typing import Union, List, Tuple, Type, Iterable
 import types
 from itertools import tee
 
@@ -475,12 +475,12 @@ class Filter:
         sep_idx = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
 
         if mode == 'intersection':
-            suffix = '_reftableintersection'
+            suffix = '_filtbyattrIntersection'
             indices = self.df.index
             for idx in sep_idx:
                 indices = indices.intersection(idx)
         elif mode == 'union':
-            suffix = '_reftableUnion'
+            suffix = '_filtbyattrUnion'
             indices = pd.Index([])
             for idx in sep_idx:
                 indices = indices.union(idx)
@@ -490,7 +490,7 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_attribute(self, attributes: List[str], ref: str = 'predefined') -> tuple:
+    def split_by_attribute(self, attributes: Union[List[str], Tuple[str]], ref: str = 'predefined') -> tuple:
 
         """
         Splits the Filter object into multiple Filter objects, \
@@ -514,11 +514,15 @@ class Filter:
             Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
 
         """
-        assert isinstance(attributes, list)
+        assert isinstance(attributes,
+                          (list, tuple)), f"'attributes' must be a list or a tuple. Got {type(attributes)} instead. "
+        for attr in attributes:
+            assert isinstance(attr, str), f"All attributes in 'split_by_attribute()' must be of type str. " \
+                                          f"Attribute '{attr}' is of type {type(attr)}"
         return tuple([self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
                       attributes])
 
-    def describe(self, percentiles: list = (0.01, 0.25, 0.5, 0.75, 0.99)):
+    def describe(self, percentiles: Union[list, Tuple, np.ndarray] = (0.01, 0.25, 0.5, 0.75, 0.99)):
 
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
@@ -535,6 +539,7 @@ class Filter:
 
         :Examples:
             >>> from rnalysis import filtering
+            >>> import numpy as np
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> counts.describe()
                           cond1         cond2         cond3         cond4
@@ -550,7 +555,7 @@ class Filter:
             max    15056.000000  12746.000000  22027.000000  15639.000000
 
             >>> # show the deciles (10%, 20%, 30%... 90%) of the columns
-            >>> counts.describe(percentiles=[decile/10 for decile in range(1,10)])
+            >>> counts.describe(percentiles=np.arange(0.1, 1, 0.1))
                           cond1         cond2         cond3         cond4
             count     22.000000     22.000000     22.000000     22.000000
             mean    2515.590909   2209.227273   4230.227273   3099.818182
@@ -1199,7 +1204,7 @@ class FoldChangeFilter(Filter):
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
-        r'C:\dir\file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :rtype: pandas DataFrame
         :return: A Dataframe with the number of given genes, the observed fold change for the given group of genes, \
         the expected fold change for a group of genes of that size and the p value for the comparison.
@@ -1585,7 +1590,7 @@ class CountFilter(Filter):
         """
 
         mltplr = 3
-        triplicate = [self.columns[(i) * mltplr:(1 + i) * mltplr] for i in range(self.shape[1] // mltplr)]
+        triplicate = [self.columns[i * mltplr:(1 + i) * mltplr] for i in range(self.shape[1] // mltplr)]
         if len(self.columns[(self.shape[1] // mltplr) * mltplr::]) > 0:
             triplicate.append([self.columns[(self.shape[1] // mltplr) * mltplr::]])
             warnings.warn(
@@ -1959,10 +1964,12 @@ class CountFilter(Filter):
         for ind, n_clusters in enumerate(k_range):
             if ind + 1 == len(k_range):
                 best_k = n_clusters
+                best_k_ind = ind
                 break
             ind_argmax = ind + 1 + np.argmax(gap_scores[ind + 1::])
             if gap_scores[ind] >= gap_scores[ind_argmax] - gap_err[ind_argmax]:
                 best_k = n_clusters
+                best_k_ind = ind
                 break
 
         fig, (ax_inertia, ax) = plt.subplots(1, 2, figsize=(14, 9))
@@ -1975,7 +1982,7 @@ class CountFilter(Filter):
         ax.set_title("Gap Statistic method for optimal k selection")
         ax.set_ylabel('Gap Value')
         ax.set_xlabel("Number of clusters (k)")
-        ax.annotate(f'Best k={best_k}', xy=(best_k, gap_scores[ind] - gap_err[ind]),
+        ax.annotate(f'Best k={best_k}', xy=(best_k, gap_scores[best_k_ind] - gap_err[best_k_ind]),
                     xytext=(best_k, max(gap_scores) * 0.75),
                     arrowprops=dict(facecolor='black', shrink=0.15))
         ax.set_xticks(k_range)
@@ -2313,6 +2320,8 @@ class CountFilter(Filter):
         [1, 1, 1, 2, 2, 2, 2, 3]. \
         If 'triplicate', then sample_groupins will automatically group samples into triplicates. For example: \
         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].
+        :type labels: bool (default True)
+        :param labels: if True, labels the points on the PCA plot.
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
 
@@ -2497,11 +2506,11 @@ class CountFilter(Filter):
             samples_df = self._avg_subsamples(samples)
 
         samples_df = np.log10(samples_df + 1)
-        fig = plt.figure(figsize=(8, 8))
+        _ = plt.figure(figsize=(8, 8))
 
         box = sns.boxplot(data=np.log10(samples_df + 1), notch=notch)
         if scatter:
-            scat = sns.stripplot(data=np.log10(samples_df + 1), color='gray', size=2)
+            _ = sns.stripplot(data=np.log10(samples_df + 1), color='gray', size=2)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
@@ -2540,11 +2549,11 @@ class CountFilter(Filter):
             samples_df = self._avg_subsamples(samples)
 
         samples_df = np.log10(samples_df + 1)
-        fig = plt.figure(figsize=(8, 8))
+        _ = plt.figure(figsize=(8, 8))
 
         boxen = sns.boxenplot(data=samples_df)
         if scatter:
-            scat = sns.stripplot(data=samples_df, color='gray', size=2)
+            _ = sns.stripplot(data=samples_df, color='gray', size=2)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
@@ -2584,7 +2593,7 @@ class CountFilter(Filter):
             samples_df = self._avg_subsamples(samples)
 
         samples_df = np.log10(samples_df + 1)
-        fig = plt.figure(figsize=(8, 8))
+        _ = plt.figure(figsize=(8, 8))
 
         violin = sns.violinplot(data=samples_df)
         plt.style.use('seaborn-whitegrid')

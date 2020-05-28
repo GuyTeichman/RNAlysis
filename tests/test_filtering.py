@@ -3,13 +3,22 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from rnalysis import general
+import matplotlib
 from rnalysis.filtering import *
 import os
+from tests import __attr_ref__, __biotype_ref__
+
+matplotlib.use('Agg')
 
 
 def test_filter_api():
     f = Filter('test_files/uncounted.csv')
     assert f.__repr__() == "Filter of file uncounted.csv"
+
+
+def test_countfilter_api():
+    h = CountFilter('test_files/counted.csv')
+    assert h.__repr__() == "CountFilter of file counted.csv"
 
 
 def test_deseqfilter_api():
@@ -33,14 +42,73 @@ def test_filter_inplace():
     assert np.all(d.df == truth)
 
 
-def test_countfilter_api():
-    h = CountFilter('test_files/counted.csv')
-    assert h.__repr__() == "CountFilter of file counted.csv"
+def test_head():
+    df = general.load_csv('test_files/test_deseq.csv', 0)
+    d = DESeqFilter('test_files/test_deseq.csv')
+    assert np.all(df.head(7) == d.head(7))
+    assert np.all(df.head(1) == d.head(1))
+
+    df2 = general.load_csv('test_files/counted.csv', 0)
+    f = Filter('test_files/counted.csv')
+    assert np.all(df2.head() == f.head())
+    assert np.all(df2.head(1000) == f.head(1000))
+
+
+def test_tail():
+    df = general.load_csv('test_files/test_deseq.csv', 0)
+    d = DESeqFilter('test_files/test_deseq.csv')
+    assert np.all(df.tail(7) == d.tail(7))
+    assert np.all(df.tail(1) == d.tail(1))
+
+    df2 = general.load_csv('test_files/counted.csv', 0)
+    f = Filter('test_files/counted.csv')
+    assert np.all(df2.tail() == f.tail())
+    assert np.all(df2.tail(1000) == f.tail(1000))
+
+
+def test_describe():
+    fc_df = general.load_csv('test_files/fc_1.csv', 0, squeeze=True)
+    count_df = general.load_csv('test_files/counted.csv', 0)
+    deseq_df = general.load_csv('test_files/test_deseq.csv', 0)
+
+    fc = FoldChangeFilter('test_files/fc_1.csv', 'a', 'b')
+    count = CountFilter('test_files/counted.csv')
+    deseq = DESeqFilter('test_files/test_deseq.csv')
+    default_percentiles = (0.01, 0.25, 0.5, 0.75, 0.99)
+    deciles = [i / 10 for i in range(1, 10)]
+    for filter_obj, df in zip([count, deseq, fc], [count_df, deseq_df, fc_df]):
+        assert np.all(filter_obj.describe() == df.describe(percentiles=default_percentiles))
+        assert np.all(filter_obj.describe(deciles) == df.describe(percentiles=deciles))
+
+
+def test_print_features_api():
+    count = CountFilter('test_files/counted.csv')
+    count.print_features()
+
+
+def test_from_string(monkeypatch):
+    monkeypatch.setattr('builtins.input', lambda x: 'first-word\nsecond word\nthird. word\n')
+    assert Filter._from_string("msg") == ["first-word", "second word", "third. word"]
+    monkeypatch.setattr('builtins.input', lambda x: 'first-word,second word,third. word')
+    assert Filter._from_string("msg", delimiter=',') == ["first-word", "second word", "third. word"]
+
+
+def test_color_gen():
+    gen = Filter._color_gen()
+    preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
+                     'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
+                     'mediumblue', 'black', 'lawngreen']
+    for i in range(150):
+        color = next(gen)
+        assert color in preset_colors or (isinstance(color, np.ndarray) and len(color) == 3 and
+                                          np.max(color) <= 1 and np.min(color) >= 0)
 
 
 def test_countfilter_normalize_to_rpm():
     truth = general.load_csv(r"test_files/test_norm_reads_rpm.csv", 0)
     h = CountFilter("test_files/counted.csv")
+    not_inplace = h.normalize_to_rpm("test_files/uncounted.csv", inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
     h.normalize_to_rpm("test_files/uncounted.csv")
     assert np.isclose(truth, h.df).all()
 
@@ -73,12 +141,37 @@ def test_filter_low_reads_reverse():
     assert np.all(h.df == low_truth)
 
 
-def test_htcount_filter_biotype():
-    truth_protein_coding = general.load_csv('test_files/counted_biotype_protein_coding.csv', 0)
-    truth_pirna = general.load_csv('test_files/counted_biotype_piRNA.csv', 0)
-    h = CountFilter("test_files/counted_biotype.csv")
-    protein_coding = h.filter_biotype(ref='test_files/biotype_ref_table_for_tests.csv', inplace=False)
-    pirna = h.filter_biotype('piRNA', ref='test_files/biotype_ref_table_for_tests.csv', inplace=False)
+def test_volcano_plot_api():
+    d = DESeqFilter("test_files/test_deseq.csv")
+    d.volcano_plot()
+    d.volcano_plot(alpha=0.000001)
+    plt.close('all')
+
+
+def test_pairplot_api():
+    c = CountFilter("test_files/counted.csv")
+    c.pairplot(log2=False)
+    c.pairplot(['cond1', 'cond3'])
+    plt.close('all')
+
+
+def test_box_plot_api():
+    c = CountFilter("test_files/counted.csv")
+    c.box_plot(notch=True, ylabel='A different label')
+    c.box_plot(samples=['cond1', 'cond3'], scatter=True)
+    plt.close('all')
+
+
+def test_violin_plot_api():
+    c = CountFilter("test_files/counted.csv")
+    c.violin_plot(ylabel='A different label')
+    c.violin_plot(samples=['cond1', 'cond4'])
+    plt.close('all')
+
+
+def _filter_biotype_tester(filter_obj, truth_protein_coding, truth_pirna):
+    protein_coding = filter_obj.filter_biotype(ref=__biotype_ref__, inplace=False)
+    pirna = filter_obj.filter_biotype('piRNA', ref=__biotype_ref__, inplace=False)
     pirna.df.sort_index(inplace=True)
     protein_coding.df.sort_index(inplace=True)
     truth_protein_coding.sort_index(inplace=True)
@@ -87,34 +180,120 @@ def test_htcount_filter_biotype():
     assert np.all(truth_pirna == pirna.df)
 
 
+def test_htcount_filter_biotype():
+    truth_protein_coding = general.load_csv('test_files/counted_biotype_protein_coding.csv', 0)
+    truth_pirna = general.load_csv('test_files/counted_biotype_piRNA.csv', 0)
+    h = CountFilter("test_files/counted_biotype.csv")
+    _filter_biotype_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
+
+
 def test_htcount_filter_biotype_opposite():
     truth_no_pirna = general.load_csv(r'test_files/counted_biotype_no_piRNA.csv', 0)
     h = CountFilter("test_files/counted_biotype.csv")
-    h.filter_biotype('piRNA', ref='test_files/biotype_ref_table_for_tests.csv', opposite=True, inplace=True)
+    h.filter_biotype('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
     h.df.sort_index(inplace=True)
     truth_no_pirna.sort_index(inplace=True)
     assert np.all(h.df == truth_no_pirna)
 
 
+def test_filter_by_attribute():
+    truth = general.load_csv('test_files/test_deseq_filter_by_attr1.csv', 0)
+    d = DESeqFilter('test_files/test_deseq.csv')
+    d_notinplace = d.filter_by_attribute('attribute1', ref=__attr_ref__, inplace=False)
+    d.filter_by_attribute('attribute1', ref=__attr_ref__)
+    truth.sort_index(inplace=True)
+    d.df.sort_index(inplace=True)
+    d_notinplace.df.sort_index(inplace=True)
+    assert np.all(truth == d.df)
+    assert np.all(truth == d_notinplace.df)
+
+
+def test_filter_by_attribute_from_string(monkeypatch):
+    monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute2\n')
+    union_truth = general.load_csv('test_files/counted_filter_by_bigtable_union_truth.csv', 0)
+    h = CountFilter('test_files/counted_filter_by_bigtable.csv')
+    assert np.all(union_truth.sort_index() == h.filter_by_attribute(mode='union',
+                                                                    ref=__attr_ref__,
+                                                                    inplace=False).df.sort_index())
+
+    monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute2')
+    assert np.all(union_truth.sort_index() == h.filter_by_attribute(mode='union',
+                                                                    ref=__attr_ref__,
+                                                                    inplace=False).df.sort_index())
+
+    monkeypatch.setattr('builtins.input', lambda x: 'attribute1')
+    deseq_truth = general.load_csv('test_files/test_deseq_filter_by_attr1.csv', 0)
+    d = DESeqFilter('test_files/test_deseq.csv')
+    assert np.all(
+        deseq_truth.sort_index() == d.filter_by_attribute(ref=__attr_ref__, inplace=False).df.sort_index())
+
+
 def test_filter_by_attribute_union():
-    union_truth = general.load_csv(r'test_files/counted_filter_by_bigtable_union_truth.csv', 0)
+    union_truth = general.load_csv('test_files/counted_filter_by_bigtable_union_truth.csv', 0)
     h = CountFilter('test_files/counted_filter_by_bigtable.csv')
     union = h.filter_by_attribute(['attribute1', 'attribute2'], mode='union',
-                                  ref='test_files/attr_ref_table_for_tests.csv', inplace=False)
-    union.df.sort_index(inplace=True)
-    union_truth.sort_index(inplace=True)
-    assert np.all(union.df == union_truth)
+                                  ref=__attr_ref__, inplace=False)
+    assert np.all(union.df.sort_index() == union_truth.sort_index())
 
 
 def test_filter_by_attribute_intersection():
     intersection_truth = general.load_csv(r'test_files/counted_filter_by_bigtable_intersect_truth.csv', 0)
     h = CountFilter('test_files/counted_filter_by_bigtable.csv')
     intersection = h.filter_by_attribute(['attribute1', 'attribute2'], mode='intersection',
-                                         ref='test_files/attr_ref_table_for_tests.csv',
+                                         ref=__attr_ref__,
                                          inplace=False)
     intersection.df.sort_index(inplace=True)
     intersection_truth.sort_index(inplace=True)
     assert np.all(intersection.df == intersection_truth)
+
+
+def test_filter_by_attribute_invalid_mode():
+    h = CountFilter('test_files/counted_filter_by_bigtable.csv')
+    with pytest.raises(ValueError):
+        h.filter_by_attribute(['attribute1', 'attribute2'], mode='difference',
+                              ref=__attr_ref__)
+
+
+def test_split_by_attribute():
+    h = CountFilter('test_files/counted_filter_by_bigtable.csv')
+    attrs = ['attribute2', 'attribute3', 'attribute4', 'attribute1']
+    newobjs = h.split_by_attribute(attrs, ref=__attr_ref__)
+    assert len(newobjs) == len(attrs)
+    for i, attr in enumerate(attrs):
+        assert np.all(
+            newobjs[i].df.sort_index() == h.filter_by_attribute(attr, ref=__attr_ref__,
+                                                                inplace=False).df.sort_index())
+
+
+def test_split_by_attribute_multiple():
+    f = Filter('test_files/test_deseq.csv')
+    attrs = ['attribute2', 'attribute3', 'attribute4', 'attribute1']
+    newobjs = f.split_by_attribute(attrs, ref=__attr_ref__)
+    assert len(newobjs) == len(attrs)
+    for i, attr in enumerate(attrs):
+        assert np.all(
+            newobjs[i].df.sort_index() == f.filter_by_attribute(attr, ref=__attr_ref__,
+                                                                inplace=False).df.sort_index())
+
+
+def test_split_by_attribute_only_one_attribute():
+    f = Filter('test_files/test_deseq.csv')
+    newobj = f.split_by_attribute(['attribute1'], ref=__attr_ref__)
+    assert len(newobj) == 1
+    assert np.all(
+        newobj[0].df.sort_index() == f.filter_by_attribute('attribute1', ref=__attr_ref__,
+                                                           inplace=False).df.sort_index())
+    with pytest.raises(AssertionError):
+        f.split_by_attribute('attribute1', ref=__attr_ref__)
+
+
+def test_split_by_attribute_faulty_attributes():
+    f = Filter('test_files/test_deseq.csv')
+    with pytest.raises(AssertionError):
+        f.split_by_attribute(['attribute1', ['attribute2', 'attribute3']],
+                             ref=__attr_ref__)
+    with pytest.raises(AssertionError):
+        f.split_by_attribute(['attribute1', 2], ref=__attr_ref__)
 
 
 def test_deseq_filter_significant():
@@ -263,7 +442,8 @@ def test_symmetric_difference():
 
 
 def test_deseq_feature_set():
-    truth = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730', 'WBGene00012648',
+    truth = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730',
+             'WBGene00012648',
              'WBGene00012961', 'WBGene00022438', 'WBGene00016635', 'WBGene00044478', 'WBGene00021375',
              'WBGene00044258', 'WBGene00219304', 'WBGene00194708', 'WBGene00018199', 'WBGene00022486',
              'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
@@ -273,7 +453,8 @@ def test_deseq_feature_set():
 
 
 def test_deseq_feature_string():
-    truth = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730', 'WBGene00012648',
+    truth = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730',
+             'WBGene00012648',
              'WBGene00012961', 'WBGene00022438', 'WBGene00016635', 'WBGene00044478', 'WBGene00021375',
              'WBGene00044258', 'WBGene00219304', 'WBGene00194708', 'WBGene00018199', 'WBGene00022486',
              'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
@@ -339,7 +520,7 @@ def test_split_by_percentile():
 def test_htcount_filter_biotype_multiple():
     truth = general.load_csv('test_files/counted_biotype_piRNA_protein_coding.csv', 0)
     h = CountFilter("test_files/counted_biotype.csv")
-    both = h.filter_biotype(['protein_coding', 'piRNA'], ref='test_files/biotype_ref_table_for_tests.csv',
+    both = h.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                             inplace=False)
     both.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
@@ -349,7 +530,7 @@ def test_htcount_filter_biotype_multiple():
 def test_htcount_filter_biotype_multiple_opposite():
     truth = general.load_csv('test_files/counted_biotype_piRNA_protein_coding_opposite.csv', 0)
     h = CountFilter("test_files/counted_biotype.csv")
-    neither = h.filter_biotype(['protein_coding', 'piRNA'], ref='test_files/biotype_ref_table_for_tests.csv',
+    neither = h.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                inplace=False,
                                opposite=True)
     neither.df.sort_index(inplace=True)
@@ -361,20 +542,13 @@ def test_deseq_filter_biotype():
     truth_protein_coding = general.load_csv('test_files/test_deseq_biotype_protein_coding.csv', 0)
     truth_pirna = general.load_csv('test_files/test_deseq_biotype_piRNA.csv', 0)
     d = DESeqFilter("test_files/test_deseq_biotype.csv")
-    protein_coding = d.filter_biotype(ref='test_files/biotype_ref_table_for_tests.csv', inplace=False)
-    pirna = d.filter_biotype('piRNA', ref='test_files/biotype_ref_table_for_tests.csv', inplace=False)
-    pirna.df.sort_index(inplace=True)
-    protein_coding.df.sort_index(inplace=True)
-    truth_protein_coding.sort_index(inplace=True)
-    truth_pirna.sort_index(inplace=True)
-    assert np.all(truth_protein_coding == protein_coding.df)
-    assert np.all(truth_pirna == pirna.df)
+    _filter_biotype_tester(d, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
 def test_deseq_filter_biotype_opposite():
     truth_no_pirna = general.load_csv(r'test_files/test_deseq_biotype_piRNA_opposite.csv', 0)
     d = DESeqFilter("test_files/test_deseq_biotype.csv")
-    d.filter_biotype('piRNA', ref='test_files/biotype_ref_table_for_tests.csv', opposite=True, inplace=True)
+    d.filter_biotype('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
     d.df.sort_index(inplace=True)
     truth_no_pirna.sort_index(inplace=True)
     assert np.all(d.df == truth_no_pirna)
@@ -383,7 +557,7 @@ def test_deseq_filter_biotype_opposite():
 def test_deseq_filter_biotype_multiple():
     truth = general.load_csv('test_files/test_deseq_biotype_piRNA_protein_coding.csv', 0)
     d = DESeqFilter("test_files/test_deseq_biotype.csv")
-    both = d.filter_biotype(['protein_coding', 'piRNA'], ref='test_files/biotype_ref_table_for_tests.csv',
+    both = d.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                             inplace=False)
     both.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
@@ -393,7 +567,7 @@ def test_deseq_filter_biotype_multiple():
 def test_deseq_filter_biotype_multiple_opposite():
     truth = general.load_csv('test_files/test_deseq_biotype_piRNA_protein_coding_opposite.csv', 0)
     d = DESeqFilter("test_files/test_deseq_biotype.csv")
-    neither = d.filter_biotype(['protein_coding', 'piRNA'], ref='test_files/biotype_ref_table_for_tests.csv',
+    neither = d.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
                                inplace=False,
                                opposite=True)
     neither.df.sort_index(inplace=True)
@@ -414,7 +588,8 @@ def test_deseqfilter_union_multiple():
 
     set1 = DESeqFilter('test_files/test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('test_files/test_deseq_set_ops_2.csv')
-    set3 = {'WBGene00077437', 'WBGene00007674', 'WBGene00023036', 'WBGene00012648', 'WBGene44444444', 'WBGene99999999',
+    set3 = {'WBGene00077437', 'WBGene00007674', 'WBGene00023036', 'WBGene00012648', 'WBGene44444444',
+            'WBGene99999999',
             'WBGene98765432'}
     union_truth = intersection_truth.union(set1_unique, set2_unique, set3_unique)
     assert set1.union(set2, set3) == union_truth
@@ -425,7 +600,8 @@ def test_deseqfilter_intersection_multiple():
                           'WBGene00012648', 'WBGene00022486'}
     set1 = DESeqFilter('test_files/test_deseq_set_ops_1.csv')
     set2 = DESeqFilter('test_files/test_deseq_set_ops_2.csv')
-    set3 = {'WBGene00077437', 'WBGene00007674', 'WBGene00023036', 'WBGene00012648', 'WBGene00022486', 'WBGene99999999',
+    set3 = {'WBGene00077437', 'WBGene00007674', 'WBGene00023036', 'WBGene00012648', 'WBGene00022486',
+            'WBGene99999999',
             'WBGene98765432'}
 
     assert set1.intersection(set2, set3, inplace=False) == intersection_truth
@@ -664,7 +840,7 @@ def test_count_filter_from_folder():
 
 def test_biotypes():
     truth = general.load_csv('test_files/biotypes_truth.csv', 0)
-    df = CountFilter(r'test_files/counted_biotype.csv').biotypes(ref='test_files/biotype_ref_table_for_tests.csv')
+    df = CountFilter(r'test_files/counted_biotype.csv').biotypes(ref=__biotype_ref__)
     truth.sort_index(inplace=True)
     df.sort_index(inplace=True)
     assert np.all(df == truth)
@@ -761,7 +937,7 @@ def test_pipeline_add_multiple_functions():
 def test_pipeline_remove_last_function():
     pl = Pipeline()
     pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding',
-                    ref='test_files/biotype_ref_table_for_tests.csv')
+                    ref=__biotype_ref__)
     pl.remove_last_function()
     assert len(pl.functions) == 0 and len(pl.params) == 0
 
@@ -794,10 +970,11 @@ def test_pipeline_apply_to():
     assert np.all(deseq_pipelined.df == deseq_truth.df)
 
     pl2 = Pipeline('countfilter')
-    pl2.add_function(Filter.filter_biotype, biotype='protein_coding', ref='test_files/biotype_ref_table_for_tests.csv')
+    pl2.add_function(Filter.filter_biotype, biotype='protein_coding',
+                     ref=__biotype_ref__)
     cnt = CountFilter('test_files/counted.csv')
     cnt_truth = cnt.__copy__()
-    cnt_truth.filter_biotype('protein_coding', ref='test_files/biotype_ref_table_for_tests.csv')
+    cnt_truth.filter_biotype('protein_coding', ref=__biotype_ref__)
     cnt_pipelined = pl2.apply_to(cnt, inplace=False)
     pl2.apply_to(cnt, inplace=True)
     cnt.sort(cnt.columns[0])
@@ -854,7 +1031,7 @@ def test_pipeline_add_function_invalid_type():
 def test_pipeline_add_function_mismatch_filter_type():
     pl_deseq = Pipeline('DESeqFilter')
     pl_deseq.add_function(CountFilter.filter_biotype, biotype='protein_coding',
-                          ref='test_files/biotype_ref_table_for_tests.csv')
+                          ref=__biotype_ref__)
     with pytest.raises(AssertionError):
         pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
 
