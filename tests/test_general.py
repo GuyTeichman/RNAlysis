@@ -53,13 +53,13 @@ def test_load_csv_bad_input():
 def test_load_csv():
     truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
     truth.set_index('idxcol', inplace=True)
-    pth = "test_load_csv.csv"
+    pth = "test_files/test_load_csv.csv"
     assert (truth == load_csv(pth, 0)).all().all()
 
 
 def test_remove_unindexed_rows():
-    truth = load_csv("counted_missing_rows_deleted.csv", 0)
-    missing = load_csv("counted_missing_rows.csv", 0)
+    truth = load_csv("test_files/counted_missing_rows_deleted.csv", 0)
+    missing = load_csv("test_files/counted_missing_rows.csv", 0)
     assert (truth == _remove_unindexed_rows(missing)).all().all()
 
 

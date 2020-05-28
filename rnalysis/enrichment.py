@@ -44,7 +44,7 @@ class FeatureSet:
             >>> from rnalysis import enrichment, filtering
             >>> my_set = enrichment.FeatureSet({'gene1','gene2','gene2'}, 'name of my set')
 
-            >>> filter_obj = filtering.CountFilter('tests/counted.csv')
+            >>> filter_obj = filtering.CountFilter('tests/test_files/counted.csv')
             >>> my_other_set = enrichment.FeatureSet(filter_obj, 'name of my other set')
 
         """
@@ -54,7 +54,7 @@ class FeatureSet:
                 "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')"))
         elif isinstance(gene_set, set):
             pass
-        elif isinstance(gene_set, list):
+        elif isinstance(gene_set, (list, tuple)):
             gene_set = set(gene_set)
         elif issubclass(gene_set.__class__, filtering.Filter):
             gene_set = gene_set.index_set
@@ -908,7 +908,7 @@ class FeatureSet:
 
         :Examples:
             >>> from rnalysis import enrichment, filtering
-            >>> d = filtering.Filter("tests/test_deseq.csv")
+            >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
             >>> en = enrichment.FeatureSet(d)
             >>> en.biotypes(ref='tests/biotype_ref_table_for_tests.csv')
                             gene
