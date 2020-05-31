@@ -17,6 +17,9 @@ Changed
 * CountFilter.pca() can now be plotted without labeled points.
 * CountFilter.violin_plot() now accepts a y_title argument.
 * Added more optional arguments to visualization functions such as CountFilter.violin_plot() and CountFilter.clustergram().
+* Automatic filenames for Filter objects should now reflect more clearly the operations that were performed.
+* The DataFrame returned by enrich_randomization() and enrich_randomization_parallel() now contains the additional column 'data_scale', determined by the new optional argument 'data_scale'.
+* The columns 'n obs' and 'n exp' in the DataFrame returned by enrich_randomization() and enrich_randomization_parallel() were renamed to 'obs' and 'exp' respectively.
 
 
 Fixed

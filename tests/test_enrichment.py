@@ -29,11 +29,11 @@ up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene0
                   'WBGene00022523'}
 
 
-def test_enrichment_processing_api():
+def test_featureset_api():
     up = FeatureSet(up_feature_set)
 
 
-def test_enrichment_processing_union():
+def test_featureset_union():
     other = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = up_feature_set.union(other)
@@ -43,7 +43,7 @@ def test_enrichment_processing_union():
     assert np.all(up.gene_set == truth)
 
 
-def test_enrichment_processing_intersection():
+def test_featureset_intersection():
     other = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
@@ -54,7 +54,7 @@ def test_enrichment_processing_intersection():
     assert np.all(up.gene_set == truth)
 
 
-def test_enrichment_processing_difference():
+def test_featureset_difference():
     other = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00000001', 'WBGene00000002'}
@@ -64,7 +64,7 @@ def test_enrichment_processing_difference():
     assert np.all(other_ep.gene_set == truth)
 
 
-def test_enrichment_processing_symmetric_difference():
+def test_featureset_symmetric_difference():
     first = {'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390'}
     second = {'WBGene00044200', 'WBGene00206390',
               'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
@@ -194,6 +194,10 @@ def test_enrichment_get_ref_custom_background_from_filter_object():
     assert np.all(res.int_index == truth.int_index)
 
 
+def test_enrichment_get_scales():
+    assert False
+
+
 def tests_enrichment_randomization_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
@@ -212,7 +216,7 @@ def test_enrichment_randomization_reliability():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     attrs = ['attribute1', 'attribute2', 'attribute4']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    random_seed = 42
+    random_seed = 0
 
     for i in range(5):
         res1 = en.enrich_randomization(attrs, reps=5000, biotype='all',
@@ -229,7 +233,7 @@ def test_enrichment_randomization_reliability():
                                        random_seed=random_seed + 2)
         random_seed += 3
         plt.close('all')
-        for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
+        for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
             assert np.all(res1[col] == res2[col])
             assert np.all(res2[col] == res3[col])
         for randcol in ['pval', 'padj']:
@@ -240,9 +244,9 @@ def test_enrichment_randomization_reliability():
 
 
 def _enrichment_validity(res, truth):
-    for col in ['samples', 'n obs', 'significant']:
+    for col in ['samples', 'obs', 'significant']:
         assert np.all(res[col] == truth[col])
-    for closecol in ['n exp', 'log2_fold_enrichment']:
+    for closecol in ['exp', 'log2_fold_enrichment']:
         assert np.isclose(res[closecol], truth[closecol], atol=0.0).all()
     for randcol in ['pval']:
         assert np.isclose(res[randcol], truth[randcol], atol=2 * 10 ** -4, rtol=0.25).all()
@@ -300,7 +304,7 @@ def test_enrichment_randomization_parallel_reliability():
                                                 random_seed=random_seed + 2)
         random_seed += 3
         plt.close('all')
-        for col in ['samples', 'n obs', 'n exp', 'log2_fold_enrichment']:
+        for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
             assert np.all(res1[col] == res2[col])
             assert np.all(res2[col] == res3[col])
         for randcol in ['pval']:
@@ -346,7 +350,7 @@ def test_randomization_all_attributes():
     assert attrs == attrs_truth
 
 
-def test_enrich_hypergeom_api():
+def test_enrich_statistic_hypergeometric_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
              'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
@@ -354,8 +358,8 @@ def test_enrich_hypergeom_api():
              'WBGene00000859', 'WBGene00268189'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path=__attr_ref__,
-                                 biotype_ref_path=__biotype_ref__)
+    _ = en.enrich_statistic(attrs, biotype='all', data_scale='boolean', attr_ref_path=__attr_ref__,
+                            biotype_ref_path=__biotype_ref__)
     plt.close('all')
 
 
