@@ -33,6 +33,21 @@ def test_featureset_api():
     up = FeatureSet(up_feature_set)
 
 
+def test_featureset_change_set_name():
+    en = FeatureSet(up_feature_set, set_name='up feature set')
+    en.change_set_name('different name')
+    assert en.set_name == 'different name'
+    en.change_set_name('')
+    assert en.set_name == ''
+
+    en = FeatureSet(up_feature_set)
+    en.change_set_name('different name')
+    assert en.set_name == 'different name'
+
+    with pytest.raises(AssertionError):
+        en.change_set_name(5)
+
+
 def test_featureset_contains():
     truth = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
