@@ -111,6 +111,17 @@ class FeatureSet:
         else:
             return FeatureSet(gene_set)
 
+    def change_set_name(self, new_name: str):
+        """
+        Change the 'set_name' of a FeatureSet to a new name.
+
+        :param new_name: the new set name
+        :type new_name: str
+
+        """
+        assert isinstance(new_name, str), f"New set name must be of type str. Instead, got {type(new_name)}"
+        self.set_name = new_name
+
     def save_txt(self, fname: Union[str, Path]):
 
         """
