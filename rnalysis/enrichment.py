@@ -4,7 +4,6 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
-import random
 import numpy as np
 import pandas as pd
 from scipy.stats import hypergeom
@@ -751,7 +750,7 @@ class FeatureSet:
         if random_seed is not None:
             assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
                                                                       f"Value {random_seed} invalid."
-            random.seed(random_seed)
+            np.random.seed(random_seed)
 
         for k, (attribute, scale) in enumerate(zip(attributes, data_scales)):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
