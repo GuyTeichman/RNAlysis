@@ -10,6 +10,7 @@ Added
 ******
 * Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.
 * Added more visualization functions, such CountFilter.enhanced_box_plot().
+* Added FeatureSet.change_set_name(), to give a new 'set_name' to a FeatureSet object.
 
 
 Changed
@@ -20,6 +21,7 @@ Changed
 * Automatic filenames for Filter objects should now reflect more clearly the operations that were performed.
 * The DataFrame returned by enrich_randomization() and enrich_randomization_parallel() now contains the additional column 'data_scale', determined by the new optional argument 'data_scale'.
 * The columns 'n obs' and 'n exp' in the DataFrame returned by enrich_randomization() and enrich_randomization_parallel() were renamed to 'obs' and 'exp' respectively.
+* FeatureSets no longer support in-place set operations (intersection, union, difference, symmetric difference). Instead, these functions return a new FeatureSet.
 
 
 Fixed
