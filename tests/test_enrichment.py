@@ -33,6 +33,22 @@ def test_featureset_api():
     up = FeatureSet(up_feature_set)
 
 
+def test_featureset_contains():
+    truth = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
+             'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
+    f = FeatureSet(truth, 'set name')
+    for ind in truth:
+        assert ind in f
+    assert 'set name' not in f
+    assert 'WBGene00000003' not in f
+
+
+def test_featureset_len():
+    l = 20
+    f = FeatureSet(set([str(i) for i in range(l)]), 'set name')
+    assert len(f) == l
+
+
 def test_featureset_union():
     other = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}

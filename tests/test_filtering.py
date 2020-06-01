@@ -31,6 +31,24 @@ def test_foldchangefilter_api():
     assert fc.__repr__() == "FoldChangeFilter (numerator: 'a', denominator: 'b') of file fc_1.csv"
 
 
+def test_filter_contains():
+    objs = [Filter('test_files/test_deseq.csv'), CountFilter('test_files/counted.csv'),
+            DESeqFilter('test_files/counted.csv'), FoldChangeFilter('test_files/fc_1.csv', 'num', 'denom')]
+    neither = ['WBGene'+str(i) for i in range(10)]
+    for obj in objs:
+        for ind in obj.df.index:
+            assert ind in obj
+        for false_ind in neither:
+            assert false_ind not in obj
+
+
+def test_filter_len():
+    objs = [Filter('test_files/test_deseq.csv'), CountFilter('test_files/counted.csv'),
+            DESeqFilter('test_files/counted.csv'), FoldChangeFilter('test_files/fc_1.csv', 'num', 'denom')]
+    for obj in objs:
+        assert len(obj) == obj.df.shape[0]
+
+
 def test_filter_inplace():
     d = DESeqFilter('test_files/test_deseq_no_nans.csv')
     d_copy = DESeqFilter('test_files/test_deseq_no_nans.csv')

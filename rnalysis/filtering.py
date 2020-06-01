@@ -87,6 +87,12 @@ class Filter:
     def __repr__(self):
         return f"{type(self).__name__} of file {self.fname.name}"
 
+    def __len__(self):
+        return self.shape[0]
+
+    def __contains__(self, item):
+        return True if item in self.df.index else False
+
     def __copy__(self):
 
         """

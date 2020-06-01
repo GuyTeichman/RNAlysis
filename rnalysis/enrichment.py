@@ -65,6 +65,12 @@ class FeatureSet:
     def __repr__(self):
         return f"FeatureSet: {self.set_name}\n" + self.gene_set.__str__()
 
+    def __len__(self):
+        return len(self.gene_set)
+
+    def __contains__(self, item):
+        return True if item in self.gene_set else False
+
     @staticmethod
     def _from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
 
