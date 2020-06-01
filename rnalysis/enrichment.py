@@ -93,23 +93,6 @@ class FeatureSet:
             split = split[:-1]
         return split
 
-    def _inplace(self, gene_set: set, inplace: bool):
-
-        """
-        Executes the user's choice whether to perform set operations in-place \
-        or create a new instance of the FeatureSet object.
-
-        :param gene_set: The set of features resulting from the set operations
-        :param inplace: bool. If True, gene_set will be saved to the current FeatureSet object. \
-        If False, gene_set will be used to created a new instance of FeatureSet.
-        :return: If inplace is True, returns a new instance of FeatureSet.
-
-        """
-        if inplace:
-            self.gene_set = gene_set
-        else:
-            return FeatureSet(gene_set)
-
     def change_set_name(self, new_name: str):
         """
         Change the 'set_name' of a FeatureSet to a new name.
@@ -145,8 +128,8 @@ class FeatureSet:
 
         """
         Performs a given set operation on self and on another object (FeatureSet or set).
-        :type other: FeatureSet, set or str
-        :param other: Other object to perform set operation with.
+        :type others: FeatureSet, set or str
+        :param others: Other object to perform set operation with.
         :type: op: Callable (set.union, set.intersection, set.difference or set.symmetric difference)
         :param op: The set operation to be performed.
         :return: A set resulting from the set operation.
@@ -171,18 +154,16 @@ class FeatureSet:
             else:
                 raise e
 
-    def union(self, *others, inplace: bool = True):
+    def union(self, *others):
 
         """
-         Calculates the set union of the indices from multipple FeatureSet objects \
+         Calculates the set union of the indices from multiple FeatureSet objects \
         (the indices that exist in at least one of the FeatureSet objects).
 
         :type others: FeatureSet, set or str
         :param others: The objects against which the current object will be compared.
-        :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of FeatureSet. \
-        If False, returns a new instance of FeatureSet.
-        :return: if inplace is False, returns a new instance of FeatureSet.
+        :return: a new FeatureSet with elements from this FeatureSet and all other objects.
+        :rtype: FeatureSet
 
         :Examples:
             >>> from rnalysis import enrichment
@@ -195,9 +176,9 @@ class FeatureSet:
             {'WBGene00000003', 'WBGene00000004', 'WBGene00000001', 'WBGene00000002', 'WBGene00000006', 'WBGene00000005'}
 
         """
-        return self._inplace(self._set_ops(others, set.union), inplace)
+        return FeatureSet(self._set_ops(others, set.union))
 
-    def intersection(self, *others, inplace: bool = True):
+    def intersection(self, *others):
 
         """
         Calculates the set intersection of the indices from multiple FeatureSet objects \
@@ -205,10 +186,8 @@ class FeatureSet:
 
         :type others: FeatureSet, set or str
         :param others: The objects against which the current object will be compared.
-        :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of FeatureSet. \
-        If False, returns a new instance of FeatureSet.
-        :return: if inplace is False, returns a new instance of FeatureSet.
+        :return: a new FeatureSet with elements common to this FeatureSet and all other objects.
+        :rtype: FeatureSet
 
         :Examples:
             >>> from rnalysis import enrichment
@@ -221,9 +200,9 @@ class FeatureSet:
             {'WBGene00000001'}
 
         """
-        return self._inplace(self._set_ops(others, set.intersection), inplace)
+        return FeatureSet(self._set_ops(others, set.intersection))
 
-    def difference(self, *others, inplace: bool = True):
+    def difference(self, *others):
 
         """
         Calculates the set difference of the indices from multiple FeatureSet objects \
@@ -231,10 +210,8 @@ class FeatureSet:
 
         :type others: FeatureSet, set or str
         :param others: The objects against which the current object will be compared.
-        :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of FeatureSet. \
-        If False, returns a new instance of FeatureSet.
-        :return: if inplace is False, returns a new instance of FeatureSet.
+        :return: a new FeatureSet with elements in this FeatureSet that are not in the other objects.
+        :rtype: FeatureSet
 
         :Examples:
             >>> from rnalysis import enrichment
@@ -247,9 +224,9 @@ class FeatureSet:
             {'WBGene00000006'}
 
         """
-        return self._inplace(self._set_ops(others, set.difference), inplace)
+        return FeatureSet(self._set_ops(others, set.difference))
 
-    def symmetric_difference(self, other, inplace: bool = True):
+    def symmetric_difference(self, other):
 
         """
         Calculates the set symmetric difference of the indices from two FeatureSet objects \
@@ -258,10 +235,8 @@ class FeatureSet:
 
         :type other: FeatureSet, set or str
         :param other: A second  object against which the current object will be compared.
-        :type inplace: bool
-        :param inplace: If True (default), modifies the current instance of FeatureSet. \
-        If False, returns a new instance of FeatureSet.
-        :return: if inplace is False, returns a new instance of FeatureSet.
+        :return: a new FeatureSet with elements in either this FeatureSet or the other object, but not both.
+        :rtype: FeatureSet
 
         :Examples:
             >>> from rnalysis import enrichment
@@ -273,7 +248,7 @@ class FeatureSet:
             {'WBGene00000002', 'WBGene00000006', 'WBGene00000004'}
 
         """
-        return self._inplace(self._set_ops([other], set.symmetric_difference), inplace)
+        return FeatureSet(self._set_ops([other], set.symmetric_difference))
 
     @staticmethod
     def _enrichment_save_csv(df: pd.DataFrame, fname: str):

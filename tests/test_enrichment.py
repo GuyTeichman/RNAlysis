@@ -69,9 +69,9 @@ def test_featureset_union():
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = up_feature_set.union(other)
     up = FeatureSet(up_feature_set)
-    other_ep = FeatureSet(other)
-    up.union(other_ep)
-    assert np.all(up.gene_set == truth)
+    other_set = FeatureSet(other)
+    union_res = up.union(other_set)
+    assert np.all(union_res.gene_set == truth)
 
 
 def test_featureset_intersection():
@@ -80,9 +80,9 @@ def test_featureset_intersection():
     truth = {'WBGene00017419', 'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390',
              'WBGene00022523'}
     up = FeatureSet(up_feature_set)
-    other_ep = FeatureSet(other)
-    up.intersection(other_ep)
-    assert np.all(up.gene_set == truth)
+    other_set = FeatureSet(other)
+    intersection_res = up.intersection(other_set)
+    assert np.all(intersection_res.gene_set == truth)
 
 
 def test_featureset_difference():
@@ -90,9 +90,9 @@ def test_featureset_difference():
              'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00000001', 'WBGene00000002'}
     up = FeatureSet(up_feature_set)
-    other_ep = FeatureSet(other)
-    other_ep.difference(up)
-    assert np.all(other_ep.gene_set == truth)
+    other_set = FeatureSet(other)
+    diff_res = other_set.difference(up)
+    assert np.all(diff_res.gene_set == truth)
 
 
 def test_featureset_symmetric_difference():
@@ -100,10 +100,10 @@ def test_featureset_symmetric_difference():
     second = {'WBGene00044200', 'WBGene00206390',
               'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00016520', 'WBGene00017225', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
-    first_ep = FeatureSet(first)
-    second_ep = FeatureSet(second)
-    direction1 = second_ep.symmetric_difference(first_ep, inplace=False)
-    direction2 = first_ep.symmetric_difference(second_ep, inplace=False)
+    first_set = FeatureSet(first)
+    second_set = FeatureSet(second)
+    direction1 = second_set.symmetric_difference(first_set)
+    direction2 = first_set.symmetric_difference(second_set)
     assert np.all(direction1.gene_set == truth)
     assert np.all(direction2.gene_set == truth)
 
@@ -120,8 +120,8 @@ def test_set_operations_with_set():
     first = {'WBGene00016520', 'WBGene00017225', 'WBGene00044200', 'WBGene00206390'}
     second = {'WBGene00044200', 'WBGene00206390', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
     truth = {'WBGene00016520', 'WBGene00017225', 'WBGene00022523', 'WBGene00000001', 'WBGene00000002'}
-    first_ep = FeatureSet(first)
-    symm_diff = first_ep.symmetric_difference(second, inplace=False)
+    first_set = FeatureSet(first)
+    symm_diff = first_set.symmetric_difference(second)
     assert np.all(symm_diff.gene_set == truth)
 
 
