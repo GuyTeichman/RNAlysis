@@ -26,6 +26,7 @@ rnalysis.filtering.CountFilter
     CountFilter.filter_by_attribute
     CountFilter.filter_by_row_sum
     CountFilter.filter_low_reads
+    CountFilter.filter_missing_values
     CountFilter.filter_percentile
     CountFilter.filter_top_n
     CountFilter.fold_change

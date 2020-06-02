@@ -120,6 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html">rnalysis.filtering.CountFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html">rnalysis.filtering.CountFilter.filter_by_row_sum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html">rnalysis.filtering.CountFilter.filter_low_reads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html">rnalysis.filtering.CountFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html">rnalysis.filtering.CountFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html">rnalysis.filtering.CountFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html">rnalysis.filtering.CountFilter.fold_change</a></li>
@@ -258,7 +259,7 @@
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/counted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -276,7 +277,7 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes.html#rnalysis.filtering.CountFilter.biotypes" title="rnalysis.filtering.CountFilter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.biotypes</span></code></a>([return_format, ref])</p></td>
 <td><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html#rnalysis.filtering.CountFilter.box_plot" title="rnalysis.filtering.CountFilter.box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.box_plot</span></code></a>([samples, scatter, ylabel])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html#rnalysis.filtering.CountFilter.box_plot" title="rnalysis.filtering.CountFilter.box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.box_plot</span></code></a>([samples, notch, …])</p></td>
 <td><p>Generates a box plot of the specified samples in the CountFilter object in log10 scale.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html#rnalysis.filtering.CountFilter.clustergram" title="rnalysis.filtering.CountFilter.clustergram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.clustergram</span></code></a>([sample_names, …])</p></td>
@@ -303,85 +304,100 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html#rnalysis.filtering.CountFilter.filter_low_reads" title="rnalysis.filtering.CountFilter.filter_low_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_low_reads</span></code></a>([threshold, …])</p></td>
 <td><p>remove features which have less then ‘threshold’ reads all columns.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html#rnalysis.filtering.CountFilter.filter_percentile" title="rnalysis.filtering.CountFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_percentile</span></code></a>(percentile, column)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html#rnalysis.filtering.CountFilter.filter_missing_values" title="rnalysis.filtering.CountFilter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_missing_values</span></code></a>([columns, …])</p></td>
+<td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html#rnalysis.filtering.CountFilter.filter_percentile" title="rnalysis.filtering.CountFilter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_percentile</span></code></a>(percentile, column)</p></td>
 <td><p>Removes all entries above the specified percentile in the specified column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html#rnalysis.filtering.CountFilter.filter_top_n" title="rnalysis.filtering.CountFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_top_n</span></code></a>(by[, n, ascending, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html#rnalysis.filtering.CountFilter.filter_top_n" title="rnalysis.filtering.CountFilter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_top_n</span></code></a>(by[, n, ascending, …])</p></td>
 <td><p>Sort the rows by the values of specified column or columns, then keep only the top ‘n’ rows.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html#rnalysis.filtering.CountFilter.fold_change" title="rnalysis.filtering.CountFilter.fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.fold_change</span></code></a>(numerator, denominator)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html#rnalysis.filtering.CountFilter.fold_change" title="rnalysis.filtering.CountFilter.fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.fold_change</span></code></a>(numerator, denominator)</p></td>
 <td><p>Calculate the fold change between the numerator condition and the denominator condition,         and return it as a FoldChangeFilter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html#rnalysis.filtering.CountFilter.from_folder" title="rnalysis.filtering.CountFilter.from_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_folder</span></code></a>(folder_path[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html#rnalysis.filtering.CountFilter.from_folder" title="rnalysis.filtering.CountFilter.from_folder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.from_folder</span></code></a>(folder_path[, …])</p></td>
 <td><p>Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html#rnalysis.filtering.CountFilter.head" title="rnalysis.filtering.CountFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.head</span></code></a>([n])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html#rnalysis.filtering.CountFilter.head" title="rnalysis.filtering.CountFilter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html#rnalysis.filtering.CountFilter.intersection" title="rnalysis.filtering.CountFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.intersection</span></code></a>(*others[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html#rnalysis.filtering.CountFilter.intersection" title="rnalysis.filtering.CountFilter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.intersection</span></code></a>(*others[, …])</p></td>
 <td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html#rnalysis.filtering.CountFilter.normalize_to_rpm" title="rnalysis.filtering.CountFilter.normalize_to_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_to_rpm</span></code></a>(…[, inplace])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html#rnalysis.filtering.CountFilter.normalize_to_rpm" title="rnalysis.filtering.CountFilter.normalize_to_rpm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_to_rpm</span></code></a>(…[, inplace])</p></td>
 <td><p>Normalizes the reads in the CountFilter to reads per million (RPM).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html#rnalysis.filtering.CountFilter.normalize_with_scaling_factors" title="rnalysis.filtering.CountFilter.normalize_with_scaling_factors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_with_scaling_factors</span></code></a>(…)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html#rnalysis.filtering.CountFilter.normalize_with_scaling_factors" title="rnalysis.filtering.CountFilter.normalize_with_scaling_factors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.normalize_with_scaling_factors</span></code></a>(…)</p></td>
 <td><p>Normalizes the reads in the CountFilter using pre-calculated scaling factors.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html#rnalysis.filtering.CountFilter.number_filters" title="rnalysis.filtering.CountFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.number_filters</span></code></a>(column, operator, …)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html#rnalysis.filtering.CountFilter.number_filters" title="rnalysis.filtering.CountFilter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.number_filters</span></code></a>(column, operator, …)</p></td>
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html#rnalysis.filtering.CountFilter.pairplot" title="rnalysis.filtering.CountFilter.pairplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.pairplot</span></code></a>([sample_list, log2])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html#rnalysis.filtering.CountFilter.pairplot" title="rnalysis.filtering.CountFilter.pairplot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.pairplot</span></code></a>([sample_list, log2])</p></td>
 <td><p>Plot pairwise relationships in the dataset.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html#rnalysis.filtering.CountFilter.pca" title="rnalysis.filtering.CountFilter.pca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.pca</span></code></a>([sample_names, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.pca.html#rnalysis.filtering.CountFilter.pca" title="rnalysis.filtering.CountFilter.pca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.pca</span></code></a>([sample_names, …])</p></td>
 <td><p>runs and plots a PCA for a given set of samples.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.plot_expression.html#rnalysis.filtering.CountFilter.plot_expression" title="rnalysis.filtering.CountFilter.plot_expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.plot_expression</span></code></a>(features, …[, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.plot_expression.html#rnalysis.filtering.CountFilter.plot_expression" title="rnalysis.filtering.CountFilter.plot_expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.plot_expression</span></code></a>(features, …[, …])</p></td>
 <td><p>Plot the average expression and standard error of the specified features under the specified conditions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.print_features.html#rnalysis.filtering.CountFilter.print_features" title="rnalysis.filtering.CountFilter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.print_features</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.print_features.html#rnalysis.filtering.CountFilter.print_features" title="rnalysis.filtering.CountFilter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.print_features</span></code></a>()</p></td>
 <td><p>Print the feature indices in the Filter object, sorted alphabetically and separated by newline.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.save_csv.html#rnalysis.filtering.CountFilter.save_csv" title="rnalysis.filtering.CountFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.save_csv</span></code></a>([alt_filename])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.save_csv.html#rnalysis.filtering.CountFilter.save_csv" title="rnalysis.filtering.CountFilter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.save_csv</span></code></a>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.scatter_sample_vs_sample.html#rnalysis.filtering.CountFilter.scatter_sample_vs_sample" title="rnalysis.filtering.CountFilter.scatter_sample_vs_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.scatter_sample_vs_sample</span></code></a>(…[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.scatter_sample_vs_sample.html#rnalysis.filtering.CountFilter.scatter_sample_vs_sample" title="rnalysis.filtering.CountFilter.scatter_sample_vs_sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.scatter_sample_vs_sample</span></code></a>(…[, …])</p></td>
 <td><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.sort.html#rnalysis.filtering.CountFilter.sort" title="rnalysis.filtering.CountFilter.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.sort</span></code></a>(by[, ascending, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.sort.html#rnalysis.filtering.CountFilter.sort" title="rnalysis.filtering.CountFilter.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.sort</span></code></a>(by[, ascending, …])</p></td>
 <td><p>Sort the rows by the values of specified column or columns.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_attribute.html#rnalysis.filtering.CountFilter.split_by_attribute" title="rnalysis.filtering.CountFilter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_by_attribute</span></code></a>(attributes[, ref])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_attribute.html#rnalysis.filtering.CountFilter.split_by_attribute" title="rnalysis.filtering.CountFilter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_by_attribute</span></code></a>(attributes[, ref])</p></td>
 <td><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html#rnalysis.filtering.CountFilter.split_by_percentile" title="rnalysis.filtering.CountFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_by_percentile</span></code></a>(percentile, …)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html#rnalysis.filtering.CountFilter.split_by_percentile" title="rnalysis.filtering.CountFilter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_by_percentile</span></code></a>(percentile, …)</p></td>
 <td><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html#rnalysis.filtering.CountFilter.split_by_reads" title="rnalysis.filtering.CountFilter.split_by_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_by_reads</span></code></a>([threshold])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html#rnalysis.filtering.CountFilter.split_by_reads" title="rnalysis.filtering.CountFilter.split_by_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_by_reads</span></code></a>([threshold])</p></td>
 <td><p>Splits the features in the current CountFilter object into two complementary, non-overlapping CountFilter         objects, based on the their maximum expression level.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_hdbscan.html#rnalysis.filtering.CountFilter.split_hdbscan" title="rnalysis.filtering.CountFilter.split_hdbscan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_hdbscan</span></code></a>([…])</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_hdbscan.html#rnalysis.filtering.CountFilter.split_hdbscan" title="rnalysis.filtering.CountFilter.split_hdbscan"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_hdbscan</span></code></a>([…])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param min_cluster_size</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmeans.html#rnalysis.filtering.CountFilter.split_kmeans" title="rnalysis.filtering.CountFilter.split_kmeans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_kmeans</span></code></a>(k[, random_state, …])</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmeans.html#rnalysis.filtering.CountFilter.split_kmeans" title="rnalysis.filtering.CountFilter.split_kmeans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_kmeans</span></code></a>(k[, random_state, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param k</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmedoids.html#rnalysis.filtering.CountFilter.split_kmedoids" title="rnalysis.filtering.CountFilter.split_kmedoids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_kmedoids</span></code></a>(k[, …])</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmedoids.html#rnalysis.filtering.CountFilter.split_kmedoids" title="rnalysis.filtering.CountFilter.split_kmedoids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.split_kmedoids</span></code></a>(k[, …])</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param k</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html#rnalysis.filtering.CountFilter.symmetric_difference" title="rnalysis.filtering.CountFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.symmetric_difference</span></code></a>(other[, …])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html#rnalysis.filtering.CountFilter.symmetric_difference" title="rnalysis.filtering.CountFilter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.symmetric_difference</span></code></a>(other[, …])</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second,         but NOT in both (set symmetric difference).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html#rnalysis.filtering.CountFilter.tail" title="rnalysis.filtering.CountFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.tail</span></code></a>([n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.tail.html#rnalysis.filtering.CountFilter.tail" title="rnalysis.filtering.CountFilter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.tail</span></code></a>([n])</p></td>
 <td><p>Return the last n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.text_filters.html#rnalysis.filtering.CountFilter.text_filters" title="rnalysis.filtering.CountFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.text_filters</span></code></a>(column, operator, value)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.text_filters.html#rnalysis.filtering.CountFilter.text_filters" title="rnalysis.filtering.CountFilter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.text_filters</span></code></a>(column, operator, value)</p></td>
 <td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.union.html#rnalysis.filtering.CountFilter.union" title="rnalysis.filtering.CountFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.union</span></code></a>(*others[, return_type])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.union.html#rnalysis.filtering.CountFilter.union" title="rnalysis.filtering.CountFilter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.union</span></code></a>(*others[, return_type])</p></td>
 <td><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.violin_plot.html#rnalysis.filtering.CountFilter.violin_plot" title="rnalysis.filtering.CountFilter.violin_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.violin_plot</span></code></a>([samples, ylabel])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.violin_plot.html#rnalysis.filtering.CountFilter.violin_plot" title="rnalysis.filtering.CountFilter.violin_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.violin_plot</span></code></a>([samples, ylabel])</p></td>
 <td><p>Generates a violin plot of the specified samples in the CountFilter object in log10 scale.</p></td>
 </tr>
 </tbody>

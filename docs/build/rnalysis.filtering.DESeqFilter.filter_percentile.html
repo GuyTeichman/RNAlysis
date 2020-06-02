@@ -39,7 +39,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.DESeqFilter.filter_significant" href="rnalysis.filtering.DESeqFilter.filter_significant.html" />
-    <link rel="prev" title="rnalysis.filtering.DESeqFilter.filter_fold_change_direction" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html" /> 
+    <link rel="prev" title="rnalysis.filtering.DESeqFilter.filter_missing_values" href="rnalysis.filtering.DESeqFilter.filter_missing_values.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -118,6 +118,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html">rnalysis.filtering.DESeqFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_attribute.html">rnalysis.filtering.DESeqFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html">rnalysis.filtering.DESeqFilter.filter_fold_change_direction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_missing_values.html">rnalysis.filtering.DESeqFilter.filter_missing_values</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.DESeqFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html">rnalysis.filtering.DESeqFilter.filter_significant</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html">rnalysis.filtering.DESeqFilter.filter_top_n</a></li>
@@ -232,13 +233,13 @@
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only the rows whose value in the column &#39;log2FoldChange&#39; is below the 75th percentile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only the rows vulse value in the column &#39;log2FoldChange&#39; is above the 25th percentile</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
@@ -261,7 +262,7 @@
         <a href="rnalysis.filtering.DESeqFilter.filter_significant.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter.filter_significant" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html" class="btn btn-neutral float-left" title="rnalysis.filtering.DESeqFilter.filter_fold_change_direction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="rnalysis.filtering.DESeqFilter.filter_missing_values.html" class="btn btn-neutral float-left" title="rnalysis.filtering.DESeqFilter.filter_missing_values" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

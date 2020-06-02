@@ -14,6 +14,7 @@ rnalysis.enrichment
     :toctree: .
     
     FeatureSet
+    RankedSet
 
 
 

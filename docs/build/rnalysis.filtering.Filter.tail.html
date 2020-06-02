@@ -117,6 +117,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html">rnalysis.filtering.Filter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html">rnalysis.filtering.Filter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
@@ -225,7 +226,7 @@
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 <span class="go">                   baseMean  log2FoldChange  ...        pvalue          padj</span>
 <span class="go">WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78</span>

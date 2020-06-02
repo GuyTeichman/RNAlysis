@@ -112,10 +112,11 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes.html">rnalysis.enrichment.FeatureSet.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.change_set_name.html">rnalysis.enrichment.FeatureSet.change_set_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_hypergeometric.html">rnalysis.enrichment.FeatureSet.enrich_hypergeometric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization.html">rnalysis.enrichment.FeatureSet.enrich_randomization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization_parallel.html">rnalysis.enrichment.FeatureSet.enrich_randomization_parallel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_statistic.html">rnalysis.enrichment.FeatureSet.enrich_statistic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html">rnalysis.enrichment.FeatureSet.save_txt</a></li>
@@ -123,6 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html">rnalysis.enrichment.FeatureSet.union</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.venn_diagram.html">rnalysis.enrichment.venn_diagram</a></li>
 </ul>
@@ -200,20 +202,20 @@
 <h1>rnalysis.enrichment.FeatureSet.intersection<a class="headerlink" href="#rnalysis-enrichment-featureset-intersection" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="rnalysis.enrichment.FeatureSet.intersection">
-<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">others</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.intersection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">FeatureSet.</code><code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">others</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.intersection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><em>set</em><em> or </em><em>str</em>) – The objects against which the current object will be compared.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), modifies the current instance of FeatureSet.         If False, returns a new instance of FeatureSet.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet" title="rnalysis.enrichment.RankedSet"><em>RankedSet</em></a><em> or </em><em>set</em>) – The objects against which the current object will be compared.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>if inplace is False, returns a new instance of FeatureSet.</p>
+<dd class="field-even"><p>a new FeatureSet with elements common to this FeatureSet and all other objects.</p>
 </dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">FeatureSet</a></p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">})</span>

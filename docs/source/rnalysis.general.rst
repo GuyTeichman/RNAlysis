@@ -15,17 +15,13 @@ rnalysis.general
 .. autosummary::
     :toctree: .
     
-    load_csv
-    
     parse_gene_name_string
     
     parse_sequence_name_string
     
     parse_wbgene_string
     
-    read_attr_ref_table_path
-    
-    read_biotype_ref_table_path
+    print_settings_file
     
     reset_settings_file
     

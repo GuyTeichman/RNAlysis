@@ -17,10 +17,11 @@ rnalysis.enrichment.FeatureSet
     :toctree: .
     
     FeatureSet.biotypes
+    FeatureSet.change_set_name
     FeatureSet.difference
-    FeatureSet.enrich_hypergeometric
     FeatureSet.enrich_randomization
     FeatureSet.enrich_randomization_parallel
+    FeatureSet.enrich_statistic
     FeatureSet.go_enrichment
     FeatureSet.intersection
     FeatureSet.save_txt

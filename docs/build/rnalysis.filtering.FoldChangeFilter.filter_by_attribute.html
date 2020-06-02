@@ -120,6 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html">rnalysis.filtering.FoldChangeFilter.filter_biotype</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
@@ -232,33 +233,33 @@
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attribute &#39;attribute1&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">(</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
 <span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to the attributes &#39;attribute1&#39; OR &#39;attribute3&#39; (union)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
 <span class="go">Filtered 14 features, leaving 8 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that belong to both attributes &#39;attribute1&#39; AND &#39;attribute3&#39; (intersection)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
 <span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
 <span class="go">Filtered 19 features, leaving 3 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to either &#39;attribute1&#39;,&#39;attribute3&#39; or both</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span>
 <span class="gp">... </span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">Filtered 8 features, leaving 14 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that DON&#39;T belong to both &#39;attribute1&#39; AND &#39;attribute3&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute3&#39;</span><span class="p">],</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;intersection&#39;</span><span class="p">,</span>
 <span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

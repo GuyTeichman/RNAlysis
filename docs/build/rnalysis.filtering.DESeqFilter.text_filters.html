@@ -118,6 +118,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html">rnalysis.filtering.DESeqFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_attribute.html">rnalysis.filtering.DESeqFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_fold_change_direction.html">rnalysis.filtering.DESeqFilter.filter_fold_change_direction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_missing_values.html">rnalysis.filtering.DESeqFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_percentile.html">rnalysis.filtering.DESeqFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html">rnalysis.filtering.DESeqFilter.filter_significant</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html">rnalysis.filtering.DESeqFilter.filter_top_n</a></li>
@@ -216,7 +217,7 @@
 <h1>rnalysis.filtering.DESeqFilter.text_filters<a class="headerlink" href="#rnalysis-filtering-deseqfilter-text-filters" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="rnalysis.filtering.DESeqFilter.text_filters">
-<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">text_filters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">operator</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.text_filters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">DESeqFilter.</code><code class="sig-name descname">text_filters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">column</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">operator</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.text_filters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -233,7 +234,7 @@
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/text_filters.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/text_filters.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows that have a value that starts with &#39;AC3&#39; in the column &#39;name&#39;.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">filt</span><span class="o">.</span><span class="n">text_filters</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;sw&#39;</span><span class="p">,</span><span class="s1">&#39;AC3&#39;</span><span class="p">)</span>
 <span class="go">Filtered 17 features, leaving 5 of the original 22 features. Filtered inplace.</span>

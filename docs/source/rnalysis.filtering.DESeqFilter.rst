@@ -23,6 +23,7 @@ rnalysis.filtering.DESeqFilter
     DESeqFilter.filter_biotype
     DESeqFilter.filter_by_attribute
     DESeqFilter.filter_fold_change_direction
+    DESeqFilter.filter_missing_values
     DESeqFilter.filter_percentile
     DESeqFilter.filter_significant
     DESeqFilter.filter_top_n

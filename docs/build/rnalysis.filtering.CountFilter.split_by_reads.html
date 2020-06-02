@@ -120,6 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html">rnalysis.filtering.CountFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html">rnalysis.filtering.CountFilter.filter_by_row_sum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html">rnalysis.filtering.CountFilter.filter_low_reads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html">rnalysis.filtering.CountFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html">rnalysis.filtering.CountFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html">rnalysis.filtering.CountFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html">rnalysis.filtering.CountFilter.fold_change</a></li>
@@ -243,7 +244,7 @@
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">low_expr</span><span class="p">,</span><span class="n">high_expr</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">split_by_reads</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">Filtered 6 features, leaving 16 of the original 22 features. Filtering result saved to new object.</span>
 <span class="go">Filtered 16 features, leaving 6 of the original 22 features. Filtering result saved to new object.</span>

@@ -21,6 +21,7 @@ rnalysis.filtering.Filter
     Filter.difference
     Filter.filter_biotype
     Filter.filter_by_attribute
+    Filter.filter_missing_values
     Filter.filter_percentile
     Filter.filter_top_n
     Filter.head

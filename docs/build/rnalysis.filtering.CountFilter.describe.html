@@ -120,6 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html">rnalysis.filtering.CountFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html">rnalysis.filtering.CountFilter.filter_by_row_sum</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html">rnalysis.filtering.CountFilter.filter_low_reads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html">rnalysis.filtering.CountFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html">rnalysis.filtering.CountFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html">rnalysis.filtering.CountFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html">rnalysis.filtering.CountFilter.fold_change</a></li>
@@ -229,7 +230,7 @@
 <h1>rnalysis.filtering.CountFilter.describe<a class="headerlink" href="#rnalysis-filtering-countfilter-describe" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt id="rnalysis.filtering.CountFilter.describe">
-<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentiles</span><span class="p">:</span> <span class="n">list</span> <span class="o">=</span> <span class="default_value">0.01, 0.25, 0.5, 0.75, 0.99</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.describe" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">CountFilter.</code><code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentiles</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>list<span class="p">, </span>Tuple<span class="p">, </span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">0.01, 0.25, 0.5, 0.75, 0.99</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.describe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.         For more information see the documentation of pandas.DataFrame.describe.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -243,7 +244,8 @@
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
 <span class="go">              cond1         cond2         cond3         cond4</span>
 <span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
@@ -259,7 +261,7 @@
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># show the deciles (10%, 20%, 30%... 90%) of the columns</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="n">decile</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">decile</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
 <span class="go">              cond1         cond2         cond3         cond4</span>
 <span class="go">count     22.000000     22.000000     22.000000     22.000000</span>
 <span class="go">mean    2515.590909   2209.227273   4230.227273   3099.818182</span>

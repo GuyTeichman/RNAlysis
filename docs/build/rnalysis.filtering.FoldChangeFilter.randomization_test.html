@@ -120,6 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html">rnalysis.filtering.FoldChangeFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
@@ -216,52 +217,26 @@
 <dl class="py method">
 <dt id="rnalysis.filtering.FoldChangeFilter.randomization_test">
 <code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">randomization_test</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.randomization_test" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Perform a randomization test to examine whether the fold change of a group of specific genomic features         is significantly different than the fold change of a background set of genomic features.</p>
-<dl class="field-list simple">
-<dt class="field-odd">type ref</dt>
-<dd class="field-odd"><p>FoldChangeFilter</p>
+<dd><p>Perform a randomization test to examine whether the fold change of a group of specific genomic features         is significantly different than the fold change of a background set of genomic features.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> (<a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter"><em>FoldChangeFilter</em></a>) – A reference FoldChangeFilter object which contains the fold change for every reference gene.         Will be used to calculate the expected score and to perform randomizations.</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – Indicates the threshold for significance (alpha).</p></li>
+<li><p><strong>reps</strong> (<em>int larger than 0</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
+</ul>
 </dd>
-<dt class="field-even">param ref</dt>
-<dd class="field-even"><p>A reference FoldChangeFilter object which contains the fold change for every reference gene.         Will be used to calculate the expected score and to perform randomizations.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas DataFrame</p>
 </dd>
-<dt class="field-odd">type alpha</dt>
-<dd class="field-odd"><p>float between 0 and 1</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A Dataframe with the number of given genes, the observed fold change for the given group of genes,         the expected fold change for a group of genes of that size and the p value for the comparison.</p>
 </dd>
-<dt class="field-even">param alpha</dt>
-<dd class="field-even"><p>Indicates the threshold for significance (alpha).</p>
-</dd>
-<dt class="field-odd">type reps</dt>
-<dd class="field-odd"><p>int larger than 0</p>
-</dd>
-<dt class="field-even">param reps</dt>
-<dd class="field-even"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
-</dd>
-<dt class="field-odd">type save_csv</dt>
-<dd class="field-odd"><p>bool, default False</p>
-</dd>
-<dt class="field-even">param save_csv</dt>
-<dd class="field-even"><p>If True, will save the results to a .csv file, under the name specified in ‘fname’.</p>
-</dd>
-<dt class="field-odd">type fname</dt>
-<dd class="field-odd"><p>str or pathlib.Path</p>
-</dd>
-<dt class="field-even">param fname</dt>
-<dd class="field-even"><p>The full path and name of the file to which to save the results. For example:         r’C:dir</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl>
-<dt>ile’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</dt><dd><dl class="field-list">
-<dt class="field-odd">rtype</dt>
-<dd class="field-odd"><p>pandas DataFrame</p>
-</dd>
-<dt class="field-even">return</dt>
-<dd class="field-even"><p>A Dataframe with the number of given genes, the observed fold change for the given group of genes,         the expected fold change for a group of genes of that size and the p value for the comparison.</p>
-</dd>
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/fc_1.csv&#39;</span> <span class="p">,</span> <span class="s1">&#39;numerator&#39;</span> <span class="p">,</span> <span class="s1">&#39;denominator&#39;</span><span class="p">)</span>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">FoldChangeFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/fc_1.csv&#39;</span> <span class="p">,</span> <span class="s1">&#39;numerator&#39;</span> <span class="p">,</span> <span class="s1">&#39;denominator&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f_background</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1">#keep only protein-coding genes as reference</span>
 <span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">f_test</span> <span class="o">=</span> <span class="n">f_background</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">(</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -273,8 +248,6 @@
 </pre></div>
 </div>
 <p>[1 rows x 5 columns]</p>
-</dd>
-</dl>
 </dd>
 </dl>
 </dd></dl>

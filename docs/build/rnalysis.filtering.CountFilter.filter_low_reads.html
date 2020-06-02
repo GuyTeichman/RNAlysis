@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.CountFilter.filter_percentile" href="rnalysis.filtering.CountFilter.filter_percentile.html" />
+    <link rel="next" title="rnalysis.filtering.CountFilter.filter_missing_values" href="rnalysis.filtering.CountFilter.filter_missing_values.html" />
     <link rel="prev" title="rnalysis.filtering.CountFilter.filter_by_row_sum" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html" /> 
 </head>
 
@@ -120,6 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html">rnalysis.filtering.CountFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_row_sum.html">rnalysis.filtering.CountFilter.filter_by_row_sum</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.filter_low_reads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html">rnalysis.filtering.CountFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_percentile.html">rnalysis.filtering.CountFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_top_n.html">rnalysis.filtering.CountFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.fold_change.html">rnalysis.filtering.CountFilter.fold_change</a></li>
@@ -244,7 +245,7 @@
 </dd>
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">filter_low_reads</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="c1"># remove all rows whose values in all columns are all &lt;5</span>
 <span class="go">Filtered 6 features, leaving 16 of the original 22 features. Filtered inplace.</span>
 </pre></div>
@@ -263,7 +264,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.filtering.CountFilter.filter_percentile.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.filter_percentile" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.filtering.CountFilter.filter_missing_values.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.filter_missing_values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="rnalysis.filtering.CountFilter.filter_by_row_sum.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.filter_by_row_sum" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

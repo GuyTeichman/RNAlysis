@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.enrichment.FeatureSet.difference" href="rnalysis.enrichment.FeatureSet.difference.html" />
+    <link rel="next" title="rnalysis.enrichment.FeatureSet.change_set_name" href="rnalysis.enrichment.FeatureSet.change_set_name.html" />
     <link rel="prev" title="rnalysis.enrichment.FeatureSet" href="rnalysis.enrichment.FeatureSet.html" /> 
 </head>
 
@@ -112,10 +112,11 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.change_set_name.html">rnalysis.enrichment.FeatureSet.change_set_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_hypergeometric.html">rnalysis.enrichment.FeatureSet.enrich_hypergeometric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization.html">rnalysis.enrichment.FeatureSet.enrich_randomization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization_parallel.html">rnalysis.enrichment.FeatureSet.enrich_randomization_parallel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_statistic.html">rnalysis.enrichment.FeatureSet.enrich_statistic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html">rnalysis.enrichment.FeatureSet.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html">rnalysis.enrichment.FeatureSet.save_txt</a></li>
@@ -123,6 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html">rnalysis.enrichment.FeatureSet.union</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.venn_diagram.html">rnalysis.enrichment.venn_diagram</a></li>
 </ul>
@@ -208,7 +210,7 @@
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
 <span class="go">                gene</span>
@@ -232,7 +234,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="rnalysis.enrichment.FeatureSet.difference.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.FeatureSet.difference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="rnalysis.enrichment.FeatureSet.change_set_name.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.FeatureSet.change_set_name" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="rnalysis.enrichment.FeatureSet.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
