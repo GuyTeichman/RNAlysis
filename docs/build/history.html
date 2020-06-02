@@ -207,12 +207,15 @@
 <div class="section" id="id1">
 <h2>1.4.0 (2020-??-??)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>This version introduces Pipelines - a quicker and more convenient way to apply a similar analysis pipeline to multiple Filter objects.</p></li>
+<li><p>This version introduces many new ways to perform enrichment analysis and to visualize your results. Moreover, this version introduces Pipelines - a quicker and more convenient way to apply a similar analysis pipeline to multiple Filter objects.</p></li>
+<li><p>This version includes changes to names and signatures of some functions in the module, as elaborated below.</p></li>
 </ul>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.</p></li>
+<li><p>Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis</p></li>
+<li><p>Added RankedSet.enrich_single_list(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see <a class="reference external" href="https://dx.doi.org/10.1371/journal.pcbi.0030039">Eden et al. (PLoS Comput Biol, 2007)</a>  and <a class="reference external" href="https://dx.doi.org/10.1371/journal.pone.0143196">Wagner (PLoS One, 2015)</a> ).</p></li>
 <li><p>Added more visualization functions, such CountFilter.enhanced_box_plot().</p></li>
 <li><p>Added FeatureSet.change_set_name(), to give a new ‘set_name’ to a FeatureSet object.</p></li>
 </ul>
@@ -315,7 +318,7 @@
 <li><p>Settings are now saved in a .yaml format. Reading and writing of settings have been modified.</p></li>
 <li><p>Changed argument name ‘deseq_highlight’ to ‘highlight’ in scatter_sample_vs_sample(). It can now accept any Filter object.</p></li>
 <li><p>Updated documentation and default ‘mode’ value for FeatureSet.go_enrichment().</p></li>
-<li><p>Updated the signature and function of utils.load_csv() to be clearer and more predictable.</p></li>
+<li><p>Updated the signature and function of general.load_csv() to be clearer and more predictable.</p></li>
 <li><p>Changed argument names in CountFilter.from_folder().</p></li>
 <li><p>Modified names and signatures of .csv test files functions to make them more comprehensible.</p></li>
 <li><p>Renamed ‘Filter.filter_by_ref_table_attr()’ to ‘Filter.filter_by_attribute()’.</p></li>
