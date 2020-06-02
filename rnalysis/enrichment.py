@@ -620,8 +620,8 @@ class FeatureSet:
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
-        and 'pvalue'; and a matplotlib Figure, if 'return_figure' is set to True.
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
 
        .. figure::  enrichment_randomization.png
           :align:   center
@@ -712,8 +712,8 @@ class FeatureSet:
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
-        and 'pvalue'; and a matplotlib Figure, if 'return_figure' is set to True.
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure::  enrichment_randomization.png
            :align:   center
@@ -796,8 +796,8 @@ class FeatureSet:
         :type return_fig: bool (default False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
-        :return:         a pandas DataFrame with the indicated attribute names as rows/index, and the columns 'log2_fold_enrichment'
-        and 'pvalue'; and a matplotlib Figure, if 'return_figure' is set to True.
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure::  enrichment_randomization.png
            :align:   center
@@ -1003,6 +1003,43 @@ class RankedSet(FeatureSet):
     def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                            attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
                            return_fig: bool = False):
+        """
+        Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
+        WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
+        `Prof. Zohar Yakhini and colleagues <https://dx.doi.org/10.1371/journal.pcbi.0030039/>`_ \
+         and generalized by \
+         `Florian Wagner <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/>`_). \
+        The attributes are drawn from an Attribute Reference Table. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a \
+        randomization test with the formula p = (successes + 1)/(repeats + 1). \
+        This formula results in a positively-biased estimator of the real p-value \
+        (a conservative estimate of p-value). When the number of reps approaches infinity, \
+        the formula results in an unbiased estimator of the real p-value. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        appears with the smallest value in the scale.
+
+        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
+        :param attributes: An iterable of attribute names or attribute numbers \
+        (according to their order in the Attribute Reference Table). \
+        If 'all', all of the attributes in the Attribute Reference Table will be used. \
+        If None, a manual input prompt will be raised.
+        :type fdr: float between 0 and 1
+        :param fdr: Indicates the FDR threshold for significance.
+        :type attr_ref_path: str or pathlib.Path (default 'predefined')
+        :param attr_ref_path: path of the Attribute Reference Table from which user-defined attributes will be drawn.
+        :type save_csv: bool, default False
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :type return_fig: bool (default False)
+        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
+        """
         attr_ref_df, gene_set, attributes = self._enrichment_setup(biotype='all', background_genes=None,
                                                                    attr_ref_path=attr_ref_path, biotype_ref_path='',
                                                                    attributes=attributes)
