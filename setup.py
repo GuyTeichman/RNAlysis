@@ -13,7 +13,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = ['numpy>=1.18.1', 'pandas>=1.0.1', 'matplotlib', 'seaborn>=0.10.0', 'tissue_enrichment_analysis', 'statsmodels',
                 'scikit-learn>=0.22', 'ipyparallel', 'grid_strategy', 'pyyaml', 'UpSetPlot', 'matplotlib-venn', 'scipy',
-                'goatools', 'wget', 'hdbscan>=0.8', 'scikit-learn-extra']
+                'goatools', 'wget', 'hdbscan>=0.8', 'scikit-learn-extra', 'xlmhg>=2.5.4']
 
 setup_requirements = ['pytest-runner', ]
 

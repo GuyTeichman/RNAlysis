@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 from pathlib import Path
 import statsmodels.stats.multitest as multitest
+from xlmhg import get_xlmhg_test_result as xlmhg_test
 from ipyparallel import Client
 from itertools import repeat, compress
 import upsetplot as upset
@@ -970,6 +971,129 @@ class FeatureSet:
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
             ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': 'not_in_biotype_reference'}))
         return ref_df.set_index('gene', drop=False).loc[self.gene_set].groupby('biotype').count()
+
+
+class RankedSet(FeatureSet):
+    __slots__ = {'ranked_genes': 'a vector of feature names/indices ordered by rank'}
+
+    def __init__(self, ranked_genes: Union[filtering.Filter, List[str], Tuple[str], np.ndarray], set_name: str = ''):
+
+        if issubclass(ranked_genes.__class__, filtering.Filter):
+            self.ranked_genes = ranked_genes.df.index.values.astype('str', copy=True)
+        elif isinstance(ranked_genes, (list, tuple)):
+            self.ranked_genes = np.array(ranked_genes, dtype='str')
+        elif isinstance(ranked_genes, np.ndarray):
+            self.ranked_genes = ranked_genes.astype('str', copy=True)
+        elif isinstance(ranked_genes, set):
+            raise TypeError("'ranked_genes' must be an array, list, tuple or Filter object, sorted by rank. "
+                            "Python sets are not a valid type ofr 'ranked_genes'.")
+        elif isinstance(ranked_genes, dict):
+            raise TypeError("Generating a RankedSet from a dictionary is not implemented yet.")
+        else:
+            raise TypeError(f"'ranked_genes' must be an array, list, tuple or Filter object, sorted by rank. "
+                            f"Instead got {type(ranked_genes)}.")
+
+        super().__init__(ranked_genes, set_name)
+        assert len(self.ranked_genes) == len(self.gene_set), f"'ranked_genes' must have no repeating elements!"
+
+    def _set_ops(self, others, op: Callable):
+        warnings.warn("Warning: when performing set operations with RankedSet objects, "
+                      "the return type will always be FeatureSet and not RankedSet.")
+        super()._set_ops(others, op)
+
+    def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
+                           attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
+                           return_fig: bool = False):
+        attr_ref_df, gene_set, attributes = self._enrichment_setup(biotype='all', background_genes=None,
+                                                                   attr_ref_path=attr_ref_path, biotype_ref_path='',
+                                                                   attributes=attributes)
+        if len(gene_set) == len(self.ranked_genes):
+            ranked_genes = self.ranked_genes
+        else:
+            ranked_genes = np.empty((len(gene_set),), dtype=self.ranked_genes.dtype)
+            i = 0
+            for elem in self.ranked_genes:
+                if elem in gene_set:
+                    ranked_genes[i] = elem
+                    i += 1
+
+        enriched_list = []
+        for k, attribute in enumerate(attributes):
+            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
+            pval, en_score = self._calc_xlmhg_stats(self._xlmhg_index_vector(ranked_genes, attribute, attr_ref_df),
+                                                    len(ranked_genes))
+            log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
+            enriched_list.append([attribute, len(ranked_genes), log2_en_score, pval])
+            print(f"Finished {k + 1} attributes out of {len(attributes)}")
+
+        return self._xlmhg_output(enriched_list, fdr, save_csv, fname, return_fig)
+
+    def _xlmhg_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, return_fig: bool):
+        """
+        Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
+        plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
+        Called at the end of enrich_single_list().
+
+        """
+        en_score_col = 'log2_enrichment_score'
+        res_df = pd.DataFrame(enriched_list,
+                              columns=['name', 'samples', en_score_col, 'pval'])
+        res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_enrichment_score'].values)))
+        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
+        res_df['padj'] = padj
+        res_df['significant'] = significant
+        res_df.set_index('name', inplace=True)
+
+        if save_csv:
+            self._enrichment_save_csv(res_df, fname)
+
+        fig = self._plot_enrichment_results(res_df, en_score_col=en_score_col,
+                                            title=f"Single-list enrichment for {self.set_name}",
+                                            ylabel=r"$\log_2$(XL-mHG enrichment score)")
+        if return_fig:
+            return res_df, fig
+        return res_df
+
+    @staticmethod
+    def _calc_xlmhg_stats(index_vec: np.ndarray, ranked_genes_len: int):
+        index_vec = np.uint16(index_vec)
+        rev_index_vec = np.uint16([ranked_genes_len - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
+        # escore_pval_thresh = the alpha threshold for XL-mHG enrichment score.
+        # Smaller alpha values result in more conservative (potentially too conservative) values of enrichment score,
+        # while larger alpha values can reduce the robustness of the estimate (due to estimating small values of n).
+        escore_alpha = 0.05
+        # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all of the positive
+        # elements in the ranked set. Determined to be the minimum between x_min and ceil(x_frac * k),
+        # where 'k' is the number of 'positive' elements in the ranked set.
+        x_frac = 0.25
+        x_min = 5
+        # L = the lowest possible cutoff (n) to be tested out of the entire list.
+        # Determined to be floor(l_frac * N), where 'N' is total number of elements in the ranked set (ranked_genes_len).
+        l_frac = 0.25
+        # pre-allocate empty array to speed up computation
+        table = np.empty((len(index_vec) + 1, ranked_genes_len - len(index_vec) + 1), dtype=np.longdouble)
+        res_obj_fwd = xlmhg_test(N=ranked_genes_len, indices=index_vec, L=int(np.floor(l_frac * ranked_genes_len)),
+                                 X=min(x_min, int(np.ceil(x_frac * len(index_vec)))), table=table)
+        res_obj_rev = xlmhg_test(N=ranked_genes_len, indices=rev_index_vec, L=int(np.floor(l_frac * ranked_genes_len)),
+                                 X=min(x_min, int(np.ceil(x_frac * len(index_vec)))), table=table)
+
+        if res_obj_fwd.pval <= res_obj_rev.pval:
+            pval, en_score = res_obj_fwd.pval, res_obj_fwd.escore
+        else:
+            pval, en_score = res_obj_rev.pval, 1 / res_obj_rev.escore
+        pval = pval if not np.isnan(pval) else 1
+        en_score = en_score if not np.isnan(en_score) else 1
+        return pval, en_score
+
+    @staticmethod
+    def _xlmhg_index_vector(ranked_genes, attribute, attr_ref_df):
+        ranked_srs = attr_ref_df.loc[ranked_genes, attribute]
+        assert ranked_srs.shape[0] == len(ranked_genes)
+        return np.uint16(np.nonzero(ranked_srs.notna().values)[0])
+
+    @staticmethod
+    def _plot_xlmhg_enrichment(results_df: pd.DataFrame, title: str):
+        pass
 
 
 def _fetch_sets(objs: dict, ref: str = 'predefined'):
