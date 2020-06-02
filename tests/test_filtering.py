@@ -34,7 +34,7 @@ def test_foldchangefilter_api():
 def test_filter_contains():
     objs = [Filter('test_files/test_deseq.csv'), CountFilter('test_files/counted.csv'),
             DESeqFilter('test_files/counted.csv'), FoldChangeFilter('test_files/fc_1.csv', 'num', 'denom')]
-    neither = ['WBGene'+str(i) for i in range(10)]
+    neither = ['WBGene' + str(i) for i in range(10)]
     for obj in objs:
         for ind in obj.df.index:
             assert ind in obj
@@ -687,20 +687,6 @@ def test_htcount_fold_change():
     assert np.all(np.isclose(fc.df, truth))
 
 
-def test_fc_randomization():
-    truth = general.load_csv('test_files/fc_randomization_truth.csv')
-    fc1 = FoldChangeFilter("test_files/fc_1.csv", 'a', 'b')
-    fc2 = FoldChangeFilter("test_files/fc_2.csv", "c", "d")
-    random_state = np.random.get_state()
-    res = fc1.randomization_test(fc2)
-
-    try:
-        assert np.all(truth['significant'] == res['significant'])
-        assert np.isclose(truth.iloc[:, :-1], res.iloc[:, :-1]).all()
-    except AssertionError:
-        raise AssertionError(f'Enrichment test failed with the numpy.random state: \n{random_state}')
-
-
 def test_fcfilter_filter_abs_fc():
     truth = general.load_csv('test_files/fcfilter_abs_fold_change_truth.csv', 0)
     truth = truth.squeeze()
@@ -910,6 +896,56 @@ def test_sort_descending():
     assert c.df['cond3'].is_monotonic_decreasing
 
 
+def test_filter_missing_values():
+    truth = general.load_csv('test_files/test_deseq_with_nan_all_removed.csv', 0)
+    f = Filter('test_files/test_deseq_with_nan.csv')
+    f.filter_missing_values()
+    assert np.all(f.df.sort_index() == truth.sort_index())
+
+
+def test_filter_missing_values_foldchangefilter():
+    truth = general.load_csv('test_files/fc_1_nan_removed.csv', 0, squeeze=True)
+    f = FoldChangeFilter('test_files/fc_1_nan.csv', 'num', 'denom')
+    f.filter_missing_values()
+    assert truth.equals(f.df)
+    with pytest.raises(AttributeError):
+        f.filter_missing_values('Fold Change')
+
+
+def test_filter_missing_values_one_columns():
+    truth = general.load_csv('test_files/test_deseq_with_nan_basemean_removed.csv', 0)
+    f = Filter('test_files/test_deseq_with_nan.csv')
+    f.filter_missing_values('baseMean')
+    print(f.df.sort_index())
+    print(truth.sort_index())
+    print(f.df.sort_index() == truth.sort_index())
+    assert truth.equals(f.df)
+
+
+def test_filter_missing_values_multiple_columns():
+    truth = general.load_csv('test_files/test_deseq_with_nan_basemean_pvalue_removed.csv', 0)
+    f = Filter('test_files/test_deseq_with_nan.csv')
+    f.filter_missing_values(['baseMean', 'pvalue'])
+    print(f.df.sort_index())
+    print(truth.sort_index())
+    print(f.df.sort_index() == truth.sort_index())
+    assert truth.equals(f.df)
+
+
+def test_filter_missing_values_invalid_type():
+    f = Filter('test_files/test_deseq_with_nan.csv')
+    with pytest.raises(TypeError):
+        f.filter_missing_values(columns={'baseMean': True, 'log2FolgChange': False})
+
+
+def test_filter_missing_values_nonexistent_column():
+    f = Filter('test_files/test_deseq_with_nan.csv')
+    with pytest.raises(AssertionError):
+        f.filter_missing_values('pval')
+    with pytest.raises(AssertionError):
+        f.filter_missing_values(['padj', 'pval'])
+
+
 def test_pipeline_api():
     pl = Pipeline()
 
@@ -1100,3 +1136,17 @@ def test_silhouette_method():
 
 def test_parse_k():
     assert False
+
+
+def test_fc_randomization():
+    truth = general.load_csv('test_files/fc_randomization_truth.csv')
+    fc1 = FoldChangeFilter("test_files/fc_1.csv", 'a', 'b')
+    fc2 = FoldChangeFilter("test_files/fc_2.csv", "c", "d")
+    random_state = np.random.get_state()
+    res = fc1.randomization_test(fc2)
+
+    try:
+        assert np.all(truth['significant'] == res['significant'])
+        assert np.isclose(truth.iloc[:, :-1], res.iloc[:, :-1]).all()
+    except AssertionError:
+        raise AssertionError(f'Enrichment test failed with the numpy.random state: \n{random_state}')

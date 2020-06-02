@@ -749,7 +749,7 @@ class Filter:
         else:
             raise ValueError(f'Invalid format "{return_format}"')
 
-    def number_filters(self, column: str, operator: str, value, opposite=False, inplace=True):
+    def number_filters(self, column: str, operator: str, value, opposite: bool = False, inplace: bool = True):
 
         """
         Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.
@@ -808,7 +808,7 @@ class Filter:
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def text_filters(self, column: str, operator: str, value: str, opposite=False, inplace=True):
+    def text_filters(self, column: str, operator: str, value: str, opposite: bool = False, inplace: bool = True):
 
         """
         Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.
@@ -856,6 +856,61 @@ class Filter:
             new_df = self.df[self.df[column].str.startswith(value)]
         else:
             raise KeyError(f"Problem with operator {operator} or key {op}. Please report to the developer. ")
+
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    def filter_missing_values(self, columns: Union[str, List[str]] = 'all', opposite: bool = False,
+                              inplace: bool = True):
+        """
+        Remove all rows whose values in the specified columns are missing (NaN).
+
+        :type columns: str or list of str (default 'all')
+        :param columns:name/names of the columns to check for missing values.
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new instance of the Filter object.
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> filt = filtering.Filter('tests/test_files/test_deseq_with_nan.csv')
+            >>> filt_no_nan = filt.filter_missing_values(inplace=False)
+            Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.
+            >>> filt_no_nan_basemean = filt.filter_missing_values(columns='baseMean', inplace=False)
+            Filtered 1 features, leaving 27 of the original 28 features. Filtering result saved to new object.
+            >>> filt_no_nan_basemean_pval = filt.filter_missing_values(columns=['baseMean','pval'], inplace=False)
+            Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
+
+        """
+        subset = None
+        suffix = '_removemissingvals'
+        if columns == 'all':
+            try:
+                if 'all' in self.columns:
+                    raise IndexError("Filter object contains a column named 'all'. RNAlysis cannot decide whether "
+                                     "to filter based on the column 'all' or based on all columns. ")
+            except AttributeError:
+                pass
+        elif isinstance(columns, str):
+            assert columns in self.columns, f"Column '{columns}' does not exist in the Filter object."
+            subset = [columns]
+            suffix += columns
+        elif isinstance(columns, (list, tuple, set, np.ndarray)):
+            for col in columns:
+                assert isinstance(col,str), f"Column name {col} is of type {type(col)} instead of str. "
+                assert col in self.columns, f"Column '{col}' does not exist in the Filter object."
+                suffix += col
+            subset = list(columns)
+        else:
+            raise TypeError(f"Invalid type for 'columns': {type(columns)}")
+        if subset is not None:
+            new_df = self.df.dropna(axis=0, subset=subset, inplace=False)
+        else:
+            new_df = self.df.dropna(axis=0, inplace=False)
 
         return self._inplace(new_df, opposite, inplace, suffix)
 

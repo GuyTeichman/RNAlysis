@@ -41,6 +41,7 @@ Fixed
 
 Added
 ******
+* Added Filter.filter_missing_values(), which can remove rows with NaN values in some (or all) columns.
 * Added the visualization function CountFilter.box_plot().
 
 Changed
