@@ -24,7 +24,7 @@ from typing import Union, List, Set, Dict, Iterable, Callable, Tuple
 
 
 class FeatureSet:
-    """ receives a filtered gene set and preforms various enrichment analyses"""
+    """ Receives a filtered gene set and the set's name (optional) and preforms various enrichment analyses on them. """
     __slots__ = {'gene_set': 'set of feature names/indices', 'set_name': 'name of the FeatureSet'}
     _go_dicts = {}
 
@@ -562,19 +562,19 @@ class FeatureSet:
                                       return_fig: bool = False, random_seed: int = None):
 
         """
-        Calculates enrichment scores, p-values and adjusted p-values \
-        for enrichment and depletion of selected attributes from an Attribute Reference Table using parallel processing. \
-        Background set is determined by either the input variable 'background_genes', \
-        or by the input variable 'biotype' and a Biotype Reference Table. \
+        Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
+        using a randomization test running in parallel. The attributes are drawn from an Attribute Reference Table. \
         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization. \
-        To use it you must first start a parallel session, using rnalysis.general.start_parallel_session(). \
-        P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
-        P-values are corrected for multiple comparisons using \
-        the Benjamini–Hochberg step-up procedure (original FDR method). \
-        Enrichment/depletion is determined automatically by the calculated enrichment score: \
-        if log2(enrichment score) is positive then enrichment is assumed, \
-        and if log2(enrichment score) is negative then depletion is assumed. \
-        In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        Results should otherwise be the same between the two functions. \
+        To use it you must first start a parallel session, using the function 'general.start_parallel_session()'. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a \
+        randomization test with the formula p = (successes + 1)/(repeats + 1). \
+        This formula results in a positively-biased estimator of the real p-value \
+        (a conservative estimate of p-value). When the number of reps approaches infinity, \
+        the formula results in an unbiased estimator of the real p-value. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
         :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
@@ -657,17 +657,16 @@ class FeatureSet:
                              save_csv: bool = False, fname=None, return_fig: bool = False, random_seed: int = None):
 
         """
-        Calculates enrichment scores, p-values and adjusted p-values \
-        for enrichment and depletion of selected attributes from an Attribute Reference Table. \
-        Background set is determined by either the input variable 'background_genes', \
-        or by the input variable 'biotype' and a Biotype Reference Table. \
-        P-values are calculated using a randomization test with the formula p = (successes + 1)/(repeats + 1). \
-        P-values are corrected for multiple comparisons using \
-        the Benjamini–Hochberg step-up procedure (original FDR method). \
-        Enrichment/depletion is determined automatically by the calculated enrichment score: \
-        if log2(enrichment score) is positive then enrichment is assumed, \
-        and if log2(enrichment score) is negative then depletion is assumed. \
-        In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
+        using a randomization test. The attributes are drawn from an Attribute Reference Table. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a \
+        randomization test with the formula p = (successes + 1)/(repeats + 1). \
+        This formula results in a positively-biased estimator of the real p-value \
+        (a conservative estimate of p-value). When the number of reps approaches infinity, \
+        the formula results in an unbiased estimator of the real p-value. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
         :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
@@ -746,11 +745,10 @@ class FeatureSet:
                          save_csv: bool = False, fname=None, return_fig: bool = False):
 
         """
-        Calculates enrichment scores, p-values and adjusted p-values \
-        for enrichment and depletion of selected attributes from an Attribute Reference Table, \
-        based on a hypergeometric test. \
-        Background set is determined by either the input variable 'background_genes', \
-        or by the input variable 'biotype' and a Biotype Reference Table. \
+        Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
+        using the Hypergeometric Test. The attributes are drawn from an Attribute Reference Table. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. \
         P-values are calculated using a hypergeometric test: \
         Given M genes in the background set, n genes in the test set, \
         with N genes from the background set belonging to a specific attribute (or 'success') \
@@ -758,12 +756,8 @@ class FeatureSet:
         If we were to randomly draw n genes from the background set (without replacement), \
         what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) \
         genes belonging to the given attribute? \
-        P-values are corrected for multiple comparisons using \
-        the Benjamini–Hochberg step-up procedure (original FDR method). \
-        Enrichment/depletion is determined automatically by the calculated enrichment score: \
-        if log2(enrichment score) is positive then enrichment is assumed, \
-        and if log2(enrichment score) is negative then depletion is assumed. \
-        In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
         appears with the smallest value in the scale.
 
         :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
@@ -974,6 +968,11 @@ class FeatureSet:
 
 
 class RankedSet(FeatureSet):
+    """
+    Receives a ranked gene set, sorted by any biologically-meaningful value (expression level, fold-change, etc)\
+     and preforms various enrichment analyses on them. \
+     ALl functions that can be applied to FeatureSet objects can also be applied to RankedSet objects.
+    """
     __slots__ = {'ranked_genes': 'a vector of feature names/indices ordered by rank'}
 
     def __init__(self, ranked_genes: Union[filtering.Filter, List[str], Tuple[str], np.ndarray], set_name: str = ''):
