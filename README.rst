@@ -1,17 +1,11 @@
 .. figure:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
-        :target: https://guyteichman.github.io/RNAlysis
+    :target: https://guyteichman.github.io/RNAlysis
+    :alt: logo
 
-.. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
-        :target: https://pypi.python.org/pypi/rnalysis
-.. |downloads| image:: https://pepy.tech/badge/rnalysis
-        :target: https://pepy.tech/project/rnalysis
-
-..  |travisci| image:: https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master
-    :target: https://travis-ci.org/GuyTeichman/RNAlysis
 
 **Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
 `Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
-`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |travisci| | |downloads|
+`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |versionssupported| | |travisci| | |downloads|
 
 ----
 
@@ -49,20 +43,24 @@ Dependencies
 * pandas
 * scipy
 * matplotlib
-* seaborn
-* tissue_enrichment_analysis
-* statsmodels
 * scikit-learn
+* hdbscan
+* scikit-learn-extra
+* seaborn
+* statsmodels
 * ipyparallel
 * grid_strategy
-* Distance
 * pyyaml
 * UpSetPlot
 * matplotlib-venn
+* tissue_enrichment_analysis
+* xlmhg
+* goatools
+* wget
 
 ----
 
-Where to get it
+How to get it
 ---------------
 Use the following command in the python prompt::
 
@@ -92,3 +90,19 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+
+
+
+.. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
+    :target: https://pypi.python.org/pypi/rnalysis
+    :alt: PyPI version
+.. |downloads| image:: https://pepy.tech/badge/rnalysis
+    :target: https://pepy.tech/project/rnalysis
+    :alt: downloads
+.. |versionssupported| image:: https://img.shields.io/pypi/pyversions/RNAlysis.svg
+    :target: https://pypi.python.org/pypi/rnalysis
+    :alt: Python versions supported
+
+..  |travisci| image:: https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master
+    :target: https://travis-ci.org/GuyTeichman/RNAlysis
+    :alt: Travis-CI build status

@@ -6,14 +6,14 @@
 RNAlysis |release| documentation
 ===================================
 
-.. figure:: logo.png
-        :target: https://guyteichman.github.io/RNAlysis
-
-.. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
-        :target: https://pypi.python.org/pypi/rnalysis
+.. figure:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
+    :target: https://guyteichman.github.io/RNAlysis
+    :alt: logo
 
 
-**Useful links:** `Current version <https://pypi.python.org/pypi/rnalysis>`_ |pipimage| | `Documentation <https://guyteichman.github.io/RNAlysis>`_ | `Source code <https://github.com/GuyTeichman/RNAlysis>`_ | `Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_
+**Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
+`Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
+`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |versionssupported| | |travisci| | |downloads|
 
 ----
 
@@ -55,3 +55,18 @@ Indices and tables:
 -------------------
 * :ref:`genindex`
 * :ref:`modindex`
+
+
+.. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg
+    :target: https://pypi.python.org/pypi/rnalysis
+    :alt: PyPI version
+.. |downloads| image:: https://pepy.tech/badge/rnalysis
+    :target: https://pepy.tech/project/rnalysis
+    :alt: downloads
+.. |versionssupported| image:: https://img.shields.io/pypi/pyversions/RNAlysis.svg
+    :target: https://pypi.python.org/pypi/rnalysis
+    :alt: Python versions supported
+
+..  |travisci| image:: https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master
+    :target: https://travis-ci.org/GuyTeichman/RNAlysis
+    :alt: Travis-CI build status
