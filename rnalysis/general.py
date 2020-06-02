@@ -1,42 +1,14 @@
 """
-This module contains general-purpose functions. Those include loading and saving files, \
-reading and updating the settings file, identifying type of input variables, etc. \
-This module is used mainly by other modules.
+This module contains general-purpose functions. Those include saving Filter objects and result tables, \
+reading and updating the settings file, parsing common types of genomic feature indices, etc.
 """
 
 import pandas as pd
-from pathlib import Path
-import os
 import re
 import time
-import subprocess
-import yaml
+
 from typing import Union, List, Set, Dict, Tuple
-from rnalysis import __path__, __attr_file_key__, __biotype_file_key__
-
-
-def _start_ipcluster(n_engines: int = 'default'):
-    """
-    Start an ipyparallel ipcluster in order to perform parallelized computation.
-
-    :type n_engines: int or 'default'
-    :param n_engines: if 'default', will initiate the default amount of engines. \
-    Otherwise, will initiate n_engines engines.
-    """
-    assert (isinstance(n_engines,
-                       int) and n_engines > 0) or n_engines == 'default', f"Invalid number of engines {n_engines}"
-    if n_engines == 'default':
-        return subprocess.Popen("ipcluster start", stderr=subprocess.PIPE, shell=True)
-    else:
-        return subprocess.Popen(["ipcluster", "start", "-n={:d}".format(n_engines)], stderr=subprocess.PIPE, shell=True)
-
-
-def _stop_ipcluster():
-    """
-    Stop a previously started ipyparallel ipcluster.
-
-    """
-    subprocess.Popen("ipcluster stop", stderr=subprocess.PIPE, shell=True)
+from rnalysis import utils, filtering, __attr_file_key__, __biotype_file_key__
 
 
 def start_parallel_session(n_engines: int = 'default'):
@@ -55,11 +27,11 @@ def start_parallel_session(n_engines: int = 'default'):
     """
     print("Starting parallel session...")
     try:
-        _stop_ipcluster()
+        utils.stop_ipcluster()
     except FileNotFoundError:
         pass
     time.sleep(1)
-    stream = _start_ipcluster(n_engines)
+    stream = utils.start_ipcluster(n_engines)
     time.sleep(1)
     while True:
         line = stream.stderr.readline()
@@ -130,74 +102,16 @@ def parse_gene_name_string(string):
     return set(re.findall(r'[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
 
 
-def _get_settings_file_path():
-    """
-    Generates the full path of the settings.yaml file.
-    :returns: the path of the settings.yaml file.
-    :rtype: pathlib.Path
-    """
-    # return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
-    return Path(os.path.join(__path__[0], 'settings.yaml'))
-
-
-def _load_settings_file():
-    """
-    loads and parses the settings.yaml file into a dictionary.
-    :rtype: dict
-    """
-    settings_pth = _get_settings_file_path()
-    if not settings_pth.exists():
-        return dict()
-    with open(settings_pth) as f:
-        settings = yaml.safe_load(f)
-        if settings is None:
-            settings = dict()
-        return settings
-
-
-def _update_settings_file(value: str, key: str):
-    """
-    Receives a key and a value, and updates/adds the key and value to the settings.yaml file.
-    :param value: the value to be added/updated (such as Reference Table path)
-    :type value: str
-    :param key: the key to be added/updated (such as __attr_file_key__)
-    :type key: str
-    """
-    settings_pth = _get_settings_file_path()
-    out = _load_settings_file()
-    out[key] = value
-    with open(settings_pth, 'w') as f:
-        yaml.safe_dump(out, f)
-
-
 def reset_settings_file():
     """
     Resets the local settings by deleting the local settings file. Warning: this action is irreversible!
     """
-    settings_pth = _get_settings_file_path()
+    settings_pth = utils.get_settings_file_path()
     if not settings_pth.exists():
         print("No local settings file exists. ")
     else:
         settings_pth.unlink()
         print(f"Local settings file was deleted. ")
-
-
-def _read_value_from_settings(key):
-    """
-    Attempt to read the value corresponding to a given key from the settings.yaml file. \
-    If the key was not previously defined, the user will be prompted to define it.
-
-    :type key: str
-    :param key: the key in the settings file whose value to read.
-
-    :return:
-    The path of the reference table.
-    """
-    settings = _load_settings_file()
-    if key not in settings:
-        _update_settings_file(input(f'Please insert the full path of {key}:\n'), key)
-        settings = _load_settings_file()
-    return settings[key]
 
 
 def set_attr_ref_table_path(path: str = None):
@@ -214,7 +128,7 @@ def set_attr_ref_table_path(path: str = None):
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
-    _update_settings_file(path, __attr_file_key__)
+    utils.update_settings_file(path, __attr_file_key__)
     print(f'Attribute Reference Table path set as: {path}')
 
 
@@ -232,190 +146,34 @@ def set_biotype_ref_table_path(path: str = None):
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
-    _update_settings_file(path, __biotype_file_key__)
+    utils.update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
 
 
-def read_biotype_ref_table_path():
+def print_settings_file():
     """
-    Reads the Biotype Reference Table path from the settings file.
-
-    :returns: the path of the Biotype Reference Table that is saved in the settings file.
-    :rtype: str
+    Print the current setting file configuration.
 
     :Examples:
-    >>> from rnalysis import general
-    >>> my_path = general.read_biotype_ref_table_path()
-    Biotype Reference Table used: my_biotype_reference_table_path
-    """
-    pth = _read_value_from_settings(__biotype_file_key__)
-    print(f'Biotype Reference Table used: {pth}')
-    return pth
-
-
-def read_attr_ref_table_path():
-    """
-    Reads the Attribute Reference Table path from the settings file.
-
-    :returns: the path of the Attribute Reference Table that is saved in the settings file.
-    :rtype: str
-
-    :Examples:
-    >>> from rnalysis import general
-    >>> my_path = general.read_attr_ref_table_path()
-    Attribute Reference Table used: my_attribute_reference_table_path
-    """
-    pth = _read_value_from_settings(__attr_file_key__)
-    print(f'Attribute Reference Table used: {pth}')
-    return pth
-
-
-def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
-             comment: str = None):
-    """
-    loads a csv df into a pandas dataframe.
-
-    :type filename: str or pathlib.Path
-    :param filename: name of the csv file to be loaded
-    :type idx_col: int, default None
-    :param idx_col: number of column to be used as index. default is None, meaning no column will be used as index.
-    :type drop_columns: str, list of str, or False (default False)
-    :param drop_columns: if a string or list of strings are specified, \
-    the columns of the same name/s will be dropped from the loaded DataFrame.
-    :type squeeze: bool, default False
-    :param squeeze: If the parsed data only contains one column then return a Series.
-    :type comment: str (optional)
-    :param comment: Indicates remainder of line should not be parsed. \
-    If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.
-    :return: a pandas dataframe of the csv file
-    """
-    assert isinstance(filename,
-                      (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
-    encoding = 'ISO-8859-1'
-    if idx_col is not None:
-        df = pd.read_csv(filename, index_col=idx_col, encoding=encoding, squeeze=squeeze, comment=comment)
-    else:
-        df = pd.read_csv(filename, encoding=encoding, squeeze=squeeze, comment=comment)
-    if drop_columns:
-        if isinstance(drop_columns, str):
-            drop_columns = [drop_columns]
-            assert isinstance(drop_columns,
-                              list), f"'drop_columns' must be str, list, or False; is instead {type(drop_columns)}."
-            for i in drop_columns:
-                assert isinstance(i, str), f"'drop_columns' must contain strings only. Member {i} is of type {type(i)}."
-                if i in df:
-                    df.drop('genes', axis=1, inplace=True)
-                else:
-                    raise IndexError(f"The argument {i} in 'drop_columns' is not a column in the loaded csv file!")
-    return df
-
-
-def _remove_unindexed_rows(df: pd.DataFrame):
-    """
-    removes rows which have no WBGene index.
-
-    :param df: a DataFrame with WBGene indices
-    :return: a new DataFrame in which all rows with no WBGene index are removed
-    """
-    return df[[not i for i in df.index.isna()]]
-
-
-def _check_is_df(inp):
-    """
-    checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object \
-    of a .csv file, or an invalid input.
-
-    :param inp: the input we wish to test
-    :return: True if pandas DataFrame, False if a string/Path object that leads to a .csv file.\
-    Raises ValueError otherwise.
-    """
-    if isinstance(inp, pd.DataFrame):
-        return True
-    elif isinstance(inp, str):
-        if inp[-4::] == '.csv':
-            return False
-    elif isinstance(inp, Path):
-        if inp.suffix == '.csv':
-            return False
-    raise ValueError("The input is neither a pandas DataFrame or a csv file")
-
-
-def save_to_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = True):
-    """
-    save a pandas DataFrame to csv.
-
-    :param df: pandas DataFrame to be saved
-    :param filename: a string or pathlib.Path object stating the original name of the file
-    :type suffix: str, default None
-    :param suffix: A suffix to be added to the original name of the file. If None, no suffix will be added.
-    :param index: if True, saves the DataFrame with the indices. If false, ignores the index.
-    """
-    fname = Path(filename)
-    if suffix is None:
-        suffix = ''
-    else:
-        assert isinstance(suffix, str), "'suffix' must be either str or None!"
-    new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{suffix}{fname.suffix}")
-    df.to_csv(new_fname, header=True)
-
-
-def _get_biotype_ref_path(ref: Union[str, Path]):
-    """
-    Returns the predefined Biotype Reference Table path from the settings file if ref='predefined', \
-    otherwise returns 'ref' unchanged.
-
-    :param ref: the 'ref' argument from a filtering module/enrichment module function
-    :type ref: str, pathlib.Path or 'predefined'
-    :returns: if ref is 'predefined', returns the predefined Biotype Reference Table path from the same file. \
-    Otherwise, returns 'ref'.
-    :rtype: str
-    """
-    if ref == 'predefined':
-        return read_biotype_ref_table_path()
-    else:
-        return ref
-
-
-def _get_attr_ref_path(ref):
-    """
-    Returns the predefined Attribute Reference Table path from the settings file if ref='predefined', \
-    otherwise returns 'ref' unchanged.
-
-    :param ref: the 'ref' argument from a filtering module/enrichment module function
-    :type ref: str, pathlib.Path or 'predefined'
-    :returns: if ref is 'predefined', returns the predefined Attribute Reference Table path from the same file. \
-    Otherwise, returns 'ref'.
-    :rtype: str
-    """
-    if ref == 'predefined':
-        return read_attr_ref_table_path()
-    else:
-        return ref
-
-
-def _biotype_table_assertions(ref_df: pd.DataFrame):
-    """
-    Assert legality of Biotype Reference Table, and rename column names to standard names ('gene' and 'biotype').
-    :param ref_df: the loaded Biotype Reference Table
-    :type ref_df: pandas DataFrame
+        >>> from rnalysis import general
+        >>> general.print_settings_file()
+        Attribute Reference Table used: my_attribute_reference_table_path
+        Biotype Reference Table used: my_biotype_reference_table_path
 
     """
-    assert ref_df.shape[
-               1] == 2, f"Invalid number of columns in Biotype Reference Table: found {ref_df.shape[1]} columns instead of 2!"
-    assert ref_df.shape[
-               0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
-    ref_df.rename(columns={ref_df.columns[0]: 'gene', ref_df.columns[1]: 'biotype'}, inplace=True)
+    utils.get_attr_ref_path('predefined')
+    utils.get_biotype_ref_path('predefined')
 
 
-def _attr_table_assertions(ref_df: pd.DataFrame):
+def save_to_csv(df: Union[pd.DataFrame, filtering.Filter], filename: str):
     """
-    Assert legality of Attribute Reference Table, and renames the first column to standard name ('gene').
-    :param ref_df:
-    :type ref_df: pandas DataFrame
-
+    save a pandas DataFrame or Filter object to csv.
+    :type df: Filter object or pandas DataFrame
+    :param df: object to be saved
+    :type filename: str
+    :param filename: name for the saved file. Specify full path to control the directory where the file will be saved.
     """
-    assert ref_df.shape[
-               1] >= 2, f"Attribute Reference Table must have at least two columns, found only  {ref_df.shape[1]}!"
-    assert ref_df.shape[
-               0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
-    ref_df.rename(columns={ref_df.columns[0]: 'gene'}, inplace=True)
+    if isinstance(df, pd.DataFrame):
+        utils.save_csv(df, filename)
+    elif issubclass(df.__class__, filtering.Filter):
+        utils.save_csv(df.df, filename)

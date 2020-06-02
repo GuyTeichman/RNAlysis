@@ -15,7 +15,6 @@ import pandas as pd
 from pathlib import Path
 import warnings
 import os
-from rnalysis import general
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, PowerTransformer
 from sklearn.cluster import KMeans, MiniBatchKMeans
@@ -28,6 +27,7 @@ from grid_strategy import strategies
 from typing import Union, List, Tuple, Type, Iterable
 import types
 from itertools import tee
+from rnalysis import utils
 
 
 class Filter:
@@ -77,7 +77,7 @@ class Filter:
         else:
             assert isinstance(fname, (str, Path))
             self.fname = Path(fname)
-            self.df = general.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
+            self.df = utils.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same WBGene index.")
         self.shape = self.df.shape
@@ -165,7 +165,7 @@ class Filter:
             alt_filename = self.fname
         else:
             alt_filename = f"{str(self.fname.parent)}\\{alt_filename}{self.fname.suffix}"
-        general.save_to_csv(self.df, alt_filename)
+        utils.save_csv(self.df, alt_filename)
 
     @staticmethod
     def _color_gen():
@@ -383,9 +383,9 @@ class Filter:
         if isinstance(biotype, str):
             biotype = [biotype]
 
-        ref = general._get_biotype_ref_path(ref)
-        ref_df = general.load_csv(ref)
-        general._biotype_table_assertions(ref_df)
+        ref = utils.get_biotype_ref_path(ref)
+        ref_df = utils.load_csv(ref)
+        utils.biotype_table_assertions(ref_df)
         ref_df.set_index('gene', inplace=True)
         ref_df.columns = ref_df.columns.str.lower()
         legal_inputs = set(ref_df['biotype'].unique())
@@ -474,9 +474,9 @@ class Filter:
         else:
             assert isinstance(attributes, (list, tuple, set))
         assert isinstance(mode, str), "'mode' must be a string!"
-        ref = general._get_attr_ref_path(ref)
-        attr_ref_table = general.load_csv(ref)
-        general._attr_table_assertions(attr_ref_table)
+        ref = utils.get_attr_ref_path(ref)
+        attr_ref_table = utils.load_csv(ref)
+        utils.attr_table_assertions(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
         sep_idx = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
 
@@ -730,9 +730,9 @@ class Filter:
             [3 rows x 48 columns]
 
         """
-        ref = general._get_biotype_ref_path(ref)
-        ref_df = general.load_csv(ref)
-        general._biotype_table_assertions(ref_df)
+        ref = utils.get_biotype_ref_path(ref)
+        ref_df = utils.load_csv(ref)
+        utils.biotype_table_assertions(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:
@@ -1315,7 +1315,7 @@ class FoldChangeFilter(Filter):
                               index=[0])
         res_df['significant'] = pval <= alpha
         if save_csv:
-            general.save_to_csv(res_df, fname)
+            utils.save_csv(res_df, fname)
         print(res_df)
 
         return res_df
@@ -1821,7 +1821,7 @@ class CountFilter(Filter):
         suffix = '_rpm'
         new_df = self.df.copy()
         if isinstance(special_counter_fname, (str, Path)):
-            features = general.load_csv(special_counter_fname, 0)
+            features = utils.load_csv(special_counter_fname, 0)
         elif isinstance(special_counter_fname, pd.DataFrame):
             features = special_counter_fname
         else:
@@ -1856,7 +1856,7 @@ class CountFilter(Filter):
         suffix = '_sizefactor'
         new_df = self.df.copy()
         if isinstance(scaling_factor_fname, (str, Path)):
-            size_factors = general.load_csv(scaling_factor_fname)
+            size_factors = utils.load_csv(scaling_factor_fname)
         elif isinstance(scaling_factor_fname, pd.DataFrame):
             size_factors = scaling_factor_fname
         else:
@@ -2729,8 +2729,8 @@ class CountFilter(Filter):
         counts = df.drop(uncounted.index, inplace=False)
 
         if save_csv:
-            general.save_to_csv(df=counts, filename=counted_fname)
-            general.save_to_csv(df=uncounted, filename=uncounted_fname)
+            utils.save_csv(df=counts, filename=counted_fname)
+            utils.save_csv(df=uncounted, filename=uncounted_fname)
 
         fname = counted_fname if save_csv else folder.name + file_suffix
         h = CountFilter((Path(fname), counts))

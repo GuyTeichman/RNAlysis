@@ -6,8 +6,8 @@ Results of enrichment analyses can be saved to .csv files.
 """
 import numpy as np
 import pandas as pd
-from scipy.stats import hypergeom
-from rnalysis import general, filtering
+from scipy.stats import hypergeom, mannwhitneyu, ttest_ind, ttest_1samp, wilcoxon
+from rnalysis import utils, filtering
 import tissue_enrichment_analysis as tea
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -19,7 +19,7 @@ from itertools import repeat, compress
 import upsetplot as upset
 import matplotlib_venn as vn
 import warnings
-from typing import Union, List, Set, Dict, Iterable, Callable
+from typing import Union, List, Set, Dict, Iterable, Callable, Tuple
 
 
 class FeatureSet:
@@ -46,10 +46,12 @@ class FeatureSet:
             >>> my_other_set = enrichment.FeatureSet(filter_obj, 'name of my other set')
 
         """
+        assert isinstance(set_name, str), f"'set_name' must be of type str, instead got {type(set_name)}."
         if gene_set is None:
-            self.gene_set = general.parse_wbgene_string(input(
-                "Please insert genomic features/indices separated by newline "
-                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')"))
+            self.gene_set = self._from_string(
+                "Please insert genomic features/indices separated by newline \n"
+                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')",
+                delimiter='\n')
         elif isinstance(gene_set, set):
             pass
         elif isinstance(gene_set, (list, tuple)):
@@ -62,7 +64,7 @@ class FeatureSet:
         self.set_name = set_name
 
     def __repr__(self):
-        return f"FeatureSet: {self.set_name}\n" + self.gene_set.__str__()
+        return f"{self.__class__.__name__}: '{self.set_name}'"
 
     def __len__(self):
         return len(self.gene_set)
@@ -141,8 +143,6 @@ class FeatureSet:
                 pass
             elif isinstance(other, FeatureSet):
                 others[i] = other.gene_set
-            elif isinstance(other, str):
-                others[i] = general.parse_wbgene_string(other)
             else:
                 raise TypeError("'other' must be an FeatureSet object or a set!")
         try:
@@ -160,7 +160,7 @@ class FeatureSet:
          Calculates the set union of the indices from multiple FeatureSet objects \
         (the indices that exist in at least one of the FeatureSet objects).
 
-        :type others: FeatureSet, set or str
+        :type others: FeatureSet, RankedSet or set
         :param others: The objects against which the current object will be compared.
         :return: a new FeatureSet with elements from this FeatureSet and all other objects.
         :rtype: FeatureSet
@@ -184,7 +184,7 @@ class FeatureSet:
         Calculates the set intersection of the indices from multiple FeatureSet objects \
         (the indices that exist in ALL of the FeatureSet objects).
 
-        :type others: FeatureSet, set or str
+        :type others: FeatureSet, RankedSet or set
         :param others: The objects against which the current object will be compared.
         :return: a new FeatureSet with elements common to this FeatureSet and all other objects.
         :rtype: FeatureSet
@@ -208,7 +208,7 @@ class FeatureSet:
         Calculates the set difference of the indices from multiple FeatureSet objects \
         (the indices that appear in the first FeatureSet object but NOT in the other objects).
 
-        :type others: FeatureSet, set or str
+        :type others: FeatureSet, RankedSet or set
         :param others: The objects against which the current object will be compared.
         :return: a new FeatureSet with elements in this FeatureSet that are not in the other objects.
         :rtype: FeatureSet
@@ -233,8 +233,8 @@ class FeatureSet:
         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither). \
         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).
 
-        :type other: FeatureSet, set or str
-        :param other: A second  object against which the current object will be compared.
+        :type other: FeatureSet, RankedSet or set
+        :param other: A second object against which the current object will be compared.
         :return: a new FeatureSet with elements in either this FeatureSet or the other object, but not both.
         :rtype: FeatureSet
 
@@ -266,7 +266,7 @@ class FeatureSet:
             assert isinstance(fname, (str, Path))
         if isinstance(fname, Path):
             fname = str(Path)
-        general.save_to_csv(df, filename=fname + '.csv')
+        utils.save_csv(df, filename=fname + '.csv')
 
     def go_enrichment(self, mode: str = 'all', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
 
@@ -395,8 +395,8 @@ class FeatureSet:
     def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
         gene_set = self.gene_set
 
-        attr_ref_df = general.load_csv(attr_ref_path)
-        general._attr_table_assertions(attr_ref_df)
+        attr_ref_df = utils.load_csv(attr_ref_path)
+        utils.attr_table_assertions(attr_ref_df)
         attr_ref_df.set_index('gene', inplace=True)
 
         assert (isinstance(biotype, (str, list, set, tuple)))
@@ -427,8 +427,8 @@ class FeatureSet:
         if biotype == 'all':
             pass
         else:
-            biotype_ref_df = general.load_csv(biotype_ref_path)
-            general._biotype_table_assertions(biotype_ref_df)
+            biotype_ref_df = utils.load_csv(biotype_ref_path)
+            utils.biotype_table_assertions(biotype_ref_df)
             biotype_ref_df.set_index('gene', inplace=True)
             biotype_ref_df.columns = biotype_ref_df.columns.str.lower()
             if isinstance(biotype, (list, tuple, set)):
@@ -448,7 +448,8 @@ class FeatureSet:
         not_in_bg = gene_set.difference(set(attr_ref_df.index))
         if len(not_in_bg) > 0:
             gene_set = gene_set.difference(not_in_bg)
-            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the background genes. \n"
+            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the "
+                          f"Attribute Reference Table and/or the background genes. \n"
                           f"Enrichment will be run on the remaining {len(gene_set)}.")
         return attr_ref_df, gene_set
 
@@ -501,7 +502,7 @@ class FeatureSet:
 
     def _enrichment_setup(self, biotype: str, background_genes: Union[Iterable[str], str, Iterable[int], int],
                           attr_ref_path: str, biotype_ref_path: str, attributes: Union[str, List[str], List[int]],
-                          data_scale_input: Union[str, List[str]]):
+                          data_scale_input: Union[str, List[str]] = None):
         """
         Perform setup for enrichment functions. This function receives most of the input variables \
         from enrichment functions, generates a full list of attributes for enrichment, gets the relevant full path to \
@@ -512,15 +513,17 @@ class FeatureSet:
         and standardizes the data scale input.
 
         """
-        attr_ref_path = general._get_attr_ref_path(attr_ref_path)
-        biotype_ref_path = general._get_biotype_ref_path(biotype_ref_path)
+        attr_ref_path = utils.get_attr_ref_path(attr_ref_path)
+        biotype_ref_path = utils.get_biotype_ref_path(biotype_ref_path)
         attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                                attr_ref_path=attr_ref_path,
                                                                biotype_ref_path=biotype_ref_path)
 
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
-        data_scales = self._enrichment_get_scales(data_scale_input=data_scale_input, attributes=attributes)
-        return attr_ref_df, gene_set, attributes, data_scales
+        if data_scale_input is not None:
+            data_scales = self._enrichment_get_scales(data_scale_input=data_scale_input, attributes=attributes)
+            return attr_ref_df, gene_set, attributes, data_scales
+        return attr_ref_df, gene_set, attributes
 
     def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, return_fig: bool):
         """
@@ -539,7 +542,7 @@ class FeatureSet:
         res_df['significant'] = significant
         res_df.set_index('name', inplace=True)
 
-        fig = self._plot_enrich_randomization(res_df, title=self.set_name)
+        fig = self._plot_enrichment_results(res_df, title=self.set_name)
 
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
@@ -859,7 +862,8 @@ class FeatureSet:
         return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
 
     @staticmethod
-    def _plot_enrich_randomization(df: pd.DataFrame, title: str = ''):
+    def _plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', title: str = '',
+                                 ylabel: str = r"$\log_2$(Fold Enrichment)"):
 
         """
         Receives a DataFrame output from FeatureSet.enrich_randomization, and plots it in a bar plort \
@@ -877,7 +881,7 @@ class FeatureSet:
         enrichment_names = df.index.values.tolist()
         enrichment_pvalue = df['padj']
         # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
-        enrichment_scores = df['log2_fold_enrichment'].values.copy()
+        enrichment_scores = df[en_score_col].values.copy()
         scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
             scores_no_inf.append(-1)
@@ -909,7 +913,7 @@ class FeatureSet:
         ax.set_xticks(range(len(enrichment_names)))
         ax.set_xticklabels(enrichment_names, fontsize=13, rotation=45)
         # ylabel and title
-        ax.set_ylabel(r"$\log_2$(Fold Enrichment)", fontsize=14)
+        ax.set_ylabel(ylabel, fontsize=14)
         ax.set_title(title, fontsize=16)
         # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
@@ -956,9 +960,9 @@ class FeatureSet:
 
         """
 
-        ref = general._get_biotype_ref_path(ref)
-        ref_df = general.load_csv(ref)
-        general._biotype_table_assertions(ref_df)
+        ref = utils.get_biotype_ref_path(ref)
+        ref_df = utils.load_csv(ref)
+        utils.biotype_table_assertions(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
         if len(not_in_ref) > 0:
@@ -993,8 +997,8 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
             try:
                 attr_table
             except NameError:
-                pth = general._get_attr_ref_path(ref)
-                attr_table = general.load_csv(pth, 0)
+                pth = utils.get_attr_ref_path(ref)
+                attr_table = utils.load_csv(pth, 0)
             attr = objs[obj]
             myset = set(attr_table[attr].loc[attr_table[attr].notna()].index)
             objs[obj] = myset
