@@ -44,8 +44,25 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 
+def hide_non_private(app, what, name, obj, skip, options):
+    # if object is a class, doc it anyway
+    if what == "method" or what == "function":
+        # if private-members is set, show only private members
+        if 'private-members' in options and not name.startswith('_'):
+            # skip public methods
+            return True
+        elif 'private-members' in options and name.startswith('__'):
+            return True
+        else:
+            return None
+    elif what == "class":
+        # do not modify skip - private methods will be shown
+        return None
+
+
 def setup(app):
     app.add_js_file('copybutton.js')
+    app.connect('autodoc-skip-member', hide_non_private)
 
 
 html_favicon = 'favicon.ico'

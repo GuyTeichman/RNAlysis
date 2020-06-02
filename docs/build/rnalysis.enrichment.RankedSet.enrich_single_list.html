@@ -91,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-to-get-it">How to get it</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -131,6 +131,11 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
 </ul>
 
             
@@ -204,7 +209,26 @@
 <dl class="py method">
 <dt id="rnalysis.enrichment.RankedSet.enrich_single_list">
 <code class="sig-prename descclassname">RankedSet.</code><code class="sig-name descname">enrich_single_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.enrich_single_list" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by          <a class="reference external" href="https://dx.doi.org/10.1371/journal.pcbi.0030039/">Prof. Zohar Yakhini and colleagues</a>          and generalized by          <a class="reference external" href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/">Florian Wagner</a>).         The attributes are drawn from an Attribute Reference Table.         The background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a         randomization test with the formula p = (successes + 1)/(repeats + 1).         This formula results in a positively-biased estimator of the real p-value         (a conservative estimate of p-value). When the number of reps approaches infinity,         the formula results in an unbiased estimator of the real p-value.         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'.</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
+<li><p><strong>fdr</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
+<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
+<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </div>
 

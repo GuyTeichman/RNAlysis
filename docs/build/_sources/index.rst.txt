@@ -51,10 +51,12 @@ Modules:
   rnalysis.general
 
 
-Indices and tables:
--------------------
-* :ref:`genindex`
-* :ref:`modindex`
+.. toctree::
+   :maxdepth: 1
+   :caption: Indices and tables:
+
+   genindex
+   api_reference
 
 
 .. |pipimage| image:: https://img.shields.io/pypi/v/rnalysis.svg

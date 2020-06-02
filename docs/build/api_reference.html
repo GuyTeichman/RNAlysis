@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>rnalysis package &mdash; RNAlysis 1.3.4 documentation</title>
+  <title>API Reference &mdash; RNAlysis 1.3.4 documentation</title>
   
 
   
@@ -37,7 +37,8 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Index" href="genindex.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -111,9 +112,15 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Indices and tables:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-filtering-module">rnalysis.filtering module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">rnalysis.enrichment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module">rnalysis.general module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-utils-module">rnalysis.utils module</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -159,13 +166,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>rnalysis package</li>
+      <li>API Reference</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/rnalysis.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/api_reference.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -178,8 +185,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rnalysis-package">
-<h1>rnalysis package<a class="headerlink" href="#rnalysis-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Private functions are not meant to be used out of context, and doing so may lead to unexpected results.</p>
+</div>
 <div class="section" id="rnalysis-filtering-module">
 <h2>rnalysis.filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this headline">¶</a></h2>
 <p>This module can filter, normalize, intersect and visualize tabular data such as read counts and differential expression data.
@@ -207,6 +218,159 @@ When you save filtered/modified data, its new file name will include by default 
 <dt>triplicates: list</dt><dd><p>Returns a nested list of the column names in the CountFilter, grouped by alphabetical order into triplicates.         For example, if counts.columns is [‘A_rep1’,’A_rep2’,’A_rep3’,’B_rep1’,’B_rep2’,_B_rep3’], then         counts.triplicates will be  [[‘A_rep1’,’A_rep2’,’A_rep3’],[‘B_rep1’,’B_rep2’,_B_rep3’]]</p>
 </dd>
 </dl>
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_avg_subsamples</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample_list</span><span class="p">:</span> <span class="n">list</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Avarages subsamples/replicates according to the specified sample list.         Every member in the sample list should be either a name of a single sample (str),         or a list of multiple sample names to be averaged (list).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sample_list</strong> – A list of the sample names and/or grouped sample names passed by the user.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]         and the resulting output will be a DataFrame containing the following columns:         [‘SAMPLE1’, ‘SAMPLE2’, ‘SAMPLE3’, ‘SAMPLE6’]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a pandas DataFrame containing samples/averaged subsamples according to the specified sample_list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_color_gen</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>A generator that yields distinct colors up to a certain limit, and then yields randomized RGB values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a color name string (like ‘black’,         or a numpy.ndarray of size (3,) containing three random values each between 0 and 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'\n'</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Takes a manual string input from the user, and then splits it using a delimiter into a list of values. 
+:param msg: a promprt to be printed to the user
+:param delimiter: the delimiter used to separate the values. Default is ‘</p>
+</div></blockquote>
+<dl class="simple">
+<dt>‘</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>A list of the comma-seperated values the user inserted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_inplace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">suffix</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">printout_operation</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'filter'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Executes the user’s choice whether to filter in-place or create a new instance of the Filter object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_df</strong> – the post-filtering DataFrame</p></li>
+<li><p><strong>opposite</strong> – boolean. Determines whether to return the filtration ,or its opposite.</p></li>
+<li><p><strong>inplace</strong> – boolean. Determines whether to filter in-place or not.</p></li>
+<li><p><strong>suffix</strong> – The suffix to be added to the filename</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If inplace is False, returns a new instance of the Filter object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_parse_k</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>List<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">clusterer_class</span><span class="p">:</span> <span class="n">type</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_init</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_clusters</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> – </p></li>
+<li><p><strong>clusterer_class</strong> – </p></li>
+<li><p><strong>random_state</strong> – </p></li>
+<li><p><strong>n_init</strong> – </p></li>
+<li><p><strong>max_iter</strong> – </p></li>
+<li><p><strong>max_clusters</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_plot_pca</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">final_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">pc1_var</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">pc2_var</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">sample_grouping</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Internal method, used to plot the results from CountFilter.pca. Static class method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>final_df</strong> – The DataFrame output from pca</p></li>
+<li><p><strong>pc1_var</strong> – Variance explained by the first PC.</p></li>
+<li><p><strong>pc2_var</strong> – Variance explained by the second PC.</p></li>
+<li><p><strong>sample_grouping</strong> – a list of indices from 0 and up, that indicates what samples are grouped together as         biological replicates. For example, if sample_names is:         [“1A_N2_25”, “1B_N2_25”, “1C_N2_25”, “2A_rde4_25”, “2B_rde4_25”, “2C_rde4_25”],         then the sample_grouping will be:         [0,0,0,1,1,1]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an axis object containing the PCA plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_rpm_assertions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">threshold</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Various assertions for functions that normalize to RPM, or are meant to be used on pre-normalized values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>threshold</strong> – optional. A threshold value for filter_low_rpm to be asserted.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_silhouette</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clusterer_class</span><span class="p">:</span> <span class="n">type</span></em>, <em class="sig-param"><span class="n">random_state</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">n_init</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_iter</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_clusters</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">20</span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>clusterer_class</strong> – </p></li>
+<li><p><strong>random_state</strong> – </p></li>
+<li><p><strong>n_init</strong> – </p></li>
+<li><p><strong>max_iter</strong> – </p></li>
+<li><p><strong>max_clusters</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_standard_box_cox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>pandas.core.frame.DataFrame<span class="p">, </span>numpy.ndarray<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt>
 <code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'short'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
@@ -289,12 +453,6 @@ which also provides descriptive statistics of each column per biotype.
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">columns</code></dt>
-<dd><p>list of column names</p>
-</dd></dl>
-
 <dl class="py method">
 <dt>
 <code class="sig-name descname">describe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentiles</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>list<span class="p">, </span>Tuple<span class="p">, </span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">0.01, 0.25, 0.5, 0.75, 0.99</span></em><span class="sig-paren">)</span></dt>
@@ -348,12 +506,6 @@ which also provides descriptive statistics of each column per biotype.
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">df</code></dt>
-<dd><p>pandas.DataFrame with the data</p>
 </dd></dl>
 
 <dl class="py method">
@@ -654,12 +806,6 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">fname</code></dt>
-<dd><p>filename with full path</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1103,12 +1249,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">shape</code></dt>
-<dd><p>(rows, columns)</p>
-</dd></dl>
-
 <dl class="py method">
 <dt>
 <code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">by</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">ascending</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>bool<span class="p">, </span>List<span class="p">[</span>bool<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">na_position</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'last'</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
@@ -1506,6 +1646,54 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dl>
 <dl class="py method">
 <dt>
+<em class="property">static </em><code class="sig-name descname">_color_gen</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>A generator that yields distinct colors up to a certain limit, and then yields randomized RGB values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a color name string (like ‘black’,         or a numpy.ndarray of size (3,) containing three random values each between 0 and 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'\n'</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Takes a manual string input from the user, and then splits it using a delimiter into a list of values. 
+:param msg: a promprt to be printed to the user
+:param delimiter: the delimiter used to separate the values. Default is ‘</p>
+</div></blockquote>
+<dl class="simple">
+<dt>‘</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>A list of the comma-seperated values the user inserted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_inplace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">suffix</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">printout_operation</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'filter'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Executes the user’s choice whether to filter in-place or create a new instance of the Filter object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_df</strong> – the post-filtering DataFrame</p></li>
+<li><p><strong>opposite</strong> – boolean. Determines whether to return the filtration ,or its opposite.</p></li>
+<li><p><strong>inplace</strong> – boolean. Determines whether to filter in-place or not.</p></li>
+<li><p><strong>suffix</strong> – The suffix to be added to the filename</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If inplace is False, returns a new instance of the Filter object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'short'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
 :type return_format: ‘short’ or ‘long’ (default ‘short’)
@@ -1541,12 +1729,6 @@ which also provides descriptive statistics of each column per biotype.
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">columns</code></dt>
-<dd><p>list of column names</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1602,12 +1784,6 @@ which also provides descriptive statistics of each column per biotype.
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">df</code></dt>
-<dd><p>pandas.DataFrame with the data</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1932,12 +2108,6 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">fname</code></dt>
-<dd><p>filename with full path</p>
-</dd></dl>
-
 <dl class="py method">
 <dt>
 <code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span></dt>
@@ -2169,12 +2339,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p><strong>alt_filename</strong> (<em>str</em><em>, </em><em>pathlib.Path</em><em>, or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – If None, file name will be generated automatically         according to the filtering methods used.         If it’s a string, it will be used as the name of the saved file. Example input: ‘myfilename’</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">shape</code></dt>
-<dd><p>(rows, columns)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2489,6 +2653,54 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dl>
 <dl class="py method">
 <dt>
+<em class="property">static </em><code class="sig-name descname">_color_gen</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>A generator that yields distinct colors up to a certain limit, and then yields randomized RGB values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a color name string (like ‘black’,         or a numpy.ndarray of size (3,) containing three random values each between 0 and 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'\n'</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Takes a manual string input from the user, and then splits it using a delimiter into a list of values. 
+:param msg: a promprt to be printed to the user
+:param delimiter: the delimiter used to separate the values. Default is ‘</p>
+</div></blockquote>
+<dl class="simple">
+<dt>‘</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>A list of the comma-seperated values the user inserted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_inplace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">suffix</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">printout_operation</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'filter'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Executes the user’s choice whether to filter in-place or create a new instance of the Filter object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_df</strong> – the post-filtering DataFrame</p></li>
+<li><p><strong>opposite</strong> – boolean. Determines whether to return the filtration ,or its opposite.</p></li>
+<li><p><strong>inplace</strong> – boolean. Determines whether to filter in-place or not.</p></li>
+<li><p><strong>suffix</strong> – The suffix to be added to the filename</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If inplace is False, returns a new instance of the Filter object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'short'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
 :type return_format: ‘short’ or ‘long’ (default ‘short’)
@@ -2524,12 +2736,6 @@ which also provides descriptive statistics of each column per biotype.
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">columns</code></dt>
-<dd><p>list of column names</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2585,12 +2791,6 @@ which also provides descriptive statistics of each column per biotype.
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">df</code></dt>
-<dd><p>pandas.DataFrame with the data</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2818,12 +3018,6 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">fname</code></dt>
-<dd><p>filename with full path</p>
 </dd></dl>
 
 <dl class="py method">
@@ -3057,12 +3251,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p><strong>alt_filename</strong> (<em>str</em><em>, </em><em>pathlib.Path</em><em>, or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – If None, file name will be generated automatically         according to the filtering methods used.         If it’s a string, it will be used as the name of the saved file. Example input: ‘myfilename’</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">shape</code></dt>
-<dd><p>(rows, columns)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -3346,6 +3534,54 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dl>
 <dl class="py method">
 <dt>
+<em class="property">static </em><code class="sig-name descname">_color_gen</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>A generator that yields distinct colors up to a certain limit, and then yields randomized RGB values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a color name string (like ‘black’,         or a numpy.ndarray of size (3,) containing three random values each between 0 and 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'\n'</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Takes a manual string input from the user, and then splits it using a delimiter into a list of values. 
+:param msg: a promprt to be printed to the user
+:param delimiter: the delimiter used to separate the values. Default is ‘</p>
+</div></blockquote>
+<dl class="simple">
+<dt>‘</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>A list of the comma-seperated values the user inserted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_inplace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">suffix</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">printout_operation</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'filter'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Executes the user’s choice whether to filter in-place or create a new instance of the Filter object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_df</strong> – the post-filtering DataFrame</p></li>
+<li><p><strong>opposite</strong> – boolean. Determines whether to return the filtration ,or its opposite.</p></li>
+<li><p><strong>inplace</strong> – boolean. Determines whether to filter in-place or not.</p></li>
+<li><p><strong>suffix</strong> – The suffix to be added to the filename</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If inplace is False, returns a new instance of the Filter object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_format</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'short'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
 :type return_format: ‘short’ or ‘long’ (default ‘short’)
@@ -3381,17 +3617,6 @@ which also provides descriptive statistics of each column per biotype.
 </div>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">columns</code></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">denominator</code></dt>
-<dd><p>name of the denominator</p>
 </dd></dl>
 
 <dl class="py method">
@@ -3448,11 +3673,6 @@ which also provides descriptive statistics of each column per biotype.
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">df</code></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt>
@@ -3746,11 +3966,6 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">fname</code></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt>
 <code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span></dt>
@@ -3936,12 +4151,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">numerator</code></dt>
-<dd><p>name of the numerator</p>
-</dd></dl>
-
 <dl class="py method">
 <dt>
 <code class="sig-name descname">print_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
@@ -4027,11 +4236,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">shape</code></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt>
@@ -4308,66 +4512,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 </dd></dl>
 
-<dl class="py class">
-<dt>
-<em class="property">class </em><code class="sig-prename descclassname">rnalysis.filtering.</code><code class="sig-name descname">Pipeline</code><span class="sig-paren">(</span><em class="sig-param">filter_type: Union[Type[rnalysis.filtering.Filter], Type[rnalysis.filtering.DESeqFilter], Type[rnalysis.filtering.FoldChangeFilter], Type[rnalysis.filtering.CountFilter], str] = &lt;class 'rnalysis.filtering.Filter'&gt;</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt>
-<code class="sig-name descname">add_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>function<span class="p">, </span>str<span class="p">]</span></span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Add a function to the pipeline. Arguments can be stated with or without the correspoding keywords.         For example: Pipeline.add_function(‘sort’, ‘columnName’, ascending=False, na_position=’first’).         Pipelines support virtually all functions in the filtering module, including         filtering functions, normalization functions, splitting functions and plotting functions.         Do not include the ‘inplace’ argument when adding functions to a pipeline; instead,         include it when applying the pipeline to a Filter object using Pipeline.apply_to(). 
-:param func: function to be added
-:type func: function or name of function from the filtering module
-:param args: unkeyworded arguments for the added function in their natural order. For example: 0.1, True
-:param kwargs: keyworded arguments for the added function. For example: opposite=True</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">apply_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filter_object</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>filter_object</strong> – </p></li>
-<li><p><strong>inplace</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="field-list simple">
-<dt class="field-odd">rtype</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">filter_type</code></dt>
-<dd><p>type of filter objects to which the Pipeline will be applied</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">functions</code></dt>
-<dd><p>list of functions to perform</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">params</code></dt>
-<dd><p>list of function parameters</p>
-</dd></dl>
-
-<dl class="py method">
-<dt>
-<code class="sig-name descname">remove_last_function</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
-<dd><p>Removes from the Pipeline the last function that was added to it. Removal is in-place.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 <div class="section" id="rnalysis-enrichment-module">
 <h2>rnalysis.enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline">¶</a></h2>
@@ -4377,6 +4521,147 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <em class="property">class </em><code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">FeatureSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gene_set</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>Set<span class="p">[</span>str<span class="p">]</span><span class="p">, </span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">rnalysis.filtering.Filter</a><span class="p">, </span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter">rnalysis.filtering.CountFilter</a><span class="p">, </span><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter">rnalysis.filtering.DESeqFilter</a><span class="p">, </span><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">rnalysis.filtering.FoldChangeFilter</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">set_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Receives a filtered gene set and the set’s name (optional) and preforms various enrichment analyses on them.</p>
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_calc_hypergeometric_pval</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bg_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">go_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">de_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">go_de_size</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Performs a hypergeometric test on the given enrichment set.         Given M genes in the background set, n genes in the test set,         with N genes from the background set belonging to a specific attribute (or ‘success’)         and X genes from the test set belonging to that attribute.         If we were to randomly draw n genes from the background set (without replacement),         what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion)         genes belonging to the given attribute?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bg_size</strong> (<em>positive int</em>) – size of the background set. Usually denoted as ‘M’.</p></li>
+<li><p><strong>go_size</strong> (<em>positive int</em>) – number of features in the background set corresponding to the attribute,         or number of successes in the population. Usually denoted as ‘n’.</p></li>
+<li><p><strong>de_size</strong> (<em>positive int</em>) – size of the differentially-expressed set, or size of test set. usually denoted as ‘N’.</p></li>
+<li><p><strong>go_de_size</strong> (<em>non-negative int</em>) – or number of successes in the test set. Usually denoted as ‘x’ or ‘k’. s</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>p-value of the hypergeometric test.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float between 0 and 1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_enrichment_fraction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mysrs</span><span class="p">:</span> <span class="n">pandas.core.series.Series</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate fraction of rows with values which aren’t NaN out of the total number of rows.         Used in enrichment functions to calculate fraction of genes that are positive for a particular attribute         (observed fraction, expected fraction, fraction of a random gene set, etc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mysrs</strong> (<em>pd.Series</em>) – a Series with each row representing a gene, and the column representing the attribute tested.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fraction of rows that aren’t NaN</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float between 0 and 1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_enrichment_get_scales</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_scale_input</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">list</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Standardizes the data scale input from the user. This function is used by enrichment functions.         Ensures the validity of the input, and turns it into a list of length len(attributes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_scale_input</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – the data_scale input received by the enrichment function.</p></li>
+<li><p><strong>attributes</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – the list of attributes for enrichment received by the enrichment function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of length len(attributes) which specifies the data scale of each attribute.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of ‘boolean’, ‘ordinal’, and/or ‘interval’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_enrichment_output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">enriched_list</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested,         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
+Called at the end of every enrichment function         (enrich_randomization, enrich_randomization_parallel, enrich_statistic…).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_enrichment_save_csv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Internal method, used to save enrichment results to .csv files. Static class method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – pandas DataFrame to be saved.</p></li>
+<li><p><strong>fname</strong> – Name and full path under which the DataFrame will be saved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_enrichment_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>List<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">data_scale_input</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Perform setup for enrichment functions. This function receives most of the input variables         from enrichment functions, generates a full list of attributes for enrichment, gets the relevant full path to         Attribute/Biotype reference tables, loads the Reference tables into a DataFrame,         filters the Attribute DataFrame to include only relevant Attributes,         generates a background gene set according to the user’s specifications,         filters the tested gene set based on the background gene set and/or biotype,         and standardizes the data scale input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">del_spaces</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'\n'</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Takes a manual string input from the user, and then splits it using a comma delimiter into a list of values.         Called when an FeatureSet instance is created without input,         or when FeatureSet.enrich_randomization is called without input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param msg</dt>
+<dd class="field-odd"><p>a promprt to be printed to the user</p>
+</dd>
+<dt class="field-even">param del_spaces</dt>
+<dd class="field-even"><p>if True, will delete all spaces in each delimited value.</p>
+</dd>
+<dt class="field-odd">param delimiter</dt>
+<dd class="field-odd"><p>the delimiter used to separate the values. Default is ‘</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>‘</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>A list of the comma-seperated values the user inserted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_plot_enrichment_results</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">en_score_col</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'log2_fold_enrichment'</span></em>, <em class="sig-param"><span class="n">title</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'$\\log_2$(Fold Enrichment)'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Receives a DataFrame output from FeatureSet.enrich_randomization, and plots it in a bar plort         Static class method.         For the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – a pandas DataFrame created by FeatureSet.enrich_randomization.</p></li>
+<li><p><strong>title</strong> – plot title.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a matplotlib.pyplot.bar instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_set_ops</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">others</span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n">Callable</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Performs a given set operation on self and on another object (FeatureSet or set).
+:type others: FeatureSet, set or str
+:param others: Other object to perform set operation with.
+:type: op: Callable (set.union, set.intersection, set.difference or set.symmetric difference)
+:param op: The set operation to be performed.
+:return: A set resulting from the set operation.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt>
 <code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
@@ -4578,12 +4863,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd></dl>
 
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">gene_set</code></dt>
-<dd><p>set of feature names/indices</p>
-</dd></dl>
-
 <dl class="py method">
 <dt>
 <code class="sig-name descname">go_enrichment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
@@ -4649,12 +4928,6 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – full filename/path for the output file. Can include the ‘.txt’ suffix but doesn’t have to.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt>
-<code class="sig-name descname">set_name</code></dt>
-<dd><p>name of the FeatureSet</p>
 </dd></dl>
 
 <dl class="py method">
@@ -4725,6 +4998,323 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <p>Receives a ranked gene set, sorted by any biologically-meaningful value (expression level, fold-change, etc)     and preforms various enrichment analyses on them.      ALl functions that can be applied to FeatureSet objects can also be applied to RankedSet objects.</p>
 <dl class="py method">
 <dt>
+<em class="property">static </em><code class="sig-name descname">_calc_hypergeometric_pval</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bg_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">go_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">de_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">go_de_size</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Performs a hypergeometric test on the given enrichment set.         Given M genes in the background set, n genes in the test set,         with N genes from the background set belonging to a specific attribute (or ‘success’)         and X genes from the test set belonging to that attribute.         If we were to randomly draw n genes from the background set (without replacement),         what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion)         genes belonging to the given attribute?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bg_size</strong> (<em>positive int</em>) – size of the background set. Usually denoted as ‘M’.</p></li>
+<li><p><strong>go_size</strong> (<em>positive int</em>) – number of features in the background set corresponding to the attribute,         or number of successes in the population. Usually denoted as ‘n’.</p></li>
+<li><p><strong>de_size</strong> (<em>positive int</em>) – size of the differentially-expressed set, or size of test set. usually denoted as ‘N’.</p></li>
+<li><p><strong>go_de_size</strong> (<em>non-negative int</em>) – or number of successes in the test set. Usually denoted as ‘x’ or ‘k’. s</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>p-value of the hypergeometric test.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float between 0 and 1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_enrichment_fraction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mysrs</span><span class="p">:</span> <span class="n">pandas.core.series.Series</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate fraction of rows with values which aren’t NaN out of the total number of rows.         Used in enrichment functions to calculate fraction of genes that are positive for a particular attribute         (observed fraction, expected fraction, fraction of a random gene set, etc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mysrs</strong> (<em>pd.Series</em>) – a Series with each row representing a gene, and the column representing the attribute tested.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>fraction of rows that aren’t NaN</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float between 0 and 1</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_enrichment_get_scales</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_scale_input</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">list</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Standardizes the data scale input from the user. This function is used by enrichment functions.         Ensures the validity of the input, and turns it into a list of length len(attributes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_scale_input</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – the data_scale input received by the enrichment function.</p></li>
+<li><p><strong>attributes</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – the list of attributes for enrichment received by the enrichment function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of length len(attributes) which specifies the data scale of each attribute.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of ‘boolean’, ‘ordinal’, and/or ‘interval’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_enrichment_output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">enriched_list</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested,         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
+Called at the end of every enrichment function         (enrich_randomization, enrich_randomization_parallel, enrich_statistic…).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_enrichment_save_csv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Internal method, used to save enrichment results to .csv files. Static class method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – pandas DataFrame to be saved.</p></li>
+<li><p><strong>fname</strong> – Name and full path under which the DataFrame will be saved</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_enrichment_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>List<span class="p">[</span>int<span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">data_scale_input</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Perform setup for enrichment functions. This function receives most of the input variables         from enrichment functions, generates a full list of attributes for enrichment, gets the relevant full path to         Attribute/Biotype reference tables, loads the Reference tables into a DataFrame,         filters the Attribute DataFrame to include only relevant Attributes,         generates a background gene set according to the user’s specifications,         filters the tested gene set based on the background gene set and/or biotype,         and standardizes the data scale input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_from_string</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">del_spaces</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'\n'</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Takes a manual string input from the user, and then splits it using a comma delimiter into a list of values.         Called when an FeatureSet instance is created without input,         or when FeatureSet.enrich_randomization is called without input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param msg</dt>
+<dd class="field-odd"><p>a promprt to be printed to the user</p>
+</dd>
+<dt class="field-even">param del_spaces</dt>
+<dd class="field-even"><p>if True, will delete all spaces in each delimited value.</p>
+</dd>
+<dt class="field-odd">param delimiter</dt>
+<dd class="field-odd"><p>the delimiter used to separate the values. Default is ‘</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>‘</dt><dd><dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>A list of the comma-seperated values the user inserted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_plot_enrichment_results</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">en_score_col</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'log2_fold_enrichment'</span></em>, <em class="sig-param"><span class="n">title</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">ylabel</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'$\\log_2$(Fold Enrichment)'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Receives a DataFrame output from FeatureSet.enrich_randomization, and plots it in a bar plort         Static class method.         For the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – a pandas DataFrame created by FeatureSet.enrich_randomization.</p></li>
+<li><p><strong>title</strong> – plot title.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a matplotlib.pyplot.bar instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_set_ops</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">others</span></em>, <em class="sig-param"><span class="n">op</span><span class="p">:</span> <span class="n">Callable</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Performs a given set operation on self and on another object (FeatureSet or set).
+:type others: FeatureSet, set or str
+:param others: Other object to perform set operation with.
+:type: op: Callable (set.union, set.intersection, set.difference or set.symmetric difference)
+:param op: The set operation to be performed.
+:return: A set resulting from the set operation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">_xlmhg_output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">enriched_list</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested,         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
+Called at the end of enrich_single_list().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">biotypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">biotypes</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="go">                gene</span>
+<span class="go">biotype</span>
+<span class="go">protein_coding    26</span>
+<span class="go">pseudogene         1</span>
+<span class="go">unknown            1</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">change_set_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Change the ‘set_name’ of a FeatureSet to a new name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_name</strong> (<em>str</em>) – the new set name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">difference</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">others</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet" title="rnalysis.enrichment.RankedSet"><em>RankedSet</em></a><em> or </em><em>set</em>) – The objects against which the current object will be compared.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new FeatureSet with elements in this FeatureSet that are not in the other objects.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">FeatureSet</a></p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">en2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">en</span><span class="p">)</span>
+<span class="go">FeatureSet: set name</span>
+<span class="go">{&#39;WBGene00000006&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">enrich_randomization</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">data_scale</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'boolean'</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Set<span class="p">[</span>str<span class="p">]</span><span class="p">, </span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">rnalysis.filtering.Filter</a><span class="p">, </span>FeatureSet<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_seed</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using a randomization test. The attributes are drawn from an Attribute Reference Table.         The background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a         randomization test with the formula p = (successes + 1)/(repeats + 1).         This formula results in a positively-biased estimator of the real p-value         (a conservative estimate of p-value). When the number of reps approaches infinity,         the formula results in an unbiased estimator of the real p-value.         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'.</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
+<li><p><strong>fdr</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
+<li><p><strong>reps</strong> (<em>int larger than 0</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
+<li><p><strong>data_scale</strong> (<em>one of</em><em> [</em><em>'boolean'</em><em>, </em><em>'ordinal'</em><em>, </em><em>'interval'</em><em>]</em><em>, or </em><em>a list of those values         with length equal to the number of supplied attributes</em><em> (</em><em>default: 'boolean'</em><em>)</em>) – Determines the type of randomization test based on the attributes’ Scale of Measurement.         For boolean attributes, the quantified metric will be number of successes;         for ordinal attributes, the quantified metric will be median value;         and for interval attributes, the quantified metric will be mean value.         ‘data_scale’ can also be a list of data scales, one data scale for each attribute supplied.</p></li>
+<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.         Default 'protein_coding'.</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default ‘predefined’)</p></li>
+<li><p><strong>attr_ref_path</strong> – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Cannot be specified together with ‘biotype’.
+:type save_csv: bool, default False
+:param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
+:type fname: str or pathlib.Path
+:param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
+:type return_fig: bool (default False)
+:param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+:type random_seed: non-negative integer (default None)
+:type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
+:rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+:return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
+<div class="figure align-center" id="id15">
+<a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">enrich_randomization_parallel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">reps</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">data_scale</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'boolean'</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Set<span class="p">[</span>str<span class="p">]</span><span class="p">, </span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">rnalysis.filtering.Filter</a><span class="p">, </span>FeatureSet<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">random_seed</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using a randomization test running in parallel. The attributes are drawn from an Attribute Reference Table.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         Results should otherwise be the same between the two functions.         To use it you must first start a parallel session, using the function ‘general.start_parallel_session()’.         The background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a         randomization test with the formula p = (successes + 1)/(repeats + 1).         This formula results in a positively-biased estimator of the real p-value         (a conservative estimate of p-value). When the number of reps approaches infinity,         the formula results in an unbiased estimator of the real p-value.         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">type attributes</dt>
+<dd class="field-odd"><p>str, int, iterable (list, tuple, set, etc) of str/int, or ‘all’.</p>
+</dd>
+<dt class="field-even">param attributes</dt>
+<dd class="field-even"><p>An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p>
+</dd>
+<dt class="field-odd">type fdr</dt>
+<dd class="field-odd"><p>float between 0 and 1</p>
+</dd>
+<dt class="field-even">param fdr</dt>
+<dd class="field-even"><p>Indicates the FDR threshold for significance.</p>
+</dd>
+<dt class="field-odd">type reps</dt>
+<dd class="field-odd"><p>int larger than 0</p>
+</dd>
+<dt class="field-even">param reps</dt>
+<dd class="field-even"><p>How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p>
+</dd>
+<dt class="field-odd">type data_scale</dt>
+<dd class="field-odd"><p>one of [‘boolean’, ‘ordinal’, ‘interval’], or a list of those values         with length equal to the number of supplied attributes (default: ‘boolean’)</p>
+</dd>
+<dt class="field-even">param data_scale</dt>
+<dd class="field-even"><p>Determines the type of randomization test based on the attributes’ Scale of Measurement.         For boolean attributes, the quantified metric will be number of successes;         for ordinal attributes, the quantified metric will be median value;         and for interval attributes, the quantified metric will be mean value.         ‘data_scale’ can also be a list of data scales, one data scale for each attribute supplied.</p>
+</dd>
+<dt class="field-odd">type biotype</dt>
+<dd class="field-odd"><p>str specifying a specific biotype, list/set of strings each specifying a biotype, or ‘all’.         Default ‘protein_coding’.</p>
+</dd>
+<dt class="field-even">param biotype</dt>
+<dd class="field-even"><p>determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p>
+</dd>
+<dt class="field-odd">type background_genes</dt>
+<dd class="field-odd"><p>set of feature indices, filtering.Filter object, or enrichment.FeatureSet object</p>
+</dd>
+<dt class="field-even">param background_genes</dt>
+<dd class="field-even"><p>a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default ‘predefined’)</p>
+</dd>
+<dt class="field-odd">param attr_ref_path</dt>
+<dd class="field-odd"><p>the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p>
+</dd>
+<dt class="field-even">type biotype_ref_path</dt>
+<dd class="field-even"><p>str or pathlib.Path (default ‘predefined’)</p>
+</dd>
+<dt class="field-odd">param biotype_ref_path</dt>
+<dd class="field-odd"><p>the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p>
+</dd>
+</dl>
+<p>Cannot be specified together with ‘biotype’.
+:type save_csv: bool, default False
+:param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
+:type fname: str or pathlib.Path
+:param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
+:type return_fig: bool (default False)
+:param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+:type random_seed: non-negative integer (default None)
+:type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
+:rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+:return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
+</div></blockquote>
+<div class="figure align-center" id="id16">
+<a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
 <code class="sig-name descname">enrich_single_list</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by          <a class="reference external" href="https://dx.doi.org/10.1371/journal.pcbi.0030039/">Prof. Zohar Yakhini and colleagues</a>          and generalized by          <a class="reference external" href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/">Florian Wagner</a>).         The attributes are drawn from an Attribute Reference Table.         The background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a         randomization test with the formula p = (successes + 1)/(repeats + 1).         This formula results in a positively-biased estimator of the real p-value         (a conservative estimate of p-value). When the number of reps approaches infinity,         the formula results in an unbiased estimator of the real p-value.         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
 <dl class="field-list simple">
@@ -4747,12 +5337,195 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt>
-<code class="sig-name descname">ranked_genes</code></dt>
-<dd><p>a vector of feature names/indices ordered by rank</p>
+<code class="sig-name descname">enrich_statistic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">attributes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>str<span class="p">, </span>Iterable<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fdr</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">data_scale</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'boolean'</span></em>, <em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">background_genes</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Set<span class="p">[</span>str<span class="p">]</span><span class="p">, </span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">rnalysis.filtering.Filter</a><span class="p">, </span>FeatureSet<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attr_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">biotype_ref_path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_fig</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using the Hypergeometric Test. The attributes are drawn from an Attribute Reference Table.         The background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.         P-values are calculated using a hypergeometric test:         Given M genes in the background set, n genes in the test set,         with N genes from the background set belonging to a specific attribute (or ‘success’)         and X genes from the test set belonging to that attribute.         If we were to randomly draw n genes from the background set (without replacement),         what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion)         genes belonging to the given attribute?         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0)         appears with the smallest value in the scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'.</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
+<li><p><strong>fdr</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
+<li><p><strong>data_scale</strong> (<em>one of</em><em> [</em><em>'boolean'</em><em>, </em><em>'ordinal'</em><em>, </em><em>'interval'</em><em>]</em><em>, or </em><em>a list of those values         with length equal to the number of supplied attributes</em><em> (</em><em>default: 'boolean'</em><em>)</em>) – Determines the type of randomization test based on the attributes’ Scale of Measurement.         For boolean attributes, the quantified metric will be number of successes;         for ordinal attributes, the quantified metric will be median value;         and for interval attributes, the quantified metric will be mean value.         ‘data_scale’ can also be a list of data scales, one data scale for each attribute supplied.</p></li>
+<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.         Default 'protein_coding'.</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
+<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
+</dd>
+</dl>
+<div class="figure align-center" id="id17">
+<a class="reference internal image-reference" href="_images/enrichment_randomization.png"><img alt="_images/enrichment_randomization.png" src="_images/enrichment_randomization.png" style="width: 768.0px; height: 370.8px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
+</div>
 </dd></dl>
 
+<dl class="py method">
+<dt>
+<code class="sig-name descname">go_enrichment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">save_csv</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Analyzes GO, Tissue and/or Phenotype enrichment for the given group of genomic features.         Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans.         Corrected p-values are calculated using hypergeometric statistics.         For more details see GitHub page of the developers: <a class="reference external" href="https://github.com/dangeles/TissueEnrichmentAnalysis">https://github.com/dangeles/TissueEnrichmentAnalysis</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>'go'</em><em>, </em><em>'tissue'</em><em>, </em><em>'phenotype'</em><em> or </em><em>'all'</em><em> (</em><em>default 'all'</em><em>)</em>) – the enrichment you wish to perform. ‘go’ for gene ontology enrichment,         ‘tissue’ for tissue enrichment, ‘phenotype’ for phenotype enrichment, or ‘all’ for all three.</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default 0.05</em><em>)</em>) – Significance threshold.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, save the result to a csv.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Name and path in which to save the results. Must be specified if save_csv is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a DataFrame which contains the significant enrichmenet terms</p>
+</dd>
+</dl>
+<div class="figure align-center" id="id18">
+<a class="reference internal image-reference" href="_images/go_en.png"><img alt="_images/go_en.png" src="_images/go_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of GO enrichment</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id19">
+<a class="reference internal image-reference" href="_images/tissue_en.png"><img alt="_images/tissue_en.png" src="_images/tissue_en.png" style="width: 560.0px; height: 318.40000000000003px;" /></a>
+<p class="caption"><span class="caption-text">Example plot of Tissue enrichment</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">intersection</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">others</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet" title="rnalysis.enrichment.RankedSet"><em>RankedSet</em></a><em> or </em><em>set</em>) – The objects against which the current object will be compared.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new FeatureSet with elements common to this FeatureSet and all other objects.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">FeatureSet</a></p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">en2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">en</span><span class="p">)</span>
+<span class="go">FeatureSet: set name</span>
+<span class="go">{&#39;WBGene00000001&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">save_txt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fname</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>pathlib.Path<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Save the list of features in the FeatureSet object under the specified filename and path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – full filename/path for the output file. Can include the ‘.txt’ suffix but doesn’t have to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">symmetric_difference</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates the set symmetric difference of the indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).         A-symmetric difference-B is equivalent to (A-difference-B)-union-(B-difference-A).</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet" title="rnalysis.enrichment.RankedSet"><em>RankedSet</em></a><em> or </em><em>set</em>) – A second object against which the current object will be compared.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new FeatureSet with elements in either this FeatureSet or the other object, but not both.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">FeatureSet</a></p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">symmetric_difference</span><span class="p">(</span><span class="n">en2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">en</span><span class="p">)</span>
+<span class="go">FeatureSet: set name</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000006&#39;, &#39;WBGene00000004&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt>
+<code class="sig-name descname">union</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">others</span></em><span class="sig-paren">)</span></dt>
+<dd><blockquote>
+<div><p>Calculates the set union of the indices from multiple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>others</strong> (<a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><em>FeatureSet</em></a><em>, </em><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet" title="rnalysis.enrichment.RankedSet"><em>RankedSet</em></a><em> or </em><em>set</em>) – The objects against which the current object will be compared.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new FeatureSet with elements from this FeatureSet and all other objects.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet">FeatureSet</a></p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000005&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000006&#39;</span><span class="p">},</span> <span class="s1">&#39;set name&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en2</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">en2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">en</span><span class="p">)</span>
+<span class="go">FeatureSet: set name</span>
+<span class="go">{&#39;WBGene00000003&#39;, &#39;WBGene00000004&#39;, &#39;WBGene00000001&#39;, &#39;WBGene00000002&#39;, &#39;WBGene00000006&#39;, &#39;WBGene00000005&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">_fetch_sets</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">objs</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Receives the ‘objs’ input from enrichment.upset_plot() and enrichment.venn_diagram(), and turns the values in it     into python sets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>objs</strong> (<em>a dictionary</em><em>, </em><em>where the keys are names of sets</em><em>, </em><em>and the values are either     python sets</em><em>, </em><em>FeatureSets</em><em> or </em><em>names of columns in the Attribute Reference Table.</em>) – the ‘objs’ input given to the function enrichment.upset_plot() or enrichment.venn_diagram().</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary, where the keys are names of sets and the values are python sets of feature indices.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.enrichment.</code><code class="sig-name descname">_generate_upset_srs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">objs</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Receives a dictionary of sets from enrichment._fetch_sets(),     and reformats it as a pandas Series to be used by the python package ‘upsetplot’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>objs</strong> (<em>dict of sets</em>) – the output of the enrichment._fetch_sets() function.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a pandas Series in the format requested by the ‘upsetplot’ package.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -4769,9 +5542,9 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a dictionary of matplotlib axes, where the keys are ‘matrix’, ‘intersections’, ‘totals’, ‘shading’.</p>
-<div class="figure align-center" id="id15">
+<div class="figure align-center" id="id20">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
 </div>
 </p>
 </dd>
@@ -4800,9 +5573,9 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
-<div class="figure align-center" id="id16">
+<div class="figure align-center" id="id21">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
-<p class="caption"><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
 </div>
 </p>
 </dd>
@@ -4965,6 +5738,181 @@ a set of the WBGene indices that appear in the given string.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="rnalysis-utils-module">
+<h2>rnalysis.utils module<a class="headerlink" href="#rnalysis-utils-module" title="Permalink to this headline">¶</a></h2>
+<p>This module contains various utility functions. This module is used mainly by other modules, and is meant for internal use only.</p>
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">attr_table_assertions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Assert legality of Attribute Reference Table, and renames the first column to standard name (‘gene’).
+:param ref_df:
+:type ref_df: pandas DataFrame</p>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">biotype_table_assertions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref_df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Assert legality of Biotype Reference Table, and rename column names to standard names (‘gene’ and ‘biotype’).
+:param ref_df: the loaded Biotype Reference Table
+:type ref_df: pandas DataFrame</p>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">check_is_df_like</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inp</span></em><span class="sig-paren">)</span></dt>
+<dd><p>checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object     of a .csv file, or an invalid input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inp</strong> – the input we wish to test</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if pandas DataFrame, False if a string/Path object that leads to a .csv file.    Raises ValueError otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">get_attr_ref_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns the predefined Attribute Reference Table path from the settings file if ref=’predefined’,     otherwise returns ‘ref’ unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em>, </em><em>pathlib.Path</em><em> or </em><em>'predefined'</em>) – the ‘ref’ argument from a filtering module/enrichment module function</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if ref is ‘predefined’, returns the predefined Attribute Reference Table path from the same file.     Otherwise, returns ‘ref’.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">get_biotype_ref_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>pathlib.Path<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns the predefined Biotype Reference Table path from the settings file if ref=’predefined’,     otherwise returns ‘ref’ unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em>, </em><em>pathlib.Path</em><em> or </em><em>'predefined'</em>) – the ‘ref’ argument from a filtering module/enrichment module function</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if ref is ‘predefined’, returns the predefined Biotype Reference Table path from the same file.     Otherwise, returns ‘ref’.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">get_settings_file_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Generates the full path of the settings.yaml file.
+:returns: the path of the settings.yaml file.
+:rtype: pathlib.Path</p>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">load_csv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">idx_col</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">drop_columns</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">squeeze</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">comment</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span></dt>
+<dd><p>loads a csv df into a pandas dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – name of the csv file to be loaded</p></li>
+<li><p><strong>idx_col</strong> (<em>int</em><em>, </em><em>default None</em>) – number of column to be used as index. default is None, meaning no column will be used as index.</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>False</em><em> (</em><em>default False</em><em>)</em>) – if a string or list of strings are specified,     the columns of the same name/s will be dropped from the loaded DataFrame.</p></li>
+<li><p><strong>squeeze</strong> (<em>bool</em><em>, </em><em>default False</em>) – If the parsed data only contains one column then return a Series.</p></li>
+<li><p><strong>comment</strong> (<em>str</em><em> (</em><em>optional</em><em>)</em>) – Indicates remainder of line should not be parsed.     If found at the beginning of a line, the line will be ignored altogether. This parameter must be a single character.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a pandas dataframe of the csv file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">load_settings_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>loads and parses the settings.yaml file into a dictionary.
+:rtype: dict</p>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">read_value_from_settings</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Attempt to read the value corresponding to a given key from the settings.yaml file.     If the key was not previously defined, the user will be prompted to define it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – the key in the settings file whose value to read.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+<p>The path of the reference table.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">remove_unindexed_rows</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em><span class="sig-paren">)</span></dt>
+<dd><p>removes rows which have no WBGene index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>df</strong> – a DataFrame with WBGene indices</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new DataFrame in which all rows with no WBGene index are removed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">save_csv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">df</span><span class="p">:</span> <span class="n">pandas.core.frame.DataFrame</span></em>, <em class="sig-param"><span class="n">filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">suffix</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">index</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span></dt>
+<dd><p>save a pandas DataFrame to csv.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> – pandas DataFrame to be saved</p></li>
+<li><p><strong>filename</strong> – a string or pathlib.Path object stating the original name of the file</p></li>
+<li><p><strong>suffix</strong> (<em>str</em><em>, </em><em>default None</em>) – A suffix to be added to the original name of the file. If None, no suffix will be added.</p></li>
+<li><p><strong>index</strong> – if True, saves the DataFrame with the indices. If false, ignores the index.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">start_ipcluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_engines</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">'default'</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Start an ipyparallel ipcluster in order to perform parallelized computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n_engines</strong> (<em>int</em><em> or </em><em>'default'</em>) – if ‘default’, will initiate the default amount of engines.     Otherwise, will initiate n_engines engines.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">stop_ipcluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Stop a previously started ipyparallel ipcluster.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt>
+<code class="sig-prename descclassname">rnalysis.utils.</code><code class="sig-name descname">update_settings_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Receives a key and a value, and updates/adds the key and value to the settings.yaml file.
+:param value: the value to be added/updated (such as Reference Table path)
+:type value: str
+:param key: the key to be added/updated (such as __attr_file_key__)
+:type key: str</p>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -4972,6 +5920,13 @@ a set of the WBGene indices that appear in the given string.</p>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="genindex.html" class="btn btn-neutral float-left" title="Index" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
