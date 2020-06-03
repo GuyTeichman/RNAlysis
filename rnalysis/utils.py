@@ -3,15 +3,15 @@ This module contains various utility functions. \
 This module is used mainly by other modules, and is meant for internal use only.
 """
 
-import pandas as pd
-from pathlib import Path
 import os
-import re
-import time
 import subprocess
+from pathlib import Path
+from typing import List, Union
+
+import pandas as pd
 import yaml
-from typing import Union, List, Set, Dict, Tuple
-from rnalysis import __path__, __attr_file_key__, __biotype_file_key__
+
+from rnalysis import __attr_file_key__, __biotype_file_key__, __path__
 
 
 def start_ipcluster(n_engines: int = 'default'):
@@ -56,7 +56,7 @@ def load_settings_file():
     settings_pth = get_settings_file_path()
     if not settings_pth.exists():
         return dict()
-    with open(settings_pth) as f:
+    with settings_pth.open() as f:
         settings = yaml.safe_load(f)
         if settings is None:
             settings = dict()
@@ -74,7 +74,7 @@ def update_settings_file(value: str, key: str):
     settings_pth = get_settings_file_path()
     out = load_settings_file()
     out[key] = value
-    with open(settings_pth, 'w') as f:
+    with settings_pth.open('w') as f:
         yaml.safe_dump(out, f)
 
 
@@ -252,6 +252,32 @@ def attr_table_assertions(ref_df: pd.DataFrame):
     assert ref_df.shape[
                0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
     ref_df.rename(columns={ref_df.columns[0]: 'gene'}, inplace=True)
+
+
+def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
+    """
+    Takes a manual string input from the user, and then splits it using a comma delimiter into a list of values. \
+    Called when an FeatureSet instance is created without input, \
+    or when FeatureSet.enrich_randomization is called without input.
+
+    :param msg: a promprt to be printed to the user
+    :param del_spaces: if True, will delete all spaces in each delimited value.
+    :param delimiter: the delimiter used to separate the values. Default is '\n'
+    :return: A list of the comma-seperated values the user inserted.
+
+    """
+    string = input(msg)
+    split = string.split(sep=delimiter)
+    if del_spaces:
+        for i in range(len(split)):
+            split[i] = split[i].replace(' ', '')
+    if split[-1] == '':
+        split = split[:-1]
+    return split
+
+
+def isinstanceinh(obj, parent_class):
+    return True if issubclass(obj.__class__, parent_class) else False
 
 
 def make_temp_copy_of_test_file():

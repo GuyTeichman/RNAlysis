@@ -10,23 +10,25 @@ When you save filtered/modified data, its new file name will include by default 
 
 """
 
+import os
+import types
+import warnings
+from itertools import tee
+from pathlib import Path
+from typing import Iterable, List, Tuple, Type, Union, Any
+
+import hdbscan
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import warnings
-import os
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler, PowerTransformer
-from sklearn.cluster import KMeans, MiniBatchKMeans
-from sklearn.metrics import silhouette_score
-from sklearn_extra.cluster import KMedoids
-import hdbscan
 import seaborn as sns
-import matplotlib.pyplot as plt
 from grid_strategy import strategies
-from typing import Union, List, Tuple, Type, Iterable
-import types
-from itertools import tee
+from sklearn.cluster import KMeans, MiniBatchKMeans
+from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import PowerTransformer, StandardScaler
+from sklearn_extra.cluster import KMedoids
+
 from rnalysis import utils
 
 
@@ -56,7 +58,7 @@ class Filter:
     __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data', 'shape': '(rows, columns)',
                  'columns': 'list of column names'}
 
-    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = False):
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False):
 
         """
         :param fname: full path/filename of the .csv file to be loaded into the Filter object
@@ -901,7 +903,7 @@ class Filter:
             suffix += columns
         elif isinstance(columns, (list, tuple, set, np.ndarray)):
             for col in columns:
-                assert isinstance(col,str), f"Column name {col} is of type {type(col)} instead of str. "
+                assert isinstance(col, str), f"Column name {col} is of type {type(col)} instead of str. "
                 assert col in self.columns, f"Column '{col}' does not exist in the Filter object."
                 suffix += col
             subset = list(columns)
@@ -1024,7 +1026,7 @@ class Filter:
         else:
             raise ValueError(f"'return type' must be either 'set' or 'str', is instead '{return_type}'!")
 
-    def _set_ops(self, others, return_type, op):
+    def _set_ops(self, others, return_type, op: Any):
         others = list(others)
         for i, other in enumerate(others):
             if isinstance(other, Filter):
@@ -1229,7 +1231,7 @@ class FoldChangeFilter(Filter):
     """
     __slots__ = {'numerator': 'name of the numerator', 'denominator': 'name of the denominator'}
 
-    def __init__(self, fname: Union[str, Path], numerator_name: str, denominator_name: str):
+    def __init__(self, fname: Union[str, Path, tuple], numerator_name: str, denominator_name: str):
         super().__init__(fname)
         self.numerator = numerator_name
         self.denominator = denominator_name
@@ -1924,8 +1926,8 @@ class CountFilter(Filter):
         self._rpm_assertions(threshold=threshold)
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in self.df.iterrows()]]
-        return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), \
-               self._inplace(low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
+        return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), self._inplace(
+            low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
 
     def filter_by_row_sum(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
@@ -2022,6 +2024,7 @@ class CountFilter(Filter):
             stdev = np.sqrt(np.mean((np.log(ref_disps) - ref_log_inertia) ** 2.0))
             gap_err[ind] = stdev * np.sqrt(1 + (1 / n_refs))
 
+        best_k, best_k_ind = None, None
         for ind, n_clusters in enumerate(k_range):
             if ind + 1 == len(k_range):
                 best_k = n_clusters
@@ -2548,9 +2551,13 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
+        :type notch: bool (default True)
+        :param notch: if True, adds a confidence-interval notch to the box-plot.
+        :type scatter: bool (default False)
+        :param scatter: if True, adds a scatter-plot on top of the box-plot.
         :type ylabel: str (default 'Log10(RPM + 1)')
         :param ylabel: the label of the Y axis.
-        :return: a seaborn box plot object.
+        :return: a seaborn boxplot object.
 
         .. figure::  ???.png
            :align:   center
@@ -2581,7 +2588,7 @@ class CountFilter(Filter):
     def enhanced_box_plot(self, samples='all', scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
 
         """
-        Generates an enhanced box plot of the specified samples in the CountFilter object in log10 scale. \
+        Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
         It is recommended to use this function on normalized values and not on absolute read values. \
         The box indicates 25% and 75% percentiles, and the white dot indicates the median.
@@ -2592,9 +2599,11 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
+        :type scatter: bool (default False)
+        :param scatter: if True, adds a scatter-plot on top of the box-plot.
         :type ylabel: str (default 'Log10(RPM + 1)')
         :param ylabel: the label of the Y axis.
-        :return: a seaborn enhanced box plot object.
+        :return: a seaborn enhanced box-plot object.
 
         .. figure::  ???.png
            :align:   center
@@ -2744,7 +2753,7 @@ class Pipeline:
                  'filter_type': 'type of filter objects to which the Pipeline will be applied'}
 
     def __init__(self, filter_type: Union[
-        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 

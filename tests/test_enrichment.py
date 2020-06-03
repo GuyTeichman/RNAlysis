@@ -1,12 +1,11 @@
 import pytest
-from rnalysis import utils
-from rnalysis.general import start_parallel_session
-
-start_parallel_session()
 import matplotlib
+from rnalysis import filtering
+from rnalysis.general import start_parallel_session
 from rnalysis.enrichment import *
 from tests import __attr_ref__, __biotype_ref__
 
+start_parallel_session()
 matplotlib.use('Agg')
 
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',

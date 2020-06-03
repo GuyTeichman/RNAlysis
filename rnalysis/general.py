@@ -3,12 +3,14 @@ This module contains general-purpose functions. Those include saving Filter obje
 reading and updating the settings file, parsing common types of genomic feature indices, etc.
 """
 
-import pandas as pd
 import re
 import time
+from typing import Union
 
-from typing import Union, List, Set, Dict, Tuple
-from rnalysis import utils, filtering, __attr_file_key__, __biotype_file_key__
+import pandas as pd
+
+from rnalysis import __attr_file_key__, __biotype_file_key__, utils
+from rnalysis.filtering import Filter
 
 
 def start_parallel_session(n_engines: int = 'default'):
@@ -99,7 +101,7 @@ def parse_gene_name_string(string):
     >>> print(parsed)
     {'saeg-2', 'lin-15B', 'cyp-23A1', 'lin-15A'}
     """
-    return set(re.findall(r'[a-z]{3,4}-[A-Z,0-9,.]{1,4}', string))
+    return set(re.findall(r'[a-z]{3,4}-[A-Z,0-9.]{1,4}', string))
 
 
 def reset_settings_file():
@@ -165,7 +167,7 @@ def print_settings_file():
     utils.get_biotype_ref_path('predefined')
 
 
-def save_to_csv(df: Union[pd.DataFrame, filtering.Filter], filename: str):
+def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):
     """
     save a pandas DataFrame or Filter object to csv.
     :type df: Filter object or pandas DataFrame
@@ -175,5 +177,5 @@ def save_to_csv(df: Union[pd.DataFrame, filtering.Filter], filename: str):
     """
     if isinstance(df, pd.DataFrame):
         utils.save_csv(df, filename)
-    elif issubclass(df.__class__, filtering.Filter):
+    elif utils.isinstanceinh(df, Filter):
         utils.save_csv(df.df, filename)

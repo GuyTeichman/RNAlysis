@@ -2,7 +2,7 @@
 
 """Top-level package for sRNA analysis pipeline."""
 
-__all__ = ['general', 'filtering', 'enrichment']
+__all__ = ['general', 'filtering', 'enrichment', '__attr_file_key__', '__biotype_file_key__']
 __name__ = "rnalysis"
 __author__ = """Guy Teichman"""
 __email__ = "guyteichman@gmail.com"

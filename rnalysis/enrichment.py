@@ -4,23 +4,27 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
+import warnings
+from itertools import compress, repeat
+from pathlib import Path
+from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
+
+import matplotlib.pyplot as plt
+import matplotlib_venn as vn
 import numpy as np
 import pandas as pd
-from scipy.stats import hypergeom, mannwhitneyu, ttest_ind, ttest_1samp, wilcoxon
-from rnalysis import utils, filtering
-import tissue_enrichment_analysis as tea
 import seaborn as sns
-import matplotlib.pyplot as plt
-from matplotlib.cm import ScalarMappable
-from pathlib import Path
 import statsmodels.stats.multitest as multitest
-from xlmhg import get_xlmhg_test_result as xlmhg_test
-from ipyparallel import Client
-from itertools import repeat, compress
+import tissue_enrichment_analysis as tea
 import upsetplot as upset
-import matplotlib_venn as vn
-import warnings
-from typing import Union, List, Set, Dict, Iterable, Callable, Tuple
+from ipyparallel import Client
+from matplotlib.cm import ScalarMappable
+from scipy.stats import hypergeom, ttest_1samp
+from statsmodels.stats.descriptivestats import sign_test
+from xlmhg import get_xlmhg_test_result as xlmhg_test
+
+from rnalysis import utils
+from rnalysis.filtering import Filter
 
 
 class FeatureSet:
@@ -28,9 +32,7 @@ class FeatureSet:
     __slots__ = {'gene_set': 'set of feature names/indices', 'set_name': 'name of the FeatureSet'}
     _go_dicts = {}
 
-    def __init__(self, gene_set: Union[List[str], Set[
-        str], filtering.Filter, filtering.CountFilter, filtering.DESeqFilter, filtering.FoldChangeFilter] = None,
-                 set_name: str = ''):
+    def __init__(self, gene_set: Union[List[str], Set[str], Filter] = None, set_name: str = ''):
 
         """
         :param gene_set: the set of genomic features to be used in downstream analyses
@@ -49,15 +51,14 @@ class FeatureSet:
         """
         assert isinstance(set_name, str), f"'set_name' must be of type str, instead got {type(set_name)}."
         if gene_set is None:
-            self.gene_set = self._from_string(
+            self.gene_set = utils.from_string(
                 "Please insert genomic features/indices separated by newline \n"
-                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')",
-                delimiter='\n')
+                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')", delimiter='\n')
         elif isinstance(gene_set, set):
             pass
         elif isinstance(gene_set, (list, tuple)):
             gene_set = set(gene_set)
-        elif issubclass(gene_set.__class__, filtering.Filter):
+        elif utils.isinstanceinh(gene_set, Filter):
             gene_set = gene_set.index_set
         else:
             raise TypeError(f"Error: 'gene_set' must be a set, list or tuple! Is a {type(gene_set)} instead. ")
@@ -72,29 +73,6 @@ class FeatureSet:
 
     def __contains__(self, item):
         return True if item in self.gene_set else False
-
-    @staticmethod
-    def _from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
-
-        """
-        Takes a manual string input from the user, and then splits it using a comma delimiter into a list of values. \
-        Called when an FeatureSet instance is created without input, \
-        or when FeatureSet.enrich_randomization is called without input.
-
-        :param msg: a promprt to be printed to the user
-        :param del_spaces: if True, will delete all spaces in each delimited value.
-        :param delimiter: the delimiter used to separate the values. Default is '\n'
-        :return: A list of the comma-seperated values the user inserted.
-
-        """
-        string = input(msg)
-        split = string.split(sep=delimiter)
-        if del_spaces:
-            for i in range(len(split)):
-                split[i] = split[i].replace(' ', '')
-        if split[-1] == '':
-            split = split[:-1]
-        return split
 
     def change_set_name(self, new_name: str):
         """
@@ -363,7 +341,7 @@ class FeatureSet:
     @staticmethod
     def _enrichment_get_attrs(attributes, attr_ref_path):
         if attributes is None:
-            attributes = FeatureSet._from_string(
+            attributes = utils.from_string(
                 "Please insert attributes separated by newline "
                 "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
         elif isinstance(attributes, (str, int)):
@@ -379,18 +357,15 @@ class FeatureSet:
         try:
             with open(attr_ref_path) as f:
                 all_attrs = f.readline().split(',')[1::]
-        except:
-            raise ValueError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
         if all_attrs[-1].endswith('\n'):
             all_attrs[-1] = all_attrs[-1][:-1]
 
         if attributes == ['all']:
             attributes = all_attrs
         elif np.all([True if isinstance(i, int) else False for i in attributes]):
-            select_attributes = []
-            for i in attributes:
-                select_attributes.append(all_attrs[i])
-            return select_attributes
+            return [all_attrs[ind] for ind in attributes]
         return attributes
 
     def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
@@ -406,13 +381,12 @@ class FeatureSet:
             pass
         else:
             assert isinstance(background_genes,
-                              (set, FeatureSet)) or issubclass(background_genes.__class__,
-                                                               filtering.Filter), f"background_genes must be a set, " \
-                                                                                  f"enrichment.FeatureSet or filtering.Filter;" \
-                                                                                  f" instead is {type(background_genes)}"
+                              (set, FeatureSet)) or utils.isinstanceinh(background_genes, Filter), \
+                f"background_genes must be a set, enrichment.FeatureSet or filtering.Filter; " \
+                f"instead got {type(background_genes)}"
             if isinstance(background_genes, FeatureSet):
                 background_genes = background_genes.gene_set
-            elif issubclass(background_genes.__class__, filtering.Filter):
+            elif utils.isinstanceinh(background_genes, Filter):
                 background_genes = background_genes.index_set
             if biotype != 'all':
                 warnings.warn(
@@ -501,9 +475,9 @@ class FeatureSet:
         """
         return (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
 
-    def _enrichment_setup(self, biotype: str, background_genes: Union[Iterable[str], str, Iterable[int], int],
+    def _enrichment_setup(self, biotype: str, background_genes: Union[Iterable[str], str, Iterable[int], int, None],
                           attr_ref_path: str, biotype_ref_path: str, attributes: Union[str, List[str], List[int]],
-                          data_scale_input: Union[str, List[str]] = None):
+                          data_scale_input: Union[str, List[str], None] = None):
         """
         Perform setup for enrichment functions. This function receives most of the input variables \
         from enrichment functions, generates a full list of attributes for enrichment, gets the relevant full path to \
@@ -556,7 +530,7 @@ class FeatureSet:
                                       fdr: float = 0.05, reps: int = 10000,
                                       data_scale: Union[str, List[str]] = 'boolean',
                                       biotype: str = 'protein_coding',
-                                      background_genes: Union[Set[str], filtering.Filter, 'FeatureSet'] = None,
+                                      background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                                       save_csv: bool = False, fname=None,
                                       return_fig: bool = False, random_seed: int = None):
@@ -622,7 +596,6 @@ class FeatureSet:
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
-
        .. figure::  enrichment_randomization.png
           :align:   center
           :scale: 40 %
@@ -652,7 +625,7 @@ class FeatureSet:
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000, data_scale: Union[str, List[str]] = 'boolean',
                              biotype: str = 'protein_coding',
-                             background_genes: Union[Set[str], filtering.Filter, 'FeatureSet'] = None,
+                             background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None, return_fig: bool = False, random_seed: int = None):
 
@@ -740,7 +713,7 @@ class FeatureSet:
     def enrich_statistic(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                          data_scale: Union[str, List[str]] = 'boolean',
                          biotype: str = 'protein_coding',
-                         background_genes: Union[Set[str], filtering.Filter, 'FeatureSet'] = None,
+                         background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                          attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                          save_csv: bool = False, fname=None, return_fig: bool = False):
 
@@ -901,7 +874,7 @@ class FeatureSet:
         ax.axhline(color='black', linewidth=1)
         # add colorbar
         sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(3, -3))
-        sm.set_array([])
+        sm.set_array(np.array([]))
         cbar = fig.colorbar(sm)
         cbar.set_label('Colorbar', fontsize=12)
         # apply xticks
@@ -975,9 +948,9 @@ class RankedSet(FeatureSet):
     """
     __slots__ = {'ranked_genes': 'a vector of feature names/indices ordered by rank'}
 
-    def __init__(self, ranked_genes: Union[filtering.Filter, List[str], Tuple[str], np.ndarray], set_name: str = ''):
+    def __init__(self, ranked_genes: Union[Filter, List[str], Tuple[str], np.ndarray], set_name: str = ''):
 
-        if issubclass(ranked_genes.__class__, filtering.Filter):
+        if utils.isinstanceinh(ranked_genes, Filter):
             self.ranked_genes = ranked_genes.df.index.values.astype('str', copy=True)
         elif isinstance(ranked_genes, (list, tuple)):
             self.ranked_genes = np.array(ranked_genes, dtype='str')
@@ -1094,10 +1067,6 @@ class RankedSet(FeatureSet):
     def _calc_xlmhg_stats(index_vec: np.ndarray, ranked_genes_len: int):
         index_vec = np.uint16(index_vec)
         rev_index_vec = np.uint16([ranked_genes_len - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
-        # escore_pval_thresh = the alpha threshold for XL-mHG enrichment score.
-        # Smaller alpha values result in more conservative (potentially too conservative) values of enrichment score,
-        # while larger alpha values can reduce the robustness of the estimate (due to estimating small values of n).
-        escore_alpha = 0.05
         # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all of the positive
         # elements in the ranked set. Determined to be the minimum between x_min and ceil(x_frac * k),
         # where 'k' is the number of 'positive' elements in the ranked set.
@@ -1149,14 +1118,12 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     for obj in objs:
         if isinstance(objs[obj], set):
             pass
-        elif issubclass(objs[obj].__class__, filtering.Filter):
+        elif utils.isinstanceinh(objs[obj], Filter):
             objs[obj] = objs[obj].index_set
         elif isinstance(objs[obj], FeatureSet):
             objs[obj] = objs[obj].gene_set
         elif isinstance(objs[obj], str):
-            try:
-                attr_table
-            except NameError:
+            if 'attr_table' not in locals():
                 pth = utils.get_attr_ref_path(ref)
                 attr_table = utils.load_csv(pth, 0)
             attr = objs[obj]
