@@ -265,7 +265,7 @@ def test_enrichment_randomization_validity():
     _enrichment_validity(res, truth)
 
 
-def test_enrichment_parallel_api():
+def test_enrichment_randomization_parallel_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
              'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
