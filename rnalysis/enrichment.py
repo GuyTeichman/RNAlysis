@@ -315,25 +315,22 @@ class FeatureSet:
     @staticmethod
     def _single_enrichment(gene_set, attribute, scale, attr_ref_df: pd.DataFrame, reps: int):
         assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-        df = attr_ref_df[[attribute, 'int_index']]
-        srs = df[attribute]
-        srs_int = (df.set_index('int_index', inplace=False))[attribute]
+        srs = attr_ref_df[attribute]
         obs_srs = srs.loc[gene_set]
         n = obs_srs.shape[0]
         expected_fraction = FeatureSet._enrichment_fraction(srs)
         observed_fraction = FeatureSet._enrichment_fraction(obs_srs)
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        ind = srs_int.index
+        gene_bank = srs.values
+        ind_range = np.arange(gene_bank.shape[0])
         if log2_fold_enrichment >= 0:
-            success = sum(
-                (FeatureSet._enrichment_fraction(
-                    srs_int.loc[np.random.choice(ind, n, replace=False)]) >= observed_fraction
-                 for _ in repeat(None, reps)))
+            success = sum(((n - np.sum(np.isnan(
+                gene_bank[np.random.choice(ind_range, n, replace=False)]))) / n >= observed_fraction for
+                           _ in repeat(None, reps)))
         else:
-            success = sum(
-                (FeatureSet._enrichment_fraction(
-                    srs_int.loc[np.random.choice(ind, n, replace=False)]) <= observed_fraction
-                 for _ in repeat(None, reps)))
+            success = sum(((n - np.sum(np.isnan(
+                gene_bank[np.random.choice(ind_range, n, replace=False)]))) / n <= observed_fraction for
+                           _ in repeat(None, reps)))
         pval = (success + 1) / (reps + 1)
 
         return [attribute, n, scale, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
@@ -416,8 +413,6 @@ class FeatureSet:
                 biotype_ref_df = biotype_ref_df.loc[biotype_ref_df.index.intersection(attr_ref_df.index)]
                 mask = biotype_ref_df['biotype'] == biotype
             attr_ref_df = attr_ref_df.loc[biotype_ref_df[mask].index]
-        attr_ref_df.sort_index(inplace=True)
-        attr_ref_df['int_index'] = [i for i in range(len(attr_ref_df.index))]
         print(f"{len(attr_ref_df.index)} background genes are used. ")
 
         not_in_bg = gene_set.difference(set(attr_ref_df.index))
@@ -426,6 +421,7 @@ class FeatureSet:
             warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the "
                           f"Attribute Reference Table and/or the background genes. \n"
                           f"Enrichment will be run on the remaining {len(gene_set)}.")
+        attr_ref_df.sort_index(inplace=True)
         return attr_ref_df, gene_set
 
     @staticmethod
@@ -783,10 +779,7 @@ class FeatureSet:
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes, data_scale)
         enriched_list = []
         for k, (attribute, scale) in enumerate(zip(attributes, data_scales)):
-            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-            print(f"Finished {k} attributes out of {len(attributes)}")
-            df = attr_ref_df[[attribute, 'int_index']]
-            srs = df[attribute]
+            srs = attr_ref_df[attribute]
             obs_srs = srs.loc[gene_set]
             n = obs_srs.shape[0]
             expected_fraction = self._enrichment_fraction(srs)

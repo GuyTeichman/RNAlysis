@@ -139,24 +139,32 @@ def test_biotypes():
     assert np.all(df == truth)
 
 
-def test_enrichment_get_ref_biotype():
-    truth = utils.load_csv('test_files/attr_ref_table_for_tests_biotype.csv', 0)
+def _enrichment_get_ref_tests_setup(truth, bg_genes):
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res, _ = en._enrichment_get_reference(biotype='protein_coding', background_genes=None,
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__)
+
+    if not isinstance(bg_genes, str):
+        bg_en = FeatureSet(bg_genes, 'background genes')
+        res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_en,
+                                              attr_ref_path=__attr_ref__,
+                                              biotype_ref_path=__biotype_ref__)
+    else:
+        res, _ = en._enrichment_get_reference(biotype=bg_genes, background_genes=None,
+                                              attr_ref_path=__attr_ref__,
+                                              biotype_ref_path=__biotype_ref__)
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
-
     assert np.all(res.index == truth.index)
     assert np.all(res.columns == truth.columns)
     assert np.all(res.attribute1.isna() == truth.attribute1.isna())
     assert np.all(res.attribute2.isna() == truth.attribute2.isna())
-    print(res.int_index)
-    print(truth.int_index)
-    assert np.all(res.int_index == truth.int_index)
+
+
+def test_enrichment_get_ref_biotype():
+    truth = utils.load_csv('test_files/attr_ref_table_for_tests_biotype.csv', 0)
+    bg_genes = 'protein_coding'
+    _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_ref_custom_background():
@@ -165,21 +173,7 @@ def test_enrichment_get_ref_custom_background():
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
                 'WBGene00000105', 'WBGene00001131'}
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-
-    res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_genes,
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__)
-    truth.sort_index(inplace=True)
-    res.sort_index(inplace=True)
-
-    assert np.all(res.index == truth.index)
-    assert np.all(res.columns == truth.columns)
-    assert np.all(res.attribute1.isna() == truth.attribute1.isna())
-    assert np.all(res.attribute2.isna() == truth.attribute2.isna())
-    assert np.all(res.int_index == truth.int_index)
+    _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_ref_custom_background_from_featureset_object():
@@ -188,41 +182,13 @@ def test_enrichment_get_ref_custom_background_from_featureset_object():
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
                 'WBGene00000105', 'WBGene00001131'}
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-    bg_en = FeatureSet(bg_genes, 'background genes')
-    res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_en,
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__)
-    truth.sort_index(inplace=True)
-    res.sort_index(inplace=True)
+    _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_ref_custom_background_from_filter_object():
     truth = utils.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = filtering.CountFilter(r'test_files/test_bg_genes_from_filter_object.csv')
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-
-    res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_genes,
-                                          attr_ref_path=__attr_ref__,
-                                          biotype_ref_path=__biotype_ref__)
-    truth.sort_index(inplace=True)
-    res.sort_index(inplace=True)
-
-    assert np.all(res.index == truth.index)
-    assert np.all(res.columns == truth.columns)
-    assert np.all(res.attribute1.isna() == truth.attribute1.isna())
-    assert np.all(res.attribute2.isna() == truth.attribute2.isna())
-    assert np.all(res.int_index == truth.int_index)
-
-    assert np.all(res.index == truth.index)
-    assert np.all(res.columns == truth.columns)
-    assert np.all(res.attribute1.isna() == truth.attribute1.isna())
-    assert np.all(res.attribute2.isna() == truth.attribute2.isna())
-    assert np.all(res.int_index == truth.int_index)
+    _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_scales():
