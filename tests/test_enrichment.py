@@ -216,15 +216,15 @@ def test_enrichment_randomization_reliability():
     random_seed = 0
 
     for i in range(5):
-        res1 = en.enrich_randomization(attrs, reps=5000, biotype='all',
+        res1 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                        attr_ref_path=__attr_ref__,
                                        biotype_ref_path=__biotype_ref__,
                                        random_seed=random_seed)
-        res2 = en.enrich_randomization(attrs, reps=5000, biotype='all',
+        res2 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                        attr_ref_path=__attr_ref__,
                                        biotype_ref_path=__biotype_ref__,
                                        random_seed=random_seed + 1)
-        res3 = en.enrich_randomization(attrs, reps=5000, biotype='all',
+        res3 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                        attr_ref_path=__attr_ref__,
                                        biotype_ref_path=__biotype_ref__,
                                        random_seed=random_seed + 2)
@@ -234,10 +234,16 @@ def test_enrichment_randomization_reliability():
             assert np.all(res1[col] == res2[col])
             assert np.all(res2[col] == res3[col])
         for randcol in ['pval', 'padj']:
-            assert np.isclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-            assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
-            assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+            try:
+                assert np.isclose(res1[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+                assert np.isclose(res2[randcol], res3[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+                assert np.isclose(res2[randcol], res1[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+                assert np.isclose(res3[randcol], res2[randcol], atol=4 * 10 ** -4, rtol=0.2).all()
+            except AssertionError:
+                print(res1)
+                print(res2)
+                print(res3)
+                assert False
 
 
 def _enrichment_validity(res, truth):
@@ -287,15 +293,15 @@ def test_enrichment_randomization_parallel_reliability():
     random_seed = 0
 
     for i in range(5):
-        res1 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
+        res1 = en.enrich_randomization_parallel(attrs, reps=10000, biotype='all',
                                                 attr_ref_path=__attr_ref__,
                                                 biotype_ref_path=__biotype_ref__,
                                                 random_seed=random_seed)
-        res2 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
+        res2 = en.enrich_randomization_parallel(attrs, reps=10000, biotype='all',
                                                 attr_ref_path=__attr_ref__,
                                                 biotype_ref_path=__biotype_ref__,
                                                 random_seed=random_seed + 1)
-        res3 = en.enrich_randomization_parallel(attrs, reps=5000, biotype='all',
+        res3 = en.enrich_randomization_parallel(attrs, reps=10000, biotype='all',
                                                 attr_ref_path=__attr_ref__,
                                                 biotype_ref_path=__biotype_ref__,
                                                 random_seed=random_seed + 2)
@@ -347,7 +353,7 @@ def test_randomization_all_attributes():
     assert attrs == attrs_truth
 
 
-def test_enrich_statistic_hypergeometric_api():
+def test_enrich_hypergeometric_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
              'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
@@ -355,16 +361,15 @@ def test_enrich_statistic_hypergeometric_api():
              'WBGene00000859', 'WBGene00268189'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.enrich_statistic(attrs, biotype='all', data_scale='boolean', attr_ref_path=__attr_ref__,
-                            biotype_ref_path=__biotype_ref__)
+    _ = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__)
     plt.close('all')
 
 
-def test_enrich_hypergeom_pvalues():
+def test_enrich_hypergeometric_pvalues():
     assert False
 
 
-def test_calc_hypergeom_pvalues():
+def test_calc_hypergeometric_pvalues():
     [M, n, N, X] = [13588, 59, 611, 19]
     truth = 4.989682834519698 * 10 ** -12
     pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)

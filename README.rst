@@ -43,6 +43,7 @@ Dependencies
 * pandas
 * scipy
 * matplotlib
+* numba
 * scikit-learn
 * hdbscan
 * scikit-learn-extra

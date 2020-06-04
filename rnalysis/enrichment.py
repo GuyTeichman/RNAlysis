@@ -11,6 +11,7 @@ from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
 
 import matplotlib.pyplot as plt
 import matplotlib_venn as vn
+from numba import jit
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -22,6 +23,7 @@ from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp
 from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
+
 
 from rnalysis import utils
 from rnalysis.filtering import Filter
@@ -313,27 +315,33 @@ class FeatureSet:
         return df_comb
 
     @staticmethod
-    def _single_enrichment(gene_set, attribute, scale, attr_ref_df: pd.DataFrame, reps: int):
+    def _single_enrichment(gene_set, attribute, attr_ref_df: pd.DataFrame, reps: int):
         assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
         srs = attr_ref_df[attribute]
-        obs_srs = srs.loc[gene_set]
-        n = obs_srs.shape[0]
-        expected_fraction = FeatureSet._enrichment_fraction(srs)
-        observed_fraction = FeatureSet._enrichment_fraction(obs_srs)
+        bg_array = np.isnan(srs.values)
+        obs_array = np.isnan(srs.loc[gene_set].values)
+        n = len(gene_set)
+        expected_fraction = (bg_array.shape[0] - np.sum(bg_array)) / bg_array.shape[0]
+        observed_fraction = (n - np.sum(obs_array)) / n
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        gene_bank = srs.values
-        ind_range = np.arange(gene_bank.shape[0])
-        if log2_fold_enrichment >= 0:
-            success = sum(((n - np.sum(np.isnan(
-                gene_bank[np.random.choice(ind_range, n, replace=False)]))) / n >= observed_fraction for
-                           _ in repeat(None, reps)))
-        else:
-            success = sum(((n - np.sum(np.isnan(
-                gene_bank[np.random.choice(ind_range, n, replace=False)]))) / n <= observed_fraction for
-                           _ in repeat(None, reps)))
-        pval = (success + 1) / (reps + 1)
+        pval = FeatureSet._calc_randomization_pval(n, log2_fold_enrichment, bg_array, reps, observed_fraction)
 
-        return [attribute, n, scale, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
+        return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
+
+    @staticmethod
+    @jit(nopython=True)
+    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float):
+        ind_range = np.arange(bg_array.shape[0])
+        success = 0
+        if log2fc >= 0:
+            for _ in range(reps):
+                success += (n - np.sum(bg_array[np.random.choice(ind_range, n, replace=False)])) / n >= obs_frac
+
+        else:
+            for _ in range(reps):
+                success += (n - np.sum(bg_array[np.random.choice(ind_range, n, replace=False)])) / n <= obs_frac
+        pval = (success + 1) / (reps + 1)
+        return pval
 
     @staticmethod
     def _enrichment_get_attrs(attributes, attr_ref_path):
@@ -457,23 +465,8 @@ class FeatureSet:
             raise TypeError(f"Invalid type for 'data_scale': {type(data_scale_input)}")
         return data_scale_list
 
-    @staticmethod
-    def _enrichment_fraction(mysrs: pd.Series):
-        """
-        Calculate fraction of rows with values which aren't NaN out of the total number of rows. \
-        Used in enrichment functions to calculate fraction of genes that are positive for a particular attribute \
-        (observed fraction, expected fraction, fraction of a random gene set, etc).
-
-        :param mysrs: a Series with each row representing a gene, and the column representing the attribute tested.
-        :type mysrs: pd.Series
-        :return: fraction of rows that aren't NaN
-        :rtype: float between 0 and 1
-        """
-        return (mysrs.shape[0] - mysrs.isna().sum()) / mysrs.shape[0]
-
     def _enrichment_setup(self, biotype: str, background_genes: Union[Iterable[str], str, Iterable[int], int, None],
-                          attr_ref_path: str, biotype_ref_path: str, attributes: Union[str, List[str], List[int]],
-                          data_scale_input: Union[str, List[str], None] = None):
+                          attr_ref_path: str, biotype_ref_path: str, attributes: Union[str, List[str], List[int]]):
         """
         Perform setup for enrichment functions. This function receives most of the input variables \
         from enrichment functions, generates a full list of attributes for enrichment, gets the relevant full path to \
@@ -491,9 +484,6 @@ class FeatureSet:
                                                                biotype_ref_path=biotype_ref_path)
 
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
-        if data_scale_input is not None:
-            data_scales = self._enrichment_get_scales(data_scale_input=data_scale_input, attributes=attributes)
-            return attr_ref_df, gene_set, attributes, data_scales
         return attr_ref_df, gene_set, attributes
 
     def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, return_fig: bool):
@@ -505,7 +495,7 @@ class FeatureSet:
 
         """
         res_df = pd.DataFrame(enriched_list,
-                              columns=['name', 'samples', 'data_scale', 'obs', 'exp', 'log2_fold_enrichment',
+                              columns=['name', 'samples', 'obs', 'exp', 'log2_fold_enrichment',
                                        'pval'])
         res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_fold_enrichment'].values)))
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
@@ -524,7 +514,6 @@ class FeatureSet:
 
     def enrich_randomization_parallel(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                                       fdr: float = 0.05, reps: int = 10000,
-                                      data_scale: Union[str, List[str]] = 'boolean',
                                       biotype: str = 'protein_coding',
                                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
@@ -557,13 +546,6 @@ class FeatureSet:
         :type reps: int larger than 0
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
-        :type data_scale: one of ['boolean', 'ordinal', 'interval'], or a list of those values \
-        with length equal to the number of supplied attributes (default: 'boolean')
-        :param data_scale: Determines the type of randomization test based on the attributes' Scale of Measurement. \
-        For boolean attributes, the quantified metric will be number of successes; \
-        for ordinal attributes, the quantified metric will be median value; \
-        and for interval attributes, the quantified metric will be mean value. \
-        'data_scale' can also be a list of data scales, one data scale for each attribute supplied.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
@@ -598,8 +580,8 @@ class FeatureSet:
 
           Example plot of enrich_randomization_parallel()
        """
-        attr_ref_df, gene_set, attributes, data_scales = \
-            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes, data_scale)
+        attr_ref_df, gene_set, attributes,  = \
+            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
 
         client = Client()
         dview = client[:]
@@ -614,13 +596,12 @@ class FeatureSet:
         attr_ref_df_rep = list(repeat(attr_ref_df, k))
         reps_rep = list(repeat(reps, k))
 
-        res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, data_scales, attr_ref_df_rep, reps_rep)
+        res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
         enriched_list = res.result()
         return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig)
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
-                             reps: int = 10000, data_scale: Union[str, List[str]] = 'boolean',
-                             biotype: str = 'protein_coding',
+                             reps: int = 10000, biotype: str = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None, return_fig: bool = False, random_seed: int = None):
@@ -648,13 +629,6 @@ class FeatureSet:
         :type reps: int larger than 0
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
-        :type data_scale: one of ['boolean', 'ordinal', 'interval'], or a list of those values \
-        with length equal to the number of supplied attributes (default: 'boolean')
-        :param data_scale: Determines the type of randomization test based on the attributes' Scale of Measurement. \
-        For boolean attributes, the quantified metric will be number of successes; \
-        for ordinal attributes, the quantified metric will be median value; \
-        and for interval attributes, the quantified metric will be mean value. \
-        'data_scale' can also be a list of data scales, one data scale for each attribute supplied.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
@@ -691,27 +665,26 @@ class FeatureSet:
            Example plot of enrich_randomization()
 
         """
-        attr_ref_df, gene_set, attributes, data_scales = \
-            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes, data_scale)
+        attr_ref_df, gene_set, attributes = \
+            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         enriched_list = []
         if random_seed is not None:
             assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
                                                                       f"Value {random_seed} invalid."
             np.random.seed(random_seed)
 
-        for k, (attribute, scale) in enumerate(zip(attributes, data_scales)):
+        for k, attribute in enumerate(attributes):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-            enriched_list.append(self._single_enrichment(gene_set, attribute, scale, attr_ref_df, reps))
+            enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
             print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
         return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig)
 
-    def enrich_statistic(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
-                         data_scale: Union[str, List[str]] = 'boolean',
-                         biotype: str = 'protein_coding',
-                         background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                         attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                         save_csv: bool = False, fname=None, return_fig: bool = False):
+    def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
+                              biotype: str = 'protein_coding',
+                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                              save_csv: bool = False, fname=None, return_fig: bool = False):
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -736,13 +709,6 @@ class FeatureSet:
         If None, a manual input prompt will be raised.
         :type fdr: float between 0 and 1
         :param fdr: Indicates the FDR threshold for significance.
-        :type data_scale: one of ['boolean', 'ordinal', 'interval'], or a list of those values \
-        with length equal to the number of supplied attributes (default: 'boolean')
-        :param data_scale: Determines the type of randomization test based on the attributes' Scale of Measurement. \
-        For boolean attributes, the quantified metric will be number of successes; \
-        for ordinal attributes, the quantified metric will be median value; \
-        and for interval attributes, the quantified metric will be mean value. \
-        'data_scale' can also be a list of data scales, one data scale for each attribute supplied.
         :type attr_ref_path: str or pathlib.Path (default 'predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
         :type biotype_ref_path: str or pathlib.Path (default 'predefined')
@@ -775,21 +741,27 @@ class FeatureSet:
            Example plot of enrich_hypergeometric()
 
         """
-        attr_ref_df, gene_set, attributes, data_scales = \
-            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes, data_scale)
+        attr_ref_df, gene_set, attributes = \
+            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         enriched_list = []
-        for k, (attribute, scale) in enumerate(zip(attributes, data_scales)):
+        for k, attribute in enumerate(attributes):
             srs = attr_ref_df[attribute]
-            obs_srs = srs.loc[gene_set]
-            n = obs_srs.shape[0]
-            expected_fraction = self._enrichment_fraction(srs)
-            observed_fraction = self._enrichment_fraction(obs_srs)
-            log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-            pval = self._calc_hypergeometric_pval(bg_size=srs.shape[0], go_size=srs.notna().sum(),
-                                                  de_size=obs_srs.shape[0], go_de_size=obs_srs.notna().sum())
+            bg_size = srs.shape[0]
+            go_size = srs.notna().sum()
+            de_size = len(gene_set)
+            go_de_size = srs.loc[gene_set].notna().sum()
+
+            expected_fraction = (bg_size - go_size) / bg_size
+            observed_fraction = (de_size - go_de_size) / de_size
+            log2_fold_enrichment = np.log2(
+                observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
+            pval = self._calc_hypergeometric_pval(bg_size=bg_size, go_size=go_size,
+                                                  de_size=de_size, go_de_size=go_de_size)
+            obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
 
             enriched_list.append(
-                (attribute, n, scale, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval))
+                (attribute, de_size, 'boolean', obs, exp, log2_fold_enrichment, pval))
+            print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
         return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig)
 

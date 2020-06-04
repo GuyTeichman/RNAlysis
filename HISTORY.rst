@@ -18,6 +18,7 @@ Added
 
 Changed
 *******
+* Improved running time of enrich_randomization() and enrich_randomization_parallel() about six-fold.
 * CountFilter.pca() can now be plotted without labeled points.
 * CountFilter.violin_plot() now accepts a y_title argument.
 * Added more optional arguments to visualization functions such as CountFilter.violin_plot() and CountFilter.clustergram().
