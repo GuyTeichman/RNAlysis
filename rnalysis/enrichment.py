@@ -495,8 +495,7 @@ class FeatureSet:
 
         """
         res_df = pd.DataFrame(enriched_list,
-                              columns=['name', 'samples', 'obs', 'exp', 'log2_fold_enrichment',
-                                       'pval'])
+                              columns=['name', 'samples', 'obs', 'exp', 'log2_fold_enrichment', 'pval'])
         res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_fold_enrichment'].values)))
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
@@ -760,7 +759,7 @@ class FeatureSet:
             obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
 
             enriched_list.append(
-                (attribute, de_size, 'boolean', obs, exp, log2_fold_enrichment, pval))
+                (attribute, de_size, obs, exp, log2_fold_enrichment, pval))
             print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
         return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig)
