@@ -24,7 +24,6 @@ from scipy.stats import hypergeom, ttest_1samp
 from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
-
 from rnalysis import utils
 from rnalysis.filtering import Filter
 
@@ -432,39 +431,6 @@ class FeatureSet:
         attr_ref_df.sort_index(inplace=True)
         return attr_ref_df, gene_set
 
-    @staticmethod
-    def _enrichment_get_scales(data_scale_input: Union[str, List[str]], attributes: list):
-        """
-        Standardizes the data scale input from the user. This function is used by enrichment functions. \
-        Ensures the validity of the input, and turns it into a list of length len(attributes).
-
-        :param data_scale_input: the data_scale input received by the enrichment function.
-        :type data_scale_input: Union[str, List[str]]
-        :param attributes: the list of attributes for enrichment received by the enrichment function.
-        :type attributes: List[str]
-        :return: a list of length len(attributes) which specifies the data scale of each attribute.
-        :rtype: list of 'boolean', 'ordinal', and/or 'interval'
-        """
-        valid_inputs = {'boolean', 'ordinal', 'interval'}
-        data_scale_list = []
-        if isinstance(data_scale_input, str):
-            assert data_scale_input.lower() in valid_inputs, \
-                f"'data_scale' must be 'boolean', 'ordinal' or 'interval'. Instead got '{data_scale_input}'."
-            data_scale_list = [data_scale_input.lower()] * len(attributes)
-        elif isinstance(data_scale_input, (list, tuple)):
-            assert len(data_scale_input) == len(attributes), \
-                f"You must specifyc either a single data scale, or one data scale per attribute! " \
-                f"Instead got {len(data_scale_input)} data scales and {len(attributes)} attributes."
-            for scale in data_scale_input:
-                assert isinstance(scale, str), \
-                    f"All scales in the 'data_scales' list must be strings! Instead got {type(scale)}. "
-                assert scale.lower() in valid_inputs, \
-                    f"'data_scale' must be 'boolean', 'ordinal' or 'interval'. Instead got '{scale}'."
-                data_scale_list.append(scale.lower())
-        else:
-            raise TypeError(f"Invalid type for 'data_scale': {type(data_scale_input)}")
-        return data_scale_list
-
     def _enrichment_setup(self, biotype: str, background_genes: Union[Iterable[str], str, Iterable[int], int, None],
                           attr_ref_path: str, biotype_ref_path: str, attributes: Union[str, List[str], List[int]]):
         """
@@ -486,7 +452,8 @@ class FeatureSet:
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         return attr_ref_df, gene_set, attributes
 
-    def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, return_fig: bool):
+    def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, plot: bool,
+                           return_fig: bool):
         """
         Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
@@ -501,14 +468,13 @@ class FeatureSet:
         res_df['padj'] = padj
         res_df['significant'] = significant
         res_df.set_index('name', inplace=True)
-
-        fig = self._plot_enrichment_results(res_df, title=self.set_name)
-
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        if return_fig:
-            return res_df, fig
+        if plot:
+            fig = self._plot_enrichment_results(res_df, title=self.set_name)
+            if return_fig:
+                return res_df, fig
         return res_df
 
     def enrich_randomization_parallel(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
@@ -579,7 +545,7 @@ class FeatureSet:
 
           Example plot of enrich_randomization_parallel()
        """
-        attr_ref_df, gene_set, attributes,  = \
+        attr_ref_df, gene_set, attributes, = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
 
         client = Client()
@@ -597,7 +563,7 @@ class FeatureSet:
 
         res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
         enriched_list = res.result()
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True)
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000, biotype: str = 'protein_coding',
@@ -677,7 +643,7 @@ class FeatureSet:
             enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
             print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True)
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                               biotype: str = 'protein_coding',
@@ -760,9 +726,8 @@ class FeatureSet:
 
             enriched_list.append(
                 (attribute, de_size, obs, exp, log2_fold_enrichment, pval))
-            print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True)
 
     @staticmethod
     def _calc_hypergeometric_pval(bg_size: int, go_size: int, de_size: int, go_de_size: int):
@@ -849,18 +814,7 @@ class FeatureSet:
         ax.set_title(title, fontsize=16)
         # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
-            fontweight = 'bold'
-            if sig < 0.0001:
-                asterisks = u'\u2217' * 4
-            elif sig < 0.001:
-                asterisks = u'\u2217' * 3
-            elif sig < 0.01:
-                asterisks = u'\u2217' * 2
-            elif sig < 0.05:
-                asterisks = u'\u2217'
-            else:
-                asterisks = 'ns'
-                fontweight = 'normal'
+            asterisks, fontweight = FeatureSet._get_pval_asterisk(sig)
             valign = 'bottom' if np.sign(col._height) == 1 else 'top'
             ax.text(x=col.xy[0] + 0.5 * col._width,
                     y=col._height, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight,
@@ -868,6 +822,113 @@ class FeatureSet:
 
         sns.despine()
         plt.show()
+        return fig
+
+    @staticmethod
+    def _get_pval_asterisk(pval: float):
+        fontweight = 'bold'
+        if pval < 0.0001:
+            asterisks = u'\u2217' * 4
+        elif pval < 0.001:
+            asterisks = u'\u2217' * 3
+        elif pval < 0.01:
+            asterisks = u'\u2217' * 2
+        elif pval < 0.05:
+            asterisks = u'\u2217'
+        else:
+            asterisks = 'ns'
+            fontweight = 'normal'
+        return asterisks, fontweight
+
+    def enrich_non_categorical(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+                               fdr: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
+                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                               attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                               plot_log_scale: bool = True, plot_style: str = 'overlap', n_bins: int = 50,
+                               save_csv: bool = False, fname=None, return_fig: bool = False):
+        attr_ref_df, gene_set, attributes = \
+            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
+        enriched_list = []
+        for k, attribute in enumerate(attributes):
+            srs = attr_ref_df[attribute]
+            if not parametric_test:
+                exp, obs = srs.median(), srs[gene_set].median()
+                _, pval = sign_test(srs[gene_set].values, exp)
+            else:
+                exp, obs = srs.mean(), srs[gene_set].mean()
+                _, pval = ttest_1samp(srs[gene_set], popmean=exp, nan_policy='propagate')
+
+            enriched_list.append(
+                (attribute, len(gene_set), obs, exp, np.nan, pval))
+
+        results_df = self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, False)
+        results_df.dropna(axis=1, inplace=True)
+        for attribute, pval in zip(attributes, results_df['padj']):
+            self._enrichment_plot_histogram(attribute, gene_set, self.set_name, attr_ref_df[attribute], plot_log_scale,
+                                            plot_style, n_bins, parametric_test, pval)
+        return results_df
+
+    @staticmethod
+    def _enrichment_plot_histogram(attribute: str, gene_set: set, set_name: str, attr_srs: pd.Series,
+                                   plot_log_scale: bool, plot_style: str, n_bins: int, parametric_test: bool,
+                                   pval: float):
+        assert isinstance(n_bins,
+                          int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
+        # generate observed and expected Series, either linear or in log10 scale
+        exp = attr_srs
+        obs = exp.loc[gene_set]
+        if plot_log_scale:
+            xlabel = r"$\log_{10}$" + f"({attribute})"
+            exp = np.log10(exp)
+            obs = np.log10(obs)
+        else:
+            xlabel = f"{attribute}"
+
+        bins = np.linspace(np.min(exp), np.max(exp), n_bins).squeeze()
+        kwargs = dict(bins=bins, density=True, alpha=0.5, edgecolor='black', linewidth=1)
+        fig = plt.figure(figsize=(12, 6))
+        ax = fig.add_subplot(111)
+
+        # generate histogram according to plot style
+        if plot_style.lower() == 'interleaved':
+            y, x, _ = ax.hist([exp.values, obs.values], **kwargs, label=['Expected', 'Observed'])
+            max_y_val = np.max(y)
+        elif plot_style.lower() == 'overlap':
+            y, _, _ = ax.hist(exp.values, **kwargs, label='Expected')
+            y2, _, _ = ax.hist(obs.values, **kwargs, label='Observed')
+            max_y_val = np.max([np.max(y), np.max(y2)])
+        else:
+            raise ValueError(f"Invalid value for 'plot_style': '{plot_style}'")
+
+        # set either mean or median as the measure of centrality
+        if parametric_test:
+            x_exp, x_obs = exp.mean(), obs.mean()
+            label_exp, label_obs = 'Expected mean', 'Observed mean'
+        else:
+            x_exp, x_obs = exp.median(), obs.median()
+            label_exp, label_obs = 'Expected median', 'Observed median'
+
+        # add lines for mean/median of observed and expected distributions
+        ax.vlines(x_exp, ymin=0, ymax=max_y_val * 1.1, color='blue', linestyle='dashed', linewidth=2,
+                  label=label_exp)
+        ax.vlines(x_obs, ymin=0, ymax=max_y_val * 1.1, color='red', linestyle='dashed', linewidth=2,
+                  label=label_obs)
+
+        # add significance notation
+        asterisks, fontweight = FeatureSet._get_pval_asterisk(pval)
+        ax.vlines([x_exp, x_obs], ymin=max_y_val * 1.12, ymax=max_y_val * 1.16, color='k', linewidth=1)
+        ax.hlines(max_y_val * 1.16, xmin=min(x_exp, x_obs), xmax=max(x_exp, x_obs), color='k', linewidth=1)
+        ax.text(np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center',
+                fontweight=fontweight)
+
+        # legend and titles
+        ax.legend()
+        obs_name = 'Observed' if set_name == '' else set_name
+        ax.set_title(f"Histogram of {attribute} - {obs_name} vs Expected")
+        ax.set_ylabel("Probability density")
+        ax.set_xlabel(xlabel)
+        plt.show()
+
         return fig
 
     def biotypes(self, ref: str = 'predefined'):
@@ -1059,10 +1120,6 @@ class RankedSet(FeatureSet):
         ranked_srs = attr_ref_df.loc[ranked_genes, attribute]
         assert ranked_srs.shape[0] == len(ranked_genes)
         return np.uint16(np.nonzero(ranked_srs.notna().values)[0])
-
-    @staticmethod
-    def _plot_xlmhg_enrichment(results_df: pd.DataFrame, title: str):
-        pass
 
 
 def _fetch_sets(objs: dict, ref: str = 'predefined'):

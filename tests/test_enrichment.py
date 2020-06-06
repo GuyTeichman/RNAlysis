@@ -191,10 +191,6 @@ def test_enrichment_get_ref_custom_background_from_filter_object():
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
-def test_enrichment_get_scales():
-    assert False
-
-
 def tests_enrichment_randomization_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
