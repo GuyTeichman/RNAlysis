@@ -2367,7 +2367,9 @@ class CountFilter(Filter):
     def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None, labels: bool = True):
 
         """
-        runs and plots a PCA for a given set of samples.
+        Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
+         variance between the different samples. The function will automatically plot Principal Component #1 \
+         with every other Principal Components calculated.
 
         :type sample_names: 'all' or list.
         :param sample_names: the names of the relevant samples in a list. \
