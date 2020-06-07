@@ -1039,7 +1039,22 @@ def test_pipeline_apply_to():
 
 
 def test_pipeline_apply_to_with_multiple_functions():
-    assert False
+    d = DESeqFilter('test_files/test_deseq_with_nan.csv')
+    d_copy = d.__copy__()
+    p = Pipeline('deseqfilter')
+    p.add_function('filter_missing_values')
+    p.add_function(Filter.filter_biotype, biotype='protein_coding', ref=__biotype_ref__)
+    p.add_function('number_filters', 'log2FoldChange', 'gt', 0.75)
+    p.add_function('sort', 'baseMean', ascending=False)
+
+    d_pipelined = p.apply_to(d_copy, inplace=False)
+    p.apply_to(d_copy)
+    d.filter_missing_values()
+    d.filter_biotype('protein_coding', __biotype_ref__)
+    d.number_filters('log2FoldChange', 'gt', 0.75)
+    d.sort('baseMean', ascending=False)
+    assert d.df.equals(d_pipelined.df)
+    assert d.df.equals(d_copy.df)
 
 
 def test_pipeline_apply_to_invalid_object():
@@ -1110,7 +1125,7 @@ def test_pipeline_apply_to_multiple_splits():
     assert False
 
 
-def test_pipeline_apply_to_filter_split_plot():
+def test_pipeline_apply_to_filter_normalize_split_plot():
     assert False
 
 
@@ -1134,8 +1149,23 @@ def test_silhouette_method():
     assert False
 
 
-def test_parse_k():
-    assert False
+def test_parse_k(monkeypatch):
+    c = CountFilter('test_files/counted.csv')
+    monkeypatch.setattr(CountFilter, "_silhouette",
+                        lambda self, clusterer_class, random_state, n_init, max_iter, max_clusters: ('success', None))
+    assert c._parse_k('silhouette', KMeans, 0, 0, 0, 0) == ['success']
+
+    monkeypatch.setattr(CountFilter, "_gap_statistic",
+                        lambda self, clusterer_class, random_state, n_init, max_iter, max_clusters: ('success', None))
+    assert c._parse_k('gap', KMeans, 0, 0, 0, 0) == ['success']
+
+    assert list(c._parse_k(10, KMeans, 0, 0, 0, 0)) == [10]
+    assert list(c._parse_k([7, 2, 5], KMeans, 0, 0, 0, 0)) == [7, 2, 5]
+    assert list(c._parse_k(range(5), KMeans, 0, 0, 0, 0)) == list(range(5))
+    with pytest.raises(AssertionError):
+        print(list(c._parse_k([1, 2, '3'], KMeans, 0, 0, 0, 0)))
+    with pytest.raises(AssertionError):
+        c._parse_k('a string', KMeans, 0, 0, 0, 0)
 
 
 def test_fc_randomization():

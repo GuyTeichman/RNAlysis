@@ -2138,7 +2138,7 @@ class CountFilter(Filter):
                 k = [k]
             k, k_copy = tee(k)
 
-            assert np.all((isinstance(item, int) for item in k_copy)), \
+            assert np.all([isinstance(item, int) for item in k_copy]), \
                 f"Invalid value for k: '{k}'. k must be an integer, Iterable of integers, 'gap', or 'silhouette'. "
         return k
 
