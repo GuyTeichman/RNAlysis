@@ -1046,6 +1046,8 @@ def test_pipeline_apply_to_with_multiple_functions():
     p.add_function(Filter.filter_biotype, biotype='protein_coding', ref=__biotype_ref__)
     p.add_function('number_filters', 'log2FoldChange', 'gt', 0.75)
     p.add_function('sort', 'baseMean', ascending=False)
+    p.add_function('biotypes')
+    p.remove_last_function()
 
     d_pipelined = p.apply_to(d_copy, inplace=False)
     p.apply_to(d_copy)
