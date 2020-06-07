@@ -884,18 +884,20 @@ class FeatureSet:
         else:
             xlabel = f"{attribute}"
 
+        # determine bins according to value range and 'n_bins'
         bins = np.linspace(np.min(exp), np.max(exp), n_bins).squeeze()
-        kwargs = dict(bins=bins, density=True, alpha=0.5, edgecolor='black', linewidth=1)
-        fig = plt.figure(figsize=(12, 6))
-        ax = fig.add_subplot(111)
 
         # generate histogram according to plot style
+        fig = plt.figure(figsize=(12, 6))
+        ax = fig.add_subplot(111)
+        kwargs = dict(bins=bins, density=True, alpha=0.5, edgecolor='black', linewidth=1)
+        colors = ['C0', 'C1']
         if plot_style.lower() == 'interleaved':
-            y, x, _ = ax.hist([exp.values, obs.values], **kwargs, label=['Expected', 'Observed'])
+            y, x, _ = ax.hist([exp.values, obs.values], **kwargs, color=colors, label=['Expected', 'Observed'])
             max_y_val = np.max(y)
         elif plot_style.lower() == 'overlap':
-            y, _, _ = ax.hist(exp.values, **kwargs, label='Expected')
-            y2, _, _ = ax.hist(obs.values, **kwargs, label='Observed')
+            y, _, _ = ax.hist(exp.values, **kwargs, color=colors[0], label='Expected')
+            y2, _, _ = ax.hist(obs.values, **kwargs, color=colors[1], label='Observed')
             max_y_val = np.max([np.max(y), np.max(y2)])
         else:
             raise ValueError(f"Invalid value for 'plot_style': '{plot_style}'")
@@ -924,9 +926,9 @@ class FeatureSet:
         # legend and titles
         ax.legend()
         obs_name = 'Observed' if set_name == '' else set_name
-        ax.set_title(f"Histogram of {attribute} - {obs_name} vs Expected")
-        ax.set_ylabel("Probability density")
-        ax.set_xlabel(xlabel)
+        ax.set_title(f"Histogram of {attribute} - {obs_name} vs Expected", fontsize=17)
+        ax.set_ylabel("Probability density", fontsize=14)
+        ax.set_xlabel(xlabel, fontsize=14)
         plt.show()
 
         return fig
