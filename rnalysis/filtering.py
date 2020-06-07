@@ -2885,7 +2885,10 @@ class Pipeline:
                     raise e.__class__(f"Invalid function signature {func_str}")
             else:
                 try:
-                    other_outputs[f"{func.__name__}_{other_cnt}"] = func(filter_object, *args, **kwargs)
+
+                    this_output = func(filter_object, *args, **kwargs)
+                    if this_output is not None:
+                        other_outputs[f"{func.__name__}_{other_cnt}"] = this_output
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
                 other_cnt += 1
