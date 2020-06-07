@@ -2823,7 +2823,9 @@ class Pipeline:
                 'To apply the pipeline inplace, state "inplace=True" when calling Pipeline.apply_to(). ')
         self.functions.append(func)
         self.params.append((args, kwargs))
-        print(f"Added function {func.__name__} with parameters [{self._param_string(args, kwargs)}] to the pipeline. ")
+        print(
+            f"Added function {func.__name__} with parameters " + "{" + f"{self._param_string(args, kwargs)}" +
+            "} to the pipeline. ")
 
     def apply_to(self, filter_object, inplace: bool = True):
 
