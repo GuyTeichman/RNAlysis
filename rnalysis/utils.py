@@ -281,9 +281,20 @@ def isinstanceinh(obj, parent_class):
     return True if issubclass(obj.__class__, parent_class) else False
 
 
-def make_temp_copy_of_test_file():
-    pass
+def make_temp_copy_of_settings_file():
+    pth = get_settings_file_path()
+    remove_temp_copy_of_settings_file()
+    with open(os.path.join(str(pth.parent), 'temp_settings.yaml'), 'w') as tempfile, pth.open() as originfile:
+        tempfile.writelines(originfile.readlines())
 
 
-def set_temp_copy_of_test_file_as_default():
-    pass
+def set_temp_copy_of_settings_file_as_default():
+    pth = get_settings_file_path()
+    pth.unlink()
+    with open(os.path.join(str(pth.parent), 'temp_settings.yaml')) as tempfile, pth.open('w') as originfile:
+        originfile.writelines(tempfile.readlines())
+
+
+def remove_temp_copy_of_settings_file():
+    pth = get_settings_file_path()
+    os.remove(os.path.join(str(pth.parent), 'temp_settings.yaml'))
