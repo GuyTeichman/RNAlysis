@@ -126,15 +126,15 @@ def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[s
     if drop_columns:
         if isinstance(drop_columns, str):
             drop_columns = [drop_columns]
-            assert isinstance(drop_columns,
-                              list), f"'drop_columns' must be str, list, or False; is instead {type(drop_columns)}."
-            for col in drop_columns:
-                assert isinstance(col, str), f"'drop_columns' must contain strings only. " \
-                                             f"Member {col} is of type {type(col)}."
-                if col in df:
-                    df.drop(col, axis=1, inplace=True)
-                else:
-                    raise IndexError(f"The argument {col} in 'drop_columns' is not a column in the loaded csv file!")
+        assert isinstance(drop_columns,
+                          list), f"'drop_columns' must be str, list, or False; is instead {type(drop_columns)}."
+        for col in drop_columns:
+            assert isinstance(col, str), f"'drop_columns' must contain strings only. " \
+                                         f"Member {col} is of type {type(col)}."
+            if col in df:
+                df.drop(col, axis=1, inplace=True)
+            else:
+                raise IndexError(f"The argument {col} in 'drop_columns' is not a column in the loaded csv file!")
     return df
 
 

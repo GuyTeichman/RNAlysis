@@ -1,5 +1,7 @@
 import pytest
+import os
 from rnalysis.general import *
+from rnalysis import __biotype_file_key__, __attr_file_key__
 
 
 def test_parse_wbgene_string():
@@ -25,28 +27,66 @@ def test_save_to_csv():
     assert False
 
 
-def test_print_settings_file():
-    utils.make_temp_copy_of_test_file()
-    utils.set_temp_copy_of_test_file_as_default()
-    assert False
+def test_print_settings_file(capfd):
+    utils.make_temp_copy_of_settings_file()
+    set_biotype_ref_table_path('temp_path')
+    set_attr_ref_table_path('temp_path')
+
+    print_settings_file()
+
+    utils.set_temp_copy_of_settings_file_as_default()
+    utils.remove_temp_copy_of_settings_file()
 
 
 def test_set_attr_ref_path():
-    utils.make_temp_copy_of_test_file()
-    utils.set_temp_copy_of_test_file_as_default()
-    assert False
+    utils.make_temp_copy_of_settings_file()
+    if utils.get_settings_file_path().exists():
+        utils.get_settings_file_path().unlink()
+
+    set_attr_ref_table_path('old/path')
+    success_1 = utils.get_attr_ref_path('predefined') == 'old/path'
+
+    set_attr_ref_table_path('new/path')
+    success_2 = utils.get_attr_ref_path('predefined') == 'new/path'
+
+    utils.set_temp_copy_of_settings_file_as_default()
+    utils.remove_temp_copy_of_settings_file()
+    assert success_1
+    assert success_2
 
 
 def test_set_biotype_ref_path():
-    utils.make_temp_copy_of_test_file()
-    utils.set_temp_copy_of_test_file_as_default()
-    assert False
+    utils.make_temp_copy_of_settings_file()
+    if utils.get_settings_file_path().exists():
+        utils.get_settings_file_path().unlink()
+
+    set_biotype_ref_table_path('old/path')
+    success_1 = utils.get_biotype_ref_path('predefined') == 'old/path'
+
+    set_biotype_ref_table_path('new/path')
+    success_2 = utils.get_biotype_ref_path('predefined') == 'new/path'
+
+    utils.set_temp_copy_of_settings_file_as_default()
+    utils.remove_temp_copy_of_settings_file()
+    assert success_1
+    assert success_2
 
 
 def test_reset_settings_file():
-    utils.make_temp_copy_of_test_file()
-    utils.set_temp_copy_of_test_file_as_default()
-    assert False
+    utils.make_temp_copy_of_settings_file()
+    try:
+        utils.get_settings_file_path().unlink()
+    except FileNotFoundError:
+        pass
+    utils.update_settings_file('path/to/biotype/ref/file', __biotype_file_key__)
+    utils.update_settings_file('path/to/attr/ref/file', __attr_file_key__)
+    reset_settings_file()
+
+    success = not utils.get_settings_file_path().exists()
+
+    utils.set_temp_copy_of_settings_file_as_default()
+    utils.remove_temp_copy_of_settings_file()
+    assert success
 
 
 def test_start_parallel_session():

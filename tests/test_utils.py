@@ -61,6 +61,18 @@ def test_load_csv():
     assert (truth == load_csv(pth, 0)).all().all()
 
 
+def test_load_csv_drop_columns():
+    loaded = load_csv('test_files/counted.csv', 0, drop_columns='cond1')
+    print(loaded)
+    assert list(loaded.columns) == ['cond2', 'cond3', 'cond4']
+
+    loaded = load_csv('test_files/counted.csv', 0, drop_columns=['cond2', 'cond4'])
+    assert list(loaded.columns) == ['cond1', 'cond3']
+
+    with pytest.raises(IndexError):
+        load_csv('test_files/counted.csv',0,drop_columns=['cond1','cond6'])
+
+
 def test_biotype_table_assertions():
     assert False
 
@@ -69,9 +81,11 @@ def test_attr_table_assertions():
     assert False
 
 
-def test_get_settings_file():
-    make_temp_copy_of_test_file()
-    set_temp_copy_of_test_file_as_default()
+def test_get_settings_file_path():
+    make_temp_copy_of_settings_file()
+
+    set_temp_copy_of_settings_file_as_default()
+    remove_temp_copy_of_settings_file()
     assert False
 
 
@@ -109,7 +123,10 @@ def test_get_biotype_ref_path():
 
 def test_update_ref_table_attributes():
     make_temp_copy_of_settings_file()
-    get_settings_file_path().unlink()
+    try:
+        get_settings_file_path().unlink()
+    except FileNotFoundError:
+        pass
     update_settings_file('path/to/biotype/ref/file', __biotype_file_key__)
     with get_settings_file_path().open() as f:
         counter = 0
