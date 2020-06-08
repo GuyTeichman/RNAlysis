@@ -299,10 +299,15 @@ def set_temp_copy_of_settings_file_as_default():
     pth = get_settings_file_path()
     if pth.exists():
         pth.unlink()
+    if not Path(os.path.join(str(pth.parent), 'temp_settings.yaml')).exists():
+        print("no temporary settings file exists")
+        return
     with open(os.path.join(str(pth.parent), 'temp_settings.yaml')) as tempfile, pth.open('w') as originfile:
         originfile.writelines(tempfile.readlines())
 
 
 def remove_temp_copy_of_settings_file():
     pth = get_settings_file_path()
-    os.remove(os.path.join(str(pth.parent), 'temp_settings.yaml'))
+    tmp_pth = Path(os.path.join(str(pth.parent), 'temp_settings.yaml'))
+    if tmp_pth.exists():
+        tmp_pth.unlink()
