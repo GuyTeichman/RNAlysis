@@ -13,9 +13,9 @@ When you save filtered/modified data, its new file name will include by default 
 import os
 import types
 import warnings
-from itertools import tee, repeat
+from itertools import tee
 from pathlib import Path
-from typing import Iterable, List, Tuple, Type, Union, Any
+from typing import Any, Iterable, List, Tuple, Type, Union
 
 import hdbscan
 import matplotlib.pyplot as plt
@@ -2259,7 +2259,8 @@ class CountFilter(Filter):
             print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
         else:
             print(
-                f"Found {n_clusters} clusters of average size {(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
+                f"Found {n_clusters} clusters of average size "
+                f"{(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
                 f"Number of unclustered genes is {unclustered}, "
                 f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
 
@@ -2763,7 +2764,8 @@ class Pipeline:
                  'filter_type': 'type of filter objects to which the Pipeline will be applied'}
 
     def __init__(self, filter_type: Union[
-        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
+        Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 
