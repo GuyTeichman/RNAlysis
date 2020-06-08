@@ -1114,7 +1114,7 @@ def _get_pipeline_with_plot(inplace: bool):
     p.add_function('filter_missing_values')
     p.add_function(Filter.filter_top_n, 'baseMean', n=15)
     p.add_function(DESeqFilter.volcano_plot, alpha=0.001)
-    p.add_function('biotypes')
+    p.add_function('biotypes', ref=__biotype_ref__)
     p.add_function('filter_top_n', 'log2FoldChange', 6)
     d = DESeqFilter('test_files/test_deseq_with_nan.csv')
     res_truth = {}
@@ -1122,7 +1122,7 @@ def _get_pipeline_with_plot(inplace: bool):
     d.filter_missing_values()
     d.filter_top_n('baseMean', n=15)
     res_truth['volcano_plot_1'] = d.volcano_plot(alpha=0.001)
-    res_truth['biotypes_1'] = d.biotypes()
+    res_truth['biotypes_1'] = d.biotypes(ref=__biotype_ref__)
     d.filter_top_n('log2FoldChange', 6)
     if inplace:
         res = p.apply_to(d_copy, inplace=True)
