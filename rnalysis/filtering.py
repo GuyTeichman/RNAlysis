@@ -56,8 +56,7 @@ class Filter:
     index_string: string
         A string of all feature indices in the current DataFrame separated by newline.
     """
-    __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data', 'shape': '(rows, columns)',
-                 'columns': 'list of column names'}
+    __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data', 'shape': '(rows, columns)'}
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False):
 
@@ -103,6 +102,18 @@ class Filter:
 
         """
         return type(self)((self.fname, self.df.copy(deep=True)))
+
+    @property
+    def columns(self) -> list:
+        """
+        The columns of df.
+
+        :return: a list of the columns in the Filter object.
+        :rtype: list
+        """
+        if isinstance(self, FoldChangeFilter):
+            return [self.df.name]
+        return list(self.df.columns)
 
     def _inplace(self, new_df: pd.DataFrame, opposite: bool, inplace: bool, suffix: str,
                  printout_operation: str = 'filter'):
@@ -900,8 +911,9 @@ class Filter:
                 pass
         elif isinstance(columns, str):
             assert columns in self.columns, f"Column '{columns}' does not exist in the Filter object."
-            subset = [columns]
-            suffix += columns
+            if len(self.columns) > 1:
+                subset = [columns]
+                suffix += columns
         elif isinstance(columns, (list, tuple, set, np.ndarray)):
             for col in columns:
                 assert isinstance(col, str), f"Column name {col} is of type {type(col)} instead of str. "
