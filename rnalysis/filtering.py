@@ -83,8 +83,6 @@ class Filter:
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same WBGene index.")
         self.shape = self.df.shape
-        if isinstance(self.df, pd.DataFrame):
-            self.columns = list(self.df.columns)
 
     def __repr__(self):
         return f"{type(self).__name__} of file {self.fname.name}"
