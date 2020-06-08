@@ -13,7 +13,7 @@ When you save filtered/modified data, its new file name will include by default 
 import os
 import types
 import warnings
-from itertools import tee
+from itertools import tee, repeat
 from pathlib import Path
 from typing import Iterable, List, Tuple, Type, Union, Any
 
@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
+from numba import jit
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
@@ -1249,7 +1250,8 @@ class FoldChangeFilter(Filter):
         return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
                           denominator_name=self.denominator)
 
-    def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None):
+    def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None,
+                           random_seed: int = None):
 
         """
         Perform a randomization test to examine whether the fold change of a group of specific genomic features \
@@ -1268,6 +1270,10 @@ class FoldChangeFilter(Filter):
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :type random_seed: non-negative integer (default None)
+        :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
+        By default it is picked at random, but you can set it to a particular integer to get consistents results \
+        over multiple runs.
         :rtype: pandas DataFrame
         :return: A Dataframe with the number of given genes, the observed fold change for the given group of genes, \
         the expected fold change for a group of genes of that size and the p value for the comparison.
@@ -1290,37 +1296,37 @@ class FoldChangeFilter(Filter):
         """
 
         obs_fc = self.df.mean(axis=0)
-        ref_df = pd.DataFrame(ref.df.__copy__(deep=True))
-        # exp_fc = ref_df['Fold Change'].mean(axis=0)
+        exp_fc = ref.df.mean()
         n = self.df.shape[0]
-
-        ref_df['int_index'] = [int(i[6:14]) for i in ref_df.index]
-
-        srs_int = (ref_df.set_index('int_index', inplace=False))['Fold Change']
+        if random_seed is not None:
+            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
+                                                                      f"Value {random_seed} invalid."
+            np.random.seed(random_seed)
 
         print('Calculating...')
-        rand = [srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(axis=0) for _ in range(reps)]
-        exp_fc = np.mean(rand)
-        if obs_fc > exp_fc:
-            success = sum(r >= obs_fc for r in rand)
-        else:
-            success = sum(r <= obs_fc for r in rand)
-
-        # success = sum((srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
-        #     axis=0) >= obs_fc if obs_fc > exp_fc else srs_int[np.random.choice(srs_int.index, n, replace=False)].mean(
-        #     axis=0) <= obs_fc for _ in range(reps)))
-
-        pval = (success + 1) / (reps + 1)
-        res = [[n, obs_fc, exp_fc, pval]]
+        res = self._foldchange_randomization(ref.df.values, reps, obs_fc, exp_fc, n)
 
         res_df = pd.DataFrame(res, columns=['group size', 'observed fold change', 'expected fold change', 'pval'],
                               index=[0])
-        res_df['significant'] = pval <= alpha
+        res_df['significant'] = res_df['pval'] <= alpha
         if save_csv:
             utils.save_csv(res_df, fname)
         print(res_df)
 
         return res_df
+
+    @staticmethod
+    @jit(nopython=True)
+    def _foldchange_randomization(vals: np.ndarray, reps: int, obs_fc: float, exp_fc: float, n: int):
+        success = 0
+        if obs_fc > exp_fc:
+            for _ in range(reps):
+                success += np.mean(np.random.choice(vals, n, replace=False)) >= obs_fc
+        else:
+            for _ in range(reps):
+                success += np.mean(np.random.choice(vals, n, replace=False)) <= obs_fc
+        pval = (success + 1) / (reps + 1)
+        return [[n, obs_fc, exp_fc, pval]]
 
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
 

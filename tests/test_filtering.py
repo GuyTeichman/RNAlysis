@@ -1202,11 +1202,6 @@ def test_fc_randomization():
     truth = utils.load_csv('test_files/fc_randomization_truth.csv')
     fc1 = FoldChangeFilter("test_files/fc_1.csv", 'a', 'b')
     fc2 = FoldChangeFilter("test_files/fc_2.csv", "c", "d")
-    random_state = np.random.get_state()
-    res = fc1.randomization_test(fc2)
-
-    try:
-        assert np.all(truth['significant'] == res['significant'])
-        assert np.isclose(truth.iloc[:, :-1], res.iloc[:, :-1]).all()
-    except AssertionError:
-        raise AssertionError(f'Enrichment test failed with the numpy.random state: \n{random_state}')
+    res = fc1.randomization_test(fc2, random_seed=0)
+    assert np.all(truth['significant'] == res['significant'])
+    assert np.isclose(truth.iloc[:, :-1], res.iloc[:, :-1]).all()
