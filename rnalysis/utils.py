@@ -294,7 +294,8 @@ def make_temp_copy_of_settings_file():
 
 def set_temp_copy_of_settings_file_as_default():
     pth = get_settings_file_path()
-    pth.unlink()
+    if pth.exists():
+        pth.unlink()
     with open(os.path.join(str(pth.parent), 'temp_settings.yaml')) as tempfile, pth.open('w') as originfile:
         originfile.writelines(tempfile.readlines())
 
