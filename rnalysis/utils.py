@@ -66,6 +66,7 @@ def load_settings_file():
 def update_settings_file(value: str, key: str):
     """
     Receives a key and a value, and updates/adds the key and value to the settings.yaml file.
+
     :param value: the value to be added/updated (such as Reference Table path)
     :type value: str
     :param key: the key to be added/updated (such as __attr_file_key__)
@@ -283,7 +284,10 @@ def isinstanceinh(obj, parent_class):
 
 def make_temp_copy_of_settings_file():
     pth = get_settings_file_path()
-    remove_temp_copy_of_settings_file()
+    try:
+        remove_temp_copy_of_settings_file()
+    except FileNotFoundError:
+        print("no previous temporary test file existed")
     with open(os.path.join(str(pth.parent), 'temp_settings.yaml'), 'w') as tempfile, pth.open() as originfile:
         tempfile.writelines(originfile.readlines())
 
