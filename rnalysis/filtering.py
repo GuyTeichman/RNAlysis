@@ -1601,17 +1601,19 @@ class DESeqFilter(Filter):
            Example plot of volcano_plot()
 
         """
-        plt.figure()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
         plt.style.use('seaborn-white')
         colors = pd.Series(index=self.df.index)
         colors.loc[(self.df['padj'] <= alpha) & (self.df['log2FoldChange'] > 0)] = 'tab:red'
         colors.loc[(self.df['padj'] <= alpha) & (self.df['log2FoldChange'] < 0)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
-        plt.scatter(self.df['log2FoldChange'], -np.log10(self.df['padj']), c=colors, s=1)
-        plt.title(f"Volcano plot of {self.fname.stem}", fontsize=18)
-        plt.xlabel('Log2(fold change)', fontsize=15)
-        plt.ylabel('-Log10(adj. p-value)', fontsize=15)
+        ax.scatter(self.df['log2FoldChange'], -np.log10(self.df['padj']), c=colors, s=1)
+        ax.set_title(f"Volcano plot of {self.fname.stem}", fontsize=18)
+        ax.set_xlabel('Log2(fold change)', fontsize=15)
+        ax.set_ylabel('-Log10(adj. p-value)', fontsize=15)
         plt.show()
+        return fig
 
 
 class CountFilter(Filter):
@@ -1959,9 +1961,10 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def _plot_clustering(self, n_clusters: int, data, labels: np.ndarray, centers: np.ndarray, title: str,
-                         plot_style: str):
+                         plot_style: str, split_plots: bool):
         assert plot_style.lower() in {'all', 'std_bar', 'std_area'}, \
             f"Invalid value for 'plot_style': '{plot_style}'. 'plot_style' must be 'all', 'std_bar' or 'std_area'. "
+        assert isinstance(split_plots, bool), f"'split_plots' must be of type bool, instead got {type(split_plots)}"
         grid = strategies.SquareStrategy()
         subplots = grid.get_grid(n_clusters)
         plt.close()
@@ -2143,24 +2146,9 @@ class CountFilter(Filter):
         return k
 
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
-                     max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
-        """
+                     max_iter: int = 300, plot_style: str = 'all', split_plots: bool = False,
+                     max_clusters: int = 'default'):
 
-        :param k:
-        :type k:
-        :param random_state:
-        :type random_state:
-        :param n_init:
-        :type n_init:
-        :param max_iter:
-        :type max_iter:
-        :param plot_style:
-        :type plot_style:
-        :param max_clusters:
-        :type max_clusters:
-        :return:
-        :rtype:
-        """
         k = self._parse_k(k=k, clusterer_class=MiniBatchKMeans, random_state=random_state, n_init=n_init,
                           max_iter=max_iter, max_clusters=max_clusters)
         filt_obj_tuples = []
@@ -2172,7 +2160,8 @@ class CountFilter(Filter):
 
             self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
-                                  title=f"Results of K-Means Clustering for K={this_k}", plot_style=plot_style)
+                                  title=f"Results of K-Means Clustering for K={this_k}", plot_style=plot_style,
+                                  split_plots=split_plots)
 
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
@@ -2218,7 +2207,7 @@ class CountFilter(Filter):
 
     def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
-                      plot_style: str = 'all', return_prob: bool = False):
+                      plot_style: str = 'all', split_plots: bool = False, return_prob: bool = False):
         """
 
         :param min_cluster_size:
@@ -2261,7 +2250,8 @@ class CountFilter(Filter):
             self._plot_clustering(n_clusters=n_clusters, data=data, labels=clusterer.labels_, centers=means,
                                   title=f"Results of HDBSCAN Clustering for min_cluster_size={min_cluster_size}, "
                                         f"min_samples = {min_samples}, epsilon={cluster_selection_epsilon} "
-                                        f"and metric='{metric}'", plot_style=plot_style)
+                                        f"and method='{cluster_selection_method}'", plot_style=plot_style,
+                                  split_plots=split_plots)
 
         filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                          suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
@@ -2426,7 +2416,7 @@ class CountFilter(Filter):
     def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool):
 
         """
-        Internal method, used to plot the results from CountFilter.pca. Static class method.
+        Internal method, used to plot the results from CountFilter.pca().
 
         :param final_df: The DataFrame output from pca
         :param pc1_var: Variance explained by the first PC.
@@ -2755,7 +2745,7 @@ class Pipeline:
                  'filter_type': 'type of filter objects to which the Pipeline will be applied'}
 
     def __init__(self, filter_type: Union[
-            Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
+        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter], str] = Filter):
         self.functions = []
         self.params = []
 
@@ -2845,7 +2835,7 @@ class Pipeline:
         assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
 
         other_outputs = dict()
-        other_cnt = 1
+        other_cnt = dict()
         # iterate over all functions and arguments
         for func, (args, kwargs) in zip(self.functions, self.params):
             func_str = f"func(filter_object, {self._param_string(args, kwargs)})"
@@ -2890,10 +2880,10 @@ class Pipeline:
 
                     this_output = func(filter_object, *args, **kwargs)
                     if this_output is not None:
-                        other_outputs[f"{func.__name__}_{other_cnt}"] = this_output
+                        other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = this_output
+                        other_cnt[func.__name__] += 1
                 except (ValueError, AssertionError, TypeError) as e:
                     raise e.__class__(f"Invalid function signature {func_str}")
-                other_cnt += 1
 
         if not inplace or isinstance(filter_object, tuple):
             if len(other_outputs) > 0:
