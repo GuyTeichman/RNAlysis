@@ -288,6 +288,9 @@ def make_temp_copy_of_settings_file():
         remove_temp_copy_of_settings_file()
     except FileNotFoundError:
         print("no previous temporary test file existed")
+    if not pth.exists():
+        print("no previous settings file exists")
+        return
     with open(os.path.join(str(pth.parent), 'temp_settings.yaml'), 'w') as tempfile, pth.open() as originfile:
         tempfile.writelines(originfile.readlines())
 
