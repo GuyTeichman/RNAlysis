@@ -1107,12 +1107,40 @@ def test_pipeline_add_function_mismatch_filter_type():
         pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
 
 
+def _get_pipeline_with_plot(inplace: bool):
+    p = Pipeline('DESeqFilter')
+    p.add_function('filter_missing_values')
+    p.add_function(Filter.filter_top_n, 'baseMean', n=15)
+    p.add_function(DESeqFilter.volcano_plot, alpha=0.001)
+    p.add_function('biotypes')
+    p.add_function('filter_top_n', 'log2FoldChange', 6)
+    d = DESeqFilter('test_files/test_deseq_with_nan.csv')
+    res_truth = {}
+    d_copy = d.__copy__()
+    d.filter_missing_values()
+    d.filter_top_n('baseMean', n=15)
+    res_truth['volcano_plot_1'] = d.volcano_plot(alpha=0.001)
+    res_truth['biotypes_1'] = d.biotypes()
+    d.filter_top_n('log2FoldChange', 6)
+    if inplace:
+        res = p.apply_to(d_copy, inplace=True)
+        assert d.df.equals(d_copy.df)
+    else:
+        d_pipelined, res = p.apply_to(d_copy, inplace=False)
+        assert d.df.equals(d_pipelined.df)
+    print(res)
+    print(res_truth)
+    assert res.keys() == res_truth.keys()
+    assert res['biotypes_1'].equals(res_truth['biotypes_1'])
+    assert type(res['volcano_plot_1']) == type(res_truth['volcano_plot_1'])
+
+
 def test_pipeline_apply_to_with_plot_inplace():
-    assert False
+    _get_pipeline_with_plot(inplace=True)
 
 
 def test_pipeline_apply_to_with_plot_not_inplace():
-    assert False
+    _get_pipeline_with_plot(inplace=False)
 
 
 def test_pipeline_apply_to_with_split_function():
