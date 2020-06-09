@@ -718,6 +718,12 @@ def test_fcfilter_split_fold_change_direction():
     assert truth_neg.equals(neg.df)
 
 
+def test_fcfilter_filter_fold_change_direction_bad_input():
+    fc = FoldChangeFilter('test_files/fc_1.csv', 'name', 'name')
+    with pytest.raises(ValueError):
+        fc.filter_fold_change_direction('bad_input')
+
+
 def test_number_filters_gt():
     truth = utils.load_csv(r'test_files/test_deseq_gt.csv', 0)
     d = DESeqFilter(r'test_files/test_deseq.csv')
