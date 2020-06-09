@@ -699,6 +699,25 @@ def test_fcfilter_filter_abs_fc():
     assert np.all(np.squeeze(f.df.values) == np.squeeze(truth.values))
 
 
+def test_fcfilter_fold_change_direction():
+    truth_pos = utils.load_csv('test_files/fc_1_pos_fc.csv', 0, squeeze=True)
+    truth_neg = utils.load_csv('test_files/fc_1_neg_fc.csv', 0, squeeze=True)
+    fc = FoldChangeFilter('test_files/fc_1.csv', 'name', 'name')
+    pos = fc.filter_fold_change_direction('pos', inplace=False)
+    neg = fc.filter_fold_change_direction('neg', inplace=False)
+    assert truth_pos.equals(pos.df)
+    assert truth_neg.equals(neg.df)
+
+
+def test_fcfilter_split_fold_change_direction():
+    truth_pos = utils.load_csv('test_files/fc_1_pos_fc.csv', 0, squeeze=True)
+    truth_neg = utils.load_csv('test_files/fc_1_neg_fc.csv', 0, squeeze=True)
+    fc = FoldChangeFilter('test_files/fc_1.csv', 'name', 'name')
+    pos, neg = fc.split_fold_change_direction()
+    assert truth_pos.equals(pos.df)
+    assert truth_neg.equals(neg.df)
+
+
 def test_number_filters_gt():
     truth = utils.load_csv(r'test_files/test_deseq_gt.csv', 0)
     d = DESeqFilter(r'test_files/test_deseq.csv')
