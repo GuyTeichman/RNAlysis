@@ -2802,6 +2802,21 @@ class Pipeline:
         else:
             return f"{args_str}, {kwargs_str}"
 
+    def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
+        """
+        Returns a string functions signature for the given function and arguments.
+
+        :param func: the function or method to generate signature for
+        :type func: function
+        :param args: arguments given for the function
+        :type args: tuple
+        :param kwargs: keyworded arguments given for the function
+        :type kwargs: dict
+        :return: function signature string
+        :rtype: str
+        """
+        return f"{self.filter_type.__name__}.{func.__name__}({self._param_string(args, kwargs)})"
+
     def add_function(self, func: Union[types.FunctionType, str], *args, **kwargs):
 
         """
