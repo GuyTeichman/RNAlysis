@@ -159,28 +159,78 @@ def test_filter_low_reads_reverse():
     assert np.all(h.df == low_truth)
 
 
-def test_volcano_plot_api():
+def test_deseqfilter_volcano_plot_api():
     d = DESeqFilter("test_files/test_deseq.csv")
     d.volcano_plot()
     d.volcano_plot(alpha=0.000001)
     plt.close('all')
 
 
-def test_pairplot_api():
+def test_countfilter_pairplot_api():
     c = CountFilter("test_files/counted.csv")
     c.pairplot(log2=False)
     c.pairplot(['cond1', 'cond3'])
     plt.close('all')
 
 
-def test_box_plot_api():
+def test_countfilter_clustergram_api():
+    c = CountFilter("test_files/counted.csv")
+    c.clustergram()
+    c.clustergram(c.columns[0:2], metric='euclidean', linkage='ward')
+    c.clustergram(c.columns[0:2], metric='euclidean', linkage='single')
+    with pytest.raises(AssertionError):
+        c.clustergram(linkage='invalid')
+    with pytest.raises(AssertionError):
+        c.clustergram(metric='invalid')
+    with pytest.raises(AssertionError):
+        c.clustergram(linkage=5)
+    plt.close('all')
+
+
+def test_countfilter_box_plot_api():
+    c = CountFilter("test_files/counted.csv")
+    c.enhanced_box_plot(ylabel='A different label')
+    c.enhanced_box_plot(samples=['cond1', 'cond3'], scatter=True)
+    plt.close('all')
+
+
+def test_countfilter_plot_expression_api():
+    c = CountFilter("test_files/counted.csv")
+    c.plot_expression('WBGene00007063', {'cond 1 and 2': [0, 1], 'cond3 and 4': ['cond3', 'cond4']})
+    c.plot_expression(['WBGene00007064', 'WBGene00044951', 'WBGene00043988', 'WBGene00007066'], {'cond1': ['cond1']})
+    c.plot_expression(['WBGene00007064', 'WBGene00044951'], {'cond1': ['cond1'], 'cond2': [1]})
+    plt.close('all')
+
+
+def test_countfilter_scatter_sample_vs_sample_api():
+    c = CountFilter("test_files/counted.csv")
+    c.scatter_sample_vs_sample('cond1', 'cond2')
+    c.scatter_sample_vs_sample('cond3', ['cond2', 'cond1', 'cond4'], highlight={'WBGene00007063', 'WBGene00007064'})
+    d = DESeqFilter('test_files/test_deseq.csv').intersection(c, inplace=True)
+    c.scatter_sample_vs_sample('cond3', ['cond2', 'cond1', 'cond4'], xlabel='label', title='title', ylabel='ylabel',
+                               highlight=d)
+    plt.close('all')
+
+
+def test_countfilter_pca_api():
+    c = CountFilter("test_files/counted.csv")
+    c.pca()
+    c.pca(sample_names=['cond1', 'cond2', 'cond3'], sample_grouping=[1, 1, 2], n_components=2, labels=False)
+    with pytest.raises(AssertionError):
+        c.pca(n_components=2.0)
+    with pytest.raises(AssertionError):
+        c.pca(n_components=1)
+    plt.close('all')
+
+
+def test_countfilter_enhanced_box_plot_api():
     c = CountFilter("test_files/counted.csv")
     c.box_plot(notch=True, ylabel='A different label')
     c.box_plot(samples=['cond1', 'cond3'], scatter=True)
     plt.close('all')
 
 
-def test_violin_plot_api():
+def test_countfilter_violin_plot_api():
     c = CountFilter("test_files/counted.csv")
     c.violin_plot(ylabel='A different label')
     c.violin_plot(samples=['cond1', 'cond4'])
@@ -875,6 +925,10 @@ def test_biotypes():
     assert np.all(df == truth)
 
 
+def test_biotypes_long_form():
+    assert False
+
+
 def test_filter_by_row_sum():
     truth = utils.load_csv('test_files/test_filter_row_sum.csv', 0)
     h = CountFilter('test_files/counted.csv')
@@ -1224,7 +1278,28 @@ def test_pipeline_apply_to_with_split_function_inplace_raise_error():
 
 
 def test_pipeline_apply_to_multiple_splits():
-    assert False
+    pl_c = Pipeline('CountFilter')
+    pl_c.add_function(CountFilter.filter_top_n, by='cond2', n=2, opposite=True)
+    pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=3, return_prob=True)
+    pl_c.add_function(CountFilter.split_kmedoids, k=2, random_state=42)
+    pl_c.add_function(CountFilter.split_by_reads, 15)
+
+    c = CountFilter('test_files/counted.csv')
+    c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
+    c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
+    c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_prob=True)
+    c_res_cont = []
+    for i in c_res:
+        c_res_cont.extend(i.split_kmedoids(k=2, random_state=42))
+    c_res_cont_fin = []
+    for i in c_res_cont:
+        c_res_cont_fin.extend(i.split_by_reads(15))
+    assert len(c_pipeline_res) == len(c_res_cont_fin)
+    for i, j in zip(c_res_cont_fin, c_pipeline_res):
+        print(i.df)
+        print(j.df)
+        assert i == j
+    assert np.all(c_pipeline_dict['split_hdbscan_1'] == prob)
 
 
 def test_pipeline_apply_to_filter_normalize_split_plot():
@@ -1277,3 +1352,7 @@ def test_fc_randomization():
     res = fc1.randomization_test(fc2, random_seed=0)
     assert np.all(truth['significant'] == res['significant'])
     assert np.isclose(truth.iloc[:, :-1], res.iloc[:, :-1]).all()
+
+
+def test_filter_save_csv():
+    assert False
