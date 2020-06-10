@@ -2856,7 +2856,9 @@ class Pipeline:
         print(
             f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline. ")
 
-    def _apply_filter_or_norm(self, func: types.FunctionType, filter_object, args: tuple, kwargs: dict, inplace: bool):
+    def _apply_filter_norm_sort(self, func: types.FunctionType,
+                                filter_object: Union[Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
+                                                     Type[CountFilter]], args: tuple, kwargs: dict, inplace: bool):
         kwargs = kwargs.copy()
         if not inplace:
             kwargs['inplace'] = False
@@ -2938,8 +2940,8 @@ class Pipeline:
         other_cnt = dict()
         # iterate over all functions and arguments
         for func, (args, kwargs) in zip(self.functions, self.params):
-            if 'filter' in func.__name__ or func.__name__.startswith('normalize'):
-                filter_object = self._apply_filter_or_norm(func, filter_object, args, kwargs, inplace)
+            if 'filter' in func.__name__ or func.__name__.startswith('normalize') or func.__name__ == 'sort':
+                filter_object = self._apply_filter_norm_sort(func, filter_object, args, kwargs, inplace)
             elif func.__name__.startswith('split'):
                 assert not inplace, f"Cannot apply the split function {self._func_signature(func, args, kwargs)} " \
                                     f"when inplace={inplace}!"
