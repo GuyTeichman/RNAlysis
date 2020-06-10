@@ -2416,6 +2416,8 @@ class CountFilter(Filter):
            Example plot of pca()
 
         """
+        assert isinstance(n_components, int) and n_components >= 2, \
+            f"'n_components' must be an integer >=2. Instead got {n_components}."
         if sample_names == 'all':
             sample_names = list(self.df.columns)
             srna_data = self.df.transpose()
