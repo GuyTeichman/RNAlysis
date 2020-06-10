@@ -85,7 +85,7 @@ class Filter:
         self.shape = self.df.shape
 
     def __repr__(self):
-        return f"{type(self).__name__} of file {self.fname.name}"
+        return f"{type(self).__name__} of file {self.fname.stem}.{self.fname.suffix}"
 
     def __len__(self):
         return self.shape[0]
