@@ -15,7 +15,7 @@ import types
 import warnings
 from itertools import tee
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple, Type, Union
+from typing import Any, Iterable, List, Tuple, Type, Union, Dict
 
 import hdbscan
 import matplotlib.pyplot as plt
