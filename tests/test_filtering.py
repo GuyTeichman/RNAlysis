@@ -134,8 +134,11 @@ def test_countfilter_normalize_to_rpm():
 def test_countfilter_norm_reads_with_scaling_factors():
     truth = utils.load_csv(r"test_files/test_norm_scaling_factors.csv", 0)
     h = CountFilter("test_files/counted.csv")
-    h.normalize_with_scaling_factors("test_files/scaling_factors.csv")
+    factors = utils.load_csv("test_files/scaling_factors.csv")
+    h_norm = h.normalize_with_scaling_factors("test_files/scaling_factors.csv", inplace=False)
+    h.normalize_with_scaling_factors(factors)
     assert np.isclose(truth, h.df).all()
+    assert h_norm.df.equals(h.df)
 
 
 def test_filter_low_reads():
