@@ -975,11 +975,8 @@ def test_filter_missing_values_nonexistent_column():
 
 def test_pipeline_api():
     pl = Pipeline()
-
     pl_count = Pipeline('countfilter')
-
     pl_deseq = Pipeline(DESeqFilter)
-
     pl = Pipeline(filter_type='FoldChangeFilter')
 
 
@@ -1175,7 +1172,12 @@ def test_pipeline_apply_to_with_split_function():
 
 
 def test_pipeline_apply_to_with_split_function_inplace_raise_error():
-    assert False
+    pl = Pipeline('DESeqFilter')
+    pl.add_function('filter_missing_values')
+    pl.add_function(DESeqFilter.filter_significant, 0.05, opposite=True)
+    pl.add_function(DESeqFilter.split_fold_change_direction)
+    with pytest.raises(AssertionError):
+        pl.apply_to(DESeqFilter('test_files/test_deseq.csv'), inplace=True)
 
 
 def test_pipeline_apply_to_multiple_splits():
