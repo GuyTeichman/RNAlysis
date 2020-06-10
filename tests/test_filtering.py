@@ -921,6 +921,12 @@ def test_count_filter_from_folder():
     os.remove('test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
     assert np.all(np.isclose(all_feature, truth_all_feature))
 
+    h_nosuffix = CountFilter.from_folder('test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
+                                         counted_fname='__allexpr_temporary_testfile',
+                                         uncounted_fname='__allfeature_temporary_testfile')
+    os.remove('test_files/test_count_from_folder/__allexpr_temporary_testfile.csv')
+    os.remove('test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
+
 
 def test_biotypes():
     truth = utils.load_csv('test_files/biotypes_truth.csv', 0)
