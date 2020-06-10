@@ -3010,8 +3010,11 @@ class _KMedoidsIter:
         inertias = np.zeros(self.n_init)
         clusterers = []
         for i in range(self.n_init):
-            clusterers.append(KMedoids(n_clusters=self.n_clusters, init=self.init, max_iter=self.max_iter,
-                                       random_state=self.random_state + i).fit(x))
+            if self.random_state is not None:
+                clusterers.append(KMedoids(n_clusters=self.n_clusters, init=self.init, max_iter=self.max_iter,
+                                           random_state=self.random_state + i).fit(x))
+            else:
+                clusterers.append(KMedoids(n_clusters=self.n_clusters, init=self.init, max_iter=self.max_iter).fit(x))
             inertias[i] = clusterers[i].inertia_
         best_clusterer = clusterers[int(np.argmax(inertias))]
         self.clusterer = best_clusterer
