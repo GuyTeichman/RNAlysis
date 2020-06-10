@@ -2761,9 +2761,9 @@ class Pipeline:
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters',
                  'filter_type': 'type of filter objects to which the Pipeline will be applied'}
 
-    def __init__(self, filter_type: Union[
-        Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
-        Type[CountFilter], str] = Filter):
+    def __init__(self, filter_type: Union[str,
+                                          Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
+                                          Type[CountFilter]] = Filter):
         self.functions = []
         self.params = []
 
@@ -2779,15 +2779,17 @@ class Pipeline:
         self.filter_type = filter_type
 
     @staticmethod
-    def _param_string(args, kwargs):
+    def _param_string(args: tuple, kwargs: dict):
 
         """
+        Returns a formatted string of the given arguments and keyworded arguments.
 
-        :param args:
-        :type args:
-        :param kwargs:
-        :type kwargs:
-        :return: :rtype:
+        :param args: arguments to format as string
+        :type args: tuple
+        :param kwargs: keyworded arguments to format as string
+        :type kwargs: dict
+        :return: a formatted string of arguments and keyworded argumentss
+        :rtype: str
 
         """
         args_str = ', '.join([f"'{arg}'" if isinstance(arg, str) else f"{arg}" for arg in args])
