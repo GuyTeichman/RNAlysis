@@ -15,7 +15,7 @@ import types
 import warnings
 from itertools import tee
 from pathlib import Path
-from typing import Any, Iterable, List, Tuple, Type, Union, Dict
+from typing import Any, Dict, Iterable, List, Tuple, Type, Union
 
 import hdbscan
 import matplotlib.pyplot as plt
@@ -2256,7 +2256,6 @@ class CountFilter(Filter):
                                     cluster_selection_epsilon=cluster_selection_epsilon, metric=metric,
                                     cluster_selection_method=cluster_selection_method)
         clusterer.fit(data)
-
         n_clusters = clusterer.labels_.max() + 1
         probabilities = clusterer.probabilities_
         unclustered = np.count_nonzero(clusterer.labels_ == -1)
@@ -2268,9 +2267,7 @@ class CountFilter(Filter):
                 f"{(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
                 f"Number of unclustered genes is {unclustered}, "
                 f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
-
             means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
-
             self._plot_clustering(n_clusters=n_clusters, data=data, labels=clusterer.labels_, centers=means,
                                   title=f"Results of HDBSCAN Clustering for min_cluster_size={min_cluster_size}, "
                                         f"min_samples = {min_samples}, epsilon={cluster_selection_epsilon} "
