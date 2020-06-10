@@ -90,6 +90,11 @@ class Filter:
     def __len__(self):
         return self.shape[0]
 
+    def __eq__(self, other):
+        if self.df.equals(other.df) and self.fname == other.fname and self.shape == other.shape:
+            return True
+        return False
+
     def __contains__(self, item):
         return True if item in self.df.index else False
 
