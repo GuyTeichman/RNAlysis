@@ -1168,7 +1168,50 @@ def test_pipeline_apply_to_with_plot_not_inplace():
 
 
 def test_pipeline_apply_to_with_split_function():
-    assert False
+    pl_d = Pipeline('DESeqFilter')
+    pl_d.add_function(DESeqFilter.filter_missing_values)
+    pl_d.add_function(DESeqFilter.split_fold_change_direction)
+    pl_d.add_function(DESeqFilter.filter_top_n, by='padj', n=3)
+    pl_d.add_function('sort', by='baseMean')
+    d = DESeqFilter('test_files/test_deseq_with_nan.csv')
+    d_pipeline_res = pl_d.apply_to(d, inplace=False)
+    d_res = d.filter_missing_values(inplace=False)
+    d_res = d_res.split_fold_change_direction()
+    for i in d_res:
+        i.filter_top_n(by='padj', n=3)
+        i.sort(by='baseMean')
+    for i, j in zip(d_res, d_pipeline_res):
+        assert i == j
+
+    pl_c = Pipeline('CountFilter')
+    pl_c.add_function(CountFilter.filter_top_n, by='cond2', n=2, opposite=True)
+    pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=3, return_prob=True)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond1', n=5)
+    c = CountFilter('test_files/counted.csv')
+    c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
+    c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
+    c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_prob=True)
+    for i in c_res:
+        i.filter_top_n(by='cond1', n=5)
+    for i, j in zip(c_res, c_pipeline_res):
+        assert i == j
+    assert np.all(c_pipeline_dict['split_hdbscan_1'] == prob)
+
+    pl_c.remove_last_function()
+    pl_c.remove_last_function()
+    pl_c.add_function('split_kmeans', k=[2, 3, 4], random_state=42)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond1', n=5)
+    c = CountFilter('test_files/counted.csv')
+    c_pipeline_res = pl_c.apply_to(c, inplace=False)
+    c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
+    c_res = c_res.split_kmeans(k=[2, 3, 4], random_state=42)
+    c_res_cont = []
+    for i in c_res:
+        c_res_cont.extend(i)
+    for i in c_res_cont:
+        i.filter_top_n(by='cond1', n=5)
+    for i, j in zip(c_res_cont, c_pipeline_res):
+        assert i == j
 
 
 def test_pipeline_apply_to_with_split_function_inplace_raise_error():
