@@ -3,8 +3,10 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from rnalysis import utils
+from sklearn_extra.cluster import KMedoids
 import matplotlib
 from rnalysis.filtering import *
+from rnalysis.filtering import _KMedoidsIter
 import os
 from tests import __attr_ref__, __biotype_ref__
 
@@ -1359,3 +1361,37 @@ def test_fc_randomization():
 
 def test_filter_save_csv():
     assert False
+
+
+def test_kmedoidsiter_api():
+    truth = KMedoids(3, max_iter=300, init='k-medoids++', random_state=42)
+    kmeds = _KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=1, random_state=42)
+    c = CountFilter('test_files/counted.csv')
+    truth.fit(c.df)
+    kmeds.fit(c.df)
+    assert np.all(truth.cluster_centers_ == kmeds.cluster_centers_)
+    assert np.all(truth.inertia_ == kmeds.inertia_)
+
+    assert np.all(truth.predict(c.df) == kmeds.predict(c.df))
+    assert np.all(truth.fit_predict(c.df) == kmeds.fit_predict(c.df))
+
+    kmeds_rand = _KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=3)
+    kmeds_rand.fit(c.df)
+    kmeds_rand.predict(c.df)
+    kmeds_rand.fit_predict(c.df)
+
+
+def test_kmedoidsiter_iter():
+    kmeds = _KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=5, random_state=0)
+    c = CountFilter('test_files/counted.csv')
+    kmeds.fit(c.df)
+
+    inertias = []
+    clusterers = []
+    for i in range(5):
+        clusterers.append(KMedoids(3, max_iter=300, init='k-medoids++', random_state=0).fit(c.df))
+        inertias.append(clusterers[i].inertia_)
+    truth_inertia = max(inertias)
+    truth_kmeds = clusterers[np.argmax(inertias)]
+    assert kmeds.inertia_ == truth_inertia
+    assert np.all(kmeds.clusterer.predict(c.df) == truth_kmeds.predict(c.df))
