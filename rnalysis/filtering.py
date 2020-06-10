@@ -2190,7 +2190,8 @@ class CountFilter(Filter):
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
-                       max_iter: int = 300, plot_style: str = 'all', max_clusters: int = 'default'):
+                       max_iter: int = 300, plot_style: str = 'all', split_plots: bool = False,
+                       max_clusters: int = 'default'):
         """
 
         :param k:
@@ -2219,7 +2220,8 @@ class CountFilter(Filter):
 
             self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
-                                  title=f"Results of K-Medoids Clustering for K={this_k}", plot_style=plot_style)
+                                  title=f"Results of K-Medoids Clustering for K={this_k}", plot_style=plot_style,
+                                  split_plots=split_plots)
 
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
