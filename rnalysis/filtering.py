@@ -2324,7 +2324,9 @@ class CountFilter(Filter):
         plt.show()
         return clustering
 
-    def plot_expression(self, features: list, sample_grouping: dict, count_unit: str = 'Reads per million'):
+    def plot_expression(self, features: Union[List[str], str],
+                        sample_grouping: Union[Dict[str, List[int]], Dict[str, List[str]]],
+                        count_unit: str = 'Reads per million'):
 
         """
         Plot the average expression and standard error of the specified features under the specified conditions.
@@ -2362,9 +2364,11 @@ class CountFilter(Filter):
         ylims = []
         for subplot, feature in zip(subplots, features):
             axes.append(f.add_subplot(subplot))
-            mean = [self.df.loc[feature].iloc[ind].mean() if isinstance(ind, int) else self.df.loc[feature][ind].mean()
+            mean = [self.df.loc[feature].iloc[ind].mean() if np.all([isinstance(i, int) for i in ind]) else
+                    self.df.loc[feature][ind].mean()
                     for ind in sample_grouping.values()]
-            sem = [self.df.loc[feature].iloc[ind].sem() if isinstance(ind, int) else self.df.loc[feature][ind].sem() for
+            sem = [self.df.loc[feature].iloc[ind].sem() if np.all([isinstance(i, int) for i in ind]) else
+                   self.df.loc[feature][ind].sem() for
                    ind in sample_grouping.values()]
             axes[-1].bar(np.arange(len(sample_grouping)), mean, yerr=sem)
             axes[-1].set_xticks(np.arange(len(sample_grouping)))
