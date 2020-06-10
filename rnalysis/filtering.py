@@ -2904,7 +2904,18 @@ class Pipeline:
                         raise ValueError(f"Unrecognized output type {type(temp_res)} from function {func}:\n{temp_res}")
                 filter_object = tuple(temp_object)
             else:
-                filter_object = func(filter_object, *args, **kwargs)
+                temp_res = func(filter_object, *args, **kwargs)
+                if isinstance(temp_res, tuple):
+                    filter_object = temp_res
+                elif isinstance(temp_res, list):
+                    temp_object = []
+                    for item in temp_res:
+                        if isinstance(item, tuple):
+                            temp_object.extend(item)
+                        elif item is not None:
+                            other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = item
+                            other_cnt[func.__name__] += 1
+                    filter_object = tuple(temp_object)
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
         return filter_object
