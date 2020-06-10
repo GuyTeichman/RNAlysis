@@ -2849,8 +2849,68 @@ class Pipeline:
         self.functions.append(func)
         self.params.append((args, kwargs))
         print(
-            f"Added function {func.__name__} with parameters " + "{" + f"{self._param_string(args, kwargs)}" +
-            "} to the pipeline. ")
+            f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline. ")
+
+    def _apply_filter_or_norm(self, func: types.FunctionType, filter_object, args: tuple, kwargs: dict, inplace: bool):
+        kwargs = kwargs.copy()
+        if not inplace:
+            kwargs['inplace'] = False
+            try:
+                if isinstance(filter_object, tuple):
+                    temp_object = []
+                    for obj in filter_object:
+                        temp_object.append(func(obj, *args, **kwargs))
+                    filter_object = tuple(temp_object)
+                else:
+                    filter_object = func(filter_object, *args, **kwargs)
+            except (ValueError, AssertionError, TypeError) as e:
+                raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
+        else:
+            kwargs['inplace'] = True
+            try:
+                if isinstance(filter_object, tuple):
+                    for obj in filter_object:
+                        func(obj, *args, **kwargs)
+                else:
+                    func(filter_object, *args, **kwargs)
+            except (ValueError, AssertionError, TypeError) as e:
+                raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
+        return filter_object
+
+    def _apply_split(self, func, filter_object, args, kwargs, other_outputs, other_cnt):
+        try:
+            if isinstance(filter_object, tuple):
+                temp_object = []
+                for obj in filter_object:
+                    temp_res = func(obj, *args, **kwargs)
+                    if isinstance(temp_res, tuple):
+                        temp_object.extend(temp_res)
+                    elif isinstance(temp_res, list):
+                        for item in temp_res:
+                            if isinstance(item, tuple):
+                                temp_object.extend(item)
+                            elif item is not None:
+                                other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = item
+                                other_cnt[func.__name__] += 1
+
+                    else:
+                        raise ValueError(f"Unrecognized output type {type(temp_res)} from function {func}:\n{temp_res}")
+                filter_object = tuple(temp_object)
+            else:
+                filter_object = func(filter_object, *args, **kwargs)
+        except (ValueError, AssertionError, TypeError) as e:
+            raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
+        return filter_object
+
+    def _apply_other(self, func, filter_object, args, kwargs, other_outputs, other_cnt):
+        try:
+
+            this_output = func(filter_object, *args, **kwargs)
+            if this_output is not None:
+                other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = this_output
+                other_cnt[func.__name__] += 1
+        except (ValueError, AssertionError, TypeError) as e:
+            raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
 
     def apply_to(self, filter_object, inplace: bool = True):
 
@@ -2873,52 +2933,14 @@ class Pipeline:
         other_cnt = dict()
         # iterate over all functions and arguments
         for func, (args, kwargs) in zip(self.functions, self.params):
-            func_str = f"func(filter_object, {self._param_string(args, kwargs)})"
             if 'filter' in func.__name__ or func.__name__.startswith('normalize'):
-                kwargs = kwargs.copy()
-                if not inplace:
-                    kwargs['inplace'] = False
-                    try:
-                        if isinstance(filter_object, tuple):
-                            temp_object = []
-                            for obj in filter_object:
-                                temp_object.append(func(obj, *args, **kwargs))
-                            filter_object = tuple(temp_object)
-                        else:
-                            filter_object = func(filter_object, *args, **kwargs)
-                    except (ValueError, AssertionError, TypeError) as e:
-                        raise e.__class__(f"Invalid function signature {func_str}")
-                else:
-                    kwargs['inplace'] = True
-                    try:
-                        if isinstance(filter_object, tuple):
-                            for obj in filter_object:
-                                func(obj, *args, **kwargs)
-                        else:
-                            func(filter_object, *args, **kwargs)
-                    except (ValueError, AssertionError, TypeError) as e:
-                        raise e.__class__(f"Invalid function signature {func_str}")
+                filter_object = self._apply_filter_or_norm(func, filter_object, args, kwargs, inplace)
             elif func.__name__.startswith('split'):
-                try:
-                    if isinstance(filter_object, tuple):
-                        temp_object = []
-                        for obj in filter_object:
-                            temp_object.append(*func(obj, *args, **kwargs))
-                        if not inplace:
-                            filter_object = tuple(temp_object)
-                    else:
-                        filter_object = func(filter_object, *args, **kwargs)
-                except (ValueError, AssertionError, TypeError) as e:
-                    raise e.__class__(f"Invalid function signature {func_str}")
+                assert not inplace, f"Cannot apply the split function {self._func_signature(func, args, kwargs)} " \
+                                    f"when inplace={inplace}!"
+                filter_object = self._apply_split(func, filter_object, args, kwargs, other_outputs, other_cnt)
             else:
-                try:
-
-                    this_output = func(filter_object, *args, **kwargs)
-                    if this_output is not None:
-                        other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = this_output
-                        other_cnt[func.__name__] += 1
-                except (ValueError, AssertionError, TypeError) as e:
-                    raise e.__class__(f"Invalid function signature {func_str}")
+                self._apply_other(func, filter_object, args, kwargs, other_outputs, other_cnt)
 
         if not inplace or isinstance(filter_object, tuple):
             if len(other_outputs) > 0:
