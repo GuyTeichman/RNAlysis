@@ -2061,6 +2061,7 @@ class CountFilter(Filter):
         ax_inertia.legend(['Observed', 'Expected'])
         ax_inertia.set_ylabel("Log(inertia)")
         ax_inertia.set_xlabel("Number of clusters (k)")
+        ax_inertia.set_xticks(k_range)
         ax.errorbar(k_range, gap_scores, yerr=gap_err, marker='o', color='r')
         ax.set_title("Gap Statistic method for optimal k selection")
         ax.set_ylabel('Gap Value')
