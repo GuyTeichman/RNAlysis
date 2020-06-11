@@ -2028,8 +2028,8 @@ class CountFilter(Filter):
         gap_scores = np.zeros((len(k_range)))
         gap_err = np.zeros((len(k_range)))
 
-        for ind, n_clusters in enumerate(k_range):
-            clusterer = clusterer_class(n_clusters=n_clusters, random_state=random_state, n_init=n_init,
+        for ind, this_k in enumerate(k_range):
+            clusterer = clusterer_class(n_clusters=this_k, random_state=random_state, n_init=n_init,
                                         max_iter=max_iter)
             ref_disps = np.zeros(n_refs)
             for i in range(n_refs):
