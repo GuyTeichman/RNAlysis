@@ -2018,6 +2018,8 @@ class CountFilter(Filter):
     def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 10,
                        max_clusters: int = 20):
         print(f"Calculating optimal k using the Gap Statistic method in range {2}:{max_clusters}...")
+        if random_state is not None:
+            np.random.seed(random_state)
         data = self._standard_box_cox(self.df.values)
         a, b = self.df.values.min(axis=0, keepdims=True), self.df.values.max(axis=0, keepdims=True)
         k_range = list(range(2, max_clusters + 1))
