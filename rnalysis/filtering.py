@@ -2921,11 +2921,20 @@ class Pipeline:
 
     def _apply_other(self, func, filter_object, args, kwargs, other_outputs, other_cnt):
         try:
-
-            this_output = func(filter_object, *args, **kwargs)
-            if this_output is not None:
-                other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = this_output
-                other_cnt[func.__name__] += 1
+            if isinstance(filter_object, tuple):
+                tmp_outputs = []
+                for obj in filter_object:
+                    this_output = func(obj, *args, **kwargs)
+                    if this_output is not None:
+                        tmp_outputs.append(this_output)
+                if len(tmp_outputs) > 0:
+                    other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = tuple(tmp_outputs)
+                    other_cnt[func.__name__] += 1
+            else:
+                this_output = func(filter_object, *args, **kwargs)
+                if this_output is not None:
+                    other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = this_output
+                    other_cnt[func.__name__] += 1
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
 
