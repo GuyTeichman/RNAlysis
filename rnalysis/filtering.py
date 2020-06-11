@@ -2015,7 +2015,7 @@ class CountFilter(Filter):
         plt.show()
         return fig, axes
 
-    def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 10,
+    def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 30,
                        max_clusters: int = 20):
         print(f"Calculating optimal k using the Gap Statistic method in range {2}:{max_clusters}...")
         if random_state is not None:
