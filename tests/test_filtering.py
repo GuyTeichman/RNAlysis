@@ -1369,8 +1369,18 @@ def test_split_kmeans():
     assert False
 
 
-def test_split_hdbscan():
-    assert False
+def test_split_hdbscan_api():
+    c = CountFilter('test_files/counted.csv')
+    res = c.split_hdbscan()
+    assert isinstance(res, tuple)
+    res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_prob=True)
+    assert isinstance(res2, list)
+    assert isinstance(res2[0], tuple)
+    assert isinstance(res2[1], np.ndarray)
+    with pytest.raises(AssertionError):
+        c.split_hdbscan(min_cluster_size=1)
+    with pytest.raises(AssertionError):
+        c.split_hdbscan(c.shape[0] + 1)
 
 
 def test_split_kmedoids():
