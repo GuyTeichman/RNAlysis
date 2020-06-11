@@ -1314,7 +1314,55 @@ def test_pipeline_apply_to_multiple_splits():
 
 
 def test_pipeline_apply_to_filter_normalize_split_plot():
-    assert False
+    scaling_factor_path = 'test_files/big_scaling_factors.csv'
+    pl_c = Pipeline('CountFilter')
+    pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
+    pl_c.add_function('biotypes', ref=__biotype_ref__)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=270, opposite=True)
+    pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=100, return_prob=True)
+    pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
+    pl_c.add_function(CountFilter.clustergram)
+    pl_c.add_function(CountFilter.split_kmedoids, k=[2, 3, 7], random_state=42, n_init=1)
+    pl_c.add_function(CountFilter.sort, by='cond2rep3')
+    pl_c.add_function(CountFilter.biotypes, 'long', __biotype_ref__)
+
+    c = CountFilter('test_files/big_counted.csv')
+    c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
+    c_dict = dict()
+    c.normalize_with_scaling_factors(scaling_factor_path)
+    c_dict['biotypes_1'] = c.biotypes(ref=__biotype_ref__)
+    c_res = c.filter_top_n(by='cond3rep1', n=270, opposite=True, inplace=False)
+    c_res, prob = c_res.split_hdbscan(min_cluster_size=100, return_prob=True)
+    c_dict['split_hdbscan_1'] = prob
+    for obj in c_res:
+        obj.filter_low_reads(threshold=10)
+    clustergrams = []
+    for obj in c_res:
+        clustergrams.append(obj.clustergram())
+    c_dict['clustergram_1'] = tuple(clustergrams)
+    c_res_cont = []
+    for obj in c_res:
+        k_out = obj.split_kmedoids(k=[2, 3, 7], random_state=42, n_init=1)
+        for k in k_out:
+            c_res_cont.extend(k)
+    for obj in c_res_cont:
+        obj.sort(by='cond2rep3')
+    biotypes = []
+    for obj in c_res_cont:
+        biotypes.append(obj.biotypes('long', __biotype_ref__))
+    c_dict['biotypes_2'] = tuple(biotypes)
+
+    assert len(c_res_cont) == len(c_pipeline_res)
+    for i, j in zip(c_res_cont, c_pipeline_res):
+        assert i == j
+    assert np.all(c_dict.keys() == c_pipeline_dict.keys())
+    assert c_dict['biotypes_1'].equals(c_pipeline_dict['biotypes_1'])
+    assert len(c_dict['clustergram_1']) == len(c_pipeline_dict['clustergram_1'])
+    for i, j in zip(c_dict['clustergram_1'], c_pipeline_dict['clustergram_1']):
+        assert type(i) == type(j)
+    assert len(c_dict['biotypes_2']) == len(c_pipeline_dict['biotypes_2'])
+    for i, j in zip(c_dict['biotypes_2'], c_pipeline_dict['biotypes_2']):
+        assert i.equals(j)
 
 
 def test_split_kmeans():
