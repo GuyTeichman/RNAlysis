@@ -2243,6 +2243,15 @@ class CountFilter(Filter):
         :return:
         :rtype:
         """
+        assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
+            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
+        assert min_cluster_size<=self.shape[0], \
+            "'min_cluster_size' cannot be larger than the number of features in the Filter object. "
+        assert isinstance(cluster_selection_method, str), \
+            f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}."
+        assert isinstance(metric, str), f"'metric' must be a string. Instead got {type(metric)}."
+        cluster_selection_method = cluster_selection_method.lower()
+        metric = metric.lower()
 
         data = self._standard_box_cox(self.df)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples,
@@ -2255,11 +2264,10 @@ class CountFilter(Filter):
         if n_clusters == 0:
             print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
         else:
-            print(
-                f"Found {n_clusters} clusters of average size "
-                f"{(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
-                f"Number of unclustered genes is {unclustered}, "
-                f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
+            print(f"Found {n_clusters} clusters of average size "
+                  f"{(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
+                  f"Number of unclustered genes is {unclustered}, "
+                  f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
             means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             self._plot_clustering(n_clusters=n_clusters, data=data, labels=clusterer.labels_, centers=means,
                                   title=f"Results of HDBSCAN Clustering for min_cluster_size={min_cluster_size}, "
