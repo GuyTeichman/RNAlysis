@@ -1365,14 +1365,36 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
         assert i.equals(j)
 
 
-def test_split_kmeans():
-    assert False
+def test_split_kmeans_api():
+    c = CountFilter('test_files/big_counted.csv')
+    res = c.split_kmeans(k=4)
+    assert isinstance(res, tuple)
+    assert len(res) == 4
+    _test_correct_clustering_split(c, res)
+    res2 = c.split_kmeans(k=[2, 3, 7], random_state=42, n_init=1, max_iter=10, plot_style='std_bar')
+    assert isinstance(res2, list)
+    assert np.all([isinstance(i, tuple) for i in res2])
+    [_test_correct_clustering_split(c, i) for i in res2]
+
+
+def _test_correct_clustering_split(counts, res, missing_indices: bool = False):
+    assert isinstance(res, tuple)
+    for obj in res:
+        assert len(counts.intersection(obj)) == obj.shape[0]
+        # all of the indices in the split object are in the original too
+        for obj2 in res:
+            if obj != obj2:
+                assert len(obj.intersection(obj2)) == 0
+                # the clusters don't overlap with each other at all
+    if not missing_indices:
+        assert len(res[0].union(*res[1:])) == counts.shape[0]
+        # if all values are clustered, make sure that all clusters sum up to the original object
 
 
 def test_split_hdbscan_api():
-    c = CountFilter('test_files/counted.csv')
-    res = c.split_hdbscan()
-    assert isinstance(res, tuple)
+    c = CountFilter('test_files/big_counted.csv')
+    res = c.split_hdbscan(100)
+    _test_correct_clustering_split(c, res, True)
     res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_prob=True)
     assert isinstance(res2, list)
     assert isinstance(res2[0], tuple)
@@ -1384,7 +1406,16 @@ def test_split_hdbscan_api():
 
 
 def test_split_kmedoids():
-    assert False
+    c = CountFilter('test_files/big_counted.csv')
+    c.filter_top_n(by='cond1rep1', n=2000)
+    res = c.split_kmedoids(k=4, n_init=3)
+    assert isinstance(res, tuple)
+    assert len(res) == 4
+    _test_correct_clustering_split(c, res)
+    res2 = c.split_kmedoids(k=[2, 3, 7], random_state=42, n_init=1, max_iter=10, plot_style='std_bar')
+    assert isinstance(res2, list)
+    assert np.all([isinstance(i, tuple) for i in res2])
+    [_test_correct_clustering_split(c, i) for i in res2]
 
 
 def test_gap_statistic():
@@ -1407,11 +1438,15 @@ def test_parse_k(monkeypatch):
 
     assert list(c._parse_k(10, KMeans, 0, 0, 0, 0)) == [10]
     assert list(c._parse_k([7, 2, 5], KMeans, 0, 0, 0, 0)) == [7, 2, 5]
-    assert list(c._parse_k(range(5), KMeans, 0, 0, 0, 0)) == list(range(5))
+    assert list(c._parse_k(range(2, 9), KMeans, 0, 0, 0, 0)) == list(range(2, 9))
     with pytest.raises(AssertionError):
-        print(list(c._parse_k([1, 2, '3'], KMeans, 0, 0, 0, 0)))
+        print(list(c._parse_k([5, 2, '3'], KMeans, 0, 0, 0, 0)))
     with pytest.raises(AssertionError):
         c._parse_k('a string', KMeans, 0, 0, 0, 0)
+    with pytest.raises(AssertionError):
+        c._parse_k(1, KMeans, 0, 0, 0, 0)
+    with pytest.raises(AssertionError):
+        c._parse_k([3, 5, 1], KMeans, 0, 0, 0, 0)
 
 
 def test_fc_randomization():
