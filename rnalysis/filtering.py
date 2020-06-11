@@ -399,28 +399,21 @@ class Filter:
         assert isinstance(biotype, (str, list)), "biotype must be a string or a list!"
         if isinstance(biotype, str):
             biotype = [biotype]
-
         ref = utils.get_biotype_ref_path(ref)
         ref_df = utils.load_csv(ref)
         utils.biotype_table_assertions(ref_df)
         ref_df.set_index('gene', inplace=True)
         ref_df.columns = ref_df.columns.str.lower()
         legal_inputs = set(ref_df['biotype'].unique())
+        suffix = f"_{'_'.join(biotype)}"
+        mask = pd.Series(np.zeros_like(ref_df['biotype'], dtype=bool), index=ref_df['biotype'].index, name='biotype')
 
         for bio in biotype:
             assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
-
-        suffix = f"_{'_'.join(biotype)}"
-
-        mask = pd.Series(np.zeros_like(ref_df['biotype'], dtype=bool), index=ref_df['biotype'].index, name='biotype')
-        for bio in biotype:
             mask = mask | (ref_df['biotype'] == bio)
-
         gene_names = ref_df[mask].index.intersection(self.df.index)
         new_df = self.df.loc[gene_names]
         return self._inplace(new_df, opposite, inplace, suffix)
-
-    # TODO: add 'remove unindexed rows' to here!
 
     def filter_by_attribute(self, attributes: Union[str, List[str]] = None, mode='union', ref: str = 'predefined',
                             opposite: bool = False, inplace: bool = True):
