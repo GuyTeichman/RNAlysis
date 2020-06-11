@@ -2356,11 +2356,11 @@ class CountFilter(Filter):
         g = strategies.SquareStrategy()
         subplots = g.get_grid(len(features))
         plt.close()
-        f = plt.figure()
+        fig = plt.figure()
         axes = []
         ylims = []
         for subplot, feature in zip(subplots, features):
-            axes.append(f.add_subplot(subplot))
+            axes.append(fig.add_subplot(subplot))
             mean = [self.df.loc[feature].iloc[ind].mean() if np.all([isinstance(i, int) for i in ind]) else
                     self.df.loc[feature][ind].mean()
                     for ind in sample_grouping.values()]
@@ -2376,8 +2376,9 @@ class CountFilter(Filter):
             ylims.append(axes[-1].get_ylim()[1])
         for ax in axes:
             ax.set_ylim((0.0, max(ylims)))
-        f.tight_layout()
+        fig.tight_layout()
         plt.show()
+        return fig
 
     def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None, labels: bool = True):
 
