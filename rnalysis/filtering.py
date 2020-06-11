@@ -2155,8 +2155,8 @@ class CountFilter(Filter):
                 k = [k]
             k, k_copy = tee(k)
 
-            assert np.all([isinstance(item, int) for item in k_copy]), \
-                f"Invalid value for k: '{k}'. k must be an integer, Iterable of integers, 'gap', or 'silhouette'. "
+            assert np.all([isinstance(item, int) and item >= 2 for item in k_copy]), \
+                f"Invalid value for k: '{k}'. k must be an integer>=2, Iterable of integers, 'gap', or 'silhouette'. "
         return k
 
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
@@ -2245,7 +2245,7 @@ class CountFilter(Filter):
         """
         assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
             f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
-        assert min_cluster_size<=self.shape[0], \
+        assert min_cluster_size <= self.shape[0], \
             "'min_cluster_size' cannot be larger than the number of features in the Filter object. "
         assert isinstance(cluster_selection_method, str), \
             f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}."
