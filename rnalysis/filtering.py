@@ -2044,14 +2044,14 @@ class CountFilter(Filter):
             gap_err[ind] = stdev * np.sqrt(1 + (1 / n_refs))
 
         best_k, best_k_ind = None, None
-        for ind, n_clusters in enumerate(k_range):
+        for ind, this_k in enumerate(k_range):
+            # if the test went on to the last K, return it as the best K
             if ind + 1 == len(k_range):
-                best_k = n_clusters
+                best_k = this_k
                 best_k_ind = ind
                 break
-            ind_argmax = ind + 1 + np.argmax(gap_scores[ind + 1::])
-            if gap_scores[ind] >= gap_scores[ind_argmax] - gap_err[ind_argmax]:
-                best_k = n_clusters
+            if gap_scores[ind] >= gap_scores[ind + 1] - gap_err[ind + 1]:
+                best_k = this_k
                 best_k_ind = ind
                 break
 
