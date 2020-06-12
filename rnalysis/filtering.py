@@ -24,7 +24,7 @@ import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
 from numba import jit
-from sklearn.cluster import KMeans, MiniBatchKMeans
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import PowerTransformer, StandardScaler
@@ -2015,65 +2015,90 @@ class CountFilter(Filter):
         plt.show()
         return fig, axes
 
-    def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 30,
+    def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 10,
                        max_clusters: int = 20):
-        print(f"Calculating optimal k using the Gap Statistic method in range {2}:{max_clusters}...")
+        # determine the range of k values to be tested
+        k_range = np.arange(2, max_clusters + 1)
+        print(f"Calculating optimal K using the Gap Statistic method in range {2}:{max_clusters}...")
+        # set the random state, if one was supplied
         if random_state is not None:
             np.random.seed(random_state)
+        # calculate the SVD of the observed data (X), and transform via X' = x_tag = dot(X, V)
+        pca = PCA().fit(self.df.values)
+        x_tag = pca.transform(self.df.values)
+        # determine the ranges of the columns of X' (x_tag)
+        a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
+        # transform the observed data using Box-Cox, and then standardize it
         data = self._standard_box_cox(self.df.values)
-        a, b = self.df.values.min(axis=0, keepdims=True), self.df.values.max(axis=0, keepdims=True)
-        k_range = list(range(2, max_clusters + 1))
-        log_inertia_obs = np.zeros((len(k_range)))
-        log_inertia_exp = np.zeros((len(k_range)))
+        # allocate empty arrays for observed/expected log(inertia), gap scores Gap(K) and gap error S(K)
+        log_disp_obs = np.zeros((len(k_range)))
+        log_disp_exp = np.zeros((len(k_range)))
         gap_scores = np.zeros((len(k_range)))
-        gap_err = np.zeros((len(k_range)))
+        gap_error = np.zeros((len(k_range)))
 
+        # iterate over K values in the range
         for ind, this_k in enumerate(k_range):
-            clusterer = clusterer_class(n_clusters=this_k, random_state=random_state, n_init=n_init,
-                                        max_iter=max_iter)
+            # init the clusterer with given arguments
+            clusterer = clusterer_class(n_clusters=this_k, random_state=random_state, n_init=n_init, max_iter=max_iter)
+            # generate 'n_refs' random reference arrays and cluster each of them into Ki clusters
             ref_disps = np.zeros(n_refs)
-            for i in range(n_refs):
-                ref = self._standard_box_cox(np.random.random_sample(size=data.shape) * (b - a) + a)
-                ref_disps[i] = clusterer.fit(ref).inertia_
+            for ref_ind in range(n_refs):
+                # draw uniform features Z' over the ranges of the columns of X', and back-transform via Z = dot(Z', V.T)
+                ref = pca.inverse_transform(np.random.random_sample(size=data.shape) * (b - a) + a)
+                # transform the random reference data using Box-Cox, and then standardize it
+                ref = self._standard_box_cox(ref)
+                # calculate dispersion/inertia for reference data clustered into Ki clusters
+                ref_disps[ref_ind] = clusterer.fit(ref).inertia_
+            # calculate dispersion/inertia for the observed data clustered into Ki clusters
             disp = clusterer.fit(data).inertia_
-            ref_log_inertia = np.mean(np.log(ref_disps))
-            log_inertia_exp[ind] = ref_log_inertia
-            log_inertia_obs[ind] = np.log(disp)
-            gap_scores[ind] = ref_log_inertia - log_inertia_obs[ind]
-            stdev = np.sqrt(np.mean((np.log(ref_disps) - ref_log_inertia) ** 2.0))
-            gap_err[ind] = stdev * np.sqrt(1 + (1 / n_refs))
+            # calculate the mean of the log(reference dispersion) values
+            log_disp_exp[ind] = np.mean(np.log(ref_disps))
+            # calculate the log(observed dispersion) value
+            log_disp_obs[ind] = np.log(disp)
+            # calculate gap score for K = Ki
+            gap_scores[ind] = log_disp_exp[ind] - log_disp_obs[ind]
+            # calculate the gap standard deviation Sd(K) for K = Ki
+            stdev = np.sqrt(np.mean((np.log(ref_disps) - log_disp_exp[ind]) ** 2.0))
+            # calculate the gap standard error (Sk) for K = Ki
+            gap_error[ind] = stdev * np.sqrt(1 + (1 / n_refs))
 
-        best_k, best_k_ind = None, None
-        for ind, this_k in enumerate(k_range):
-            # if the test went on to the last K, return it as the best K
-            if ind + 1 == len(k_range):
-                best_k = this_k
-                best_k_ind = ind
-                break
-            if gap_scores[ind] >= gap_scores[ind + 1] - gap_err[ind + 1]:
-                best_k = this_k
-                best_k_ind = ind
-                break
+        # Find the smallest K such that Gap(K) >= Gap(K+1) - S(K+1), AKA Diff(K) = Gap(k) - Gap(k+1) + S(K+1) >= 0
+        diff = gap_scores[:-1] - gap_scores[1::] + gap_error[1::]
+        # Return all K values that fulfilled the condition as 'potentially good K values'
+        k_candidates = k_range[:-1][diff >= 0]
+        # if no K fulfilled the condition (the gap function is monotonically increasing),
+        # return the last value of K as the best K
+        best_k = k_candidates[0] if len(k_candidates) > 0 else k_range[-1]
+        best_k_ind = np.argmax(k_range == best_k)
+        print(f"Using the Gap Statistic method, {best_k} was chosen as the best number of clusters (K).")
+        if len(k_candidates) >= 2:
+            print(f"Other potentially good values of K that were found: {list(k_candidates[1:])}. ")
 
+        # plot results
+        fig = self._plot_gap(k_range, log_disp_obs, log_disp_exp, gap_scores, gap_error, best_k, best_k_ind)
+
+        return best_k, fig
+
+    @staticmethod
+    def _plot_gap(k_range, log_disp_obs, log_disp_exp, gap_scores, gap_error, best_k, best_k_ind):
         fig, (ax_inertia, ax) = plt.subplots(1, 2, figsize=(14, 9))
-        ax_inertia.plot(k_range, log_inertia_obs, '-o')
-        ax_inertia.plot(k_range, log_inertia_exp, '-o')
+        ax_inertia.plot(k_range, log_disp_obs, '-o')
+        ax_inertia.plot(k_range, log_disp_exp, '-o')
         ax_inertia.legend(['Observed', 'Expected'])
-        ax_inertia.set_ylabel("Log(inertia)")
-        ax_inertia.set_xlabel("Number of clusters (k)")
+        ax_inertia.set_ylabel(r"$\ln$(dispersion)", fontsize=15)
+        ax_inertia.set_xlabel("Number of clusters (K)", fontsize=15)
         ax_inertia.set_xticks(k_range)
-        ax.errorbar(k_range, gap_scores, yerr=gap_err, marker='o', color='r')
-        ax.set_title("Gap Statistic method for optimal k selection")
-        ax.set_ylabel('Gap Value')
-        ax.set_xlabel("Number of clusters (k)")
-        ax.annotate(f'Best k={best_k}', xy=(best_k, gap_scores[best_k_ind] - gap_err[best_k_ind]),
-                    xytext=(best_k, max(gap_scores) * 0.75),
-                    arrowprops=dict(facecolor='black', shrink=0.15))
+        ax.errorbar(k_range, gap_scores, yerr=gap_error, marker='o', color='r')
+        ax.set_title("Gap Statistic method for optimal K selection")
+        ax.set_ylabel('Gap Value', fontsize=15)
+        ax.set_xlabel("Number of clusters (K)", fontsize=15)
+        ax.annotate(f'Best K={best_k}', xy=(best_k, (gap_scores[best_k_ind] - gap_error[best_k_ind]) / 1.05),
+                    xytext=(best_k, (gap_scores[best_k_ind] - gap_error[best_k_ind]) / 1.2),
+                    arrowprops=dict(facecolor='black', shrink=0.01))
         ax.set_xticks(k_range)
         sns.despine()
         plt.show()
-        print(f"Using the Gap Statistic method, {best_k} was chosen as the best number of clusters (k).")
-        return best_k, fig
+        return fig
 
     def _silhouette(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, max_clusters: int = 20):
         """
@@ -2094,7 +2119,7 @@ class CountFilter(Filter):
         print(f"Calculating optimal k using the Silhouette method in range {2}:{max_clusters}...")
         data = self._standard_box_cox(self.df)
         sil_scores = []
-        k_range = list(range(2, max_clusters + 1))
+        k_range = np.arange(2, max_clusters + 1)
         for n_clusters in k_range:
             clusterer = clusterer_class(n_clusters=n_clusters, n_init=n_init, max_iter=max_iter,
                                         random_state=random_state)
@@ -2166,7 +2191,7 @@ class CountFilter(Filter):
                      max_iter: int = 300, plot_style: str = 'all', split_plots: bool = False,
                      max_clusters: int = 'default'):
 
-        k = self._parse_k(k=k, clusterer_class=MiniBatchKMeans, random_state=random_state, n_init=n_init,
+        k = self._parse_k(k=k, clusterer_class=KMeans, random_state=random_state, n_init=n_init,
                           max_iter=max_iter, max_clusters=max_clusters)
         filt_obj_tuples = []
         data = self._standard_box_cox(self.df)
