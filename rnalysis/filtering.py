@@ -555,13 +555,12 @@ class Filter:
             Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
 
         """
-        assert isinstance(attributes,
-                          (list, tuple)), f"'attributes' must be a list or a tuple. Got {type(attributes)} instead. "
+        assert isinstance(attributes, (list, tuple)), \
+            f"'attributes' must be a list or a tuple. Got {type(attributes)} instead. "
         for attr in attributes:
             assert isinstance(attr, str), f"All attributes in 'split_by_attribute()' must be of type str. " \
                                           f"Attribute '{attr}' is of type {type(attr)}"
-        return tuple([self.filter_by_attribute(attributes=att, mode='union', ref=ref, inplace=False) for att in
-                      attributes])
+        return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
     def describe(self, percentiles: Union[list, Tuple, np.ndarray] = (0.01, 0.25, 0.5, 0.75, 0.99)):
 
@@ -774,21 +773,20 @@ class Filter:
         ref = utils.get_biotype_ref_path(ref)
         ref_df = utils.load_csv(ref)
         utils.biotype_table_assertions(ref_df)
-        ref_df.columns = ref_df.columns.str.lower()
+        # find which genes from tne Filter object don't appear in the Biotype Reference Table
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
             ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': 'not_in_biotype_reference'}))
+        # return just the number of genes/indices belonging to each biotype
         if return_format == 'short':
             return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
+        # additionally return descriptive statistics for each biotype
         elif return_format == 'long':
             self_df = self.df.__deepcopy__()
             self_df['biotype'] = ref_df.set_index('gene').loc[self.df.index]
             return self_df.groupby('biotype').describe()
-
-        else:
-            raise ValueError(f'Invalid format "{return_format}"')
 
     def number_filters(self, column: str, operator: str, value, opposite: bool = False, inplace: bool = True):
 
@@ -829,24 +827,27 @@ class Filter:
             Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.
 
         """
+        # determine whether operator is valid
         operator_dict = {'gt': 'gt', 'greater than': 'gt', '>': 'gt', 'eq': 'eq', 'equals': 'eq', '=': 'eq', 'lt': 'lt',
                          'lesser than': 'lt', '<': 'lt', 'equal': 'eq'}
         operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
-        assert isinstance(value, (int, float)), f"'value' must be a number!"
-        assert column in self.columns, f"column {column} not in DataFrame!"
         op = operator_dict[operator]
-        suffix = f"_{column}{op}{value}"
+        # determine that 'value' is a number
+        assert isinstance(value, (int, float)), f"'value' must be a number!"
+        # determine that the column is legal
+        assert column in self.columns, f"column {column} not in DataFrame!"
 
+        suffix = f"_{column}{op}{value}"
+        # perform operation according to operator
         if op == 'eq':
             new_df = self.df[self.df[column] == value]
         elif op == 'gt':
             new_df = self.df[self.df[column] > value]
         elif op == 'lt':
             new_df = self.df[self.df[column] < value]
-        else:
-            raise KeyError(f"Problem with operator {operator} or key {op}. Please report to the developer. ")
 
+        # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def text_filters(self, column: str, operator: str, value: str, opposite: bool = False, inplace: bool = True):
@@ -878,15 +879,19 @@ class Filter:
             Filtered 17 features, leaving 5 of the original 22 features. Filtered inplace.
 
         """
+        # determine whether operator is valid
         operator_dict = {'eq': 'eq', 'equals': 'eq', '=': 'eq', 'ct': 'ct', 'in': 'ct', 'contains': 'ct', 'sw': 'sw',
                          'starts with': 'sw', 'ew': 'ew', 'ends with': 'ew', 'equal': 'eq', 'begins with': 'sw'}
         operator = operator.lower()
         assert operator in operator_dict, f"Invalid operator {operator}"
-        assert isinstance(value, str), f"'value' must be a string!"
-        assert column in self.columns, f"column {column} not in DataFrame!"
         op = operator_dict[operator]
-        suffix = f"_{column}{op}{value}"
+        # determine that 'value' is a string
+        assert isinstance(value, str), f"'value' must be a string!"
+        # determine that the column is legal
+        assert column in self.columns, f"column {column} not in DataFrame!"
 
+        suffix = f"_{column}{op}{value}"
+        # perform operation according to operator
         if op == 'eq':
             new_df = self.df[self.df[column] == value]
         elif op == 'ct':
@@ -895,9 +900,8 @@ class Filter:
             new_df = self.df[self.df[column].str.endswith(value)]
         elif op == 'sw':
             new_df = self.df[self.df[column].str.startswith(value)]
-        else:
-            raise KeyError(f"Problem with operator {operator} or key {op}. Please report to the developer. ")
 
+        # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def filter_missing_values(self, columns: Union[str, List[str]] = 'all', opposite: bool = False,
