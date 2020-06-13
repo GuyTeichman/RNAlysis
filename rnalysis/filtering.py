@@ -114,8 +114,6 @@ class Filter:
         :return: a list of the columns in the Filter object.
         :rtype: list
         """
-        if isinstance(self, FoldChangeFilter):
-            return [self.df.name]
         return list(self.df.columns)
 
     def _inplace(self, new_df: pd.DataFrame, opposite: bool, inplace: bool, suffix: str,
@@ -1257,6 +1255,16 @@ class FoldChangeFilter(Filter):
     def __copy__(self):
         return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
                           denominator_name=self.denominator)
+
+    @property
+    def columns(self) -> list:
+        """
+        The columns of df.
+
+        :return: a list of the columns in the Filter object.
+        :rtype: list
+        """
+        return [self.df.name]
 
     def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None,
                            random_seed: int = None):
