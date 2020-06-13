@@ -20,6 +20,7 @@ Changed
 *******
 * Improved running time of enrich_randomization() and enrich_randomization_parallel() about six-fold.
 * CountFilter.pca() can now be plotted without labeled points.
+* Filter.index_string is now sorted by the current order of indices in the Filter object, instead of by alphabetical order.
 * CountFilter.violin_plot() now accepts a y_title argument.
 * Added more optional arguments to visualization functions such as CountFilter.violin_plot() and CountFilter.clustergram().
 * Automatic filenames for Filter objects should now reflect more clearly the operations that were performed.
