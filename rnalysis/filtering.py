@@ -934,12 +934,11 @@ class Filter:
         subset = None
         suffix = '_removemissingvals'
         if columns == 'all':
-            try:
-                if 'all' in self.columns:
-                    raise IndexError("Filter object contains a column named 'all'. RNAlysis cannot decide whether "
-                                     "to filter based on the column 'all' or based on all columns. ")
-            except AttributeError:
-                pass
+            # on the rare off-chance that there is a column named 'all'
+            if 'all' in self.columns:
+                raise IndexError("Filter object contains a column named 'all'. RNAlysis cannot decide whether "
+                                 "to filter based on the column 'all' or based on all columns. ")
+
         elif isinstance(columns, str):
             assert columns in self.columns, f"Column '{columns}' does not exist in the Filter object."
             if len(self.columns) > 1:
