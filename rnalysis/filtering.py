@@ -2024,7 +2024,8 @@ class CountFilter(Filter):
         if random_state is not None:
             np.random.seed(random_state)
         # calculate the SVD of the observed data (X), and transform via X' = x_tag = dot(X, V)
-        pca = PCA().fit(self.df.values)
+        # note: the data is centered by sklearn.decomposition.PCA, no need to pre-center it.
+        pca = PCA(random_state=random_state).fit(self.df.values)
         x_tag = pca.transform(self.df.values)
         # determine the ranges of the columns of X' (x_tag)
         a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
@@ -2094,7 +2095,7 @@ class CountFilter(Filter):
         ax.set_xlabel("Number of clusters (K)", fontsize=15)
         ax.annotate(f'Best K={best_k}', xy=(best_k, (gap_scores[best_k_ind] - gap_error[best_k_ind]) / 1.05),
                     xytext=(best_k, (gap_scores[best_k_ind] - gap_error[best_k_ind]) / 1.2),
-                    arrowprops=dict(facecolor='black', shrink=0.01))
+                    arrowprops=dict(facecolor='black'))
         ax.set_xticks(k_range)
         sns.despine()
         plt.show()
