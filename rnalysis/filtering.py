@@ -934,7 +934,7 @@ class Filter:
         subset = None
         suffix = '_removemissingvals'
         if columns == 'all':
-            # on the rare off-chance that there is a column named 'all'
+            # on the rare off-chance that there is a column named 'all', decide not to decide
             if 'all' in self.columns:
                 raise IndexError("Filter object contains a column named 'all'. RNAlysis cannot decide whether "
                                  "to filter based on the column 'all' or based on all columns. ")
@@ -1043,6 +1043,8 @@ class Filter:
             Filtered 12 features, leaving 10 of the original 22 features. Filtered inplace.
 
         """
+        order = 'asc' if ascending else 'desc'
+        suffix = f"_top{n}{by}{order}"
         assert isinstance(n, int), "n must be an integer!"
         assert n > 0, "n must be a positive integer!"
         if isinstance(by, list):
@@ -1050,13 +1052,13 @@ class Filter:
                 assert col in self.columns, f"{col} is not a column in the Filter object!"
         else:
             assert by in self.columns, f"{by} is not a column in the Filter object!"
+        # sort the DataFrame by the specified column/columns, in the specified order
         self.sort(by=by, ascending=ascending, na_position=na_position, inplace=True)
+        # keep only the top n values in the DataFrame after the sort (or the top len(self) items, if n>len(self))
         if n > self.df.shape[0]:
             warnings.warn(f'Current number of rows {self.df.shape[0]} is smaller than the specified n={n}. '
                           f'Therefore output Filter object will only have {self.df.shape[0]} rows. ')
         new_df = self.df.iloc[0:min(n, self.df.shape[0])]
-        order = 'asc' if ascending else 'desc'
-        suffix = f"_top{n}{by}{order}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @staticmethod
@@ -1070,6 +1072,18 @@ class Filter:
             raise ValueError(f"'return type' must be either 'set' or 'str', is instead '{return_type}'!")
 
     def _set_ops(self, others, return_type, op: Any):
+        """
+        Apply the supplied set operation (union/intersection/difference/symmetric difference) to the supplied objects.
+
+        :param others: the other objects to apply the set operation to
+        :type others: Filter or set objects.
+        :param return_type: the return type of the output
+        :type return_type: 'set' or 'str'
+        :param op: the set operation
+        :type op: function (set.union, set.intersection, set.difference or set.symmetric_difference)
+        :return: a set/string of indices resulting from the set operation
+        :rtype: set or str
+        """
         others = list(others)
         for i, other in enumerate(others):
             if isinstance(other, Filter):
@@ -1119,10 +1133,12 @@ class Filter:
             Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.
 
         """
+        # if intersection is performed inplace, apply it to the self
         if inplace:
             suffix = f"_intersection"
             new_set = self._set_ops(others, 'set', set.intersection)
             return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
+        # if intersection is not performed inplace, return a set/string according to user's request
         else:
             new_set = self._set_ops(others, return_type, set.intersection)
             return new_set
@@ -1159,6 +1175,7 @@ class Filter:
             'WBGene00007075', 'WBGene00000022', 'WBGene00000009'}
 
         """
+        # union always returns a set/string (What is the meaning of in-place union between two different tables?)
         return self._set_ops(others, return_type, set.union)
 
     def difference(self, *others, return_type: str = 'set', inplace: bool = False):
@@ -1198,11 +1215,12 @@ class Filter:
             Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
 
         """
-
+        # if difference is performed inplace, apply it to the self
         if inplace:
             suffix = f"_difference"
             new_set = self._set_ops(others, 'set', set.difference)
             return self._inplace(self.df.loc[new_set], opposite=False, inplace=inplace, suffix=suffix)
+        # if difference is not performed inplace, return a set/string according to user's request
         else:
             new_set = self._set_ops(others, return_type, set.difference)
             return new_set
@@ -1239,6 +1257,8 @@ class Filter:
             'WBGene00007075', 'WBGene00000022', 'WBGene00000009'}
 
         """
+        # symmetric difference always returns a set/string
+        # (What is the meaning of in-place symmetric difference between two different tables?)
         return self._set_ops([other], return_type, set.symmetric_difference)
 
 
@@ -1279,6 +1299,7 @@ class FoldChangeFilter(Filter):
         self.numerator = numerator_name
         self.denominator = denominator_name
         self.df.name = 'Fold Change'
+        # inf/0 can be problematic for functions down the line (like randomization test)
         if np.inf in self.df or 0 in self.df:
             warnings.warn(
                 " FoldChangeFilter does not support 'inf' or '0' values! "
@@ -1346,21 +1367,23 @@ class FoldChangeFilter(Filter):
             [1 rows x 5 columns]
 
         """
-
+        # calculate observed and expected mean fold-change, and the set size (n)
         obs_fc = self.df.mean(axis=0)
         exp_fc = ref.df.mean()
         n = self.df.shape[0]
+        # set random seed if requested
         if random_seed is not None:
             assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
                                                                       f"Value {random_seed} invalid."
             np.random.seed(random_seed)
-
+        # run randomization test
         print('Calculating...')
         res = self._foldchange_randomization(ref.df.values, reps, obs_fc, exp_fc, n)
-
+        # format the output DataFrame
         res_df = pd.DataFrame(res, columns=['group size', 'observed fold change', 'expected fold change', 'pval'],
                               index=[0])
         res_df['significant'] = res_df['pval'] <= alpha
+        # save the output DataFrame if requested
         if save_csv:
             utils.save_csv(res_df, fname)
         print(res_df)
@@ -1371,12 +1394,17 @@ class FoldChangeFilter(Filter):
     @jit(nopython=True)
     def _foldchange_randomization(vals: np.ndarray, reps: int, obs_fc: float, exp_fc: float, n: int):
         success = 0
+        # determine the randomization test's direction (is observed greater/lesser than expected)
         if obs_fc > exp_fc:
             for _ in range(reps):
+                # count the number of succeccess (mean(random subset) >= mean(observed)) over 'reps' repeats
                 success += np.mean(np.random.choice(vals, n, replace=False)) >= obs_fc
         else:
             for _ in range(reps):
+                # count the number of succeccess (mean(random subset) <= mean(observed)) over 'reps' repeats
                 success += np.mean(np.random.choice(vals, n, replace=False)) <= obs_fc
+        # calculate the positively-biased (less sig.) estimator of p-value (the unbiased estimator is (success / reps))
+        # the positive bias corrects for the finite (and perhaps small) number of random permutations tested
         pval = (success + 1) / (reps + 1)
         return [[n, obs_fc, exp_fc, pval]]
 
@@ -1482,8 +1510,8 @@ class FoldChangeFilter(Filter):
             Filtered 14 features, leaving 8 of the original 22 features. Filtering result saved to new object.
 
         """
-        return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
-            direction='neg', inplace=False)
+        return self.filter_fold_change_direction(direction='pos', inplace=False), \
+               self.filter_fold_change_direction(direction='neg', inplace=False)
 
 
 class DESeqFilter(Filter):
