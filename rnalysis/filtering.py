@@ -766,6 +766,11 @@ class Filter:
             [3 rows x 48 columns]
 
         """
+        # validate 'return_format'
+        assert isinstance(return_format, str), f"'return_format' must be a string!"
+        return_format = return_format.lower()
+        assert return_format in {'short', 'long'}, f"Invalid format '{return_format}'. Must be 'short' or 'long'."
+        # load the Biotype Reference Table
         ref = utils.get_biotype_ref_path(ref)
         ref_df = utils.load_csv(ref)
         utils.biotype_table_assertions(ref_df)

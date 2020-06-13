@@ -945,14 +945,22 @@ def test_count_filter_from_folder():
 
 def test_biotypes():
     truth = utils.load_csv('test_files/biotypes_truth.csv', 0)
-    df = CountFilter(r'test_files/counted_biotype.csv').biotypes(ref=__biotype_ref__)
+    c = CountFilter(r'test_files/counted_biotype.csv')
+    df = c.biotypes(ref=__biotype_ref__)
     truth.sort_index(inplace=True)
     df.sort_index(inplace=True)
     assert np.all(df == truth)
+    c.biotypes(return_format='Short', ref=__biotype_ref__)
 
 
 def test_biotypes_long_form():
     assert False
+
+
+def test_biotypes_invalid_return_format():
+    f = CountFilter(r'test_files/counted_biotype.csv')
+    with pytest.raises(AssertionError):
+        f.biotypes(return_format='medium')
 
 
 def test_filter_by_row_sum():
