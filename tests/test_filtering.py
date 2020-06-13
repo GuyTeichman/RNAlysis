@@ -322,7 +322,7 @@ def test_filter_by_attribute_intersection():
 
 def test_filter_by_attribute_invalid_mode():
     h = CountFilter('test_files/counted_filter_by_bigtable.csv')
-    with pytest.raises(ValueError):
+    with pytest.raises(AssertionError):
         h.filter_by_attribute(['attribute1', 'attribute2'], mode='difference',
                               ref=__attr_ref__)
 

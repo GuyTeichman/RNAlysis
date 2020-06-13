@@ -72,22 +72,29 @@ class Filter:
             >>> d = filtering.Filter("tests/test_files/counted.csv")
 
         """
+        # init from a tuple (fname, DataFrame/Series). Used in self.__copy__(), self._inplace
         if isinstance(fname, tuple):
             assert isinstance(fname[1], (pd.DataFrame, pd.Series)) and isinstance(fname[0], (str, Path))
             self.fname = fname[0]
             self.df = fname[1]
+        # init from a file (load the csv into a DataFrame/Series)
         else:
             assert isinstance(fname, (str, Path))
             self.fname = Path(fname)
             self.df = utils.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
+        # check for duplicate indices
         if self.df.index.has_duplicates:
-            warnings.warn("This Filter object contains multiple rows with the same WBGene index.")
+            warnings.warn("This Filter object contains multiple rows with the same name/index.")
         self.shape = self.df.shape
 
     def __repr__(self):
         return f"{type(self).__name__} of file {self.fname.stem}{self.fname.suffix}"
 
     def __len__(self):
+        """
+        Returns the number of rows in the Filter object
+
+        """
         return self.shape[0]
 
     def __eq__(self, other):
@@ -133,18 +140,22 @@ class Filter:
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
         assert printout_operation.lower() in ['filter', 'normalize'], \
             f"Invalid input for variable 'printout_operation': {printout_operation}"
+        # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
             new_df = self.df.loc[self.df.index.difference(new_df.index)]
             suffix += 'opposite'
 
+        # update filename with the suffix of the operation that was just performed
         new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}{suffix}{self.fname.suffix}")
 
+        # generate printout for user ("Filtered X features, leaving Y... filtered inplace/not inplace")
         printout = ''
         if printout_operation.lower() == 'filter':
             printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
                         f"of the original {self.df.shape[0]} features. "
         elif printout_operation.lower() == 'normalize':
             printout += f"Normalized the values of {new_df.shape[0]} features. "
+        # if inplace, modify the df, fname and shape properties of self
         if inplace:
             if printout_operation.lower() == 'filter':
                 printout += 'Filtered inplace.'
@@ -153,6 +164,7 @@ class Filter:
             print(printout)
             self.df, self.fname = new_df, new_fname
             self.shape = self.df.shape
+        # if not inplace, copy self, modify the df/fname/shape properties of the copy, and return it
         else:
             if printout_operation.lower() == 'filter':
                 printout += 'Filtering result saved to new object.'
@@ -176,6 +188,7 @@ class Filter:
         :type alt_filename: str, pathlib.Path, or None (default)
 
         """
+        # save with the default filename if no alternative filename was given
         if alt_filename is None:
             alt_filename = self.fname
         else:
@@ -395,21 +408,25 @@ class Filter:
             Filtered 0 features, leaving 22 of the original 22 features. Filtered inplace.
 
         """
+        suffix = f"_{'_'.join(biotype)}"
+        # make sure 'biotype' is a list of strings
         assert isinstance(biotype, (str, list)), "biotype must be a string or a list!"
         if isinstance(biotype, str):
             biotype = [biotype]
+        # load the biotype reference table
         ref = utils.get_biotype_ref_path(ref)
         ref_df = utils.load_csv(ref)
         utils.biotype_table_assertions(ref_df)
         ref_df.set_index('gene', inplace=True)
-        ref_df.columns = ref_df.columns.str.lower()
+        # generate set of legal inputs
         legal_inputs = set(ref_df['biotype'].unique())
-        suffix = f"_{'_'.join(biotype)}"
+        # generate an empty boolean mask for filtering down the line
         mask = pd.Series(np.zeros_like(ref_df['biotype'], dtype=bool), index=ref_df['biotype'].index, name='biotype')
-
+        # perform bitwise 'OR' between each biotype in the 'biotype' list and the mask
         for bio in biotype:
             assert bio in legal_inputs, f"biotype {bio} is not a legal string!"
             mask = mask | (ref_df['biotype'] == bio)
+        # gene names which remain after filtering are the 'True' in the mask AND were previously in the DataFrame
         gene_names = ref_df[mask].index.intersection(self.df.index)
         new_df = self.df.loc[gene_names]
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -474,34 +491,43 @@ class Filter:
             Filtered 3 features, leaving 19 of the original 22 features. Filtered inplace.
 
         """
+        suffix = '_filtbyattr'
+        # get attributes as input if none were supplied
         if attributes is None:
             attributes = self._from_string(
                 "Please insert attributes separated by newline "
                 "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
+        # make sure 'attributes' is a set/list/tuple of strings
         elif isinstance(attributes, str):
             attributes = [attributes]
         else:
             assert isinstance(attributes, (list, tuple, set))
+        # make sure 'mode' is legal
         assert isinstance(mode, str), "'mode' must be a string!"
+        mode = mode.lower()
+        assert mode in {'union', 'intersection'}, \
+            f"Illegal input {mode}: mode must be either 'union' or 'intersection'"
+        # load the Attribute Reference Table
         ref = utils.get_attr_ref_path(ref)
         attr_ref_table = utils.load_csv(ref)
         utils.attr_table_assertions(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
-        sep_idx = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
-
-        if mode == 'intersection':
-            suffix = '_filtbyattrIntersection'
-            indices = self.df.index
-            for idx in sep_idx:
-                indices = indices.intersection(idx)
-        elif mode == 'union':
-            suffix = '_filtbyattrUnion'
-            indices = pd.Index([])
-            for idx in sep_idx:
+        # generate list of the indices that are positive for each attribute
+        attr_indices_list = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
+        indices = pd.Index([])
+        # if in union mode, calculate union between the indices of all attributes
+        if mode == 'union':
+            suffix += 'Union'
+            for idx in attr_indices_list:
                 indices = indices.union(idx)
             indices = indices.intersection(self.df.index)
-        else:
-            raise ValueError(f"Illegal input {mode}: mode must be either 'union' or 'intersection'")
+        # if in intersection mode, calculate intersection between the indices of all attributes
+        elif mode == 'intersection':
+            suffix += 'Intersection'
+            indices = self.df.index
+            for idx in attr_indices_list:
+                indices = indices.intersection(idx)
+
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
