@@ -576,7 +576,22 @@ def test_filter_percentile():
     h.filter_percentile(0.25, 'padj', inplace=True)
     h.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
-    assert np.all(h.df == truth)
+    assert truth.equals(h.df)
+    h.filter_percentile(1, 'baseMean')
+    assert truth.equals(h.df)
+    h.filter_percentile(0, 'padj')
+    assert len(h) == 1
+    assert h.df['padj'].values == truth['padj'].min()
+
+
+def test_filter_percentile_bad_input():
+    h = DESeqFilter(r'test_files/test_deseq_percentile.csv')
+    with pytest.raises(AssertionError):
+        h.filter_percentile(-0.2, 'pvalue')
+    with pytest.raises(AssertionError):
+        h.filter_percentile(1.1, 'baseMean')
+    with pytest.raises(AssertionError):
+        h.filter_percentile('0.5', 'log2FoldChange')
 
 
 def test_split_by_percentile():

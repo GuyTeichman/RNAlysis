@@ -33,6 +33,7 @@ Fixed
 * Updated type-hinting of specific functions.
 * Filter.biotypes() and FeatureSet.biotypes() now support Biotype Reference Tables with different column names.
 * Generally improved performance of RNAlysis.
+* Fixed bug in Filter.filter_percentile() where the value at the exact percentile speficied (e.g. the median for percentile=0.5) would be removed from the Filter object.
 * Various bug fixes.
 
 

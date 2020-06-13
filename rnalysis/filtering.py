@@ -327,10 +327,11 @@ class Filter:
 
 
         """
-        assert isinstance(percentile, float), "percentile must be a float between 0 and 1!"
+        assert isinstance(percentile, (float, int)) and 0 <= percentile <= 1, \
+            "percentile must be a float between 0 and 1!"
         assert isinstance(column, str) and column in self.df, "Invalid column name!"
         suffix = f'_below{percentile}percentile'
-        new_df = self.df[self.df[column] < self.df[column].quantile(percentile)]
+        new_df = self.df[self.df[column] <= self.df[column].quantile(percentile)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def split_by_percentile(self, percentile: float, column: str) -> tuple:
