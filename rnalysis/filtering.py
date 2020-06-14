@@ -2853,7 +2853,7 @@ class CountFilter(Filter):
         for item in folder.iterdir():
             if item.is_file() and item.suffix == input_format:
                 df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
-        assert not df.empty, f"Error: no valid files with suffix {input_format} were found in the folder {folder_path}!"
+        assert not df.empty, f"Error: no valid files with the suffix '{input_format}' were found in '{folder_path}'."
 
         uncounted = df.loc[
             ['__no_feature', '__ambiguous', '__alignment_not_unique', '__too_low_aQual', '__not_aligned']]
@@ -2863,7 +2863,7 @@ class CountFilter(Filter):
             utils.save_csv(df=counts, filename=counted_fname)
             utils.save_csv(df=uncounted, filename=uncounted_fname)
 
-        fname = counted_fname if save_csv else folder.name + file_suffix
+        fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
         h = CountFilter((Path(fname), counts))
         if norm_to_rpm:
             h.normalize_to_rpm(uncounted)
