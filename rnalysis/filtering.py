@@ -2297,7 +2297,7 @@ class CountFilter(Filter):
 
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                     suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
+                                     suffix=f'_kmedoidscluster{i + 1}') for i in range(this_k)]))
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
