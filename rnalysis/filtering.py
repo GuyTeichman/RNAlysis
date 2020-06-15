@@ -24,7 +24,7 @@ import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
 from numba import jit
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, AgglomerativeClustering, OPTICS
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
 from sklearn.preprocessing import PowerTransformer, StandardScaler
@@ -2276,6 +2276,42 @@ class CountFilter(Filter):
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
+        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+
+    def split_hierarchical(self, n_clusters: Union[int, List[int], str], metric: str = 'euclidean',
+                           linkage: str = 'ward', distance_threshold: float = None, plot_style: str = 'all',
+                           split_plots: bool = False, max_clusters: int = 'default', gap_random_state: int = None):
+        clusterer_kwargs = dict(affinity=metric, linkage=linkage)
+        data = self._standard_box_cox(self.df)
+        if n_clusters is not None:
+            k = self._parse_k(k=n_clusters, clusterer_class=AgglomerativeClustering, random_state=gap_random_state,
+                              clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
+        else:
+            clusterer = AgglomerativeClustering(distance_threshold=distance_threshold, **clusterer_kwargs).fit(data)
+            k = clusterer.n_clusters_
+            means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(k)])
+            self._plot_clustering(n_clusters=k, data=data, labels=clusterer.labels_, centers=means,
+                                  title=f"Results of Hierarchical Clustering for n_clusters={k}, "
+                                        f"metric='{metric}', linkage='{linkage}'", plot_style=plot_style,
+                                  split_plots=split_plots)
+
+            return tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
+                                        suffix=f'_hierarchicalcluster{i + 1}') for i in range(k)])
+
+        filt_obj_tuples = []
+        for this_k in k:
+            this_k = int(this_k)
+            clusterer = AgglomerativeClustering(n_clusters=this_k, **clusterer_kwargs).fit(data)
+
+            means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(this_k)])
+            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_, centers=means,
+                                  title=f"Results of Hierarchical Clustering for n_clusters={this_k}, "
+                                        f"metric='{metric}', linkage='{linkage}'", plot_style=plot_style,
+                                  split_plots=split_plots)
+
+            filt_obj_tuples.append(
+                tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
+                                     suffix=f'_hierarchicalcluster{i + 1}') for i in range(this_k)]))
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
