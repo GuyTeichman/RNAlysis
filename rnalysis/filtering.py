@@ -2103,6 +2103,11 @@ class CountFilter(Filter):
         a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
         # transform the observed data using Box-Cox, and then standardize it
         data = self._standard_box_cox(self.df.values)
+        # generate 'n_refs' random reference arrays:
+        # draw uniform features Z' over the ranges of the columns of X', and back-transform via Z = dot(Z', V.T), then
+        # transform the random reference data using Box-Cox, and then standardize it
+        refs = [self._standard_box_cox(pca.inverse_transform(np.random.random_sample(size=data.shape) * (b - a) + a))
+                for _ in range(n_refs)]
         # allocate empty arrays for observed/expected log(inertia), gap scores Gap(K) and gap error S(K)
         log_disp_obs = np.zeros((len(k_range)))
         log_disp_exp = np.zeros((len(k_range)))
@@ -2113,13 +2118,9 @@ class CountFilter(Filter):
         for ind, this_k in enumerate(k_range):
             # init the clusterer with given arguments
             clusterer = clusterer_class(n_clusters=this_k, random_state=random_state, n_init=n_init, max_iter=max_iter)
-            # generate 'n_refs' random reference arrays and cluster each of them into Ki clusters
+            # cluster each of the n_refs reference arrays into Ki clusters
             ref_disps = np.zeros(n_refs)
-            for ref_ind in range(n_refs):
-                # draw uniform features Z' over the ranges of the columns of X', and back-transform via Z = dot(Z', V.T)
-                ref = pca.inverse_transform(np.random.random_sample(size=data.shape) * (b - a) + a)
-                # transform the random reference data using Box-Cox, and then standardize it
-                ref = self._standard_box_cox(ref)
+            for ref_ind, ref in enumerate(refs):
                 # calculate dispersion/inertia for reference data clustered into Ki clusters
                 ref_disps[ref_ind] = clusterer.fit(ref).inertia_
             # calculate dispersion/inertia for the observed data clustered into Ki clusters
