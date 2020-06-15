@@ -26,7 +26,7 @@ from grid_strategy import strategies
 from numba import jit
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import pairwise_distances, silhouette_score
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from sklearn_extra.cluster import KMedoids
 
@@ -2122,9 +2122,9 @@ class CountFilter(Filter):
             ref_disps = np.zeros(n_refs)
             for ref_ind, ref in enumerate(refs):
                 # calculate dispersion/inertia for reference data clustered into Ki clusters
-                ref_disps[ref_ind] = clusterer.fit(ref).inertia_
+                ref_disps[ref_ind] = self._compute_dispersion(clusterer.fit(ref), ref, this_k)
             # calculate dispersion/inertia for the observed data clustered into Ki clusters
-            disp = clusterer.fit(data).inertia_
+            disp = self._compute_dispersion(clusterer.fit(data), data, this_k)
             # calculate the mean of the log(reference dispersion) values
             log_disp_exp[ind] = np.mean(np.log(ref_disps))
             # calculate the log(observed dispersion) value
@@ -2152,6 +2152,18 @@ class CountFilter(Filter):
         fig = self._plot_gap(k_range, log_disp_obs, log_disp_exp, gap_scores, gap_error, best_k, best_k_ind)
 
         return best_k, fig
+
+    @staticmethod
+    def _compute_dispersion(clusterer, data, k):
+        # known as Wk in the Gap Statistic paper
+        if hasattr(clusterer, 'inertia_'):
+            return clusterer.inertia_
+        labels = clusterer.labels_
+        dispersion = 0
+        for r in range(k):
+            this_label = labels == r
+            dispersion += np.sum(pairwise_distances(data[this_label, :]) ** 2) / (2 * np.sum(this_label))
+        return dispersion
 
     @staticmethod
     def _plot_gap(k_range, log_disp_obs, log_disp_exp, gap_scores, gap_error, best_k, best_k_ind):
