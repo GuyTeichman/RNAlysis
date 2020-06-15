@@ -1451,25 +1451,26 @@ def test_silhouette_method():
 
 def test_parse_k(monkeypatch):
     c = CountFilter('test_files/counted.csv')
+    args = (KMeans, 0, {}, 0)
     monkeypatch.setattr(CountFilter, "_silhouette",
-                        lambda self, clusterer_class, random_state, n_init, max_iter, max_clusters: ('success', None))
-    assert c._parse_k('silhouette', KMeans, 0, 0, 0, 0) == ['success']
+                        lambda self, clusterer_class, clusterer_kwargs, max_clusters: ('success', None))
+    assert c._parse_k('silhouette', *args) == ['success']
 
     monkeypatch.setattr(CountFilter, "_gap_statistic",
-                        lambda self, clusterer_class, random_state, n_init, max_iter, max_clusters: ('success', None))
-    assert c._parse_k('gap', KMeans, 0, 0, 0, 0) == ['success']
+                        lambda self, clusterer_class, random_state, clusterer_kwargs, max_clusters: ('success', None))
+    assert c._parse_k('gap', *args) == ['success']
 
-    assert list(c._parse_k(10, KMeans, 0, 0, 0, 0)) == [10]
-    assert list(c._parse_k([7, 2, 5], KMeans, 0, 0, 0, 0)) == [7, 2, 5]
-    assert list(c._parse_k(range(2, 9), KMeans, 0, 0, 0, 0)) == list(range(2, 9))
+    assert list(c._parse_k(10, *args)) == [10]
+    assert list(c._parse_k([7, 2, 5], *args)) == [7, 2, 5]
+    assert list(c._parse_k(range(2, 9), *args)) == list(range(2, 9))
     with pytest.raises(AssertionError):
-        print(list(c._parse_k([5, 2, '3'], KMeans, 0, 0, 0, 0)))
+        print(list(c._parse_k([5, 2, '3'], *args)))
     with pytest.raises(AssertionError):
-        c._parse_k('a string', KMeans, 0, 0, 0, 0)
+        c._parse_k('a string', *args)
     with pytest.raises(AssertionError):
-        c._parse_k(1, KMeans, 0, 0, 0, 0)
+        c._parse_k(1, *args)
     with pytest.raises(AssertionError):
-        c._parse_k([3, 5, 1], KMeans, 0, 0, 0, 0)
+        c._parse_k([3, 5, 1], *args)
 
 
 def test_fc_randomization():

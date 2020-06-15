@@ -2087,7 +2087,7 @@ class CountFilter(Filter):
         plt.show()
         return fig, axes
 
-    def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 10,
+    def _gap_statistic(self, clusterer_class: type, random_state: int, clusterer_kwargs: dict, n_refs: int = 10,
                        max_clusters: int = 20):
         # determine the range of k values to be tested
         k_range = np.arange(1, max_clusters + 1)
@@ -2117,7 +2117,7 @@ class CountFilter(Filter):
         # iterate over K values in the range
         for ind, this_k in enumerate(k_range):
             # init the clusterer with given arguments
-            clusterer = clusterer_class(n_clusters=this_k, random_state=random_state, n_init=n_init, max_iter=max_iter)
+            clusterer = clusterer_class(n_clusters=this_k, **clusterer_kwargs)
             # cluster each of the n_refs reference arrays into Ki clusters
             ref_disps = np.zeros(n_refs)
             for ref_ind, ref in enumerate(refs):
@@ -2186,7 +2186,7 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def _silhouette(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, max_clusters: int = 20):
+    def _silhouette(self, clusterer_class: type, clusterer_kwargs: dict, max_clusters: int = 20):
         """
 
         :param clusterer_class:
@@ -2207,8 +2207,7 @@ class CountFilter(Filter):
         sil_scores = []
         k_range = np.arange(2, max_clusters + 1)
         for n_clusters in k_range:
-            clusterer = clusterer_class(n_clusters=n_clusters, n_init=n_init, max_iter=max_iter,
-                                        random_state=random_state)
+            clusterer = clusterer_class(n_clusters=n_clusters, **clusterer_kwargs)
             sil_scores.append(silhouette_score(data, clusterer.fit_predict(data)))
         fig = plt.figure(figsize=(7, 9))
         ax = fig.add_subplot(111)
@@ -2236,33 +2235,17 @@ class CountFilter(Filter):
         """
         return StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
 
-    def _parse_k(self, k: Union[int, List[int], str], clusterer_class: type, random_state: int, n_init: int,
-                 max_iter: int, max_clusters: int):
-        """
+    def _parse_k(self, k: Union[int, List[int], str], clusterer_class: type, random_state: int, clusterer_kwargs: dict,
+                 max_clusters: int):
 
-        :param k:
-        :type k:
-        :param clusterer_class:
-        :type clusterer_class:
-        :param random_state:
-        :type random_state:
-        :param n_init:
-        :type n_init:
-        :param max_iter:
-        :type max_iter:
-        :param max_clusters:
-        :type max_clusters:
-        :return:
-        :rtype:
-        """
         max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
-            best_k, _ = self._silhouette(clusterer_class=clusterer_class, random_state=random_state, n_init=n_init,
-                                         max_iter=max_iter, max_clusters=max_clusters)
+            best_k, _ = self._silhouette(clusterer_class=clusterer_class, clusterer_kwargs=clusterer_kwargs,
+                                         max_clusters=max_clusters)
             k = [best_k]
         elif isinstance(k, str) and k.lower() == 'gap':
-            best_k, _ = self._gap_statistic(clusterer_class=clusterer_class, random_state=random_state, n_init=n_init,
-                                            max_iter=max_iter, max_clusters=max_clusters)
+            best_k, _ = self._gap_statistic(clusterer_class=clusterer_class, random_state=random_state,
+                                            clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
             k = [best_k]
         else:
             if not isinstance(k, Iterable):
@@ -2276,15 +2259,14 @@ class CountFilter(Filter):
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
                      max_iter: int = 300, plot_style: str = 'all', split_plots: bool = False,
                      max_clusters: int = 'default'):
-
-        k = self._parse_k(k=k, clusterer_class=KMeans, random_state=random_state, n_init=n_init,
-                          max_iter=max_iter, max_clusters=max_clusters)
+        clusterer_kwargs = dict(init='k-means++', random_state=random_state, n_init=n_init, max_iter=max_iter)
+        k = self._parse_k(k=k, clusterer_class=KMeans, random_state=random_state, clusterer_kwargs=clusterer_kwargs,
+                          max_clusters=max_clusters)
         filt_obj_tuples = []
         data = self._standard_box_cox(self.df)
         for this_k in k:
             this_k = int(this_k)
-            clusterer = KMeans(init='k-means++', n_clusters=this_k, n_init=n_init, max_iter=max_iter,
-                               random_state=random_state).fit(data)
+            clusterer = KMeans(n_clusters=this_k, **clusterer_kwargs).fit(data)
 
             self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
@@ -2299,31 +2281,14 @@ class CountFilter(Filter):
     def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
                        max_iter: int = 300, plot_style: str = 'all', split_plots: bool = False,
                        max_clusters: int = 'default'):
-        """
-
-        :param k:
-        :type k:
-        :param random_state:
-        :type random_state:
-        :param n_init:
-        :type n_init:
-        :param max_iter:
-        :type max_iter:
-        :param plot_style:
-        :type plot_style:
-        :param max_clusters:
-        :type max_clusters:
-        :return:
-        :rtype:
-        """
-        k = self._parse_k(k=k, clusterer_class=_KMedoidsIter, random_state=random_state, n_init=n_init,
-                          max_iter=max_iter, max_clusters=max_clusters)
+        clusterer_kwargs = dict(init='k-medoids++', random_state=random_state, n_init=n_init, max_iter=max_iter)
+        k = self._parse_k(k=k, clusterer_class=_KMedoidsIter, random_state=random_state,
+                          clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
         filt_obj_tuples = []
         data = self._standard_box_cox(self.df)
         for this_k in k:
             this_k = int(this_k)
-            clusterer = _KMedoidsIter(init='k-medoids++', n_clusters=this_k, n_init=n_init, max_iter=max_iter,
-                                      random_state=random_state).fit(data)
+            clusterer = _KMedoidsIter(n_clusters=this_k, **clusterer_kwargs).fit(data)
 
             self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
