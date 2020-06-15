@@ -2090,7 +2090,7 @@ class CountFilter(Filter):
     def _gap_statistic(self, clusterer_class: type, random_state: int, n_init: int, max_iter: int, n_refs: int = 10,
                        max_clusters: int = 20):
         # determine the range of k values to be tested
-        k_range = np.arange(2, max_clusters + 1)
+        k_range = np.arange(1, max_clusters + 1)
         print(f"Calculating optimal K using the Gap Statistic method in range {2}:{max_clusters}...")
         # set the random state, if one was supplied
         if random_state is not None:
