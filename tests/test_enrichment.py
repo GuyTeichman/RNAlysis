@@ -106,6 +106,8 @@ def test_featureset_symmetric_difference():
     direction2 = first_set.symmetric_difference(second_set)
     assert np.all(direction1.gene_set == truth)
     assert np.all(direction2.gene_set == truth)
+    with pytest.raises(TypeError):
+        first_set.symmetric_difference(second_set, second)
 
 
 def test_set_operations_invalid_obj():
