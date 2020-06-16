@@ -362,6 +362,12 @@ def test_randomization_attributes_from_string(monkeypatch):
     assert attrs == attrs_truth
 
 
+def test_enrichment_get_attrs_bad_path():
+    en = FeatureSet(gene_set={'_'}, set_name='test_set')
+    with pytest.raises(FileNotFoundError):
+        attrs = en._enrichment_get_attrs('attribute1', 'fakepath')
+
+
 def test_enrich_hypergeometric_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
