@@ -1524,7 +1524,11 @@ def test_filter_save_csv():
     d.save_csv()
     pth = Path('test_files/test_deseq_with_nan_removemissingvals.csv')
     # assert pth.exists()
-    for file in Path('test_files').iterdir():
+    for file in Path('.').iterdir():
+        print(file)
+    for file in Path('../').iterdir():
+        print(file)
+    for file in Path('../../').iterdir():
         print(file)
     d_loaded = DESeqFilter(pth)
     assert np.isclose(d_loaded.df, d.df).all()
