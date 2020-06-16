@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 from rnalysis import utils
 from sklearn_extra.cluster import KMedoids
+from collections import namedtuple
 import matplotlib
 from rnalysis.filtering import *
 from rnalysis.filtering import _KMedoidsIter
@@ -1465,7 +1466,15 @@ def _test_correct_clustering_split(counts, res, missing_indices: bool = False):
 
 
 def test_compute_dispersion():
-    assert False
+    clust_with_inertia = namedtuple('Clusterer', ['inertia_'])
+    clust_without_inertia = namedtuple('Clusterer', ['labels_'])
+    data = utils.load_csv('test_files/counted.csv', 0).values
+    for k in [1, 3, data.shape[0]]:
+        kmeans = KMeans(k, random_state=42).fit(data)
+        assert CountFilter._compute_dispersion(clust_with_inertia(kmeans.inertia_), data, k) == kmeans.inertia_
+        print(k, kmeans.inertia_, sorted(kmeans.labels_))
+        assert np.isclose(CountFilter._compute_dispersion(clust_without_inertia(kmeans.labels_), data, k),
+                          kmeans.inertia_)
 
 
 def test_gap_statistic():

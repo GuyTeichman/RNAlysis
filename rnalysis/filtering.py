@@ -2162,7 +2162,10 @@ class CountFilter(Filter):
         dispersion = 0
         for r in range(k):
             this_label = labels == r
-            dispersion += np.sum(pairwise_distances(data[this_label, :]) ** 2) / (2 * np.sum(this_label))
+            n = np.sum(this_label)
+            # don't calculate within-cluster dispersion for empty clusters or clusters with a single member
+            if n > 1:
+                dispersion += np.sum(pairwise_distances(data[this_label, :]) ** 2) / (2 * n)
         return dispersion
 
     @staticmethod
