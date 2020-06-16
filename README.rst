@@ -51,25 +51,25 @@ Dependencies
 ------------
 All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 
-* numpy
-* pandas
-* scipy
-* matplotlib
-* numba
-* scikit-learn
-* scikit-learn-extra
-* hdbscan
-* seaborn
-* statsmodels
-* ipyparallel
-* grid_strategy
-* pyyaml
-* UpSetPlot
-* matplotlib-venn
-* tissue_enrichment_analysis
-* xlmhg
-* goatools
-* wget
+* `numpy <https://numpy.org/>`_
+* `pandas <https://pandas.pydata.org/>`_
+* `scipy <https://www.scipy.org/>`_
+* `matplotlib <https://matplotlib.org/>`_
+* `numba <http://numba.pydata.org/>`_
+* `scikit-learn <https://scikit-learn.org/>`_
+* `scikit-learn-extra <https://github.com/scikit-learn-contrib/scikit-learn-extra>`_
+* `hdbscan <https://github.com/scikit-learn-contrib/hdbscan>`_
+* `seaborn <https://seaborn.pydata.org/>`_
+* `statsmodels <https://www.statsmodels.org/>`_
+* `ipyparallel <https://github.com/ipython/ipyparallel>`_
+* `grid_strategy <https://github.com/matplotlib/grid-strategy>`_
+* `pyyaml <https://github.com/yaml/pyyaml>`_
+* `UpSetPlot <https://github.com/jnothman/UpSetPlot>`_
+* `matplotlib-venn <https://github.com/konstantint/matplotlib-venn>`_
+* `tissue_enrichment_analysis <https://github.com/dangeles/TissueEnrichmentAnalysis>`_
+* `xlmhg <https://github.com/flo-compbio/xlmhg>`_
+* `goatools <https://github.com/tanghaibao/Goatools>`_
+* `wget <https://pypi.org/project/wget/>`_
 
 ----
 
