@@ -146,7 +146,7 @@ class Filter:
             suffix += 'opposite'
 
         # update filename with the suffix of the operation that was just performed
-        new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}{suffix}{self.fname.suffix}")
+        new_fname = Path(os.path.join(str(self.fname.parent), f"{self.fname.stem}{suffix}{self.fname.suffix}"))
 
         # generate printout for user ("Filtered X features, leaving Y... filtered inplace/not inplace")
         printout = ''
@@ -199,7 +199,7 @@ class Filter:
             if (isinstance(alt_filename, str) and alt_filename.endswith(suffix)) or \
                 (isinstance(alt_filename, Path) and alt_filename.suffix == suffix):
                 suffix = ''
-            alt_filename = f"{str(self.fname.parent)}\\{alt_filename}{suffix}"
+            alt_filename = os.path.join(str(self.fname.parent), f"{alt_filename}{suffix}")
         utils.save_csv(self.df, alt_filename)
 
     @staticmethod
@@ -1811,7 +1811,7 @@ class CountFilter(Filter):
             assert den in self.df, f"all denominator arguments must be columns in the CountFilter object! ({den})"
 
         srs = (self.df[numerator].mean(axis=1) + 1) / (self.df[denominator].mean(axis=1) + 1)
-        new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}'_fold_change_'"
+        new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
         # init the FoldChangeFilter object from an existing Series
         fcfilt = FoldChangeFilter((new_fname, srs), numerator_name=numer_name, denominator_name=denom_name)
