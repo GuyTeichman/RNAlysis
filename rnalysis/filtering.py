@@ -1790,10 +1790,13 @@ class CountFilter(Filter):
             rnalysis.filtering.FoldChangeFilter
 
         """
-        assert isinstance(numerator, (str, list, tuple)), "numerator must be a string or a list!"
-        assert isinstance(denominator, (str, list, tuple)), "denominator must be a string or a list!"
         assert isinstance(numer_name, str), "numerator name must be a string or 'default'!"
         assert isinstance(denom_name, str), "denominator name must be a string or 'default'!"
+        numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
+        denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
+        # numerator and denominator should end up as a list of column names (strings)
+        assert isinstance(numerator, (str, list, tuple)), "numerator must be a string or a list!"
+        assert isinstance(denominator, (str, list, tuple)), "denominator must be a string or a list!"
         if isinstance(numerator, str):
             numerator = [numerator]
         elif isinstance(numerator, tuple):
@@ -1804,15 +1807,13 @@ class CountFilter(Filter):
             denominator = list(denominator)
         for num in numerator:
             assert num in self.df, f"all numerator arguments must be columns in the CountFilter object! ({num})"
-
         for den in denominator:
             assert den in self.df, f"all denominator arguments must be columns in the CountFilter object! ({den})"
+
         srs = (self.df[numerator].mean(axis=1) + 1) / (self.df[denominator].mean(axis=1) + 1)
-        numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
-        denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
         new_fname = Path(f"{str(self.fname.parent)}\\{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
-
+        # init the FoldChangeFilter object from an existing Series
         fcfilt = FoldChangeFilter((new_fname, srs), numerator_name=numer_name, denominator_name=denom_name)
 
         return fcfilt
@@ -1855,17 +1856,18 @@ class CountFilter(Filter):
         plt.show()
         return pairplt
 
-    def _rpm_assertions(self, threshold: float = 1):
+    def _threshold_assertions(self, threshold: float = 1):
 
         """
-        Various assertions for functions that normalize to RPM, or are meant to be used on pre-normalized values.
+        Assertions for functions that filter normalized values by some threshold, \
+        or are meant to be used on normalized values.
 
         :param threshold: optional. A threshold value for filter_low_rpm to be asserted.
 
         """
         assert isinstance(threshold, (float, int)), "Threshold must be a number!"
         assert threshold >= 0, "Threshold must be zero or larger!"
-        if 'rpm' not in str(self.fname) and 'sizefactor' not in str(self.fname):
+        if '_norm' not in str(self.fname):
             warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
 
     def _avg_subsamples(self, sample_list: list):
@@ -1897,7 +1899,7 @@ class CountFilter(Filter):
     def normalize_to_rpm(self, special_counter_fname: str, inplace: bool = True):
 
         """
-        Normalizes the reads in the CountFilter to reads per million (RPM). \
+        Normalizes the reads in the CountFilter to Reads Per Million (RPM). \
         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq's output. \
         Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .
 
@@ -1915,7 +1917,7 @@ class CountFilter(Filter):
             Normalized the values of 22 features. Normalized inplace.
 
         """
-        suffix = '_rpm'
+        suffix = '_normtorpm'
         new_df = self.df.copy()
         if isinstance(special_counter_fname, (str, Path)):
             features = utils.load_csv(special_counter_fname, 0)
@@ -1950,7 +1952,7 @@ class CountFilter(Filter):
             Normalized the values of 22 features. Normalized inplace.
 
         """
-        suffix = '_sizefactor'
+        suffix = '_normwithscalingfactors'
         new_df = self.df.copy()
         if isinstance(scaling_factor_fname, (str, Path)):
             size_factors = utils.load_csv(scaling_factor_fname)
@@ -1988,7 +1990,7 @@ class CountFilter(Filter):
             Filtered 6 features, leaving 16 of the original 22 features. Filtered inplace.
 
         """
-        self._rpm_assertions(threshold=threshold)
+        self._threshold_assertions(threshold=threshold)
         new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         suffix = f"_filt{threshold}reads"
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -2018,7 +2020,7 @@ class CountFilter(Filter):
             Filtered 16 features, leaving 6 of the original 22 features. Filtering result saved to new object.
 
         """
-        self._rpm_assertions(threshold=threshold)
+        self._threshold_assertions(threshold=threshold)
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in self.df.iterrows()]]
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), self._inplace(
@@ -2048,7 +2050,7 @@ class CountFilter(Filter):
             Filtered 4 features, leaving 18 of the original 22 features. Filtered inplace.
 
         """
-        self._rpm_assertions(threshold=threshold)
+        self._threshold_assertions(threshold=threshold)
         new_df = self.df.loc[self.df.sum(axis=1) >= threshold]
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -2201,12 +2203,8 @@ class CountFilter(Filter):
 
         :param clusterer_class:
         :type clusterer_class:
-        :param random_state:
-        :type random_state:
-        :param n_init:
-        :type n_init:
-        :param max_iter:
-        :type max_iter:
+        :param clusterer_kwargs:
+        :type clusterer_kwargs:
         :param max_clusters:
         :type max_clusters:
         :return:
@@ -2672,7 +2670,7 @@ class CountFilter(Filter):
 
 
         """
-        self._rpm_assertions()
+        self._threshold_assertions()
         assert isinstance(sample1, (str, list, tuple, set)) and isinstance(sample2, (str, list, tuple, set))
         xvals = np.log10(self.df[sample1].values + 1) if isinstance(sample1, str) else np.log10(
             self.df[sample1].mean(axis=1).values + 1)
@@ -2743,7 +2741,7 @@ class CountFilter(Filter):
 
 
         """
-        self._rpm_assertions()
+        self._threshold_assertions()
         if samples == 'all':
             samples_df = self.df
         else:
@@ -2788,7 +2786,7 @@ class CountFilter(Filter):
            Example plot of enhanced_box_plot()
 
         """
-        self._rpm_assertions()
+        self._threshold_assertions()
         if samples == 'all':
             samples_df = self.df
         else:
@@ -2832,7 +2830,7 @@ class CountFilter(Filter):
 
 
         """
-        self._rpm_assertions()
+        self._threshold_assertions()
         if samples == 'all':
             samples_df = self.df
         else:
