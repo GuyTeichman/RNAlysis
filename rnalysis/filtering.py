@@ -2278,16 +2278,46 @@ class CountFilter(Filter):
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_hierarchical(self, n_clusters: Union[int, List[int], str], metric: str = 'euclidean',
+    def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
                            linkage: str = 'ward', distance_threshold: float = None, plot_style: str = 'all',
                            split_plots: bool = False, max_clusters: int = 'default', gap_random_state: int = None):
+        """
+
+        :param n_clusters:
+        :type n_clusters:
+        :param metric:
+        :type metric:
+        :param linkage:
+        :type linkage:
+        :param distance_threshold:
+        :type distance_threshold:
+        :param plot_style:
+        :type plot_style:
+        :param split_plots:
+        :type split_plots:
+        :param max_clusters:
+        :type max_clusters:
+        :param gap_random_state:
+        :type gap_random_state:
+        :return:
+        :rtype:
+        """
+        assert isinstance(metric, str), f"'metric' must be a string. Instead got '{type(metric)}'."
+        assert isinstance(linkage, str), f"'linkage' must be a string. Instead got '{type(linkage)}'."
+        metric, linkage = metric.lower(), linkage.lower()
+        assert metric in {'euclidean', 'spearman'}, \
+            f"'metric' must be 'euclidean' or 'spearman'. Instead got '{metric}'."
+        assert linkage in {'single', 'average', 'complete', 'ward'}, \
+            f"'linkage' must be 'single', 'average', 'complete' or 'ward'. Instead got '{linkage}'."
+
         clusterer_kwargs = dict(affinity=metric, linkage=linkage)
         data = self._standard_box_cox(self.df)
         if n_clusters is not None:
             k = self._parse_k(k=n_clusters, clusterer_class=AgglomerativeClustering, random_state=gap_random_state,
                               clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
         else:
-            clusterer = AgglomerativeClustering(distance_threshold=distance_threshold, **clusterer_kwargs).fit(data)
+            clusterer = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold,
+                                                **clusterer_kwargs).fit(data)
             k = clusterer.n_clusters_
             means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(k)])
             self._plot_clustering(n_clusters=k, data=data, labels=clusterer.labels_, centers=means,

@@ -1400,18 +1400,27 @@ def test_split_kmeans_api():
     [_test_correct_clustering_split(c, i) for i in res2]
 
 
-def _test_correct_clustering_split(counts, res, missing_indices: bool = False):
+def test_split_hierarchical_api():
+    c = CountFilter('test_files/big_counted.csv')
+    c.filter_top_n(by='cond1rep1', n=2000)
+    res = c.split_hierarchical(4)
     assert isinstance(res, tuple)
-    for obj in res:
-        assert len(counts.intersection(obj)) == obj.shape[0]
-        # all of the indices in the split object are in the original too
-        for obj2 in res:
-            if obj != obj2:
-                assert len(obj.intersection(obj2)) == 0
-                # the clusters don't overlap with each other at all
-    if not missing_indices:
-        assert len(res[0].union(*res[1:])) == counts.shape[0]
-        # if all values are clustered, make sure that all clusters sum up to the original object
+    assert len(res) == 4
+    _test_correct_clustering_split(c, res)
+    res2 = c.split_hierarchical([2, 3, 7], metric='Euclidean', linkage='AVERAGE', plot_style='std_bar',
+                                gap_random_state=42)
+    assert isinstance(res2, list)
+    assert np.all([isinstance(i, tuple) for i in res2])
+    [_test_correct_clustering_split(c, i) for i in res2]
+
+    res3 = c.split_hierarchical(None, distance_threshold=10)
+    assert isinstance(res3, tuple)
+    _test_correct_clustering_split(c, res3)
+
+    with pytest.raises(AssertionError):
+        c.split_hierarchical(5, metric='badinput')
+    with pytest.raises(AssertionError):
+        c.split_hierarchical(4, linkage='avg')
 
 
 def test_split_hdbscan_api():
@@ -1428,7 +1437,7 @@ def test_split_hdbscan_api():
         c.split_hdbscan(c.shape[0] + 1)
 
 
-def test_split_kmedoids():
+def test_split_kmedoids_api():
     c = CountFilter('test_files/big_counted.csv')
     c.filter_top_n(by='cond1rep1', n=2000)
     res = c.split_kmedoids(k=4, n_init=3)
@@ -1439,6 +1448,24 @@ def test_split_kmedoids():
     assert isinstance(res2, list)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
+
+
+def _test_correct_clustering_split(counts, res, missing_indices: bool = False):
+    assert isinstance(res, tuple)
+    for obj in res:
+        assert len(counts.intersection(obj)) == obj.shape[0]
+        # all of the indices in the split object are in the original too
+        for obj2 in res:
+            if obj != obj2:
+                assert len(obj.intersection(obj2)) == 0
+                # the clusters don't overlap with each other at all
+    if not missing_indices:
+        assert len(res[0].union(*res[1:])) == counts.shape[0]
+        # if all values are clustered, make sure that all clusters sum up to the original object
+
+
+def test_compute_dispersion():
+    assert False
 
 
 def test_gap_statistic():
