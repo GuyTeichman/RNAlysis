@@ -351,6 +351,17 @@ def test_randomization_all_attributes():
     assert attrs == attrs_truth
 
 
+def test_randomization_attributes_from_string(monkeypatch):
+    monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute4\n')
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
+    en = FeatureSet(gene_set=genes, set_name='test_set')
+    attrs_truth = ['attribute1', 'attribute4']
+    attrs = en._enrichment_get_attrs(None, __attr_ref__)
+    plt.close('all')
+    assert attrs == attrs_truth
+
+
 def test_enrich_hypergeometric_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
              'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
