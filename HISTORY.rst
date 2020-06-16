@@ -15,6 +15,7 @@ Added
 * Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.
 * Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis
 * Added RankedSet.enrich_single_list(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see `Eden et al. (PLoS Comput Biol, 2007) <https://dx.doi.org/10.1371/journal.pcbi.0030039>`_  and `Wagner (PLoS One, 2015) <https://dx.doi.org/10.1371/journal.pone.0143196>`_ ).
+* Added FeatureSet.enrich_hypergeometric(), which can perform enrichment analysis using the Hypergeometric Test.
 * Added more visualization functions, such CountFilter.enhanced_box_plot().
 * Added FeatureSet.change_set_name(), to give a new 'set_name' to a FeatureSet object.
 
