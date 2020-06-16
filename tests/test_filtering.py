@@ -1519,7 +1519,25 @@ def test_fc_randomization():
 
 
 def test_filter_save_csv():
-    assert False
+    d = DESeqFilter('test_files/test_deseq_with_nan.csv')
+    d.filter_missing_values()
+    d.save_csv()
+    pth = Path('test_files/test_deseq_with_nan_removemissingvals.csv')
+    assert pth.exists()
+    d_loaded = DESeqFilter(pth)
+    assert np.isclose(d_loaded.df, d.df).all()
+    pth.unlink()
+    d_sig = d.filter_significant(inplace=False)
+    d_sig.save_csv(alt_filename='d_significant')
+    d_sig.save_csv(alt_filename='d_significant_with_suffix.csv')
+    pth_sig = Path('test_files/d_significant.csv')
+    pth_sig_suffix = Path('test_files/d_significant_with_suffix.csv')
+    assert pth_sig.exists()
+    assert pth_sig_suffix.exists()
+    assert np.isclose(DESeqFilter(pth_sig).df, d_sig.df).all()
+    assert np.isclose(DESeqFilter(pth_sig_suffix).df, d_sig.df).all()
+    pth_sig.unlink()
+    pth_sig_suffix.unlink()
 
 
 def test_kmedoidsiter_api():

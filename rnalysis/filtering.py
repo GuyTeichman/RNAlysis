@@ -188,11 +188,18 @@ class Filter:
         :type alt_filename: str, pathlib.Path, or None (default)
 
         """
+        suffix = '.csv'
         # save with the default filename if no alternative filename was given
         if alt_filename is None:
             alt_filename = self.fname
         else:
-            alt_filename = f"{str(self.fname.parent)}\\{alt_filename}{self.fname.suffix}"
+            assert isinstance(alt_filename, (str, Path)), \
+                f"'alt_filename' must be a string or Path object. Instead got {type(alt_filename)}."
+            # make sure we don't add another suffix on top of an existing suffix
+            if (isinstance(alt_filename, str) and alt_filename.endswith(suffix)) or \
+                (isinstance(alt_filename, Path) and alt_filename.suffix == suffix):
+                suffix = ''
+            alt_filename = f"{str(self.fname.parent)}\\{alt_filename}{suffix}"
         utils.save_csv(self.df, alt_filename)
 
     @staticmethod
