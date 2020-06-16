@@ -364,7 +364,14 @@ def test_enrich_hypergeometric_api():
 
 
 def test_enrich_hypergeometric_pvalues():
-    assert False
+    truth = utils.load_csv('test_files/enrichment_hypergeometric_res.csv', 0)
+    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
+             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
+    attrs = ['attribute1', 'attribute2']
+    en = FeatureSet(gene_set=genes, set_name='test_set')
+    res = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__, )
+    plt.close('all')
+    _enrichment_validity(res, truth)
 
 
 def test_calc_hypergeometric_pvalues():

@@ -716,8 +716,8 @@ class FeatureSet:
             de_size = len(gene_set)
             go_de_size = srs.loc[gene_set].notna().sum()
 
-            expected_fraction = (bg_size - go_size) / bg_size
-            observed_fraction = (de_size - go_de_size) / de_size
+            expected_fraction = go_size / bg_size
+            observed_fraction = go_de_size / de_size
             log2_fold_enrichment = np.log2(
                 observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
             pval = self._calc_hypergeometric_pval(bg_size=bg_size, go_size=go_size,

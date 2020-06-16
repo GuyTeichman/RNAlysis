@@ -2,7 +2,7 @@
 History
 =======
 
-1.4.0 (2020-??-??)
+2.0.0 (2020-??-??)
 ------------------
 * This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering and HDBSCAN.
 * This version introduces many new ways to perform enrichment analysis and to visualize your results.
@@ -11,7 +11,7 @@ History
 
 Added
 ******
-* Added CountFilter.split_kmeans(), CountFilter.split_kmedoids(), CountFilter.split_hierarchical() and CountFilter.split_hdbscan(), which split your read count matrices into clusters with similar expression patterns. 
+* Added CountFilter.split_kmeans(), CountFilter.split_kmedoids(), CountFilter.split_hierarchical() and CountFilter.split_hdbscan(), which split your read count matrices into clusters with similar expression patterns.
 * Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.
 * Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis
 * Added RankedSet.enrich_single_list(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see `Eden et al. (PLoS Comput Biol, 2007) <https://dx.doi.org/10.1371/journal.pcbi.0030039>`_  and `Wagner (PLoS One, 2015) <https://dx.doi.org/10.1371/journal.pone.0143196>`_ ).
