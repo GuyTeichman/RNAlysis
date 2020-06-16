@@ -194,11 +194,7 @@ def test_enrichment_get_ref_custom_background_from_filter_object():
 
 
 def tests_enrichment_randomization_api():
-    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
-             'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
-             'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
-             'WBGene00003864', 'WBGene00000019', 'WBGene00014208', 'WBGene00002074', 'WBGene00000106', 'WBGene00000137',
-             'WBGene00000859', 'WBGene00268189'}
+    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
     _ = en.enrich_randomization(attrs, reps=1, biotype='all', attr_ref_path=__attr_ref__,
@@ -270,11 +266,7 @@ def test_enrichment_randomization_validity():
 
 
 def test_enrichment_randomization_parallel_api():
-    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
-             'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
-             'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
-             'WBGene00003864', 'WBGene00000019', 'WBGene00014208', 'WBGene00002074', 'WBGene00000106', 'WBGene00000137',
-             'WBGene00000859', 'WBGene00268189'}
+    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
     _ = en.enrich_randomization_parallel(attrs, reps=1, biotype='all',
@@ -328,7 +320,7 @@ def test_enrichment_parallel_validity():
     _enrichment_validity(res, truth)
 
 
-def test_randomization_int_index_attributes():
+def test_enrichment_get_attrs_int_index_attributes():
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
@@ -341,17 +333,17 @@ def test_randomization_int_index_attributes():
     assert attr == attr_truth_single
 
 
-def test_randomization_all_attributes():
+def test_enrichment_get_attrs_all_attributes():
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['attribute1', 'attribute2', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs('all', 'test_files/attr_ref_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs('all', __attr_ref__)
     plt.close('all')
     assert attrs == attrs_truth
 
 
-def test_randomization_attributes_from_string(monkeypatch):
+def test_enrichment_get_attrs_from_string(monkeypatch):
     monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute4\n')
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
@@ -369,11 +361,7 @@ def test_enrichment_get_attrs_bad_path():
 
 
 def test_enrich_hypergeometric_api():
-    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
-             'WBGene00255734', 'WBGene00048863', 'WBGene00000369', 'WBGene00000863', 'WBGene00000041', 'WBGene00268190',
-             'WBGene00199486', 'WBGene00001131', 'WBGene00003902', 'WBGene00001436', 'WBGene00000865', 'WBGene00001132',
-             'WBGene00003864', 'WBGene00000019', 'WBGene00014208', 'WBGene00002074', 'WBGene00000106', 'WBGene00000137',
-             'WBGene00000859', 'WBGene00268189'}
+    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
     _ = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__)
@@ -406,3 +394,100 @@ def test_calc_hypergeometric_pvalues():
     truth = 0.0265186938062861
     pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)
     assert np.isclose(truth, pval, atol=0, rtol=0.00001)
+
+
+def test_save_txt():
+    assert False
+
+
+def test_enrichment_save_csv():
+    assert False
+
+
+def test_featureset_from_string():
+    assert False
+
+
+def test_featureset_repr():
+    assert False
+
+
+def test_featureset_invalid_type():
+    assert False
+
+
+def test_calc_randomization_pval():
+    assert False
+
+
+def test_enrichment_output():
+    assert False
+
+
+def test_plot_enrichment_results():
+    assert False
+
+
+def test_get_pval_asterisk():
+    assert False
+
+
+def test_enrich_non_categorial_parametric_test():
+    assert False
+
+
+def test_enrich_non_categorial_nonparametric_test():
+    assert False
+
+
+def test_enrich_plot_histogram():
+    assert False
+
+
+def test_rankedset_api():
+    assert False
+
+
+def test_rankedset_repr():
+    assert False
+
+
+def test_rankedset_set_ops_return_type():
+    assert False
+
+
+def test_enrich_single_list():
+    assert False
+
+
+def test_xlmhg_output():
+    assert False
+
+
+def test_calc_xlmhg_stats():
+    assert False
+
+
+def test_xlmhg_index_vector():
+    assert False
+
+
+def test_fetch_sets():
+    assert False
+
+
+def test_upset_plot_api():
+    assert False
+
+
+def test_venn_diagram_api():
+    # 2 and 3 circles
+    assert False
+
+
+def test_venn_diagram_too_many_sets():
+    assert False
+
+
+def test_generate_upset_srs():
+    assert False
