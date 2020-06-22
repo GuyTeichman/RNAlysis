@@ -541,7 +541,13 @@ class FeatureSet:
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
-       .. figure::  enrichment_randomization.png
+       .. figure::  plot_enrichment_results.png
+          :align:   center
+          :scale: 40 %
+
+          Example plot of enrich_randomization_parallel()
+
+        .. figure::  plot_enrichment_results_vertical.png
           :align:   center
           :scale: 40 %
 
@@ -629,7 +635,13 @@ class FeatureSet:
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  enrichment_randomization.png
+        .. figure::  plot_enrichment_results.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of enrich_randomization()
+
+        .. figure::  plot_enrichment_results_vertical.png
            :align:   center
            :scale: 40 %
 
@@ -709,7 +721,13 @@ class FeatureSet:
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  enrichment_randomization.png
+        .. figure::  plot_enrichment_results.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of enrich_hypergeometric()
+
+        .. figure::  plot_enrichment_results_vertical.png
            :align:   center
            :scale: 40 %
 
