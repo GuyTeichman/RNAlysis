@@ -471,7 +471,7 @@ class FeatureSet:
             self._enrichment_save_csv(res_df, fname)
 
         if plot:
-            fig = self._plot_enrichment_results(res_df, title=self.set_name, horizontal=plot_horizontal)
+            fig = self.plot_enrichment_results(res_df, title=self.set_name, plot_horizontal=plot_horizontal)
             if return_fig:
                 return res_df, fig
         return res_df
@@ -769,24 +769,33 @@ class FeatureSet:
         return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
 
     @staticmethod
-    def _plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', title: str = '',
-                                 ylabel: str = r"$\log_2$(Fold Enrichment)", horizontal: bool = False,
-                                 center_bars: bool = True):
+    def plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', title: str = '',
+                                ylabel: str = r"$\log_2$(Fold Enrichment)", plot_horizontal: bool = True,
+                                center_bars: bool = True):
 
         """
-        Receives a DataFrame output from FeatureSet.enrich_randomization, and plots it in a bar plort \
-        Static class method. \
+        Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
         For the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
         :param df: a pandas DataFrame created by FeatureSet.enrich_randomization.
+        :type df: pd.DataFrame
+        :param en_score_col: name of the DataFrame column that contains the enrichment scores.
+        :type en_score_col: str (default 'log2_fold_enrichment')
         :param title: plot title.
-        :return: a matplotlib.pyplot.bar instance
-
+        :type title: str
+        :param ylabel: plot ylabel.
+        :type ylabel: str
+        :param plot_horizontal:
+        :type plot_horizontal: bool (default True)
+        :param center_bars: if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.
+        :type center_bars: bool (default True)
+        :return: Figure object containing the bar plot
+        :rtype: matplotlib.figure.Figure instance
         """
         plt.style.use('seaborn-white')
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
-        if horizontal:
+        if plot_horizontal:
             figsize = [5.6, 0.4 * (6.4 + df.shape[0])]
             bar_func = plt.Axes.barh
             line_func = plt.Axes.axvline
@@ -830,14 +839,19 @@ class FeatureSet:
         # generate bar plot
         fig, ax = plt.subplots(constrained_layout=True, figsize=figsize)
         bar = bar_func(ax, range(len(enrichment_names)), enrichment_scores, color=colors, edgecolor='black',
-                       linewidth=1)
+                       linewidth=1, zorder=2)
         bar.tick_labels = enrichment_names
-        # add horizontal line
-        line_func(ax, color='black', linewidth=1)
+        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1) * 1.002])
+        # add black line at y=0 and grey lines at every round positive/negative integer in range
+        for ind in range(int(bounds[0]), int(bounds[1]) + 1):
+            color = 'black' if ind == 0 else 'grey'
+            linewidth = 1 if ind == 0 else 0.5
+            linestyle = '-' if ind == 0 else '-.'
+            line_func(ax, ind, color=color, linewidth=linewidth, linestyle=linestyle, zorder=0)
         # add colorbar
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(max_score, -max_score))
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
         sm.set_array(np.array([]))
-        cbar = fig.colorbar(sm, ticks=range(int(-max_score), int(max_score) + 1), **cbar_kwargs)
+        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), **cbar_kwargs)
         cbar.set_label(**cbar_label_kwargs)
         cbar.ax.tick_params(labelsize=14, pad=6)
         # apply xticks
@@ -848,7 +862,7 @@ class FeatureSet:
         # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
             asterisks, fontweight = FeatureSet._get_pval_asterisk(sig)
-            if horizontal:
+            if plot_horizontal:
                 x = col._width
                 y = col.xy[1] + 0.5 * col._height
                 valign = 'center'
@@ -862,17 +876,16 @@ class FeatureSet:
                 rotation = 0
 
             ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight, rotation=rotation,
-                    fontsize=12, horizontalalignment=halign, verticalalignment=valign)
-        # set xlim, if plot is horizontal
-        if horizontal:
-            _ = [ax.spines[side].set_visible(False) for side in ['top', 'left', 'right']]
-            if center_bars:
-                ax.set_xlim(-max_score, max_score)
+                    fontsize=12, horizontalalignment=halign, verticalalignment=valign, zorder=1)
+        # despine
+        _ = [ax.spines[side].set_visible(False) for side in ['top', 'right']]
+        # center bars
+        if center_bars:
+            if plot_horizontal:
+                ax.set_xbound(bounds)
                 plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
-        else:
-            _ = [ax.spines[side].set_visible(False) for side in ['top', 'right']]
-            if center_bars:
-                ax.set_ylim(-max_score, max_score)
+            else:
+                ax.set_ybound(bounds)
                 plt.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
 
         plt.show()
@@ -1141,9 +1154,9 @@ class RankedSet(FeatureSet):
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        fig = self._plot_enrichment_results(res_df, en_score_col=en_score_col,
-                                            title=f"Single-list enrichment for {self.set_name}",
-                                            ylabel=r"$\log_2$(XL-mHG enrichment score)", horizontal=plot_horizontal)
+        fig = self.plot_enrichment_results(res_df, en_score_col=en_score_col,
+                                           title=f"Single-list enrichment for {self.set_name}",
+                                           ylabel=r"$\log_2$(XL-mHG enrichment score)", plot_horizontal=plot_horizontal)
         if return_fig:
             return res_df, fig
         return res_df
