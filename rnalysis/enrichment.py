@@ -471,7 +471,8 @@ class FeatureSet:
             self._enrichment_save_csv(res_df, fname)
 
         if plot:
-            fig = self.plot_enrichment_results(res_df, title=self.set_name, plot_horizontal=plot_horizontal)
+            fig = self.plot_enrichment_results(res_df, title=f"Enrichment for {self.set_name}",
+                                               plot_horizontal=plot_horizontal)
             if return_fig:
                 return res_df, fig
         return res_df
@@ -826,7 +827,6 @@ class FeatureSet:
             tick_func = plt.Axes.set_yticks
             ticklabels_func = plt.Axes.set_yticklabels
             ticklabels_kwargs = dict(fontsize=13, rotation=0)
-            cbar_label_kwargs = dict(label=ylabel, fontsize=18, labelpad=15)
         else:
             figsize = [0.5 * (6.4 + df.shape[0]), 5.6]
             bar_func = plt.Axes.bar
@@ -835,7 +835,6 @@ class FeatureSet:
             tick_func = plt.Axes.set_xticks
             ticklabels_func = plt.Axes.set_xticklabels
             ticklabels_kwargs = dict(fontsize=13, rotation=45)
-            cbar_label_kwargs = dict(label=ylabel, fontsize=18, labelpad=15)
 
         # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
         enrichment_names = df.index.values.tolist()
@@ -874,6 +873,7 @@ class FeatureSet:
         # add colorbar
         sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
         sm.set_array(np.array([]))
+        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15)
         cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), **cbar_kwargs)
         cbar.set_label(**cbar_label_kwargs)
         cbar.ax.tick_params(labelsize=14, pad=6)
@@ -881,7 +881,7 @@ class FeatureSet:
         tick_func(ax, range(len(enrichment_names)))
         ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
         # title
-        ax.set_title(title, fontsize=16)
+        ax.set_title(title, fontsize=18)
         # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
             asterisks, fontweight = FeatureSet._get_pval_asterisk(sig)
@@ -1132,6 +1132,20 @@ class RankedSet(FeatureSet):
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
+
+        .. figure::  plot_enrichment_results_single_list.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of enrich_single_list()
+
+
+        .. figure::  plot_enrichment_results_single_list_vertical.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of enrich_single_list(plot_horizontal = False)
+
         """
         attr_ref_df, gene_set, attributes = self._enrichment_setup(biotype='all', background_genes=None,
                                                                    attr_ref_path=attr_ref_path, biotype_ref_path='',
