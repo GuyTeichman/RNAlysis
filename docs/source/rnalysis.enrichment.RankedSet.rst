@@ -19,12 +19,14 @@ rnalysis.enrichment.RankedSet
     RankedSet.biotypes
     RankedSet.change_set_name
     RankedSet.difference
+    RankedSet.enrich_hypergeometric
+    RankedSet.enrich_non_categorical
     RankedSet.enrich_randomization
     RankedSet.enrich_randomization_parallel
     RankedSet.enrich_single_list
-    RankedSet.enrich_statistic
     RankedSet.go_enrichment
     RankedSet.intersection
+    RankedSet.plot_enrichment_results
     RankedSet.save_txt
     RankedSet.symmetric_difference
     RankedSet.union

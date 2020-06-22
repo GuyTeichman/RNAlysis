@@ -88,10 +88,10 @@
             
               <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -140,6 +140,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
 </ul>
 
             
@@ -213,34 +218,35 @@
 <dl class="py method">
 <dt id="rnalysis.filtering.Filter.print_features">
 <code class="sig-prename descclassname">Filter.</code><code class="sig-name descname">print_features</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.print_features" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print the feature indices in the Filter object, sorted alphabetically and separated by newline.</p>
+<dd><p>Print the feature indices in the Filter object, sorted by their current order in the FIlter object,         and separated by newline.</p>
 <dl class="field-list">
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;cond1&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">print_features</span><span class="p">()</span>
-<span class="go">WBGene00007063</span>
-<span class="go">WBGene00007064</span>
-<span class="go">WBGene00007066</span>
-<span class="go">WBGene00007067</span>
-<span class="go">WBGene00007069</span>
-<span class="go">WBGene00007071</span>
-<span class="go">WBGene00007074</span>
 <span class="go">WBGene00007075</span>
+<span class="go">WBGene00043988</span>
+<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007079</span>
 <span class="go">WBGene00007076</span>
+<span class="go">WBGene00043989</span>
+<span class="go">WBGene00007063</span>
 <span class="go">WBGene00007077</span>
 <span class="go">WBGene00007078</span>
-<span class="go">WBGene00007079</span>
-<span class="go">WBGene00014997</span>
+<span class="go">WBGene00007071</span>
+<span class="go">WBGene00007064</span>
+<span class="go">WBGene00007066</span>
+<span class="go">WBGene00007074</span>
 <span class="go">WBGene00043987</span>
-<span class="go">WBGene00043988</span>
-<span class="go">WBGene00043989</span>
-<span class="go">WBGene00043990</span>
+<span class="go">WBGene00007067</span>
+<span class="go">WBGene00014997</span>
 <span class="go">WBGene00044022</span>
-<span class="go">WBGene00044951</span>
-<span class="go">WBGene00077502</span>
 <span class="go">WBGene00077503</span>
 <span class="go">WBGene00077504</span>
+<span class="go">WBGene00077502</span>
+<span class="go">WBGene00007069</span>
+<span class="go">WBGene00044951</span>
 </pre></div>
 </div>
 </dd>

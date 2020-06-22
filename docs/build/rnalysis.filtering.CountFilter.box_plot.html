@@ -88,10 +88,10 @@
             
               <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-to-get-it">How to get it</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -141,6 +141,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_percentile.html">rnalysis.filtering.CountFilter.split_by_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_by_reads.html">rnalysis.filtering.CountFilter.split_by_reads</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_hdbscan.html">rnalysis.filtering.CountFilter.split_hdbscan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_hierarchical.html">rnalysis.filtering.CountFilter.split_hierarchical</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmeans.html">rnalysis.filtering.CountFilter.split_kmeans</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.split_kmedoids.html">rnalysis.filtering.CountFilter.split_kmedoids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.symmetric_difference.html">rnalysis.filtering.CountFilter.symmetric_difference</a></li>
@@ -241,11 +242,13 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>'all'</em><em> or </em><em>list.</em>) – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
+<li><p><strong>notch</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, adds a confidence-interval notch to the box-plot.</p></li>
+<li><p><strong>scatter</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, adds a scatter-plot on top of the box-plot.</p></li>
 <li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default 'Log10</em><em>(</em><em>RPM + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a seaborn box plot object.</p>
+<dd class="field-even"><p>a seaborn boxplot object.</p>
 </dd>
 </dl>
 <div class="figure align-center" id="id1">

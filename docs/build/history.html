@@ -88,10 +88,10 @@
             
               <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -105,7 +105,7 @@
 <p class="caption"><span class="caption-text">Change history:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">1.4.0 (2020-??-??)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">2.0.0 (2020-??-??)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
@@ -138,6 +138,11 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
 </ul>
 
             
@@ -205,17 +210,21 @@
   <div class="section" id="history">
 <h1>History<a class="headerlink" href="#history" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
-<h2>1.4.0 (2020-??-??)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>2.0.0 (2020-??-??)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>This version introduces many new ways to perform enrichment analysis and to visualize your results. Moreover, this version introduces Pipelines - a quicker and more convenient way to apply a similar analysis pipeline to multiple Filter objects.</p></li>
+<li><p>This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering and HDBSCAN.</p></li>
+<li><p>This version introduces many new ways to perform enrichment analysis and to visualize your results.</p></li>
+<li><p>This version introduces Pipelines - a quicker and more convenient way to apply a similar analysis pipeline to multiple Filter objects.</p></li>
 <li><p>This version includes changes to names and signatures of some functions in the module, as elaborated below.</p></li>
 </ul>
 <div class="section" id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li><p>Added CountFilter.split_kmeans(), CountFilter.split_kmedoids(), CountFilter.split_hierarchical() and CountFilter.split_hdbscan(), which split your read count matrices into clusters with similar expression patterns.</p></li>
 <li><p>Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.</p></li>
 <li><p>Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis</p></li>
 <li><p>Added RankedSet.enrich_single_list(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see <a class="reference external" href="https://dx.doi.org/10.1371/journal.pcbi.0030039">Eden et al. (PLoS Comput Biol, 2007)</a>  and <a class="reference external" href="https://dx.doi.org/10.1371/journal.pone.0143196">Wagner (PLoS One, 2015)</a> ).</p></li>
+<li><p>Added FeatureSet.enrich_hypergeometric(), which can perform enrichment analysis using the Hypergeometric Test.</p></li>
 <li><p>Added more visualization functions, such CountFilter.enhanced_box_plot().</p></li>
 <li><p>Added FeatureSet.change_set_name(), to give a new ‘set_name’ to a FeatureSet object.</p></li>
 </ul>
@@ -223,7 +232,9 @@
 <div class="section" id="changed">
 <h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li><p>Improved running time of enrich_randomization() and enrich_randomization_parallel() about six-fold.</p></li>
 <li><p>CountFilter.pca() can now be plotted without labeled points.</p></li>
+<li><p>Filter.index_string is now sorted by the current order of indices in the Filter object, instead of by alphabetical order.</p></li>
 <li><p>CountFilter.violin_plot() now accepts a y_title argument.</p></li>
 <li><p>Added more optional arguments to visualization functions such as CountFilter.violin_plot() and CountFilter.clustergram().</p></li>
 <li><p>Automatic filenames for Filter objects should now reflect more clearly the operations that were performed.</p></li>
@@ -238,6 +249,7 @@
 <li><p>Updated type-hinting of specific functions.</p></li>
 <li><p>Filter.biotypes() and FeatureSet.biotypes() now support Biotype Reference Tables with different column names.</p></li>
 <li><p>Generally improved performance of RNAlysis.</p></li>
+<li><p>Fixed bug in Filter.filter_percentile() where the value at the exact percentile speficied (e.g. the median for percentile=0.5) would be removed from the Filter object.</p></li>
 <li><p>Various bug fixes.</p></li>
 </ul>
 </div>

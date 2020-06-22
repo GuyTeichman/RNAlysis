@@ -88,10 +88,10 @@
             
               <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">What is RNAlysis?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#main-features">Main Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#how-do-i-install-it">How do I install it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#dependencies">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#how-to-get-it">How to get it</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#credits">Credits</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#development-lead">Development Lead</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#contributors">Contributors</a></li>
@@ -115,6 +115,11 @@
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
 </ul>
 
             
@@ -160,7 +165,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>What is RNAlysis?</li>
+      <li>What is <em>RNAlysis?</em></li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -187,58 +192,62 @@
 <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues">Bug reports</a> | <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="PyPI version" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a> | <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="Python versions supported" src="https://img.shields.io/pypi/pyversions/RNAlysis.svg" /></a> | <a class="reference external" href="https://travis-ci.org/GuyTeichman/RNAlysis"><img alt="Travis-CI build status" src="https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master" /></a> | <a class="reference external" href="https://pepy.tech/project/rnalysis"><img alt="downloads" src="https://pepy.tech/badge/rnalysis" /></a></p>
 <hr class="docutils" />
 <div class="section" id="what-is-rnalysis">
-<h1>What is RNAlysis?<a class="headerlink" href="#what-is-rnalysis" title="Permalink to this headline">¶</a></h1>
-<p>RNAlysis is a python package providing modular analysis pipeline for RNA sequencing data.
-The package includes various filtering methods, data visualisation, clustering analyses, enrichment anslyses and
-exploratory analyses.</p>
-<p>RNAlysis allows you to perform filtering and analyses at any order you wish.
-It has the ability to save or load your progress at any given phase,
-Wand document the order of operations you performed in the saved file names.</p>
-<p>RNAlysis works with sequencing count matrices and differential expression output files in general, and integrates in particular with python’s HTSeq-count and R’s DESeq2.</p>
+<h1>What is <em>RNAlysis?</em><a class="headerlink" href="#what-is-rnalysis" title="Permalink to this headline">¶</a></h1>
+<p><em>RNAlysis</em> is a Python-based modular analysis pipeline for RNA sequencing data.
+You can use it to normalize, filter and visualize your data, cluster genes based on their expression patterns,
+and perform enrichment analysis for both Gene Ontology terms and user-defined attributes.</p>
+<p><em>RNAlysis</em> allows you to perform filtering operations and analyses at any order you wish.
+You can save or load your progress at any given point; the operations you performed on your data and their order
+will be reflected in saved file’s name.</p>
+<p>RNAlysis works with gene expression matrices and differential expression tables in general, and integrates in particular with Python’s <em>HTSeq-count</em> and R’s <em>DESeq2</em>.</p>
 </div>
 <hr class="docutils" />
-<div class="section" id="main-features">
-<h1>Main Features<a class="headerlink" href="#main-features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-can-i-do-with-rnalysis">
+<h1>What can I do with <em>RNAlysis</em>?<a class="headerlink" href="#what-can-i-do-with-rnalysis" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><p>Filter your read count matrices, fold change data, differential expression tables, and tabular data in general.</p></li>
-<li><p>Normalize your read count data</p></li>
+<li><p>Filter your gene expression matrices, differential expression tables, fold change data, and tabular data in general.</p></li>
+<li><p>Normalize your gene expression matrices</p></li>
 <li><p>Visualise, explore and describe your sequencing data</p></li>
-<li><p>Find global relationships between sample expression profiles with clustering and dimensionality reduction</p></li>
+<li><p>Find global relationships between sample expression profiles with clustering analyses and dimensionality reduction</p></li>
 <li><p>Create and share analysis pipelines</p></li>
 <li><p>Perform enrichment analysis with pre-determined Gene Ontology terms, or with used-defined attributes</p></li>
+<li><p>Perform enrichment analysis on a single ranked list, instead of a test set and a background set</p></li>
 </ul>
+</div>
+<hr class="docutils" />
+<div class="section" id="how-do-i-install-it">
+<h1>How do I install it?<a class="headerlink" href="#how-do-i-install-it" title="Permalink to this headline">¶</a></h1>
+<p>You can install <em>RNAlysis</em> via PyPI.
+Use the following command in the python prompt:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span>
+</pre></div>
+</div>
 </div>
 <hr class="docutils" />
 <div class="section" id="dependencies">
 <h1>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h1>
+<p>All of <em>RNAlysis</em>’s dependencies can be installed automatically via PyPI.</p>
 <ul class="simple">
-<li><p>numpy</p></li>
-<li><p>pandas</p></li>
-<li><p>scipy</p></li>
-<li><p>matplotlib</p></li>
-<li><p>scikit-learn</p></li>
-<li><p>hdbscan</p></li>
-<li><p>scikit-learn-extra</p></li>
-<li><p>seaborn</p></li>
-<li><p>statsmodels</p></li>
-<li><p>ipyparallel</p></li>
-<li><p>grid_strategy</p></li>
-<li><p>pyyaml</p></li>
-<li><p>UpSetPlot</p></li>
-<li><p>matplotlib-venn</p></li>
-<li><p>tissue_enrichment_analysis</p></li>
-<li><p>xlmhg</p></li>
-<li><p>goatools</p></li>
-<li><p>wget</p></li>
+<li><p><a class="reference external" href="https://numpy.org/">numpy</a></p></li>
+<li><p><a class="reference external" href="https://pandas.pydata.org/">pandas</a></p></li>
+<li><p><a class="reference external" href="https://www.scipy.org/">scipy</a></p></li>
+<li><p><a class="reference external" href="https://matplotlib.org/">matplotlib</a></p></li>
+<li><p><a class="reference external" href="http://numba.pydata.org/">numba</a></p></li>
+<li><p><a class="reference external" href="https://scikit-learn.org/">scikit-learn</a></p></li>
+<li><p><a class="reference external" href="https://github.com/scikit-learn-contrib/scikit-learn-extra">scikit-learn-extra</a></p></li>
+<li><p><a class="reference external" href="https://github.com/scikit-learn-contrib/hdbscan">hdbscan</a></p></li>
+<li><p><a class="reference external" href="https://seaborn.pydata.org/">seaborn</a></p></li>
+<li><p><a class="reference external" href="https://www.statsmodels.org/">statsmodels</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ipython/ipyparallel">ipyparallel</a></p></li>
+<li><p><a class="reference external" href="https://github.com/matplotlib/grid-strategy">grid_strategy</a></p></li>
+<li><p><a class="reference external" href="https://github.com/yaml/pyyaml">pyyaml</a></p></li>
+<li><p><a class="reference external" href="https://github.com/jnothman/UpSetPlot">UpSetPlot</a></p></li>
+<li><p><a class="reference external" href="https://github.com/konstantint/matplotlib-venn">matplotlib-venn</a></p></li>
+<li><p><a class="reference external" href="https://github.com/dangeles/TissueEnrichmentAnalysis">tissue_enrichment_analysis</a></p></li>
+<li><p><a class="reference external" href="https://github.com/flo-compbio/xlmhg">xlmhg</a></p></li>
+<li><p><a class="reference external" href="https://github.com/tanghaibao/Goatools">goatools</a></p></li>
+<li><p><a class="reference external" href="https://pypi.org/project/wget/">wget</a></p></li>
 </ul>
-</div>
-<hr class="docutils" />
-<div class="section" id="how-to-get-it">
-<h1>How to get it<a class="headerlink" href="#how-to-get-it" title="Permalink to this headline">¶</a></h1>
-<p>Use the following command in the python prompt:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span>
-</pre></div>
-</div>
 </div>
 <hr class="docutils" />
 <div class="section" id="credits">

@@ -541,17 +541,20 @@ class FeatureSet:
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
-       .. figure::  plot_enrichment_results.png
-          :align:   center
-          :scale: 40 %
 
-          Example plot of enrich_randomization_parallel()
+        .. figure::  plot_enrichment_results.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of enrich_randomization_parallel()
+
 
         .. figure::  plot_enrichment_results_vertical.png
-          :align:   center
-          :scale: 40 %
+           :align:   center
+           :scale: 60 %
 
-          Example plot of enrich_randomization_parallel()
+           Example plot of enrich_randomization_parallel(plot_horizontal = False)
+
        """
         attr_ref_df, gene_set, attributes, = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
@@ -637,15 +640,16 @@ class FeatureSet:
 
         .. figure::  plot_enrichment_results.png
            :align:   center
-           :scale: 40 %
+           :scale: 60 %
 
            Example plot of enrich_randomization()
+
 
         .. figure::  plot_enrichment_results_vertical.png
            :align:   center
-           :scale: 40 %
+           :scale: 60 %
 
-           Example plot of enrich_randomization()
+           Example plot of enrich_randomization(plot_horizontal = False)
 
         """
         attr_ref_df, gene_set, attributes = \
@@ -723,15 +727,16 @@ class FeatureSet:
 
         .. figure::  plot_enrichment_results.png
            :align:   center
-           :scale: 40 %
+           :scale: 60 %
 
            Example plot of enrich_hypergeometric()
+
 
         .. figure::  plot_enrichment_results_vertical.png
            :align:   center
-           :scale: 40 %
+           :scale: 60 %
 
-           Example plot of enrich_hypergeometric()
+           Example plot of enrich_hypergeometric(plot_horizontal = False)
 
         """
         attr_ref_df, gene_set, attributes = \

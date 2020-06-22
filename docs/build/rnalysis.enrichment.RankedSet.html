@@ -88,10 +88,10 @@
             
               <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#how-to-get-it">How to get it</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -115,12 +115,14 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes.html">rnalysis.enrichment.RankedSet.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html">rnalysis.enrichment.RankedSet.change_set_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html">rnalysis.enrichment.RankedSet.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_hypergeometric.html">rnalysis.enrichment.RankedSet.enrich_hypergeometric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_non_categorical.html">rnalysis.enrichment.RankedSet.enrich_non_categorical</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization.html">rnalysis.enrichment.RankedSet.enrich_randomization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization_parallel.html">rnalysis.enrichment.RankedSet.enrich_randomization_parallel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_single_list.html">rnalysis.enrichment.RankedSet.enrich_single_list</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_statistic.html">rnalysis.enrichment.RankedSet.enrich_statistic</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html">rnalysis.enrichment.RankedSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html">rnalysis.enrichment.RankedSet.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.plot_enrichment_results.html">rnalysis.enrichment.RankedSet.plot_enrichment_results</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.save_txt.html">rnalysis.enrichment.RankedSet.save_txt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference.html">rnalysis.enrichment.RankedSet.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.union.html">rnalysis.enrichment.RankedSet.union</a></li>
@@ -248,23 +250,29 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html#rnalysis.enrichment.RankedSet.difference" title="rnalysis.enrichment.RankedSet.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.difference</span></code></a>(*others)</p></td>
 <td><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_hypergeometric.html#rnalysis.enrichment.RankedSet.enrich_hypergeometric" title="rnalysis.enrichment.RankedSet.enrich_hypergeometric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_hypergeometric</span></code></a>([…])</p></td>
+<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using the Hypergeometric Test.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_non_categorical.html#rnalysis.enrichment.RankedSet.enrich_non_categorical" title="rnalysis.enrichment.RankedSet.enrich_non_categorical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_non_categorical</span></code></a>([…])</p></td>
+<td><p></p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization.html#rnalysis.enrichment.RankedSet.enrich_randomization" title="rnalysis.enrichment.RankedSet.enrich_randomization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_randomization</span></code></a>([attributes, …])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using a randomization test.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization_parallel.html#rnalysis.enrichment.RankedSet.enrich_randomization_parallel" title="rnalysis.enrichment.RankedSet.enrich_randomization_parallel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_randomization_parallel</span></code></a>([…])</p></td>
-<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using a randomization test running in parallel. The attributes are drawn from an Attribute Reference Table.         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization.         Results should otherwise be the same between the two functions.         To use it you must first start a parallel session, using the function ‘general.start_parallel_session()’.         The background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a         randomization test with the formula p = (successes + 1)/(repeats + 1).         This formula results in a positively-biased estimator of the real p-value         (a conservative estimate of p-value). When the number of reps approaches infinity,         the formula results in an unbiased estimator of the real p-value.         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p></td>
+<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using a randomization test running in parallel.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_single_list.html#rnalysis.enrichment.RankedSet.enrich_single_list" title="rnalysis.enrichment.RankedSet.enrich_single_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_single_list</span></code></a>([attributes, …])</p></td>
 <td><p>Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by          <a class="reference external" href="https://dx.doi.org/10.1371/journal.pcbi.0030039/">Prof.Zohar Yakhini and colleagues</a>          and generalized by          <a class="reference external" href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/">Florian Wagner</a>).The attributes are drawn from an Attribute Reference Table.The background set is determined by either the input variable ‘background_genes’,         or by the input variable ‘biotype’ and a Biotype Reference Table.P-values are calculated using a         randomization test with the formula p = (successes + 1)/(repeats + 1).This formula results in a positively-biased estimator of the real p-value         (a conservative estimate of p-value).When the number of reps approaches infinity,         the formula results in an unbiased estimator of the real p-value.P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method).In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale..</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_statistic.html#rnalysis.enrichment.RankedSet.enrich_statistic" title="rnalysis.enrichment.RankedSet.enrich_statistic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_statistic</span></code></a>([attributes, …])</p></td>
-<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using the Hypergeometric Test.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html#rnalysis.enrichment.RankedSet.go_enrichment" title="rnalysis.enrichment.RankedSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.go_enrichment</span></code></a>([mode, alpha, …])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html#rnalysis.enrichment.RankedSet.go_enrichment" title="rnalysis.enrichment.RankedSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.go_enrichment</span></code></a>([mode, alpha, …])</p></td>
 <td><p>Analyzes GO, Tissue and/or Phenotype enrichment for the given group of genomic features.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html#rnalysis.enrichment.RankedSet.intersection" title="rnalysis.enrichment.RankedSet.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.intersection</span></code></a>(*others)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html#rnalysis.enrichment.RankedSet.intersection" title="rnalysis.enrichment.RankedSet.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.intersection</span></code></a>(*others)</p></td>
 <td><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.plot_enrichment_results.html#rnalysis.enrichment.RankedSet.plot_enrichment_results" title="rnalysis.enrichment.RankedSet.plot_enrichment_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.plot_enrichment_results</span></code></a>(df[, …])</p></td>
+<td><p>Receives a DataFrame output from an enrichment function and plots it in a bar plot.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.save_txt.html#rnalysis.enrichment.RankedSet.save_txt" title="rnalysis.enrichment.RankedSet.save_txt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.save_txt</span></code></a>(fname)</p></td>
 <td><p>Save the list of features in the FeatureSet object under the specified filename and path.</p></td>
