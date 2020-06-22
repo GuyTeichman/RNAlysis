@@ -14,7 +14,6 @@ import matplotlib_venn as vn
 from numba import jit
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import statsmodels.stats.multitest as multitest
 import tissue_enrichment_analysis as tea
 import upsetplot as upset
@@ -453,7 +452,7 @@ class FeatureSet:
         return attr_ref_df, gene_set, attributes
 
     def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, plot: bool,
-                           return_fig: bool):
+                           return_fig: bool, plot_horizontal: bool = True):
         """
         Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
@@ -472,7 +471,7 @@ class FeatureSet:
             self._enrichment_save_csv(res_df, fname)
 
         if plot:
-            fig = self._plot_enrichment_results(res_df, title=self.set_name)
+            fig = self._plot_enrichment_results(res_df, title=self.set_name, horizontal=plot_horizontal)
             if return_fig:
                 return res_df, fig
         return res_df
@@ -482,8 +481,8 @@ class FeatureSet:
                                       biotype: str = 'protein_coding',
                                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                                      save_csv: bool = False, fname=None,
-                                      return_fig: bool = False, random_seed: int = None):
+                                      save_csv: bool = False, fname=None, return_fig: bool = False,
+                                      plot_horizontal: bool = True, random_seed: int = None):
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -532,6 +531,9 @@ class FeatureSet:
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
+        will be plotted with a vertical plot.
         :type random_seed: non-negative integer (default None)
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
@@ -563,13 +565,14 @@ class FeatureSet:
 
         res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
         enriched_list = res.result()
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True, plot_horizontal)
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000, biotype: str = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                             save_csv: bool = False, fname=None, return_fig: bool = False, random_seed: int = None):
+                             save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                             random_seed: int = None):
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -615,6 +618,9 @@ class FeatureSet:
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
+        will be plotted with a vertical plot.
         :type random_seed: non-negative integer (default None)
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
@@ -643,13 +649,14 @@ class FeatureSet:
             enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
             print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True, plot_horizontal)
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                               biotype: str = 'protein_coding',
                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                               attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                              save_csv: bool = False, fname=None, return_fig: bool = False):
+                              save_csv: bool = False, fname=None, return_fig: bool = False,
+                              plot_horizontal: bool = True):
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -695,6 +702,9 @@ class FeatureSet:
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
+        will be plotted with a vertical plot.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
@@ -727,7 +737,7 @@ class FeatureSet:
             enriched_list.append(
                 (attribute, de_size, obs, exp, log2_fold_enrichment, pval))
 
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True, plot_horizontal)
 
     @staticmethod
     def _calc_hypergeometric_pval(bg_size: int, go_size: int, de_size: int, go_de_size: int):
@@ -760,7 +770,8 @@ class FeatureSet:
 
     @staticmethod
     def _plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', title: str = '',
-                                 ylabel: str = r"$\log_2$(Fold Enrichment)"):
+                                 ylabel: str = r"$\log_2$(Fold Enrichment)", horizontal: bool = False,
+                                 center_bars: bool = True):
 
         """
         Receives a DataFrame output from FeatureSet.enrich_randomization, and plots it in a bar plort \
@@ -774,17 +785,39 @@ class FeatureSet:
 
         """
         plt.style.use('seaborn-white')
+        # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
+        if horizontal:
+            figsize = [5.6, 0.4 * (6.4 + df.shape[0])]
+            bar_func = plt.Axes.barh
+            line_func = plt.Axes.axvline
+            cbar_kwargs = dict(location='bottom')
+            tick_func = plt.Axes.set_yticks
+            ticklabels_func = plt.Axes.set_yticklabels
+            ticklabels_kwargs = dict(fontsize=13, rotation=0)
+            cbar_label_kwargs = dict(label=ylabel, fontsize=18, labelpad=15)
+        else:
+            figsize = [0.5 * (6.4 + df.shape[0]), 5.6]
+            bar_func = plt.Axes.bar
+            line_func = plt.Axes.axhline
+            cbar_kwargs = dict(location='left')
+            tick_func = plt.Axes.set_xticks
+            ticklabels_func = plt.Axes.set_xticklabels
+            ticklabels_kwargs = dict(fontsize=13, rotation=45)
+            cbar_label_kwargs = dict(label=ylabel, fontsize=18, labelpad=15)
 
+        # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
         enrichment_names = df.index.values.tolist()
-        enrichment_pvalue = df['padj']
+        enrichment_scores = df[en_score_col].values.tolist()
+        enrichment_pvalue = df['padj'].values.tolist()
+
         # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
-        enrichment_scores = df[en_score_col].values.copy()
         scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
             scores_no_inf.append(-1)
         for i in range(len(enrichment_scores)):
             if enrichment_scores[i] == -np.inf:
                 enrichment_scores[i] = min(scores_no_inf)
+        max_score = max(np.max(np.abs(enrichment_scores)), 3)
 
         # get color values for bars
         data_color = [(i / 3) * 127.5 for i in enrichment_scores]
@@ -795,32 +828,53 @@ class FeatureSet:
         colors = my_cmap(data_color_norm_256)
 
         # generate bar plot
-        fig, ax = plt.subplots(constrained_layout=True, figsize=[6.4 * 0.5 + 0.5 * df.shape[0], 5.6])
-        bar = ax.bar(x=range(len(enrichment_names)), height=enrichment_scores, color=colors, edgecolor='black',
-                     linewidth=1)
+        fig, ax = plt.subplots(constrained_layout=True, figsize=figsize)
+        bar = bar_func(ax, range(len(enrichment_names)), enrichment_scores, color=colors, edgecolor='black',
+                       linewidth=1)
         bar.tick_labels = enrichment_names
         # add horizontal line
-        ax.axhline(color='black', linewidth=1)
+        line_func(ax, color='black', linewidth=1)
         # add colorbar
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(3, -3))
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(max_score, -max_score))
         sm.set_array(np.array([]))
-        cbar = fig.colorbar(sm)
-        cbar.set_label('Colorbar', fontsize=12)
+        cbar = fig.colorbar(sm, ticks=range(int(-max_score), int(max_score) + 1), **cbar_kwargs)
+        cbar.set_label(**cbar_label_kwargs)
+        cbar.ax.tick_params(labelsize=14, pad=6)
         # apply xticks
-        ax.set_xticks(range(len(enrichment_names)))
-        ax.set_xticklabels(enrichment_names, fontsize=13, rotation=45)
-        # ylabel and title
-        ax.set_ylabel(ylabel, fontsize=14)
+        tick_func(ax, range(len(enrichment_names)))
+        ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
+        # title
         ax.set_title(title, fontsize=16)
         # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
             asterisks, fontweight = FeatureSet._get_pval_asterisk(sig)
-            valign = 'bottom' if np.sign(col._height) == 1 else 'top'
-            ax.text(x=col.xy[0] + 0.5 * col._width,
-                    y=col._height, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight,
-                    fontsize=12, horizontalalignment='center', verticalalignment=valign)
+            if horizontal:
+                x = col._width
+                y = col.xy[1] + 0.5 * col._height
+                valign = 'center'
+                halign = 'left' if np.sign(col._width) == 1 else 'right'
+                rotation = 270 if np.sign(col._width) == 1 else 90
+            else:
+                x = col.xy[0] + 0.5 * col._width
+                y = col._height
+                valign = 'bottom' if np.sign(col._height) == 1 else 'top'
+                halign = 'center'
+                rotation = 0
 
-        sns.despine()
+            ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight, rotation=rotation,
+                    fontsize=12, horizontalalignment=halign, verticalalignment=valign)
+        # set xlim, if plot is horizontal
+        if horizontal:
+            _ = [ax.spines[side].set_visible(False) for side in ['top', 'left', 'right']]
+            if center_bars:
+                ax.set_xlim(-max_score, max_score)
+                plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+        else:
+            _ = [ax.spines[side].set_visible(False) for side in ['top', 'right']]
+            if center_bars:
+                ax.set_ylim(-max_score, max_score)
+                plt.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
+
         plt.show()
         return fig
 
@@ -1002,7 +1056,7 @@ class RankedSet(FeatureSet):
 
     def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                            attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
-                           return_fig: bool = False):
+                           return_fig: bool = False, plot_horizontal: bool = True):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1036,6 +1090,9 @@ class RankedSet(FeatureSet):
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
+        will be plotted with a vertical plot.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
@@ -1062,9 +1119,10 @@ class RankedSet(FeatureSet):
             enriched_list.append([attribute, len(ranked_genes), log2_en_score, pval])
             print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
-        return self._xlmhg_output(enriched_list, fdr, save_csv, fname, return_fig)
+        return self._xlmhg_output(enriched_list, fdr, save_csv, fname, return_fig, plot_horizontal)
 
-    def _xlmhg_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, return_fig: bool):
+    def _xlmhg_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, return_fig: bool,
+                      plot_horizontal: bool):
         """
         Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
@@ -1085,7 +1143,7 @@ class RankedSet(FeatureSet):
 
         fig = self._plot_enrichment_results(res_df, en_score_col=en_score_col,
                                             title=f"Single-list enrichment for {self.set_name}",
-                                            ylabel=r"$\log_2$(XL-mHG enrichment score)")
+                                            ylabel=r"$\log_2$(XL-mHG enrichment score)", horizontal=plot_horizontal)
         if return_fig:
             return res_df, fig
         return res_df
