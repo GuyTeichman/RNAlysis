@@ -2064,16 +2064,28 @@ class CountFilter(Filter):
         assert plot_style.lower() in {'all', 'std_bar', 'std_area'}, \
             f"Invalid value for 'plot_style': '{plot_style}'. 'plot_style' must be 'all', 'std_bar' or 'std_area'. "
         assert isinstance(split_plots, bool), f"'split_plots' must be of type bool, instead got {type(split_plots)}"
-        grid = strategies.SquareStrategy()
-        subplots = grid.get_grid(n_clusters)
-        plt.close()
-        fig = plt.figure(figsize=(14, 9))
-        fig.suptitle(title, fontsize=18)
+        if split_plots:
+            subplots = [plt.subplots(constrained_layout=True, figsize=(6.4, 5.6)) for _ in range(n_clusters)]
+            ylabel_fontsize = 14
+            ticklabels_fontsize = 9
+        else:
+            grid = strategies.SquareStrategy()
+            subplots = grid.get_grid(n_clusters)
+            plt.close()
+            fig = plt.figure(figsize=(14, 9))
+            fig.suptitle(title, fontsize=18)
+            ylabel_fontsize = 10
+            ticklabels_fontsize = 5
         axes = []
         min_y, max_y = 0, 0
         color_generator = CountFilter._color_gen()
         for i, subplot in enumerate(subplots):
-            axes.append(fig.add_subplot(subplot))
+            if split_plots:
+                axes.append(subplot[1])
+                fig = subplot[0]
+                fig.suptitle(title, fontsize=18)
+            else:
+                axes.append(fig.add_subplot(subplot))
             mean = centers[i, :]
             stdev = data[labels == i, :].T.std(axis=1, ddof=1)
             x = np.arange(self.shape[1]) + 0.5
@@ -2091,12 +2103,13 @@ class CountFilter(Filter):
                     axes[-1].plot(x, vals, color=color, alpha=0.05, linewidth=0.35)
 
             axes[-1].set_title(f"Cluster number {i + 1} ({np.count_nonzero(labels == i)} genes)")
-            axes[-1].set_ylabel('Standardized expression')
+            axes[-1].set_ylabel('Standardized expression', fontsize=ylabel_fontsize)
             axes[-1].set_xticks(x)
-            axes[-1].set_xticklabels(self.columns, fontsize=5)
+            axes[-1].set_xticklabels(self.columns, fontsize=ticklabels_fontsize)
         for ax in axes:
             ax.set_ylim((min_y, max_y))
-        fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+        if not split_plots:
+            fig.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.show()
         return fig, axes
 
