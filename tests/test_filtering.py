@@ -16,22 +16,26 @@ matplotlib.use('Agg')
 
 def test_filter_api():
     f = Filter('test_files/uncounted.csv')
-    assert f.__repr__() == "Filter of file uncounted.csv"
+    assert f.__str__() == "Filter of file uncounted.csv"
+    assert f.__repr__().replace('\\', '/') == "Filter('test_files/uncounted.csv')"
 
 
 def test_countfilter_api():
     h = CountFilter('test_files/counted.csv')
-    assert h.__repr__() == "CountFilter of file counted.csv"
+    assert h.__str__() == "CountFilter of file counted.csv"
+    assert h.__repr__().replace('\\', '/') == "CountFilter('test_files/counted.csv')"
 
 
 def test_deseqfilter_api():
     d = DESeqFilter('test_files/test_deseq.csv')
-    assert d.__repr__() == "DESeqFilter of file test_deseq.csv"
+    assert d.__str__() == "DESeqFilter of file test_deseq.csv"
+    assert d.__repr__().replace('\\', '/') == "DESeqFilter('test_files/test_deseq.csv')"
 
 
 def test_foldchangefilter_api():
     fc = FoldChangeFilter("test_files/fc_1.csv", 'a', 'b')
-    assert fc.__repr__() == "FoldChangeFilter (numerator: 'a', denominator: 'b') of file fc_1.csv"
+    assert fc.__str__() == "FoldChangeFilter (numerator: 'a', denominator: 'b') of file fc_1.csv"
+    assert fc.__repr__().replace('\\', '/') == "FoldChangeFilter('test_files/fc_1.csv', 'a', 'b')"
 
 
 def test_filter_contains():
@@ -1067,24 +1071,44 @@ def test_pipeline_api():
     pl_count = Pipeline('countfilter')
     pl_deseq = Pipeline(DESeqFilter)
     pl = Pipeline(filter_type='FoldChangeFilter')
+    assert pl.__len__() == 0
+
+
+def test_pipeline_repr():
+    pl = Pipeline('countfilter')
+    assert repr(pl) == "Pipeline('CountFilter')"
+    pl.add_function('sort')
+    pl.add_function(CountFilter.filter_biotype, 'protein_coding', opposite=True)
+    assert repr(pl) == "Pipeline('CountFilter'): CountFilter.sort()-->" \
+                       "CountFilter.filter_biotype('protein_coding', opposite=True)"
+
+
+def test_pipeline_str():
+    pl = Pipeline('countfilter')
+    assert str(pl) == "Pipeline for CountFilter objects"
+    pl.add_function('sort')
+    pl.add_function(CountFilter.filter_biotype, 'protein_coding', opposite=True)
+    assert str(pl) == "Pipeline for CountFilter objects:\n" \
+                      "\tCountFilter.sort()\n" \
+                      "\tCountFilter.filter_biotype('protein_coding', opposite=True)"
 
 
 def test_pipeline_add_function():
     pl = Pipeline()
     pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding')
-    assert len(pl.functions) == 1 and len(pl.params) == 1
+    assert len(pl.functions) == 1 and len(pl.params) == 1 and len(pl) == 1
     assert pl.functions[0] == DESeqFilter.filter_biotype
     assert pl.params[0] == ((), {'biotype': 'protein_coding'})
 
     pl = Pipeline()
     pl.add_function('filter_biotype', 'piRNA')
-    assert len(pl.functions) == 1 and len(pl.params) == 1
+    assert len(pl.functions) == 1 and len(pl.params) == 1 and len(pl) == 1
     assert pl.functions[0] == Filter.filter_biotype
     assert pl.params[0] == (('piRNA',), {})
 
     pl_deseq = Pipeline('DEseqFilter')
     pl_deseq.add_function(Filter.number_filters, 'log2FoldChange', operator='>', value=5)
-    assert len(pl_deseq.functions) == 1 and len(pl_deseq.params) == 1
+    assert len(pl_deseq.functions) == 1 and len(pl_deseq.params) == 1 and len(pl_deseq) == 1
     assert pl_deseq.functions[0] == DESeqFilter.number_filters
     assert pl_deseq.params[0] == (('log2FoldChange',), {'operator': '>', 'value': 5})
 
@@ -1095,7 +1119,7 @@ def test_pipeline_add_multiple_functions():
     pl_deseq.add_function(DESeqFilter.filter_significant)
     pl_deseq.add_function('sort', by='log2FoldChange')
 
-    assert len(pl_deseq.functions) == 3 and len(pl_deseq.params) == 3
+    assert len(pl_deseq.functions) == 3 and len(pl_deseq.params) == 3 and len(pl_deseq) == 3
     assert pl_deseq.functions == [DESeqFilter.number_filters, DESeqFilter.filter_significant, DESeqFilter.sort]
     assert pl_deseq.params == [(('log2FoldChange',), {'operator': '>', 'value': 5}), ((), {}),
                                ((), {'by': 'log2FoldChange'})]
@@ -1106,7 +1130,7 @@ def test_pipeline_remove_last_function():
     pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding',
                     ref=__biotype_ref__)
     pl.remove_last_function()
-    assert len(pl.functions) == 0 and len(pl.params) == 0
+    assert len(pl.functions) == 0 and len(pl.params) == 0 and len(pl) == 0
 
 
 def test_pipeline_remove_last_from_empty_pipeline():
@@ -1494,7 +1518,7 @@ def test_parse_k(monkeypatch):
 
     monkeypatch.setattr(CountFilter, "_gap_statistic",
                         lambda self, clusterer_class, transform, random_state, clusterer_kwargs, max_clusters: (
-                        'success', None))
+                            'success', None))
     assert c._parse_k('gap', *args) == ['success']
 
     assert list(c._parse_k(10, *args)) == [10]

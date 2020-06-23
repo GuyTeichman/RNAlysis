@@ -89,6 +89,9 @@ class Filter:
         self.shape = self.df.shape
 
     def __repr__(self):
+        return f"{type(self).__name__}('{self.fname}')"
+
+    def __str__(self):
         return f"{type(self).__name__} of file {self.fname.stem}{self.fname.suffix}"
 
     def __len__(self):
@@ -1314,6 +1317,9 @@ class FoldChangeFilter(Filter):
                 "Unexpected results may occur during filtering or statistical analyses. ")
 
     def __repr__(self):
+        return f"{type(self).__name__}('{self.fname}', '{self.numerator}', '{self.denominator}')"
+
+    def __str__(self):
         return f"{type(self).__name__} (numerator: '{self.numerator}', denominator: '{self.denominator}') " \
                f"of file {self.fname.name}"
 
@@ -2964,6 +2970,23 @@ class Pipeline:
             assert filter_type in filter_types.values(), f"Invalid filter_type {filter_type}"
         self.filter_type = filter_type
 
+    def __str__(self):
+        string = f"Pipeline for {self.filter_type.__name__} objects"
+        if len(self) > 0:
+            string += f":\n\t" + '\n\t'.join(
+                self._func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
+        return string
+
+    def __repr__(self):
+        string = f"Pipeline('{self.filter_type.__name__}')"
+        if len(self) > 0:
+            string += ": " + "-->".join(
+                self._func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
+        return string
+
+    def __len__(self):
+        return len(self.functions)
+
     @staticmethod
     def _param_string(args: tuple, kwargs: dict):
 
@@ -3185,11 +3208,18 @@ class _KMedoidsIter:
         self.init = init
         self.max_iter = max_iter
         self.random_state = random_state
-        self.clusterer = None
+        self.clusterer = KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init,
+                                  max_iter=self.max_iter, random_state=random_state)
         self.inertia_ = None
         self.cluster_centers_ = None
         self.medoid_indices_ = None
         self.labels_ = None
+
+    def __repr__(self):
+        return repr(self.clusterer)
+
+    def __str__(self):
+        return str(self.clusterer)
 
     def fit(self, x):
         inertias = np.zeros(self.n_init)
