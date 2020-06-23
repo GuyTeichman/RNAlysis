@@ -7,8 +7,10 @@ import os
 import subprocess
 from pathlib import Path
 from typing import List, Union
+from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 import pandas as pd
+import numpy as np
 import yaml
 
 from rnalysis import __attr_file_key__, __biotype_file_key__, __path__
@@ -311,3 +313,25 @@ def remove_temp_copy_of_settings_file():
     tmp_pth = Path(os.path.join(str(pth.parent), 'temp_settings.yaml'))
     if tmp_pth.exists():
         tmp_pth.unlink()
+
+
+def standard_box_cox(data: np.ndarray):
+    """
+
+    :param data:
+    :type data:
+    :return:
+    :rtype:
+    """
+    return StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
+
+
+def standardize(data: np.ndarray):
+    """
+
+    :param data:
+    :type data:
+    :return:
+    :rtype:
+    """
+    return StandardScaler().fit_transform(data)

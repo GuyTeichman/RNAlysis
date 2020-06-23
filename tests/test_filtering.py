@@ -1487,13 +1487,14 @@ def test_silhouette_method():
 
 def test_parse_k(monkeypatch):
     c = CountFilter('test_files/counted.csv')
-    args = (KMeans, 0, {}, 0)
+    args = (KMeans, utils.standardize, 0, {}, 0)
     monkeypatch.setattr(CountFilter, "_silhouette",
-                        lambda self, clusterer_class, clusterer_kwargs, max_clusters: ('success', None))
+                        lambda self, clusterer_class, transform, clusterer_kwargs, max_clusters: ('success', None))
     assert c._parse_k('silhouette', *args) == ['success']
 
     monkeypatch.setattr(CountFilter, "_gap_statistic",
-                        lambda self, clusterer_class, random_state, clusterer_kwargs, max_clusters: ('success', None))
+                        lambda self, clusterer_class, transform, random_state, clusterer_kwargs, max_clusters: (
+                        'success', None))
     assert c._parse_k('gap', *args) == ['success']
 
     assert list(c._parse_k(10, *args)) == [10]

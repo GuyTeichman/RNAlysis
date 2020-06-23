@@ -15,16 +15,17 @@ import types
 import warnings
 from itertools import tee
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple, Type, Union
+from typing import Any, Dict, Iterable, List, Tuple, Type, Union, Callable
 
 import hdbscan
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pairwisedist.pairwisedist as pwdist
 import seaborn as sns
 from grid_strategy import strategies
 from numba import jit
-from sklearn.cluster import KMeans, AgglomerativeClustering, OPTICS
+from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
 from sklearn.preprocessing import PowerTransformer, StandardScaler
@@ -1736,6 +1737,9 @@ class CountFilter(Filter):
         counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
 
     """
+    _precomputed_metrics = {'spearman': None, 'pearson': None, 'ys1': pwdist.ys1_distance,
+                            'yr1': pwdist.yr1_distance, 'jackknife': pwdist.jackknife_distance}
+    _transforms = {True: utils.standard_box_cox, False: utils.standardize}
 
     @property
     def triplicates(self):
@@ -2087,7 +2091,7 @@ class CountFilter(Filter):
                     axes[-1].plot(x, vals, color=color, alpha=0.05, linewidth=0.35)
 
             axes[-1].set_title(f"Cluster number {i + 1} ({np.count_nonzero(labels == i)} genes)")
-            axes[-1].set_ylabel('Standardized\npower-transformed expression')
+            axes[-1].set_ylabel('Standardized expression')
             axes[-1].set_xticks(x)
             axes[-1].set_xticklabels(self.columns, fontsize=5)
         for ax in axes:
@@ -2096,8 +2100,9 @@ class CountFilter(Filter):
         plt.show()
         return fig, axes
 
-    def _gap_statistic(self, clusterer_class: type, random_state: int, clusterer_kwargs: dict, n_refs: int = 10,
-                       max_clusters: int = 20):
+    def _gap_statistic(self, clusterer_class: type, transform: Callable, random_state: int, clusterer_kwargs: dict,
+                       n_refs: int = 10, max_clusters: int = 20):
+        print(clusterer_kwargs)
         # determine the range of k values to be tested
         k_range = np.arange(1, max_clusters + 1)
         print(f"Calculating optimal K using the Gap Statistic method in range {2}:{max_clusters}...")
@@ -2111,11 +2116,11 @@ class CountFilter(Filter):
         # determine the ranges of the columns of X' (x_tag)
         a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
         # transform the observed data using Box-Cox, and then standardize it
-        data = self._standard_box_cox(self.df.values)
+        data = transform(self.df.values)
         # generate 'n_refs' random reference arrays:
         # draw uniform features Z' over the ranges of the columns of X', and back-transform via Z = dot(Z', V.T), then
         # transform the random reference data using Box-Cox, and then standardize it
-        refs = [self._standard_box_cox(pca.inverse_transform(np.random.random_sample(size=data.shape) * (b - a) + a))
+        refs = [transform(pca.inverse_transform(np.random.random_sample(size=self.df.values.shape) * (b - a) + a))
                 for _ in range(n_refs)]
         # allocate empty arrays for observed/expected log(inertia), gap scores Gap(K) and gap error S(K)
         log_disp_obs = np.zeros((len(k_range)))
@@ -2198,7 +2203,7 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def _silhouette(self, clusterer_class: type, clusterer_kwargs: dict, max_clusters: int = 20):
+    def _silhouette(self, clusterer_class: type, transform: Callable, clusterer_kwargs: dict, max_clusters: int = 20):
         """
 
         :param clusterer_class:
@@ -2211,7 +2216,7 @@ class CountFilter(Filter):
         :rtype:
         """
         print(f"Calculating optimal k using the Silhouette method in range {2}:{max_clusters}...")
-        data = self._standard_box_cox(self.df)
+        data = transform(self.df.values)
         sil_scores = []
         k_range = np.arange(2, max_clusters + 1)
         for n_clusters in k_range:
@@ -2232,28 +2237,18 @@ class CountFilter(Filter):
         print(f"Using the Silhouette method, {best_k} was chosen as the best number of clusters (k).")
         return best_k, fig
 
-    @staticmethod
-    def _standard_box_cox(data: Union[pd.DataFrame, np.ndarray]):
-        """
-
-        :param data:
-        :type data:
-        :return:
-        :rtype:
-        """
-        return StandardScaler().fit_transform(PowerTransformer(method='box-cox').fit_transform(data + 1))
-
-    def _parse_k(self, k: Union[int, List[int], str], clusterer_class: type, random_state: int, clusterer_kwargs: dict,
-                 max_clusters: int):
+    def _parse_k(self, k: Union[int, List[int], str], clusterer_class: type, transform: Callable,
+                 random_state: int, clusterer_kwargs: dict, max_clusters: int):
 
         max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
-            best_k, _ = self._silhouette(clusterer_class=clusterer_class, clusterer_kwargs=clusterer_kwargs,
-                                         max_clusters=max_clusters)
+            best_k, _ = self._silhouette(clusterer_class=clusterer_class, transform=transform,
+                                         clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
             k = [best_k]
         elif isinstance(k, str) and k.lower() == 'gap':
-            best_k, _ = self._gap_statistic(clusterer_class=clusterer_class, random_state=random_state,
-                                            clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
+            best_k, _ = self._gap_statistic(clusterer_class=clusterer_class, transform=transform,
+                                            random_state=random_state, clusterer_kwargs=clusterer_kwargs,
+                                            max_clusters=max_clusters)
             k = [best_k]
         else:
             if not isinstance(k, Iterable):
@@ -2264,138 +2259,151 @@ class CountFilter(Filter):
                 f"Invalid value for k: '{k}'. k must be an integer>=2, Iterable of integers, 'gap', or 'silhouette'. "
         return k
 
+    def _clustering_get_transform(self, power_transform: bool, metric: str) -> Tuple[Callable, str]:
+        if metric in self._precomputed_metrics:
+            def transform(x):
+                return self._precomputed_metrics[metric](self._transforms[power_transform](x))
+
+            return_metric = 'precomputed'
+        else:
+            transform = self._transforms[power_transform]
+            return_metric = metric
+        return transform, return_metric
+
+    @staticmethod
+    def _clustering_assert_metric(metric: str, linkage: str = None):
+        legal_metrics = {'euclidean', 'spearman', 'pearson', 'manhattan', 'cosine', 'ys1', 'yr1', 'jackknife'}
+        legal_linkages = {'single', 'average', 'complete', 'ward'}
+        assert isinstance(metric, str), f"'metric' must be a string. Instead got '{type(metric)}'."
+        metric = metric.lower()
+        assert metric in legal_metrics, f"'metric' must be one of {legal_metrics}. Instead got '{metric}'."
+
+        if linkage is not None:
+            assert isinstance(linkage, str), f"'linkage' must be a string. Instead got '{type(linkage)}'."
+            linkage = linkage.lower()
+            assert linkage in legal_linkages, f"'linkage' must be in {legal_linkages}. Instead got '{linkage}'."
+            return metric, linkage
+        return metric
+
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
-                     max_iter: int = 300, plot_style: str = 'all', split_plots: bool = False,
-                     max_clusters: int = 'default'):
+                     max_iter: int = 300, power_transform: bool = True,
+                     plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default'):
+        # get the transform function
+        transform, _ = self._clustering_get_transform(power_transform, 'euclidean')
+        # set keyworded arguments for clusterer type = KMeans
         clusterer_kwargs = dict(init='k-means++', random_state=random_state, n_init=n_init, max_iter=max_iter)
-        k = self._parse_k(k=k, clusterer_class=KMeans, random_state=random_state, clusterer_kwargs=clusterer_kwargs,
-                          max_clusters=max_clusters)
+        # parse k value
+        k = self._parse_k(k=k, clusterer_class=KMeans, transform=transform, random_state=random_state,
+                          clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
+        # generate standardized data for plots
+        data_for_plot = transform(self.df)
+        # iterate over all K values, generating clustering results and plotting them
         filt_obj_tuples = []
-        data = self._standard_box_cox(self.df)
         for this_k in k:
             this_k = int(this_k)
-            clusterer = KMeans(n_clusters=this_k, **clusterer_kwargs).fit(data)
-
-            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
+            clusterer = KMeans(n_clusters=this_k, **clusterer_kwargs).fit(transform(self.df.values))
+            # plot results
+            self._plot_clustering(n_clusters=this_k, data=data_for_plot, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
                                   title=f"Results of K-Means Clustering for K={this_k}", plot_style=plot_style,
                                   split_plots=split_plots)
-
+            # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(this_k)]))
+        # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
-                           linkage: str = 'ward', distance_threshold: float = None, plot_style: str = 'all',
-                           split_plots: bool = False, max_clusters: int = 'default', gap_random_state: int = None):
-        """
+                           linkage: str = 'ward', power_transform: bool = True, distance_threshold: float = None,
+                           plot_style: str = 'all', split_plots: bool = False,
+                           max_clusters: int = 'default', gap_random_state: int = None):
 
-        :param n_clusters:
-        :type n_clusters:
-        :param metric:
-        :type metric:
-        :param linkage:
-        :type linkage:
-        :param distance_threshold:
-        :type distance_threshold:
-        :param plot_style:
-        :type plot_style:
-        :param split_plots:
-        :type split_plots:
-        :param max_clusters:
-        :type max_clusters:
-        :param gap_random_state:
-        :type gap_random_state:
-        :return:
-        :rtype:
-        """
-        assert isinstance(metric, str), f"'metric' must be a string. Instead got '{type(metric)}'."
-        assert isinstance(linkage, str), f"'linkage' must be a string. Instead got '{type(linkage)}'."
-        metric, linkage = metric.lower(), linkage.lower()
-        assert metric in {'euclidean', 'spearman'}, \
-            f"'metric' must be 'euclidean' or 'spearman'. Instead got '{metric}'."
-        assert linkage in {'single', 'average', 'complete', 'ward'}, \
-            f"'linkage' must be 'single', 'average', 'complete' or 'ward'. Instead got '{linkage}'."
-
+        # assert metrics/linkages are legal
+        metric, linkage = self._clustering_assert_metric(metric, linkage)
+        # set keyworded arguments for clusterer type = AgglomerativeClustering
         clusterer_kwargs = dict(affinity=metric, linkage=linkage)
-        data = self._standard_box_cox(self.df)
+        # get the transform/pairwise-distance function
+        transform, clusterer_kwargs['affinity'] = self._clustering_get_transform(power_transform, metric)
+        # generate standardized data for plots
+        data_for_plot = utils.standardize(self.df)
+        # if k was supplied, parse k value
         if n_clusters is not None:
-            k = self._parse_k(k=n_clusters, clusterer_class=AgglomerativeClustering, random_state=gap_random_state,
-                              clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
+            k = self._parse_k(k=n_clusters, clusterer_class=AgglomerativeClustering, transform=transform,
+                              random_state=gap_random_state, clusterer_kwargs=clusterer_kwargs,
+                              max_clusters=max_clusters)
+        # if k was not supplied, determined k by AgglomerativeClustering with distance_threshold
         else:
             clusterer = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold,
-                                                **clusterer_kwargs).fit(data)
+                                                **clusterer_kwargs).fit(transform(self.df.values))
             k = clusterer.n_clusters_
-            means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(k)])
-            self._plot_clustering(n_clusters=k, data=data, labels=clusterer.labels_, centers=means,
+            # calculate cluster centers
+            centers = np.array([data_for_plot[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(k)])
+            # plot results
+            self._plot_clustering(n_clusters=k, data=data_for_plot, labels=clusterer.labels_, centers=centers,
                                   title=f"Results of Hierarchical Clustering for n_clusters={k}, "
                                         f"metric='{metric}', linkage='{linkage}'", plot_style=plot_style,
                                   split_plots=split_plots)
-
+            # split the CountFilter object
             return tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                         suffix=f'_hierarchicalcluster{i + 1}') for i in range(k)])
-
+        # iterate over all K values, generating clustering results and plotting them
         filt_obj_tuples = []
         for this_k in k:
             this_k = int(this_k)
-            clusterer = AgglomerativeClustering(n_clusters=this_k, **clusterer_kwargs).fit(data)
-
-            means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(this_k)])
-            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_, centers=means,
+            clusterer = AgglomerativeClustering(n_clusters=this_k, **clusterer_kwargs).fit(transform(self.df.values))
+            # calculate cluster centers
+            centers = np.array([data_for_plot[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(this_k)])
+            # plot results
+            self._plot_clustering(n_clusters=this_k, data=data_for_plot, labels=clusterer.labels_, centers=centers,
                                   title=f"Results of Hierarchical Clustering for n_clusters={this_k}, "
                                         f"metric='{metric}', linkage='{linkage}'", plot_style=plot_style,
                                   split_plots=split_plots)
-
+            # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_hierarchicalcluster{i + 1}') for i in range(this_k)]))
+        # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
-                       max_iter: int = 300, plot_style: str = 'all', split_plots: bool = False,
-                       max_clusters: int = 'default'):
-        clusterer_kwargs = dict(init='k-medoids++', random_state=random_state, n_init=n_init, max_iter=max_iter)
-        k = self._parse_k(k=k, clusterer_class=_KMedoidsIter, random_state=random_state,
+                       max_iter: int = 300, metric: str = 'euclidean', power_transform: bool = True,
+                       plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default'):
+        # assert metric is legal
+        metric = self._clustering_assert_metric(metric)
+        # set keyworded arguments for clusterer type = KMedoidsIter
+        clusterer_kwargs = dict(init='k-medoids++', metric=metric, random_state=random_state, n_init=n_init,
+                                max_iter=max_iter)
+        # get the transform/pairwise-distance function
+        transform, clusterer_kwargs['metric'] = self._clustering_get_transform(power_transform, metric)
+        # generate standardized data for plots
+        data_for_plot = utils.standardize(self.df)
+        # parse K value
+        k = self._parse_k(k=k, clusterer_class=_KMedoidsIter, transform=transform, random_state=random_state,
                           clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
+        # iterate over all K values, generating clustering results and plotting them
         filt_obj_tuples = []
-        data = self._standard_box_cox(self.df)
         for this_k in k:
             this_k = int(this_k)
-            clusterer = _KMedoidsIter(n_clusters=this_k, **clusterer_kwargs).fit(data)
-
-            self._plot_clustering(n_clusters=this_k, data=data, labels=clusterer.labels_,
-                                  centers=clusterer.cluster_centers_,
+            clusterer = _KMedoidsIter(n_clusters=this_k, **clusterer_kwargs).fit(transform(self.df.values))
+            # get cluster centers
+            centers = data_for_plot[clusterer.medoid_indices_, :]
+            # plot results
+            self._plot_clustering(n_clusters=this_k, data=data_for_plot, labels=clusterer.labels_, centers=centers,
                                   title=f"Results of K-Medoids Clustering for K={this_k}", plot_style=plot_style,
                                   split_plots=split_plots)
-
+            # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(this_k)]))
+        # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
+                      power_transform: bool = True,
                       plot_style: str = 'all', split_plots: bool = False, return_prob: bool = False):
-        """
 
-        :param min_cluster_size:
-        :type min_cluster_size:
-        :param min_samples:
-        :type min_samples:
-        :param metric:
-        :type metric:
-        :param cluster_selection_epsilon:
-        :type cluster_selection_epsilon:
-        :param cluster_selection_method:
-        :type cluster_selection_method:
-        :param plot_style:
-        :type plot_style:
-        :param return_prob:
-        :type return_prob:
-        :return:
-        :rtype:
-        """
         assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
             f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
         assert min_cluster_size <= self.shape[0], \
@@ -2405,8 +2413,8 @@ class CountFilter(Filter):
         assert isinstance(metric, str), f"'metric' must be a string. Instead got {type(metric)}."
         cluster_selection_method = cluster_selection_method.lower()
         metric = metric.lower()
-
-        data = self._standard_box_cox(self.df)
+        transform, metric = self._clustering_get_transform(power_transform, metric)
+        data = transform(self.df.values)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples,
                                     cluster_selection_epsilon=cluster_selection_epsilon, metric=metric,
                                     cluster_selection_method=cluster_selection_method)
@@ -3153,11 +3161,13 @@ class Pipeline:
 # TODO: add option for mask in clustergram
 
 class _KMedoidsIter:
-    def __init__(self, n_clusters: int, init: str = 'k-medoids++', max_iter: int = 300, random_state: int = None,
-                 n_init: int = 10):
-        assert isinstance(n_init, int), f"n_init must be an integer, is {type(n_init)} instead. "
-        assert n_init > 0, f"n_init must be a positive integer. Input {n_init} is invalid. "
+    def __init__(self, n_clusters: int, metric: str = 'euclidean', init: str = 'k-medoids++', max_iter: int = 300,
+                 random_state: int = None, n_init: int = 10):
+        assert isinstance(n_init, int), f"'n_init' must be an integer, is {type(n_init)} instead."
+        assert isinstance(metric, str), f"'metric' must be a string, is {type(metric)} instead."
+        assert n_init > 0, f"'n_init' must be a positive integer. Input {n_init} is invalid. "
         self.n_clusters = n_clusters
+        self.metric = metric
         self.n_init = n_init
         self.init = init
         self.max_iter = max_iter
@@ -3165,6 +3175,7 @@ class _KMedoidsIter:
         self.clusterer = None
         self.inertia_ = None
         self.cluster_centers_ = None
+        self.medoid_indices_ = None
         self.labels_ = None
 
     def fit(self, x):
@@ -3172,15 +3183,18 @@ class _KMedoidsIter:
         clusterers = []
         for i in range(self.n_init):
             if self.random_state is not None:
-                clusterers.append(KMedoids(n_clusters=self.n_clusters, init=self.init, max_iter=self.max_iter,
-                                           random_state=self.random_state + i).fit(x))
+                clusterers.append(
+                    KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init, max_iter=self.max_iter,
+                             random_state=self.random_state + i).fit(x))
             else:
-                clusterers.append(KMedoids(n_clusters=self.n_clusters, init=self.init, max_iter=self.max_iter).fit(x))
+                clusterers.append(KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init,
+                                           max_iter=self.max_iter).fit(x))
             inertias[i] = clusterers[i].inertia_
         best_clusterer = clusterers[int(np.argmax(inertias))]
         self.clusterer = best_clusterer
         self.inertia_ = self.clusterer.inertia_
         self.cluster_centers_ = self.clusterer.cluster_centers_
+        self.medoid_indices_ = self.clusterer.medoid_indices_
         self.labels_ = self.clusterer.labels_
         return self
 

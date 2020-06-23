@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from rnalysis.utils import *
 from rnalysis.general import reset_settings_file
 from rnalysis import __attr_file_key__, __biotype_file_key__
@@ -70,7 +71,7 @@ def test_load_csv_drop_columns():
     assert list(loaded.columns) == ['cond1', 'cond3']
 
     with pytest.raises(IndexError):
-        load_csv('test_files/counted.csv',0,drop_columns=['cond1','cond6'])
+        load_csv('test_files/counted.csv', 0, drop_columns=['cond1', 'cond6'])
 
 
 def test_biotype_table_assertions():
@@ -162,3 +163,22 @@ def test_update_ref_table_attributes():
 
 def test_save_csv():
     assert False
+
+
+def test_standardize():
+    np.random.seed(42)
+    data = np.random.randint(-200, 100000, (100, 5))
+    res = standardize(data)
+    assert res.shape == data.shape
+    assert np.isclose(res.mean(axis=0), 0).all()
+    assert np.isclose(res.std(axis=0), 1).all()
+
+
+def test_standard_box_cos():
+    np.random.seed(42)
+    data = np.random.randint(-200, 100000, (100, 5))
+    res = standard_box_cox(data)
+    assert res.shape == data.shape
+    assert np.isclose(res.mean(axis=0), 0).all()
+    assert np.isclose(res.std(axis=0), 1).all()
+    assert not np.isclose(res, standardize(data)).all()
