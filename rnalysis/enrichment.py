@@ -375,7 +375,7 @@ class FeatureSet:
         gene_set = self.gene_set
 
         attr_ref_df = io.load_csv(attr_ref_path)
-        validation.attr_table_assertions(attr_ref_df)
+        validation.validate_attr_table(attr_ref_df)
         attr_ref_df.set_index('gene', inplace=True)
 
         assert (isinstance(biotype, (str, list, set, tuple)))
@@ -406,7 +406,7 @@ class FeatureSet:
             pass
         else:
             biotype_ref_df = io.load_csv(biotype_ref_path)
-            validation.biotype_table_assertions(biotype_ref_df)
+            validation.validate_biotype_table(biotype_ref_df)
             biotype_ref_df.set_index('gene', inplace=True)
             biotype_ref_df.columns = biotype_ref_df.columns.str.lower()
             if isinstance(biotype, (list, tuple, set)):
@@ -1047,7 +1047,7 @@ class FeatureSet:
 
         ref = ref_tables.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
-        validation.biotype_table_assertions(ref_df)
+        validation.validate_biotype_table(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
         if len(not_in_ref) > 0:

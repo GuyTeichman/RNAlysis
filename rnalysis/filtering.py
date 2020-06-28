@@ -426,7 +426,7 @@ class Filter:
         # load the biotype reference table
         ref = ref_tables.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
-        validation.biotype_table_assertions(ref_df)
+        validation.validate_biotype_table(ref_df)
         ref_df.set_index('gene', inplace=True)
         # generate set of legal inputs
         legal_inputs = set(ref_df['biotype'].unique())
@@ -520,7 +520,7 @@ class Filter:
         # load the Attribute Reference Table
         ref = ref_tables.get_attr_ref_path(ref)
         attr_ref_table = io.load_csv(ref)
-        validation.attr_table_assertions(attr_ref_table)
+        validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
         # generate list of the indices that are positive for each attribute
         attr_indices_list = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
@@ -782,7 +782,7 @@ class Filter:
         # load the Biotype Reference Table
         ref = ref_tables.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
-        validation.biotype_table_assertions(ref_df)
+        validation.validate_biotype_table(ref_df)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:

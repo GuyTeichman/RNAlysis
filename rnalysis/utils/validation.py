@@ -27,7 +27,7 @@ def isinstanceinh(obj, parent_class):
     return True if issubclass(obj.__class__, parent_class) else False
 
 
-def biotype_table_assertions(ref_df: pd.DataFrame):
+def validate_biotype_table(ref_df: pd.DataFrame):
     """
     Assert legality of Biotype Reference Table, and rename column names to standard names ('gene' and 'biotype').
     :param ref_df: the loaded Biotype Reference Table
@@ -41,7 +41,7 @@ def biotype_table_assertions(ref_df: pd.DataFrame):
     ref_df.rename(columns={ref_df.columns[0]: 'gene', ref_df.columns[1]: 'biotype'}, inplace=True)
 
 
-def attr_table_assertions(ref_df: pd.DataFrame):
+def validate_attr_table(ref_df: pd.DataFrame):
     """
     Assert legality of Attribute Reference Table, and renames the first column to standard name ('gene').
     :param ref_df:
