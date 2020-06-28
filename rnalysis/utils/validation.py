@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from typing import Union, List, Set, Iterable
 import pandas as pd
 
 
@@ -53,3 +53,9 @@ def validate_attr_table(ref_df: pd.DataFrame):
     assert ref_df.shape[
                0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
     ref_df.rename(columns={ref_df.columns[0]: 'gene'}, inplace=True)
+
+
+def validate_uniprot_dataset_name(dataset_dict: dict, *names: str):
+    for name in names:
+        assert name in dataset_dict, f"Dataset '{name}' is not a valid Uniprot Dataset for mapping gene names/IDs. " \
+                                     f"Valid Uniprot Datasets are: {', '.join(dataset_dict.keys())}."
