@@ -28,10 +28,9 @@ from numba import jit
 from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
-from sklearn.preprocessing import PowerTransformer, StandardScaler
-from sklearn_extra.cluster import KMedoids
+from sklearn.preprocessing import StandardScaler
 
-from rnalysis import utils
+from rnalysis.utils import io, validation, preprocessing, ref_tables, clustering
 
 
 class Filter:
@@ -82,7 +81,7 @@ class Filter:
         else:
             assert isinstance(fname, (str, Path))
             self.fname = Path(fname)
-            self.df = utils.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
+            self.df = io.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
         # check for duplicate indices
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same name/index.")
@@ -204,7 +203,7 @@ class Filter:
                 (isinstance(alt_filename, Path) and alt_filename.suffix == suffix):
                 suffix = ''
             alt_filename = os.path.join(str(self.fname.parent), f"{alt_filename}{suffix}")
-        utils.save_csv(self.df, alt_filename)
+        io.save_csv(self.df, alt_filename)
 
     @staticmethod
     def _color_gen():
@@ -425,9 +424,9 @@ class Filter:
         if isinstance(biotype, str):
             biotype = [biotype]
         # load the biotype reference table
-        ref = utils.get_biotype_ref_path(ref)
-        ref_df = utils.load_csv(ref)
-        utils.biotype_table_assertions(ref_df)
+        ref = ref_tables.get_biotype_ref_path(ref)
+        ref_df = io.load_csv(ref)
+        validation.biotype_table_assertions(ref_df)
         ref_df.set_index('gene', inplace=True)
         # generate set of legal inputs
         legal_inputs = set(ref_df['biotype'].unique())
@@ -519,9 +518,9 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal input {mode}: mode must be either 'union' or 'intersection'"
         # load the Attribute Reference Table
-        ref = utils.get_attr_ref_path(ref)
-        attr_ref_table = utils.load_csv(ref)
-        utils.attr_table_assertions(attr_ref_table)
+        ref = ref_tables.get_attr_ref_path(ref)
+        attr_ref_table = io.load_csv(ref)
+        validation.attr_table_assertions(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
         # generate list of the indices that are positive for each attribute
         attr_indices_list = [attr_ref_table[attr_ref_table[attr].notnull()].index for attr in attributes]
@@ -781,9 +780,9 @@ class Filter:
         return_format = return_format.lower()
         assert return_format in {'short', 'long'}, f"Invalid format '{return_format}'. Must be 'short' or 'long'."
         # load the Biotype Reference Table
-        ref = utils.get_biotype_ref_path(ref)
-        ref_df = utils.load_csv(ref)
-        utils.biotype_table_assertions(ref_df)
+        ref = ref_tables.get_biotype_ref_path(ref)
+        ref_df = io.load_csv(ref)
+        validation.biotype_table_assertions(ref_df)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:
@@ -1399,7 +1398,7 @@ class FoldChangeFilter(Filter):
         res_df['significant'] = res_df['pval'] <= alpha
         # save the output DataFrame if requested
         if save_csv:
-            utils.save_csv(res_df, fname)
+            io.save_csv(res_df, fname)
         print(res_df)
 
         return res_df
@@ -1745,7 +1744,7 @@ class CountFilter(Filter):
     """
     _precomputed_metrics = {'spearman': None, 'pearson': None, 'ys1': pwdist.ys1_distance,
                             'yr1': pwdist.yr1_distance, 'jackknife': pwdist.jackknife_distance}
-    _transforms = {True: utils.standard_box_cox, False: utils.standardize}
+    _transforms = {True: preprocessing.standard_box_cox, False: preprocessing.standardize}
 
     @property
     def triplicates(self):
@@ -1930,7 +1929,7 @@ class CountFilter(Filter):
         suffix = '_normtorpm'
         new_df = self.df.copy()
         if isinstance(special_counter_fname, (str, Path)):
-            features = utils.load_csv(special_counter_fname, 0)
+            features = io.load_csv(special_counter_fname, 0)
         elif isinstance(special_counter_fname, pd.DataFrame):
             features = special_counter_fname
         else:
@@ -1965,7 +1964,7 @@ class CountFilter(Filter):
         suffix = '_normwithscalingfactors'
         new_df = self.df.copy()
         if isinstance(scaling_factor_fname, (str, Path)):
-            size_factors = utils.load_csv(scaling_factor_fname)
+            size_factors = io.load_csv(scaling_factor_fname)
         elif isinstance(scaling_factor_fname, pd.DataFrame):
             size_factors = scaling_factor_fname
         else:
@@ -2345,7 +2344,7 @@ class CountFilter(Filter):
         # get the transform/pairwise-distance function
         transform, clusterer_kwargs['affinity'] = self._clustering_get_transform(power_transform, metric)
         # generate standardized data for plots
-        data_for_plot = utils.standardize(self.df)
+        data_for_plot = preprocessing.standardize(self.df)
         # if k was supplied, parse k value
         if n_clusters is not None:
             k = self._parse_k(k=n_clusters, clusterer_class=AgglomerativeClustering, transform=transform,
@@ -2396,15 +2395,15 @@ class CountFilter(Filter):
         # get the transform/pairwise-distance function
         transform, clusterer_kwargs['metric'] = self._clustering_get_transform(power_transform, metric)
         # generate standardized data for plots
-        data_for_plot = utils.standardize(self.df)
+        data_for_plot = preprocessing.standardize(self.df)
         # parse K value
-        k = self._parse_k(k=k, clusterer_class=_KMedoidsIter, transform=transform, random_state=random_state,
+        k = self._parse_k(k=k, clusterer_class=clustering.KMedoidsIter, transform=transform, random_state=random_state,
                           clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
         # iterate over all K values, generating clustering results and plotting them
         filt_obj_tuples = []
         for this_k in k:
             this_k = int(this_k)
-            clusterer = _KMedoidsIter(n_clusters=this_k, **clusterer_kwargs).fit(transform(self.df.values))
+            clusterer = clustering.KMedoidsIter(n_clusters=this_k, **clusterer_kwargs).fit(transform(self.df.values))
             # get cluster centers
             centers = data_for_plot[clusterer.medoid_indices_, :]
             # plot results
@@ -2939,8 +2938,8 @@ class CountFilter(Filter):
         counts = df.drop(uncounted.index, inplace=False)
 
         if save_csv:
-            utils.save_csv(df=counts, filename=counted_fname)
-            utils.save_csv(df=uncounted, filename=uncounted_fname)
+            io.save_csv(df=counts, filename=counted_fname)
+            io.save_csv(df=uncounted, filename=uncounted_fname)
 
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
         h = CountFilter((Path(fname), counts))
@@ -3192,58 +3191,5 @@ class Pipeline:
         print(
             f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline. ")
 
-
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
-
-class _KMedoidsIter:
-    def __init__(self, n_clusters: int, metric: str = 'euclidean', init: str = 'k-medoids++', max_iter: int = 300,
-                 random_state: int = None, n_init: int = 10):
-        assert isinstance(n_init, int), f"'n_init' must be an integer, is {type(n_init)} instead."
-        assert isinstance(metric, str), f"'metric' must be a string, is {type(metric)} instead."
-        assert n_init > 0, f"'n_init' must be a positive integer. Input {n_init} is invalid. "
-        self.n_clusters = n_clusters
-        self.metric = metric
-        self.n_init = n_init
-        self.init = init
-        self.max_iter = max_iter
-        self.random_state = random_state
-        self.clusterer = KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init,
-                                  max_iter=self.max_iter, random_state=random_state)
-        self.inertia_ = None
-        self.cluster_centers_ = None
-        self.medoid_indices_ = None
-        self.labels_ = None
-
-    def __repr__(self):
-        return repr(self.clusterer)
-
-    def __str__(self):
-        return str(self.clusterer)
-
-    def fit(self, x):
-        inertias = np.zeros(self.n_init)
-        clusterers = []
-        for i in range(self.n_init):
-            if self.random_state is not None:
-                clusterers.append(
-                    KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init, max_iter=self.max_iter,
-                             random_state=self.random_state + i).fit(x))
-            else:
-                clusterers.append(KMedoids(n_clusters=self.n_clusters, metric=self.metric, init=self.init,
-                                           max_iter=self.max_iter).fit(x))
-            inertias[i] = clusterers[i].inertia_
-        best_clusterer = clusterers[int(np.argmax(inertias))]
-        self.clusterer = best_clusterer
-        self.inertia_ = self.clusterer.inertia_
-        self.cluster_centers_ = self.clusterer.cluster_centers_
-        self.medoid_indices_ = self.clusterer.medoid_indices_
-        self.labels_ = self.clusterer.labels_
-        return self
-
-    def predict(self, x):
-        return self.clusterer.predict(x)
-
-    def fit_predict(self, x):
-        self.fit(x)
-        return self.predict(x)

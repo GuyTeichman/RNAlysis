@@ -112,3 +112,4 @@ settings.ini
 /what_can_you_do_with_RNAlysis.ipynb
 /rnalysis/settings.yaml
 /rnalysis/temp_settings.yaml
+/rnalysis/random_pvals.pyx

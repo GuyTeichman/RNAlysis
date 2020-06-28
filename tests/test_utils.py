@@ -1,8 +1,14 @@
 import pytest
-import numpy as np
-from rnalysis.utils import *
-from rnalysis.general import reset_settings_file
+
+from rnalysis.utils.clustering import *
+from rnalysis.utils.parallel import *
+from rnalysis.utils.validation import *
+from rnalysis.utils.preprocessing import *
+from rnalysis.utils.ref_tables import *
+from rnalysis.utils.parsing import *
+from rnalysis.utils.io import *
 from rnalysis import __attr_file_key__, __biotype_file_key__
+from rnalysis.utils.validation import check_is_df_like
 
 
 def test_is_df_dataframe():
@@ -41,12 +47,6 @@ def test_is_df_invalid_type():
     invalid_type = 67
     with pytest.raises(ValueError):
         check_is_df_like(invalid_type)
-
-
-def test_remove_unindexed_rows():
-    truth = load_csv("test_files/counted_missing_rows_deleted.csv", 0)
-    missing = load_csv("test_files/counted_missing_rows.csv", 0)
-    assert (truth == remove_unindexed_rows(missing)).all().all()
 
 
 def test_load_csv_bad_input():
@@ -182,3 +182,37 @@ def test_standard_box_cos():
     assert np.isclose(res.mean(axis=0), 0).all()
     assert np.isclose(res.std(axis=0), 1).all()
     assert not np.isclose(res, standardize(data)).all()
+
+
+def test_kmedoidsiter_api():
+    truth = KMedoids(3, max_iter=300, init='k-medoids++', random_state=42)
+    kmeds = KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=1, random_state=42)
+    df = load_csv('test_files/counted.csv', 0)
+    truth.fit(df)
+    kmeds.fit(df)
+    assert np.all(truth.cluster_centers_ == kmeds.cluster_centers_)
+    assert np.all(truth.inertia_ == kmeds.inertia_)
+
+    assert np.all(truth.predict(df) == kmeds.predict(df))
+    assert np.all(truth.fit_predict(df) == kmeds.fit_predict(df))
+
+    kmeds_rand = KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=3)
+    kmeds_rand.fit(df)
+    kmeds_rand.predict(df)
+    kmeds_rand.fit_predict(df)
+
+
+def test_kmedoidsiter_iter():
+    kmeds = KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=5, random_state=0)
+    df = load_csv('test_files/counted.csv', 0)
+    kmeds.fit(df)
+
+    inertias = []
+    clusterers = []
+    for i in range(5):
+        clusterers.append(KMedoids(3, max_iter=300, init='k-medoids++', random_state=0).fit(df))
+        inertias.append(clusterers[i].inertia_)
+    truth_inertia = max(inertias)
+    truth_kmeds = clusterers[np.argmax(inertias)]
+    assert kmeds.inertia_ == truth_inertia
+    assert np.all(kmeds.clusterer.predict(df) == truth_kmeds.predict(df))

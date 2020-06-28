@@ -9,7 +9,8 @@ from typing import Union
 
 import pandas as pd
 
-from rnalysis import __attr_file_key__, __biotype_file_key__, utils
+from rnalysis import __attr_file_key__, __biotype_file_key__
+from rnalysis.utils import io, parallel, validation, ref_tables
 from rnalysis.filtering import Filter
 
 
@@ -29,11 +30,11 @@ def start_parallel_session(n_engines: int = 'default'):
     """
     print("Starting parallel session...")
     try:
-        utils.stop_ipcluster()
+        parallel.stop_ipcluster()
     except FileNotFoundError:
         pass
     time.sleep(1)
-    stream = utils.start_ipcluster(n_engines)
+    stream = parallel.start_ipcluster(n_engines)
     time.sleep(1)
     while True:
         line = stream.stderr.readline()
@@ -108,7 +109,7 @@ def reset_settings_file():
     """
     Resets the local settings by deleting the local settings file. Warning: this action is irreversible!
     """
-    settings_pth = utils.get_settings_file_path()
+    settings_pth = ref_tables.get_settings_file_path()
     if not settings_pth.exists():
         print("No local settings file exists. ")
     else:
@@ -130,7 +131,7 @@ def set_attr_ref_table_path(path: str = None):
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
-    utils.update_settings_file(path, __attr_file_key__)
+    ref_tables.update_settings_file(path, __attr_file_key__)
     print(f'Attribute Reference Table path set as: {path}')
 
 
@@ -148,7 +149,7 @@ def set_biotype_ref_table_path(path: str = None):
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
-    utils.update_settings_file(path, __biotype_file_key__)
+    ref_tables.update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
 
 
@@ -163,8 +164,8 @@ def print_settings_file():
         Biotype Reference Table used: my_biotype_reference_table_path
 
     """
-    utils.get_attr_ref_path('predefined')
-    utils.get_biotype_ref_path('predefined')
+    ref_tables.get_attr_ref_path('predefined')
+    ref_tables.get_biotype_ref_path('predefined')
 
 
 def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):
@@ -176,6 +177,6 @@ def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):
     :param filename: name for the saved file. Specify full path to control the directory where the file will be saved.
     """
     if isinstance(df, pd.DataFrame):
-        utils.save_csv(df, filename)
-    elif utils.isinstanceinh(df, Filter):
-        utils.save_csv(df.df, filename)
+        io.save_csv(df, filename)
+    elif validation.isinstanceinh(df, Filter):
+        io.save_csv(df.df, filename)

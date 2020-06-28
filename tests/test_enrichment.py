@@ -1,5 +1,7 @@
 import pytest
 import matplotlib
+
+from rnalysis.utils import io
 from rnalysis import filtering
 from rnalysis.general import start_parallel_session
 from rnalysis.enrichment import *
@@ -128,7 +130,7 @@ def test_set_operations_with_set():
 
 
 def test_biotypes():
-    truth = utils.load_csv('test_files/biotypes_truth.csv', 0)
+    truth = io.load_csv('test_files/biotypes_truth.csv', 0)
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
              'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105',
@@ -164,13 +166,13 @@ def _enrichment_get_ref_tests_setup(truth, bg_genes):
 
 
 def test_enrichment_get_ref_biotype():
-    truth = utils.load_csv('test_files/attr_ref_table_for_tests_biotype.csv', 0)
+    truth = io.load_csv('test_files/attr_ref_table_for_tests_biotype.csv', 0)
     bg_genes = 'protein_coding'
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_ref_custom_background():
-    truth = utils.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -179,7 +181,7 @@ def test_enrichment_get_ref_custom_background():
 
 
 def test_enrichment_get_ref_custom_background_from_featureset_object():
-    truth = utils.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -188,7 +190,7 @@ def test_enrichment_get_ref_custom_background_from_featureset_object():
 
 
 def test_enrichment_get_ref_custom_background_from_filter_object():
-    truth = utils.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = filtering.CountFilter(r'test_files/test_bg_genes_from_filter_object.csv')
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
@@ -253,7 +255,7 @@ def _enrichment_validity(res, truth):
 
 
 def test_enrichment_randomization_validity():
-    truth = utils.load_csv('test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_csv('test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -308,7 +310,7 @@ def test_enrichment_randomization_parallel_reliability():
 
 
 def test_enrichment_parallel_validity():
-    truth = utils.load_csv('test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_csv('test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -369,7 +371,7 @@ def test_enrich_hypergeometric_api():
 
 
 def test_enrich_hypergeometric_pvalues():
-    truth = utils.load_csv('test_files/enrichment_hypergeometric_res.csv', 0)
+    truth = io.load_csv('test_files/enrichment_hypergeometric_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']

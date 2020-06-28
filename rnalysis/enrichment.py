@@ -23,7 +23,7 @@ from scipy.stats import hypergeom, ttest_1samp
 from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
-from rnalysis import utils
+from rnalysis.utils import io, parsing, validation, ref_tables
 from rnalysis.filtering import Filter
 
 
@@ -51,14 +51,14 @@ class FeatureSet:
         """
         assert isinstance(set_name, str), f"'set_name' must be of type str, instead got {type(set_name)}."
         if gene_set is None:
-            self.gene_set = utils.from_string(
+            self.gene_set = parsing.from_string(
                 "Please insert genomic features/indices separated by newline \n"
                 "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')", delimiter='\n')
         elif isinstance(gene_set, set):
             pass
         elif isinstance(gene_set, (list, tuple)):
             gene_set = set(gene_set)
-        elif utils.isinstanceinh(gene_set, Filter):
+        elif validation.isinstanceinh(gene_set, Filter):
             gene_set = gene_set.index_set
         else:
             raise TypeError(f"Error: 'gene_set' must be a set, list or tuple! Is a {type(gene_set)} instead. ")
@@ -245,7 +245,7 @@ class FeatureSet:
             assert isinstance(fname, (str, Path))
         if isinstance(fname, Path):
             fname = str(Path)
-        utils.save_csv(df, filename=fname + '.csv')
+        io.save_csv(df, filename=fname + '.csv')
 
     def go_enrichment(self, mode: str = 'all', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
 
@@ -344,7 +344,7 @@ class FeatureSet:
     @staticmethod
     def _enrichment_get_attrs(attributes, attr_ref_path):
         if attributes is None:
-            attributes = utils.from_string(
+            attributes = parsing.from_string(
                 "Please insert attributes separated by newline "
                 "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
         elif isinstance(attributes, (str, int)):
@@ -374,8 +374,8 @@ class FeatureSet:
     def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
         gene_set = self.gene_set
 
-        attr_ref_df = utils.load_csv(attr_ref_path)
-        utils.attr_table_assertions(attr_ref_df)
+        attr_ref_df = io.load_csv(attr_ref_path)
+        validation.attr_table_assertions(attr_ref_df)
         attr_ref_df.set_index('gene', inplace=True)
 
         assert (isinstance(biotype, (str, list, set, tuple)))
@@ -384,12 +384,12 @@ class FeatureSet:
             pass
         else:
             assert isinstance(background_genes,
-                              (set, FeatureSet)) or utils.isinstanceinh(background_genes, Filter), \
+                              (set, FeatureSet)) or validation.isinstanceinh(background_genes, Filter), \
                 f"background_genes must be a set, enrichment.FeatureSet or filtering.Filter; " \
                 f"instead got {type(background_genes)}"
             if isinstance(background_genes, FeatureSet):
                 background_genes = background_genes.gene_set
-            elif utils.isinstanceinh(background_genes, Filter):
+            elif validation.isinstanceinh(background_genes, Filter):
                 background_genes = background_genes.index_set
             if biotype != 'all':
                 warnings.warn(
@@ -405,8 +405,8 @@ class FeatureSet:
         if biotype == 'all':
             pass
         else:
-            biotype_ref_df = utils.load_csv(biotype_ref_path)
-            utils.biotype_table_assertions(biotype_ref_df)
+            biotype_ref_df = io.load_csv(biotype_ref_path)
+            validation.biotype_table_assertions(biotype_ref_df)
             biotype_ref_df.set_index('gene', inplace=True)
             biotype_ref_df.columns = biotype_ref_df.columns.str.lower()
             if isinstance(biotype, (list, tuple, set)):
@@ -442,8 +442,8 @@ class FeatureSet:
         and standardizes the data scale input.
 
         """
-        attr_ref_path = utils.get_attr_ref_path(attr_ref_path)
-        biotype_ref_path = utils.get_biotype_ref_path(biotype_ref_path)
+        attr_ref_path = ref_tables.get_attr_ref_path(attr_ref_path)
+        biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
         attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
                                                                attr_ref_path=attr_ref_path,
                                                                biotype_ref_path=biotype_ref_path)
@@ -1045,9 +1045,9 @@ class FeatureSet:
 
         """
 
-        ref = utils.get_biotype_ref_path(ref)
-        ref_df = utils.load_csv(ref)
-        utils.biotype_table_assertions(ref_df)
+        ref = ref_tables.get_biotype_ref_path(ref)
+        ref_df = io.load_csv(ref)
+        validation.biotype_table_assertions(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
         not_in_ref = pd.Index(self.gene_set).difference(set(ref_df['gene']))
         if len(not_in_ref) > 0:
@@ -1067,7 +1067,7 @@ class RankedSet(FeatureSet):
 
     def __init__(self, ranked_genes: Union[Filter, List[str], Tuple[str], np.ndarray], set_name: str = ''):
 
-        if utils.isinstanceinh(ranked_genes, Filter):
+        if validation.isinstanceinh(ranked_genes, Filter):
             self.ranked_genes = ranked_genes.df.index.values.astype('str', copy=True)
         elif isinstance(ranked_genes, (list, tuple)):
             self.ranked_genes = np.array(ranked_genes, dtype='str')
@@ -1249,14 +1249,14 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     for obj in objs:
         if isinstance(objs[obj], set):
             pass
-        elif utils.isinstanceinh(objs[obj], Filter):
+        elif validation.isinstanceinh(objs[obj], Filter):
             objs[obj] = objs[obj].index_set
         elif isinstance(objs[obj], FeatureSet):
             objs[obj] = objs[obj].gene_set
         elif isinstance(objs[obj], str):
             if 'attr_table' not in locals():
-                pth = utils.get_attr_ref_path(ref)
-                attr_table = utils.load_csv(pth, 0)
+                pth = ref_tables.get_attr_ref_path(ref)
+                attr_table = io.load_csv(pth, 0)
             attr = objs[obj]
             myset = set(attr_table[attr].loc[attr_table[attr].notna()].index)
             objs[obj] = myset
