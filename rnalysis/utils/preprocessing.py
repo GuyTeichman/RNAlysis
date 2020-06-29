@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import PowerTransformer, StandardScaler
+from typing import Union
 
 
 def standard_box_cox(data: np.ndarray):
@@ -22,3 +23,7 @@ def standardize(data: np.ndarray):
     :rtype:
     """
     return StandardScaler().fit_transform(data)
+
+
+def intersection_nonempty(*objs: Union[list, set, tuple]):
+    return set.intersection(*[set(item) for item in objs if len(item) > 0])
