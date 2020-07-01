@@ -852,19 +852,20 @@ class FeatureSet:
 
         # get color values for bars
         data_color_norm = [0.5 * (1 + i / (np.floor(max_score) + 1)) * 255 for i in enrichment_scores]
-        data_color_norm_256 = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for i
-                               in data_color_norm]
+        data_color_norm_8bit = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for
+                                i in data_color_norm]
         my_cmap = plt.cm.get_cmap('coolwarm')
-        colors = my_cmap(data_color_norm_256)
+        colors = my_cmap(data_color_norm_8bit)
 
         # generate bar plot
         fig, ax = plt.subplots(constrained_layout=True, figsize=figsize)
         bar = bar_func(ax, range(len(enrichment_names)), enrichment_scores, color=colors, edgecolor='black',
                        linewidth=1, zorder=2)
         bar.tick_labels = enrichment_names
-        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1) * 1.002])
+        # determine bound, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
+        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
         # add black line at y=0 and grey lines at every round positive/negative integer in range
-        for ind in range(int(bounds[0]), int(bounds[1]) + 1):
+        for ind in range(int(bounds[0]) + 1, int(bounds[1]) + 1):
             color = 'black' if ind == 0 else 'grey'
             linewidth = 1 if ind == 0 else 0.5
             linestyle = '-' if ind == 0 else '-.'
