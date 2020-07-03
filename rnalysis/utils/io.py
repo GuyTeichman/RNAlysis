@@ -128,7 +128,8 @@ def fetch_golr_annotations(taxon_id: int, aspects: Union[str, List[str]] = 'all'
         "wt": "json",
         "rows": 0,
         "start": None,
-        "fq": query
+        "fq": query,
+        "fl": "bioentity,bioentity_internal_id,bioentity_label_searchable,annotation_class,annotation_class_label"
     }
     req = requests.get(url, params=params)
     if not req.ok:
