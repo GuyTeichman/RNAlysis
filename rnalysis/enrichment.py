@@ -575,7 +575,7 @@ class FeatureSet:
 
         res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
         enriched_list = res.result()
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True, plot_horizontal)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000, biotype: str = 'protein_coding',
@@ -666,7 +666,7 @@ class FeatureSet:
             enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
             print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True, plot_horizontal)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                               biotype: str = 'protein_coding',
@@ -761,7 +761,7 @@ class FeatureSet:
             enriched_list.append(
                 (attribute, de_size, obs, exp, log2_fold_enrichment, pval))
 
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, True, plot_horizontal)
+        return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
 
     @staticmethod
     def _calc_hypergeometric_pval(bg_size: int, go_size: int, de_size: int, go_de_size: int):
