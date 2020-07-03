@@ -19,13 +19,14 @@ def map_ids(ids: Union[str, Set[str], List[str]], map_from: str, map_to: str = '
         'format': 'tab',
         'query': format_ids(ids)
     }
-    print(f"Mapping {len(params['query'])} entries from '{map_from}' to '{map_to}'...")
+    n_queries = len(params['query'].split(" "))
+    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
     req = requests.get(url, params=params)
     if req.status_code != 200:
         raise ConnectionError(f"Request failed with status code {req.status_code}.")
     output = parsing.uniprot_tab_to_dict(req.text)
-    if len(output) < len(params['query']):
-        warnings.warn(f"Failed to map {len(output) - len(params['query'])} entries from '{map_from}' to '{map_to}'. "
+    if len(output) < n_queries:
+        warnings.warn(f"Failed to map {len(output) - n_queries} entries from '{map_from}' to '{map_to}'. "
                       f"Returning the remaining {len(output)} entries.")
     return output
 
