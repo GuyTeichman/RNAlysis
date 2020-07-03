@@ -1,8 +1,12 @@
 import os
 from pathlib import Path
 from typing import List, Union
-
+import requests
 import pandas as pd
+import json
+
+from rnalysis.utils import parsing
+
 
 def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
              comment: str = None):
@@ -62,3 +66,85 @@ def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = 
         assert isinstance(suffix, str), "'suffix' must be either str or None!"
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{suffix}{fname.suffix}")
     df.to_csv(new_fname, header=True, index=index)
+
+
+source = "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz"
+
+
+def fetch_gaf_file(taxon_id: int, aspects: Union[str, List[str]] = 'all',
+                   evidence_codes: Union[str, List[str]] = 'all', databases: Union[str, List[str]] = 'all',
+                   qualifiers: Union[str, List[str]] = None):
+    url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search?"
+
+    legal_aspects = {'biological_process', 'molecular_function', 'cellular_component'}
+    aspects = ",".join(legal_aspects) if aspects is 'all' else ",".join(parsing.data_to_list(aspects))
+
+    params = {
+        'taxonId': taxon_id,
+        'aspect': aspects,
+        'taxonUsage': 'descendants',
+        'limit': 100,
+        'page': 25
+    }
+    if not evidence_codes == 'all':
+        params['evidenceCodeUsage'] = 'descendants'
+        params['evidenceCode'] = ",".join(parsing.data_to_list(evidence_codes))
+    if not databases == 'all':
+        params['assignedBy'] = ",".join(parsing.data_to_list(databases))
+    if qualifiers is not None:
+        params['qualifier'] = ",".join(parsing.data_to_list(qualifiers))
+    req = requests.get(url, params=params, headers={"Accept": "application/json"})
+    if not req.ok:
+        req.raise_for_status()
+    data = json.loads(req.text)
+
+    return data
+
+
+def fetch_golr_annotations(taxon_id: int, aspects: Union[str, List[str]] = 'all',
+                           evidence_types: Union[str, List[str]] = 'all', databases: Union[str, List[str]] = 'all',
+                           qualifiers: Union[str, List[str]] = None, iter_size: int = 10000):
+    url = 'http://golr-aux.geneontology.io/solr/select?'
+    legal_aspects = {'P', 'F', 'C'}
+    legal_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP', 'IBA', 'IBD', 'IKR',
+                      'IRD', 'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA', 'TAS', 'NAS', 'IC', 'ND', 'IEA'}
+    # legal_qualifier = {'NOT', 'contributes_to', 'colocalizes_with'}
+
+    aspects = legal_aspects if aspects == 'all' else parsing.data_to_set(aspects)
+    evidence_types = legal_evidence if evidence_types == 'all' else parsing.data_to_set(evidence_types)
+
+    for field, legals in zip((aspects, evidence_types),
+                             (legal_aspects, legal_evidence)):
+        for item in field:
+            assert item in legals, f"Illegal item {item}."
+
+    query = [f'document_category:"annotation"',
+             f'taxon:"NCBITaxon:{taxon_id}"',
+             ' OR '.join([f'aspect:"{aspect}"' for aspect in aspects]),
+             ' OR '.join([f'evidence_type:"{evidence_type}"' for evidence_type in evidence_types])]
+
+    params = {
+        "q": "*:*",
+        "wt": "json",
+        "rows": 0,
+        "start": None,
+        "fq": query
+    }
+    req = requests.get(url, params=params)
+    if not req.ok:
+        req.raise_for_status()
+    n_annotations = json.loads(req.text)['response']['numFound']
+
+    print(f"Fetching {n_annotations} annotations...")
+
+    start = 0
+    max_iters = n_annotations // iter_size + 1
+    for i in range(max_iters):
+        params['start'] = start
+        start += iter_size
+        params['rows'] = iter_size if i < max_iters - 1 else n_annotations % iter_size
+        req = requests.get(url, params=params)
+        if not req.ok:
+            req.raise_for_status()
+        for record in json.loads(req.text)['response']['docs']:
+            yield record
