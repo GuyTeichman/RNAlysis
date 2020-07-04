@@ -3,6 +3,7 @@ from itertools import islice
 import numpy as np
 from typing import Union, List, TextIO, Any
 import Bio.UniProt.GOA as GOA
+import pandas as pd
 from rnalysis.utils import preprocessing
 
 
@@ -95,5 +96,14 @@ def data_to_set(data: Any):
         raise TypeError(f"Invalid type {type(data)}.")
 
 
-def parse_evidence_code(codes: Union[str, List[str]]):
-    pass
+def sparse_dict_to_bool_df(sparse_dict: dict):
+    rows = list(sparse_dict.keys())
+    columns = set()
+    for val in sparse_dict.values():
+        for item in val:
+            columns.add(item)
+    df = pd.DataFrame(np.zeros((len(rows), len(columns)), dtype=bool), columns=columns, index=rows)
+    for key in sparse_dict:
+        for item in sparse_dict[key]:
+            df.loc[key, item] = True
+    return df
