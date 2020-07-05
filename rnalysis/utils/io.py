@@ -213,28 +213,51 @@ def map_taxon_id(taxon_name: str) -> Tuple[int, str]:
     return taxon_id, scientific_name
 
 
-def map_gene_ids(ids: Union[str, Set[str], List[str]], map_from: str, map_to: str = 'UniProtKB AC'):
+class GeneIDTranslator:
+    def __init__(self, mapping_dict: Union[dict, None] = None):
+        self.mapping_dict = mapping_dict
+
+    def __getitem__(self, key):
+        if self.mapping_dict is None:
+            return key
+        return self.mapping_dict[key]
+
+    def __contains__(self, item):
+        try:
+            _ = self[item]
+            return True
+        except KeyError:
+            return False
+
+
+def map_gene_ids(ids: Union[str, Set[str], List[str]], map_from: str, map_to: str = 'UniProtKB AC') -> GeneIDTranslator:
     url = 'https://www.uniprot.org/uploadlists/'
     id_dict = _load_id_abbreviation_dict()
     validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
 
-    params = {
-        'from': id_dict[map_from],
-        'to': id_dict[map_to],
-        'format': 'tab',
-        'query': _format_ids(ids),
-    }
-    n_queries = len(params['query'].split(" "))
-    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
-    req = requests.get(url, params=params)
-    if not req.ok:
-        req.raise_for_status()
+    if id_dict[map_to] == id_dict[map_from]:
+        return GeneIDTranslator()
 
-    output = parsing.uniprot_tab_to_dict(req.text)
+    ids = parsing.data_to_list(ids)
+    n_queries = len(ids)
+    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
+    output = {}
+    if id_dict[map_to] != 'Null' and id_dict[map_from] != 'Null':
+        for chunk in _format_ids_iter(ids):
+            params = {
+                'from': id_dict[map_from],
+                'to': id_dict[map_to],
+                'format': 'tab',
+                'query': chunk, }
+            req = requests.get(url, params=params)
+            if not req.ok:
+                req.raise_for_status()
+            output.update(parsing.uniprot_tab_to_dict(req.text))
+
     if len(output) < n_queries:
-        warnings.warn(f"Failed to map {len(output) - n_queries} entries from '{map_from}' to '{map_to}'. "
-                      f"Returning the remaining {len(output)} entries.")
-    return output
+        warnings.warn(f"Failed to map {n_queries - len(output)} entries from '{map_from}' to '{map_to}'. "
+                      f"Returning {len(output)} successfully-mapped entries.")
+    return GeneIDTranslator(output)
 
 
 def _format_ids(ids: Union[str, int, list, set]):
@@ -243,6 +266,16 @@ def _format_ids(ids: Union[str, int, list, set]):
     elif isinstance(ids, int):
         return str(ids)
     return " ".join((str(item) for item in ids))
+
+
+def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 500):
+    if isinstance(ids, str):
+        return ids
+    elif isinstance(ids, int):
+        return str(ids)
+    for i in range(0, len(ids), chunk_size):
+        j = min(chunk_size, len(ids) - i)
+        yield " ".join((str(item) for item in ids[i:j]))
 
 
 def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
