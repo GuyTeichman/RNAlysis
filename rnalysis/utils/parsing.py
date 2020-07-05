@@ -29,7 +29,7 @@ def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
     return split
 
 
-def uniprot_tab_to_dict(tab_input: str):
+def uniprot_tab_to_dict(tab_input: str) -> dict:
     split_list = tab_input.split()
     if len(split_list) == 0:
         return {}
@@ -74,7 +74,7 @@ def filtered_gaf_iterator(file_object: TextIO, taxon_id: int, aspects: Union[str
             yield record
 
 
-def data_to_list(data: Any):
+def data_to_list(data: Any) -> list:
     if isinstance(data, list):
         return data
     elif isinstance(data, (set, tuple, np.ndarray)):
@@ -82,10 +82,13 @@ def data_to_list(data: Any):
     elif isinstance(data, (int, float, bool, str)):
         return [data]
     else:
-        raise TypeError(f"Invalid type {type(data)}.")
+        try:
+            return list(data)
+        except TypeError:
+            raise TypeError(f"Invalid type {type(data)}.")
 
 
-def data_to_set(data: Any):
+def data_to_set(data: Any) -> set:
     if isinstance(data, set):
         return data
     elif isinstance(data, (list, tuple, np.ndarray)):
@@ -93,10 +96,13 @@ def data_to_set(data: Any):
     elif isinstance(data, (int, float, bool, str)):
         return {data}
     else:
-        raise TypeError(f"Invalid type {type(data)}.")
+        try:
+            return set(data)
+        except TypeError:
+            raise TypeError(f"Invalid type {type(data)}.")
 
 
-def sparse_dict_to_bool_df(sparse_dict: dict):
+def sparse_dict_to_bool_df(sparse_dict: dict) -> pd.DataFrame:
     rows = list(sparse_dict.keys())
     columns = set()
     for val in sparse_dict.values():
