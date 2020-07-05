@@ -1,11 +1,12 @@
 import os
+import warnings
 from pathlib import Path
-from typing import List, Union
+from typing import List, Set, Union, Iterable, Tuple
 import requests
 import pandas as pd
 import json
 
-from rnalysis.utils import parsing
+from rnalysis.utils import parsing, validation, __path__
 
 
 def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
@@ -101,27 +102,58 @@ def fetch_gaf_file(taxon_id: int, aspects: Union[str, List[str]] = 'all',
     return data
 
 
-def fetch_golr_annotations(taxon_id: int, aspects: Union[str, List[str]] = 'all',
-                           evidence_types: Union[str, List[str]] = 'all', databases: Union[str, List[str]] = 'all',
-                           qualifiers: Union[str, List[str]] = None, iter_size: int = 10000):
+def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] = 'any',
+                              evidence_types: Union[str, Iterable[str]] = 'any',
+                              excluded_evidence_types: Union[str, Iterable[str]] = (),
+                              databases: Union[str, List[str], Set[str]] = 'any',
+                              excluded_databases: Union[str, List[str], Set[str]] = 'any',
+                              qualifiers: Union[str, Iterable[str]] = 'any',
+                              excluded_qualifiers: Union[str, Iterable[str]] = (),
+                              iter_size: int = 10000):
     url = 'http://golr-aux.geneontology.io/solr/select?'
     legal_aspects = {'P', 'F', 'C'}
     legal_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP', 'IBA', 'IBD', 'IKR',
                       'IRD', 'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA', 'TAS', 'NAS', 'IC', 'ND', 'IEA'}
-    # legal_qualifier = {'NOT', 'contributes_to', 'colocalizes_with'}
+    experimental_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
+    legal_qualifiers = {'not', 'contributes_to', 'colocalizes_with'}
 
-    aspects = legal_aspects if aspects == 'all' else parsing.data_to_set(aspects)
-    evidence_types = legal_evidence if evidence_types == 'all' else parsing.data_to_set(evidence_types)
+    aspects = legal_aspects if aspects == 'any' else parsing.data_to_set(aspects)
+    databases = parsing.data_to_set(databases)
+    qualifiers = parsing.data_to_set(qualifiers)
 
-    for field, legals in zip((aspects, evidence_types),
-                             (legal_aspects, legal_evidence)):
+    if evidence_types == 'any':
+        evidence_types = legal_evidence
+    elif evidence_types == 'experimental':
+        evidence_types = experimental_evidence
+    else:
+        evidence_types = parsing.data_to_set(evidence_types)
+
+    if excluded_evidence_types == 'any':
+        excluded_evidence_types = legal_evidence
+    elif excluded_evidence_types == 'experimental':
+        excluded_evidence_types = experimental_evidence
+    else:
+        excluded_evidence_types = parsing.data_to_set(excluded_evidence_types)
+    # assert legality of inputs
+    for field, legals in zip((aspects, evidence_types, qualifiers, excluded_evidence_types, excluded_qualifiers),
+                             (legal_aspects, legal_evidence, legal_qualifiers, legal_aspects, qualifiers)):
         for item in field:
             assert item in legals, f"Illegal item {item}."
-
+    # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
     query = [f'document_category:"annotation"',
              f'taxon:"NCBITaxon:{taxon_id}"',
              ' OR '.join([f'aspect:"{aspect}"' for aspect in aspects]),
              ' OR '.join([f'evidence_type:"{evidence_type}"' for evidence_type in evidence_types])]
+    # exclude all 'excluded' items from query
+    query.extend([f'-evidence_type:"{evidence_type}"' for evidence_type in excluded_evidence_types])
+    query.extend([f'-source:"{db}"' for db in excluded_databases])
+    query.extend([f'-qualifier:"{qual}"' for qual in excluded_qualifiers])
+    # add union of all requested databases to query
+    if not databases == {'any'}:
+        query.append(' OR '.join(f'source:"{db}"' for db in databases))
+    # add union of all requested qualifiers to query
+    if len(qualifiers) > 0:
+        query.append(' OR '.join([f'qualifier:"{qual}"' for qual in qualifiers]))
 
     params = {
         "q": "*:*",
@@ -131,6 +163,7 @@ def fetch_golr_annotations(taxon_id: int, aspects: Union[str, List[str]] = 'all'
         "fq": query,
         "fl": "source,bioentity_internal_id,annotation_class,annotation_class_label"
     }
+    # get number of annotations found in the query
     req = requests.get(url, params=params)
     if not req.ok:
         req.raise_for_status()
@@ -138,6 +171,7 @@ def fetch_golr_annotations(taxon_id: int, aspects: Union[str, List[str]] = 'all'
 
     print(f"Fetching {n_annotations} annotations...")
 
+    # fetch all annotations in batches of size iter_size, and yield them one-by-one
     start = 0
     max_iters = n_annotations // iter_size + 1
     for i in range(max_iters):
