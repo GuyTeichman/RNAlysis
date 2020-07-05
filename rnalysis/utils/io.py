@@ -5,6 +5,7 @@ from typing import List, Set, Union, Iterable, Tuple
 import requests
 import pandas as pd
 import json
+from itertools import chain
 
 from rnalysis.utils import parsing, validation, __path__
 
@@ -102,7 +103,7 @@ def fetch_gaf_file(taxon_id: int, aspects: Union[str, List[str]] = 'all',
     return data
 
 
-def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] = 'any',
+def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] = 'all',
                               evidence_types: Union[str, Iterable[str]] = 'any',
                               excluded_evidence_types: Union[str, Iterable[str]] = (),
                               databases: Union[str, List[str], Set[str]] = 'any',
@@ -117,9 +118,11 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
     experimental_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
     legal_qualifiers = {'not', 'contributes_to', 'colocalizes_with'}
 
-    aspects = legal_aspects if aspects == 'any' else parsing.data_to_set(aspects)
+    aspects = legal_aspects if aspects == 'all' else parsing.data_to_set(aspects)
     databases = parsing.data_to_set(databases)
-    qualifiers = parsing.data_to_set(qualifiers)
+    qualifiers = () if qualifiers == 'any' else parsing.data_to_set(qualifiers)
+    excluded_qualifiers = parsing.data_to_set(excluded_qualifiers)
+    excluded_databases = parsing.data_to_set(excluded_databases)
 
     if evidence_types == 'any':
         evidence_types = legal_evidence
