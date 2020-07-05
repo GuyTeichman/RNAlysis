@@ -28,7 +28,6 @@ from numba import jit
 from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
-from sklearn.preprocessing import StandardScaler
 
 from rnalysis.utils import io, validation, preprocessing, ref_tables, clustering
 
@@ -2598,13 +2597,13 @@ class CountFilter(Filter):
             f"'n_components' must be an integer >=2. Instead got {n_components}."
         if sample_names == 'all':
             sample_names = list(self.df.columns)
-            srna_data = self.df.transpose()
+            data = self.df.transpose()
         else:
-            srna_data = self.df[sample_names].transpose()
-        srna_data_norm = StandardScaler().fit_transform(srna_data)
+            data = self.df[sample_names].transpose()
+        data_standardized = preprocessing.standardize(data)
 
         pca_obj = PCA(n_components=n_components)
-        pcomps = pca_obj.fit_transform(srna_data_norm)
+        pcomps = pca_obj.fit_transform(data_standardized)
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
         principal_df = pd.DataFrame(data=pcomps, columns=columns)
         final_df = principal_df
