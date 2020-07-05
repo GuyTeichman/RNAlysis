@@ -2,6 +2,7 @@
     "UniProtKB AC/ID": "ACC+ID",
     "UniProtKB AC": "ACC",
     "UniProtKB ID": "ID",
+    "UniProtKB": "ACC",
     "ArachnoServer": "ARACHNOSERVER_ID",
     "Araport": "ARAPORT_ID",
     "CCDS": "CCDS_ID",
@@ -44,5 +45,32 @@
     "RefSeq Nucleotide": "REFSEQ_NT_ID",
     "RefSeq Protein": "P_REFSEQ_AC",
     "Gene name": "GENENAME",
-    "WBParaSite": "WBPARASITE_ID"
+    "WBParaSite": "WBPARASITE_ID",
+    "UniParc": "UPARC",
+    "UniRef50": "NF50",
+    "UniRef90": "NF90",
+    "UniRef100": "NF100",
+    "CRC64": "CRC64",
+    "Entrez Gene ID": "P_ENTREZGENEID",
+    "PDB": "PDB_ID",
+    "BioGRID": "BIOGRID_ID",
+    "ComplexPortal": "COMPLEXPORTAL_ID",
+    "DIP": "DIP_ID",
+    "STRING": "STRING_ID",
+    "ChEMBL": "CHEMBL_ID",
+    "DrugBank": "DRUGBANK_ID",
+    "GuidetoPHARMACOLOGY": "GUIDETOPHARMACOLOGY_ID",
+    "SwissLipids": "SWISSLIPIDS_ID",
+    "Allergome": "ALLERGOME_ID",
+
+    "GlyConnect": "GLYCONNECT_ID",
+    "BioMuta": "BIOMUTA_ID",
+    "DMDM": "DMDM_ID",
+    "World-2DPAGE": "WORLD_2DPAGE_ID",
+    "CPTAC": "CPTAC_ID",
+    "ProteomicsDB": "PROTEOMICSDB_ID",
+    "DNASU": "DNASU_ID",
+
+
+    "RNAcentral": "Null"
 }
