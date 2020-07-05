@@ -88,6 +88,20 @@ def data_to_list(data: Any) -> list:
             raise TypeError(f"Invalid type {type(data)}.")
 
 
+def data_to_tuple(data: Any) -> tuple:
+    if isinstance(data, tuple):
+        return data
+    elif isinstance(data, (set, list, np.ndarray)):
+        return tuple(data)
+    elif isinstance(data, (int, float, bool, str)):
+        return (data,)
+    else:
+        try:
+            return tuple(data)
+        except TypeError:
+            raise TypeError(f"Invalid type {type(data)}.")
+
+
 def data_to_set(data: Any) -> set:
     if isinstance(data, set):
         return data
