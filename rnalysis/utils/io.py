@@ -138,10 +138,11 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
     else:
         excluded_evidence_types = parsing.data_to_set(excluded_evidence_types)
     # assert legality of inputs
-    for field, legals in zip((aspects, evidence_types, qualifiers, excluded_evidence_types, excluded_qualifiers),
-                             (legal_aspects, legal_evidence, legal_qualifiers, legal_aspects, qualifiers)):
+    for field, legals in zip((aspects, chain(evidence_types, excluded_evidence_types),
+                              chain(qualifiers, excluded_qualifiers)),
+                             (legal_aspects, legal_evidence, legal_qualifiers)):
         for item in field:
-            assert item in legals, f"Illegal item {item}."
+            assert item in legals, f"Illegal item {item}. Legal items are {legals}.."
     # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
     query = [f'document_category:"annotation"',
              f'taxon:"NCBITaxon:{taxon_id}"',
