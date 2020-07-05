@@ -183,3 +183,64 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
             req.raise_for_status()
         for record in json.loads(req.text)['response']['docs']:
             yield record
+
+
+def map_taxon_id(taxon_name: str) -> Tuple[int, str]:
+    url = 'https://www.uniprot.org/taxonomy/?'
+
+    params = {
+        'format': 'tab',
+        'query': taxon_name,
+        'sort': 'score'
+    }
+    req = requests.get(url, params=params)
+    if not req.ok:
+        req.raise_for_status()
+    res = req.text.splitlines()
+    header = res[0].split('\t')
+    if len(res) > 2:
+        warnings.warn(
+            f"Found {len(res) - 1} taxons matching the search term '{taxon_name}'. "
+            f"Picking the match with the highest score.")
+    matched_taxon = res[1].split('\t')
+    taxon_id = int(matched_taxon[header.index('Taxon')])
+    scientific_name = matched_taxon[header.index('Scientific name')]
+
+    return taxon_id, scientific_name
+
+
+def map_gene_ids(ids: Union[str, Set[str], List[str]], map_from: str, map_to: str = 'UniProtKB AC'):
+    url = 'https://www.uniprot.org/uploadlists/'
+    id_dict = _load_id_abbreviation_dict()
+    validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
+
+    params = {
+        'from': id_dict[map_from],
+        'to': id_dict[map_to],
+        'format': 'tab',
+        'query': _format_ids(ids),
+    }
+    n_queries = len(params['query'].split(" "))
+    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
+    req = requests.get(url, params=params)
+    if not req.ok:
+        req.raise_for_status()
+
+    output = parsing.uniprot_tab_to_dict(req.text)
+    if len(output) < n_queries:
+        warnings.warn(f"Failed to map {len(output) - n_queries} entries from '{map_from}' to '{map_to}'. "
+                      f"Returning the remaining {len(output)} entries.")
+    return output
+
+
+def _format_ids(ids: Union[str, int, list, set]):
+    if isinstance(ids, str):
+        return ids
+    elif isinstance(ids, int):
+        return str(ids)
+    return " ".join((str(item) for item in ids))
+
+
+def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
+    with open(dict_path) as f:
+        return json.load(f)
