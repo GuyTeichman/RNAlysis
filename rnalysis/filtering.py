@@ -2113,7 +2113,7 @@ class CountFilter(Filter):
         for ax in axes:
             ax.set_ylim((min_y, max_y))
         if not split_plots:
-            fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+            fig.tight_layout(rect=[0, 0.03, 1, 0.92])
         plt.show()
         return fig, axes
 
@@ -2321,7 +2321,8 @@ class CountFilter(Filter):
             # plot results
             self._plot_clustering(n_clusters=this_k, data=data_for_plot, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
-                                  title=f"Results of K-Means Clustering for K={this_k}", plot_style=plot_style,
+                                  title=f"Results of K-Means Clustering for K={this_k} and "
+                                        f"power_transform={power_transform}", plot_style=plot_style,
                                   split_plots=split_plots)
             # split the CountFilter object
             filt_obj_tuples.append(
@@ -2358,7 +2359,8 @@ class CountFilter(Filter):
             # plot results
             self._plot_clustering(n_clusters=k, data=data_for_plot, labels=clusterer.labels_, centers=centers,
                                   title=f"Results of Hierarchical Clustering for n_clusters={k}, "
-                                        f"metric='{metric}', linkage='{linkage}'", plot_style=plot_style,
+                                        f"metric='{metric}', \nlinkage='{linkage}' and "
+                                        f"power_transform={power_transform}", plot_style=plot_style,
                                   split_plots=split_plots)
             # split the CountFilter object
             return tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
@@ -2373,7 +2375,8 @@ class CountFilter(Filter):
             # plot results
             self._plot_clustering(n_clusters=this_k, data=data_for_plot, labels=clusterer.labels_, centers=centers,
                                   title=f"Results of Hierarchical Clustering for n_clusters={this_k}, "
-                                        f"metric='{metric}', linkage='{linkage}'", plot_style=plot_style,
+                                        f"metric='{metric}', \nlinkage='{linkage}' and "
+                                        f"power_transform={power_transform}", plot_style=plot_style,
                                   split_plots=split_plots)
             # split the CountFilter object
             filt_obj_tuples.append(
@@ -2406,8 +2409,9 @@ class CountFilter(Filter):
             centers = data_for_plot[clusterer.medoid_indices_, :]
             # plot results
             self._plot_clustering(n_clusters=this_k, data=data_for_plot, labels=clusterer.labels_, centers=centers,
-                                  title=f"Results of K-Medoids Clustering for K={this_k}", plot_style=plot_style,
-                                  split_plots=split_plots)
+                                  title=f"Results of K-Medoids Clustering for K={this_k}, metric='{metric}', "
+                                        f"power_transform={power_transform}",
+                                  plot_style=plot_style, split_plots=split_plots)
             # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
@@ -2448,8 +2452,10 @@ class CountFilter(Filter):
             means = np.array([data[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             self._plot_clustering(n_clusters=n_clusters, data=data, labels=clusterer.labels_, centers=means,
                                   title=f"Results of HDBSCAN Clustering for min_cluster_size={min_cluster_size}, "
-                                        f"min_samples = {min_samples}, epsilon={cluster_selection_epsilon} "
-                                        f"and method='{cluster_selection_method}'", plot_style=plot_style,
+                                        f"min_samples = {min_samples}, metric='{metric}', \n"
+                                        f"epsilon={cluster_selection_epsilon}, "
+                                        f"method='{cluster_selection_method}'and "
+                                        f"power_transform={power_transform}", plot_style=plot_style,
                                   split_plots=split_plots)
 
         filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
