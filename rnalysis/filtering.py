@@ -2333,7 +2333,7 @@ class CountFilter(Filter):
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
-                           linkage: str = 'ward', power_transform: bool = False, distance_threshold: float = None,
+                           linkage: str = 'average', power_transform: bool = False, distance_threshold: float = None,
                            plot_style: str = 'all', split_plots: bool = False,
                            max_clusters: int = 'default', gap_random_state: int = None):
 
