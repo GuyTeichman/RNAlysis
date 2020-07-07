@@ -21,7 +21,7 @@ import hdbscan
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pairwisedist.pairwisedist as pwdist
+import pairwisedist as pwdist
 import seaborn as sns
 from grid_strategy import strategies
 from numba import jit
@@ -1741,8 +1741,9 @@ class CountFilter(Filter):
         counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
 
     """
-    _precomputed_metrics = {'spearman': None, 'pearson': None, 'ys1': pwdist.ys1_distance,
-                            'yr1': pwdist.yr1_distance, 'jackknife': pwdist.jackknife_distance}
+    _precomputed_metrics = {'spearman': pwdist.spearman_distance, 'pearson': pwdist.pearson_distance,
+                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
+                            'jackknife': pwdist.jackknife_distance}
     _transforms = {True: preprocessing.standard_box_cox, False: preprocessing.standardize}
 
     @property
