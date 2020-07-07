@@ -2303,7 +2303,7 @@ class CountFilter(Filter):
         return metric
 
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
-                     max_iter: int = 300, power_transform: bool = True,
+                     max_iter: int = 300, power_transform: bool = False,
                      plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default'):
         # get the transform function
         transform, _ = self._clustering_get_transform(power_transform, 'euclidean')
@@ -2332,7 +2332,7 @@ class CountFilter(Filter):
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
-                           linkage: str = 'ward', power_transform: bool = True, distance_threshold: float = None,
+                           linkage: str = 'ward', power_transform: bool = False, distance_threshold: float = None,
                            plot_style: str = 'all', split_plots: bool = False,
                            max_clusters: int = 'default', gap_random_state: int = None):
 
@@ -2384,7 +2384,7 @@ class CountFilter(Filter):
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
-                       max_iter: int = 300, metric: str = 'euclidean', power_transform: bool = True,
+                       max_iter: int = 300, metric: str = 'euclidean', power_transform: bool = False,
                        plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default'):
         # assert metric is legal
         metric = self._clustering_assert_metric(metric)
