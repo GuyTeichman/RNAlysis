@@ -2417,7 +2417,7 @@ class CountFilter(Filter):
 
     def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
-                      power_transform: bool = True,
+                      power_transform: bool = False,
                       plot_style: str = 'all', split_plots: bool = False, return_prob: bool = False):
 
         assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
