@@ -189,7 +189,7 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
             yield record
 
 
-def map_taxon_id(taxon_name: str) -> Tuple[int, str]:
+def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     url = 'https://www.uniprot.org/taxonomy/?'
 
     params = {
@@ -202,13 +202,14 @@ def map_taxon_id(taxon_name: str) -> Tuple[int, str]:
         req.raise_for_status()
     res = req.text.splitlines()
     header = res[0].split('\t')
-    if len(res) > 2:
-        warnings.warn(
-            f"Found {len(res) - 1} taxons matching the search term '{taxon_name}'. "
-            f"Picking the match with the highest score.")
+
     matched_taxon = res[1].split('\t')
     taxon_id = int(matched_taxon[header.index('Taxon')])
     scientific_name = matched_taxon[header.index('Scientific name')]
+    if len(res) > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
+        warnings.warn(
+            f"Found {len(res) - 1} taxons matching the search term '{taxon_name}'. "
+            f"Picking the match with the highest score.")
 
     return taxon_id, scientific_name
 
