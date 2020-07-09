@@ -794,15 +794,17 @@ class FeatureSet:
         return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
 
     @staticmethod
-    def plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', title: str = '',
-                                ylabel: str = r"$\log_2$(Fold Enrichment)", plot_horizontal: bool = True,
-                                center_bars: bool = True):
+    def plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', name_col: str = None,
+                                title: str = '', ylabel: str = r"$\log_2$(Fold Enrichment)",
+                                plot_horizontal: bool = True, center_bars: bool = True):
 
         """
         Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
         For the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
+        :param name_col:
+        :type name_col:
         :param df: a pandas DataFrame created by FeatureSet.enrich_randomization.
         :type df: pd.DataFrame
         :param en_score_col: name of the DataFrame column that contains the enrichment scores.
@@ -828,6 +830,7 @@ class FeatureSet:
             tick_func = plt.Axes.set_yticks
             ticklabels_func = plt.Axes.set_yticklabels
             ticklabels_kwargs = dict(fontsize=13, rotation=0)
+            df = df[::-1]
         else:
             figsize = [0.5 * (6.4 + df.shape[0]), 5.6]
             bar_func = plt.Axes.bar
@@ -838,7 +841,7 @@ class FeatureSet:
             ticklabels_kwargs = dict(fontsize=13, rotation=45)
 
         # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
-        enrichment_names = df.index.values.tolist()
+        enrichment_names = df.index.values.tolist() if name_col is None else df[name_col].values.tolist()
         enrichment_scores = df[en_score_col].values.tolist()
         enrichment_pvalue = df['padj'].values.tolist()
 
