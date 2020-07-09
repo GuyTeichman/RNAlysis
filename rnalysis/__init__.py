@@ -19,3 +19,4 @@ def _simple_warning_format(msg, *args, **kwargs):
 
 
 warnings.formatwarning = _simple_warning_format
+warnings.simplefilter('always', UserWarning)
