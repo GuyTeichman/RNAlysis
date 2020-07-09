@@ -30,7 +30,7 @@ from rnalysis.filtering import Filter
 class FeatureSet:
     """ Receives a filtered gene set and the set's name (optional) and preforms various enrichment analyses on them. """
     __slots__ = {'gene_set': 'set of feature names/indices', 'set_name': 'name of the FeatureSet'}
-    _go_dicts = {}
+    __goa_queries__ = {}
 
     def __init__(self, gene_set: Union[List[str], Set[str], Filter] = None, set_name: str = ''):
 
@@ -247,70 +247,85 @@ class FeatureSet:
             fname = str(Path)
         io.save_csv(df, filename=fname + '.csv')
 
-    def go_enrichment(self, mode: str = 'all', alpha: float = 0.05, save_csv: bool = False, fname: str = None):
+    def go_enrichment(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
+                      biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                      biotype_ref_path: str = 'predefined',
+                      evidence_types: Union[str, Iterable[str]] = 'experimental',
+                      aspects: Union[str, Iterable[str]] = 'all',
+                      databases: Union[str, Iterable[str]] = 'any',
+                      qualifiers: Union[str, Iterable[str]] = 'any',
+                      excluded_qualifiers: Union[str, Iterable[str]] = 'not',
+                      return_nonsignificant: bool = False,
+                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True):
+        goa_query_key = (organism, gene_id_type, parsing.data_to_tuple(evidence_types), parsing.data_to_tuple(aspects),
+                         parsing.data_to_tuple(databases), parsing.data_to_tuple(qualifiers),
+                         parsing.data_to_tuple(excluded_qualifiers))
 
-        """
-        Analyzes GO, Tissue and/or Phenotype enrichment for the given group of genomic features. \
-        Uses the the Anatomy, Phenotype and Gene Ontology annotations for C. elegans. \
-        Corrected p-values are calculated using hypergeometric statistics. \
-        For more details see GitHub page of the developers: https://github.com/dangeles/TissueEnrichmentAnalysis
-
-        :type mode: 'go', 'tissue', 'phenotype' or 'all' (default 'all')
-        :param mode: the enrichment you wish to perform. 'go' for gene ontology enrichment, \
-        'tissue' for tissue enrichment, 'phenotype' for phenotype enrichment, or 'all' for all three.
-        :type alpha: float between 0 and 1 (default 0.05)
-        :param alpha: Significance threshold.
-        :type save_csv: bool (default False)
-        :param save_csv: If True, save the result to a csv.
-        :type fname: str or pathlib.Path
-        :param fname: Name and path in which to save the results. Must be specified if save_csv is True.
-        :return: a DataFrame which contains the significant enrichmenet terms
-
-        .. figure::  go_en.png
-           :align:   center
-           :scale: 40 %
-
-           Example plot of GO enrichment
-
-        .. figure::  tissue_en.png
-           :align:   center
-           :scale: 40 %
-
-           Example plot of Tissue enrichment
-
-        """
-        assert isinstance(alpha, float), "alpha must be a float!"
-        assert isinstance(mode, str), "'mode' must be a string!"
-        plt.style.use('seaborn-white')
-        if mode == 'all':
-            d = []
-            df_comb = pd.DataFrame()
-            for k, arg in enumerate(('go', 'tissue', 'phenotype')):
-                print(f'Calculating... {100 * k / 3 :.2f}% done')
-                if arg in FeatureSet._go_dicts:
-                    d.append(FeatureSet._go_dicts[arg])
-                else:
-                    d.append(tea.fetch_dictionary(arg))
-                    FeatureSet._go_dicts[arg] = d[-1]
-                df = tea.enrichment_analysis(self.gene_set, d[-1], alpha=alpha)
-                if not df.empty:
-                    df_comb = df_comb.append(df)
-                    plt.figure()
-                    tea.plot_enrichment_results(df, title=f'{arg.capitalize()} Enrichment Analysis', analysis=arg)
-                    plt.title(f'{arg.capitalize()} Enrichment Analysis for sample {self.set_name}', fontsize=20)
-
+        if goa_query_key in self.__goa_queries__:
+            goa_df, go_id_to_term_dict = self.__goa_queries__[goa_query_key]
         else:
-            assert (mode == 'go' or mode == 'tissue' or mode == 'phenotype'), "Invalid mode!"
-            d = tea.fetch_dictionary(mode)
-            df_comb = tea.enrichment_analysis(self.gene_set, d, show=True)
-            if not df_comb.empty:
-                tea.plot_enrichment_results(df_comb, title=f'{mode.capitalize()} Enrichment Analysis', analysis=mode)
-                plt.title(f'{mode.capitalize()} Enrichment Analysis', fontsize=20)
+            taxon_id, organism_name = io.map_taxon_id(organism)
+            print(f"Fetching GO annotations for organism '{organism_name}' (taxon ID:{taxon_id}).")
+            annotations_iter = io.golr_annotations_iterator(taxon_id, aspects, evidence_types, databases=databases,
+                                                            qualifiers=qualifiers,
+                                                            excluded_qualifiers=excluded_qualifiers)
+            sparse_annotation_dict = {}
+            go_id_to_term_dict = {}
+            source_to_gene_id_dict = {}
+            for annotation in annotations_iter:
+                # add annotation to annotation dictionary
+                if annotation['bioentity_internal_id'] not in sparse_annotation_dict:
+                    sparse_annotation_dict[annotation['bioentity_internal_id']] = (set())
+                sparse_annotation_dict[annotation['bioentity_internal_id']].add(annotation['annotation_class'])
+                # add gene id and source to source dict
+                if annotation['source'] not in source_to_gene_id_dict:
+                    source_to_gene_id_dict[annotation['source']] = set()
+                source_to_gene_id_dict[annotation['source']].add(annotation['bioentity_internal_id'])
+                # add go term to term dictionary
+                if annotation['annotation_class'] not in go_id_to_term_dict:
+                    go_id_to_term_dict[annotation['annotation_class']] = annotation['annotation_class_label']
 
-        if save_csv:
-            self._enrichment_save_csv(df_comb, fname)
-        plt.show()
-        return df_comb
+            # translate gene IDs
+            translated_sparse_annotation_dict = {}
+            for source in source_to_gene_id_dict:
+                translator = io.map_gene_ids(source_to_gene_id_dict[source], source, gene_id_type)
+                for gene_id in sparse_annotation_dict.copy():
+                    if gene_id in translator:
+                        translated_sparse_annotation_dict[translator[gene_id]] = sparse_annotation_dict.pop(gene_id)
+
+            # get boolean DataFrame for enrichment
+            print("Generating Gene Ontology Reference Table...")
+            goa_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict)
+
+            self.__goa_queries__[goa_query_key] = (goa_df, go_id_to_term_dict)
+
+        print("Calculating enrichment...")
+        biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
+        goa_df, gene_set = self._enrichment_get_reference(biotype, background_genes, goa_df, biotype_ref_path,
+                                                          reindex=True)
+        goa_df.fillna(False)
+
+        enriched_list = []
+        go_sizes = goa_df.sum(axis=0)
+        go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
+        bg_size = goa_df.shape[0]
+        de_size = len(gene_set)
+        for k, go_id in enumerate(goa_df.columns):
+            go_size = go_sizes[go_id]
+            go_de_size = go_de_sizes[go_id]
+
+            expected_fraction = go_size / bg_size
+            observed_fraction = go_de_size / de_size
+            log2_fold_enrichment = np.log2(
+                observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
+            pval = self._calc_hypergeometric_pval(bg_size=bg_size, go_size=go_size,
+                                                  de_size=de_size, go_de_size=go_de_size)
+            obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
+
+            enriched_list.append(
+                (go_id, go_id_to_term_dict[go_id], de_size, obs, exp, log2_fold_enrichment, pval))
+        return self._go_enrichment_output(enriched_list, fdr, return_nonsignificant, save_csv, fname, True, return_fig,
+                                          plot_horizontal)
 
     @staticmethod
     def _single_enrichment(gene_set, attribute, attr_ref_df: pd.DataFrame, reps: int):
@@ -452,6 +467,38 @@ class FeatureSet:
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         return attr_ref_df, gene_set, attributes
 
+    def _go_enrichment_output(self, enriched_list: list, fdr: float, return_nonsignificant: bool,
+                              save_csv: bool, fname: str, plot: bool, return_fig: bool, plot_horizontal: bool = True):
+        """
+        Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
+        plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
+        Called at the end of every enrichment function \
+        (enrich_randomization, enrich_randomization_parallel, enrich_statistic...).
+
+        """
+        res_df = pd.DataFrame(enriched_list,
+                              columns=['go_id', 'term', 'samples', 'obs', 'exp', 'log2_fold_enrichment', 'pval'])
+        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
+        res_df['padj'] = padj
+        res_df['significant'] = significant
+        res_df.set_index('go_id', inplace=True)
+        res_df.sort_values('padj', inplace=True)
+        if not return_nonsignificant:
+            res_df = res_df[res_df['significant']]
+
+        if save_csv:
+            self._enrichment_save_csv(res_df, fname)
+
+        if plot:
+            n_plot = min(10, res_df.shape[0])
+            fig = self.plot_enrichment_results(res_df.iloc[:n_plot], name_col=res_df.columns[0],
+                                               title=f"Enrichment for {self.set_name}\n"
+                                                     f"top {n_plot} most significant GO terms",
+                                               plot_horizontal=plot_horizontal)
+            if return_fig:
+                return res_df, fig
+        return res_df
+
     def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, plot: bool,
                            return_fig: bool, plot_horizontal: bool = True):
         """
@@ -463,7 +510,6 @@ class FeatureSet:
         """
         res_df = pd.DataFrame(enriched_list,
                               columns=['name', 'samples', 'obs', 'exp', 'log2_fold_enrichment', 'pval'])
-        res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_fold_enrichment'].values)))
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
         res_df['significant'] = significant
