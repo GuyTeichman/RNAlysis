@@ -371,54 +371,50 @@ class FeatureSet:
             return [all_attrs[ind] for ind in attributes]
         return attributes
 
-    def _enrichment_get_reference(self, biotype, background_genes, attr_ref_path, biotype_ref_path):
+    def _enrichment_get_reference(self, biotype: Union[str, List[str], Set[str], Tuple[str]], background_genes,
+                                  attr_ref_df: pd.DataFrame, biotype_ref_path: str, reindex: bool = False):
         gene_set = self.gene_set
-
-        attr_ref_df = io.load_csv(attr_ref_path)
-        validation.validate_attr_table(attr_ref_df)
-        attr_ref_df.set_index('gene', inplace=True)
 
         assert (isinstance(biotype, (str, list, set, tuple)))
 
-        if background_genes is None:
-            pass
-        else:
-            assert isinstance(background_genes,
-                              (set, FeatureSet)) or validation.isinstanceinh(background_genes, Filter), \
-                f"background_genes must be a set, enrichment.FeatureSet or filtering.Filter; " \
-                f"instead got {type(background_genes)}"
+        if background_genes is not None:
             if isinstance(background_genes, FeatureSet):
-                background_genes = background_genes.gene_set
+                bg = background_genes.gene_set
             elif validation.isinstanceinh(background_genes, Filter):
-                background_genes = background_genes.index_set
-            if biotype != 'all':
-                warnings.warn(
-                    "both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored. ")
-                biotype = 'all'
+                bg = background_genes.index_set
+            elif isinstance(background_genes, set):
+                bg = background_genes
+            else:
+                raise TypeError(f"background_genes must be a set, enrichment.FeatureSet or filtering.Filter; "
+                                f"instead got {type(background_genes)}")
 
-            attr_ref_df = attr_ref_df.loc[background_genes.intersection(set(attr_ref_df.index))]
-            if len(attr_ref_df.index) < len(background_genes):
-                warnings.warn(
-                    f"{len(background_genes) - len(attr_ref_df.index)} indices from the requested "
-                    f"background genes do not appear in the Attribute Reference Table, and are therefore ignored. \n"
-                    f"This leaves a total of {len(attr_ref_df.index)} background genes. ")
-        if biotype == 'all':
-            pass
+            if biotype != 'all':
+                warnings.warn("both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored.")
+
         else:
             biotype_ref_df = io.load_csv(biotype_ref_path)
             validation.validate_biotype_table(biotype_ref_df)
             biotype_ref_df.set_index('gene', inplace=True)
-            biotype_ref_df.columns = biotype_ref_df.columns.str.lower()
-            if isinstance(biotype, (list, tuple, set)):
+            if biotype == 'all':
+                bg = biotype_ref_df.index
+            else:
+                biotype = parsing.data_to_list(biotype)
                 mask = pd.Series(np.zeros_like(biotype_ref_df['biotype'].values, dtype=bool),
                                  biotype_ref_df['biotype'].index,
                                  name='biotype')
                 for bio in biotype:
                     mask = mask | (biotype_ref_df['biotype'] == bio)
-            else:
-                biotype_ref_df = biotype_ref_df.loc[biotype_ref_df.index.intersection(attr_ref_df.index)]
-                mask = biotype_ref_df['biotype'] == biotype
-            attr_ref_df = attr_ref_df.loc[biotype_ref_df[mask].index]
+                bg = biotype_ref_df[mask].index
+
+        if reindex:
+            attr_ref_df = attr_ref_df.reindex(attr_ref_df.index.union(bg))
+        else:
+            attr_ref_df = attr_ref_df.loc[attr_ref_df.index.intersection(bg)]
+        if len(attr_ref_df.index) < len(bg):
+            warnings.warn(
+                f"{len(bg) - len(attr_ref_df.index)} indices from the requested "
+                f"background genes do not appear in the Attribute Reference Table, and are therefore ignored. \n"
+                f"This leaves a total of {len(attr_ref_df.index)} background genes. ")
         print(f"{len(attr_ref_df.index)} background genes are used. ")
 
         not_in_bg = gene_set.difference(set(attr_ref_df.index))
@@ -426,7 +422,7 @@ class FeatureSet:
             gene_set = gene_set.difference(not_in_bg)
             warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the "
                           f"Attribute Reference Table and/or the background genes. \n"
-                          f"Enrichment will be run on the remaining {len(gene_set)}.")
+                          f"Enrichment will be run on the remaining {len(gene_set)} genes.")
         attr_ref_df.sort_index(inplace=True)
         return attr_ref_df, gene_set
 
@@ -444,8 +440,13 @@ class FeatureSet:
         """
         attr_ref_path = ref_tables.get_attr_ref_path(attr_ref_path)
         biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
+
+        attr_ref_df = io.load_csv(attr_ref_path)
+        validation.validate_attr_table(attr_ref_df)
+        attr_ref_df.set_index('gene', inplace=True)
+
         attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
-                                                               attr_ref_path=attr_ref_path,
+                                                               attr_ref_df=attr_ref_df,
                                                                biotype_ref_path=biotype_ref_path)
 
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)

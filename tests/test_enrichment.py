@@ -148,14 +148,16 @@ def _enrichment_get_ref_tests_setup(truth, bg_genes):
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
+    attr_ref_df = io.load_csv(__attr_ref__,0)
+
     if not isinstance(bg_genes, str):
         bg_en = FeatureSet(bg_genes, 'background genes')
         res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_en,
-                                              attr_ref_path=__attr_ref__,
+                                              attr_ref_df=attr_ref_df,
                                               biotype_ref_path=__biotype_ref__)
     else:
         res, _ = en._enrichment_get_reference(biotype=bg_genes, background_genes=None,
-                                              attr_ref_path=__attr_ref__,
+                                              attr_ref_df=attr_ref_df,
                                               biotype_ref_path=__biotype_ref__)
     truth.sort_index(inplace=True)
     res.sort_index(inplace=True)
