@@ -790,11 +790,11 @@ class FeatureSet:
         attr_ref_df, gene_set, attributes = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         enriched_list = []
+        bg_size = attr_ref_df.shape[0]
+        de_size = len(gene_set)
         for k, attribute in enumerate(attributes):
             srs = attr_ref_df[attribute]
-            bg_size = srs.shape[0]
             go_size = srs.notna().sum()
-            de_size = len(gene_set)
             go_de_size = srs.loc[gene_set].notna().sum()
 
             expected_fraction = go_size / bg_size
