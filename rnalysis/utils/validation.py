@@ -27,6 +27,15 @@ def isinstanceinh(obj, parent_class):
     return True if issubclass(obj.__class__, parent_class) else False
 
 
+def isiterable(obj):
+    try:
+        _ = iter(obj)
+    except Exception:
+        return False
+    else:
+        return True
+
+
 def validate_biotype_table(ref_df: pd.DataFrame):
     """
     Assert legality of Biotype Reference Table, and rename column names to standard names ('gene' and 'biotype').

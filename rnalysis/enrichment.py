@@ -247,16 +247,14 @@ class FeatureSet:
             fname = str(Path)
         io.save_csv(df, filename=fname + '.csv')
 
-    def go_enrichment(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
-                      biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                      biotype_ref_path: str = 'predefined',
-                      evidence_types: Union[str, Iterable[str]] = 'experimental',
-                      aspects: Union[str, Iterable[str]] = 'all',
-                      databases: Union[str, Iterable[str]] = 'any',
-                      qualifiers: Union[str, Iterable[str]] = 'any',
-                      excluded_qualifiers: Union[str, Iterable[str]] = 'not',
-                      return_nonsignificant: bool = False,
-                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True):
+    def _go_enrichment_fetch_annotations(self, organism: Union[str, int], gene_id_type: str,
+                                         aspects: Union[str, Iterable[str]],
+                                         evidence_types: Union[str, Iterable[str]],
+                                         excluded_evidence_types: Union[str, Iterable[str]],
+                                         databases: Union[str, Iterable[str]],
+                                         excluded_databases: Union[str, Iterable[str]],
+                                         qualifiers: Union[str, Iterable[str]],
+                                         excluded_qualifiers: Union[str, Iterable[str]]):
         goa_query_key = (organism, gene_id_type, parsing.data_to_tuple(evidence_types), parsing.data_to_tuple(aspects),
                          parsing.data_to_tuple(databases), parsing.data_to_tuple(qualifiers),
                          parsing.data_to_tuple(excluded_qualifiers))
@@ -266,9 +264,9 @@ class FeatureSet:
         else:
             taxon_id, organism_name = io.map_taxon_id(organism)
             print(f"Fetching GO annotations for organism '{organism_name}' (taxon ID:{taxon_id}).")
-            annotations_iter = io.golr_annotations_iterator(taxon_id, aspects, evidence_types, databases=databases,
-                                                            qualifiers=qualifiers,
-                                                            excluded_qualifiers=excluded_qualifiers)
+            annotations_iter = io.golr_annotations_iterator(taxon_id, aspects, evidence_types, excluded_evidence_types,
+                                                            databases, excluded_databases, qualifiers,
+                                                            excluded_qualifiers)
             sparse_annotation_dict = {}
             go_id_to_term_dict = {}
             source_to_gene_id_dict = {}
@@ -298,6 +296,105 @@ class FeatureSet:
             goa_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict)
 
             self.__goa_queries__[goa_query_key] = (goa_df, go_id_to_term_dict)
+
+        return goa_df, go_id_to_term_dict
+
+    def go_enrichment(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
+                      biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                      biotype_ref_path: str = 'predefined',
+                      aspects: Union[str, Iterable[str]] = 'any',
+                      evidence_types: Union[str, Iterable[str]] = 'any',
+                      excluded_evidence_types: Union[str, Iterable[str]] = None,
+                      databases: Union[str, Iterable[str]] = 'any',
+                      excluded_databases: Union[str, Iterable[str]] = None,
+                      qualifiers: Union[str, Iterable[str]] = 'any',
+                      excluded_qualifiers: Union[str, Iterable[str]] = 'not',
+                      return_nonsignificant: bool = False,
+                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True):
+        """
+        ...
+
+        :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type:
+        :type gene_id_type:
+        :type fdr: float between 0 and 1
+        :param fdr: Indicates the FDR threshold for significance.
+        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
+        Default 'protein_coding'.
+        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
+        'all' will include all genomic features in the reference table, \
+        'protein_coding' will include only protein-coding genes from the reference table, etc. \
+        Cannot be specified together with 'background_genes'.
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+        :param background_genes: a set of specific feature indices to be used as background genes. \
+        Cannot be specified together with 'biotype'.
+        :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+        :param biotype_ref_path: the path of the Biotype Reference Table. \
+        Will be used to generate background set if 'biotype' is specified.
+        :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
+        Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
+        :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
+        or 'any' (default='any')
+        :param evidence_types: only annotations with the specified evidence types will be included in the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+        'curator', 'electronic', or 'any' (default='any')
+        :param excluded_evidence_types: annotations with the specified evidence types will be \
+        excluded from the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
+        'author', 'curator', 'electronic', or None (default=None)
+        :param databases: only annotations from the specified databases will be included in the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type databases: str, Iterable of str, or 'any' (default)
+        :param excluded_databases: annotations from the specified databases will be excluded from the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type excluded_databases: str, Iterable of str, or None (default)
+        :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type qualifiers: str, Iterable of str, or 'any' (default)
+        :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type excluded_qualifiers: str, Iterable of str, or None (default 'not')
+        :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
+        both significant and non-significant terms. If False (default), only significant GO terms will be returned.
+        :type return_nonsignificant: bool (default False)
+        :type save_csv: bool, default False
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :type return_fig: bool (default False)
+        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
+        will be plotted with a vertical plot.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
+
+        .. figure::  plot_enrichment_results_go.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of go_enrichment()
+
+
+        .. figure::  plot_enrichment_results_go_vertical.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of go_enrichment(plot_horizontal = False)
+        """
+        goa_df, go_id_to_term_dict = self._go_enrichment_fetch_annotations(organism, gene_id_type, aspects,
+                                                                           evidence_types, excluded_evidence_types,
+                                                                           databases, excluded_databases, qualifiers,
+                                                                           excluded_qualifiers)
 
         print("Calculating enrichment...")
         biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
@@ -949,7 +1046,7 @@ class FeatureSet:
                 rotation = 0
 
             ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight, rotation=rotation,
-                    fontsize=12, horizontalalignment=halign, verticalalignment=valign, zorder=1)
+                    fontsize=9, horizontalalignment=halign, verticalalignment=valign, zorder=1)
         # despine
         _ = [ax.spines[side].set_visible(False) for side in ['top', 'right']]
         # center bars

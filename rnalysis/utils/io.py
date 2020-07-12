@@ -103,40 +103,39 @@ def fetch_gaf_file(taxon_id: int, aspects: Union[str, List[str]] = 'all',
     return data
 
 
-def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] = 'all',
+def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] = 'any',
                               evidence_types: Union[str, Iterable[str]] = 'any',
-                              excluded_evidence_types: Union[str, Iterable[str]] = (),
-                              databases: Union[str, List[str], Set[str]] = 'any',
-                              excluded_databases: Union[str, List[str], Set[str]] = 'any',
+                              excluded_evidence_types: Union[str, Iterable[str]] = None,
+                              databases: Union[str, Iterable[str]] = 'any',
+                              excluded_databases: Union[str, Iterable[str]] = None,
                               qualifiers: Union[str, Iterable[str]] = 'any',
-                              excluded_qualifiers: Union[str, Iterable[str]] = (),
+                              excluded_qualifiers: Union[str, Iterable[str]] = None,
                               iter_size: int = 10000):
     url = 'http://golr-aux.geneontology.io/solr/select?'
     legal_aspects = {'P', 'F', 'C'}
-    legal_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP', 'IBA', 'IBD', 'IKR',
-                      'IRD', 'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA', 'TAS', 'NAS', 'IC', 'ND', 'IEA'}
+    aspects_dict = {'P': 'biological_process', 'F': 'molecular_function', 'C': 'cellular_component'}
     experimental_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
+    phylogenetic_evidence = {'IBA', 'IBD', 'IKR', 'IRD'}
+    computational_evidence = {'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA'}
+    author_evidence = {'TAS', 'NAS'}
+    curator_evidence = {'IC', 'ND'}
+    electronic_evidence = {'IEA'}
+    evidence_type_dict = {'experimental': experimental_evidence, 'phylogenetic': phylogenetic_evidence,
+                          'computational': computational_evidence, 'author': author_evidence,
+                          'curator': curator_evidence,
+                          'electronic': electronic_evidence}
+    legal_evidence = set.union(*[set(s) for s in evidence_type_dict.values()])
+
     legal_qualifiers = {'not', 'contributes_to', 'colocalizes_with'}
 
-    aspects = legal_aspects if aspects == 'all' else parsing.data_to_set(aspects)
+    aspects = parsing.parse_go_aspects(aspects, aspects_dict)
     databases = parsing.data_to_set(databases)
     qualifiers = () if qualifiers == 'any' else parsing.data_to_set(qualifiers)
-    excluded_qualifiers = parsing.data_to_set(excluded_qualifiers)
-    excluded_databases = parsing.data_to_set(excluded_databases)
-
-    if evidence_types == 'any':
-        evidence_types = legal_evidence
-    elif evidence_types == 'experimental':
-        evidence_types = experimental_evidence
-    else:
-        evidence_types = parsing.data_to_set(evidence_types)
-
-    if excluded_evidence_types == 'any':
-        excluded_evidence_types = legal_evidence
-    elif excluded_evidence_types == 'experimental':
-        excluded_evidence_types = experimental_evidence
-    else:
-        excluded_evidence_types = parsing.data_to_set(excluded_evidence_types)
+    excluded_qualifiers = set() if excluded_qualifiers is None else parsing.data_to_set(excluded_qualifiers)
+    excluded_databases = set() if excluded_databases is None else parsing.data_to_set(excluded_databases)
+    # parse evidence types
+    evidence_types = parsing.parse_evidence_types(evidence_types, evidence_type_dict)
+    excluded_evidence_types = parsing.parse_evidence_types(excluded_evidence_types, evidence_type_dict)
     # assert legality of inputs
     for field, legals in zip((aspects, chain(evidence_types, excluded_evidence_types),
                               chain(qualifiers, excluded_qualifiers)),

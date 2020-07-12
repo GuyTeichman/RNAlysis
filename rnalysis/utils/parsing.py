@@ -1,10 +1,10 @@
 import warnings
 from itertools import islice
 import numpy as np
-from typing import Union, List, TextIO, Any
+from typing import Union, List, TextIO, Any, Set, Iterable
 import Bio.UniProt.GOA as GOA
 import pandas as pd
-from rnalysis.utils import preprocessing
+from rnalysis.utils import preprocessing, validation
 
 
 def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
@@ -127,3 +127,26 @@ def sparse_dict_to_bool_df(sparse_dict: dict) -> pd.DataFrame:
         for item in sparse_dict[key]:
             df.loc[key, item] = True
     return df
+
+
+def parse_evidence_types(evidence_types: Union[str, Iterable[str]], evidence_type_dict: dict) -> Set[str]:
+    if evidence_types == 'any':
+        return set.union(*[set(s) for s in evidence_type_dict.values()])
+    elif isinstance(evidence_types, str) and evidence_types.lower() in evidence_type_dict:
+        return evidence_type_dict[evidence_types.lower()]
+    elif validation.isiterable(evidence_types) and \
+        any([isinstance(ev_type, str) and ev_type.lower() in evidence_type_dict for ev_type in evidence_types]):
+        return set.union(
+            *[evidence_type_dict[ev_type.lower()] if ev_type.lower() in evidence_type_dict else {ev_type} for ev_type in
+              evidence_types])
+    else:
+        return data_to_set(evidence_types)
+
+
+def parse_go_aspects(aspects: Union[str, Iterable[str]], aspects_dict: dict) -> Set[str]:
+    if aspects == 'any':
+        return set.union(*[set(s) for s in aspects_dict.values()])
+    elif any([isinstance(aspect, str) and aspect.lower() in aspects_dict for aspect in aspects]):
+        return {aspects_dict[aspect.lower()] if aspect.lower() in aspects_dict else aspect for aspect in aspects}
+    else:
+        return data_to_set(aspects)
