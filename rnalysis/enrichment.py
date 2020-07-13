@@ -312,7 +312,22 @@ class FeatureSet:
                       return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True):
         """
-        ...
+        Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set \
+        using the Hypergeometric Test. The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
+        using the search terms defined by the user. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. \
+        P-values are calculated using a hypergeometric test: \
+        Given M genes in the background set, n genes in the test set, \
+        with N genes from the background set belonging to a specific attribute (or 'success') \
+        and X genes from the test set belonging to that attribute. \
+        If we were to randomly draw n genes from the background set (without replacement), \
+        what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) \
+        genes belonging to the given attribute? \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
+        appears with the smallest value in the scale.
+
 
         :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
         :type organism: str or int
@@ -1263,83 +1278,93 @@ class RankedSet(FeatureSet):
                                   save_csv: bool = False, fname=None,
                                   return_fig: bool = False, plot_horizontal: bool = True):
         """
-                ...
+        Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
+        WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
+        `Prof. Zohar Yakhini and colleagues <https://dx.doi.org/10.1371/journal.pcbi.0030039/>`_ \
+        and generalized by \
+        `Florian Wagner <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/>`_). \
+        The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
+        using the search terms defined by the user. \
+        P-values are calculated using using the generalized Minimum Hypergeometric Test. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        appears with the smallest value in the scale.
 
-                :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
-                :type organism: str or int
-                :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
-                (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
-                If the annotations fetched from the GOLR server do not match your gene_id_type, \
-                RNAlysis will attempt to map  the annotations' gene IDs to your identifier type. \
-                For a full list of legal 'gene_id_type' names, see the UniProt website: \
-                https://www.uniprot.org/help/api_idmapping
-                :type gene_id_type: str (default='UniProtKB')
-                :type fdr: float between 0 and 1
-                :param fdr: Indicates the FDR threshold for significance.
-                :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
-                Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
-                :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
-                or 'any' (default='any')
-                :param evidence_types: only annotations with the specified evidence types \
-                will be included in the analysis. \
-                For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
-                http://geneontology.org/docs/guide-go-evidence-codes/
-                :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
-                'curator', 'electronic', or 'any' (default='any')
-                :param excluded_evidence_types: annotations with the specified evidence types will be \
-                excluded from the analysis. \
-                For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
-                http://geneontology.org/docs/guide-go-evidence-codes/
-                :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
-                'author', 'curator', 'electronic', or None (default=None)
-                :param databases: only annotations from the specified databases will be included in the analysis. \
-                For a full list of legal databases see the GO Consortium website:
-                http://amigo.geneontology.org/xrefs
-                :type databases: str, Iterable of str, or 'any' (default)
-                :param excluded_databases: annotations from the specified databases \
-                will be excluded from the analysis. \
-                For a full list of legal databases see the GO Consortium website:
-                http://amigo.geneontology.org/xrefs
-                :type excluded_databases: str, Iterable of str, or None (default)
-                :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
-                Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
-                :type qualifiers: str, Iterable of str, or 'any' (default)
-                :param excluded_qualifiers: annotations with the speficied qualifiers \
-                will be excluded from the analysis. \
-                Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
-                :type excluded_qualifiers: str, Iterable of str, or None (default 'not')
-                :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
-                both significant and non-significant terms. If False (default), \
-                only significant GO terms will be returned.
-                :type return_nonsignificant: bool (default False)
-                :type save_csv: bool, default False
-                :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
-                :type fname: str or pathlib.Path
-                :param fname: The full path and name of the file to which to save the results. For example: \
-                'C:/dir/file'. No '.csv' suffix is required. If None (default), \
-                fname will be requested in a manual prompt.
-                :type return_fig: bool (default False)
-                :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-                :type plot_horizontal: bool (default True)
-                :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
-                Otherwise, results will be plotted with a vertical plot.
-                :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
-                :return: a pandas DataFrame with the indicated attribute names as rows/index; \
-                and a matplotlib Figure, if 'return_figure' is set to True.
+        :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the GOLR server do not match your gene_id_type, \
+        RNAlysis will attempt to map  the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str (default='UniProtKB')
+        :type fdr: float between 0 and 1
+        :param fdr: Indicates the FDR threshold for significance.
+        :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
+        Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
+        :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
+        or 'any' (default='any')
+        :param evidence_types: only annotations with the specified evidence types \
+        will be included in the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+        'curator', 'electronic', or 'any' (default='any')
+        :param excluded_evidence_types: annotations with the specified evidence types will be \
+        excluded from the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
+        'author', 'curator', 'electronic', or None (default=None)
+        :param databases: only annotations from the specified databases will be included in the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type databases: str, Iterable of str, or 'any' (default)
+        :param excluded_databases: annotations from the specified databases \
+        will be excluded from the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type excluded_databases: str, Iterable of str, or None (default)
+        :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type qualifiers: str, Iterable of str, or 'any' (default)
+        :param excluded_qualifiers: annotations with the speficied qualifiers \
+        will be excluded from the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type excluded_qualifiers: str, Iterable of str, or None (default 'not')
+        :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
+        both significant and non-significant terms. If False (default), \
+        only significant GO terms will be returned.
+        :type return_nonsignificant: bool (default False)
+        :type save_csv: bool, default False
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), \
+        fname will be requested in a manual prompt.
+        :type return_fig: bool (default False)
+        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
+        Otherwise, results will be plotted with a vertical plot.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
 
-                .. figure::  plot_enrichment_results_go_singlelist.png
-                   :align:   center
-                   :scale: 60 %
+        .. figure::  plot_enrichment_results_go_singlelist.png
+           :align:   center
+           :scale: 60 %
 
-                   Example plot of go_enrichment_single_list()
+           Example plot of go_enrichment_single_list()
 
 
-                .. figure::  plot_enrichment_results_go_singlelist_vertical.png
-                   :align:   center
-                   :scale: 60 %
+        .. figure::  plot_enrichment_results_go_singlelist_vertical.png
+           :align:   center
+           :scale: 60 %
 
-                   Example plot of go_enrichment_single_list(plot_horizontal = False)
-                """
+           Example plot of go_enrichment_single_list(plot_horizontal = False)
+        """
         goa_df, go_id_to_term_dict = self._go_enrichment_fetch_annotations(organism, gene_id_type, aspects,
                                                                            evidence_types, excluded_evidence_types,
                                                                            databases, excluded_databases, qualifiers,
@@ -1366,15 +1391,10 @@ class RankedSet(FeatureSet):
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
         `Prof. Zohar Yakhini and colleagues <https://dx.doi.org/10.1371/journal.pcbi.0030039/>`_ \
-         and generalized by \
-         `Florian Wagner <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/>`_). \
+        and generalized by \
+        `Florian Wagner <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/>`_). \
         The attributes are drawn from an Attribute Reference Table. \
-        The background set is determined by either the input variable ‘background_genes’, \
-        or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a \
-        randomization test with the formula p = (successes + 1)/(repeats + 1). \
-        This formula results in a positively-biased estimator of the real p-value \
-        (a conservative estimate of p-value). When the number of reps approaches infinity, \
-        the formula results in an unbiased estimator of the real p-value. \
+        P-values are calculated using using the generalized Minimum Hypergeometric Test. \
         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
