@@ -1675,5 +1675,3 @@ def _generate_upset_srs(objs: dict):
         srs.loc[ind] = group_size
     return srs
 
-# TODO: other types of plots
-# TODO: heat map plot of multiple DESEQ files

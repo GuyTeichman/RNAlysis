@@ -3194,7 +3194,8 @@ class Pipeline:
         func = self.functions.pop(-1)
         args, kwargs = self.params.pop(-1)
         print(
-            f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline. ")
+            f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline.")
 
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
+# TODO: heat map plot of multiple DESEQ files
