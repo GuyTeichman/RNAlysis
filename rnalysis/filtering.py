@@ -140,7 +140,7 @@ class Filter:
         """
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
-        assert printout_operation.lower() in ['filter', 'normalize'], \
+        assert printout_operation.lower() in ['filter', 'normalize', 'sort'], \
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
@@ -157,12 +157,16 @@ class Filter:
                         f"of the original {self.df.shape[0]} features. "
         elif printout_operation.lower() == 'normalize':
             printout += f"Normalized the values of {new_df.shape[0]} features. "
+        elif printout_operation.lower() == 'sort':
+            printout += f"Sorted {new_df.shape[0]} features. "
         # if inplace, modify the df, fname and shape properties of self
         if inplace:
             if printout_operation.lower() == 'filter':
                 printout += 'Filtered inplace.'
             elif printout_operation.lower() == 'normalize':
                 printout += 'Normalized inplace.'
+            elif printout_operation.lower() == 'sort':
+                printout += 'Sorted inplace.'
             print(printout)
             self.df, self.fname = new_df, new_fname
             self.shape = self.df.shape
@@ -172,6 +176,10 @@ class Filter:
                 printout += 'Filtering result saved to new object.'
             elif printout_operation.lower() == 'normalize':
                 printout += 'Normalization result saved to a new object.'
+            elif printout_operation.lower() == 'sort':
+                printout += 'Sorting result saved to a new object.' \
+                            '' \
+                            ''
             print(printout)
             tmp_df, tmp_fname = self.df, self.fname
             self.df, self.fname = new_df, new_fname
@@ -1007,11 +1015,31 @@ class Filter:
             WBGene00077503      1      4      2      0
 
         """
+        suffix = f'_sortedby{by}ascending{ascending}na{na_position}'
+        new_df = self._sort(by=by, ascending=ascending, inplace=inplace, na_position=na_position)
         if inplace:
-            self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=True, na_position=na_position)
-        else:
-            new_df = self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=False, na_position=na_position)
-            return self._inplace(new_df, False, inplace, '')
+            new_df = self.df
+        return self._inplace(new_df, False, inplace, suffix, 'sort')
+
+    def _sort(self, by: Union[str, List[str]], ascending: Union[bool, List[bool]] = True, na_position: str = 'last',
+              inplace: bool = True):
+        """
+        Sort the rows by the values of specified column or columns.
+
+        :type by: str or list of str
+        :param by: Names of the column or columns to sort by.
+        :type ascending: bool or list of bool, default True
+        :param ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
+        If this is a list of bools, it must have the same length as 'by'.
+        :type na_position: 'first' or 'last', default 'last'
+        :param na_position: If 'first', puts NaNs at the beginning; if 'last', puts NaNs at the end.
+        :type inplace: bool, default True
+        :param inplace: If True, perform operation in-place. \
+        Otherwise, returns a sorted copy of the Filter object without modifying the original.
+        :return: None if inplace=True, a sorted Filter object otherwise.
+        """
+
+        return self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=inplace, na_position=na_position)
 
     def filter_top_n(self, by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True,
                      na_position: str = 'last', opposite: bool = False, inplace: bool = True, ):
@@ -1062,7 +1090,7 @@ class Filter:
         else:
             assert by in self.columns, f"{by} is not a column in the Filter object!"
         # sort the DataFrame by the specified column/columns, in the specified order
-        self.sort(by=by, ascending=ascending, na_position=na_position, inplace=True)
+        self._sort(by=by, ascending=ascending, na_position=na_position, inplace=True)
         # keep only the top n values in the DataFrame after the sort (or the top len(self) items, if n>len(self))
         if n > self.df.shape[0]:
             warnings.warn(f'Current number of rows {self.df.shape[0]} is smaller than the specified n={n}. '
