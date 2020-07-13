@@ -113,7 +113,8 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
                               iter_size: int = 10000):
     url = 'http://golr-aux.geneontology.io/solr/select?'
     legal_aspects = {'P', 'F', 'C'}
-    aspects_dict = {'P': 'biological_process', 'F': 'molecular_function', 'C': 'cellular_component'}
+    aspects_dict = {'biological_process': 'P', 'molecular_function': 'F', 'cellular_component': 'C',
+                    'biological process': 'P', 'molecular function': 'F', 'cellular component': 'C'}
     experimental_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
     phylogenetic_evidence = {'IBA', 'IBD', 'IKR', 'IRD'}
     computational_evidence = {'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA'}
