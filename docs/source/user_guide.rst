@@ -403,9 +403,23 @@ We would then supply the normalization function with the path to the special cou
 The resulting :term:`CountFilter` object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
 
-Data visualization and clustering analysis with CountFilter
--------------------------------------------------------------
-:term:`CountFilter` includes multiple methods for visualization and clustering of count data.
+Data clustering with CountFilter
+----------------------------------
+RNAlysis supports a wide variety of clustering methods... TODO
+
+With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:
+
+ .. figure::  clustergram.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of CountFilter.clustergram()
+
+TODO
+
+Data visualization and exploratory data analysis with CountFilter
+------------------------------------------------------------------------
+:term:`CountFilter` includes multiple methods for visualization and exploratory analysis of count data.
 
 
 With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
@@ -415,14 +429,6 @@ With CountFilter.pairplot, you can get a quick overview of the distribution of c
            :scale: 40 %
 
            Example output of CountFilter.pairplot()
-
-With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:
-
- .. figure::  clustergram.png
-           :align:   center
-           :scale: 40 %
-
-           Example plot of CountFilter.clustergram()
 
 With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:
 
@@ -522,7 +528,7 @@ The output table would look like this:
 
 Sequentially applying filtering operations using Pipelines
 ============================================================
-:term:`Pipeline` objects allow you to group together multiple operations from the `filtering` module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects' of your choice in a specific and consistent order.
+:term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects' of your choice in a specific and consistent order.
 Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
 
 
@@ -534,7 +540,7 @@ To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
     >>> pipe = Pipeline()
 
 Because every :term:`Filter object` has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
-By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the `filtering` module that can apply to any Filter object.
+By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the *filtering* module that can apply to any Filter object.
 If we wanted, for example, to create a Pipeline for DESeqFilter objects, we would have to specify the parameter `filter_type`::
 
     >>> from rnalysis import filtering
@@ -583,7 +589,7 @@ Now that we have a Pipeline with multiple functions, we can apply it to our Filt
 
 Applying Pipelines to Filter objects
 _____________________________________
-Just like with other functions in the `filtering` module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
+Just like with other functions in the *filtering* module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
 You can determine that via the `inplace` argument of the function `Pipeline.apply_to()`::
 
     >>> from rnalysis import filtering
@@ -689,9 +695,9 @@ At this point, you will be prompted to enter a string of feature indices seperat
 FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
 
-Perform enrichment analysis for user-defined attributes
--------------------------------------------------------------------
-Using the `enrichment` module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
+Performing enrichment analysis for user-defined attributes
+-----------------------------------------------------------
+Using the *enrichment* module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
 
 Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
@@ -755,6 +761,12 @@ To use it, you must first start a parallel session::
 To read more about parallel sessions, visit the :ref:`parallel-ref` section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.
 
+Performing enrichment analysis for non-categorical user-defined attributes
+---------------------------------------------------------------------------
+TODO
+
+
+
 Performing set operations and visualisation on multiple FeatureSet objects
 -------------------------------------------------------------------------------
 
@@ -795,6 +807,29 @@ It is possible to save the feature indices from an FeatureSet object to a .txt f
 
 The feature indices will be saved to the text file in the specified path, separated by newline ('\n').
 
+Working with RankedSet objects
+=========================================
+TODO
+
+Initialize an RankedSet object
+------------------------------------------
+TODO
+
+Performing single-list enrichment analysis without a background set
+---------------------------------------------------------------------------
+TODO
+
+Visualizing sets, intersections and enrichment
+================================================
+TODO
+
+Plotting results of enrichment analysis
+-----------------------------------------
+TODO
+
+Plotting Venn Diagrams and UpSet Plots
+---------------------------------------
+TODO
 
 ****************************
 RNAlysis general module
