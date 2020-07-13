@@ -3100,6 +3100,14 @@ class Pipeline:
         :param args: unkeyworded arguments for the added function in their natural order. For example: 0.1, True
         :param kwargs: keyworded arguments for the added function. For example: opposite=True
 
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> pipe = filtering.Pipeline()
+            >>> pipe.add_function(filtering.Filter.filter_missing_values)
+            Added function 'Filter.filter_missing_values()' to the pipeline.
+            >>> pipe.add_function('number_filters', 'col1', 'greater than', value=5, opposite=True)
+            Added function 'Filter.number_filters('col1', 'greater than', value=5, opposite=True)' to the pipeline.
+
         """
         assert isinstance(func, (str, types.FunctionType)), f"'func' must be a function/str, is {type(func)} instead."
         if isinstance(func, str):
@@ -3268,6 +3276,29 @@ class Pipeline:
         they will also be returned in a dictionary. Otherwise, nothing will be returned.
         :rtype: Filter object, Tuple[Filter, dict], dict, or None
 
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> # create the pipeline
+            >>> pipe = filtering.Pipeline('DESeqFilter')
+            >>> pipe.add_function(filtering.DESeqFilter.filter_missing_values)
+            Added function 'DESeqFilter.filter_missing_values()' to the pipeline.
+            >>> pipe.add_function(filtering.DESeqFilter.filter_top_n, by='padj', n=3)
+            Added function 'DESeqFilter.filter_top_n(by='padj', n=3)' to the pipeline.
+            >>> pipe.add_function('sort', by='baseMean')
+            Added function 'DESeqFilter.sort(by='baseMean')' to the pipeline.
+            >>> # load the Filter object
+            >>> d = filtering.DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
+            >>> # apply the Pipeline not-inplace
+            >>> d_filtered = pipe.apply_to(d, inplace=False)
+            Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.
+            Filtered 22 features, leaving 3 of the original 25 features. Filtering result saved to new object.
+            Sorted 3 features. Sorting result saved to a new object.
+            >>> # apply the Pipeline inplace
+            >>> pipe.apply_to(d)
+            Filtered 3 features, leaving 25 of the original 28 features. Filtered inplace.
+            Filtered 22 features, leaving 3 of the original 25 features. Filtered inplace.
+            Sorted 3 features. Sorted inplace.
+
         """
         # noinspection PyTypeHints
         assert issubclass(filter_object.__class__,
@@ -3299,6 +3330,14 @@ class Pipeline:
 
         """
         Removes from the Pipeline the last function that was added to it. Removal is in-place.
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> pipe = filtering.Pipeline()
+            >>> pipe.add_function(filtering.Filter.filter_missing_values)
+            Added function 'Filter.filter_missing_values()' to the pipeline.
+            >>> pipe.remove_last_function()
+            Removed function filter_missing_values with parameters [] from the pipeline.
 
         """
         assert len(self.functions) > 0 and len(self.params) > 0, "Pipeline is empty, no functions to remove!"
