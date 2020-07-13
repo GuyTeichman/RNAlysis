@@ -520,17 +520,145 @@ The output table would look like this:
 |   7        |       2.806873       |  2.51828             |0.36026 | False       |
 +------------+----------------------+----------------------+--------+-------------+
 
+Sequentially applying filtering operations using Pipelines
+============================================================
+:term:`Pipeline` objects allow you to group together multiple operations from the `filtering` module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects' of your choice in a specific and consistent order.
+Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
+
+
+Creating a new Pipeline
+________________________
+To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
+
+    >>> from rnalysis import filtering
+    >>> pipe = Pipeline()
+
+Because every :term:`Filter object` has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
+By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the `filtering` module that can apply to any Filter object.
+If we wanted, for example, to create a Pipeline for DESeqFilter objects, we would have to specify the parameter `filter_type`::
+
+    >>> from rnalysis import filtering
+    >>> deseq_pipe = filtering.Pipeline('deseqfilter')
+
+One we have an empty :term:`Pipeline`, we can start adding functions to it.
+We can do that either via the function's name::
+
+    >>> from rnalysis import filtering
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function('filter_significant')
+    Added function 'DESeqFilter.filter_significant()' to the pipeline.
+
+or via the function itself::
+
+    >>> from rnalysis import filtering
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function(filtering.DESeqFilter.filter_significant)
+    Added function 'DESeqFilter.filter_significant()' to the pipeline.
+
+We can also specify the function's arguments. We can specify both non-keyworded and keyworded arguments, just as we would if we called the function normally::
+
+    >>> from rnalysis import filtering
+    >>> pipe = filtering.Pipeline()
+    >>> pipe.add_function(filtering.Filter.filter_biotype, biotype='protein_coding')
+    Added function 'Filter.filter_biotype(biotype='protein_coding')' to the pipeline.
+    >>> pipe.add_function('number_filters', 'column1', 'gt', value=5, opposite=True)
+    Added function 'Filter.number_filters('column1', 'gt', value=5, opposite=True)' to the pipeline.
+
+We can also view the functions currently in the Pipeline object, their arguments, and their order::
+
+    >>> print(pipe)
+    Pipeline for Filter objects:
+        Filter.filter_biotype(biotype='protein_coding')
+        Filter.number_filters('column1', 'gt', value=5, opposite=True)
+    >>> print(repr(pipe))
+    Pipeline('Filter'): Filter.filter_biotype(biotype='protein_coding')-->Filter.number_filters('column1', 'gt', value=5, opposite=True)
+
+
+We can also remove functions from the Pipeline::
+
+    >>> pipe.remove_last_function()
+    Removed function number_filters with parameters ['column1', 'gt', value=5, opposite=True] from the pipeline.
+
+Now that we have a Pipeline with multiple functions, we can apply it to our Filter objects.
+
+Applying Pipelines to Filter objects
+_____________________________________
+Just like with other functions in the `filtering` module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
+You can determine that via the `inplace` argument of the function `Pipeline.apply_to()`::
+
+    >>> from rnalysis import filtering
+    >>> # create the pipeline
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function(filtering.DESeqFilter.filter_missing_values)
+    Added function 'DESeqFilter.filter_missing_values()' to the pipeline.
+    >>> pipe.add_function(filtering.DESeqFilter.filter_top_n, by='padj', n=3)
+    Added function 'DESeqFilter.filter_top_n(by='padj', n=3)' to the pipeline.
+    >>> pipe.add_function('sort', by='baseMean')
+    Added function 'DESeqFilter.sort(by='baseMean')' to the pipeline.
+    >>> # load the Filter object
+    >>> d = filtering.DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
+    >>> # apply the Pipeline not-inplace
+    >>> d_filtered = pipe.apply_to(d, inplace=False)
+    Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.
+    Filtered 22 features, leaving 3 of the original 25 features. Filtering result saved to new object.
+    Sorted 3 features. Sorting result saved to a new object.
+    >>> # apply the Pipeline inplace
+    >>> pipe.apply_to(d)
+    Filtered 3 features, leaving 25 of the original 28 features. Filtered inplace.
+    Filtered 22 features, leaving 3 of the original 25 features. Filtered inplace.
+    Sorted 3 features. Sorted inplace.
+
+Note that only functions that can be applied inplace (such as filtering/normalizing) will be applied inplace.
+If our pipeline contained other types of functions, they will not be applied inplace, and will instead be returned at the end of the Pipeline.
+
+If we apply a Pipeline with functions that return additional outputs (such as Figures, DataFrames, etc), they will be returned in a dictionary alongside the Filter object::
+
+    >>> from rnalysis import filtering
+    >>> # create the pipeline
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function('biotypes', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes(ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('filter_biotype', 'protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.filter_biotype('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('biotypes', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes(ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> # load the Filter object
+    >>> d = filtering.DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
+    >>> # apply the Pipeline not-inplace
+    >>> d_filtered, output_dict = pipe.apply_to(d, inplace=False)
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    >>> print(output_dict['biotypes_1'])
+                    gene
+    biotype
+    protein_coding    26
+    pseudogene         1
+    unknown            1
+    >>> print(output_dict['biotypes_2'])
+                    gene
+    biotype
+    protein_coding    26
+    >>> # apply the Pipeline inplace
+    >>> output_dict_inplace = pipe.apply_to(d)
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+
+When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes' is under the key 'biotypes_1', and the second call to 'biotypes' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
+We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
 
 ****************************
 RNAlysis enrichment module
 ****************************
-RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
+RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including Gene Ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
 
 
 Working with FeatureSet objects
 =========================================
-
-The enrichment module is built around FeatureSet objects, which are a container for a set of genomic features and their name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the FeatureSet object.
+The enrichment module is built around :term:`FeatureSet` objects. A Featureset is a container for a set of gene/genomic feature IDs, and the set's name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the :term:`FeatureSet` object.
 
 
 Initialize an FeatureSet object
@@ -539,7 +667,7 @@ We will start by importing the enrichment module::
 
     >>> from rnalysis import enrichment
 
-An FeatureSet object can now be initialized by one of three methods.
+An :term:`FeatureSet` object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
 
     >>> c = filtering.CountFilter('tests/counted.csv')
