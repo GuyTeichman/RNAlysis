@@ -11,10 +11,11 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['numpy>=1.18.1', 'pandas>=1.0.1', 'matplotlib>=3.2.2', 'seaborn>=0.10.0', 'tissue_enrichment_analysis',
-                'statsmodels', 'scikit-learn>=0.22', 'ipyparallel', 'grid_strategy', 'pyyaml', 'UpSetPlot',
-                'matplotlib-venn', 'scipy', 'hdbscan>=0.8', 'scikit-learn-extra', 'xlmhg>=2.5.4', 'biopython',
-                'numba', 'pairwisedist>=1.2.0', 'requests']
+requirements = [
+    'numpy>=1.18.1', 'pandas>=1.0.1', 'matplotlib>=3.2.2', 'seaborn>=0.10.0', 'statsmodels',
+    'scikit-learn>=0.22', 'ipyparallel', 'grid_strategy', 'pyyaml', 'UpSetPlot', 'matplotlib-venn', 'scipy',
+    'hdbscan>=0.8', 'scikit-learn-extra', 'xlmhg>=2.5.4', 'numba', 'pairwisedist>=1.2.0', 'requests'
+]
 
 setup_requirements = ['pytest-runner', ]
 
@@ -52,6 +53,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/GuyTeichman/RNAlysis',
-    version='1.3.4',
+    version='1.3.5',
     zip_safe=False,
 )

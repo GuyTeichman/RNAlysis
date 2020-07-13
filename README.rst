@@ -66,10 +66,9 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `pyyaml <https://github.com/yaml/pyyaml>`_
 * `UpSetPlot <https://github.com/jnothman/UpSetPlot>`_
 * `matplotlib-venn <https://github.com/konstantint/matplotlib-venn>`_
-* `tissue_enrichment_analysis <https://github.com/dangeles/TissueEnrichmentAnalysis>`_
 * `xlmhg <https://github.com/flo-compbio/xlmhg>`_
-* `goatools <https://github.com/tanghaibao/Goatools>`_
-* `wget <https://pypi.org/project/wget/>`_
+* `requests <https://github.com/psf/requests/>`_
+* `pairwisedist <https://github.com/GuyTeichman/pairwisedist/>`_
 
 ----
 
