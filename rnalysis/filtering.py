@@ -34,14 +34,14 @@ from rnalysis.utils import io, validation, preprocessing, ref_tables, clustering
 
 class Filter:
     """
-    An all-purpose Filter.
+    An all-purpose Filter object.
 
 
     **Attributes**
 
     df: pandas DataFrame
         A DataFrame that contains the DESeq output file contents. \
-        The DataFrame is modified upon usage of filter operations. .
+        The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
         The dimensions of df.
     columns: list
@@ -132,9 +132,13 @@ class Filter:
         Executes the user's choice whether to filter in-place or create a new instance of the Filter object.
 
         :param new_df: the post-filtering DataFrame
-        :param opposite: boolean. Determines whether to return the filtration ,or its opposite.
-        :param inplace: boolean. Determines whether to filter in-place or not.
+        :type new_df: pd.DataFrame
+        :param opposite: Determines whether to return the filtration ,or its opposite.
+        :type opposite: bool
+        :param inplace: Determines whether to filter in-place or not.
+        :type inplace: bool
         :param suffix: The suffix to be added to the filename
+        :type suffix: str
         :return: If inplace is False, returns a new instance of the Filter object.
 
         """
@@ -1311,7 +1315,7 @@ class FoldChangeFilter(Filter):
 
     df: pandas Series
         A Series that contains the fold change values. \
-        The Series is modified upon usage of filter operations. .
+        The Series is modified upon usage of filter operations.
     shape: tuple (rows, columns)
         The dimensions of df.
     columns: list
@@ -1562,7 +1566,7 @@ class DESeqFilter(Filter):
 
     df: pandas DataFrame
         A DataFrame that contains the DESeq output file contents. \
-        The DataFrame is modified upon usage of filter operations. .
+        The DataFrame is modified upon usage of filter operations.
     shape: tuple (rows, columns)
         The dimensions of df.
     columns: list
@@ -2982,12 +2986,35 @@ class CountFilter(Filter):
 
 
 class Pipeline:
+    """
+    An all-purpose Filter object.
+
+
+    **Attributes**
+
+    functions: list
+        A list of the functions in the Pipeline.
+    params: list
+        A list of the parameters of the functions in the Pipeline.
+    filter_type: Filter object
+        The type of Filter objects to which the Pipeline can be applied
+    """
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters',
-                 'filter_type': 'type of filter objects to which the Pipeline will be applied'}
+                 'filter_type': 'type of filter objects to which the Pipeline can be applied'}
 
     def __init__(self, filter_type: Union[str,
                                           Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
                                           Type[CountFilter]] = Filter):
+        """
+        :param filter_type: the type of Filter object the Pipeline can be applied to.
+        :type filter_type: str or Filter object (default=filtering.Filter)
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> pipe = filtering.Pipeline()
+            >>> deseq_pipe = filtering.Pipeline('deseqfilter')
+
+        """
         self.functions = []
         self.params = []
 
@@ -3074,11 +3101,11 @@ class Pipeline:
         :param kwargs: keyworded arguments for the added function. For example: opposite=True
 
         """
-        assert isinstance(func, (str, types.FunctionType)), f"'func' must be a function, is {type(func)} instead. "
+        assert isinstance(func, (str, types.FunctionType)), f"'func' must be a function/str, is {type(func)} instead."
         if isinstance(func, str):
             func = func.lower()  # function names are always expected to be lowercase. This prevents capitalized typos.
             assert hasattr(self.filter_type, func), \
-                f"Function {func} does not exist for filter_type {self.filter_type}. "
+                f"Function {func} does not exist for filter_type {self.filter_type}."
             func = getattr(self.filter_type, func)
         else:
             assert hasattr(self.filter_type, func.__name__) and getattr(self.filter_type, func.__name__) == func, \
@@ -3086,15 +3113,30 @@ class Pipeline:
         if 'inplace' in kwargs:
             warnings.warn(
                 'The "inplace" argument supplied to this function will be ignored. '
-                'To apply the pipeline inplace, state "inplace=True" when calling Pipeline.apply_to(). ')
+                'To apply the pipeline inplace, state "inplace=True" when calling Pipeline.apply_to().')
         self.functions.append(func)
         self.params.append((args, kwargs))
         print(
-            f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline. ")
+            f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline.")
 
     def _apply_filter_norm_sort(self, func: types.FunctionType,
                                 filter_object: Union[Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
                                                      Type[CountFilter]], args: tuple, kwargs: dict, inplace: bool):
+        """
+        Apply a filtering/normalizing/sorting function.
+
+        :param func: function to apply
+        :type func: function
+        :param filter_object: Filter object to apply function to
+        :type filter_object: Filter, CountFilter, DESeqFilter, or FoldChangeFilter.
+        :param args: arguments for the function
+        :type args: tuple
+        :param kwargs: keyworded arguments for the function
+        :type kwargs: dict
+        :param inplace: if True, function will be applied inplace.
+        :type inplace: bool
+        :return: Filter object to which the function was applied.
+        """
         kwargs = kwargs.copy()
         if not inplace:
             kwargs['inplace'] = False
@@ -3120,7 +3162,26 @@ class Pipeline:
                 raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
         return filter_object
 
-    def _apply_split(self, func, filter_object, args, kwargs, other_outputs, other_cnt):
+    def _apply_split(self, func: types.FunctionType,
+                     filter_object: Union[Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter]],
+                     args: tuple, kwargs: dict, other_outputs, other_cnt):
+        """
+         Apply a splitting function.
+
+        :param func: function to apply
+        :type func: function
+        :param filter_object: Filter object to apply function to
+        :type filter_object: Filter, CountFilter, DESeqFilter, or FoldChangeFilter.
+        :param args: arguments for the function
+        :type args: tuple
+        :param kwargs: keyworded arguments for the function
+        :type kwargs: dict
+        :param other_outputs: dictionary with additional function outputs
+        :type other_outputs: dict
+        :param other_cnt: counter for how many times each function was already called
+        :type other_cnt: dict
+        :return: Filter object to which the function was applied.
+        """
         try:
             if isinstance(filter_object, tuple):
                 temp_object = []
@@ -3157,6 +3218,23 @@ class Pipeline:
         return filter_object
 
     def _apply_other(self, func, filter_object, args, kwargs, other_outputs, other_cnt):
+        """
+        Apply a non filtering/splitting/normalizing/sorting function.
+
+        :param func: function to apply
+        :type func: function
+        :param filter_object: Filter object to apply function to
+        :type filter_object: Filter, CountFilter, DESeqFilter, or FoldChangeFilter.
+        :param args: arguments for the function
+        :type args: tuple
+        :param kwargs: keyworded arguments for the function
+        :type kwargs: dict
+        :param other_outputs: dictionary with additional function outputs
+        :type other_outputs: dict
+        :param other_cnt: counter for how many times each function was already called
+        :type other_cnt: dict
+        :return: Filter object to which the function was applied.
+        """
         try:
             if isinstance(filter_object, tuple):
                 tmp_outputs = []
@@ -3178,12 +3256,17 @@ class Pipeline:
     def apply_to(self, filter_object, inplace: bool = True):
 
         """
+        Sequentially apply all functions in the Pipeline to a given Filter object.
 
-        :param filter_object:
-        :type filter_object:
-        :param inplace:
-        :type inplace:
-        :return: :rtype:
+        :param filter_object: filter object to apply the Pipeline to. \
+        Type of filter_object must be identical to `Pipeline.filter_type`.
+        :type filter_object: Filter, CountFilter, DESeqFilter, or FoldChangeFilter
+        :param inplace: Determines whether to apply operations in-place or not.
+        :type inplace: bool (default=True)
+        :return: If inplace=False, a Filter object/tuple of Filter objects will be returned. \
+        If the functions in the Pipeline return any additional outputs, \
+        they will also be returned in a dictionary. Otherwise, nothing will be returned.
+        :rtype: Filter object, Tuple[Filter, dict], dict, or None
 
         """
         # noinspection PyTypeHints
