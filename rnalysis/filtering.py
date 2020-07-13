@@ -2987,7 +2987,7 @@ class CountFilter(Filter):
 
 class Pipeline:
     """
-    An all-purpose Filter object.
+    A collection of functions to be applied sequentially to Filter objects.
 
 
     **Attributes**
