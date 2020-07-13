@@ -328,7 +328,6 @@ class FeatureSet:
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
         appears with the smallest value in the scale.
 
-
         :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
         :type organism: str or int
         :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
