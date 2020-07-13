@@ -569,8 +569,9 @@ class FeatureSet:
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         return attr_ref_df, gene_set, attributes
 
-    def _go_enrichment_output(self, enriched_list: list, fdr: float, return_nonsignificant: bool,
-                              save_csv: bool, fname: str, plot: bool, return_fig: bool, plot_horizontal: bool = True):
+    def _go_enrichment_output(self, enriched_list: list, fdr: float, return_nonsignificant: bool, save_csv: bool,
+                              fname: str, plot: bool, return_fig: bool, plot_horizontal: bool,
+                              single_list: bool = False):
         """
         Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
@@ -578,8 +579,18 @@ class FeatureSet:
         (enrich_randomization, enrich_randomization_parallel, enrich_statistic...).
 
         """
-        res_df = pd.DataFrame(enriched_list,
-                              columns=['go_id', 'term', 'samples', 'obs', 'exp', 'log2_fold_enrichment', 'pval'])
+        n_plot = min(10, len(enriched_list))
+        if single_list:
+            en_score_col = 'log2_enrichment_score'
+            columns = ['go_id', 'term', 'samples', en_score_col, 'pval']
+            title = f"Single-list enrichment for {self.set_name}\ntop {n_plot} most significant GO terms"
+            ylabel = r"$\log_2$(XL-mHG enrichment score)"
+        else:
+            en_score_col = 'log2_fold_enrichment'
+            columns = ['go_id', 'term', 'samples', 'obs', 'exp', en_score_col, 'pval']
+            title = f"Enrichment for {self.set_name}\ntop {n_plot} most significant GO terms"
+            ylabel = r"$\log_2$(Fold Enrichment)"
+        res_df = pd.DataFrame(enriched_list, columns=columns)
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
         res_df['significant'] = significant
@@ -593,10 +604,8 @@ class FeatureSet:
 
         if plot:
             n_plot = min(10, res_df.shape[0])
-            fig = self.plot_enrichment_results(res_df.iloc[:n_plot], name_col=res_df.columns[0],
-                                               title=f"Enrichment for {self.set_name}\n"
-                                                     f"top {n_plot} most significant GO terms",
-                                               plot_horizontal=plot_horizontal)
+            fig = self.plot_enrichment_results(res_df.iloc[:n_plot], en_score_col, res_df.columns[0],
+                                               title=title, ylabel=ylabel, plot_horizontal=plot_horizontal)
             if return_fig:
                 return res_df, fig
         return res_df
@@ -1242,6 +1251,114 @@ class RankedSet(FeatureSet):
                       "the return type will always be FeatureSet and not RankedSet.")
         super()._set_ops(others, op)
 
+    def go_enrichment_single_list(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
+                                  aspects: Union[str, Iterable[str]] = 'any',
+                                  evidence_types: Union[str, Iterable[str]] = 'any',
+                                  excluded_evidence_types: Union[str, Iterable[str]] = None,
+                                  databases: Union[str, Iterable[str]] = 'any',
+                                  excluded_databases: Union[str, Iterable[str]] = None,
+                                  qualifiers: Union[str, Iterable[str]] = 'any',
+                                  excluded_qualifiers: Union[str, Iterable[str]] = 'not',
+                                  return_nonsignificant: bool = False,
+                                  save_csv: bool = False, fname=None,
+                                  return_fig: bool = False, plot_horizontal: bool = True):
+        """
+                ...
+
+                :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+                :type organism: str or int
+                :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+                (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+                If the annotations fetched from the GOLR server do not match your gene_id_type, \
+                RNAlysis will attempt to map  the annotations' gene IDs to your identifier type. \
+                For a full list of legal 'gene_id_type' names, see the UniProt website: \
+                https://www.uniprot.org/help/api_idmapping
+                :type gene_id_type: str (default='UniProtKB')
+                :type fdr: float between 0 and 1
+                :param fdr: Indicates the FDR threshold for significance.
+                :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
+                Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
+                :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
+                or 'any' (default='any')
+                :param evidence_types: only annotations with the specified evidence types \
+                will be included in the analysis. \
+                For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+                http://geneontology.org/docs/guide-go-evidence-codes/
+                :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+                'curator', 'electronic', or 'any' (default='any')
+                :param excluded_evidence_types: annotations with the specified evidence types will be \
+                excluded from the analysis. \
+                For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+                http://geneontology.org/docs/guide-go-evidence-codes/
+                :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
+                'author', 'curator', 'electronic', or None (default=None)
+                :param databases: only annotations from the specified databases will be included in the analysis. \
+                For a full list of legal databases see the GO Consortium website:
+                http://amigo.geneontology.org/xrefs
+                :type databases: str, Iterable of str, or 'any' (default)
+                :param excluded_databases: annotations from the specified databases \
+                will be excluded from the analysis. \
+                For a full list of legal databases see the GO Consortium website:
+                http://amigo.geneontology.org/xrefs
+                :type excluded_databases: str, Iterable of str, or None (default)
+                :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
+                Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+                :type qualifiers: str, Iterable of str, or 'any' (default)
+                :param excluded_qualifiers: annotations with the speficied qualifiers \
+                will be excluded from the analysis. \
+                Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+                :type excluded_qualifiers: str, Iterable of str, or None (default 'not')
+                :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
+                both significant and non-significant terms. If False (default), \
+                only significant GO terms will be returned.
+                :type return_nonsignificant: bool (default False)
+                :type save_csv: bool, default False
+                :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+                :type fname: str or pathlib.Path
+                :param fname: The full path and name of the file to which to save the results. For example: \
+                'C:/dir/file'. No '.csv' suffix is required. If None (default), \
+                fname will be requested in a manual prompt.
+                :type return_fig: bool (default False)
+                :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+                :type plot_horizontal: bool (default True)
+                :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
+                Otherwise, results will be plotted with a vertical plot.
+                :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+                :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+                and a matplotlib Figure, if 'return_figure' is set to True.
+
+                .. figure::  plot_enrichment_results_go_singlelist.png
+                   :align:   center
+                   :scale: 60 %
+
+                   Example plot of go_enrichment_single_list()
+
+
+                .. figure::  plot_enrichment_results_go_singlelist_vertical.png
+                   :align:   center
+                   :scale: 60 %
+
+                   Example plot of go_enrichment_single_list(plot_horizontal = False)
+                """
+        goa_df, go_id_to_term_dict = self._go_enrichment_fetch_annotations(organism, gene_id_type, aspects,
+                                                                           evidence_types, excluded_evidence_types,
+                                                                           databases, excluded_databases, qualifiers,
+                                                                           excluded_qualifiers)
+
+        print("Calculating enrichment...")
+        goa_df, gene_set = self._enrichment_get_reference('all', self.gene_set, goa_df, '', reindex=True)
+        goa_df.fillna(False)
+
+        enriched_list = []
+        for k, go_id in enumerate(goa_df.columns):
+            pval, en_score = self._calc_xlmhg_stats(
+                self._xlmhg_index_vector(self.ranked_genes, go_id, goa_df, notna=False), len(self.ranked_genes))
+            log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
+            enriched_list.append([go_id, go_id_to_term_dict[go_id], len(self.ranked_genes), log2_en_score, pval])
+
+        return self._go_enrichment_output(enriched_list, fdr, return_nonsignificant, save_csv, fname, True, return_fig,
+                                          plot_horizontal)
+
     def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                            attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
                            return_fig: bool = False, plot_horizontal: bool = True):
@@ -1332,8 +1449,7 @@ class RankedSet(FeatureSet):
 
         """
         en_score_col = 'log2_enrichment_score'
-        res_df = pd.DataFrame(enriched_list,
-                              columns=['name', 'samples', en_score_col, 'pval'])
+        res_df = pd.DataFrame(enriched_list, columns=['name', 'samples', en_score_col, 'pval'])
         res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_enrichment_score'].values)))
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
@@ -1378,10 +1494,12 @@ class RankedSet(FeatureSet):
         return pval, en_score
 
     @staticmethod
-    def _xlmhg_index_vector(ranked_genes, attribute, attr_ref_df):
+    def _xlmhg_index_vector(ranked_genes, attribute, attr_ref_df, notna: bool = True):
         ranked_srs = attr_ref_df.loc[ranked_genes, attribute]
         assert ranked_srs.shape[0] == len(ranked_genes)
-        return np.uint16(np.nonzero(ranked_srs.notna().values)[0])
+        if notna:
+            return np.uint16(np.nonzero(ranked_srs.notna().values)[0])
+        return np.uint16(np.nonzero(ranked_srs.values)[0])
 
 
 def _fetch_sets(objs: dict, ref: str = 'predefined'):
