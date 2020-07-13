@@ -1,10 +1,9 @@
 import warnings
 from itertools import islice
 import numpy as np
-from typing import Union, List, TextIO, Any, Set, Iterable
-import Bio.UniProt.GOA as GOA
+from typing import Union, Any, Set, Iterable
 import pandas as pd
-from rnalysis.utils import preprocessing, validation
+from rnalysis.utils import  validation
 
 
 def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
@@ -46,32 +45,6 @@ def uniprot_tab_to_dict(tab_input: str) -> dict:
     if len(duplicates) > 0:
         warnings.warn(f"{len(duplicates)} duplicate mappings were found and ignored: {duplicates}")
     return parsed
-
-
-def filtered_gaf_iterator(file_object: TextIO, taxon_id: int, aspects: Union[str, List[str]] = 'all',
-                          evidence_codes: Union[str, List[str]] = 'all', databases: Union[str, List[str]] = 'all',
-                          qualifiers: Union[str, List[str]] = None):
-    legal_aspects = {'P', 'F', 'C'}
-    legal_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP', 'IBA', 'IBD', 'IKR',
-                      'IRD', 'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA', 'TAS', 'NAS', 'IC', 'ND', 'IEA'}
-    legal_databases = {'UniProtKB', 'UniGene', 'Ensembl'}
-    legal_qualifier = {'NOT', 'contributes_to', 'colocalizes_with'}
-
-    aspects = legal_aspects if aspects is 'all' else data_to_set(aspects)
-    evidence_codes = legal_evidence if evidence_codes is 'all' else data_to_set(evidence_codes)
-    databases = legal_databases if databases is 'all' else data_to_set(databases)
-    qualifiers = set() if qualifiers is None else data_to_set(qualifiers)
-
-    for field, legals in zip((aspects, evidence_codes, databases, qualifiers),
-                             (legal_aspects, legal_evidence, legal_databases, legal_qualifier)):
-        for item in field:
-            assert item in legals, f"Illegal item {item}."
-
-    for record in GOA.gafiterator(file_object):
-        if f"taxon:{taxon_id}" in record['Taxon_ID'] and record['Aspect'] in aspects and \
-            record['DB'] in databases and record['Evidence'] in evidence_codes and \
-            len(preprocessing.intersection_nonempty(qualifiers, record['Qualifier'])) > 0:
-            yield record
 
 
 def data_to_list(data: Any) -> list:
