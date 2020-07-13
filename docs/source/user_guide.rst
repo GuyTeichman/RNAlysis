@@ -689,11 +689,11 @@ At this point, you will be prompted to enter a string of feature indices seperat
 FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
 
-Randomization test enrichment analysis for user-defined attributes
+Perform enrichment analysis for user-defined attributes
 -------------------------------------------------------------------
-Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis is performed using a randomization test.
+Using the `enrichment` module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
 
-Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
+Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
     >>> c = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(h.index_set, 'my set')
@@ -716,7 +716,7 @@ When specifying a biotype, an internal reference file is used to categorize diff
 The second method of changing the background set is to define a specific set of genomic features to be used as background::
 
     >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> en.enrich_randomization(['attribute1','attribute2'], background_genes=my_background_set)
+    >>> en.enrich_hypergeometric(['attribute1','attribute2'], background_genes=my_background_set)
 
 In this example, our background set consists of feature1, feature2 and feature3.
 
@@ -724,7 +724,7 @@ It is not possible to specify both a biotype and a specific background set.
 
 If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
 
-Calling enrich_randomization will perform a randomization test for each of the specified attributes, and return a pandas DataFrame with the following format:
+Calling enrich_randomization/enrich_hypergeometric will perform a randomization/hypergeometric test for each of the specified attributes, and return a pandas DataFrame with the following format:
 
 +----------------+--------------+-------+-------+----------------------+----------+----------+-------------+
 |     name       |    samples   | n obs | n exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -736,9 +736,14 @@ Calling enrich_randomization will perform a randomization test for each of the s
 
 'samples' is the number of features that were used in the enrichment set. 'n obs' is the observed number of features positive for the attribute in the enrichment set.
 'n exp' is the expected number of features positive for the attribute in the enrichment set. 'log2_fold_enrichment' is log2 of the fold change 'n obs'/'n exp'.
+
+enrich_hypergeometric performs the hypergeometric test: Given M genes in the background set, n genes in the test set, with N genes from the background set belonging to a specific attribute (or 'success') and X genes from the test set belonging to that attribute.
+If we were to randomly draw n genes from the background set (without replacement), what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) genes belonging to the given attribute?
+
 enrich_randomization performs the number of randomizations specified by the user (10,000 by default), and marks each randomization as either a success or a failure.
 The p values specified in 'pval' are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
 
+Randomization tests can be computationally heavy, and take a while to run, especially if we test a large number of attributes.
 If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
 To use it, you must first start a parallel session::
 
