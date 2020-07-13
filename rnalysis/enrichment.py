@@ -316,8 +316,13 @@ class FeatureSet:
 
         :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
         :type organism: str or int
-        :param gene_id_type:
-        :type gene_id_type:
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the GOLR server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str (default='UniProtKB')
         :type fdr: float between 0 and 1
         :param fdr: Indicates the FDR threshold for significance.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
@@ -372,8 +377,8 @@ class FeatureSet:
         :type return_fig: bool (default False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
         :type plot_horizontal: bool (default True)
-        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
-        will be plotted with a vertical plot.
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
+        Otherwise, results will be plotted with a vertical plot.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
