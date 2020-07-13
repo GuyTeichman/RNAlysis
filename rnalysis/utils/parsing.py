@@ -139,6 +139,8 @@ def parse_evidence_types(evidence_types: Union[str, Iterable[str]], evidence_typ
         return set.union(
             *[evidence_type_dict[ev_type.lower()] if ev_type.lower() in evidence_type_dict else {ev_type} for ev_type in
               evidence_types])
+    elif evidence_types is None:
+        return set()
     else:
         return data_to_set(evidence_types)
 
