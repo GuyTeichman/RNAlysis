@@ -523,16 +523,18 @@ class FeatureSet:
         bg_size = goa_df.shape[0]
         de_size = len(gene_set)
         for go_id in dag_tree.level_iterator():
-            children = set(dag_tree.go_terms[go_id].get_children())
+            if go_id not in goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
+                continue
+            children = {child for child in dag_tree.go_terms[go_id].get_children() if child in goa_df.columns}
             FeatureSet._compute_term_sig(go_id, children, dag_tree, gene_set, goa_df, go_id_to_term_dict, weights,
                                          res_dict, bg_size, de_size)
 
         return res_dict
 
     @staticmethod
-    def _compute_term_sig(go_id: str, children: set, dag_tree: parsing.DAGTreeParser, gene_set: set, goa_df: pd.DataFrame,
-                          go_id_to_term_dict: Dict[str, str], weights: dict, res_dict: dict, bg_size: int,
-                          de_size: int):
+    def _compute_term_sig(go_id: str, children: set, dag_tree: parsing.DAGTreeParser, gene_set: set,
+                          goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str], weights: dict, res_dict: dict,
+                          bg_size: int, de_size: int) -> None:
         # calculate stats for go_id
         go_size = np.ceil(goa_df[go_id].sum())
         go_de_size = np.ceil(goa_df[go_id].loc[gene_set].sum())
