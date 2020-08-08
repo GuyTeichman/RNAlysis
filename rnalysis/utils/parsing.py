@@ -1,9 +1,13 @@
+import queue
+import re
 import warnings
 from itertools import islice
+from typing import Any, Dict, Iterable, Set, Union
+
 import numpy as np
-from typing import Union, Any, Set, Iterable
 import pandas as pd
-from rnalysis.utils import  validation
+
+from rnalysis.utils import validation
 
 
 def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
@@ -125,3 +129,109 @@ def parse_go_aspects(aspects: Union[str, Iterable[str]], aspects_dict: dict) -> 
         return {aspects_dict[aspect.lower()] if aspect.lower() in aspects_dict else aspect for aspect in aspects}
     else:
         return data_to_set(aspects)
+
+
+class GOTerm:
+    def __init__(self):
+        self.id = None
+        self.level = None
+        self.relationships = {'is_a': [], 'part_of': []}
+        self.children_relationships = {'is_a': [], 'part_of': []}
+
+    def get_parents(self, relationships: Union[str, list] = ('is_a', 'part_of')):
+        go_ids = []
+        _ = [go_ids.extend(self.relationships[relationship]) for relationship in data_to_list(relationships)]
+        return go_ids
+
+    def get_children(self, relationships: Union[str, list] = ('is_a', 'part_of')):
+        go_ids = []
+        _ = [go_ids.extend(self.children_relationships[relationship]) for relationship in data_to_list(relationships)]
+        return go_ids
+
+
+def parse_go_id(byte_sequence: bytes):
+    return re.findall(b"GO:[0-9]{7}", byte_sequence)[0].decode('utf8')
+
+
+class DAGTreeParser:
+    def __init__(self, file_handle, parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
+        self.data_version = None
+        self.go_terms: Dict[str, GOTerm] = {}
+        self.levels: list = []
+        self.parent_relationship_types: list = data_to_list(parent_relationship_types)
+
+        self._parse_file(file_handle)
+        self._populate_levels()
+        self._populate_children()
+
+    def _parse_file(self, file_handle):
+        current_term = None
+        in_frame = False
+        for line in file_handle.iter_lines():
+            if line.startswith(b'[Term]'):
+                current_term = GOTerm()
+                in_frame = True
+            elif in_frame and line.startswith(b'id: '):
+                current_term.id = parse_go_id(line)
+            elif in_frame and line.startswith(b'is_a: '):
+                current_term.relationships['is_a'].append(parse_go_id(line))
+            elif in_frame and line.startswith(b'relationship: '):
+                relationship_type = line.split(b' ')[1].decode('utf8')
+                if relationship_type not in current_term.relationships:
+                    current_term.relationships[relationship_type] = []
+                current_term.relationships[relationship_type].append(parse_go_id(line))
+            elif in_frame and line == b'is_obsolete: true':
+                in_frame = False
+            elif line.startswith(b'[Typedef]'):
+                pass
+            elif in_frame and line == b'':
+                self.go_terms[current_term.id] = current_term
+                in_frame = False
+            elif line.startswith(b'data-version:'):
+                self.data_version = line[14:].decode('utf8')
+
+    def _populate_levels(self):
+        levels_dict = {}
+        for go_term in self.go_terms.values():
+            if go_term.level is None:
+                go_term.level = self._get_term_level_rec(go_term)
+            if go_term.level not in levels_dict:
+                levels_dict[go_term.level] = {}
+            levels_dict[go_term.level][go_term.id] = go_term
+
+        self.levels = [levels_dict[i] for i in range(0, max(levels_dict.keys()) + 1)]
+
+    def _get_term_level_rec(self, go_term: GOTerm):
+        if go_term.level is not None:
+            pass
+        elif len(go_term.get_parents(self.parent_relationship_types)) == 0:
+            go_term.level = 0
+        else:
+            go_term.level = 1 + min(
+                [self._get_term_level_rec(self.go_terms[parent_id]) for parent_id in
+                 go_term.get_parents(self.parent_relationship_types)])
+        return go_term.level
+
+    def _populate_children(self):
+        for go_id in self.level_iterator():
+            for rel_type in self.parent_relationship_types:
+                for parent_id in self.go_terms[go_id].get_parents(rel_type):
+                    if rel_type not in self.go_terms[parent_id].children_relationships:
+                        self.go_terms[parent_id].children_relationships = []
+                    self.go_terms[parent_id].children_relationships[rel_type].append(go_id)
+
+    def level_iterator(self):
+        for level in self.levels[::-1]:
+            for go_id in level:
+                yield go_id
+
+    def upper_induced_graph_iterator(self, go_id: str):
+        node_queue = queue.SimpleQueue()
+        for parent in self.go_terms[go_id].get_parents(self.parent_relationship_types):
+            node_queue.put(parent)
+        while not node_queue.empty():
+            this_node = node_queue.get()
+            parents = self.go_terms[this_node].get_parents(self.parent_relationship_types)
+            for parent in parents:
+                node_queue.put(parent)
+            yield this_node
