@@ -291,7 +291,10 @@ class FeatureSet:
                 source_to_gene_id_dict[annotation['source']].add(annotation['bioentity_internal_id'])
                 # add go term to term dictionary
                 if annotation['annotation_class'] not in go_id_to_term_dict:
-                    go_id_to_term_dict[annotation['annotation_class']] = annotation['annotation_class_label']
+                    try:
+                        go_id_to_term_dict[annotation['annotation_class']] = annotation['annotation_class_label']
+                    except KeyError:
+                        go_id_to_term_dict[annotation['annotation_class']] = 'None'
                     if propagate_annotations != 'no':
                         go_id_to_term_dict.update(annotation['isa_partof_closure_map'])
             print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
