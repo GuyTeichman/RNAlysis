@@ -282,3 +282,9 @@ def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 500):
 def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
     with open(dict_path) as f:
         return json.load(f)
+
+
+def fetch_go_basic():
+    url = 'http://current.geneontology.org/ontology/go-basic.obo'
+    with requests.get(url, stream=True) as obo_stream:
+        return parsing.DAGTreeParser(obo_stream)
