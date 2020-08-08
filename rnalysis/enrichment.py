@@ -438,7 +438,7 @@ class FeatureSet:
 
         biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
         goa_df, gene_set = self._enrichment_get_reference(biotype, background_genes, goa_df, biotype_ref_path,
-                                                          reindex=True)
+                                                          go_printout=True)
         goa_df.fillna(False)
 
         print(f"Calculating enrichment using the '{propagate_annotations}' method...")
@@ -545,7 +545,7 @@ class FeatureSet:
 
         sig_children = set()
         for child in children:
-            weights[child] = res_dict[child][-1] / res_dict[go_id][-1]  # TODO: test potential inf issues
+            weights[child] = (1 - res_dict[child][-1]) / (1 - res_dict[go_id][-1])  # TODO: test potential inf issues
             if weights[child] >= 1:
                 sig_children.add(child)
 
@@ -641,7 +641,7 @@ class FeatureSet:
         return attributes
 
     def _enrichment_get_reference(self, biotype: Union[str, List[str], Set[str], Tuple[str]], background_genes,
-                                  attr_ref_df: pd.DataFrame, biotype_ref_path: str, reindex: bool = False):
+                                  attr_ref_df: pd.DataFrame, biotype_ref_path: str, go_printout: bool = False):
         gene_set = self.gene_set
 
         assert (isinstance(biotype, (str, list, set, tuple)))
@@ -675,23 +675,24 @@ class FeatureSet:
                     mask = mask | (biotype_ref_df['biotype'] == bio)
                 bg = biotype_ref_df[mask].index
 
-        if reindex:
-            attr_ref_df = attr_ref_df.reindex(attr_ref_df.index.union(bg))
+        if go_printout:
+            printout_params = "have any GO Annotations asocciated with them"
         else:
-            attr_ref_df = attr_ref_df.loc[attr_ref_df.index.intersection(bg)]
+            printout_params = "appear in the Attribute Reference Table"
+        attr_ref_df = attr_ref_df.loc[attr_ref_df.index.intersection(bg)]
         if len(attr_ref_df.index) < len(bg):
             warnings.warn(
-                f"{len(bg) - len(attr_ref_df.index)} indices from the requested "
-                f"background genes do not appear in the Attribute Reference Table, and are therefore ignored. \n"
-                f"This leaves a total of {len(attr_ref_df.index)} background genes. ")
+                f"{len(bg) - len(attr_ref_df.index)} genes out of the requested {len(bg)} background genes do not "
+                f"{printout_params}"
+                f", and are therefore ignored. \nThis leaves a total of {len(attr_ref_df.index)} background genes.")
         print(f"{len(attr_ref_df.index)} background genes are used. ")
 
         not_in_bg = gene_set.difference(set(attr_ref_df.index))
         if len(not_in_bg) > 0:
             gene_set = gene_set.difference(not_in_bg)
-            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not appear in the "
-                          f"Attribute Reference Table and/or the background genes. \n"
-                          f"Enrichment will be run on the remaining {len(gene_set)} genes.")
+            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not {printout_params} "
+                          f"and/or do not appear in the background gene set. \n"
+                          f"Enrichment will be computed on the remaining {len(gene_set)} genes.")
         attr_ref_df.sort_index(inplace=True)
         return attr_ref_df, gene_set
 
@@ -1511,7 +1512,7 @@ class RankedSet(FeatureSet):
                                                                            excluded_qualifiers, propagate_annotations)
 
         print("Calculating enrichment...")
-        goa_df, gene_set = self._enrichment_get_reference('all', self.gene_set, goa_df, '', reindex=True)
+        goa_df, gene_set = self._enrichment_get_reference('all', self.gene_set, goa_df, '', go_printout=True)
         goa_df.fillna(False)
         # TODO: implement propagate_annotations in go_enrichment_single_list()
         res_dict = {}
