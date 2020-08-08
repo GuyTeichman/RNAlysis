@@ -494,7 +494,7 @@ class FeatureSet:
         bg_size = goa_df.shape[0]
         de_size = len(gene_set)
         for go_id in dag_tree.level_iterator():
-            if go_id not in goa_df.index:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
+            if go_id not in goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
                 continue
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
                 goa_df[go_id].loc[marked_nodes[go_id]] = 0
