@@ -161,11 +161,11 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
 
     params = {
         "q": "*:*",
-        "wt": "json",
-        "rows": 0,
-        "start": None,
-        "fq": query,
-        "fl": "source,bioentity_internal_id,annotation_class,annotation_class_label"
+        "wt": "json",  # return format
+        "rows": 0,  # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
+        "start": None,  # from which annotation number to start fetching
+        "fq": query,  # search query
+        "fl": "source,bioentity_internal_id,annotation_class,annotation_class_label,isa_partof_closure_map"  # fields
     }
     # get number of annotations found in the query
     req = requests.get(url, params=params)
@@ -178,6 +178,7 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
     # fetch all annotations in batches of size iter_size, and yield them one-by-one
     start = 0
     max_iters = n_annotations // iter_size + 1
+    params['omitHeader'] = "true"  # omit the header from the json response
     for i in range(max_iters):
         params['start'] = start
         start += iter_size
