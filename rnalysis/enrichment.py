@@ -33,6 +33,8 @@ class FeatureSet:
     __goa_queries__ = {}
     __go_basic__ = None
 
+    # TODO: add a half-way memoization of goa_queries (before the table stage)
+
     def __init__(self, gene_set: Union[List[str], Set[str], Filter] = None, set_name: str = ''):
 
         """
@@ -259,7 +261,7 @@ class FeatureSet:
                                          propagate_annotations: str):
         goa_query_key = (organism, gene_id_type, parsing.data_to_tuple(evidence_types), parsing.data_to_tuple(aspects),
                          parsing.data_to_tuple(databases), parsing.data_to_tuple(qualifiers),
-                         parsing.data_to_tuple(excluded_qualifiers))
+                         parsing.data_to_tuple(excluded_qualifiers), propagate_annotations.lower() != 'no')
 
         if goa_query_key in self.__goa_queries__:
             goa_df, go_id_to_term_dict = self.__goa_queries__[goa_query_key]
@@ -484,7 +486,7 @@ class FeatureSet:
 
     @staticmethod
     def _go_elim_pvalues(gene_set: set, goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str],
-                         dag_tree: parsing.DAGTreeParser, fdr: float, inplace: bool = True) -> dict:
+                         dag_tree: parsing.DAGTreeParser, fdr: float, inplace: bool = False) -> dict:
         if not inplace:
             goa_df = goa_df.copy(deep=True)
 
@@ -512,7 +514,7 @@ class FeatureSet:
 
     @staticmethod
     def _go_weight_pvalues(gene_set: set, goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str],
-                           dag_tree: parsing.DAGTreeParser, inplace: bool = True) -> dict:
+                           dag_tree: parsing.DAGTreeParser, inplace: bool = False) -> dict:
         if not inplace:
             goa_df = goa_df.copy(deep=True)
 
