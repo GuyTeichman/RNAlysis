@@ -207,7 +207,7 @@ class DAGTreeParser:
         elif len(go_term.get_parents(self.parent_relationship_types)) == 0:
             go_term.level = 0
         else:
-            go_term.level = 1 + min(
+            go_term.level = 1 + max(
                 [self._get_term_level_rec(self.go_terms[parent_id]) for parent_id in
                  go_term.get_parents(self.parent_relationship_types)])
         return go_term.level
