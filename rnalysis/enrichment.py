@@ -735,14 +735,14 @@ class FeatureSet:
             ylabel = r"$\log_2$(XL-mHG enrichment score)"
         else:
             en_score_col = 'log2_fold_enrichment'
-            columns = ['go_id', 'term', 'samples', 'obs', 'exp', en_score_col, 'pval']
+            columns = ['term', 'samples', 'obs', 'exp', en_score_col, 'pval']
             title = f"Enrichment for {self.set_name}\ntop {n_plot} most significant GO terms"
             ylabel = r"$\log_2$(Fold Enrichment)"
         res_df = pd.DataFrame.from_dict(res_dict, orient='index', columns=columns)
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
         res_df['significant'] = significant
-        res_df.set_index('go_id', inplace=True)
+        res_df.rename_axis('go_id')
         res_df.sort_values('padj', inplace=True)
         if not return_nonsignificant:
             res_df = res_df[res_df['significant']]
