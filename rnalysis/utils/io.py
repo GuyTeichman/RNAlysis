@@ -187,6 +187,8 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
         if not req.ok:
             req.raise_for_status()
         for record in json.loads(req.text)['response']['docs']:
+            # parse the json field 'isa_partof_closure_map' from json to dictionary
+            record['isa_partof_closure_map'] = json.loads(record['isa_partof_closure_map'])
             yield record
 
 
