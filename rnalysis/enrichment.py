@@ -1569,6 +1569,8 @@ class RankedSet(FeatureSet):
            Example plot of enrich_single_list(plot_horizontal = False)
 
         """
+        # TODO: prevent printout of 'XYZ background genes are used' when doing single-list enrichment!!
+        # TODO: look into floating point precision for XL-mHG p-values
         attr_ref_df, gene_set, attributes = self._enrichment_setup(biotype='all', background_genes=None,
                                                                    attr_ref_path=attr_ref_path, biotype_ref_path='',
                                                                    attributes=attributes)
@@ -1583,13 +1585,12 @@ class RankedSet(FeatureSet):
                     i += 1
 
         enriched_list = []
-        for k, attribute in enumerate(attributes):
+        for attribute in attributes:
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             pval, en_score = self._calc_xlmhg_stats(self._xlmhg_index_vector(ranked_genes, attribute, attr_ref_df),
                                                     len(ranked_genes))
             log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
             enriched_list.append([attribute, len(ranked_genes), log2_en_score, pval])
-            print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
         return self._xlmhg_output(enriched_list, fdr, save_csv, fname, return_fig, plot_horizontal)
 
@@ -1626,11 +1627,11 @@ class RankedSet(FeatureSet):
         # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all of the positive
         # elements in the ranked set. Determined to be the minimum between x_min and ceil(x_frac * k),
         # where 'k' is the number of 'positive' elements in the ranked set.
-        x_frac = 0.25
-        x_min = 5
+        x_frac = 0.5
+        x_min = 10
         # L = the lowest possible cutoff (n) to be tested out of the entire list.
         # Determined to be floor(l_frac * N), where 'N' is total number of elements in the ranked set (ranked_genes_len).
-        l_frac = 0.25
+        l_frac = 0.1
         # pre-allocate empty array to speed up computation
         table = np.empty((len(index_vec) + 1, ranked_genes_len - len(index_vec) + 1), dtype=np.longdouble)
         res_obj_fwd = xlmhg_test(N=ranked_genes_len, indices=index_vec, L=int(np.floor(l_frac * ranked_genes_len)),
@@ -1808,4 +1809,3 @@ def _generate_upset_srs(objs: dict):
         group_size = len(set.intersection(*[objs[s] for s in sets]))
         srs.loc[ind] = group_size
     return srs
-
