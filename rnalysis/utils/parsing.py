@@ -97,8 +97,7 @@ def sparse_dict_to_bool_df(sparse_dict: dict) -> pd.DataFrame:
     rows = list(sparse_dict.keys())
     columns = set()
     for val in sparse_dict.values():
-        for item in val:
-            columns.add(item)
+        columns.update(val)
     df = pd.DataFrame(np.zeros((len(rows), len(columns)), dtype=bool), columns=columns, index=rows)
     for key in sparse_dict:
         df.loc[key, sparse_dict[key]] = True
@@ -255,5 +254,5 @@ class DAGTreeParser:
             for parent in parents:
                 if parent not in processed_nodes:
                     node_queue.put(parent)
-                    processed_nodes.add(parent)
+                processed_nodes.update(parents)
             yield this_node
