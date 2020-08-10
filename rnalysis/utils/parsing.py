@@ -232,19 +232,19 @@ class DAGTreeParser:
         return go_term.level
 
     def _populate_children(self):
-        for go_id in self.level_iterator():
+        for go_id in self.level_iter():
             for rel_type in self.parent_relationship_types:
                 for parent_id in self[go_id].get_parents(rel_type):
                     if rel_type not in self[parent_id].children_relationships:
                         self[parent_id].children_relationships = []
                     self[parent_id].children_relationships[rel_type].append(go_id)
 
-    def level_iterator(self):
+    def level_iter(self):
         for level in self.levels[::-1]:
             for go_id in level:
                 yield go_id
 
-    def upper_induced_graph_iterator(self, go_id: str):
+    def upper_induced_graph_iter(self, go_id: str):
         node_queue = queue.SimpleQueue()
         processed_nodes = set()
         for parent in self[go_id].get_parents(self.parent_relationship_types):

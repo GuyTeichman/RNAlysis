@@ -165,7 +165,7 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
         "rows": 0,  # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
         "start": None,  # from which annotation number to start fetching
         "fq": query,  # search query
-        "fl": "source,bioentity_internal_id,annotation_class,annotation_class_label,isa_partof_closure_map"  # fields
+        "fl": "source,bioentity_internal_id,annotation_class"  # fields
     }
     # get number of annotations found in the query
     req = requests.get(url, params=params)
@@ -187,8 +187,6 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
         if not req.ok:
             req.raise_for_status()
         for record in json.loads(req.text)['response']['docs']:
-            # parse the json field 'isa_partof_closure_map' from json to dictionary
-            record['isa_partof_closure_map'] = json.loads(record['isa_partof_closure_map'])
             yield record
 
 

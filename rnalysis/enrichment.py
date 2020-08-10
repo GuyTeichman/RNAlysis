@@ -258,13 +258,13 @@ class FeatureSet:
                                          excluded_databases: Union[str, Iterable[str]],
                                          qualifiers: Union[str, Iterable[str]],
                                          excluded_qualifiers: Union[str, Iterable[str]],
-                                         propagate_annotations: str):
+                                         propagate_annotations: str, dag_tree: parsing.DAGTreeParser):
         goa_query_key = (organism, gene_id_type, parsing.data_to_tuple(evidence_types), parsing.data_to_tuple(aspects),
                          parsing.data_to_tuple(databases), parsing.data_to_tuple(qualifiers),
                          parsing.data_to_tuple(excluded_qualifiers), propagate_annotations.lower() != 'no')
 
         if goa_query_key in self.__goa_queries__:
-            goa_df, go_id_to_term_dict = self.__goa_queries__[goa_query_key]
+            goa_df = self.__goa_queries__[goa_query_key]
         else:
             taxon_id, organism_name = io.map_taxon_id(organism)
             if propagate_annotations != 'no':
@@ -273,32 +273,27 @@ class FeatureSet:
                 out = f"Fetching GO annotations for organism '{organism_name}' (taxon ID:{taxon_id})."
             print(out)
             annotations_iter = io.golr_annotations_iterator(taxon_id, aspects, evidence_types, excluded_evidence_types,
-                                                            databases, excluded_databases, qualifiers,
-                                                            excluded_qualifiers)
+                                                            databases, excluded_databases,
+                                                            qualifiers, excluded_qualifiers)
             sparse_annotation_dict = {}
-            go_id_to_term_dict = {}
             source_to_gene_id_dict = {}
             for annotation in annotations_iter:
                 # add annotation to annotation dictionary
-                if annotation['bioentity_internal_id'] not in sparse_annotation_dict:
-                    sparse_annotation_dict[annotation['bioentity_internal_id']] = (set())
-                sparse_annotation_dict[annotation['bioentity_internal_id']].add(annotation['annotation_class'])
-                if propagate_annotations != 'no':
-                    sparse_annotation_dict[annotation['bioentity_internal_id']].update(
-                        annotation['isa_partof_closure_map'].keys())
+                gene_id = annotation['bioentity_internal_id']
+                go_id = dag_tree[annotation['annotation_class']].id
+                source = annotation['source']
+                if gene_id not in sparse_annotation_dict:
+                    sparse_annotation_dict[gene_id] = (set())
+                sparse_annotation_dict[gene_id].add(go_id)
 
                 # add gene id and source to source dict
-                if annotation['source'] not in source_to_gene_id_dict:
-                    source_to_gene_id_dict[annotation['source']] = set()
-                source_to_gene_id_dict[annotation['source']].add(annotation['bioentity_internal_id'])
-                # add go term to term dictionary
-                if annotation['annotation_class'] not in go_id_to_term_dict:
-                    try:
-                        go_id_to_term_dict[annotation['annotation_class']] = annotation['annotation_class_label']
-                    except KeyError:
-                        go_id_to_term_dict[annotation['annotation_class']] = 'None'
-                    if propagate_annotations != 'no':
-                        go_id_to_term_dict.update(annotation['isa_partof_closure_map'])
+                if source not in source_to_gene_id_dict:
+                    source_to_gene_id_dict[source] = set()
+                source_to_gene_id_dict[source].add(gene_id)
+                # propagate annotations
+                if propagate_annotations != 'no':
+                    parents = set(dag_tree.upper_induced_graph_iter(go_id))
+                    sparse_annotation_dict[gene_id].update(parents)
             print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
             # translate gene IDs
             translated_sparse_annotation_dict = {}
@@ -312,9 +307,9 @@ class FeatureSet:
             print("Generating Gene Ontology Reference Table...")
             goa_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict)
 
-            self.__goa_queries__[goa_query_key] = (goa_df, go_id_to_term_dict)
+            self.__goa_queries__[goa_query_key] = goa_df
 
-        return goa_df, go_id_to_term_dict
+        return goa_df
 
     def go_enrichment(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
                       biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
@@ -431,10 +426,12 @@ class FeatureSet:
            Example plot of go_enrichment(plot_horizontal = False)
         """
         propagate_annotations = propagate_annotations.lower()
-        goa_df, go_id_to_term_dict = self._go_enrichment_fetch_annotations(organism, gene_id_type, aspects,
-                                                                           evidence_types, excluded_evidence_types,
-                                                                           databases, excluded_databases, qualifiers,
-                                                                           excluded_qualifiers, propagate_annotations)
+        dag_tree = io.fetch_go_basic() if self.__go_basic__ is None else self.__go_basic__
+        goa_df = self._go_enrichment_fetch_annotations(organism, gene_id_type, aspects,
+                                                       evidence_types, excluded_evidence_types,
+                                                       databases, excluded_databases, qualifiers,
+                                                       excluded_qualifiers, propagate_annotations,
+                                                       dag_tree)
 
         biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
         goa_df, gene_set = self._enrichment_get_reference(biotype, background_genes, goa_df, biotype_ref_path,
@@ -442,19 +439,17 @@ class FeatureSet:
         goa_df.fillna(False)
 
         print(f"Calculating enrichment using the '{propagate_annotations}' method...")
-        args = [gene_set, goa_df, go_id_to_term_dict]
+        args = [gene_set, goa_df, dag_tree]
         if propagate_annotations in {'classic', 'no'}:
             res_dict = self._go_classic_pvalues(*args)
         elif propagate_annotations in {'elim', 'weight', 'all.m'}:
-            dag_tree = io.fetch_go_basic() if self.__go_basic__ is None else self.__go_basic__
             if propagate_annotations == 'elim':
-                args.extend([dag_tree, fdr])
+                args.append(fdr)
                 res_dict = self._go_elim_pvalues(*args)
             elif propagate_annotations == 'weight':
-                args.append(dag_tree)
                 res_dict = self._go_weight_pvalues(*args)
             else:
-                args.extend([dag_tree, fdr])
+                args.append(fdr)
                 res_dict = self._go_allm_pvalues(*args)
         else:
             raise ValueError(f"Invalid value for 'propagate_annotations': '{propagate_annotations}'.")
@@ -463,14 +458,14 @@ class FeatureSet:
 
     @staticmethod
     def _calc_go_stats(go_id: str, bg_size: int, go_size: int, de_size: int, go_de_size: int, term: str,
-                       res_dict: dict) -> None:
+                       res_dict: dict, calc_pvalue: bool = True) -> None:
         obs, exp = go_de_size, de_size * (go_size / bg_size)
         log2_fold_enrichment = np.log2(obs / exp) if obs > 0 else -np.inf
-        pvalue = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
-        res_dict[go_id] = (term, de_size, obs, exp, log2_fold_enrichment, pvalue)
+        pvalue = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size) if calc_pvalue else None
+        res_dict[go_id] = [term, de_size, obs, exp, log2_fold_enrichment, pvalue]
 
     @staticmethod
-    def _go_classic_pvalues(gene_set: set, goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str]) -> dict:
+    def _go_classic_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser) -> dict:
         res_dict = {}
         go_sizes = goa_df.sum(axis=0)
         bg_size = goa_df.shape[0]
@@ -480,65 +475,76 @@ class FeatureSet:
         for go_id in goa_df.columns:
             go_size = go_sizes[go_id]
             go_de_size = go_de_sizes[go_id]
-            FeatureSet._calc_go_stats(go_id, bg_size, go_size, de_size, go_de_size, go_id_to_term_dict[go_id], res_dict)
+            FeatureSet._calc_go_stats(go_id, bg_size, go_size, de_size, go_de_size, dag_tree[go_id].name, res_dict)
 
         return res_dict
 
     @staticmethod
-    def _go_elim_pvalues(gene_set: set, goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str],
-                         dag_tree: parsing.DAGTreeParser, fdr: float, inplace: bool = False) -> dict:
-        if not inplace:
-            goa_df = goa_df.copy(deep=True)
+    def _go_elim_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser, fdr: float,
+                         inplace: bool = False) -> dict:
+
+        mod_goa_df = goa_df if inplace else goa_df.copy(deep=True)
 
         threshold = fdr / sum([len(level) for level in dag_tree.levels])
         res_dict = {}
         marked_nodes = {}
+        orig_go_sizes = goa_df.sum(axis=0)
         bg_size = goa_df.shape[0]
         de_size = len(gene_set)
-        for go_id in dag_tree.level_iterator():
-            if go_id not in goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
+        orig_go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
+        for go_id in dag_tree.level_iter():
+            if go_id not in mod_goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
                 continue
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
-                goa_df[go_id].loc[marked_nodes[go_id]] = 0
-            go_size = goa_df[go_id].sum()
-            go_de_size = goa_df[go_id].loc[gene_set].sum()
-            FeatureSet._calc_go_stats(go_id, bg_size, go_size, de_size, go_de_size, go_id_to_term_dict[go_id], res_dict)
+                mod_goa_df.loc[marked_nodes[go_id], go_id] = 0
+            go_size = mod_goa_df[go_id].sum()
+            go_de_size = mod_goa_df.loc[gene_set, go_id].sum()
+            orig_go_size = orig_go_sizes[go_id]
+            orig_go_de_size = orig_go_de_sizes[go_id]
+            FeatureSet._calc_go_stats(go_id, bg_size, orig_go_size, de_size, orig_go_de_size, dag_tree[go_id].name,
+                                      res_dict, calc_pvalue=False)
+            res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
 
             if res_dict[go_id][-1] <= threshold:  # if current GO ID is significant, mark its ancestors
-                new_marked_genes = set(goa_df[go_id][goa_df[go_id] == 1].index)
-                for ancestor in dag_tree.upper_induced_graph_iterator(go_id):
+                new_marked_genes = set(mod_goa_df[go_id][mod_goa_df[go_id] == 1].index)
+                for ancestor in dag_tree.upper_induced_graph_iter(go_id):
                     if ancestor not in marked_nodes:
                         marked_nodes[ancestor] = set()
                     marked_nodes[ancestor] = marked_nodes[ancestor].union(new_marked_genes)
         return res_dict
 
     @staticmethod
-    def _go_weight_pvalues(gene_set: set, goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str],
-                           dag_tree: parsing.DAGTreeParser, inplace: bool = False) -> dict:
-        if not inplace:
-            goa_df = goa_df.copy(deep=True)
+    def _go_weight_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser,
+                           inplace: bool = False) -> dict:
+        mod_goa_df = goa_df if inplace else goa_df.copy(deep=True)
 
         res_dict = {}
         weights = collections.defaultdict(lambda: 1)  # default weight for all nodes is 1
+        orig_go_sizes = goa_df.sum(axis=0)
         bg_size = goa_df.shape[0]
         de_size = len(gene_set)
-        for go_id in dag_tree.level_iterator():
-            if go_id not in goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
+        orig_go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
+        for go_id in dag_tree.level_iter():
+            if go_id not in mod_goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
                 continue
-            children = {child for child in dag_tree.go_terms[go_id].get_children() if child in goa_df.columns}
-            FeatureSet._compute_term_sig(go_id, children, dag_tree, gene_set, goa_df, go_id_to_term_dict, weights,
+            orig_go_size = orig_go_sizes[go_id]
+            orig_go_de_size = orig_go_de_sizes[go_id]
+            FeatureSet._calc_go_stats(go_id, bg_size, orig_go_size, de_size, orig_go_de_size,
+                                      dag_tree[go_id].name, res_dict, calc_pvalue=False)
+            children = {child for child in dag_tree[go_id].get_children() if child in mod_goa_df.columns}
+            FeatureSet._compute_term_sig(go_id, children, dag_tree, gene_set, mod_goa_df, weights,
                                          res_dict, bg_size, de_size)
 
         return res_dict
 
     @staticmethod
     def _compute_term_sig(go_id: str, children: set, dag_tree: parsing.DAGTreeParser, gene_set: set,
-                          goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str], weights: dict, res_dict: dict,
+                          goa_df: pd.DataFrame, weights: dict, res_dict: dict,
                           bg_size: int, de_size: int) -> None:
         # calculate stats for go_id
         go_size = np.ceil(goa_df[go_id].sum())
         go_de_size = np.ceil(goa_df[go_id].loc[gene_set].sum())
-        FeatureSet._calc_go_stats(go_id, bg_size, go_size, de_size, go_de_size, go_id_to_term_dict[go_id], res_dict)
+        res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
 
         if len(children) == 0:
             return
@@ -555,29 +561,28 @@ class FeatureSet:
                 goa_df[child] *= weights[child]
                 go_size = np.ceil(goa_df[child].sum())
                 go_de_size = np.ceil(goa_df[child].loc[gene_set].sum())
-                FeatureSet._calc_go_stats(child, bg_size, go_size, de_size, go_de_size, go_id_to_term_dict[child],
-                                          res_dict)
+                res_dict[child][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
+
             return
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
         for sig_child in sig_children:
-            for inclusive_ancestor in chain([go_id], dag_tree.upper_induced_graph_iterator(go_id)):
+            for inclusive_ancestor in chain([go_id], dag_tree.upper_induced_graph_iter(go_id)):
                 goa_df[inclusive_ancestor] *= 1 / weights[sig_child]
         # re-run compute_term_sig, only with the children which were not more significant than their parents
-        FeatureSet._compute_term_sig(go_id, children.difference(sig_children), dag_tree, gene_set, goa_df,
-                                     go_id_to_term_dict, weights, res_dict, bg_size, de_size)
+        FeatureSet._compute_term_sig(go_id, children.difference(sig_children), dag_tree, gene_set, goa_df, weights,
+                                     res_dict, bg_size, de_size)
 
     @staticmethod
-    def _go_allm_pvalues(gene_set: set, goa_df: pd.DataFrame, go_id_to_term_dict: Dict[str, str],
-                         dag_tree: parsing.DAGTreeParser, fdr: float) -> dict:
-        classic = FeatureSet._go_classic_pvalues(gene_set, goa_df, go_id_to_term_dict)
-        elim = FeatureSet._go_elim_pvalues(gene_set, goa_df, go_id_to_term_dict, dag_tree, fdr, inplace=False)
-        weight = FeatureSet._go_weight_pvalues(gene_set, goa_df, go_id_to_term_dict, dag_tree, inplace=False)
+    def _go_allm_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser, fdr: float) -> dict:
+        classic = FeatureSet._go_classic_pvalues(gene_set, goa_df, dag_tree)
+        elim = FeatureSet._go_elim_pvalues(gene_set, goa_df, dag_tree, fdr, inplace=False)
+        weight = FeatureSet._go_weight_pvalues(gene_set, goa_df, dag_tree, inplace=False)
         # TODO: make sure no in-place shenanigans occur with goa_df
         res_dict = {}
         for go_id in classic.keys():
-            pvalue = np.exp(np.mean(np.log([classic[go_id[-1]], elim[go_id[-1]], weight[go_id[-1]]])))
+            pvalue = np.exp(np.mean(np.log([classic[go_id][-1], elim[go_id][-1], weight[go_id][-1]])))
             res_dict[go_id] = (*classic[go_id][:-1], pvalue)
         return res_dict
 
@@ -679,7 +684,8 @@ class FeatureSet:
             printout_params = "have any GO Annotations asocciated with them"
         else:
             printout_params = "appear in the Attribute Reference Table"
-        attr_ref_df = attr_ref_df.loc[attr_ref_df.index.intersection(bg)]
+        # attr_ref_df = attr_ref_df.loc[attr_ref_df.index.intersection(bg)]
+        attr_ref_df = attr_ref_df.drop(attr_ref_df.index.difference(bg))
         if len(attr_ref_df.index) < len(bg):
             warnings.warn(
                 f"{len(bg) - len(attr_ref_df.index)} genes out of the requested {len(bg)} background genes do not "
