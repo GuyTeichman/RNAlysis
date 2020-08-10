@@ -228,17 +228,17 @@ class DAGTreeParser:
             go_term.level = 0
         else:
             go_term.level = 1 + max(
-                [self._get_term_level_rec(self.go_terms[parent_id]) for parent_id in
+                [self._get_term_level_rec(self[parent_id]) for parent_id in
                  go_term.get_parents(self.parent_relationship_types)])
         return go_term.level
 
     def _populate_children(self):
         for go_id in self.level_iterator():
             for rel_type in self.parent_relationship_types:
-                for parent_id in self.go_terms[go_id].get_parents(rel_type):
-                    if rel_type not in self.go_terms[parent_id].children_relationships:
-                        self.go_terms[parent_id].children_relationships = []
-                    self.go_terms[parent_id].children_relationships[rel_type].append(go_id)
+                for parent_id in self[go_id].get_parents(rel_type):
+                    if rel_type not in self[parent_id].children_relationships:
+                        self[parent_id].children_relationships = []
+                    self[parent_id].children_relationships[rel_type].append(go_id)
 
     def level_iterator(self):
         for level in self.levels[::-1]:
@@ -247,11 +247,12 @@ class DAGTreeParser:
 
     def upper_induced_graph_iterator(self, go_id: str):
         node_queue = queue.SimpleQueue()
-        for parent in self.go_terms[go_id].get_parents(self.parent_relationship_types):
+        processed_nodes = set()
+        for parent in self[go_id].get_parents(self.parent_relationship_types):
             node_queue.put(parent)
         while not node_queue.empty():
             this_node = node_queue.get()
-            parents = self.go_terms[this_node].get_parents(self.parent_relationship_types)
+            parents = self[this_node].get_parents(self.parent_relationship_types)
             for parent in parents:
                 node_queue.put(parent)
             yield this_node
