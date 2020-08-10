@@ -134,6 +134,7 @@ def parse_go_aspects(aspects: Union[str, Iterable[str]], aspects_dict: dict) -> 
 class GOTerm:
     def __init__(self):
         self.id = None
+        self.name = None
         self.level = None
         self.relationships = {'is_a': [], 'part_of': []}
         self.children_relationships = {'is_a': [], 'part_of': []}
@@ -157,12 +158,27 @@ class DAGTreeParser:
     def __init__(self, file_handle, parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
         self.data_version = None
         self.go_terms: Dict[str, GOTerm] = {}
+        self.alt_ids: Dict[str, str] = {}
         self.levels: list = []
         self.parent_relationship_types: list = data_to_list(parent_relationship_types)
 
         self._parse_file(file_handle)
         self._populate_levels()
         self._populate_children()
+
+    def __getitem__(self, key):
+        if key in self.go_terms:
+            return self.go_terms[key]
+        elif key in self.alt_ids:
+            return self.go_terms[self.alt_ids[key]]
+        raise KeyError(key)
+
+    def __contains__(self, item):
+        try:
+            _ = self[item]
+            return True
+        except KeyError:
+            return False
 
     def _parse_file(self, file_handle):
         current_term = None
@@ -173,6 +189,10 @@ class DAGTreeParser:
                 in_frame = True
             elif in_frame and line.startswith(b'id: '):
                 current_term.id = parse_go_id(line)
+            elif in_frame and line.startswith(b'name: '):
+                current_term.name = line[6:].decode('utf8')
+            elif in_frame and line.startswith(b'alt_id: '):
+                self.alt_ids[parse_go_id(line)] = current_term.id
             elif in_frame and line.startswith(b'is_a: '):
                 current_term.relationships['is_a'].append(parse_go_id(line))
             elif in_frame and line.startswith(b'relationship: '):
