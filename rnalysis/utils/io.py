@@ -110,7 +110,7 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
                               excluded_databases: Union[str, Iterable[str]] = None,
                               qualifiers: Union[str, Iterable[str]] = 'any',
                               excluded_qualifiers: Union[str, Iterable[str]] = None,
-                              iter_size: int = 10000):
+                              iter_size: int = 200000):
     url = 'http://golr-aux.geneontology.io/solr/select?'
     legal_aspects = {'P', 'F', 'C'}
     aspects_dict = {'biological_process': 'P', 'molecular_function': 'F', 'cellular_component': 'C',
