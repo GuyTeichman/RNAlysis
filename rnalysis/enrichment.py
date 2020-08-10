@@ -436,7 +436,6 @@ class FeatureSet:
         biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
         goa_df, gene_set = self._enrichment_get_reference(biotype, background_genes, goa_df, biotype_ref_path,
                                                           go_printout=True)
-        goa_df.fillna(False)
 
         print(f"Calculating enrichment using the '{propagate_annotations}' method...")
         args = [gene_set, goa_df, dag_tree]
@@ -480,10 +479,9 @@ class FeatureSet:
         return res_dict
 
     @staticmethod
-    def _go_elim_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser, fdr: float,
-                         inplace: bool = False) -> dict:
+    def _go_elim_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser, fdr: float) -> dict:
 
-        mod_goa_df = goa_df if inplace else goa_df.copy(deep=True)
+        mod_goa_df = goa_df.copy(deep=True)
 
         threshold = fdr / sum([len(level) for level in dag_tree.levels])
         res_dict = {}
@@ -514,9 +512,8 @@ class FeatureSet:
         return res_dict
 
     @staticmethod
-    def _go_weight_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser,
-                           inplace: bool = False) -> dict:
-        mod_goa_df = goa_df if inplace else goa_df.copy(deep=True)
+    def _go_weight_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser) -> dict:
+        mod_goa_df = goa_df.astype("float64", copy=True)
 
         res_dict = {}
         weights = collections.defaultdict(lambda: 1)  # default weight for all nodes is 1
@@ -532,18 +529,18 @@ class FeatureSet:
             FeatureSet._calc_go_stats(go_id, bg_size, orig_go_size, de_size, orig_go_de_size,
                                       dag_tree[go_id].name, res_dict, calc_pvalue=False)
             children = {child for child in dag_tree[go_id].get_children() if child in mod_goa_df.columns}
-            FeatureSet._compute_term_sig(go_id, children, dag_tree, gene_set, mod_goa_df, weights,
+            FeatureSet._compute_term_sig(go_id, children, dag_tree, gene_set, mod_goa_df, goa_df, weights,
                                          res_dict, bg_size, de_size)
 
         return res_dict
 
     @staticmethod
     def _compute_term_sig(go_id: str, children: set, dag_tree: parsing.DAGTreeParser, gene_set: set,
-                          goa_df: pd.DataFrame, weights: dict, res_dict: dict,
-                          bg_size: int, de_size: int) -> None:
+                          weighted_goa_df: pd.DataFrame, goa_df: pd.DataFrame, weights: dict, res_dict: dict,
+                          bg_size: int, de_size: int, tolerance: float = 10 ** -50) -> None:
         # calculate stats for go_id
-        go_size = np.ceil(goa_df[go_id].sum())
-        go_de_size = np.ceil(goa_df[go_id].loc[gene_set].sum())
+        go_size = int(np.ceil(weighted_goa_df[go_id].sum()))
+        go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, go_id].sum()))
         res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
 
         if len(children) == 0:
@@ -551,34 +548,42 @@ class FeatureSet:
 
         sig_children = set()
         for child in children:
-            weights[child] = (1 - res_dict[child][-1]) / (1 - res_dict[go_id][-1])  # TODO: test potential inf issues
+            a = res_dict[child][-1]
+            b = res_dict[go_id][-1]
+            if np.isclose(a, 0, rtol=0, atol=tolerance):  # if a is close to 0, add tolerance to avoid division by 0
+                sig_ratio = b / (a + tolerance)
+            elif np.isclose(a, b, rtol=0, atol=tolerance):  # if a and b are nearly identical, set their ratio to 1
+                sig_ratio = 1
+            else:
+                sig_ratio = b / a
+            weights[child] = sig_ratio
+
             if weights[child] >= 1:
                 sig_children.add(child)
 
         # CASE 1: if go_id is more significant than all children, re-weigh the children and recompute their stats
         if len(sig_children) == 0:
             for child in children:
-                goa_df[child] *= weights[child]
-                go_size = np.ceil(goa_df[child].sum())
-                go_de_size = np.ceil(goa_df[child].loc[gene_set].sum())
-                res_dict[child][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
-
+                weighted_goa_df.loc[goa_df[go_id] == 1, child] *= weights[child]
+                ch_go_size = int(np.ceil(weighted_goa_df[child].sum()))
+                ch_go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, child].sum()))
+                res_dict[child][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, ch_go_size, de_size, ch_go_de_size)
             return
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
         for sig_child in sig_children:
             for inclusive_ancestor in chain([go_id], dag_tree.upper_induced_graph_iter(go_id)):
-                goa_df[inclusive_ancestor] *= 1 / weights[sig_child]
+                weighted_goa_df.loc[goa_df[sig_child] == 1, inclusive_ancestor] *= (1 / weights[sig_child])
         # re-run compute_term_sig, only with the children which were not more significant than their parents
-        FeatureSet._compute_term_sig(go_id, children.difference(sig_children), dag_tree, gene_set, goa_df, weights,
-                                     res_dict, bg_size, de_size)
+        FeatureSet._compute_term_sig(go_id, children.difference(sig_children), dag_tree, gene_set, weighted_goa_df,
+                                     goa_df, weights, res_dict, bg_size, de_size, tolerance)
 
     @staticmethod
     def _go_allm_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser, fdr: float) -> dict:
         classic = FeatureSet._go_classic_pvalues(gene_set, goa_df, dag_tree)
-        elim = FeatureSet._go_elim_pvalues(gene_set, goa_df, dag_tree, fdr, inplace=False)
-        weight = FeatureSet._go_weight_pvalues(gene_set, goa_df, dag_tree, inplace=False)
+        elim = FeatureSet._go_elim_pvalues(gene_set, goa_df, dag_tree, fdr)
+        weight = FeatureSet._go_weight_pvalues(gene_set, goa_df, dag_tree)
         # TODO: make sure no in-place shenanigans occur with goa_df
         res_dict = {}
         for go_id in classic.keys():
@@ -1105,6 +1110,7 @@ class FeatureSet:
         :rtype: float between 0 and 1
 
         """
+
         if go_de_size / de_size < go_size / bg_size:
             return hypergeom.cdf(go_de_size, bg_size, go_size, de_size)
         return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
