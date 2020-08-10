@@ -254,5 +254,7 @@ class DAGTreeParser:
             this_node = node_queue.get()
             parents = self[this_node].get_parents(self.parent_relationship_types)
             for parent in parents:
-                node_queue.put(parent)
+                if parent not in processed_nodes:
+                    node_queue.put(parent)
+                    processed_nodes.add(parent)
             yield this_node
