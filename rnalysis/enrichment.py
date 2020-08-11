@@ -456,8 +456,8 @@ class FeatureSet:
                 res_dict = self._go_allm_pvalues(*args)
         else:
             raise ValueError(f"Invalid value for 'propagate_annotations': '{propagate_annotations}'.")
-        return self._go_enrichment_output(res_dict, fdr, return_nonsignificant, save_csv, fname, True, return_fig,
-                                          plot_horizontal)
+        return self._go_enrichment_output(res_dict, fdr, return_nonsignificant, dag_tree, save_csv, fname, True,
+                                          return_fig, plot_horizontal)
 
     @staticmethod
     def _calc_go_stats(go_id: str, bg_size: int, go_size: int, de_size: int, go_de_size: int, term: str,
@@ -737,7 +737,8 @@ class FeatureSet:
         attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
         return attr_ref_df, gene_set, attributes
 
-    def _go_enrichment_output(self, res_dict: dict, fdr: float, return_nonsignificant: bool, save_csv: bool,
+    def _go_enrichment_output(self, res_dict: dict, fdr: float, return_nonsignificant: bool,
+                              dag_tree: parsing.DAGTreeParser, save_csv: bool,
                               fname: str, plot: bool, return_fig: bool, plot_horizontal: bool,
                               single_list: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
@@ -751,19 +752,20 @@ class FeatureSet:
         if single_list:
             en_score_col = 'log2_enrichment_score'
             columns = ['go_id', 'term', 'samples', en_score_col, 'pval']
-            title = f"Single-list enrichment for {self.set_name}\ntop {n_plot} most significant GO terms"
+            title = f"Single-list enrichment for {self.set_name}\ntop {n_plot} most specific GO terms"
             ylabel = r"$\log_2$(XL-mHG enrichment score)"
         else:
             en_score_col = 'log2_fold_enrichment'
             columns = ['term', 'samples', 'obs', 'exp', en_score_col, 'pval']
-            title = f"Enrichment for {self.set_name}\ntop {n_plot} most significant GO terms"
+            title = f"Enrichment for {self.set_name}\ntop {n_plot} most specific GO terms"
             ylabel = r"$\log_2$(Fold Enrichment)"
         res_df = pd.DataFrame.from_dict(res_dict, orient='index', columns=columns)
         significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
         res_df['padj'] = padj
         res_df['significant'] = significant
         res_df.rename_axis('go_id')
-        res_df.sort_values('padj', inplace=True)
+        res_df['dag_level'] = [dag_tree[ind].level for ind in res_df.index]
+        res_df = res_df.sort_values('dag_level', ascending=False).drop('dag_level', 1)
         if not return_nonsignificant:
             res_df = res_df[res_df['significant']]
 
@@ -1571,7 +1573,7 @@ class RankedSet(FeatureSet):
             log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
             res_dict[go_id] = [go_id_to_term_dict[go_id], len(self.ranked_genes), log2_en_score, pval]
 
-        return self._go_enrichment_output(res_dict, fdr, return_nonsignificant, save_csv, fname, True, return_fig,
+        return self._go_enrichment_output(res_dict, fdr, return_nonsignificant, None, save_csv, fname, True, return_fig,
                                           plot_horizontal)
 
     def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
