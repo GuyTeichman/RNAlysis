@@ -4,27 +4,28 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
+import collections
+import itertools
+import types
 import warnings
-from itertools import compress, repeat, chain
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
 
+import ipyparallel
 import matplotlib.pyplot as plt
 import matplotlib_venn as vn
-from numba import jit
+import numba
 import numpy as np
 import pandas as pd
 import statsmodels.stats.multitest as multitest
-import upsetplot as upset
-import collections
-from ipyparallel import Client
+import upsetplot
 from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp
 from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
-from rnalysis.utils import io, parsing, validation, ref_tables
 from rnalysis.filtering import Filter
+from rnalysis.utils import io, parsing, ref_tables, validation
 
 
 class FeatureSet:
@@ -35,7 +36,7 @@ class FeatureSet:
 
     # TODO: add a half-way memoization of goa_queries (before the table stage)
 
-    def __init__(self, gene_set: Union[List[str], Set[str], Filter] = None, set_name: str = ''):
+    def __init__(self, gene_set: Union[List[str], Set[str], 'Filter'] = None, set_name: str = ''):
 
         """
         :param gene_set: the set of genomic features to be used in downstream analyses
@@ -108,11 +109,12 @@ class FeatureSet:
             for gene in self.gene_set:
                 f.write(gene + '\n')
 
-    def _set_ops(self, others, op: Callable):
+    def _set_ops(self, others: Union[set, 'FeatureSet', Tuple[Union[set, 'FeatureSet']]],
+                 op: types.FunctionType) -> set:
 
         """
         Performs a given set operation on self and on another object (FeatureSet or set).
-        :type others: FeatureSet, set or str
+        :type others: FeatureSet or set
         :param others: Other object to perform set operation with.
         :type: op: Callable (set.union, set.intersection, set.difference or set.symmetric difference)
         :param op: The set operation to be performed.
@@ -136,13 +138,13 @@ class FeatureSet:
             else:
                 raise e
 
-    def union(self, *others):
+    def union(self, *others: Union[set, 'FeatureSet']) -> 'FeatureSet':
 
         """
          Calculates the set union of the indices from multiple FeatureSet objects \
         (the indices that exist in at least one of the FeatureSet objects).
 
-        :type others: FeatureSet, RankedSet or set
+        :type others: FeatureSet or set
         :param others: The objects against which the current object will be compared.
         :return: a new FeatureSet with elements from this FeatureSet and all other objects.
         :rtype: FeatureSet
@@ -160,7 +162,7 @@ class FeatureSet:
         """
         return FeatureSet(self._set_ops(others, set.union))
 
-    def intersection(self, *others):
+    def intersection(self, *others: Union[set, 'FeatureSet']) -> 'FeatureSet':
 
         """
         Calculates the set intersection of the indices from multiple FeatureSet objects \
@@ -184,7 +186,7 @@ class FeatureSet:
         """
         return FeatureSet(self._set_ops(others, set.intersection))
 
-    def difference(self, *others):
+    def difference(self, *others: Union[set, 'FeatureSet']) -> 'FeatureSet':
 
         """
         Calculates the set difference of the indices from multiple FeatureSet objects \
@@ -208,7 +210,7 @@ class FeatureSet:
         """
         return FeatureSet(self._set_ops(others, set.difference))
 
-    def symmetric_difference(self, other):
+    def symmetric_difference(self, other: Union[set, 'FeatureSet']) -> 'FeatureSet':
 
         """
         Calculates the set symmetric difference of the indices from two FeatureSet objects \
@@ -230,7 +232,7 @@ class FeatureSet:
             {'WBGene00000002', 'WBGene00000006', 'WBGene00000004'}
 
         """
-        return FeatureSet(self._set_ops([other], set.symmetric_difference))
+        return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
     @staticmethod
     def _enrichment_save_csv(df: pd.DataFrame, fname: str):
@@ -258,7 +260,8 @@ class FeatureSet:
                                          excluded_databases: Union[str, Iterable[str]],
                                          qualifiers: Union[str, Iterable[str]],
                                          excluded_qualifiers: Union[str, Iterable[str]],
-                                         propagate_annotations: str, dag_tree: parsing.DAGTreeParser):
+                                         propagate_annotations: str, dag_tree: parsing.DAGTreeParser) -> pd.DataFrame:
+
         goa_query_key = (organism, gene_id_type, parsing.data_to_tuple(evidence_types), parsing.data_to_tuple(aspects),
                          parsing.data_to_tuple(databases), parsing.data_to_tuple(qualifiers),
                          parsing.data_to_tuple(excluded_qualifiers), propagate_annotations.lower() != 'no')
@@ -323,7 +326,8 @@ class FeatureSet:
                       qualifiers: Union[str, Iterable[str]] = 'any',
                       excluded_qualifiers: Union[str, Iterable[str]] = 'not',
                       return_nonsignificant: bool = False,
-                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True):
+                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True
+                      ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set \
         using the Hypergeometric Test. The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
@@ -491,7 +495,7 @@ class FeatureSet:
         de_size = len(gene_set)
         orig_go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
         for go_id in dag_tree.level_iter():
-            if go_id not in mod_goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
+            if go_id not in mod_goa_df.columns:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
                 continue
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
                 mod_goa_df.loc[marked_nodes[go_id], go_id] = 0
@@ -522,7 +526,7 @@ class FeatureSet:
         de_size = len(gene_set)
         orig_go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
         for go_id in dag_tree.level_iter():
-            if go_id not in mod_goa_df.columns:  # skip any GO ID that has no annotations whatsoever (direct or inherited)
+            if go_id not in mod_goa_df.columns:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
                 continue
             orig_go_size = orig_go_sizes[go_id]
             orig_go_de_size = orig_go_de_sizes[go_id]
@@ -573,7 +577,7 @@ class FeatureSet:
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
         for sig_child in sig_children:
-            for inclusive_ancestor in chain([go_id], dag_tree.upper_induced_graph_iter(go_id)):
+            for inclusive_ancestor in itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id)):
                 weighted_goa_df.loc[goa_df[sig_child] == 1, inclusive_ancestor] *= (1 / weights[sig_child])
         # re-run compute_term_sig, only with the children which were not more significant than their parents
         FeatureSet._compute_term_sig(go_id, children.difference(sig_children), dag_tree, gene_set, weighted_goa_df,
@@ -592,7 +596,7 @@ class FeatureSet:
         return res_dict
 
     @staticmethod
-    def _single_enrichment(gene_set, attribute, attr_ref_df: pd.DataFrame, reps: int):
+    def _single_enrichment(gene_set, attribute, attr_ref_df: pd.DataFrame, reps: int) -> list:
         assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
         srs = attr_ref_df[attribute]
         bg_array = np.isnan(srs.values)
@@ -606,8 +610,8 @@ class FeatureSet:
         return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
     @staticmethod
-    @jit(nopython=True)
-    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float):
+    @numba.jit(nopython=True)
+    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float) -> float:
         ind_range = np.arange(bg_array.shape[0])
         success = 0
         if log2fc >= 0:
@@ -735,7 +739,7 @@ class FeatureSet:
 
     def _go_enrichment_output(self, res_dict: dict, fdr: float, return_nonsignificant: bool, save_csv: bool,
                               fname: str, plot: bool, return_fig: bool, plot_horizontal: bool,
-                              single_list: bool = False):
+                              single_list: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
@@ -805,7 +809,8 @@ class FeatureSet:
                                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                                       save_csv: bool = False, fname=None, return_fig: bool = False,
-                                      plot_horizontal: bool = True, random_seed: int = None):
+                                      plot_horizontal: bool = True, random_seed: int = None
+                                      ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -882,7 +887,7 @@ class FeatureSet:
         attr_ref_df, gene_set, attributes, = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
 
-        client = Client()
+        client = ipyparallel.Client()
         dview = client[:]
         dview.execute("""import numpy as np
               import pandas as pd""")
@@ -891,9 +896,9 @@ class FeatureSet:
                                                                       f"Value {random_seed} invalid."
             dview.execute(f"np.random.seed({random_seed})")
         k = len(attributes)
-        gene_set_rep = list(repeat(gene_set, k))
-        attr_ref_df_rep = list(repeat(attr_ref_df, k))
-        reps_rep = list(repeat(reps, k))
+        gene_set_rep = list(itertools.repeat(gene_set, k))
+        attr_ref_df_rep = list(itertools.repeat(attr_ref_df, k))
+        reps_rep = list(itertools.repeat(reps, k))
 
         res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
         enriched_list = res.result()
@@ -904,7 +909,7 @@ class FeatureSet:
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                             random_seed: int = None):
+                             random_seed: int = None) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -995,7 +1000,7 @@ class FeatureSet:
                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                               attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                               save_csv: bool = False, fname=None, return_fig: bool = False,
-                              plot_horizontal: bool = True):
+                              plot_horizontal: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -1086,7 +1091,7 @@ class FeatureSet:
         return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
 
     @staticmethod
-    def _calc_hypergeometric_pval(bg_size: int, go_size: int, de_size: int, go_de_size: int):
+    def _calc_hypergeometric_pval(bg_size: int, go_size: int, de_size: int, go_de_size: int) -> float:
 
         """
         Performs a hypergeometric test on the given enrichment set. \
@@ -1118,7 +1123,7 @@ class FeatureSet:
     @staticmethod
     def plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', name_col: str = None,
                                 title: str = '', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                                plot_horizontal: bool = True, center_bars: bool = True):
+                                plot_horizontal: bool = True, center_bars: bool = True) -> plt.Figure:
 
         """
         Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
@@ -1261,7 +1266,8 @@ class FeatureSet:
                                background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                                plot_log_scale: bool = True, plot_style: str = 'overlap', n_bins: int = 50,
-                               save_csv: bool = False, fname=None, return_fig: bool = False):
+                               save_csv: bool = False, fname=None, return_fig: bool = False
+                               ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         attr_ref_df, gene_set, attributes = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         enriched_list = []
@@ -1287,7 +1293,7 @@ class FeatureSet:
     @staticmethod
     def _enrichment_plot_histogram(attribute: str, gene_set: set, set_name: str, attr_srs: pd.Series,
                                    plot_log_scale: bool, plot_style: str, n_bins: int, parametric_test: bool,
-                                   pval: float):
+                                   pval: float) -> plt.Figure:
         assert isinstance(n_bins,
                           int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
         # generate observed and expected Series, either linear or in log10 scale
@@ -1411,7 +1417,7 @@ class RankedSet(FeatureSet):
         super().__init__(ranked_genes, set_name)
         assert len(self.ranked_genes) == len(self.gene_set), f"'ranked_genes' must have no repeating elements!"
 
-    def _set_ops(self, others, op: Callable):
+    def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
         warnings.warn("Warning: when performing set operations with RankedSet objects, "
                       "the return type will always be FeatureSet and not RankedSet.")
         super()._set_ops(others, op)
@@ -1427,7 +1433,8 @@ class RankedSet(FeatureSet):
                                   excluded_qualifiers: Union[str, Iterable[str]] = 'not',
                                   return_nonsignificant: bool = False,
                                   save_csv: bool = False, fname=None,
-                                  return_fig: bool = False, plot_horizontal: bool = True):
+                                  return_fig: bool = False, plot_horizontal: bool = True
+                                  ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1735,9 +1742,9 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
     """
 
     upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
-    upsetplot = upset.plot(upset_df)
+    upset = upsetplot.plot(upset_df)
     plt.title(title)
-    return upsetplot
+    return upset
 
 
 def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default', ref: str = 'predefined',
@@ -1825,7 +1832,7 @@ def _generate_upset_srs(objs: dict):
     multi_ind = pd.MultiIndex.from_product([[True, False] for _ in range(len(names))], names=names)[:-1]
     srs = pd.Series(index=multi_ind)
     for ind in multi_ind:
-        sets = list(compress(names, ind))
+        sets = list(itertools.compress(names, ind))
         group_size = len(set.intersection(*[objs[s] for s in sets]))
         srs.loc[ind] = group_size
     return srs
