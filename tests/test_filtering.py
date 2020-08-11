@@ -1299,7 +1299,7 @@ def test_pipeline_apply_to_with_split_function():
     c = CountFilter('test_files/counted.csv')
     c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
-    c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_prob=True)
+    c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_probabilities=True)
     for i in c_res:
         i.filter_top_n(by='cond1', n=5)
     for i, j in zip(c_res, c_pipeline_res):
@@ -1342,7 +1342,7 @@ def test_pipeline_apply_to_multiple_splits():
     c = CountFilter('test_files/counted.csv')
     c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
-    c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_prob=True)
+    c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_probabilities=True)
     c_res_cont = []
     for i in c_res:
         c_res_cont.extend(i.split_kmedoids(k=2, random_state=42))
@@ -1376,7 +1376,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     c.normalize_with_scaling_factors(scaling_factor_path)
     c_dict['biotypes_1'] = c.biotypes(ref=__biotype_ref__)
     c_res = c.filter_top_n(by='cond3rep1', n=270, opposite=True, inplace=False)
-    c_res, prob = c_res.split_hdbscan(min_cluster_size=100, return_prob=True)
+    c_res, prob = c_res.split_hdbscan(min_cluster_size=100, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
     for obj in c_res:
         obj.filter_low_reads(threshold=10)
@@ -1448,7 +1448,7 @@ def test_split_hdbscan_api():
     c = CountFilter('test_files/big_counted.csv')
     res = c.split_hdbscan(100)
     _test_correct_clustering_split(c, res, True)
-    res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_prob=True)
+    res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_probabilities=True)
     assert isinstance(res2, list)
     assert isinstance(res2[0], tuple)
     assert isinstance(res2[1], np.ndarray)

@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Union, List, Set, Iterable
 import pandas as pd
+import warnings
 
 
 def check_is_df_like(inp):
@@ -68,3 +69,45 @@ def validate_uniprot_dataset_name(dataset_dict: dict, *names: str):
     for name in names:
         assert name in dataset_dict, f"Dataset '{name}' is not a valid Uniprot Dataset for mapping gene names/IDs. " \
                                      f"Valid Uniprot Datasets are: {', '.join(dataset_dict.keys())}."
+
+
+def validate_threshold(threshold: float = 1):
+    """
+    Assertions for functions that filter normalized values by some threshold, \
+    or are meant to be used on normalized values.
+
+    :param threshold: optional. A threshold value for filter_low_rpm to be asserted.
+
+    """
+    assert isinstance(threshold, (float, int)), "Threshold must be a number!"
+    assert threshold >= 0, "Threshold must be zero or larger!"
+
+
+def validate_is_normalized(filter_obj_fname: Union[str, Path]):
+    if '_norm' not in str(filter_obj_fname):
+        warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
+
+
+def validate_clustering_parameters(metric: str, linkage: str = None):
+    legal_metrics = {'euclidean', 'spearman', 'pearson', 'manhattan', 'cosine', 'ys1', 'yr1', 'jackknife'}
+    legal_linkages = {'single', 'average', 'complete', 'ward'}
+    assert isinstance(metric, str), f"'metric' must be a string. Instead got '{type(metric)}'."
+    metric = metric.lower()
+    assert metric in legal_metrics, f"'metric' must be one of {legal_metrics}. Instead got '{metric}'."
+
+    if linkage is not None:
+        assert isinstance(linkage, str), f"'linkage' must be a string. Instead got '{type(linkage)}'."
+        linkage = linkage.lower()
+        assert linkage in legal_linkages, f"'linkage' must be in {legal_linkages}. Instead got '{linkage}'."
+        return metric, linkage
+    return metric
+
+
+def validate_hdbscan_parameters(min_cluster_size: int, metric: str, cluster_selection_method: str, n_features:int):
+    assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
+        f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
+    assert min_cluster_size <= n_features, \
+        "'min_cluster_size' cannot be larger than the number of features in the CountFilter object. "
+    assert isinstance(cluster_selection_method, str), \
+        f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}."
+    assert isinstance(metric, str), f"'metric' must be a string. Instead got {type(metric)}."

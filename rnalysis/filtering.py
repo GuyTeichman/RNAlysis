@@ -15,21 +15,21 @@ import types
 import warnings
 from itertools import tee
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple, Type, Union, Callable
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
 
 import hdbscan
 import matplotlib.pyplot as plt
+import numba
 import numpy as np
-import pandas as pd
 import pairwisedist as pwdist
+import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
-from numba import jit
-from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
 
-from rnalysis.utils import io, validation, preprocessing, ref_tables, clustering
+from rnalysis.utils import clustering, io, parsing, preprocessing, ref_tables, validation
 
 
 class Filter:
@@ -251,7 +251,7 @@ class Filter:
             split = split[:-1]
         return split
 
-    def head(self, n: int = 5):
+    def head(self, n: int = 5) -> pd.DataFrame:
 
         """
         Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.
@@ -583,7 +583,7 @@ class Filter:
                                           f"Attribute '{attr}' is of type {type(attr)}"
         return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
-    def describe(self, percentiles: Union[list, Tuple, np.ndarray] = (0.01, 0.25, 0.5, 0.75, 0.99)):
+    def describe(self, percentiles: Union[list, Tuple, np.ndarray] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
 
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
@@ -749,7 +749,7 @@ class Filter:
         """
         print(self.index_string)
 
-    def biotypes(self, return_format: str = 'short', ref: str = 'predefined'):
+    def biotypes(self, return_format: str = 'short', ref: str = 'predefined') -> pd.DataFrame:
 
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
@@ -1103,7 +1103,7 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @staticmethod
-    def __return_type(index_set: set, return_type: str):
+    def _return_type(index_set: set, return_type: str):
         assert isinstance(return_type, str), "'return_type' must be a string!!"
         if return_type == 'set':
             return index_set
@@ -1141,9 +1141,9 @@ class Filter:
                     f"Symmetric difference can only be calculated for two objects, {len(others) + 1} were given!")
             else:
                 raise e
-        return Filter.__return_type(op_indices, return_type)
+        return Filter._return_type(op_indices, return_type)
 
-    def intersection(self, *others, return_type: str = 'set', inplace: bool = False):
+    def intersection(self, *others: Union['Filter', set], return_type: str = 'set', inplace: bool = False):
 
         """
         Keep only the features that exist in ALL of the given Filter objects/sets. \
@@ -1184,7 +1184,7 @@ class Filter:
             new_set = self._set_ops(others, return_type, set.intersection)
             return new_set
 
-    def union(self, *others, return_type: str = 'set'):
+    def union(self, *others: Union['Filter', set], return_type: str = 'set'):
 
         """
         Returns a set/string of the union of WBGene indices between multiple Filter objects \
@@ -1219,7 +1219,7 @@ class Filter:
         # union always returns a set/string (What is the meaning of in-place union between two different tables?)
         return self._set_ops(others, return_type, set.union)
 
-    def difference(self, *others, return_type: str = 'set', inplace: bool = False):
+    def difference(self, *others: Union['Filter', set], return_type: str = 'set', inplace: bool = False):
 
         """
         Keep only the features that exist in the first Filter object/set but NOT in the others. \
@@ -1266,7 +1266,7 @@ class Filter:
             new_set = self._set_ops(others, return_type, set.difference)
             return new_set
 
-    def symmetric_difference(self, other, return_type: str = 'set'):
+    def symmetric_difference(self, other: Union['Filter', set], return_type: str = 'set'):
 
         """
         Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second, \
@@ -1368,7 +1368,7 @@ class FoldChangeFilter(Filter):
         return [self.df.name]
 
     def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None,
-                           random_seed: int = None):
+                           random_seed: int = None) -> pd.DataFrame:
 
         """
         Perform a randomization test to examine whether the fold change of a group of specific genomic features \
@@ -1435,7 +1435,7 @@ class FoldChangeFilter(Filter):
         return res_df
 
     @staticmethod
-    @jit(nopython=True)
+    @numba.jit(nopython=True)
     def _foldchange_randomization(vals: np.ndarray, reps: int, obs_fc: float, exp_fc: float, n: int):
         success = 0
         # determine the randomization test's direction (is observed greater/lesser than expected)
@@ -1582,7 +1582,7 @@ class DESeqFilter(Filter):
 
     """
 
-    def filter_significant(self, alpha: float = 0.1, opposite: bool = False, inplace: bool = True, ):
+    def filter_significant(self, alpha: float = 0.1, opposite: bool = False, inplace: bool = True):
 
         """
         Removes all features which did not change significantly, according to the provided alpha.
@@ -1714,7 +1714,7 @@ class DESeqFilter(Filter):
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
             direction='neg', inplace=False)
 
-    def volcano_plot(self, alpha: float = 0.1):
+    def volcano_plot(self, alpha: float = 0.1) -> plt.Figure:
 
         """
         Plots a volcano plot (log2(fold change) vs -log10(adj. p-value)) of the DESeqFilter object. \
@@ -1792,11 +1792,12 @@ class CountFilter(Filter):
         triplicate = [self.columns[i * mltplr:(1 + i) * mltplr] for i in range(self.shape[1] // mltplr)]
         if len(self.columns[(self.shape[1] // mltplr) * mltplr::]) > 0:
             triplicate.append([self.columns[(self.shape[1] // mltplr) * mltplr::]])
-            warnings.warn(
-                f'Number of samples {self.shape[1]} is not divisible by 3. Appending the remaining {self.shape[1] % mltplr} as an inncomplete triplicate')
+            warnings.warn(f'Number of samples {self.shape[1]} is not divisible by 3. '
+                          f'Appending the remaining {self.shape[1] % mltplr} as an inncomplete triplicate.')
         return triplicate
 
-    def fold_change(self, numerator, denominator, numer_name: str = 'default', denom_name: str = 'default'):
+    def fold_change(self, numerator: Union[str, List[str]], denominator: Union[str, List[str]],
+                    numer_name: str = 'default', denom_name: str = 'default') -> 'FoldChangeFilter':
 
         """
         Calculate the fold change between the numerator condition and the denominator condition, \
@@ -1861,7 +1862,7 @@ class CountFilter(Filter):
 
         pass
 
-    def pairplot(self, sample_list: list = 'all', log2: bool = False):
+    def pairplot(self, sample_list: list = 'all', log2: bool = False) -> sns.PairGrid:
 
         """
         Plot pairwise relationships in the dataset. \
@@ -1897,20 +1898,6 @@ class CountFilter(Filter):
         plt.show()
         return pairplt
 
-    def _threshold_assertions(self, threshold: float = 1):
-
-        """
-        Assertions for functions that filter normalized values by some threshold, \
-        or are meant to be used on normalized values.
-
-        :param threshold: optional. A threshold value for filter_low_rpm to be asserted.
-
-        """
-        assert isinstance(threshold, (float, int)), "Threshold must be a number!"
-        assert threshold >= 0, "Threshold must be zero or larger!"
-        if '_norm' not in str(self.fname):
-            warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
-
     def _avg_subsamples(self, sample_list: list):
 
         """
@@ -1937,7 +1924,7 @@ class CountFilter(Filter):
 
         return samples_df
 
-    def normalize_to_rpm(self, special_counter_fname: str, inplace: bool = True):
+    def normalize_to_rpm(self, special_counter_fname: Union[str, Path], inplace: bool = True):
 
         """
         Normalizes the reads in the CountFilter to Reads Per Million (RPM). \
@@ -2031,7 +2018,9 @@ class CountFilter(Filter):
             Filtered 6 features, leaving 16 of the original 22 features. Filtered inplace.
 
         """
-        self._threshold_assertions(threshold=threshold)
+        validation.validate_threshold(threshold)
+        validation.validate_is_normalized(self.fname)
+
         new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         suffix = f"_filt{threshold}reads"
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -2056,12 +2045,14 @@ class CountFilter(Filter):
         :Examples:
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter('tests/test_files/counted.csv')
-            >>> low_expr,high_expr = c.split_by_reads(5)
+            >>> low_expression, high_expression = c.split_by_reads(5)
             Filtered 6 features, leaving 16 of the original 22 features. Filtering result saved to new object.
             Filtered 16 features, leaving 6 of the original 22 features. Filtering result saved to new object.
 
         """
-        self._threshold_assertions(threshold=threshold)
+        validation.validate_threshold(threshold)
+        validation.validate_is_normalized(self.fname)
+
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
         low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in self.df.iterrows()]]
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), self._inplace(
@@ -2091,13 +2082,15 @@ class CountFilter(Filter):
             Filtered 4 features, leaving 18 of the original 22 features. Filtered inplace.
 
         """
-        self._threshold_assertions(threshold=threshold)
+        validation.validate_threshold(threshold)
+        validation.validate_is_normalized(self.fname)
+
         new_df = self.df.loc[self.df.sum(axis=1) >= threshold]
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def _plot_clustering(self, n_clusters: int, data, labels: np.ndarray, centers: np.ndarray, title: str,
-                         plot_style: str, split_plots: bool):
+                         plot_style: str, split_plots: bool) -> Tuple[plt.Figure, plt.Axes]:
         assert plot_style.lower() in {'all', 'std_bar', 'std_area'}, \
             f"Invalid value for 'plot_style': '{plot_style}'. 'plot_style' must be 'all', 'std_bar' or 'std_area'. "
         assert isinstance(split_plots, bool), f"'split_plots' must be of type bool, instead got {type(split_plots)}"
@@ -2151,7 +2144,7 @@ class CountFilter(Filter):
         return fig, axes
 
     def _gap_statistic(self, clusterer_class: type, transform: Callable, random_state: int, clusterer_kwargs: dict,
-                       n_refs: int = 10, max_clusters: int = 20):
+                       n_refs: int = 10, max_clusters: int = 20) -> Tuple[int, plt.Figure]:
         # determine the range of k values to be tested
         k_range = np.arange(1, max_clusters + 1)
         print(f"Calculating optimal K using the Gap Statistic method in range {2}:{max_clusters}...")
@@ -2217,7 +2210,7 @@ class CountFilter(Filter):
         return best_k, fig
 
     @staticmethod
-    def _compute_dispersion(clusterer, data, k):
+    def _compute_dispersion(clusterer, data, k: int):
         # known as Wk in the Gap Statistic paper
         if hasattr(clusterer, 'inertia_'):
             return clusterer.inertia_
@@ -2232,7 +2225,7 @@ class CountFilter(Filter):
         return dispersion
 
     @staticmethod
-    def _plot_gap(k_range, log_disp_obs, log_disp_exp, gap_scores, gap_error, best_k, best_k_ind):
+    def _plot_gap(k_range, log_disp_obs, log_disp_exp, gap_scores, gap_error, best_k: int, best_k_ind) -> plt.Figure:
         fig, (ax_inertia, ax) = plt.subplots(1, 2, figsize=(14, 9))
         ax_inertia.plot(k_range, log_disp_obs, '-o')
         ax_inertia.plot(k_range, log_disp_exp, '-o')
@@ -2287,26 +2280,26 @@ class CountFilter(Filter):
         return best_k, fig
 
     def _parse_k(self, k: Union[int, List[int], str], clusterer_class: type, transform: Callable,
-                 random_state: int, clusterer_kwargs: dict, max_clusters: int):
+                 random_state: int, clusterer_kwargs: dict, max_clusters: Union[int, str]) -> List[int]:
 
+        # get best k value using gap statistic/silhouette method, if requested by the user
+        # max_clusters is the highest k value to test in gap/silhouette
         max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
-            best_k, _ = self._silhouette(clusterer_class=clusterer_class, transform=transform,
-                                         clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
-            k = [best_k]
+            k, _ = self._silhouette(clusterer_class=clusterer_class, transform=transform,
+                                    clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
         elif isinstance(k, str) and k.lower() == 'gap':
-            best_k, _ = self._gap_statistic(clusterer_class=clusterer_class, transform=transform,
-                                            random_state=random_state, clusterer_kwargs=clusterer_kwargs,
-                                            max_clusters=max_clusters)
-            k = [best_k]
-        else:
-            if not isinstance(k, Iterable):
-                k = [k]
-            k, k_copy = tee(k)
-
-            assert np.all([isinstance(item, int) and item >= 2 for item in k_copy]), \
-                f"Invalid value for k: '{k}'. k must be an integer>=2, Iterable of integers, 'gap', or 'silhouette'. "
-        return k
+            k, _ = self._gap_statistic(clusterer_class=clusterer_class, transform=transform,
+                                       random_state=random_state, clusterer_kwargs=clusterer_kwargs,
+                                       max_clusters=max_clusters)
+        # turn k into a list of k values
+        k = parsing.data_to_list(k)
+        # make sure all values of k are in valid range
+        k, k_copy = tee(k)
+        assert np.all([isinstance(item, int) and 2 <= item <= len(self.df.index) for item in k_copy]), \
+            f"Invalid value for k: '{k}'. k must be 'gap', 'silhouette', " \
+            f"or an integer/Iterable of integers in range 2 <= k <= n_features."
+        return parsing.data_to_list(k)
 
     def _clustering_get_transform(self, power_transform: bool, metric: str) -> Tuple[Callable, str]:
         if metric in self._precomputed_metrics:
@@ -2319,24 +2312,31 @@ class CountFilter(Filter):
             return_metric = metric
         return transform, return_metric
 
-    @staticmethod
-    def _clustering_assert_metric(metric: str, linkage: str = None):
-        legal_metrics = {'euclidean', 'spearman', 'pearson', 'manhattan', 'cosine', 'ys1', 'yr1', 'jackknife'}
-        legal_linkages = {'single', 'average', 'complete', 'ward'}
-        assert isinstance(metric, str), f"'metric' must be a string. Instead got '{type(metric)}'."
-        metric = metric.lower()
-        assert metric in legal_metrics, f"'metric' must be one of {legal_metrics}. Instead got '{metric}'."
-
-        if linkage is not None:
-            assert isinstance(linkage, str), f"'linkage' must be a string. Instead got '{type(linkage)}'."
-            linkage = linkage.lower()
-            assert linkage in legal_linkages, f"'linkage' must be in {legal_linkages}. Instead got '{linkage}'."
-            return metric, linkage
-        return metric
-
     def split_kmeans(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
-                     max_iter: int = 300, power_transform: bool = False,
-                     plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default'):
+                     max_iter: int = 300, power_transform: bool = False, plot_style: str = 'all',
+                     split_plots: bool = False,
+                     max_clusters: int = 'default') -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+        """
+
+        :param k:
+        :type k:
+        :param random_state:
+        :type random_state:
+        :param n_init:
+        :type n_init:
+        :param max_iter:
+        :type max_iter:
+        :param power_transform:
+        :type power_transform:
+        :param plot_style:
+        :type plot_style:
+        :param split_plots:
+        :type split_plots:
+        :param max_clusters:
+        :type max_clusters:
+        :return:
+        :rtype:
+        """
         # get the transform function
         transform, _ = self._clustering_get_transform(power_transform, 'euclidean')
         # set keyworded arguments for clusterer type = KMeans
@@ -2366,11 +2366,33 @@ class CountFilter(Filter):
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
                            linkage: str = 'average', power_transform: bool = False, distance_threshold: float = None,
-                           plot_style: str = 'all', split_plots: bool = False,
-                           max_clusters: int = 'default', gap_random_state: int = None):
+                           plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default',
+                           gap_random_state: int = None) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+        """
 
+        :param n_clusters:
+        :type n_clusters:
+        :param metric:
+        :type metric:
+        :param linkage:
+        :type linkage:
+        :param power_transform:
+        :type power_transform:
+        :param distance_threshold:
+        :type distance_threshold:
+        :param plot_style:
+        :type plot_style:
+        :param split_plots:
+        :type split_plots:
+        :param max_clusters:
+        :type max_clusters:
+        :param gap_random_state:
+        :type gap_random_state:
+        :return:
+        :rtype:
+        """
         # assert metrics/linkages are legal
-        metric, linkage = self._clustering_assert_metric(metric, linkage)
+        metric, linkage = validation.validate_clustering_parameters(metric, linkage)
         # set keyworded arguments for clusterer type = AgglomerativeClustering
         clusterer_kwargs = dict(affinity=metric, linkage=linkage)
         # get the transform/pairwise-distance function
@@ -2420,9 +2442,33 @@ class CountFilter(Filter):
 
     def split_kmedoids(self, k: Union[int, List[int], str], random_state: int = None, n_init: int = 3,
                        max_iter: int = 300, metric: str = 'euclidean', power_transform: bool = False,
-                       plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default'):
+                       plot_style: str = 'all', split_plots: bool = False,
+                       max_clusters: int = 'default') -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+        """
+
+        :param k:
+        :type k:
+        :param random_state:
+        :type random_state:
+        :param n_init:
+        :type n_init:
+        :param max_iter:
+        :type max_iter:
+        :param metric:
+        :type metric:
+        :param power_transform:
+        :type power_transform:
+        :param plot_style:
+        :type plot_style:
+        :param split_plots:
+        :type split_plots:
+        :param max_clusters:
+        :type max_clusters:
+        :return:
+        :rtype:
+        """
         # assert metric is legal
-        metric = self._clustering_assert_metric(metric)
+        metric = validation.validate_clustering_parameters(metric)
         # set keyworded arguments for clusterer type = KMedoidsIter
         clusterer_kwargs = dict(init='k-medoids++', metric=metric, random_state=random_state, n_init=n_init,
                                 max_iter=max_iter)
@@ -2452,18 +2498,36 @@ class CountFilter(Filter):
         # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric='euclidean',
+    def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric: str = 'euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
-                      power_transform: bool = False,
-                      plot_style: str = 'all', split_plots: bool = False, return_prob: bool = False):
+                      power_transform: bool = False, plot_style: str = 'all', split_plots: bool = False,
+                      return_probabilities: bool = False
+                      ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter'], np.ndarray]]:
+        """
 
-        assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
-            f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
-        assert min_cluster_size <= self.shape[0], \
-            "'min_cluster_size' cannot be larger than the number of features in the Filter object. "
-        assert isinstance(cluster_selection_method, str), \
-            f"'cluster_selection_method' must be a string. Instead got {type(cluster_selection_method)}."
-        assert isinstance(metric, str), f"'metric' must be a string. Instead got {type(metric)}."
+        :param min_cluster_size:
+        :type min_cluster_size:
+        :param min_samples:
+        :type min_samples:
+        :param metric:
+        :type metric:
+        :param cluster_selection_epsilon:
+        :type cluster_selection_epsilon:
+        :param cluster_selection_method:
+        :type cluster_selection_method:
+        :param power_transform:
+        :type power_transform:
+        :param plot_style:
+        :type plot_style:
+        :param split_plots:
+        :type split_plots:
+        :param return_probabilities:
+        :type return_probabilities:
+        :return:
+        :rtype:
+        """
+        validation.validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, self.shape[0])
+
         cluster_selection_method = cluster_selection_method.lower()
         metric = metric.lower()
         transform, metric = self._clustering_get_transform(power_transform, metric)
@@ -2493,7 +2557,7 @@ class CountFilter(Filter):
 
         filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                          suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
-        return [filt_objs, probabilities] if return_prob else filt_objs
+        return [filt_objs, probabilities] if return_probabilities else filt_objs
 
     def clustergram(self, sample_names: list = 'all', metric: str = 'euclidean', linkage: str = 'average'):
 
@@ -2533,14 +2597,14 @@ class CountFilter(Filter):
             sample_names = list(self.df.columns)
         print('Calculating clustergram...')
         plt.style.use('seaborn-whitegrid')
-        clustering = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
-                                    cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
+        clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
+                                     cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
         plt.show()
-        return clustering
+        return clustergram
 
     def plot_expression(self, features: Union[List[str], str],
                         sample_grouping: Union[Dict[str, List[int]], Dict[str, List[str]]],
-                        count_unit: str = 'Reads per million'):
+                        count_unit: str = 'Reads per million') -> plt.Figure:
 
         """
         Plot the average expression and standard error of the specified features under the specified conditions.
@@ -2597,7 +2661,8 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def pca(self, sample_names: list = 'all', n_components=3, sample_grouping: list = None, labels: bool = True):
+    def pca(self, sample_names: list = 'all', n_components: int = 3, sample_grouping: list = None, labels: bool = True
+            ) -> Tuple[PCA, List[plt.Figure]]:
 
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
@@ -2649,13 +2714,13 @@ class CountFilter(Filter):
 
         pc_var = pca_obj.explained_variance_ratio_
         graphs = 2 if n_components > 2 else 1
-        axes = []
+        figs = []
         for graph in range(graphs):
-            axes.append(CountFilter._plot_pca(
+            figs.append(CountFilter._plot_pca(
                 final_df=final_df[['Principal component 1', f'Principal component {2 + graph}', 'lib']],
                 pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=sample_grouping, labels=labels))
 
-        return pca_obj, axes
+        return pca_obj, figs
 
     @staticmethod
     def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool):
@@ -2699,10 +2764,11 @@ class CountFilter(Filter):
                 row[1] += 1
                 ax.text(*row)
         ax.grid(True)
-        return ax
+        return fig
 
     def scatter_sample_vs_sample(self, sample1: Union[str, List[str]], sample2: Union[str, List[str]],
-                                 xlabel: str = None, ylabel: str = None, title: str = None, highlight=None):
+                                 xlabel: str = None, ylabel: str = None, title: str = None,
+                                 highlight: Union['Filter', Iterable[str]] = None) -> plt.Figure:
 
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
@@ -2733,8 +2799,9 @@ class CountFilter(Filter):
 
 
         """
-        self._threshold_assertions()
+        validation.validate_is_normalized(self.fname)
         assert isinstance(sample1, (str, list, tuple, set)) and isinstance(sample2, (str, list, tuple, set))
+
         xvals = np.log10(self.df[sample1].values + 1) if isinstance(sample1, str) else np.log10(
             self.df[sample1].mean(axis=1).values + 1)
         yvals = np.log10(self.df[sample2].values + 1) if isinstance(sample2, str) else np.log10(
@@ -2756,23 +2823,22 @@ class CountFilter(Filter):
 
         if highlight is not None:
             highlight_features = highlight.index_set if issubclass(highlight.__class__,
-                                                                   Filter) else highlight
-            highlight_intersection = highlight_features.intersection(self.index_set)
-            if len(highlight_intersection) < len(highlight_features):
+                                                                   Filter) else parsing.data_to_set(highlight)
+            highlight_valid = highlight_features.intersection(self.index_set)
+            if len(highlight_valid) < len(highlight_features):
                 warnings.warn(
                     f'Out of {len(highlight_features)} features to be highlighted, '
-                    f'{len(highlight_features) - len(highlight_intersection)} features are missing from the CountFilter '
-                    f'object and will not be highlighted.')
-                highlight_features = highlight_intersection
+                    f'{len(highlight_features) - len(highlight_valid)} features are missing from the '
+                    f'CountFilter object and will not be highlighted.')
 
-            xvals_highlight = np.log10(self.df[sample1].loc[highlight_features].values + 1) if \
-                isinstance(sample1, str) else np.log10(self.df[sample1].loc[highlight_features].mean(axis=1).values + 1)
-            yvals_highlight = np.log10(self.df[sample2].loc[highlight_features].values + 1) if \
-                isinstance(sample2, str) else np.log10(self.df[sample2].loc[highlight_features].mean(axis=1).values + 1)
+            xvals_highlight = np.log10(self.df.loc[highlight_valid, sample1].values + 1) if \
+                isinstance(sample1, str) else np.log10(self.df.loc[highlight_valid, sample1].mean(axis=1).values + 1)
+            yvals_highlight = np.log10(self.df.loc[highlight_valid, sample2].values + 1) if \
+                isinstance(sample2, str) else np.log10(self.df.loc[highlight_valid, sample2].mean(axis=1).values + 1)
 
             ax.scatter(xvals_highlight, yvals_highlight, s=3, c=np.array([[0.75, 0.1, 0.1]]))
         plt.show()
-        return ax
+        return fig
 
     def box_plot(self, samples='all', notch: bool = True, scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
 
@@ -2804,7 +2870,7 @@ class CountFilter(Filter):
 
 
         """
-        self._threshold_assertions()
+        validation.validate_is_normalized(self.fname)
         if samples == 'all':
             samples_df = self.df
         else:
@@ -2849,7 +2915,7 @@ class CountFilter(Filter):
            Example plot of enhanced_box_plot()
 
         """
-        self._threshold_assertions()
+        validation.validate_is_normalized(self.fname)
         if samples == 'all':
             samples_df = self.df
         else:
@@ -2867,7 +2933,7 @@ class CountFilter(Filter):
         plt.show()
         return boxen
 
-    def violin_plot(self, samples='all', ylabel: str = 'log10(RPM + 1)'):
+    def violin_plot(self, samples: Union[str, List[str]] = 'all', ylabel: str = '$\log_10$(normalized reads + 1)'):
 
         """
         Generates a violin plot of the specified samples in the CountFilter object in log10 scale. \
@@ -2881,7 +2947,7 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :type ylabel: str (default 'Log10(RPM + 1)')
+        :type ylabel: str (default 'log10(normalized reads + 1)')
         :param ylabel: the label of the Y axis.
         :return: a seaborn violin object.
 
@@ -2893,7 +2959,7 @@ class CountFilter(Filter):
 
 
         """
-        self._threshold_assertions()
+        validation.validate_is_normalized(self.fname)
         if samples == 'all':
             samples_df = self.df
         else:
@@ -2910,10 +2976,11 @@ class CountFilter(Filter):
         return violin
 
     # TODO: add ranksum test
+    # TODO: generate new sample figure
 
     @staticmethod
     def from_folder(folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, counted_fname: str = None,
-                    uncounted_fname: str = None, input_format: str = '.txt'):
+                    uncounted_fname: str = None, input_format: str = '.txt') -> 'CountFilter':
 
         """
         Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table. \
@@ -2979,10 +3046,10 @@ class CountFilter(Filter):
             io.save_csv(df=uncounted, filename=uncounted_fname)
 
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
-        h = CountFilter((Path(fname), counts))
+        count_filter_obj = CountFilter((Path(fname), counts))
         if norm_to_rpm:
-            h.normalize_to_rpm(uncounted)
-        return h
+            count_filter_obj.normalize_to_rpm(uncounted)
+        return count_filter_obj
 
 
 class Pipeline:
@@ -3002,9 +3069,7 @@ class Pipeline:
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters',
                  'filter_type': 'type of filter objects to which the Pipeline can be applied'}
 
-    def __init__(self, filter_type: Union[str,
-                                          Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
-                                          Type[CountFilter]] = Filter):
+    def __init__(self, filter_type: Union[str, 'Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'] = Filter):
         """
         :param filter_type: the type of Filter object the Pipeline can be applied to.
         :type filter_type: str or Filter object (default=filtering.Filter)
@@ -3124,12 +3189,11 @@ class Pipeline:
                 'To apply the pipeline inplace, state "inplace=True" when calling Pipeline.apply_to().')
         self.functions.append(func)
         self.params.append((args, kwargs))
-        print(
-            f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline.")
+        print(f"Added function '{self._func_signature(func, args, kwargs)}' to the pipeline.")
 
     def _apply_filter_norm_sort(self, func: types.FunctionType,
-                                filter_object: Union[Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter],
-                                                     Type[CountFilter]], args: tuple, kwargs: dict, inplace: bool):
+                                filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
+                                args: tuple, kwargs: dict, inplace: bool):
         """
         Apply a filtering/normalizing/sorting function.
 
@@ -3171,8 +3235,8 @@ class Pipeline:
         return filter_object
 
     def _apply_split(self, func: types.FunctionType,
-                     filter_object: Union[Type[Filter], Type[DESeqFilter], Type[FoldChangeFilter], Type[CountFilter]],
-                     args: tuple, kwargs: dict, other_outputs, other_cnt):
+                     filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
+                     args: tuple, kwargs: dict, other_outputs: dict, other_cnt: dict):
         """
          Apply a splitting function.
 
@@ -3225,7 +3289,9 @@ class Pipeline:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
         return filter_object
 
-    def _apply_other(self, func, filter_object, args, kwargs, other_outputs, other_cnt):
+    def _apply_other(self, func: types.FunctionType,
+                     filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
+                     args: tuple, kwargs: dict, other_outputs: dict, other_cnt: dict):
         """
         Apply a non filtering/splitting/normalizing/sorting function.
 
@@ -3261,7 +3327,9 @@ class Pipeline:
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
 
-    def apply_to(self, filter_object, inplace: bool = True):
+    def apply_to(self, filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
+                 inplace: bool = True
+                 ) -> Union['Filter', Tuple['Filter', dict], Tuple[Tuple['Filter'], dict], dict, None]:
 
         """
         Sequentially apply all functions in the Pipeline to a given Filter object.
@@ -3349,3 +3417,4 @@ class Pipeline:
 # TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
 # TODO: add option for mask in clustergram
 # TODO: heat map plot of multiple DESEQ files
+# TODO: join split_heirarchical and clustergram
