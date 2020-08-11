@@ -3,11 +3,9 @@ import matplotlib
 
 from rnalysis.utils import io
 from rnalysis import filtering
-from rnalysis.general import start_parallel_session
 from rnalysis.enrichment import *
 from tests import __attr_ref__, __biotype_ref__
 
-start_parallel_session()
 matplotlib.use('Agg')
 
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',
@@ -148,7 +146,7 @@ def _enrichment_get_ref_tests_setup(truth, bg_genes):
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
 
-    attr_ref_df = io.load_csv(__attr_ref__,0)
+    attr_ref_df = io.load_csv(__attr_ref__, 0)
 
     if not isinstance(bg_genes, str):
         bg_en = FeatureSet(bg_genes, 'background genes')
@@ -273,8 +271,9 @@ def test_enrichment_randomization_parallel_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.enrich_randomization_parallel(attrs, reps=1, biotype='all',
-                                         attr_ref_path=__attr_ref__,
+    _ = en.enrich_randomization(attrs, reps=1, biotype='all', attr_ref_path=__attr_ref__,
+                                biotype_ref_path=__biotype_ref__, parallel_processing=True)
+    _ = en.enrich_randomization_parallel(attrs, reps=1, biotype='all', attr_ref_path=__attr_ref__,
                                          biotype_ref_path=__biotype_ref__)
     plt.close('all')
 
@@ -287,18 +286,18 @@ def test_enrichment_randomization_parallel_reliability():
     random_seed = 0
 
     for i in range(5):
-        res1 = en.enrich_randomization_parallel(attrs, reps=10000, biotype='all',
+        res1 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                                 attr_ref_path=__attr_ref__,
                                                 biotype_ref_path=__biotype_ref__,
-                                                random_seed=random_seed)
-        res2 = en.enrich_randomization_parallel(attrs, reps=10000, biotype='all',
+                                                random_seed=random_seed, parallel_processing=True)
+        res2 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                                 attr_ref_path=__attr_ref__,
                                                 biotype_ref_path=__biotype_ref__,
-                                                random_seed=random_seed + 1)
-        res3 = en.enrich_randomization_parallel(attrs, reps=10000, biotype='all',
+                                                random_seed=random_seed + 1, parallel_processing=True)
+        res3 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                                 attr_ref_path=__attr_ref__,
                                                 biotype_ref_path=__biotype_ref__,
-                                                random_seed=random_seed + 2)
+                                                random_seed=random_seed + 2, parallel_processing=True)
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -317,9 +316,9 @@ def test_enrichment_parallel_validity():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.enrich_randomization_parallel(attrs, reps=100000, biotype='all',
+    res = en.enrich_randomization(attrs, reps=100000, biotype='all',
                                            attr_ref_path=__attr_ref__,
-                                           biotype_ref_path=__biotype_ref__, random_seed=0)
+                                           biotype_ref_path=__biotype_ref__, random_seed=0, parallel_processing=True)
     plt.close('all')
     _enrichment_validity(res, truth)
 

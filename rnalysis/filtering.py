@@ -1581,6 +1581,13 @@ class DESeqFilter(Filter):
         A string of all feature indices in the current DataFrame separated by newline.
 
     """
+    __slots__ = {'log2fc_col': 'name of the log2 fold change column', 'padj_col': 'name of the adjusted p-value column'}
+
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
+                 log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj'):
+        super().__init__(fname, drop_columns)
+        self.log2fc_col = log2fc_col
+        self.padj_col = padj_col
 
     def filter_significant(self, alpha: float = 0.1, opposite: bool = False, inplace: bool = True):
 
@@ -1610,7 +1617,7 @@ class DESeqFilter(Filter):
 
         """
         assert isinstance(alpha, float), "alpha must be a float!"
-        new_df = self.df[self.df['padj'] <= alpha]
+        new_df = self.df[self.df[self.padj_col] <= alpha]
         suffix = f"_sig{alpha}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -1643,7 +1650,7 @@ class DESeqFilter(Filter):
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
         suffix = f"_{abslog2fc}abslog2foldchange"
-        new_df = self.df[np.abs(self.df['log2FoldChange']) >= abslog2fc]
+        new_df = self.df[np.abs(self.df[self.log2fc_col]) >= abslog2fc]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def filter_fold_change_direction(self, direction: str = 'pos', opposite: bool = False, inplace: bool = True):
@@ -1681,10 +1688,10 @@ class DESeqFilter(Filter):
         assert isinstance(direction, str), \
             "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
         if direction == 'pos':
-            new_df = self.df[self.df['log2FoldChange'] > 0]
+            new_df = self.df[self.df[self.log2fc_col] > 0]
             suffix = '_PositiveLog2FC'
         elif direction == 'neg':
-            new_df = self.df[self.df['log2FoldChange'] < 0]
+            new_df = self.df[self.df[self.log2fc_col] < 0]
             suffix = '_NegativeLog2FC'
         else:
             raise ValueError(
@@ -1735,10 +1742,10 @@ class DESeqFilter(Filter):
         ax = fig.add_subplot(111)
         plt.style.use('seaborn-white')
         colors = pd.Series(index=self.df.index)
-        colors.loc[(self.df['padj'] <= alpha) & (self.df['log2FoldChange'] > 0)] = 'tab:red'
-        colors.loc[(self.df['padj'] <= alpha) & (self.df['log2FoldChange'] < 0)] = 'tab:blue'
+        colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] > 0)] = 'tab:red'
+        colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] < 0)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
-        ax.scatter(self.df['log2FoldChange'], -np.log10(self.df['padj']), c=colors, s=1)
+        ax.scatter(self.df[self.log2fc_col], -np.log10(self.df[self.padj_col]), c=colors, s=1)
         ax.set_title(f"Volcano plot of {self.fname.stem}", fontsize=18)
         ax.set_xlabel('Log2(fold change)', fontsize=15)
         ax.set_ylabel('-Log10(adj. p-value)', fontsize=15)

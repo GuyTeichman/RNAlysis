@@ -25,7 +25,7 @@ from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, ref_tables, validation
+from rnalysis.utils import io, parsing, ref_tables, validation, parallel
 
 
 class FeatureSet:
@@ -814,7 +814,10 @@ class FeatureSet:
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
-        using a randomization test running in parallel. The attributes are drawn from an Attribute Reference Table. \
+        using a randomization test running in parallel. \
+        This function is depracated, and is replaced by enrich_randomization(parallel_processing=True). \
+        It will be removed in future versions of RNAlysis. \
+        The attributes are drawn from an Attribute Reference Table. \
         Parallel processing makes this function generally faster than FeatureSet.enrich_randomization. \
         Results should otherwise be the same between the two functions. \
         To use it you must first start a parallel session, using the function 'general.start_parallel_session()'. \
@@ -884,32 +887,20 @@ class FeatureSet:
            Example plot of enrich_randomization_parallel(plot_horizontal = False)
 
        """
-        attr_ref_df, gene_set, attributes, = \
-            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
-
-        client = ipyparallel.Client()
-        dview = client[:]
-        dview.execute("""import numpy as np
-              import pandas as pd""")
-        if random_seed is not None:
-            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
-                                                                      f"Value {random_seed} invalid."
-            dview.execute(f"np.random.seed({random_seed})")
-        k = len(attributes)
-        gene_set_rep = list(itertools.repeat(gene_set, k))
-        attr_ref_df_rep = list(itertools.repeat(attr_ref_df, k))
-        reps_rep = list(itertools.repeat(reps, k))
-
-        res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
-        enriched_list = res.result()
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
+        warnings.warn("FeatureSet.enrich_randomization_parallel() is deprecated and will be removed "
+                      "in a future release. Please use Featureset.enrich_randomization() "
+                      "with the parameter 'parallel_processing=True' instead.", DeprecationWarning)
+        return self.enrich_randomization(attributes, fdr, reps, biotype, background_genes, attr_ref_path,
+                                         biotype_ref_path, save_csv, fname, return_fig, plot_horizontal, random_seed,
+                                         parallel_processing=True)
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000, biotype: str = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                             random_seed: int = None) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                             random_seed: int = None, parallel_processing: bool = False
+                             ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -962,6 +953,10 @@ class FeatureSet:
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
+        :type parallel_processing: bool (default False)
+        :param parallel_processing: if True, will perform the randomization tests using parallel processing. \
+        In most cases, parallel processing will lead to shorter computation time, but should otherwise not affect \
+        the results of the analysis.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
@@ -982,16 +977,51 @@ class FeatureSet:
         """
         attr_ref_df, gene_set, attributes = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
-        enriched_list = []
-        if random_seed is not None:
-            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
-                                                                      f"Value {random_seed} invalid."
-            np.random.seed(random_seed)
+        # parallel processing
+        if parallel_processing:
+            try:
+                client = ipyparallel.Client()
+            except ipyparallel.error.TimeoutError:
+                print("Parallel session appears to be inactive. Starting parallel session...")
+                stream = parallel.start_ipcluster()
+                while True:
+                    line = stream.stderr.readline().decode('utf8')
+                    if 'Engines appear to have started successfully' in line:
+                        break
+                    elif 'Cluster is already running' in line:
+                        parallel.stop_ipcluster()
+                        stream = parallel.start_ipcluster()
 
-        for k, attribute in enumerate(attributes):
-            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-            enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
-            print(f"Finished {k + 1} attributes out of {len(attributes)}")
+                print('Parallel session started successfully')
+                client = ipyparallel.Client()
+            dview = client[:]
+            dview.execute("""import numpy as np
+                          import pandas as pd""")
+            if random_seed is not None:
+                assert isinstance(random_seed,
+                                  int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
+                                                             f"Value {random_seed} invalid."
+                dview.execute(f"np.random.seed({random_seed})")
+            k = len(attributes)
+            gene_set_rep = list(itertools.repeat(gene_set, k))
+            attr_ref_df_rep = list(itertools.repeat(attr_ref_df, k))
+            reps_rep = list(itertools.repeat(reps, k))
+
+            res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
+            enriched_list = res.result()
+        # no parallel processing
+        else:
+            enriched_list = []
+            if random_seed is not None:
+                assert isinstance(random_seed,
+                                  int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
+                                                             f"Value {random_seed} invalid."
+                np.random.seed(random_seed)
+
+            for k, attribute in enumerate(attributes):
+                assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
+                enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
+                print(f"Finished {k + 1} attributes out of {len(attributes)}")
 
         return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
 

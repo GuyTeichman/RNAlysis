@@ -37,9 +37,12 @@ def start_parallel_session(n_engines: int = 'default'):
     stream = parallel.start_ipcluster(n_engines)
     time.sleep(1)
     while True:
-        line = stream.stderr.readline()
-        if 'Engines appear to have started successfully' in str(line):
+        line = stream.stderr.readline().decode('utf8')
+        if 'Engines appear to have started successfully' in line:
             break
+        elif 'Cluster is already running' in line:
+            parallel.stop_ipcluster()
+            stream = parallel.start_ipcluster(n_engines)
     print('Parallel session started successfully')
 
 
