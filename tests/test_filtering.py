@@ -1509,13 +1509,13 @@ def test_parse_k(monkeypatch):
     c = CountFilter('test_files/counted.csv')
     args = (KMeans, preprocessing.standardize, 0, {}, 0)
     monkeypatch.setattr(CountFilter, "_silhouette",
-                        lambda self, clusterer_class, transform, clusterer_kwargs, max_clusters: ('success', None))
-    assert c._parse_k('silhouette', *args) == ['success']
+                        lambda self, clusterer_class, transform, clusterer_kwargs, max_clusters: (6, None))
+    assert c._parse_k('silhouette', *args) == [6]
 
     monkeypatch.setattr(CountFilter, "_gap_statistic",
                         lambda self, clusterer_class, transform, random_state, clusterer_kwargs, max_clusters: (
-                            'success', None))
-    assert c._parse_k('gap', *args) == ['success']
+                            7, None))
+    assert c._parse_k('gap', *args) == [7]
 
     assert list(c._parse_k(10, *args)) == [10]
     assert list(c._parse_k([7, 2, 5], *args)) == [7, 2, 5]

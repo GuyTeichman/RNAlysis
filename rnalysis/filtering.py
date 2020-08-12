@@ -2293,20 +2293,22 @@ class CountFilter(Filter):
         # max_clusters is the highest k value to test in gap/silhouette
         max_clusters = min(20, self.shape[0] // 4) if max_clusters == 'default' else max_clusters
         if isinstance(k, str) and k.lower() == 'silhouette':
-            k, _ = self._silhouette(clusterer_class=clusterer_class, transform=transform,
-                                    clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
+            n_clusters, _ = self._silhouette(clusterer_class=clusterer_class, transform=transform,
+                                             clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
         elif isinstance(k, str) and k.lower() == 'gap':
-            k, _ = self._gap_statistic(clusterer_class=clusterer_class, transform=transform,
-                                       random_state=random_state, clusterer_kwargs=clusterer_kwargs,
-                                       max_clusters=max_clusters)
+            n_clusters, _ = self._gap_statistic(clusterer_class=clusterer_class, transform=transform,
+                                                random_state=random_state, clusterer_kwargs=clusterer_kwargs,
+                                                max_clusters=max_clusters)
+        else:
+            n_clusters = k
         # turn k into a list of k values
-        k = parsing.data_to_list(k)
+        n_clusters = parsing.data_to_list(n_clusters)
         # make sure all values of k are in valid range
-        k, k_copy = tee(k)
-        assert np.all([isinstance(item, int) and 2 <= item <= len(self.df.index) for item in k_copy]), \
+        n_clusters, n_clusters_copy = tee(n_clusters)
+        assert np.all([isinstance(item, int) and 2 <= item <= len(self.df.index) for item in n_clusters_copy]), \
             f"Invalid value for k: '{k}'. k must be 'gap', 'silhouette', " \
             f"or an integer/Iterable of integers in range 2 <= k <= n_features."
-        return parsing.data_to_list(k)
+        return parsing.data_to_list(n_clusters)
 
     def _clustering_get_transform(self, power_transform: bool, metric: str) -> Tuple[Callable, str]:
         if metric in self._precomputed_metrics:
