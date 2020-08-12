@@ -227,7 +227,15 @@ def test_parse_go_id():
     assert parsing.parse_go_id(line_2) == truth_2
 
 
-def test_dag_tree_parser():
+def test_dag_tree_parser_api():
+    file = 'test_files/go_mini.obo'
+    with open(file, 'rb') as f:
+        dag_tree = parsing.DAGTreeParser(f, ['is_a', 'part_of', 'regulates'])
+    with open(file, 'rb') as f:
+        dag_tree._parse_file(f)
+
+
+def test_dag_tree_parser_construction():
     file = 'test_files/go_mini.obo'
     levels_truth = [{'GO:0034308': 0, 'GO:0051125': 0},
                     {'GO:0034315': 0, 'GO:0006040': 0, 'GO:0006793': 0, 'GO:0009225': 0, 'GO:0009226': 0},
