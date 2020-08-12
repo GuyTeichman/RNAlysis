@@ -1,7 +1,7 @@
 import pytest
 import matplotlib
+import os
 
-from rnalysis.utils import io
 from rnalysis import filtering
 from rnalysis.enrichment import *
 from tests import __attr_ref__, __biotype_ref__
@@ -287,17 +287,17 @@ def test_enrichment_randomization_parallel_reliability():
 
     for i in range(5):
         res1 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                                attr_ref_path=__attr_ref__,
-                                                biotype_ref_path=__biotype_ref__,
-                                                random_seed=random_seed, parallel_processing=True)
+                                       attr_ref_path=__attr_ref__,
+                                       biotype_ref_path=__biotype_ref__,
+                                       random_seed=random_seed, parallel_processing=True)
         res2 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                                attr_ref_path=__attr_ref__,
-                                                biotype_ref_path=__biotype_ref__,
-                                                random_seed=random_seed + 1, parallel_processing=True)
+                                       attr_ref_path=__attr_ref__,
+                                       biotype_ref_path=__biotype_ref__,
+                                       random_seed=random_seed + 1, parallel_processing=True)
         res3 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                                attr_ref_path=__attr_ref__,
-                                                biotype_ref_path=__biotype_ref__,
-                                                random_seed=random_seed + 2, parallel_processing=True)
+                                       attr_ref_path=__attr_ref__,
+                                       biotype_ref_path=__biotype_ref__,
+                                       random_seed=random_seed + 2, parallel_processing=True)
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -317,8 +317,8 @@ def test_enrichment_parallel_validity():
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
     res = en.enrich_randomization(attrs, reps=100000, biotype='all',
-                                           attr_ref_path=__attr_ref__,
-                                           biotype_ref_path=__biotype_ref__, random_seed=0, parallel_processing=True)
+                                  attr_ref_path=__attr_ref__,
+                                  biotype_ref_path=__biotype_ref__, random_seed=0, parallel_processing=True)
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -400,27 +400,63 @@ def test_calc_hypergeometric_pvalues():
 
 
 def test_save_txt():
-    assert False
+    try:
+        geneset = {'gene1', 'gene2', 'gene3', 'gene5'}
+        en = FeatureSet(geneset, 'my gene set')
+        en.save_txt('test_files/tmp_enrichment_txt')
+
+        with open('test_files/tmp_enrichment_txt.txt') as f:
+            loaded_geneset = {gene.replace('\n', '') for gene in f}
+        assert loaded_geneset == geneset
+    except Exception as e:
+        raise e
+    finally:
+        os.remove('test_files/tmp_enrichment_csv.csv')
 
 
 def test_enrichment_save_csv():
-    assert False
+    try:
+        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        FeatureSet._enrichment_save_csv(df, 'test_files/tmp_enrichment_csv.csv')
+        df_loaded = pd.read_csv('test_files/tmp_enrichment_csv.csv', index_col=0)
+        print('\n')
+        print(df)
+        print(df_loaded)
+        assert df.equals(df_loaded)
+        os.remove('test_files/tmp_enrichment_csv.csv')
+    except Exception as e:
+        raise e
+    finally:
+        os.remove('test_files/tmp_enrichment_csv.csv')
 
 
-def test_featureset_from_string():
-    assert False
+def test_featureset_from_string(monkeypatch):
+    truth = {'gene1', 'gene2', 'gene 5'}
+    monkeypatch.setattr('builtins.input', lambda x: 'gene1\ngene2\ngene 5\n')
+    en = FeatureSet(None)
+    assert en.gene_set == truth
 
 
 def test_featureset_repr():
-    assert False
+    en = FeatureSet({"1", "2", "4", "5"}, 'my very important set')
+    assert repr(en) == "FeatureSet: 'my very important set'"
 
 
 def test_featureset_invalid_type():
-    assert False
+    with pytest.raises(TypeError):
+        en = FeatureSet(42)
+    with pytest.raises(TypeError):
+        en = FeatureSet('gene')
 
 
 def test_calc_randomization_pval():
-    assert False
+    np.random.seed(42)
+    hypergeom_pval = 0.2426153598589023
+    avg_pval = 0
+    for i in range(5):
+        avg_pval += FeatureSet._calc_randomization_pval(500, 1, np.random.random(10000) > 0.1, 100000, 0.11)
+    avg_pval /= 5
+    assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
 
 
 def test_enrichment_output():
@@ -428,11 +464,18 @@ def test_enrichment_output():
 
 
 def test_plot_enrichment_results():
-    assert False
+    df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv')
+    FeatureSet.plot_enrichment_results(df)
+    FeatureSet.plot_enrichment_results(df, plot_horizontal=False, ylabel='different ylabel', fdr=0.1)
+    plt.close('all')
 
 
 def test_get_pval_asterisk():
-    assert False
+    assert FeatureSet._get_pval_asterisk(0.6) == ('ns', 'normal')
+    assert FeatureSet._get_pval_asterisk(0.001, 0.00099) == ('ns', 'normal')
+    assert FeatureSet._get_pval_asterisk(0.04) == (u'\u2217', 'bold')
+    assert FeatureSet._get_pval_asterisk(0.0099) == (u'\u2217' * 2, 'bold')
+    assert FeatureSet._get_pval_asterisk(0) == (u'\u2217' * 4, 'bold')
 
 
 def test_enrich_non_categorial_parametric_test():
@@ -448,11 +491,15 @@ def test_enrich_plot_histogram():
 
 
 def test_rankedset_api():
-    assert False
+    en = RankedSet(['1', '9', '4'], 'name')
+    assert en.gene_set == {'1', '9', '4'}
+    assert (en.ranked_genes == np.array(['1', '9', '4'], dtype='str')).all()
+    assert en.set_name == 'name'
 
 
 def test_rankedset_repr():
-    assert False
+    en = RankedSet(['1', '9', '4'], 'my very important set')
+    assert repr(en) == "RankedSet: 'my very important set'"
 
 
 def test_rankedset_set_ops_return_type():
@@ -493,4 +540,12 @@ def test_venn_diagram_too_many_sets():
 
 
 def test_generate_upset_srs():
+    assert False
+
+
+def test_classic_pvals():
+    assert False
+
+
+def test_elim_pvals():
     assert False

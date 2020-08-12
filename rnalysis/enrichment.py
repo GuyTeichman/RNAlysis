@@ -55,9 +55,9 @@ class FeatureSet:
         """
         assert isinstance(set_name, str), f"'set_name' must be of type str, instead got {type(set_name)}."
         if gene_set is None:
-            self.gene_set = parsing.from_string(
+            gene_set = parsing.data_to_set(parsing.from_string(
                 "Please insert genomic features/indices separated by newline \n"
-                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')", delimiter='\n')
+                "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')", delimiter='\n'))
         elif isinstance(gene_set, set):
             pass
         elif isinstance(gene_set, (list, tuple)):
@@ -250,7 +250,7 @@ class FeatureSet:
             assert isinstance(fname, (str, Path))
         if isinstance(fname, Path):
             fname = str(Path)
-        io.save_csv(df, filename=fname + '.csv')
+        io.save_csv(df, filename=fname if fname.endswith('.csv') else fname + '.csv')
 
     def _go_enrichment_fetch_annotations(self, organism: Union[str, int], gene_id_type: str,
                                          aspects: Union[str, Iterable[str]],
@@ -576,8 +576,11 @@ class FeatureSet:
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
+        inclusive_ancestors = {ancestor for ancestor in
+                               itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id)) if
+                               ancestor in goa_df.index}
         for sig_child in sig_children:
-            for inclusive_ancestor in itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id)):
+            for inclusive_ancestor in inclusive_ancestors:
                 weighted_goa_df.loc[goa_df[sig_child] == 1, inclusive_ancestor] *= (1 / weights[sig_child])
         # re-run compute_term_sig, only with the children which were not more significant than their parents
         FeatureSet._compute_term_sig(go_id, children.difference(sig_children), dag_tree, gene_set, weighted_goa_df,
@@ -774,8 +777,9 @@ class FeatureSet:
 
         if plot:
             n_plot = min(10, res_df.shape[0])
-            fig = self.plot_enrichment_results(res_df.iloc[:n_plot], en_score_col, res_df.columns[0],
-                                               title=title, ylabel=ylabel, plot_horizontal=plot_horizontal)
+            fig = self.plot_enrichment_results(res_df.iloc[:n_plot], fdr, en_score_col=en_score_col,
+                                               name_col=res_df.columns[0], title=title, plot_horizontal=plot_horizontal,
+                                               ylabel=ylabel)
             if return_fig:
                 return res_df, fig
         return res_df
@@ -799,7 +803,7 @@ class FeatureSet:
             self._enrichment_save_csv(res_df, fname)
 
         if plot:
-            fig = self.plot_enrichment_results(res_df, title=f"Enrichment for {self.set_name}",
+            fig = self.plot_enrichment_results(res_df, fdr, title=f"Enrichment for {self.set_name}",
                                                plot_horizontal=plot_horizontal)
             if return_fig:
                 return res_df, fig
@@ -1153,15 +1157,17 @@ class FeatureSet:
         return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
 
     @staticmethod
-    def plot_enrichment_results(df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment', name_col: str = None,
-                                title: str = '', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                                plot_horizontal: bool = True, center_bars: bool = True) -> plt.Figure:
+    def plot_enrichment_results(df: pd.DataFrame, fdr=0.05, en_score_col: str = 'log2_fold_enrichment',
+                                name_col: str = None, title: str = '', center_bars: bool = True,
+                                plot_horizontal: bool = True, ylabel: str = r"$\log_2$(Fold Enrichment)") -> plt.Figure:
 
         """
         Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
         For the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
+        :param fdr:
+        :type fdr:
         :param name_col:
         :type name_col:
         :param df: a pandas DataFrame created by FeatureSet.enrich_randomization.
@@ -1247,7 +1253,7 @@ class FeatureSet:
         ax.set_title(title, fontsize=18)
         # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
-            asterisks, fontweight = FeatureSet._get_pval_asterisk(sig)
+            asterisks, fontweight = FeatureSet._get_pval_asterisk(sig, fdr)
             if plot_horizontal:
                 x = col._width
                 y = col.xy[1] + 0.5 * col._height
@@ -1278,19 +1284,19 @@ class FeatureSet:
         return fig
 
     @staticmethod
-    def _get_pval_asterisk(pval: float):
+    def _get_pval_asterisk(pval: float, alpha: float = 0.05):
         fontweight = 'bold'
-        if pval < 0.0001:
+        if pval > alpha:
+            asterisks = 'ns'
+            fontweight = 'normal'
+        elif pval < 0.0001:
             asterisks = u'\u2217' * 4
         elif pval < 0.001:
             asterisks = u'\u2217' * 3
         elif pval < 0.01:
             asterisks = u'\u2217' * 2
-        elif pval < 0.05:
-            asterisks = u'\u2217'
         else:
-            asterisks = 'ns'
-            fontweight = 'normal'
+            asterisks = u'\u2217'
         return asterisks, fontweight
 
     def enrich_non_categorical(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
@@ -1672,9 +1678,9 @@ class RankedSet(FeatureSet):
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
 
-        fig = self.plot_enrichment_results(res_df, en_score_col=en_score_col,
+        fig = self.plot_enrichment_results(res_df, fdr, en_score_col=en_score_col,
                                            title=f"Single-list enrichment for {self.set_name}",
-                                           ylabel=r"$\log_2$(XL-mHG enrichment score)", plot_horizontal=plot_horizontal)
+                                           plot_horizontal=plot_horizontal, ylabel=r"$\log_2$(XL-mHG enrichment score)")
         if return_fig:
             return res_df, fig
         return res_df
