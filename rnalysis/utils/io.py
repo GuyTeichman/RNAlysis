@@ -288,4 +288,4 @@ def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'unipr
 def fetch_go_basic():
     url = 'http://current.geneontology.org/ontology/go-basic.obo'
     with requests.get(url, stream=True) as obo_stream:
-        return parsing.DAGTreeParser(obo_stream)
+        return parsing.DAGTreeParser(obo_stream.iter_lines())

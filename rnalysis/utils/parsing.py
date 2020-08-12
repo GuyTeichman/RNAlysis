@@ -2,7 +2,7 @@ import queue
 import re
 import warnings
 from itertools import islice
-from typing import Any, Dict, Iterable, Set, Union
+from typing import Any, Dict, Iterable, Set, Union, List
 
 import numpy as np
 import pandas as pd
@@ -134,37 +134,40 @@ class GOTerm:
         self.id = None
         self.name = None
         self.level = None
-        self.relationships = {'is_a': [], 'part_of': []}
-        self.children_relationships = {'is_a': [], 'part_of': []}
+        self.relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
+        self.children_relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
 
-    def get_parents(self, relationships: Union[str, list] = ('is_a', 'part_of')):
+    def get_parents(self, relationships: Union[str, list] = ('is_a', 'part_of')) -> List[str]:
         go_ids = []
-        _ = [go_ids.extend(self.relationships[relationship]) for relationship in data_to_list(relationships)]
+        _ = [go_ids.extend(self.relationships[relationship]) for relationship in data_to_list(relationships) if
+             relationship in self.relationships]
         return go_ids
 
-    def get_children(self, relationships: Union[str, list] = ('is_a', 'part_of')):
+    def get_children(self, relationships: Union[str, list] = ('is_a', 'part_of')) -> List[str]:
         go_ids = []
-        _ = [go_ids.extend(self.children_relationships[relationship]) for relationship in data_to_list(relationships)]
+        _ = [go_ids.extend(self.children_relationships[relationship]) for relationship in data_to_list(relationships) if
+             relationship in self.children_relationships]
         return go_ids
 
 
-def parse_go_id(byte_sequence: bytes):
+def parse_go_id(byte_sequence: bytes) -> str:
     return re.findall(b"GO:[0-9]{7}", byte_sequence)[0].decode('utf8')
 
 
 class DAGTreeParser:
-    def __init__(self, file_handle, parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
+    def __init__(self, line_iterator: Iterable[bytes],
+                 parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
         self.data_version = None
         self.go_terms: Dict[str, GOTerm] = {}
         self.alt_ids: Dict[str, str] = {}
-        self.levels: list = []
+        self.levels: List[dict] = []
         self.parent_relationship_types: list = data_to_list(parent_relationship_types)
 
-        self._parse_file(file_handle)
+        self._parse_file(line_iterator)
         self._populate_levels()
         self._populate_children()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> 'GOTerm':
         if key in self.go_terms:
             return self.go_terms[key]
         elif key in self.alt_ids:
@@ -178,35 +181,35 @@ class DAGTreeParser:
         except KeyError:
             return False
 
-    def _parse_file(self, file_handle):
+    def _parse_file(self, line_iterator: Iterable[bytes]):
         current_term = None
         in_frame = False
-        for line in file_handle.iter_lines():
-            if line.startswith(b'[Term]'):
-                current_term = GOTerm()
-                in_frame = True
-            elif in_frame and line.startswith(b'id: '):
-                current_term.id = parse_go_id(line)
-            elif in_frame and line.startswith(b'name: '):
-                current_term.name = line[6:].decode('utf8')
-            elif in_frame and line.startswith(b'alt_id: '):
-                self.alt_ids[parse_go_id(line)] = current_term.id
-            elif in_frame and line.startswith(b'is_a: '):
-                current_term.relationships['is_a'].append(parse_go_id(line))
-            elif in_frame and line.startswith(b'relationship: '):
-                relationship_type = line.split(b' ')[1].decode('utf8')
-                if relationship_type not in current_term.relationships:
-                    current_term.relationships[relationship_type] = []
-                current_term.relationships[relationship_type].append(parse_go_id(line))
-            elif in_frame and line == b'is_obsolete: true':
-                in_frame = False
-            elif line.startswith(b'[Typedef]'):
-                pass
-            elif in_frame and line == b'':
-                self.go_terms[current_term.id] = current_term
-                in_frame = False
-            elif line.startswith(b'data-version:'):
-                self.data_version = line[14:].decode('utf8')
+        for line in line_iterator:
+            if in_frame:
+                if line.startswith(b'id: '):
+                    current_term.id = parse_go_id(line)
+                elif line.startswith(b'name: '):
+                    current_term.name = line[6:].decode('utf8')
+                elif line.startswith(b'alt_id: '):
+                    self.alt_ids[parse_go_id(line)] = current_term.id
+                elif line.startswith(b'is_a: '):
+                    current_term.relationships['is_a'].append(parse_go_id(line))
+                elif line.startswith(b'relationship: '):
+                    relationship_type = line.split(b' ')[1].decode('utf8')
+                    if relationship_type not in current_term.relationships:
+                        current_term.relationships[relationship_type] = []
+                    current_term.relationships[relationship_type].append(parse_go_id(line))
+                elif line.startswith(b'is_obsolete: true'):
+                    in_frame = False
+                elif line == b'' or line == b'\n':
+                    self.go_terms[current_term.id] = current_term
+                    in_frame = False
+            else:
+                if line.startswith(b'[Term]'):
+                    current_term = GOTerm()
+                    in_frame = True
+                elif line.startswith(b'data-version:'):
+                    self.data_version = line[14:].decode('utf8').replace('\n', '')
 
     def _populate_levels(self):
         levels_dict = {}
@@ -235,7 +238,7 @@ class DAGTreeParser:
             for rel_type in self.parent_relationship_types:
                 for parent_id in self[go_id].get_parents(rel_type):
                     if rel_type not in self[parent_id].children_relationships:
-                        self[parent_id].children_relationships = []
+                        self[parent_id].children_relationships[rel_type] = []
                     self[parent_id].children_relationships[rel_type].append(go_id)
 
     def level_iter(self):
