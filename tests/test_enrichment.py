@@ -411,7 +411,10 @@ def test_save_txt():
     except Exception as e:
         raise e
     finally:
-        os.remove('test_files/tmp_enrichment_csv.csv')
+        try:
+            os.remove('test_files/tmp_enrichment_csv.csv')
+        finally:
+            pass
 
 
 def test_enrichment_save_csv():
@@ -423,11 +426,13 @@ def test_enrichment_save_csv():
         print(df)
         print(df_loaded)
         assert df.equals(df_loaded)
-        os.remove('test_files/tmp_enrichment_csv.csv')
     except Exception as e:
         raise e
     finally:
-        os.remove('test_files/tmp_enrichment_csv.csv')
+        try:
+            os.remove('test_files/tmp_enrichment_csv.csv')
+        finally:
+            pass
 
 
 def test_featureset_from_string(monkeypatch):

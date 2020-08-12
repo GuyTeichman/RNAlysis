@@ -987,7 +987,7 @@ class FeatureSet:
         if parallel_processing:
             try:
                 client = ipyparallel.Client()
-            except ipyparallel.error.TimeoutError:
+            except (ipyparallel.error.TimeoutError, IOError, OSError) as e:
                 print("Parallel session appears to be inactive. Starting parallel session...")
                 stream = parallel.start_ipcluster()
                 while True:
