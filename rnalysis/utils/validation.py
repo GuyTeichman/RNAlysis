@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, List, Set, Iterable
+from typing import Union
 import pandas as pd
 import warnings
 
@@ -31,7 +31,7 @@ def isinstanceinh(obj, parent_class):
 def isiterable(obj):
     try:
         _ = iter(obj)
-    except Exception:
+    except TypeError:
         return False
     else:
         return True
@@ -103,7 +103,7 @@ def validate_clustering_parameters(metric: str, linkage: str = None):
     return metric
 
 
-def validate_hdbscan_parameters(min_cluster_size: int, metric: str, cluster_selection_method: str, n_features:int):
+def validate_hdbscan_parameters(min_cluster_size: int, metric: str, cluster_selection_method: str, n_features: int):
     assert isinstance(min_cluster_size, int) and min_cluster_size >= 2, \
         f"'min_cluster_size' must be an integer >=2. Instead got {min_cluster_size}, type={type(min_cluster_size)}."
     assert min_cluster_size <= n_features, \
