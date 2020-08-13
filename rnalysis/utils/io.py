@@ -231,22 +231,15 @@ def map_gene_ids(ids: Union[str, Set[str], List[str]], map_from: str, map_to: st
     return GeneIDTranslator(output)
 
 
-def _format_ids(ids: Union[str, int, list, set]):
-    if isinstance(ids, str):
-        return ids
-    elif isinstance(ids, int):
-        return str(ids)
-    return " ".join((str(item) for item in ids))
-
-
 def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 500):
     if isinstance(ids, str):
-        return ids
+        yield ids
     elif isinstance(ids, int):
-        return str(ids)
-    for i in range(0, len(ids), chunk_size):
-        j = min(chunk_size, len(ids) - i)
-        yield " ".join((str(item) for item in ids[i:j]))
+        yield str(ids)
+    else:
+        for i in range(0, len(ids), chunk_size):
+            j = min(chunk_size, len(ids) - i)
+            yield " ".join((str(item) for item in ids[i:i+j]))
 
 
 def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):

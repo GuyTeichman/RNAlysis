@@ -8,6 +8,7 @@ from rnalysis.utils.preprocessing import *
 from rnalysis.utils.ref_tables import *
 from rnalysis.utils.parsing import *
 from rnalysis.utils.io import *
+from rnalysis.utils.io import _format_ids_iter
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
 
@@ -401,16 +402,27 @@ def test_map_gene_ids_connectivity():
     assert mapped_ids.mapping_dict == mapped_ids_truth_rev
 
 
+def test_map_gene_ids_request(monkeypatch):
+    assert False
+
+
+def test_map_gene_ids_to_same_set():
+    mapper = map_gene_ids(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'], 'UniProtKB', 'UniProtKB')
+    assert mapper.mapping_dict is None
+    for i in ['it', 'not', False, 42, 3.14]:
+        assert i in mapper
+        assert mapper[i] == i
+
+
 def test_map_gene_ids_parsing(monkeypatch):
     assert False
 
 
-def test_format_ids():
-    assert False
-
-
 def test_format_ids_iter():
-    assert False
+    assert list(_format_ids_iter('one two three')) == ['one two three']
+    assert list(_format_ids_iter(123)) == ['123']
+    assert list(_format_ids_iter(['one', ' two', 'three; ', 'four'])) == ['one  two three;  four']
+    assert list(_format_ids_iter(['1', 'two', '3', '4', 'five', '6', '7'], 3)) == ['1 two 3', '4 five 6', '7']
 
 
 def _load_id_abbreviation_dict():
@@ -418,11 +430,17 @@ def _load_id_abbreviation_dict():
 
 
 def test_gene_id_translator_api():
-    assert False
+    _ = GeneIDTranslator({1: 2, 3: 4})
+    _ = GeneIDTranslator()
 
 
 def test_gene_id_translator_getitem():
-    assert False
+    translator = GeneIDTranslator({1: 2, 3: 4})
+    assert translator[1] == 2
+    assert translator[3] == 4
+    translator = GeneIDTranslator(None)
+    for something in [2, 3, '1', False, True, {}, 3.141592]:
+        assert translator[something] == something
 
 
 def test_gene_id_translator_contains():
@@ -457,3 +475,29 @@ def test_stop_ipcluster():
 
 def test_start_ipcluster():
     start_ipcluster(1)
+
+
+def test_is_iterable():
+    assert isiterable(range(10))
+    assert isiterable([])
+    assert isiterable('fortytwo')
+    assert not isiterable(42)
+    assert not isiterable(3.14)
+    assert not isiterable(True)
+    assert isiterable((i for i in range(10)))
+    assert isiterable({})
+    assert isiterable({1, 2, 4})
+
+
+def test_is_iterable_not_emptying_generator():
+    gen = (i for i in range(10) if i != 7)
+    assert isiterable(gen)
+    assert list(gen) == [i for i in range(10) if i != 7]
+
+
+def test_validate_uniprot_dataset_name():
+    validate_uniprot_dataset_name({'one': 1, 'two': 2, 'three': 3}, 'one', 'two', 'three')
+    with pytest.raises(AssertionError):
+        validate_uniprot_dataset_name({'one': 1, 'two': 2, 'three': 3}, 'one', 2, 'three')
+    with pytest.raises(AssertionError):
+        validate_uniprot_dataset_name({'one': 1, 'two': 2, 'three': 3}, 'one', 'Two', 'three')
