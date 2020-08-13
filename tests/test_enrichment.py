@@ -413,7 +413,7 @@ def test_save_txt():
     finally:
         try:
             os.remove('test_files/tmp_enrichment_csv.csv')
-        finally:
+        except:
             pass
 
 
@@ -431,7 +431,7 @@ def test_enrichment_save_csv():
     finally:
         try:
             os.remove('test_files/tmp_enrichment_csv.csv')
-        finally:
+        except:
             pass
 
 
