@@ -70,39 +70,6 @@ def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = 
     df.to_csv(new_fname, header=True, index=index)
 
 
-source = "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz"
-
-
-def fetch_gaf_file(taxon_id: int, aspects: Union[str, List[str]] = 'all',
-                   evidence_codes: Union[str, List[str]] = 'all', databases: Union[str, List[str]] = 'all',
-                   qualifiers: Union[str, List[str]] = None):
-    url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search?"
-
-    legal_aspects = {'biological_process', 'molecular_function', 'cellular_component'}
-    aspects = ",".join(legal_aspects) if aspects is 'all' else ",".join(parsing.data_to_list(aspects))
-
-    params = {
-        'taxonId': taxon_id,
-        'aspect': aspects,
-        'taxonUsage': 'descendants',
-        'limit': 100,
-        'page': 25
-    }
-    if not evidence_codes == 'all':
-        params['evidenceCodeUsage'] = 'descendants'
-        params['evidenceCode'] = ",".join(parsing.data_to_list(evidence_codes))
-    if not databases == 'all':
-        params['assignedBy'] = ",".join(parsing.data_to_list(databases))
-    if qualifiers is not None:
-        params['qualifier'] = ",".join(parsing.data_to_list(qualifiers))
-    req = requests.get(url, params=params, headers={"Accept": "application/json"})
-    if not req.ok:
-        req.raise_for_status()
-    data = json.loads(req.text)
-
-    return data
-
-
 def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] = 'any',
                               evidence_types: Union[str, Iterable[str]] = 'any',
                               excluded_evidence_types: Union[str, Iterable[str]] = None,
@@ -216,6 +183,8 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
 
 
 class GeneIDTranslator:
+    __slots__ = {'mapping_dict': 'dictionary mapping gene IDs from one type to another'}
+
     def __init__(self, mapping_dict: Union[dict, None] = None):
         self.mapping_dict = mapping_dict
 

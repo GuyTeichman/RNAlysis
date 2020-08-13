@@ -130,6 +130,10 @@ def parse_go_aspects(aspects: Union[str, Iterable[str]], aspects_dict: dict) -> 
 
 
 class GOTerm:
+    __slots__ = {'id': 'GO ID', 'name': 'GO Term name', 'level': "GO Term's level in the DAG Tree",
+                 'relationships': 'direct parent relationships of the GO Term',
+                 'children_relationships': 'direct children relationships of the GO Term'}
+
     def __init__(self):
         self.id = None
         self.name = None
@@ -155,6 +159,12 @@ def parse_go_id(byte_sequence: bytes) -> str:
 
 
 class DAGTreeParser:
+    __slots__ = {'data_version': 'version of the go-basic.obo file',
+                 'go_terms': 'dictionary of GO Terms in the DAG Tree',
+                 'alt_ids': 'mapping of alternagive GO IDs to their main GO ID',
+                 'levels': 'list of levels in the DAG Tree',
+                 'parent_relationship_types': 'the types of relationships that constitute parenthood in the DAG Tree'}
+
     def __init__(self, line_iterator: Iterable[bytes],
                  parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
         self.data_version = None

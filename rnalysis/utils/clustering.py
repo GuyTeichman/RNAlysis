@@ -3,6 +3,15 @@ from sklearn_extra.cluster import KMedoids
 
 
 class KMedoidsIter:
+    __slots__ = {'n_clusters': 'number of clusters to find', 'metric': 'distance metric',
+                 'n_init': 'number of initializations to run', 'init': 'initialization algorithm',
+                 'max_iter': 'max number of algorithm iterations per initialization',
+                 'random_state': 'random state of the random number generator',
+                 'clusterer': 'the KMedoids clusterer object', 'inertia_': "the clustering solution's inertia",
+                 'cluster_centers_': "the clustering solution's cluster centers",
+                 'medoid_indices_': "the clustering solution's medoid indices",
+                 'labels_': "the clustering solution's point labels"}
+
     def __init__(self, n_clusters: int, metric: str = 'euclidean', init: str = 'k-medoids++', max_iter: int = 300,
                  random_state: int = None, n_init: int = 10):
         assert isinstance(n_init, int), f"'n_init' must be an integer, is {type(n_init)} instead."
