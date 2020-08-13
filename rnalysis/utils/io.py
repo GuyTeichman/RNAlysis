@@ -169,6 +169,8 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     if not req.ok:
         req.raise_for_status()
     res = req.text.splitlines()
+    if len(res) == 0:
+        raise ValueError(f'No taxons match the search query {taxon_name}.')
     header = res[0].split('\t')
 
     matched_taxon = res[1].split('\t')
@@ -176,8 +178,8 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     scientific_name = matched_taxon[header.index('Scientific name')]
     if len(res) > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
-            f"Found {len(res) - 1} taxons matching the search term '{taxon_name}'. "
-            f"Picking the match with the highest score.")
+            f"Found {len(res) - 1} taxons matching the search query '{taxon_name}'. "
+            f"Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).")
 
     return taxon_id, scientific_name
 
