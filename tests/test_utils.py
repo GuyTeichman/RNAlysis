@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from rnalysis.utils.clustering import *
 from rnalysis.utils.parallel import *
@@ -8,7 +9,6 @@ from rnalysis.utils.ref_tables import *
 from rnalysis.utils.parsing import *
 from rnalysis.utils.io import *
 from rnalysis import __attr_file_key__, __biotype_file_key__
-from rnalysis.utils.validation import check_is_df_like
 
 
 def test_is_df_dataframe():
@@ -162,7 +162,25 @@ def test_update_ref_table_attributes():
 
 
 def test_save_csv():
-    assert False
+    try:
+        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        save_csv(df, 'test_files/tmp_test_save_csv.csv')
+        df_loaded = pd.read_csv('test_files/tmp_test_save_csv.csv', index_col=0)
+        assert df.equals(df_loaded)
+        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv')
+        save_csv(df, 'test_files/tmp_test_save_csv.csv', '_2', index=False)
+        df_loaded = pd.read_csv('test_files/tmp_test_save_csv_2.csv', index_col=0)
+        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        assert df.equals(df_loaded)
+
+    except Exception as e:
+        raise e
+    finally:
+        try:
+            os.remove('test_files/tmp_test_save_csv.csv')
+            os.remove('test_files/tmp_test_save_csv_2.csv')
+        except:
+            pass
 
 
 def test_standardize():
@@ -200,6 +218,9 @@ def test_kmedoidsiter_api():
     kmeds_rand.fit(df)
     kmeds_rand.predict(df)
     kmeds_rand.fit_predict(df)
+
+    assert repr(kmeds) == repr(kmeds.clusterer)
+    assert str(kmeds) == str(kmeds.clusterer)
 
 
 def test_kmedoidsiter_iter():
@@ -316,3 +337,123 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
         ui_tree = list(dag_tree.upper_induced_graph_iter(node))
         ui_tree.sort()
         assert ui_tree == parents_truth[node]
+
+
+def test_data_to_list():
+    assert parsing.data_to_list([1, 2, 'hi']) == [1, 2, 'hi']
+    assert parsing.data_to_list((1, 2, 'hi')) == [1, 2, 'hi']
+    assert parsing.data_to_list('fifty seven brave men') == ['fifty seven brave men']
+    assert sorted(parsing.data_to_list({'three', 'different', 'elements'})) == sorted(
+        ['three', 'different', 'elements'])
+    assert parsing.data_to_list(np.array([6, 9, 2])) == [6, 9, 2]
+    assert parsing.data_to_list(67.2) == [67.2]
+
+
+def test_data_to_set():
+    assert parsing.data_to_set([1, 2, 'hi']) == {1, 2, 'hi'}
+    assert parsing.data_to_set((1, 2, 'hi')) == {1, 2, 'hi'}
+    assert parsing.data_to_set('fifty seven brave men') == {'fifty seven brave men'}
+    assert parsing.data_to_set({'three', 'different', 'elements'}) == {'three', 'different', 'elements'}
+    assert parsing.data_to_set(np.array([6, 9, 2])) == {6, 9, 2}
+    assert parsing.data_to_set(67.2) == {67.2}
+
+
+def test_data_to_tuple():
+    assert parsing.data_to_tuple([1, 2, 'hi']) == (1, 2, 'hi')
+    assert parsing.data_to_tuple('fifty seven brave men') == ('fifty seven brave men',)
+    assert sorted(parsing.data_to_tuple({'three', 'different', 'elements'})) == sorted(
+        ('three', 'different', 'elements'))
+    assert parsing.data_to_tuple(np.array([6, 9, 2])) == (6, 9, 2)
+    assert parsing.data_to_tuple(67.2) == (67.2,)
+
+
+def test_from_string(monkeypatch):
+    monkeypatch.setattr('builtins.input', lambda x: 'one\ntwo \nthree;\n')
+    assert from_string() == ['one', 'two ', 'three;']
+
+
+def test_intersection_nonempty():
+    assert intersection_nonempty({1, 2, 3}, {2, 5, 7, 1}) == {1, 2}
+    assert intersection_nonempty({1, 3, 7}, set()) == {1, 3, 7}
+    assert intersection_nonempty({1, 2, 4, 5}, set(), {1, 3, 4, 7}) == {1, 4}
+
+
+def test_fetch_go_basic_connectivity():
+    _ = fetch_go_basic()
+
+
+def test_map_gene_ids_connectivity():
+    ids_uniprot = ['P34544', 'Q27395', 'P12844']
+    ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
+    mapped_ids_truth = {uniprot: wb for uniprot, wb in zip(ids_uniprot, ids_wormbase)}
+    mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids_truth.values())}
+
+    mapped_ids = map_gene_ids(ids_uniprot, map_from='UniProtKB', map_to='WormBase')
+    for geneid in ids_uniprot:
+        assert geneid in mapped_ids
+        assert mapped_ids[geneid] == mapped_ids_truth[geneid]
+    assert mapped_ids.mapping_dict == mapped_ids_truth
+
+    mapped_ids = map_gene_ids(ids_wormbase, map_from='WormBase', map_to='UniProtKB')
+    for geneid in ids_wormbase:
+        assert geneid in mapped_ids
+        assert mapped_ids[geneid] == mapped_ids_truth_rev[geneid]
+    assert mapped_ids.mapping_dict == mapped_ids_truth_rev
+
+
+def test_map_gene_ids_parsing(monkeypatch):
+    assert False
+
+
+def test_format_ids():
+    assert False
+
+
+def test_format_ids_iter():
+    assert False
+
+
+def _load_id_abbreviation_dict():
+    assert False
+
+
+def test_gene_id_translator_api():
+    assert False
+
+
+def test_gene_id_translator_getitem():
+    assert False
+
+
+def test_gene_id_translator_contains():
+    translator = GeneIDTranslator({1: 2, 3: 4})
+    assert 1 in translator and 3 in translator
+    for invalid in [2, 4, '1', False]:
+        assert invalid not in translator
+    translator = GeneIDTranslator(None)
+    for something in [2, 3, '1', False, True, {}, 3.141592]:
+        assert something in translator
+
+
+def test_map_taxon_id_connectivity():
+    assert False
+
+
+def test_map_taxon_id_parsing(monkeypatch):
+    assert False
+
+
+def test_golr_annotation_iterator_connectivity():
+    assert False
+
+
+def test_golr_annotation_iterator_parsing(monkeypatch):
+    assert False
+
+
+def test_stop_ipcluster():
+    stop_ipcluster()
+
+
+def test_start_ipcluster():
+    start_ipcluster(1)
