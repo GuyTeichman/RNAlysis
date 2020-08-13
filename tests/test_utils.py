@@ -454,10 +454,25 @@ def test_gene_id_translator_contains():
 
 
 def test_map_taxon_id_connectivity():
-    assert False
+    assert map_taxon_id(6239) == (6239, 'Caenorhabditis elegans')
+    assert map_taxon_id('canis lupus familiaris') == (9615, 'Canis lupus familiaris')
+    with pytest.raises(ValueError):
+        map_taxon_id('Lorem ipsum dolor sit amet')
 
 
 def test_map_taxon_id_parsing(monkeypatch):
+    assert False
+
+
+def test_map_taxon_id_no_results(monkeypatch):
+    assert False
+
+
+def test_map_taxon_id_multiple_results(monkeypatch):
+    assert False
+
+
+def test_map_taxon_id_no_connection(monkeypatch):
     assert False
 
 
@@ -501,3 +516,22 @@ def test_validate_uniprot_dataset_name():
         validate_uniprot_dataset_name({'one': 1, 'two': 2, 'three': 3}, 'one', 2, 'three')
     with pytest.raises(AssertionError):
         validate_uniprot_dataset_name({'one': 1, 'two': 2, 'three': 3}, 'one', 'Two', 'three')
+
+
+def test_validate_hdbscan_parameters():
+    with pytest.raises(AssertionError):
+        validate_hdbscan_parameters(1, 'euclidean', 'eom', 1)
+
+    with pytest.raises(AssertionError):
+        validate_hdbscan_parameters(2.0, 'euclidean', 'eom', 13)
+
+    with pytest.raises(AssertionError):
+        validate_hdbscan_parameters(14, 'euclidean', 'eom', 13)
+
+    validate_hdbscan_parameters(13, 'euclidean', 'eom', 13)
+
+    with pytest.raises(AssertionError):
+        validate_hdbscan_parameters(2, 'euclidean', 5, 13)
+
+    with pytest.raises(AssertionError):
+        validate_hdbscan_parameters(2, 5, 'EOM', 13)
