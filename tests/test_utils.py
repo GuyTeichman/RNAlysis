@@ -12,6 +12,20 @@ from rnalysis.utils.io import _format_ids_iter
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
 
+class MockResponse(object):
+    def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = {'blaa': '1234'},
+                 text: str = ''):
+        self.status_code = status_code
+        self.url = url
+        self.headers = headers
+        self.text = text
+        self.ok = self.status_code == 200
+
+    def raise_for_status(self):
+        if not self.ok:
+            raise ConnectionError('request not ok')
+
+
 def test_is_df_dataframe():
     my_df = pd.DataFrame()
     assert (check_is_df_like(my_df))
@@ -386,6 +400,8 @@ def test_fetch_go_basic_connectivity():
 def test_map_gene_ids_connectivity():
     ids_uniprot = ['P34544', 'Q27395', 'P12844']
     ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
+    entrez_to_wb_truth = {'176183': 'WBGene00019883', '173203': 'WBGene00012343'}
+    wb_to_entrez_truth = {val: key for key, val in zip(entrez_to_wb_truth.keys(), entrez_to_wb_truth.values())}
     mapped_ids_truth = {uniprot: wb for uniprot, wb in zip(ids_uniprot, ids_wormbase)}
     mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids_truth.values())}
 
@@ -401,8 +417,20 @@ def test_map_gene_ids_connectivity():
         assert mapped_ids[geneid] == mapped_ids_truth_rev[geneid]
     assert mapped_ids.mapping_dict == mapped_ids_truth_rev
 
+    mapped_ids = map_gene_ids(entrez_to_wb_truth.keys(), 'Entrez Gene ID', 'WormBase')
+    for geneid in entrez_to_wb_truth:
+        assert mapped_ids[geneid] == entrez_to_wb_truth[geneid]
+
+    mapped_ids = map_gene_ids(wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID')
+    for geneid in wb_to_entrez_truth:
+        assert mapped_ids[geneid] == wb_to_entrez_truth[geneid]
+
 
 def test_map_gene_ids_request(monkeypatch):
+    def mock_get(url):
+        return MockResponse()
+
+    monkeypatch.setattr(requests, 'get', mock_get)
     assert False
 
 
@@ -415,6 +443,10 @@ def test_map_gene_ids_to_same_set():
 
 
 def test_map_gene_ids_parsing(monkeypatch):
+    def mock_get(url, params):
+        return MockResponse(text='From\tTo\na\tA\nQ27395\tb\nB\tWBGene00003515\n')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
     assert False
 
 

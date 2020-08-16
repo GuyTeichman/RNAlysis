@@ -2,7 +2,7 @@ import queue
 import re
 import warnings
 from itertools import islice
-from typing import Any, Dict, Iterable, Set, Union, List
+from typing import Any, Dict, Iterable, Set, Union, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -32,23 +32,61 @@ def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
     return split
 
 
-def uniprot_tab_to_dict(tab_input: str) -> dict:
+def uniprot_tab_to_dict(tab_input: str) -> Tuple[Dict[str, str], list]:
     split_list = tab_input.split()
     if len(split_list) == 0:
-        return {}
+        return {}, []
     split_list = split_list[2:]
 
     parsed = {}
     duplicates = []
     for key, val in zip(islice(split_list, 0, len(split_list), 2), islice(split_list, 1, len(split_list), 2)):
         if key in parsed:
-            duplicates.append((key, val))
+            parsed[key].append(val)
         else:
-            parsed[key] = val
+            parsed[key] = [val]
+
+    for key in parsed:
+        if len(parsed[key]) > 1:
+            duplicates.extend(parsed.pop(key))
+        else:
+            parsed[key] = parsed[key][0]
+
+    return parsed, duplicates
+
+
+def uniprot_tab_with_score_to_dict(tab_input: str, reverse_key_value: bool = False) -> Dict[str, str]:
+    split_list = re.split('[\t\n]', tab_input)
+    if len(split_list) == 0:
+        return {}
+    split_list = split_list[3:]
+
+    parsed: Dict[str, Tuple[List[str], List[int]]] = {}
+    for gene_id, rank, key in zip(islice(split_list, 0, len(split_list), 3), islice(split_list, 1, len(split_list), 3),
+                                  islice(split_list, 2, len(split_list), 3)):
+        if reverse_key_value:
+            gene_id, key = key, gene_id
+        numeric_rank = int(rank[0])
+        if key in parsed:
+            parsed[key][0].append(gene_id)
+            parsed[key][1].append(numeric_rank)
+        else:
+            parsed[key] = ([gene_id], [numeric_rank])
+
+    key_to_id = {}
+    duplicates = {}
+    for key, (gene_ids, ranks) in zip(parsed.keys(), parsed.values()):
+        if len(gene_ids) == 1:
+            key_to_id[key] = gene_ids[0]
+        else:
+            best_id = gene_ids[max(range(len(ranks)), key=lambda i: ranks[i])]
+            key_to_id[key] = best_id
+            duplicates[key] = best_id
 
     if len(duplicates) > 0:
-        warnings.warn(f"{len(duplicates)} duplicate mappings were found and ignored: {duplicates}")
-    return parsed
+        warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes. "
+                      f"The following mapping was chosen for them based on their annotation score: {duplicates}")
+    return key_to_id
 
 
 def data_to_list(data: Any) -> list:
