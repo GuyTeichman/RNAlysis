@@ -1588,6 +1588,25 @@ class DESeqFilter(Filter):
         super().__init__(fname, drop_columns)
         self.log2fc_col = log2fc_col
         self.padj_col = padj_col
+        if log2fc_col not in self.columns:
+            warnings.warn(f"The specified log2fc_col '{log2fc_col}' does not appear in the DESeqFilter's columns: "
+                          f"{self.columns}. DESeqFilter-specific functions that depend on "
+                          f"log2(fold change) may fail to run. ")
+        if padj_col not in self.columns:
+            warnings.warn(f"The specified padj_col '{padj_col}' does not appear in the DESeqFilter's columns: "
+                          f"{self.columns}. DESeqFilter-specific functions that depend on p-values may fail to run. ")
+
+    def _assert_padj_col(self):
+        if self.padj_col not in self.df.columns:
+            raise KeyError(f"A column with adjusted p-values under the name padj_col='{self.padj_col}' "
+                           f"could not be found. Try setting a different value for the parameter 'padj_col' "
+                           f"when creating the DESeqFilter object.")
+
+    def _assert_log2fc_col(self):
+        if self.log2fc_col not in self.df.columns:
+            raise KeyError(f"A column with log2 fold change values under the name log2fc_col='{self.log2fc_col}' "
+                           f"could not be found. Try setting a different value for the parameter 'log2fc_col' "
+                           f"when creating the DESeqFilter object.")
 
     def filter_significant(self, alpha: float = 0.1, opposite: bool = False, inplace: bool = True):
 
@@ -1617,6 +1636,8 @@ class DESeqFilter(Filter):
 
         """
         assert isinstance(alpha, float), "alpha must be a float!"
+        self._assert_padj_col()
+
         new_df = self.df[self.df[self.padj_col] <= alpha]
         suffix = f"_sig{alpha}"
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -1649,6 +1670,8 @@ class DESeqFilter(Filter):
         """
         assert isinstance(abslog2fc, (float, int)), "abslog2fc must be a number!"
         assert abslog2fc >= 0, "abslog2fc must be non-negative!"
+        self._assert_log2fc_col()
+
         suffix = f"_{abslog2fc}abslog2foldchange"
         new_df = self.df[np.abs(self.df[self.log2fc_col]) >= abslog2fc]
         return self._inplace(new_df, opposite, inplace, suffix)
@@ -1687,6 +1710,8 @@ class DESeqFilter(Filter):
         """
         assert isinstance(direction, str), \
             "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. "
+        self._assert_log2fc_col()
+
         if direction == 'pos':
             new_df = self.df[self.df[self.log2fc_col] > 0]
             suffix = '_PositiveLog2FC'
@@ -1738,6 +1763,9 @@ class DESeqFilter(Filter):
            Example plot of volcano_plot()
 
         """
+        self._assert_padj_col()
+        self._assert_log2fc_col()
+
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plt.style.use('seaborn-white')
