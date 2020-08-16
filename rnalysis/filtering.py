@@ -1812,6 +1812,22 @@ class CountFilter(Filter):
                             'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
                             'jackknife': pwdist.jackknife_distance}
     _transforms = {True: preprocessing.standard_box_cox, False: preprocessing.standardize}
+    _numeric_dtypes = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False):
+        super().__init__(fname, drop_columns)
+
+        if len(self._numeric_columns) < len(self.columns):
+            warnings.warn(f"The following columns in the CountFilter are not numeric, and will therefore be ignored "
+                          f"when running some CountFilter-specific functions: "
+                          f"{set(self.df.columns).difference(self._numeric_columns)}")
+
+    @property
+    def _numeric_columns(self) -> list:
+        """
+        Returns a list of the numeric (int/float) columns in the DataFrame.
+        """
+        return list(self.df.columns[[dtype in self._numeric_dtypes for dtype in self.df.dtypes]])
 
     @property
     def triplicates(self):
@@ -1824,11 +1840,13 @@ class CountFilter(Filter):
         """
 
         mltplr = 3
-        triplicate = [self.columns[i * mltplr:(1 + i) * mltplr] for i in range(self.shape[1] // mltplr)]
-        if len(self.columns[(self.shape[1] // mltplr) * mltplr::]) > 0:
-            triplicate.append([self.columns[(self.shape[1] // mltplr) * mltplr::]])
-            warnings.warn(f'Number of samples {self.shape[1]} is not divisible by 3. '
-                          f'Appending the remaining {self.shape[1] % mltplr} as an inncomplete triplicate.')
+        numeric_cols = self._numeric_columns
+        n_cols = len(numeric_cols)
+        triplicate = [numeric_cols[i * mltplr:(1 + i) * mltplr] for i in range(n_cols // mltplr)]
+        if len(numeric_cols[(n_cols // mltplr) * mltplr::]) > 0:
+            triplicate.append([numeric_cols[(n_cols // mltplr) * mltplr::]])
+            warnings.warn(f'Number of samples {n_cols} is not divisible by 3. '
+                          f'Appending the remaining {n_cols % mltplr} as an inncomplete triplicate.')
         return triplicate
 
     def fold_change(self, numerator: Union[str, List[str]], denominator: Union[str, List[str]],
@@ -1882,10 +1900,14 @@ class CountFilter(Filter):
             denominator = [denominator]
         elif isinstance(denominator, tuple):
             denominator = list(denominator)
+
+        numeric_cols = self._numeric_columns
         for num in numerator:
-            assert num in self.df, f"all numerator arguments must be columns in the CountFilter object! ({num})"
+            assert num in self.df, f"'{num}' is not a column in the CountFilter object!"
+            assert num in numeric_cols, f"Invalid dtype for column '{num}': {self.df.dtypes[num]}"
         for den in denominator:
-            assert den in self.df, f"all denominator arguments must be columns in the CountFilter object! ({den})"
+            assert den in self.df, f"'{den}' is not a column in the CountFilter object!"
+            assert den in numeric_cols, f"Invalid dtype for column '{den}': {self.df.dtypes[den]}"
 
         srs = (self.df[numerator].mean(axis=1) + 1) / (self.df[denominator].mean(axis=1) + 1)
         new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
@@ -1988,10 +2010,12 @@ class CountFilter(Filter):
             features = special_counter_fname
         else:
             raise TypeError("Invalid type for 'special_counter_fname'!")
+        numeric_cols = self._numeric_columns
         for column in new_df.columns:
-            norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
-                r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
-            new_df[column] /= norm_factor
+            if column in numeric_cols:
+                norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
+                    r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
+                new_df[column] /= norm_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize')
 
     def normalize_with_scaling_factors(self, scaling_factor_fname: Union[str, Path], inplace: bool = True):
@@ -2023,9 +2047,11 @@ class CountFilter(Filter):
             size_factors = scaling_factor_fname
         else:
             raise TypeError("Invalid type for 'scaling_factor_fname'!")
+        numeric_cols = self._numeric_columns
         for column in new_df.columns:
-            norm_factor = size_factors[column].values
-            new_df[column] /= norm_factor
+            if column in numeric_cols:
+                norm_factor = size_factors[column].values
+                new_df[column] /= norm_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize')
 
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
@@ -2056,7 +2082,8 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         validation.validate_is_normalized(self.fname)
 
-        new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
+        new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in
+                              self.df.loc[:, self._numeric_columns].iterrows()]]
         suffix = f"_filt{threshold}reads"
         return self._inplace(new_df, opposite, inplace, suffix)
 
@@ -2088,8 +2115,10 @@ class CountFilter(Filter):
         validation.validate_threshold(threshold)
         validation.validate_is_normalized(self.fname)
 
-        high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in self.df.iterrows()]]
-        low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in self.df.iterrows()]]
+        high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in
+                                 self.df.loc[:, self._numeric_columns].iterrows()]]
+        low_expr = self.df.loc[[False if max(vals) > threshold else True for gene, vals in
+                                self.df.loc[:, self._numeric_columns].iterrows()]]
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), self._inplace(
             low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
 
@@ -2180,6 +2209,7 @@ class CountFilter(Filter):
 
     def _gap_statistic(self, clusterer_class: type, transform: Callable, random_state: int, clusterer_kwargs: dict,
                        n_refs: int = 10, max_clusters: int = 20) -> Tuple[int, plt.Figure]:
+        raw_data = self.df.loc[:, self._numeric_columns].values
         # determine the range of k values to be tested
         k_range = np.arange(1, max_clusters + 1)
         print(f"Calculating optimal K using the Gap Statistic method in range {2}:{max_clusters}...")
@@ -2188,17 +2218,18 @@ class CountFilter(Filter):
             np.random.seed(random_state)
         # calculate the SVD of the observed data (X), and transform via X' = x_tag = dot(X, V)
         # note: the data is centered by sklearn.decomposition.PCA, no need to pre-center it.
-        pca = PCA(random_state=random_state).fit(self.df.values)
-        x_tag = pca.transform(self.df.values)
+        pca = PCA(random_state=random_state).fit(raw_data)
+        x_tag = pca.transform(raw_data)
         # determine the ranges of the columns of X' (x_tag)
         a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
         # transform the observed data using Box-Cox, and then standardize it
-        data = transform(self.df.values)
+        data = transform(raw_data)
         # generate 'n_refs' random reference arrays:
         # draw uniform features Z' over the ranges of the columns of X', and back-transform via Z = dot(Z', V.T), then
         # transform the random reference data using Box-Cox, and then standardize it
-        refs = [transform(pca.inverse_transform(np.random.random_sample(size=self.df.values.shape) * (b - a) + a))
-                for _ in range(n_refs)]
+        refs = [transform(pca.inverse_transform(
+            np.random.random_sample(size=raw_data.shape) * (b - a) + a))
+            for _ in range(n_refs)]
         # allocate empty arrays for observed/expected log(inertia), gap scores Gap(K) and gap error S(K)
         log_disp_obs = np.zeros((len(k_range)))
         log_disp_exp = np.zeros((len(k_range)))
@@ -2293,7 +2324,7 @@ class CountFilter(Filter):
         :rtype:
         """
         print(f"Calculating optimal k using the Silhouette method in range {2}:{max_clusters}...")
-        data = transform(self.df.values)
+        data = transform(self.df.loc[:, self._numeric_columns].values)
         sil_scores = []
         k_range = np.arange(2, max_clusters + 1)
         for n_clusters in k_range:
@@ -2382,12 +2413,13 @@ class CountFilter(Filter):
         k = self._parse_k(k=k, clusterer_class=KMeans, transform=transform, random_state=random_state,
                           clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
         # generate standardized data for plots
-        data_for_plot = transform(self.df)
+        data_for_plot = transform(self.df.loc[:, self._numeric_columns])
         # iterate over all K values, generating clustering results and plotting them
         filt_obj_tuples = []
         for this_k in k:
             this_k = int(this_k)
-            clusterer = KMeans(n_clusters=this_k, **clusterer_kwargs).fit(transform(self.df.values))
+            clusterer = KMeans(n_clusters=this_k, **clusterer_kwargs).fit(
+                transform(self.df.loc[:, self._numeric_columns].values))
             # plot results
             self._plot_clustering(n_clusters=this_k, data=data_for_plot, labels=clusterer.labels_,
                                   centers=clusterer.cluster_centers_,
@@ -2435,7 +2467,7 @@ class CountFilter(Filter):
         # get the transform/pairwise-distance function
         transform, clusterer_kwargs['affinity'] = self._clustering_get_transform(power_transform, metric)
         # generate standardized data for plots
-        data_for_plot = preprocessing.standardize(self.df)
+        data_for_plot = preprocessing.standardize(self.df.loc[:, self._numeric_columns])
         # if k was supplied, parse k value
         if n_clusters is not None:
             k = self._parse_k(k=n_clusters, clusterer_class=AgglomerativeClustering, transform=transform,
@@ -2444,7 +2476,8 @@ class CountFilter(Filter):
         # if k was not supplied, determined k by AgglomerativeClustering with distance_threshold
         else:
             clusterer = AgglomerativeClustering(n_clusters=None, distance_threshold=distance_threshold,
-                                                **clusterer_kwargs).fit(transform(self.df.values))
+                                                **clusterer_kwargs).fit(
+                transform(self.df.loc[:, self._numeric_columns].values))
             k = clusterer.n_clusters_
             # calculate cluster centers
             centers = np.array([data_for_plot[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(k)])
@@ -2512,7 +2545,7 @@ class CountFilter(Filter):
         # get the transform/pairwise-distance function
         transform, clusterer_kwargs['metric'] = self._clustering_get_transform(power_transform, metric)
         # generate standardized data for plots
-        data_for_plot = preprocessing.standardize(self.df)
+        data_for_plot = preprocessing.standardize(self.df.loc[:, self._numeric_columns])
         # parse K value
         k = self._parse_k(k=k, clusterer_class=clustering.KMedoidsIter, transform=transform, random_state=random_state,
                           clusterer_kwargs=clusterer_kwargs, max_clusters=max_clusters)
@@ -2520,7 +2553,8 @@ class CountFilter(Filter):
         filt_obj_tuples = []
         for this_k in k:
             this_k = int(this_k)
-            clusterer = clustering.KMedoidsIter(n_clusters=this_k, **clusterer_kwargs).fit(transform(self.df.values))
+            clusterer = clustering.KMedoidsIter(n_clusters=this_k, **clusterer_kwargs).fit(
+                transform(self.df.loc[:, self._numeric_columns].values))
             # get cluster centers
             centers = data_for_plot[clusterer.medoid_indices_, :]
             # plot results
@@ -2568,7 +2602,7 @@ class CountFilter(Filter):
         cluster_selection_method = cluster_selection_method.lower()
         metric = metric.lower()
         transform, metric = self._clustering_get_transform(power_transform, metric)
-        data = transform(self.df.values)
+        data = transform(self.df.loc[:, self._numeric_columns].values)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples,
                                     cluster_selection_epsilon=cluster_selection_epsilon, metric=metric,
                                     cluster_selection_method=cluster_selection_method)
