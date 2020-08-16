@@ -46,7 +46,7 @@ def uniprot_tab_to_dict(tab_input: str) -> Tuple[Dict[str, str], list]:
         else:
             parsed[key] = [val]
 
-    for key in parsed:
+    for key in list(parsed.keys()):
         if len(parsed[key]) > 1:
             duplicates.extend(parsed.pop(key))
         else:

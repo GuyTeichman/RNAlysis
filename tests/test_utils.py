@@ -442,14 +442,6 @@ def test_map_gene_ids_to_same_set():
         assert mapper[i] == i
 
 
-def test_map_gene_ids_parsing(monkeypatch):
-    def mock_get(url, params):
-        return MockResponse(text='From\tTo\na\tA\nQ27395\tb\nB\tWBGene00003515\n')
-
-    monkeypatch.setattr(requests, 'get', mock_get)
-    assert False
-
-
 def test_format_ids_iter():
     assert list(_format_ids_iter('one two three')) == ['one two three']
     assert list(_format_ids_iter(123)) == ['123']
@@ -490,6 +482,35 @@ def test_map_taxon_id_connectivity():
     assert map_taxon_id('canis lupus familiaris') == (9615, 'Canis lupus familiaris')
     with pytest.raises(ValueError):
         map_taxon_id('Lorem ipsum dolor sit amet')
+
+
+def test_uniprot_tab_to_dict():
+    tab = 'From\tTo\nWBGene00019883\tP34544\nWBGene00023497\tQ27395\nWBGene00003515\tP12844\nWBGene00000004\t' \
+          'A0A0K3AVL7\nWBGene00000004\tO17395\n'
+    tab_rev = 'From\tTo\nP34544\tWBGene00019883\nQ27395\tWBGene00023497\nP12844\tWBGene00003515\nA0A0K3AVL7\t' \
+              'WBGene00000004\nO17395\tWBGene00000004\n'
+
+    truth = ({'WBGene00019883': 'P34544', 'WBGene00023497': 'Q27395', 'WBGene00003515': 'P12844'},
+             ['A0A0K3AVL7', 'O17395'])
+    truth_rev = ({'P34544': 'WBGene00019883', 'Q27395': 'WBGene00023497', 'P12844': 'WBGene00003515',
+                  'A0A0K3AVL7': 'WBGene00000004', 'O17395': 'WBGene00000004'}, [])
+    assert truth == uniprot_tab_to_dict(tab)
+
+    assert truth_rev == uniprot_tab_to_dict(tab_rev)
+
+
+def test_uniprot_tab_with_score_to_dict():
+    tab = 'Entry\tAnnotation\tyourlist:M20200816216DA2B77BFBD2E6699CA9B6D1C41EB2A5FE6AF\nP34544\t5 out of 5\t' \
+          'WBGene00019883\nQ27395\t4 out of 5\tWBGene00023497\nP12844\t5 out of 5\tWBGene00003515\nA0A0K3AVL7\t' \
+          '1 out of 5\tWBGene00000004\nO17395\t2 out of 5\tWBGene00000004\n'
+
+    truth = {'WBGene00019883': 'P34544', 'WBGene00023497': 'Q27395', 'WBGene00003515': 'P12844',
+             'WBGene00000004': 'O17395'}
+    truth_rev = {'P34544': 'WBGene00019883', 'Q27395': 'WBGene00023497', 'P12844': 'WBGene00003515',
+                 'A0A0K3AVL7': 'WBGene00000004', 'O17395': 'WBGene00000004'}
+    assert truth == uniprot_tab_with_score_to_dict(tab)
+
+    assert truth_rev == uniprot_tab_with_score_to_dict(tab, True)
 
 
 def test_map_taxon_id_parsing(monkeypatch):
