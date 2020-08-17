@@ -1458,7 +1458,7 @@ class RankedSet(FeatureSet):
     def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
         warnings.warn("Warning: when performing set operations with RankedSet objects, "
                       "the return type will always be FeatureSet and not RankedSet.")
-        super()._set_ops(others, op)
+        return super()._set_ops(others, op)
 
     def go_enrichment_single_list(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
                                   propagate_annotations: str = 'elim',

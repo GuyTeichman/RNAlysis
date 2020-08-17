@@ -508,7 +508,14 @@ def test_rankedset_repr():
 
 
 def test_rankedset_set_ops_return_type():
-    assert False
+    r1 = RankedSet(['1', '2', '3', '4'])
+    r2 = RankedSet(['3', '4', '5'])
+    f1 = FeatureSet(['3', '5', '6', '7', '9'])
+    s1 = {'1', '2', '3', '5'}
+    assert isinstance(r1.intersection(r2), FeatureSet)
+    assert isinstance(r2.union(f1), FeatureSet)
+    assert isinstance(r1.difference(s1), FeatureSet)
+    assert isinstance(f1.symmetric_difference(r2), FeatureSet)
 
 
 def test_enrich_single_list():
