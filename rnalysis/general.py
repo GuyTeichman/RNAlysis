@@ -43,6 +43,8 @@ def start_parallel_session(n_engines: int = 'default'):
         elif 'Cluster is already running' in line:
             parallel_processing.stop_ipcluster()
             stream = parallel_processing.start_ipcluster(n_engines)
+        elif line != '':
+            print(line.replace('\n', ''))
     print('Parallel session started successfully')
 
 

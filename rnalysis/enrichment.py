@@ -998,6 +998,8 @@ class FeatureSet:
                     elif 'Cluster is already running' in line:
                         parallel_processing.stop_ipcluster()
                         stream = parallel_processing.start_ipcluster()
+                    elif line != '':
+                        print(line.replace('\n', ''))
 
                 print('Parallel session started successfully')
                 client = ipyparallel.Client()
