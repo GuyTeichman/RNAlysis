@@ -985,9 +985,9 @@ class FeatureSet:
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         # parallel processing
         if parallel_processing:
-            try:
+            try:  # try starting an ipyparallel Client. If it fails, try starting/re-starting parallel session
                 client = ipyparallel.Client()
-            except (ipyparallel.error.TimeoutError, IOError, OSError) as e:
+            except (ipyparallel.error.TimeoutError, IOError, OSError):
                 print("Parallel session appears to be inactive. Starting parallel session...")
                 stream = parallel.start_ipcluster()
                 while True:
@@ -1008,12 +1008,9 @@ class FeatureSet:
                                   int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
                                                              f"Value {random_seed} invalid."
                 dview.execute(f"np.random.seed({random_seed})")
-            k = len(attributes)
-            gene_set_rep = list(itertools.repeat(gene_set, k))
-            attr_ref_df_rep = list(itertools.repeat(attr_ref_df, k))
-            reps_rep = list(itertools.repeat(reps, k))
-
-            res = dview.map(FeatureSet._single_enrichment, gene_set_rep, attributes, attr_ref_df_rep, reps_rep)
+            pushed_params = dict(gene_set=gene_set, reps=reps, attr_ref_df=attr_ref_df)
+            dview.push(pushed_params)
+            res = dview.map(lambda attr: FeatureSet._single_enrichment(gene_set, attr, attr_ref_df, reps), attributes)
             enriched_list = res.result()
         # no parallel processing
         else:
@@ -1024,10 +1021,10 @@ class FeatureSet:
                                                              f"Value {random_seed} invalid."
                 np.random.seed(random_seed)
 
-            for k, attribute in enumerate(attributes):
+            for n_attrs, attribute in enumerate(attributes):
                 assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
                 enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
-                print(f"Finished {k + 1} attributes out of {len(attributes)}")
+                print(f"Finished {n_attrs + 1} attributes out of {len(attributes)}")
 
         return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
 
