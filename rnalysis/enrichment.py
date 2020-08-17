@@ -921,23 +921,24 @@ class FeatureSet:
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
-        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
+        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all' (default 'all').
         :param attributes: An iterable of attribute names or attribute numbers \
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
-        :type fdr: float between 0 and 1
+        :type fdr: float between 0 and 1 (default 0.05)
         :param fdr: Indicates the FDR threshold for significance.
-        :type reps: int larger than 0
+        :type reps: int larger than 0 (default 10000)
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
-        Default 'protein_coding'.
+        (default 'protein_coding')
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
         'all' will include all genomic features in the reference table, \
         'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
-        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
+        (default None)
         :param background_genes: a set of specific feature indices to be used as background genes. \
         :type attr_ref_path: str or pathlib.Path (default 'predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
