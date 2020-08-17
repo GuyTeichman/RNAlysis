@@ -272,7 +272,7 @@ def test_enrichment_randomization_parallel_api():
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
     _ = en.enrich_randomization(attrs, reps=1, biotype='all', attr_ref_path=__attr_ref__,
-                                biotype_ref_path=__biotype_ref__, parallel_processing=True)
+                                biotype_ref_path=__biotype_ref__, parallel=True)
     _ = en.enrich_randomization_parallel(attrs, reps=1, biotype='all', attr_ref_path=__attr_ref__,
                                          biotype_ref_path=__biotype_ref__)
     plt.close('all')
@@ -289,15 +289,15 @@ def test_enrichment_randomization_parallel_reliability():
         res1 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                        attr_ref_path=__attr_ref__,
                                        biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed, parallel_processing=True)
+                                       random_seed=random_seed, parallel=True)
         res2 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                        attr_ref_path=__attr_ref__,
                                        biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed + 1, parallel_processing=True)
+                                       random_seed=random_seed + 1, parallel=True)
         res3 = en.enrich_randomization(attrs, reps=10000, biotype='all',
                                        attr_ref_path=__attr_ref__,
                                        biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed + 2, parallel_processing=True)
+                                       random_seed=random_seed + 2, parallel=True)
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -318,7 +318,7 @@ def test_enrichment_parallel_validity():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     res = en.enrich_randomization(attrs, reps=100000, biotype='all',
                                   attr_ref_path=__attr_ref__,
-                                  biotype_ref_path=__biotype_ref__, random_seed=0, parallel_processing=True)
+                                  biotype_ref_path=__biotype_ref__, random_seed=0, parallel=True)
     plt.close('all')
     _enrichment_validity(res, truth)
 

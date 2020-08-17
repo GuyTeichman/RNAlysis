@@ -676,15 +676,15 @@ We will start by importing the enrichment module::
 An :term:`FeatureSet` object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
 
-    >>> c = filtering.CountFilter('tests/counted.csv')
-    >>> en = enrichment.FeatureSet(filt, 'a name for my set')
+    >>> my_filter_obj = filtering.CountFilter('tests/counted.csv') # create a Filter object
+    >>> my_set = enrichment.FeatureSet(my_filter_obj, 'a name for my set')
 
 The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing :term:`Filter object` (see above for more information about :term:`Filter objects` and the filtering module) using the function 'index_set'::
 
-    >>> myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
-    >>> en = enrichment.FeatureSet(myset, 'a name for my set')
+    >>> my_python_set = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
+    >>> my_set = enrichment.FeatureSet(my_python_set, 'a name for my set')
     # alternatively, using 'index_set' on an existing Filter object:
-    >>> en2 = enrichment.FeatureSet(filt.index_set,' a name for my set')
+    >>> my_other_set = enrichment.FeatureSet(my_filter_obj.index_set,' a name for my set')
 
 The third method is not to specify a gene set at all::
 
@@ -702,7 +702,7 @@ Using the *enrichment* module, you can perform enrichment analysis for user-defi
 Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
     >>> c = filtering.CountFilter('path_to_my_file.csv')
-    >>> en = enrichment.FeatureSet(h.index_set, 'my set')
+    >>> en = enrichment.FeatureSet(c.index_set, 'my set')
 
 Our attributes should be defined in a Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.

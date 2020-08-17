@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 
 from rnalysis.utils.clustering import *
-from rnalysis.utils.parallel import *
+from rnalysis.utils.parallel_processing import *
 from rnalysis.utils.validation import *
 from rnalysis.utils.preprocessing import *
 from rnalysis.utils.ref_tables import *

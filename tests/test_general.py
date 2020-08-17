@@ -89,4 +89,5 @@ def test_reset_settings_file():
 
 
 def test_start_parallel_session():
-    assert False
+    start_parallel_session(1)
+    start_parallel_session()
