@@ -20,8 +20,9 @@ env:
 # Command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
     - pip install -U tox-travis
-    - pip install coverage
-    - pip install codecov
+    - pip install coverage>=5.0.0
+    - pip install coveralls
+    - pip install pytest-cov
 
 jobs:
     allow_failures:
