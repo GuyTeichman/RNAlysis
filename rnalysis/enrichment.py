@@ -946,9 +946,9 @@ class FeatureSet:
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
         Cannot be specified together with 'biotype'.
-        :type save_csv: bool, default False
+        :type save_csv: bool (default False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
-        :type fname: str or pathlib.Path
+        :type fname: str or pathlib.Path (default None)
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default False)
@@ -960,10 +960,10 @@ class FeatureSet:
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
-        :type parallel_processing: bool (default False)
-        :param parallel_processing: if True, will perform the randomization tests using parallel processing. \
-        In most cases, parallel processing will lead to shorter computation time, but should otherwise not affect \
-        the results of the analysis.
+        :type parallel: bool (default False)
+        :param parallel: if True, will perform the randomization tests using parallel processing. \
+        In most cases, parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
@@ -1057,25 +1057,26 @@ class FeatureSet:
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
-        :type fdr: float between 0 and 1
+        :type fdr: float between 0 and 1 (default 0.05)
         :param fdr: Indicates the FDR threshold for significance.
         :type attr_ref_path: str or pathlib.Path (default 'predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
         :type biotype_ref_path: str or pathlib.Path (default 'predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
-        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
-        Default 'protein_coding'.
+        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all' \
+        (default 'protein_coding')
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
         'all' will include all genomic features in the reference table, \
         'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
-        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
+        (default None)
         :param background_genes: a set of specific feature indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
-        :type save_csv: bool, default False
+        :type save_csv: bool (default False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
-        :type fname: str or pathlib.Path
+        :type fname: str or pathlib.Path (default None)
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default False)
