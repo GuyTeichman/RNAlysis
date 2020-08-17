@@ -999,9 +999,10 @@ class FeatureSet:
                                   int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
                                                              f"Value {random_seed} invalid."
                 dview.execute(f"np.random.seed({random_seed})")
-            pushed_params = dict(gene_set=gene_set, reps=reps, attr_ref_df=attr_ref_df)
+            pval_func = FeatureSet._single_enrichment
+            pushed_params = dict(gene_set=gene_set, reps=reps, attr_ref_df=attr_ref_df, pval_func=pval_func)
             dview.push(pushed_params)
-            res = dview.map(lambda attr: FeatureSet._single_enrichment(gene_set, attr, attr_ref_df, reps), attributes)
+            res = dview.map(lambda attr: pval_func(gene_set, attr, attr_ref_df, reps), attributes)
             enriched_list = res.result()
         # no parallel processing
         else:
