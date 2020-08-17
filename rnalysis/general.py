@@ -4,13 +4,12 @@ reading and updating the settings file, parsing common types of genomic feature 
 """
 
 import re
-import time
 from typing import Union
 
 import pandas as pd
 
 from rnalysis import __attr_file_key__, __biotype_file_key__
-from rnalysis.utils import io, parallel_processing, validation, ref_tables
+from rnalysis.utils import io, validation, ref_tables, parallel_processing
 from rnalysis.filtering import Filter
 
 
@@ -28,24 +27,7 @@ def start_parallel_session(n_engines: int = 'default'):
     Starting parallel session...
     Parallel session started successfully
     """
-    print("Starting parallel session...")
-    try:
-        parallel_processing.stop_ipcluster()
-    except FileNotFoundError:
-        pass
-    time.sleep(1)
-    stream = parallel_processing.start_ipcluster(n_engines)
-    time.sleep(1)
-    while True:
-        line = stream.stderr.readline().decode('utf8')
-        if 'Engines appear to have started successfully' in line:
-            break
-        elif 'Cluster is already running' in line:
-            parallel_processing.stop_ipcluster()
-            stream = parallel_processing.start_ipcluster(n_engines)
-        elif line != '':
-            print(line.replace('\n', ''))
-    print('Parallel session started successfully')
+    parallel_processing.start_parallel_session(n_engines)
 
 
 def parse_wbgene_string(string):

@@ -1,6 +1,8 @@
-from rnalysis.utils import ref_tables
 from rnalysis.general import *
 from rnalysis import __biotype_file_key__, __attr_file_key__
+import time
+
+from rnalysis.utils.parallel_processing import start_parallel_session
 
 
 def test_parse_wbgene_string():
@@ -89,5 +91,11 @@ def test_reset_settings_file():
 
 
 def test_start_parallel_session():
-    start_parallel_session(1)
-    start_parallel_session()
+    try:
+        start_parallel_session(1)
+        time.sleep(1)
+        start_parallel_session()
+    except:
+        pass
+    finally:
+        parallel_processing.stop_ipcluster()

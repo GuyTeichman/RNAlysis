@@ -989,19 +989,7 @@ class FeatureSet:
             try:  # try starting an ipyparallel Client. If it fails, try starting/re-starting parallel session
                 client = ipyparallel.Client()
             except (ipyparallel.error.TimeoutError, IOError, OSError):
-                print("Parallel session appears to be inactive. Starting parallel session...")
-                stream = parallel_processing.start_ipcluster()
-                while True:
-                    line = stream.stderr.readline().decode('utf8')
-                    if 'Engines appear to have started successfully' in line:
-                        break
-                    elif 'Cluster is already running' in line:
-                        parallel_processing.stop_ipcluster()
-                        stream = parallel_processing.start_ipcluster()
-                    elif line != '':
-                        print(line.replace('\n', ''))
-
-                print('Parallel session started successfully')
+                parallel_processing.start_parallel_session()
                 client = ipyparallel.Client()
             dview = client[:]
             dview.execute("""import numpy as np
