@@ -9,7 +9,7 @@ import itertools
 import types
 import warnings
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
+from typing import Dict, Iterable, List, Set, Tuple, Union
 
 import ipyparallel
 import matplotlib.pyplot as plt
@@ -25,7 +25,7 @@ from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, ref_tables, validation, parallel
+from rnalysis.utils import io, parsing, ref_tables, validation, parallel_processing
 
 
 class FeatureSet:
@@ -898,14 +898,14 @@ class FeatureSet:
                       "with the parameter 'parallel_processing=True' instead.", DeprecationWarning)
         return self.enrich_randomization(attributes, fdr, reps, biotype, background_genes, attr_ref_path,
                                          biotype_ref_path, save_csv, fname, return_fig, plot_horizontal, random_seed,
-                                         parallel_processing=True)
+                                         parallel=True)
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
                              reps: int = 10000, biotype: str = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                             random_seed: int = None, parallel_processing: bool = False
+                             random_seed: int = None, parallel: bool = False
                              ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
@@ -921,7 +921,7 @@ class FeatureSet:
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
 
-        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all' (default 'all').
+        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'
         :param attributes: An iterable of attribute names or attribute numbers \
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
@@ -985,19 +985,19 @@ class FeatureSet:
         attr_ref_df, gene_set, attributes = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         # parallel processing
-        if parallel_processing:
+        if parallel:
             try:  # try starting an ipyparallel Client. If it fails, try starting/re-starting parallel session
                 client = ipyparallel.Client()
             except (ipyparallel.error.TimeoutError, IOError, OSError):
                 print("Parallel session appears to be inactive. Starting parallel session...")
-                stream = parallel.start_ipcluster()
+                stream = parallel_processing.start_ipcluster()
                 while True:
                     line = stream.stderr.readline().decode('utf8')
                     if 'Engines appear to have started successfully' in line:
                         break
                     elif 'Cluster is already running' in line:
-                        parallel.stop_ipcluster()
-                        stream = parallel.start_ipcluster()
+                        parallel_processing.stop_ipcluster()
+                        stream = parallel_processing.start_ipcluster()
 
                 print('Parallel session started successfully')
                 client = ipyparallel.Client()

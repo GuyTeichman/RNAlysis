@@ -10,7 +10,7 @@ from typing import Union
 import pandas as pd
 
 from rnalysis import __attr_file_key__, __biotype_file_key__
-from rnalysis.utils import io, parallel, validation, ref_tables
+from rnalysis.utils import io, parallel_processing, validation, ref_tables
 from rnalysis.filtering import Filter
 
 
@@ -30,19 +30,19 @@ def start_parallel_session(n_engines: int = 'default'):
     """
     print("Starting parallel session...")
     try:
-        parallel.stop_ipcluster()
+        parallel_processing.stop_ipcluster()
     except FileNotFoundError:
         pass
     time.sleep(1)
-    stream = parallel.start_ipcluster(n_engines)
+    stream = parallel_processing.start_ipcluster(n_engines)
     time.sleep(1)
     while True:
         line = stream.stderr.readline().decode('utf8')
         if 'Engines appear to have started successfully' in line:
             break
         elif 'Cluster is already running' in line:
-            parallel.stop_ipcluster()
-            stream = parallel.start_ipcluster(n_engines)
+            parallel_processing.stop_ipcluster()
+            stream = parallel_processing.start_ipcluster(n_engines)
     print('Parallel session started successfully')
 
 
