@@ -1178,7 +1178,7 @@ class FeatureSet:
         plt.style.use('seaborn-white')
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
         if plot_horizontal:
-            figsize = [5.6, 0.4 * (6.4 + df.shape[0])]
+            figsize = [14, 0.4 * (6.4 + df.shape[0])]
             bar_func = plt.Axes.barh
             line_func = plt.Axes.axvline
             cbar_kwargs = dict(location='bottom')
