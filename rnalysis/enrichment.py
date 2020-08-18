@@ -487,7 +487,7 @@ class FeatureSet:
 
         mod_goa_df = goa_df.copy(deep=True)
 
-        threshold = fdr / sum([len(level) for level in dag_tree.levels])
+        threshold = fdr / len(goa_df.columns)
         res_dict = {}
         marked_nodes = {}
         orig_go_sizes = goa_df.sum(axis=0)
