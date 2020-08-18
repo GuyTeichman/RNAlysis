@@ -763,7 +763,7 @@ class FeatureSet:
             title = f"Enrichment for {self.set_name}\ntop {n_plot} most specific GO terms"
             ylabel = r"$\log_2$(Fold Enrichment)"
         res_df = pd.DataFrame.from_dict(res_dict, orient='index', columns=columns)
-        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
+        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr, method='negcorr')
         res_df['padj'] = padj
         res_df['significant'] = significant
         res_df.rename_axis('go_id')
