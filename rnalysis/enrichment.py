@@ -20,7 +20,7 @@ import pandas as pd
 import statsmodels.stats.multitest as multitest
 import upsetplot
 from matplotlib.cm import ScalarMappable
-from scipy.stats import hypergeom, ttest_1samp
+from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
@@ -506,8 +506,8 @@ class FeatureSet:
             FeatureSet._calc_go_stats(go_id, bg_size, orig_go_size, de_size, orig_go_de_size, dag_tree[go_id].name,
                                       res_dict, calc_pvalue=False)
             res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
-
-            if res_dict[go_id][-1] <= threshold:  # if current GO ID is significant, mark its ancestors
+            # if current GO ID is significantly ENRICHED, mark its ancestors
+            if res_dict[go_id][-1] <= threshold and res_dict[go_id][-2] > 0:
                 new_marked_genes = set(mod_goa_df[go_id][mod_goa_df[go_id] == 1].index)
                 for ancestor in dag_tree.upper_induced_graph_iter(go_id):
                     if ancestor not in marked_nodes:
@@ -545,7 +545,7 @@ class FeatureSet:
         # calculate stats for go_id
         go_size = int(np.ceil(weighted_goa_df[go_id].sum()))
         go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, go_id].sum()))
-        res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
+        _, res_dict[go_id][-1] = fisher_exact([[go_de_size, de_size], [go_size, bg_size]])
 
         if len(children) == 0:
             return
@@ -571,7 +571,7 @@ class FeatureSet:
                 weighted_goa_df.loc[goa_df[go_id] == 1, child] *= weights[child]
                 ch_go_size = int(np.ceil(weighted_goa_df[child].sum()))
                 ch_go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, child].sum()))
-                res_dict[child][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, ch_go_size, de_size, ch_go_de_size)
+                _, res_dict[child][-1] = fisher_exact([[ch_go_de_size, de_size], [ch_go_size, bg_size]])
             return
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
