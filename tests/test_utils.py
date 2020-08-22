@@ -584,7 +584,6 @@ def test_golr_annotation_iterator_connectivity():
 
 
 def test_golr_annotation_iterator_parsing(monkeypatch):
-    print(os.getcwd())
     assert False
 
 

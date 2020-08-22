@@ -1497,14 +1497,6 @@ def test_compute_dispersion():
                           kmeans.inertia_)
 
 
-def test_gap_statistic():
-    assert False
-
-
-def test_silhouette_method():
-    assert False
-
-
 def test_parse_k(monkeypatch):
     c = CountFilter('tests/test_files/counted.csv')
     args = (KMeans, preprocessing.standardize, 0, {}, 0)
@@ -1559,3 +1551,44 @@ def test_filter_save_csv():
     assert np.isclose(DESeqFilter(pth_sig_suffix).df, d_sig.df).all()
     pth_sig.unlink()
     pth_sig_suffix.unlink()
+
+
+def test_foldchange_randomization():
+    assert False
+
+
+def test_assert_padj_col():
+    assert False
+
+
+def test_assert_log2fc_col():
+    assert False
+
+
+def test_gap_statistic():
+    assert False
+
+
+def test_silhouette_method():
+    assert False
+
+
+def test_triplicates():
+    assert False
+
+
+def test_plot_clustering_api():
+    assert False
+    # split_plots = True
+
+
+def test_compute_dispersion():
+    assert False
+
+
+def test_plot_gap_api():
+    assert False
+
+
+def test_clustering_get_transforms():
+    assert False

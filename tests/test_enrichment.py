@@ -484,18 +484,6 @@ def test_get_pval_asterisk():
     assert FeatureSet._get_pval_asterisk(0) == (u'\u2217' * 4, 'bold')
 
 
-def test_enrich_non_categorial_parametric_test():
-    assert False
-
-
-def test_enrich_non_categorial_nonparametric_test():
-    assert False
-
-
-def test_enrich_plot_histogram():
-    assert False
-
-
 def test_rankedset_api():
     en = RankedSet(['1', '9', '4'], 'name')
     assert en.gene_set == {'1', '9', '4'}
@@ -517,43 +505,6 @@ def test_rankedset_set_ops_return_type():
     assert isinstance(r2.union(f1), FeatureSet)
     assert isinstance(r1.difference(s1), FeatureSet)
     assert isinstance(f1.symmetric_difference(r2), FeatureSet)
-
-
-def test_enrich_single_list():
-    assert False
-
-
-def test_xlmhg_output():
-    assert False
-
-
-def test_calc_xlmhg_stats():
-    assert False
-
-
-def test_xlmhg_index_vector():
-    assert False
-
-
-def test_fetch_sets():
-    assert False
-
-
-def test_upset_plot_api():
-    assert False
-
-
-def test_venn_diagram_api():
-    # 2 and 3 circles
-    assert False
-
-
-def test_venn_diagram_too_many_sets():
-    assert False
-
-
-def test_generate_upset_srs():
-    assert False
 
 
 def _comp_go_res_df(res, truth):
@@ -618,3 +569,84 @@ def test_allm_pvals():
     res = pd.DataFrame.from_dict(FeatureSet._go_allm_pvalues(gene_set, goa_df, dag_tree, threshold), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
     _comp_go_res_df(res, truth)
+
+
+def test_rankedset_from_ndarray():
+    assert False
+
+
+def test_rankedset_init_invalid_type():
+    assert False
+
+
+def test_go_enrichment_fetch_annotations(monkeypatch):
+    assert False
+
+
+def test_go_enrichment_fetch_annotations_pre_fetched():
+    assert False
+
+
+def test_go_enrichment_output():
+    assert False
+
+
+def test_go_enrichment_api():
+    assert False
+
+
+def test_enrich_non_categorical_api():
+    assert False
+
+
+def test_enrich_non_categorial_parametric_test():
+    assert False
+
+
+def test_enrich_non_categorial_nonparametric_test():
+    assert False
+
+
+def test_enrich_plot_histogram():
+    assert False
+
+
+def test_enrich_single_list_api():
+    assert False
+
+
+def test_xlmhg_output():
+    assert False
+
+
+def test_calc_xlmhg_stats():
+    assert False
+
+
+def test_xlmhg_index_vector():
+    assert False
+
+
+def test_go_enrichment_single_list_api():
+    assert False
+
+
+def test_fetch_sets():
+    assert False
+
+
+def test_upset_plot_api():
+    assert False
+
+
+def test_venn_diagram_api():
+    # 2 and 3 circles
+    assert False
+
+
+def test_venn_diagram_too_many_sets():
+    assert False
+
+
+def test_generate_upset_srs():
+    assert False
