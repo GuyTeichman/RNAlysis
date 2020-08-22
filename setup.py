@@ -11,10 +11,10 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-with open('requirements.txt') as fp:
-    requirements = fp.read()
+with open('requirements.txt') as requirements_file:
+    requirements = requirements_file.read().split('\n')
 
-setup_requirements = ['pytest-runner', ]
+setup_requirements = ['pytest-runner', 'numpy']
 
 test_requirements = ['pytest', ]
 
