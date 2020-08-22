@@ -131,7 +131,7 @@ def data_to_set(data: Any) -> set:
             raise TypeError(f"Invalid type {type(data)}.")
 
 
-def sparse_dict_to_bool_df(sparse_dict: dict) -> pd.DataFrame:
+def sparse_dict_to_bool_df(sparse_dict: Dict[str, set]) -> pd.DataFrame:
     rows = list(sparse_dict.keys())
     columns = set()
     for val in sparse_dict.values():

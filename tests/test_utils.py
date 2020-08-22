@@ -659,3 +659,11 @@ def test_parse_evidence_types():
     assert parse_evidence_types({'a', 'bc', 'f'}, ev_dict) == {'eva', 'evb', 'evc', 'f'}
     assert parse_evidence_types({'a', 'ab'}, ev_dict) == {'eva', 'evb'}
     assert parse_evidence_types({'z', 'v'}, ev_dict) == {'z', 'v'}
+
+
+def test_sparse_dict_to_bool_df():
+    truth = pd.read_csv('tests/test_files/sparse_dict_to_df_truth.csv', index_col=0).sort_index(axis=1)
+    sparse_dict = {'gene1': {'a', 'c'}, 'gene2': {'b'}, 'gene3': {'b', 'g', 'h'}, 'gene4': {'e', 'd', 'a', 'c', 'f'},
+                   'gene5': set()}
+    res = sparse_dict_to_bool_df(sparse_dict).sort_index(axis=1)
+    assert res.equals(truth)
