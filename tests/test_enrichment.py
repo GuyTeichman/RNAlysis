@@ -129,7 +129,7 @@ def test_set_operations_with_set():
 
 
 def test_biotypes():
-    truth = io.load_csv('test_files/biotypes_truth.csv', 0)
+    truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0)
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
              'WBGene00268191', 'WBGene00000041', 'WBGene00199486', 'WBGene00255735', 'WBGene00000105',
@@ -167,13 +167,13 @@ def _enrichment_get_ref_tests_setup(truth, bg_genes):
 
 
 def test_enrichment_get_ref_biotype():
-    truth = io.load_csv('test_files/attr_ref_table_for_tests_biotype.csv', 0)
+    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_biotype.csv', 0)
     bg_genes = 'protein_coding'
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
 def test_enrichment_get_ref_custom_background():
-    truth = io.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -182,7 +182,7 @@ def test_enrichment_get_ref_custom_background():
 
 
 def test_enrichment_get_ref_custom_background_from_featureset_object():
-    truth = io.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
     bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
                 'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
                 'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
@@ -191,8 +191,8 @@ def test_enrichment_get_ref_custom_background_from_featureset_object():
 
 
 def test_enrichment_get_ref_custom_background_from_filter_object():
-    truth = io.load_csv('test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
-    bg_genes = filtering.CountFilter(r'test_files/test_bg_genes_from_filter_object.csv')
+    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
+    bg_genes = filtering.CountFilter(r'tests/test_files/test_bg_genes_from_filter_object.csv')
     _enrichment_get_ref_tests_setup(truth, bg_genes)
 
 
@@ -256,7 +256,7 @@ def _enrichment_validity(res, truth):
 
 
 def test_enrichment_randomization_validity():
-    truth = io.load_csv('test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_csv('tests/test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -312,7 +312,7 @@ def test_enrichment_randomization_parallel_reliability():
 
 
 def test_enrichment_parallel_validity():
-    truth = io.load_csv('test_files/enrichment_randomization_res.csv', 0)
+    truth = io.load_csv('tests/test_files/enrichment_randomization_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -329,11 +329,11 @@ def test_enrichment_get_attrs_int_index_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['attribute1', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs([0, 2, 3], 'test_files/attr_ref_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs([0, 2, 3], 'tests/test_files/attr_ref_table_for_tests.csv')
     assert attrs == attrs_truth
 
     attr_truth_single = ['attribute4']
-    attr = en._enrichment_get_attrs(3, 'test_files/attr_ref_table_for_tests.csv')
+    attr = en._enrichment_get_attrs(3, 'tests/test_files/attr_ref_table_for_tests.csv')
     assert attr == attr_truth_single
 
 
@@ -373,7 +373,7 @@ def test_enrich_hypergeometric_api():
 
 
 def test_enrich_hypergeometric_pvalues():
-    truth = io.load_csv('test_files/enrichment_hypergeometric_res.csv', 0)
+    truth = io.load_csv('tests/test_files/enrichment_hypergeometric_res.csv', 0)
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
@@ -404,25 +404,25 @@ def test_save_txt():
     try:
         geneset = {'gene1', 'gene2', 'gene3', 'gene5'}
         en = FeatureSet(geneset, 'my gene set')
-        en.save_txt('test_files/tmp_enrichment_txt')
+        en.save_txt('tests/test_files/tmp_enrichment_txt')
 
-        with open('test_files/tmp_enrichment_txt.txt') as f:
+        with open('tests/test_files/tmp_enrichment_txt.txt') as f:
             loaded_geneset = {gene.replace('\n', '') for gene in f}
         assert loaded_geneset == geneset
     except Exception as e:
         raise e
     finally:
         try:
-            os.remove('test_files/tmp_enrichment_csv.csv')
+            os.remove('tests/test_files/tmp_enrichment_csv.csv')
         except:
             pass
 
 
 def test_enrichment_save_csv():
     try:
-        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv', index_col=0)
-        FeatureSet._enrichment_save_csv(df, 'test_files/tmp_enrichment_csv.csv')
-        df_loaded = pd.read_csv('test_files/tmp_enrichment_csv.csv', index_col=0)
+        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        FeatureSet._enrichment_save_csv(df, 'tests/test_files/tmp_enrichment_csv.csv')
+        df_loaded = pd.read_csv('tests/test_files/tmp_enrichment_csv.csv', index_col=0)
         print('\n')
         print(df)
         print(df_loaded)
@@ -431,7 +431,7 @@ def test_enrichment_save_csv():
         raise e
     finally:
         try:
-            os.remove('test_files/tmp_enrichment_csv.csv')
+            os.remove('tests/test_files/tmp_enrichment_csv.csv')
         except:
             pass
 
@@ -470,7 +470,7 @@ def test_enrichment_output():
 
 
 def test_plot_enrichment_results():
-    df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv')
+    df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
     FeatureSet.plot_enrichment_results(df)
     FeatureSet.plot_enrichment_results(df, plot_horizontal=False, ylabel='different ylabel', fdr=0.1)
     plt.close('all')
@@ -565,9 +565,9 @@ def _comp_go_res_df(res, truth):
 
 
 def test_classic_pvals():
-    goa_df = pd.read_csv('test_files/goa_table.csv', index_col=0).astype('bool')
+    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('test_files/go_pvalues_classic_truth.csv', index_col=0)
+    truth = pd.read_csv('tests/test_files/go_pvalues_classic_truth.csv', index_col=0)
     dummy_go_node = namedtuple('DummyGONode', field_names='name')
 
     class DummyDAGTree:
@@ -583,11 +583,11 @@ def test_classic_pvals():
 
 
 def test_elim_pvals():
-    goa_df = pd.read_csv('test_files/goa_table.csv', index_col=0).astype('bool')
+    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
     threshold = 0.2  # make sure there are both significant and non-significant examples with our small bg size (30)
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('test_files/go_pvalues_elim_truth.csv', index_col=0).sort_index()
-    with open('test_files/obo_for_go_tests.obo', 'rb') as f:
+    truth = pd.read_csv('tests/test_files/go_pvalues_elim_truth.csv', index_col=0).sort_index()
+    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a'])
 
     res = pd.DataFrame.from_dict(FeatureSet._go_elim_pvalues(gene_set, goa_df, dag_tree, threshold), orient='index',
@@ -596,10 +596,10 @@ def test_elim_pvals():
 
 
 def test_weight_pvals():
-    goa_df = pd.read_csv('test_files/goa_table.csv', index_col=0).astype('bool')
+    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('test_files/go_pvalues_weight_truth.csv', index_col=0).sort_index()
-    with open('test_files/obo_for_go_tests.obo', 'rb') as f:
+    truth = pd.read_csv('tests/test_files/go_pvalues_weight_truth.csv', index_col=0).sort_index()
+    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a'])
 
     res = pd.DataFrame.from_dict(FeatureSet._go_weight_pvalues(gene_set, goa_df, dag_tree), orient='index',
@@ -608,11 +608,11 @@ def test_weight_pvals():
 
 
 def test_allm_pvals():
-    goa_df = pd.read_csv('test_files/goa_table.csv', index_col=0).astype('bool')
+    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
     threshold = 0.2  # make sure there are both significant and non-significant examples with our small bg size (30)
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('test_files/go_pvalues_allm_truth.csv', index_col=0).sort_index()
-    with open('test_files/obo_for_go_tests.obo', 'rb') as f:
+    truth = pd.read_csv('tests/test_files/go_pvalues_allm_truth.csv', index_col=0).sort_index()
+    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a'])
 
     res = pd.DataFrame.from_dict(FeatureSet._go_allm_pvalues(gene_set, goa_df, dag_tree, threshold), orient='index',

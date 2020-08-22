@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 
 from rnalysis.utils.clustering import *
 from rnalysis.utils.parallel_processing import *
@@ -72,20 +71,20 @@ def test_load_csv_bad_input():
 def test_load_csv():
     truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
     truth.set_index('idxcol', inplace=True)
-    pth = "test_files/test_load_csv.csv"
+    pth = "tests/test_files/test_load_csv.csv"
     assert (truth == load_csv(pth, 0)).all().all()
 
 
 def test_load_csv_drop_columns():
-    loaded = load_csv('test_files/counted.csv', 0, drop_columns='cond1')
+    loaded = load_csv('tests/test_files/counted.csv', 0, drop_columns='cond1')
     print(loaded)
     assert list(loaded.columns) == ['cond2', 'cond3', 'cond4']
 
-    loaded = load_csv('test_files/counted.csv', 0, drop_columns=['cond2', 'cond4'])
+    loaded = load_csv('tests/test_files/counted.csv', 0, drop_columns=['cond2', 'cond4'])
     assert list(loaded.columns) == ['cond1', 'cond3']
 
     with pytest.raises(IndexError):
-        load_csv('test_files/counted.csv', 0, drop_columns=['cond1', 'cond6'])
+        load_csv('tests/test_files/counted.csv', 0, drop_columns=['cond1', 'cond6'])
 
 
 def test_biotype_table_assertions():
@@ -177,22 +176,22 @@ def test_update_ref_table_attributes():
 
 def test_save_csv():
     try:
-        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv', index_col=0)
-        save_csv(df, 'test_files/tmp_test_save_csv.csv')
-        df_loaded = pd.read_csv('test_files/tmp_test_save_csv.csv', index_col=0)
+        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        save_csv(df, 'tests/test_files/tmp_test_save_csv.csv')
+        df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv.csv', index_col=0)
         assert df.equals(df_loaded)
-        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv')
-        save_csv(df, 'test_files/tmp_test_save_csv.csv', '_2', index=False)
-        df_loaded = pd.read_csv('test_files/tmp_test_save_csv_2.csv', index_col=0)
-        df = pd.read_csv('test_files/enrichment_hypergeometric_res.csv', index_col=0)
+        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
+        save_csv(df, 'tests/test_files/tmp_test_save_csv.csv', '_2', index=False)
+        df_loaded = pd.read_csv('tests/test_files/tmp_test_save_csv_2.csv', index_col=0)
+        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
         assert df.equals(df_loaded)
 
     except Exception as e:
         raise e
     finally:
         try:
-            os.remove('test_files/tmp_test_save_csv.csv')
-            os.remove('test_files/tmp_test_save_csv_2.csv')
+            os.remove('tests/test_files/tmp_test_save_csv.csv')
+            os.remove('tests/test_files/tmp_test_save_csv_2.csv')
         except:
             pass
 
@@ -219,7 +218,7 @@ def test_standard_box_cos():
 def test_kmedoidsiter_api():
     truth = KMedoids(3, max_iter=300, init='k-medoids++', random_state=42)
     kmeds = KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=1, random_state=42)
-    df = load_csv('test_files/counted.csv', 0)
+    df = load_csv('tests/test_files/counted.csv', 0)
     truth.fit(df)
     kmeds.fit(df)
     assert np.all(truth.cluster_centers_ == kmeds.cluster_centers_)
@@ -239,7 +238,7 @@ def test_kmedoidsiter_api():
 
 def test_kmedoidsiter_iter():
     kmeds = KMedoidsIter(3, max_iter=300, init='k-medoids++', n_init=5, random_state=0)
-    df = load_csv('test_files/counted.csv', 0)
+    df = load_csv('tests/test_files/counted.csv', 0)
     kmeds.fit(df)
 
     inertias = []
@@ -263,7 +262,7 @@ def test_parse_go_id():
 
 
 def test_dag_tree_parser_api():
-    file = 'test_files/go_mini.obo'
+    file = 'tests/test_files/go_mini.obo'
     with open(file, 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a', 'part_of', 'regulates'])
     with open(file, 'rb') as f:
@@ -271,7 +270,7 @@ def test_dag_tree_parser_api():
 
 
 def test_dag_tree_parser_construction():
-    file = 'test_files/go_mini.obo'
+    file = 'tests/test_files/go_mini.obo'
     levels_truth = [{'GO:0034308': 0, 'GO:0051125': 0},
                     {'GO:0034315': 0, 'GO:0006040': 0, 'GO:0006793': 0, 'GO:0009225': 0, 'GO:0009226': 0},
                     {'GO:2001315': 0, 'GO:2001313': 0}]
@@ -295,7 +294,7 @@ def test_dag_tree_parser_construction():
 
 
 def test_go_term_get_parents():
-    file = 'test_files/go_mini.obo'
+    file = 'tests/test_files/go_mini.obo'
     with open(file, 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a', 'part_of', 'regulates'])
     parents_truth = {'GO:0034308': [], 'GO:0051125': [], 'GO:0034315': ['GO:0051125'], 'GO:0006040': ['GO:0034308'],
@@ -308,7 +307,7 @@ def test_go_term_get_parents():
 
 
 def test_go_term_get_children():
-    file = 'test_files/go_mini.obo'
+    file = 'tests/test_files/go_mini.obo'
     with open(file, 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a', 'part_of', 'regulates'])
     children_truth = {'GO:0034308': ['GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'],
@@ -325,7 +324,7 @@ def test_dag_tree_parser_level_iterator():
                     {'GO:0034315', 'GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'},
                     {'GO:2001315', 'GO:2001313'}]
     levels_truth.reverse()
-    file = 'test_files/go_mini.obo'
+    file = 'tests/test_files/go_mini.obo'
     with open(file, 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a', 'part_of', 'regulates'])
 
@@ -342,7 +341,7 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
                      'GO:0006793': ['GO:0034308'], 'GO:0009225': ['GO:0034308'], 'GO:0009226': ['GO:0034308'],
                      'GO:2001315': ['GO:0009226', 'GO:0006793', 'GO:0034308'],
                      'GO:2001313': ['GO:0009225', 'GO:0006793', 'GO:0006040', 'GO:0034308']}
-    file = 'test_files/go_mini.obo'
+    file = 'tests/test_files/go_mini.obo'
     with open(file, 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a', 'part_of', 'regulates'])
 
@@ -352,7 +351,7 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
         ui_tree.sort()
         assert ui_tree == parents_truth[node]
 
-    file = 'test_files/obo_for_go_tests.obo'
+    file = 'tests/test_files/obo_for_go_tests.obo'
     with open(file, 'rb') as f:
         dag_tree = parsing.DAGTreeParser(f, ['is_a'])
     parents_truth_file_2 = {'GO:0008150': [], 'GO:0050896': ['GO:0008150'], 'GO:0007610': ['GO:0008150'],
@@ -551,6 +550,7 @@ def test_golr_annotation_iterator_connectivity():
 
 
 def test_golr_annotation_iterator_parsing(monkeypatch):
+    print(os.getcwd())
     assert False
 
 

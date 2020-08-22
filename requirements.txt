@@ -1,3 +1,4 @@
+numpy>=1.18.1
 pandas>=1.0.1
 matplotlib>=3.3.1
 seaborn>=0.10.0
@@ -15,4 +16,3 @@ xlmhg>=2.5.4
 numba
 pairwisedist>=1.2.0
 requests
-numpy>=1.18.1
