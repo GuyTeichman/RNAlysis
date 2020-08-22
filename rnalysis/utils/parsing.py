@@ -146,12 +146,13 @@ def parse_evidence_types(evidence_types: Union[str, Iterable[str]], evidence_typ
     if evidence_types == 'any':
         return set.union(*[data_to_set(s) for s in evidence_type_dict.values()])
     elif isinstance(evidence_types, str) and evidence_types.lower() in evidence_type_dict:
-        return evidence_type_dict[evidence_types.lower()]
+        return data_to_set(evidence_type_dict[evidence_types.lower()])
     elif validation.isiterable(evidence_types) and \
         any([isinstance(ev_type, str) and ev_type.lower() in evidence_type_dict for ev_type in evidence_types]):
         return set.union(
-            *[evidence_type_dict[ev_type.lower()] if ev_type.lower() in evidence_type_dict else data_to_set(ev_type) for
-              ev_type in evidence_types])
+            *[data_to_set(
+                evidence_type_dict[ev_type.lower()]) if ev_type.lower() in evidence_type_dict else data_to_set(ev_type)
+              for ev_type in evidence_types])
     elif evidence_types is None:
         return set()
     else:

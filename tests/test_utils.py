@@ -649,3 +649,13 @@ def test_parse_go_aspects():
     assert parse_go_aspects(['a', 'z', 'c'], go_dict) == {'aspect a', 'aspect c', 'z'}
     assert parse_go_aspects(['b', 'c', 'A'], go_dict) == {'aspect a', 'aspect b', 'aspect c'}
     assert parse_go_aspects(['aspect z'], go_dict) == {'aspect z'}
+
+
+def test_parse_evidence_types():
+    ev_dict = {'a': 'eva', 'b': 'evb', 'c': 'evc', 'ab': {'eva', 'evb'}, 'bc': {'evb', 'evc'}, 'de': {'evd', 'eve'}}
+    assert parse_evidence_types('any', ev_dict) == {'eva', 'evb', 'evc', 'evd', 'eve'}
+    assert parse_evidence_types('bc', ev_dict) == {'evb', 'evc'}
+    assert parse_evidence_types('c', ev_dict) == {'evc'}
+    assert parse_evidence_types({'a', 'bc', 'f'}, ev_dict) == {'eva', 'evb', 'evc', 'f'}
+    assert parse_evidence_types({'a', 'ab'}, ev_dict) == {'eva', 'evb'}
+    assert parse_evidence_types({'z', 'v'}, ev_dict) == {'z', 'v'}
