@@ -6,6 +6,7 @@ from collections import namedtuple
 from rnalysis import filtering
 from rnalysis.enrichment import *
 from tests import __attr_ref__, __biotype_ref__
+
 matplotlib.use('Agg')
 
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',
@@ -555,6 +556,14 @@ def test_generate_upset_srs():
     assert False
 
 
+def _comp_go_res_df(res, truth):
+    res.drop('name', axis=1, inplace=True)
+    res.rename_axis('go_id')
+    assert res.loc[:, ['n', 'obs']].equals(truth.loc[:, ['n', 'obs']])
+    assert np.allclose(res.loc[:, ['exp', 'log2fc']], res.loc[:, ['exp', 'log2fc']])
+    assert np.allclose(res['pval'], truth['pval'], atol=0)
+
+
 def test_classic_pvals():
     goa_df = pd.read_csv('test_files/goa_table.csv', index_col=0).astype('bool')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
@@ -570,12 +579,7 @@ def test_classic_pvals():
 
     res = pd.DataFrame.from_dict(FeatureSet._go_classic_pvalues(gene_set, goa_df, DummyDAGTree()), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval'])
-    res.drop('name', axis=1, inplace=True)
-    res.rename_axis('go_id')
-
-    assert res.loc[:, ['n', 'obs']].equals(truth.loc[:, ['n', 'obs']])
-    assert np.allclose(res.loc[:, ['exp', 'log2fc']], res.loc[:, ['exp', 'log2fc']])
-    assert np.allclose(res['pval'], truth['pval'], atol=0)
+    _comp_go_res_df(res, truth)
 
 
 def test_elim_pvals():
@@ -588,11 +592,7 @@ def test_elim_pvals():
 
     res = pd.DataFrame.from_dict(FeatureSet._go_elim_pvalues(gene_set, goa_df, dag_tree, threshold), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
-    res.drop('name', axis=1, inplace=True)
-    res.rename_axis('go_id')
-    assert res.loc[:, ['n', 'obs']].equals(truth.loc[:, ['n', 'obs']])
-    assert np.allclose(res.loc[:, ['exp', 'log2fc']], res.loc[:, ['exp', 'log2fc']])
-    assert np.allclose(res['pval'], truth['pval'], atol=0)
+    _comp_go_res_df(res, truth)
 
 
 def test_weight_pvals():
@@ -604,10 +604,17 @@ def test_weight_pvals():
 
     res = pd.DataFrame.from_dict(FeatureSet._go_weight_pvalues(gene_set, goa_df, dag_tree), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
-    res.drop('name', axis=1, inplace=True)
-    res.rename_axis('go_id')
-    assert res.loc[:, ['n', 'obs']].equals(truth.loc[:, ['n', 'obs']])
-    assert np.allclose(res.loc[:, ['exp', 'log2fc']], res.loc[:, ['exp', 'log2fc']])
-    print('\n',res)
-    print(truth)
-    assert np.allclose(res['pval'], truth['pval'], atol=0)
+    _comp_go_res_df(res, truth)
+
+
+def test_allm_pvals():
+    goa_df = pd.read_csv('test_files/goa_table.csv', index_col=0).astype('bool')
+    threshold = 0.2  # make sure there are both significant and non-significant examples with our small bg size (30)
+    gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
+    truth = pd.read_csv('test_files/go_pvalues_allm_truth.csv', index_col=0).sort_index()
+    with open('test_files/obo_for_go_tests.obo', 'rb') as f:
+        dag_tree = parsing.DAGTreeParser(f, ['is_a'])
+
+    res = pd.DataFrame.from_dict(FeatureSet._go_allm_pvalues(gene_set, goa_df, dag_tree, threshold), orient='index',
+                                 columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
+    _comp_go_res_df(res, truth)
