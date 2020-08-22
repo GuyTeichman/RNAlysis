@@ -27,7 +27,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
@@ -38,7 +37,7 @@ setup(
                 'RNAlysis includes various methods for filtering, data visualisation, exploratory analyses, '
                 'enrichment anslyses and clustering.',
     install_requires=requirements,
-    python_requires='>3.6',
+    python_requires='>=3.7',
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
