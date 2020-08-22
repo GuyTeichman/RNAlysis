@@ -1,0 +1,73 @@
+format-version: 1.2
+data-version: releases/2020-07-16
+
+
+[Term]
+id: GO:0008150
+name: biological process
+namespace: biological_process
+def: null
+
+[Term]
+id: GO:0050896
+name: response to stimulus
+namespace: biological_process
+def: null
+is_a: GO:0008150 ! biological process
+
+[Term]
+id: GO:0009605
+name: response to external stimulus
+namespace: biological_process
+def: null
+is_a: GO:0050896 ! response to stimulus
+
+[Term]
+id: GO:0009991
+name: response to extracellular stimulus
+namespace: biological_process
+def: null
+is_a: GO:0009605 ! response to external stimulus
+
+[Term]
+id: GO:0042221
+name: response to chemical
+namespace: biological_process
+def: null
+is_a: GO:0050896 ! response to stimulus
+
+[Term]
+id: GO:0007610
+name: behavior
+namespace: biological_process
+def: null
+is_a: GO:0008150 ! biological process
+
+[Term]
+id: GO:0031667
+name: response to nutrient levels
+namespace: biological_process
+def: null
+is_a: GO:0009991 ! response to extracellular stimulus
+
+[Term]
+id: GO:0007584
+name: response to nutrient
+namespace: biological_process
+def: null
+is_a: GO:0031667 ! response to nutrient levels
+is_a: GO:0042221 ! response to chemical
+
+[Term]
+id: GO:0051780
+name: behavioral response to nutrient
+namespace: biological_process
+def: null
+is_a: GO:0007584 ! response to nutrient
+is_a: GO:0007610 ! behavior
+
+[Term]
+id: GO:0098772
+name: molecular function
+namespace: molecular_function
+def: null
