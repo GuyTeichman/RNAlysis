@@ -376,49 +376,51 @@ def test_deseq_filter_significant():
 
 
 def test_deseq_filter_significant_opposite():
-    truth = io.load_csv(r'tests/test_files/test_deseq_not_sig_truth.csv', 0)
+    truth = io.load_csv(r'tests/test_files/test_deseq_not_sig_truth.csv', 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq_sig.csv")
     d.filter_significant(alpha=0.05, opposite=True)
     d.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    truth.fillna(1234567890, inplace=True)
-    d.df.fillna(1234567890, inplace=True)
-    assert np.all(d.df == truth)
+    assert d.df.equals(truth)
 
 
 def test_filter_top_n_ascending_number():
-    truth = io.load_csv("tests/test_files/test_deseq_top10.csv", 0)
+    truth = io.load_csv("tests/test_files/test_deseq_top10.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq.csv")
     d.filter_top_n('padj', 10)
     d.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
     assert np.isclose(truth, d.df).all()
 
 
 def test_filter_top_n_ascending_text():
-    truth = io.load_csv("tests/test_files/test_deseq_top10_text_ascend.csv", 0)
+    truth = io.load_csv("tests/test_files/test_deseq_top10_text_ascend.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
+    print(d.sort('textcol', inplace=False).df)
     d.filter_top_n('textcol', 10, True)
     d.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
-    assert np.all(truth == d.df)
+    assert d.df.equals(truth)
+
+
+def test_filter_top_n_multiple_columns():
+    truth = io.load_csv("tests/test_files/test_deseq_textcol_top15_text_basemean.csv", 0).sort_index()
+    d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
+    d.filter_top_n(['textcol', 'baseMean'], 15, True)
+    d.df.sort_index(inplace=True)
+    assert d.df.equals(truth)
 
 
 def test_filter_top_n_descending_number():
-    truth = io.load_csv("tests/test_files/test_deseq_bottom7.csv", 0)
+    truth = io.load_csv("tests/test_files/test_deseq_bottom7.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq.csv")
     d.filter_top_n('log2FoldChange', 7, False)
     d.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
     assert np.isclose(truth, d.df).all()
 
 
 def test_filter_top_n_descending_text():
-    truth = io.load_csv("tests/test_files/test_deseq_bottom10_text_descend.csv", 0)
+    truth = io.load_csv("tests/test_files/test_deseq_bottom10_text_descend.csv", 0).sort_index()
     d = DESeqFilter("tests/test_files/test_deseq_textcol.csv")
     d.filter_top_n('textcol', 10, False)
     d.df.sort_index(inplace=True)
-    truth.sort_index(inplace=True)
     assert np.all(truth == d.df)
 
 
@@ -1557,7 +1559,3 @@ def test_filter_save_csv():
     assert np.isclose(DESeqFilter(pth_sig_suffix).df, d_sig.df).all()
     pth_sig.unlink()
     pth_sig_suffix.unlink()
-
-
-
-
