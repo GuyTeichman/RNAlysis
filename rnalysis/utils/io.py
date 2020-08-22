@@ -92,7 +92,7 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
                           'computational': computational_evidence, 'author': author_evidence,
                           'curator': curator_evidence,
                           'electronic': electronic_evidence}
-    legal_evidence = set.union(*[set(s) for s in evidence_type_dict.values()])
+    legal_evidence = set.union(*[parsing.data_to_set(s) for s in evidence_type_dict.values()])
 
     legal_qualifiers = {'not', 'contributes_to', 'colocalizes_with'}
 
