@@ -32,7 +32,8 @@ jobs:
 
 # Command to run tests, e.g. python setup.py test
 script:
-  - coverage run -m pytest tests/
+  - coverage run --source=rnalysis/ -m pytest tests/
+  - coverage report -m
 
 
 after_script:
