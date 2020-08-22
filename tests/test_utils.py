@@ -11,7 +11,6 @@ from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
-
 class MockResponse(object):
     def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = {'blaa': '1234'},
                  text: str = ''):
@@ -352,6 +351,24 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
         ui_tree = list(dag_tree.upper_induced_graph_iter(node))
         ui_tree.sort()
         assert ui_tree == parents_truth[node]
+
+    file = 'test_files/obo_for_go_tests.obo'
+    with open(file, 'rb') as f:
+        dag_tree = parsing.DAGTreeParser(f, ['is_a'])
+    parents_truth_file_2 = {'GO:0008150': [], 'GO:0050896': ['GO:0008150'], 'GO:0007610': ['GO:0008150'],
+                            'GO:0042221': ['GO:0008150', 'GO:0050896'], 'GO:0009605': ['GO:0050896', 'GO:0008150'],
+                            'GO:0009991': ['GO:0008150', 'GO:0050896', 'GO:0009605'],
+                            'GO:0031667': ['GO:0008150', 'GO:0050896', 'GO:0009605', 'GO:0009991'],
+                            'GO:0007584': ['GO:0042221', 'GO:0031667', 'GO:0008150', 'GO:0050896', 'GO:0009605',
+                                           'GO:0009991'],
+                            'GO:0051780': ['GO:0007584', 'GO:0007610', 'GO:0042221', 'GO:0031667', 'GO:0008150',
+                                           'GO:0050896', 'GO:0009605', 'GO:0009991']}
+    for node in parents_truth_file_2:
+        parents_truth_file_2[node].sort()
+        ui_tree = list(dag_tree.upper_induced_graph_iter(node))
+        ui_tree.sort()
+        print(node)
+        assert ui_tree == parents_truth_file_2[node]
 
 
 def test_data_to_list():

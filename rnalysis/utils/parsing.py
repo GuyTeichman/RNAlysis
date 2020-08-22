@@ -249,7 +249,7 @@ class DAGTreeParser:
                     current_term.relationships[relationship_type].append(parse_go_id(line))
                 elif line.startswith(b'is_obsolete: true'):
                     in_frame = False
-                elif line == b'' or line == b'\n':
+                elif line in {b'', b'\n', b'\r\n'}:
                     self.go_terms[current_term.id] = current_term
                     in_frame = False
             else:
@@ -259,6 +259,9 @@ class DAGTreeParser:
                 elif line.startswith(b'data-version:'):
                     self.data_version = line[14:].decode('utf8').replace('\n', '')
 
+        if in_frame: #  add last go term to the set, if it was not already added
+            self.go_terms[current_term.id] = current_term
+
     def _populate_levels(self):
         levels_dict = {}
         for go_term in self.go_terms.values():
@@ -267,8 +270,10 @@ class DAGTreeParser:
             if go_term.level not in levels_dict:
                 levels_dict[go_term.level] = {}
             levels_dict[go_term.level][go_term.id] = go_term
-
-        self.levels = [levels_dict[i] for i in range(0, max(levels_dict.keys()) + 1)]
+        if len(levels_dict) == 0:
+            self.levels = [{}]
+        else:
+            self.levels = [levels_dict[i] for i in range(0, max(levels_dict.keys()) + 1)]
 
     def _get_term_level_rec(self, go_term: GOTerm):
         if go_term.level is not None:
@@ -305,5 +310,5 @@ class DAGTreeParser:
             for parent in parents:
                 if parent not in processed_nodes:
                     node_queue.put(parent)
-                processed_nodes.update(parents)
+            processed_nodes.update(parents)
             yield this_node
