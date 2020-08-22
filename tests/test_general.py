@@ -1,8 +1,10 @@
 from rnalysis.general import *
 from rnalysis import __biotype_file_key__, __attr_file_key__
 import time
+import pytest
 
 from rnalysis.utils.parallel_processing import start_parallel_session
+from rnalysis.filtering import Filter
 
 
 def test_parse_wbgene_string():
@@ -22,10 +24,6 @@ def test_parse_gene_name_string():
     string = 'saeg-2 /// \tlin-15B cyp-23A1lin-15A WBGene12345678\n GHF5H.3'
     truth = {'saeg-2', 'lin-15B', 'cyp-23A1', 'lin-15A'}
     assert truth == parse_gene_name_string(string)
-
-
-def test_save_to_csv():
-    assert False
 
 
 def test_print_settings_file(capfd):
@@ -99,3 +97,14 @@ def test_start_parallel_session():
         pass
     finally:
         parallel_processing.stop_ipcluster()
+
+
+def test_save_to_csv(monkeypatch):
+    monkeypatch.setattr('rnalysis.utils.io.save_csv',
+                        lambda x, y: None if isinstance(x, pd.DataFrame) else (_ for _ in ()).throw(AssertionError))
+    df = pd.DataFrame([[1, 2, 3], [4, 5, 6]])
+    save_to_csv(df, 'filename')
+    f = Filter(('filename', df))
+    save_to_csv(f, 'filename')
+    with pytest.raises(TypeError):
+        save_to_csv(5, 'filename')

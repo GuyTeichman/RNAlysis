@@ -167,3 +167,5 @@ def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):
         io.save_csv(df, filename)
     elif validation.isinstanceinh(df, Filter):
         io.save_csv(df.df, filename)
+    else:
+        raise TypeError(f"Object of type {type(df)} cannot be saved to csv")
