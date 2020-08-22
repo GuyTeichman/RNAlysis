@@ -144,14 +144,14 @@ def sparse_dict_to_bool_df(sparse_dict: dict) -> pd.DataFrame:
 
 def parse_evidence_types(evidence_types: Union[str, Iterable[str]], evidence_type_dict: dict) -> Set[str]:
     if evidence_types == 'any':
-        return set.union(*[set(s) for s in evidence_type_dict.values()])
+        return set.union(*[data_to_set(s) for s in evidence_type_dict.values()])
     elif isinstance(evidence_types, str) and evidence_types.lower() in evidence_type_dict:
         return evidence_type_dict[evidence_types.lower()]
     elif validation.isiterable(evidence_types) and \
         any([isinstance(ev_type, str) and ev_type.lower() in evidence_type_dict for ev_type in evidence_types]):
         return set.union(
-            *[evidence_type_dict[ev_type.lower()] if ev_type.lower() in evidence_type_dict else {ev_type} for ev_type in
-              evidence_types])
+            *[evidence_type_dict[ev_type.lower()] if ev_type.lower() in evidence_type_dict else data_to_set(ev_type) for
+              ev_type in evidence_types])
     elif evidence_types is None:
         return set()
     else:
@@ -259,7 +259,7 @@ class DAGTreeParser:
                 elif line.startswith(b'data-version:'):
                     self.data_version = line[14:].decode('utf8').replace('\n', '')
 
-        if in_frame: #  add last go term to the set, if it was not already added
+        if in_frame:  # add last go term to the set, if it was not already added
             self.go_terms[current_term.id] = current_term
 
     def _populate_levels(self):
