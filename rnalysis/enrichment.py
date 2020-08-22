@@ -498,7 +498,7 @@ class FeatureSet:
             if go_id not in mod_goa_df.columns:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
                 continue
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
-                mod_goa_df.loc[marked_nodes[go_id], go_id] = 0
+                mod_goa_df.loc[marked_nodes[go_id], go_id] = False
             go_size = mod_goa_df[go_id].sum()
             go_de_size = mod_goa_df.loc[gene_set, go_id].sum()
             orig_go_size = orig_go_sizes[go_id]
@@ -545,7 +545,9 @@ class FeatureSet:
         # calculate stats for go_id
         go_size = int(np.ceil(weighted_goa_df[go_id].sum()))
         go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, go_id].sum()))
-        _, res_dict[go_id][-1] = fisher_exact([[go_de_size, de_size], [go_size, bg_size]])
+        # res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size,go_size,de_size,go_de_size)
+        _, res_dict[go_id][-1] = fisher_exact(
+            [[go_de_size, go_size - go_de_size], [de_size - go_de_size, bg_size - go_size - de_size + go_de_size]])
 
         if len(children) == 0:
             return
@@ -571,14 +573,17 @@ class FeatureSet:
                 weighted_goa_df.loc[goa_df[go_id] == 1, child] *= weights[child]
                 ch_go_size = int(np.ceil(weighted_goa_df[child].sum()))
                 ch_go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, child].sum()))
-                _, res_dict[child][-1] = fisher_exact([[ch_go_de_size, de_size], [ch_go_size, bg_size]])
+                _, res_dict[child][-1] = fisher_exact([[ch_go_de_size, ch_go_size - ch_go_de_size],
+                                                       [de_size - ch_go_de_size,
+                                                        bg_size - ch_go_size - de_size + ch_go_de_size]])
+                # res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, ch_go_size, de_size, ch_go_de_size)
             return
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
         inclusive_ancestors = {ancestor for ancestor in
                                itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id)) if
-                               ancestor in goa_df.index}
+                               ancestor in goa_df.columns}
         for sig_child in sig_children:
             for inclusive_ancestor in inclusive_ancestors:
                 weighted_goa_df.loc[goa_df[sig_child] == 1, inclusive_ancestor] *= (1 / weights[sig_child])
