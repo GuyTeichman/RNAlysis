@@ -160,7 +160,7 @@ def parse_evidence_types(evidence_types: Union[str, Iterable[str]], evidence_typ
 
 def parse_go_aspects(aspects: Union[str, Iterable[str]], aspects_dict: dict) -> Set[str]:
     if aspects == 'any':
-        return set.union(*[set(s) for s in aspects_dict.values()])
+        return set.union(*[data_to_set(s) for s in aspects_dict.values()])
     elif any([isinstance(aspect, str) and aspect.lower() in aspects_dict for aspect in aspects]):
         return {aspects_dict[aspect.lower()] if aspect.lower() in aspects_dict else aspect for aspect in aspects}
     else:

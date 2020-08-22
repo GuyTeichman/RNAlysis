@@ -10,6 +10,12 @@ from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
+
+class DummyClass:
+    def __init__(self):
+        pass
+
+
 class MockResponse(object):
     def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = {'blaa': '1234'},
                  text: str = ''):
@@ -371,36 +377,53 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
 
 
 def test_data_to_list():
-    assert parsing.data_to_list([1, 2, 'hi']) == [1, 2, 'hi']
-    assert parsing.data_to_list((1, 2, 'hi')) == [1, 2, 'hi']
-    assert parsing.data_to_list('fifty seven brave men') == ['fifty seven brave men']
-    assert sorted(parsing.data_to_list({'three', 'different', 'elements'})) == sorted(
+    assert data_to_list([1, 2, 'hi']) == [1, 2, 'hi']
+    assert data_to_list((1, 2, 'hi')) == [1, 2, 'hi']
+    assert data_to_list('fifty seven brave men') == ['fifty seven brave men']
+    assert sorted(data_to_list({'three', 'different', 'elements'})) == sorted(
         ['three', 'different', 'elements'])
-    assert parsing.data_to_list(np.array([6, 9, 2])) == [6, 9, 2]
-    assert parsing.data_to_list(67.2) == [67.2]
+    assert data_to_list(np.array([6, 9, 2])) == [6, 9, 2]
+    assert data_to_list(67.2) == [67.2]
+
+
+def test_data_to_list_invalid_type():
+    with pytest.raises(TypeError):
+        data_to_list(DummyClass())
+
+
+def test_data_to_tuple_invalid_type():
+    with pytest.raises(TypeError):
+        data_to_tuple(DummyClass())
+
+
+def test_data_to_set_invalid_type():
+    with pytest.raises(TypeError):
+        data_to_set(DummyClass())
 
 
 def test_data_to_set():
-    assert parsing.data_to_set([1, 2, 'hi']) == {1, 2, 'hi'}
-    assert parsing.data_to_set((1, 2, 'hi')) == {1, 2, 'hi'}
-    assert parsing.data_to_set('fifty seven brave men') == {'fifty seven brave men'}
-    assert parsing.data_to_set({'three', 'different', 'elements'}) == {'three', 'different', 'elements'}
-    assert parsing.data_to_set(np.array([6, 9, 2])) == {6, 9, 2}
-    assert parsing.data_to_set(67.2) == {67.2}
+    assert data_to_set([1, 2, 'hi']) == {1, 2, 'hi'}
+    assert data_to_set((1, 2, 'hi')) == {1, 2, 'hi'}
+    assert data_to_set('fifty seven brave men') == {'fifty seven brave men'}
+    assert data_to_set({'three', 'different', 'elements'}) == {'three', 'different', 'elements'}
+    assert data_to_set(np.array([6, 9, 2])) == {6, 9, 2}
+    assert data_to_set(67.2) == {67.2}
 
 
 def test_data_to_tuple():
-    assert parsing.data_to_tuple([1, 2, 'hi']) == (1, 2, 'hi')
-    assert parsing.data_to_tuple('fifty seven brave men') == ('fifty seven brave men',)
-    assert sorted(parsing.data_to_tuple({'three', 'different', 'elements'})) == sorted(
+    assert data_to_tuple([1, 2, 'hi']) == (1, 2, 'hi')
+    assert data_to_tuple('fifty seven brave men') == ('fifty seven brave men',)
+    assert sorted(data_to_tuple({'three', 'different', 'elements'})) == sorted(
         ('three', 'different', 'elements'))
-    assert parsing.data_to_tuple(np.array([6, 9, 2])) == (6, 9, 2)
-    assert parsing.data_to_tuple(67.2) == (67.2,)
+    assert data_to_tuple(np.array([6, 9, 2])) == (6, 9, 2)
+    assert data_to_tuple((67.2,)) == (67.2,)
+    assert data_to_tuple(67.2) == (67.2,)
 
 
 def test_from_string(monkeypatch):
-    monkeypatch.setattr('builtins.input', lambda x: 'one\ntwo \nthree;\n')
-    assert from_string() == ['one', 'two ', 'three;']
+    monkeypatch.setattr('builtins.input', lambda x: 'one\t\ntwo \nthree; and four\n')
+    assert from_string() == ['one\t', 'two ', 'three; and four']
+    assert from_string(del_spaces=True) == ['one\t', 'two', 'three;andfour']
 
 
 def test_intersection_nonempty():
@@ -515,6 +538,17 @@ def test_uniprot_tab_to_dict():
     assert truth_rev == uniprot_tab_to_dict(tab_rev)
 
 
+def test_uniprot_tab_to_dict_empty():
+    tab = 'From\tTo\n'
+    assert uniprot_tab_to_dict(tab) == ({}, [])
+
+
+def test_uniprot_tab_with_score_to_dict_empty():
+    tab = 'Entry\tAnnotation\tyourlist:M20200816216DA2B77BFBD2E6699CA9B6D1C41EB2A5FE6AF\n'
+    assert uniprot_tab_with_score_to_dict(tab) == {}
+    assert uniprot_tab_with_score_to_dict(tab, True) == {}
+
+
 def test_uniprot_tab_with_score_to_dict():
     tab = 'Entry\tAnnotation\tyourlist:M20200816216DA2B77BFBD2E6699CA9B6D1C41EB2A5FE6AF\nP34544\t5 out of 5\t' \
           'WBGene00019883\nQ27395\t4 out of 5\tWBGene00023497\nP12844\t5 out of 5\tWBGene00003515\nA0A0K3AVL7\t' \
@@ -605,3 +639,13 @@ def test_validate_hdbscan_parameters():
 
     with pytest.raises(AssertionError):
         validate_hdbscan_parameters(2, 5, 'EOM', 13)
+
+
+def test_parse_go_aspects():
+    go_dict = {'a': 'aspect a', 'b': 'aspect b', 'c': 'aspect c', '_a_': 'aspect a'}
+    assert parse_go_aspects('any', go_dict) == {'aspect a', 'aspect b', 'aspect c'}
+    assert parse_go_aspects('B', go_dict) == {'aspect b'}
+    assert parse_go_aspects(['b'], go_dict) == {'aspect b'}
+    assert parse_go_aspects(['a', 'z', 'c'], go_dict) == {'aspect a', 'aspect c', 'z'}
+    assert parse_go_aspects(['b', 'c', 'A'], go_dict) == {'aspect a', 'aspect b', 'aspect c'}
+    assert parse_go_aspects(['aspect z'], go_dict) == {'aspect z'}
