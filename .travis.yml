@@ -31,7 +31,7 @@ jobs:
 
 # Command to run tests, e.g. python setup.py test
 script:
-  - tox
+  - coverage run -m pytest tests/
 
 
 after_script:
