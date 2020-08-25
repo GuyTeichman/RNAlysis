@@ -58,14 +58,10 @@ class FeatureSet:
             gene_set = parsing.data_to_set(parsing.from_string(
                 "Please insert genomic features/indices separated by newline \n"
                 "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')", delimiter='\n'))
-        elif isinstance(gene_set, set):
-            pass
-        elif isinstance(gene_set, (list, tuple)):
-            gene_set = set(gene_set)
         elif validation.isinstanceinh(gene_set, Filter):
             gene_set = gene_set.index_set
         else:
-            raise TypeError(f"Error: 'gene_set' must be a set, list or tuple! Is a {type(gene_set)} instead. ")
+            gene_set = parsing.data_to_set(gene_set)
         self.gene_set = gene_set
         self.set_name = set_name
 
@@ -1866,7 +1862,7 @@ def _generate_upset_srs(objs: dict):
     srs = pd.Series(index=multi_ind, dtype='uint32')
     for ind in multi_ind:
         intersection_sets = list(itertools.compress(names, ind))
-        difference_sets = list(itertools.compress(names,(not i for i in ind)))
+        difference_sets = list(itertools.compress(names, (not i for i in ind)))
         group = set.intersection(*[objs[s] for s in intersection_sets]).difference(*[objs[s] for s in difference_sets])
         group_size = len(group)
         srs.loc[ind] = group_size
