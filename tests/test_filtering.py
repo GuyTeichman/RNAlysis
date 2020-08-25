@@ -1558,11 +1558,23 @@ def test_foldchange_randomization():
 
 
 def test_assert_padj_col():
-    assert False
+    d = DESeqFilter('tests/test_files/test_deseq.csv')
+    d._assert_padj_col()
+    d = DESeqFilter('tests/test_files/test_deseq.csv', padj_col='baseMean')
+    d._assert_padj_col()
+    d = DESeqFilter('tests/test_files/test_deseq.csv', padj_col='not there')
+    with pytest.raises(KeyError):
+        d._assert_padj_col()
 
 
 def test_assert_log2fc_col():
-    assert False
+    d = DESeqFilter('tests/test_files/test_deseq.csv')
+    d._assert_log2fc_col()
+    d = DESeqFilter('tests/test_files/test_deseq.csv', log2fc_col='baseMean')
+    d._assert_log2fc_col()
+    d = DESeqFilter('tests/test_files/test_deseq.csv', log2fc_col='not there')
+    with pytest.raises(KeyError):
+        d._assert_log2fc_col()
 
 
 def test_gap_statistic():
