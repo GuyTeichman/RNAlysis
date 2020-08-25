@@ -1553,9 +1553,6 @@ def test_filter_save_csv():
     pth_sig_suffix.unlink()
 
 
-def test_foldchange_randomization():
-    assert False
-
 
 def test_assert_padj_col():
     d = DESeqFilter('tests/test_files/test_deseq.csv')
@@ -1592,10 +1589,6 @@ def test_triplicates():
 def test_plot_clustering_api():
     assert False
     # split_plots = True
-
-
-def test_compute_dispersion():
-    assert False
 
 
 def test_plot_gap_api():
