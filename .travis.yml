@@ -13,6 +13,7 @@ addons:
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
         packages:
             - llvm-9
+            - graphviz
 
 env:
     - ALLOWFAIL=yes
