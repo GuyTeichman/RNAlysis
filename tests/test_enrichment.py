@@ -465,10 +465,6 @@ def test_calc_randomization_pval():
     assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
 
 
-def test_enrichment_output():
-    assert False
-
-
 def test_plot_enrichment_results():
     df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
     FeatureSet.plot_enrichment_results(df)
@@ -636,17 +632,35 @@ def test_fetch_sets():
 
 
 def test_upset_plot_api():
-    assert False
+    upset_plot({'obj': {'0', '1', '2'}, 'obj2': {'1', '3'}, 'obj3': {'5', '6', '7', '0'}, 'obj4': {'0', '3', '5'}})
+    upset_plot({'obj': {'0', '1', '2'}, 'obj2': FeatureSet({'1', '2', '3'}), 'obj3': RankedSet(['5', '3', '0'])})
+    upset_plot(
+        {'obj': 'attribute1', 'obj2': 'attribute2', 'obj3': {'WBGene00000001', 'WBGene00001234'}, 'obj4': 'attribute3',
+         'obj5': 'attribute4'},
+        ref=__attr_ref__)
+    plt.close('all')
 
 
 def test_venn_diagram_api():
-    # 2 and 3 circles
-    assert False
+    venn_diagram({'obj': {'0', '1', '2'}, 'obj2': {'1', '3'}, 'obj3': {'5', '6', '7', '0'}})
+    venn_diagram({'obj': {'0', '1', '2'}, 'obj2': FeatureSet({'1', '2', '3'}), 'obj3': RankedSet(['5', '3', '0'])})
+    venn_diagram({'obj': 'attribute1', 'obj2': 'attribute2', 'obj3': {'WBGene00000001', 'WBGene00001234'}},
+                 ref=__attr_ref__)
+    plt.close('all')
 
 
-def test_venn_diagram_too_many_sets():
-    assert False
+def test_venn_diagram_invalid_number_of_sets():
+    with pytest.raises(ValueError):
+        venn_diagram({'obj': {'0', '1', '2'}, 'obj2': {'1', '3'}, 'obj3': {'5', '6', '7', '0'}, 'obj4': {'3', '4'}})
+    with pytest.raises(ValueError):
+        venn_diagram({'obj1': FeatureSet({'1', '2'})})
+    with pytest.raises(ValueError):
+        venn_diagram({'obj1': FeatureSet({'1', '2'}), 'obj2': {}, 'obj3': 'attr3', 'obj4': 'attr4', 'obj5': 'attr2'})
 
 
 def test_generate_upset_srs():
+    assert False
+
+
+def test_enrichment_output():
     assert False
