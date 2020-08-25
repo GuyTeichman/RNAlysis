@@ -1863,9 +1863,11 @@ def _generate_upset_srs(objs: dict):
     """
     names = list(objs.keys())
     multi_ind = pd.MultiIndex.from_product([[True, False] for _ in range(len(names))], names=names)[:-1]
-    srs = pd.Series(index=multi_ind)
+    srs = pd.Series(index=multi_ind, dtype='uint32')
     for ind in multi_ind:
-        sets = list(itertools.compress(names, ind))
-        group_size = len(set.intersection(*[objs[s] for s in sets]))
+        intersection_sets = list(itertools.compress(names, ind))
+        difference_sets = list(itertools.compress(names,(not i for i in ind)))
+        group = set.intersection(*[objs[s] for s in intersection_sets]).difference(*[objs[s] for s in difference_sets])
+        group_size = len(group)
         srs.loc[ind] = group_size
     return srs
