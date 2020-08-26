@@ -1,0 +1,6 @@
+name,samples,obs,exp,pval,padj,significant
+attr1,8,7,4.75,0.4043,0.5054,FALSE
+attr2,8,4.375,-0.7857,0.2274,0.379,FALSE
+attr3,8,24.75,10.74,0.2042,0.379,FALSE
+attr4,8,12.88,13.61,0.601,0.601,FALSE
+attr5,8,20.37,7.709,0.028,0.14,TRUE

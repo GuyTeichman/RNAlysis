@@ -606,18 +606,84 @@ def test_enrichment_output():
 
 
 def test_enrich_non_categorical_api():
-    assert False
+    ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
+    s = FeatureSet(
+        {'WBGene00000001', 'WBGene00000002', 'WBGene00000003', 'WBGene00000004', 'WBGene00000005', 'WBGene00000006',
+         'WBGene00000007', 'WBGene00000008', 'WBGene00000009', 'WBGene00000010', 'WBGene00000011', 'WBGene00000012'})
+    res = s.enrich_non_categorical('attr1', biotype='all', parametric_test=True, attr_ref_path=ref_table,
+                                   biotype_ref_path=__biotype_ref__)
+    assert isinstance(res, pd.DataFrame)
+    res = s.enrich_non_categorical(['attr3', 'attr2', 'attr4'], biotype='protein_coding', attr_ref_path=ref_table,
+                                   biotype_ref_path=__biotype_ref__, plot_log_scale=False, n_bins=30,
+                                   plot_style='interleaved', return_fig=True)
+    assert isinstance(res, tuple)
+    assert isinstance(res[0], pd.DataFrame)
+    assert isinstance(res[1], list)
+    for fig in res[1]:
+        assert isinstance(fig, plt.Figure)
+    plt.close('all')
 
 
 def test_enrich_non_categorial_parametric_test():
-    assert False
+    ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
+    res_param_truth = pd.read_csv('tests/test_files/enrich_non_categorical_parametric_truth_fdr15.csv', index_col=0)
+    geneset = {'WBGene00000001', 'WBGene00000003', 'WBGene00000004', 'WBGene00000008', 'WBGene00000010',
+               'WBGene00000014', 'WBGene00000015', 'WBGene00000020'}
+
+    fs = FeatureSet(geneset)
+    res_param = fs.enrich_non_categorical('all', fdr=0.15, parametric_test=True, attr_ref_path=ref_table, biotype='all')
+    assert res_param.loc[:, ['samples', 'significant']].equals(res_param_truth.loc[:, ['samples', 'significant']])
+    assert np.isclose(res_param.loc[:, ['obs', 'exp']].values, res_param_truth.loc[:, ['obs', 'exp']].values,
+                      rtol=0.01).all()
+    assert np.isclose(res_param.loc[:, ['pval', 'padj']].values, res_param_truth.loc[:, ['pval', 'padj']], atol=0,
+                      rtol=0.02).all()
 
 
 def test_enrich_non_categorial_nonparametric_test():
-    assert False
+    ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
+    res_nonparam_truth = pd.read_csv('tests/test_files/enrich_non_categorical_aparametric_truth_fdr15.csv', index_col=0)
+    geneset = {'WBGene00000001', 'WBGene00000003', 'WBGene00000004', 'WBGene00000008', 'WBGene00000010',
+               'WBGene00000014', 'WBGene00000015', 'WBGene00000020'}
+
+    fs = FeatureSet(geneset)
+
+    res_nonparam = fs.enrich_non_categorical('all', fdr=0.15, attr_ref_path=ref_table, biotype='all')
+    assert res_nonparam.loc[:, ['samples', 'significant']].equals(res_nonparam_truth.loc[:, ['samples', 'significant']])
+    assert np.isclose(res_nonparam.loc[:, ['obs', 'exp']].values, res_nonparam_truth.loc[:, ['obs', 'exp']].values,
+                      rtol=0.01).all()
+    assert np.isclose(res_nonparam.loc[:, ['pval', 'padj']].values, res_nonparam_truth.loc[:, ['pval', 'padj']], atol=0,
+                      rtol=0.02).all()
+    plt.close('all')
 
 
-def test_enrich_plot_histogram():
+def test_enrich_non_categorical_nan_values():
+    ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
+    geneset = {'WBGene00000025', 'WBGene00000023', 'WBGene00000027', 'WBGene00000028', 'WBGene00000029',
+               'WBGene00000030', 'WBGene00000015', 'WBGene00000020'}
+    truth = pd.read_csv('tests/test_files/enrich_non_categorical_nan_truth.csv', index_col=0)
+    truth_param = pd.read_csv('tests/test_files/enrich_non_categorical_nan_parametric_truth.csv', index_col=0)
+    fs = FeatureSet(geneset)
+    attrs = ['attr1', 'attr5', 'attr2', 'attr3', 'attr4']
+    res_param = fs.enrich_non_categorical(attrs, parametric_test=True, attr_ref_path=ref_table, biotype='all')
+    res_nonparam = fs.enrich_non_categorical(attrs, attr_ref_path=ref_table, biotype='all')
+    print(res_param, res_nonparam)
+
+    for df, df_truth in zip((res_nonparam, res_param), (truth, truth_param)):
+        assert df.loc[:, ['samples', 'significant']].equals(
+            df_truth.loc[:, ['samples', 'significant']])
+        assert np.isclose(df.loc[:, ['obs', 'exp']].values, df_truth.loc[:, ['obs', 'exp']].values,
+                          rtol=0.01, equal_nan=True).all()
+        assert np.isclose(df.loc[:, ['pval', 'padj']].values, df_truth.loc[:, ['pval', 'padj']],
+                          atol=0, rtol=0.02, equal_nan=True).all()
+    plt.close('all')
+
+
+def test_plot_enrichment_hist_api():
+    res = pd.read_csv('tests/test_files/enrich_non_categorical_parametric_truth_fdr15.csv', index_col=0)
+    args_list = []
+    for row, args in zip(res.iterrows(), args_list):
+        FeatureSet.plot_enrichment_hist(row[0], *args)
+    plt.close('all')
     assert False
 
 
