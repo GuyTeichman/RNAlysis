@@ -786,7 +786,7 @@ class FeatureSet:
         return res_df
 
     def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, plot: bool,
-                           return_fig: bool, plot_horizontal: bool = True):
+                           return_fig: bool = False, plot_horizontal: bool = True):
         """
         Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
         plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
@@ -796,9 +796,9 @@ class FeatureSet:
         """
         res_df = pd.DataFrame(enriched_list,
                               columns=['name', 'samples', 'obs', 'exp', 'log2_fold_enrichment', 'pval'])
-        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
-        res_df['padj'] = padj
-        res_df['significant'] = significant
+        significant, padj = multitest.fdrcorrection(res_df.loc[res_df['pval'].notna(), 'pval'].values, alpha=fdr)
+        res_df.loc[res_df['pval'].notna(), 'padj'] = padj
+        res_df.loc[res_df['padj'].notna(), 'significant'] = significant
         res_df.set_index('name', inplace=True)
         if save_csv:
             self._enrichment_save_csv(res_df, fname)
@@ -1296,33 +1296,50 @@ class FeatureSet:
                                attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                                plot_log_scale: bool = True, plot_style: str = 'overlap', n_bins: int = 50,
                                save_csv: bool = False, fname=None, return_fig: bool = False
-                               ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                               ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
         attr_ref_df, gene_set, attributes = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         enriched_list = []
         for k, attribute in enumerate(attributes):
             srs = attr_ref_df[attribute]
             if not parametric_test:
-                exp, obs = srs.median(), srs[gene_set].median()
-                _, pval = sign_test(srs[gene_set].values, exp)
+                exp, obs = srs.median(), srs[gene_set].median(skipna=False)
+                if np.isnan(obs):
+                    pval = np.nan
+                else:
+                    _, pval = sign_test(srs[gene_set].values, exp)
             else:
-                exp, obs = srs.mean(), srs[gene_set].mean()
-                _, pval = ttest_1samp(srs[gene_set], popmean=exp, nan_policy='propagate')
+                exp, obs = srs.mean(), srs[gene_set].mean(skipna=False)
+                if np.isnan(obs):
+                    pval = np.nan
+                else:
+                    _, pval = ttest_1samp(srs[gene_set], popmean=exp)
 
             enriched_list.append(
                 (attribute, len(gene_set), obs, exp, np.nan, pval))
 
-        results_df = self._enrichment_output(enriched_list, fdr, save_csv, fname, return_fig, False)
-        results_df.dropna(axis=1, inplace=True)
-        for attribute, pval in zip(attributes, results_df['padj']):
-            self._enrichment_plot_histogram(attribute, gene_set, self.set_name, attr_ref_df[attribute], plot_log_scale,
-                                            plot_style, n_bins, parametric_test, pval)
-        return results_df
+        results_df = self._enrichment_output(enriched_list, fdr, save_csv, fname, plot=False).drop(
+            'log2_fold_enrichment', axis=1)
+        if results_df['padj'].isna().any():
+            warnings.warn(f"One or more of the genes in the {type(self)} contained NaN values in "
+                          f"{len(results_df['padj'].isna())} of the attributes. "
+                          f"P-values and plots will not be generated for those attributes. ")
+        if return_fig:
+            output = (results_df, [])
+        else:
+            output = results_df
+        for attribute, padj in zip(attributes, results_df['padj']):
+            if not np.isnan(padj):
+                fig = self.plot_enrichment_hist(attribute, gene_set, self.set_name, attr_ref_df[attribute],
+                                                plot_log_scale, plot_style, n_bins, parametric_test, padj)
+                if return_fig:
+                    output[1].append(fig)
+        return output
 
     @staticmethod
-    def _enrichment_plot_histogram(attribute: str, gene_set: set, set_name: str, attr_srs: pd.Series,
-                                   plot_log_scale: bool, plot_style: str, n_bins: int, parametric_test: bool,
-                                   pval: float) -> plt.Figure:
+    def plot_enrichment_hist(attribute: str, gene_set: set, set_name: str, attr_srs: pd.Series,
+                             plot_log_scale: bool, plot_style: str, n_bins: int, parametric_test: bool,
+                             pval: float) -> plt.Figure:
         assert isinstance(n_bins,
                           int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
         # generate observed and expected Series, either linear or in log10 scale
