@@ -413,8 +413,8 @@ def test_save_txt():
         raise e
     finally:
         try:
-            os.remove('tests/test_files/tmp_enrichment_csv.csv')
-        except:
+            os.remove('tests/test_files/tmp_enrichment_txt.txt')
+        except FileNotFoundError:
             pass
 
 
@@ -446,13 +446,6 @@ def test_featureset_from_string(monkeypatch):
 def test_featureset_repr():
     en = FeatureSet({"1", "2", "4", "5"}, 'my very important set')
     assert repr(en) == "FeatureSet: 'my very important set'"
-
-
-def test_featureset_invalid_type():
-    with pytest.raises(TypeError):
-        en = FeatureSet(42)
-    with pytest.raises(TypeError):
-        en = FeatureSet('gene')
 
 
 def test_calc_randomization_pval():
