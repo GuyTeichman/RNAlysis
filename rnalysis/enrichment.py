@@ -985,6 +985,13 @@ class FeatureSet:
         """
         attr_ref_df, gene_set, attributes = \
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
+
+        # set random seed, if requested
+        if random_seed is not None:
+            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
+                                                                      f"Value '{random_seed}' is invalid."
+            np.random.seed(random_seed)
+
         # parallel processing
         if parallel:
             with distributed.Client(processes=False) as client:
@@ -994,12 +1001,6 @@ class FeatureSet:
         # no parallel processing
         else:
             enriched_list = []
-            if random_seed is not None:
-                assert isinstance(random_seed,
-                                  int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
-                                                             f"Value {random_seed} invalid."
-                np.random.seed(random_seed)
-
             for n_attrs, attribute in enumerate(attributes):
                 assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
                 enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
