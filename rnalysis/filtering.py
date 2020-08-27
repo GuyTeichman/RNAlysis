@@ -107,6 +107,9 @@ class Filter:
     def __contains__(self, item):
         return True if item in self.df.index else False
 
+    def __iter__(self):
+        yield from self.df.index
+
     def __copy__(self):
 
         """

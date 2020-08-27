@@ -16,4 +16,4 @@ numba>=0.51.0
 pairwisedist>=1.2.0
 requests
 pydot
-distributed>=2.24.0
+dask>=2.24.0

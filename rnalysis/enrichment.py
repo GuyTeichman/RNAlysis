@@ -11,7 +11,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
-import distributed
+from dask import distributed
 import matplotlib.pyplot as plt
 import matplotlib_venn as vn
 import numba
@@ -987,7 +987,7 @@ class FeatureSet:
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         # parallel processing
         if parallel:
-            with distributed.Client() as client:
+            with distributed.Client(processes=False) as client:
                 pval_func = FeatureSet._single_enrichment
                 futures = client.map(lambda attr: pval_func(gene_set, attr, attr_ref_df, reps), attributes)
                 enriched_list = client.gather(futures)
