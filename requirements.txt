@@ -4,7 +4,6 @@ matplotlib>=3.3.1
 seaborn>=0.10.0
 statsmodels>=0.11.1
 scikit-learn>=0.23.2
-ipyparallel>=6.0
 grid_strategy
 pyyaml
 UpSetPlot>=0.3.0
@@ -13,7 +12,8 @@ scipy>=1.5.0
 hdbscan>=0.8.26
 scikit-learn-extra
 xlmhg>=2.5.4
-numba>=0.51
+numba>=0.51.0
 pairwisedist>=1.2.0
 requests
 pydot
+distributed>=2.24.0

@@ -113,3 +113,4 @@ settings.ini
 /rnalysis/settings.yaml
 /rnalysis/temp_settings.yaml
 /rnalysis/random_pvals.pyx
+/dask-worker-space/

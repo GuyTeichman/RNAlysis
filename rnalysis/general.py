@@ -9,25 +9,8 @@ from typing import Union
 import pandas as pd
 
 from rnalysis import __attr_file_key__, __biotype_file_key__
-from rnalysis.utils import io, validation, ref_tables, parallel_processing
+from rnalysis.utils import io, validation, ref_tables
 from rnalysis.filtering import Filter
-
-
-def start_parallel_session(n_engines: int = 'default'):
-    """
-    Stop previous ipyparallel ipcluster and start a new one in order to perform parallelized computation.
-
-    :type n_engines: int or 'default'
-    :param n_engines: if 'default', will initiate the default amount of engines. \
-    Otherwise, will initiate n_engines engines.
-
-    :Examples:
-    >>> from rnalysis import general
-    >>> general.start_parallel_session()
-    Starting parallel session...
-    Parallel session started successfully
-    """
-    parallel_processing.start_parallel_session(n_engines)
 
 
 def parse_wbgene_string(string):

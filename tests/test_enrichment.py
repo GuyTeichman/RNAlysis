@@ -318,8 +318,7 @@ def test_enrichment_parallel_validity():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.enrich_randomization(attrs, reps=100000, biotype='all',
-                                  attr_ref_path=__attr_ref__,
+    res = en.enrich_randomization(attrs, reps=100000, biotype='all', attr_ref_path=__attr_ref__,
                                   biotype_ref_path=__biotype_ref__, random_seed=0, parallel=True)
     plt.close('all')
     _enrichment_validity(res, truth)

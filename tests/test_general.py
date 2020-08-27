@@ -1,9 +1,7 @@
 from rnalysis.general import *
 from rnalysis import __biotype_file_key__, __attr_file_key__
-import time
 import pytest
 
-from rnalysis.utils.parallel_processing import start_parallel_session
 from rnalysis.filtering import Filter
 
 
@@ -86,17 +84,6 @@ def test_reset_settings_file():
     ref_tables.set_temp_copy_of_settings_file_as_default()
     ref_tables.remove_temp_copy_of_settings_file()
     assert success
-
-
-def test_start_parallel_session():
-    try:
-        start_parallel_session(1)
-        time.sleep(1)
-        start_parallel_session()
-    except:
-        pass
-    finally:
-        parallel_processing.stop_ipcluster()
 
 
 def test_save_to_csv(monkeypatch):

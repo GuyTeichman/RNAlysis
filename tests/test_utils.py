@@ -1,7 +1,6 @@
 import pytest
 
 from rnalysis.utils.clustering import *
-from rnalysis.utils.parallel_processing import *
 from rnalysis.utils.validation import *
 from rnalysis.utils.preprocessing import *
 from rnalysis.utils.ref_tables import *
@@ -585,14 +584,6 @@ def test_golr_annotation_iterator_connectivity():
 
 def test_golr_annotation_iterator_parsing(monkeypatch):
     assert False
-
-
-def test_stop_ipcluster():
-    stop_ipcluster()
-
-
-def test_start_ipcluster():
-    start_ipcluster(1)
 
 
 def test_is_iterable():

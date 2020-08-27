@@ -11,7 +11,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
-import ipyparallel
+import distributed
 import matplotlib.pyplot as plt
 import matplotlib_venn as vn
 import numba
@@ -25,7 +25,7 @@ from statsmodels.stats.descriptivestats import sign_test
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, ref_tables, validation, parallel_processing
+from rnalysis.utils import io, parsing, ref_tables, validation
 
 
 class FeatureSet:
@@ -987,24 +987,10 @@ class FeatureSet:
             self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
         # parallel processing
         if parallel:
-            try:  # try starting an ipyparallel Client. If it fails, try starting/re-starting parallel session
-                client = ipyparallel.Client()
-            except (ipyparallel.error.TimeoutError, IOError, OSError):
-                parallel_processing.start_parallel_session()
-                client = ipyparallel.Client()
-            dview = client[:]
-            dview.execute("""import numpy as np
-                          import pandas as pd""")
-            if random_seed is not None:
-                assert isinstance(random_seed,
-                                  int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
-                                                             f"Value {random_seed} invalid."
-                dview.execute(f"np.random.seed({random_seed})")
-            pval_func = FeatureSet._single_enrichment
-            pushed_params = dict(gene_set=gene_set, reps=reps, attr_ref_df=attr_ref_df, pval_func=pval_func)
-            dview.push(pushed_params)
-            res = dview.map(lambda attr: pval_func(gene_set, attr, attr_ref_df, reps), attributes)
-            enriched_list = res.result()
+            with distributed.Client() as client:
+                pval_func = FeatureSet._single_enrichment
+                futures = client.map(lambda attr: pval_func(gene_set, attr, attr_ref_df, reps), attributes)
+                enriched_list = client.gather(futures)
         # no parallel processing
         else:
             enriched_list = []
