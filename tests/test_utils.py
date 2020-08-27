@@ -657,3 +657,15 @@ def test_sparse_dict_to_bool_df():
                    'gene5': set()}
     res = sparse_dict_to_bool_df(sparse_dict).sort_index(axis=1)
     assert res.equals(truth)
+
+
+@pytest.mark.parametrize("test_input,expected_type,expected", [
+    (["3", "hello world", "", ], str, True),
+    ({5, 3, 7, 8}, int, True),
+    ((5, 3, '7', 8), int, False),
+    ([[], [1], [1, 2]], int, False),
+    ([], DummyClass, True),
+    ({'one': DummyClass(), 'two': DummyClass()}.values(), DummyClass, True)
+])
+def test_isinstanceiter(test_input, expected_type, expected):
+    assert isinstanceiter(test_input, expected_type) == expected

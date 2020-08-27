@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Iterable
 import pandas as pd
 import warnings
 
@@ -26,6 +26,11 @@ def check_is_df_like(inp):
 
 def isinstanceinh(obj, parent_class):
     return True if issubclass(obj.__class__, parent_class) else False
+
+
+def isinstanceiter(iterable: Iterable, object_class: type):
+    assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
+    return all([isinstance(i, object_class) for i in iterable])
 
 
 def isiterable(obj):
