@@ -98,7 +98,7 @@ is_a: GO:0034308 ! primary alcohol metabolic process
 [Term]
 id: GO:0051125
 name: regulation of actin nucleation
-namespace: biological_process
+namespace: molecular_function
 def: "Any process that modulates the frequency, rate or extent of actin nucleation, the initial step in the formation of an actin filament in which actin monomers combine to form a new filament." [GOC:ai]
 relationship: negatively_regulates GO:0045010 ! actin nucleation
 
