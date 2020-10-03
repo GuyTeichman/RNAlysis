@@ -327,3 +327,9 @@ class DAGTree:
                     node_queue.put(parent)
             processed_nodes.update(parents)
             yield this_node
+
+
+def partition_list(lst: Union[list, tuple], chunk_size: int) -> Union[List[tuple], List[list]]:
+    if len(lst) == 0:
+        return [type(lst)()]
+    return [lst[i: i + chunk_size] for i in range(0, len(lst), chunk_size)]
