@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 import json
 from itertools import chain
+from functools import lru_cache
 
 from rnalysis.utils import parsing, validation, __path__
 
@@ -157,6 +158,7 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
             yield record
 
 
+@lru_cache(maxsize=32, typed=False)
 def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     url = 'https://www.uniprot.org/taxonomy/?'
 
@@ -209,10 +211,10 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
     ids = parsing.data_to_list(ids)
     n_queries = len(ids)
-    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
     if id_dict[map_to] == id_dict[map_from]:
         return GeneIDTranslator()
-    elif id_dict[map_to] != id_dict['UniProtKB AC'] and id_dict[map_from] != id_dict['UniProtKB AC']:
+    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
+    if id_dict[map_to] != id_dict['UniProtKB AC'] and id_dict[map_from] != id_dict['UniProtKB AC']:
         to_uniprot = map_gene_ids(ids, map_from, 'UniProtKB AC').mapping_dict
         from_uniprot = map_gene_ids(to_uniprot.values(), 'UniProtKB AC', map_to).mapping_dict
         output = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
@@ -272,7 +274,8 @@ def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'unipr
         return json.load(f)
 
 
+@lru_cache(maxsize=2)
 def fetch_go_basic():
     url = 'http://current.geneontology.org/ontology/go-basic.obo'
     with requests.get(url, stream=True) as obo_stream:
-        return parsing.DAGTreeParser(obo_stream.iter_lines())
+        return parsing.DAGTree(obo_stream.iter_lines())
