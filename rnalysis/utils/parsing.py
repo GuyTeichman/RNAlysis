@@ -6,7 +6,6 @@ from typing import Any, Dict, Iterable, Set, Union, List, Tuple
 
 import numpy as np
 import pandas as pd
-
 from rnalysis.utils import validation
 
 
@@ -169,13 +168,16 @@ def parse_go_aspects(aspects: Union[str, Iterable[str]], aspects_dict: dict) -> 
 
 
 class GOTerm:
-    __slots__ = {'id': 'GO ID', 'name': 'GO Term name', 'level': "GO Term's level in the DAG Tree",
+    __slots__ = {'id': 'GO ID', 'name': 'GO Term name',
+                 'namespace': 'biological_process, cellular_component or molecular_function',
+                 'level': "GO Term's level in the DAG Tree",
                  'relationships': 'direct parent relationships of the GO Term',
                  'children_relationships': 'direct children relationships of the GO Term'}
 
     def __init__(self):
         self.id = None
         self.name = None
+        self.namespace = None
         self.level = None
         self.relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
         self.children_relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
@@ -197,10 +199,11 @@ def parse_go_id(byte_sequence: bytes) -> str:
     return re.findall(b"GO:[0-9]{7}", byte_sequence)[0].decode('utf8')
 
 
-class DAGTreeParser:
+class DAGTree:
     __slots__ = {'data_version': 'version of the go-basic.obo file',
                  'go_terms': 'dictionary of GO Terms in the DAG Tree',
                  'alt_ids': 'mapping of alternagive GO IDs to their main GO ID',
+                 'namespaces': "namespaces included in the DAGTree",
                  'levels': 'list of levels in the DAG Tree',
                  'parent_relationship_types': 'the types of relationships that constitute parenthood in the DAG Tree'}
 
@@ -209,6 +212,7 @@ class DAGTreeParser:
         self.data_version = None
         self.go_terms: Dict[str, GOTerm] = {}
         self.alt_ids: Dict[str, str] = {}
+        self.namespaces: Set[str] = set()
         self.levels: List[dict] = []
         self.parent_relationship_types: list = data_to_list(parent_relationship_types)
 
@@ -237,8 +241,12 @@ class DAGTreeParser:
             if in_frame:
                 if line.startswith(b'id: '):
                     current_term.id = parse_go_id(line)
+                elif line.startswith(b'namespace: '):
+                    current_term.namespace = line[11:].decode('utf8').replace('\n', '')
+                    if current_term.namespace not in self.namespaces:
+                        self.namespaces.add(current_term.namespace)
                 elif line.startswith(b'name: '):
-                    current_term.name = line[6:].decode('utf8')
+                    current_term.name = line[6:].decode('utf8').replace('\n', '')
                 elif line.startswith(b'alt_id: '):
                     self.alt_ids[parse_go_id(line)] = current_term.id
                 elif line.startswith(b'is_a: '):
@@ -295,10 +303,16 @@ class DAGTreeParser:
                         self[parent_id].children_relationships[rel_type] = []
                     self[parent_id].children_relationships[rel_type].append(go_id)
 
-    def level_iter(self):
-        for level in self.levels[::-1]:
-            for go_id in level:
-                yield go_id
+    def level_iter(self, namespace: str = 'all'):
+        if namespace == 'all':
+            for level in self.levels[::-1]:
+                for go_id in level:
+                    yield go_id
+        else:
+            for level in self.levels[::-1]:
+                for go_id in level:
+                    if self[go_id].namespace == namespace:
+                        yield go_id
 
     def upper_induced_graph_iter(self, go_id: str):
         node_queue = queue.SimpleQueue()
