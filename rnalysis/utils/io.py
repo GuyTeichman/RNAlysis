@@ -1,7 +1,7 @@
 import os
 import warnings
 from pathlib import Path
-from typing import List, Set, Union, Iterable, Tuple
+from typing import List, Set, Union, Iterable, Tuple, Dict
 import requests
 import pandas as pd
 import json
@@ -156,6 +156,49 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
             req.raise_for_status()
         for record in json.loads(req.text)['response']['docs']:
             yield record
+
+
+@lru_cache(maxsize=32, typed=False)
+def _ensmbl_lookup_post(gene_ids: Tuple[str]) -> dict:
+    url = 'https://rest.ensembl.org/lookup/id'
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    data = {"ids": parsing.data_to_list(gene_ids)}
+    req = requests.post(url, headers=headers, data=data.__repr__().replace("'", '"'))
+    if not req.ok:
+        req.raise_for_status()
+    return req.json()
+
+
+def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
+    output = _ensmbl_lookup_post(parsing.data_to_tuple(gene_ids))
+    sources = {}
+    for gene_id in output:
+        if output[gene_id] is not None:
+            source = output[gene_id]['source']
+            if source not in sources:
+                sources[source] = set()
+            sources[source].add(gene_id)
+    return sources
+
+
+def infer_taxon_id_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
+    output = _ensmbl_lookup_post(parsing.data_to_tuple(gene_ids))
+    species = dict()
+    for gene_id in output:
+        if output[gene_id] is not None:
+            species[output[gene_id]['species']] = species.setdefault(output[gene_id]['species'], 0) + 1
+    if len(species) == 0:
+        raise ValueError("No taxon ID could be matched to any of the given gene IDs.")
+    chosen_species = list(species.keys())[0]
+    chosen_species_n = species[chosen_species]
+    if len(species) > 1:
+        warnings.warn(f"The given gene IDs match more than one species. "
+                      f"Picking the species that fits the majority of gene IDs.")
+        for s in species:
+            if species[s] > chosen_species_n:
+                chosen_species = s
+                chosen_species_n = species[s]
+    return map_taxon_id(chosen_species.replace('_', ' '))
 
 
 @lru_cache(maxsize=32, typed=False)
