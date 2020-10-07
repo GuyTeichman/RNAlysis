@@ -687,8 +687,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _get_enrichment_func(self, pval_func_name: str):
         enrichment_func = super()._get_enrichment_func(pval_func_name)
-        if self.propagate_annotations == 'weight' and pval_func_name.lower() != 'fisher':
-            raise NotImplementedError("the 'weight' propagation algorithm is only compatible with Fisher's Exact test.")
+        if self.propagate_annotations in {'weight'} and pval_func_name.lower() != 'fisher':
+            raise NotImplementedError("The 'weight' propagation algorithm is only compatible with Fisher's Exact test.")
+        elif self.propagate_annotations in {'allm'} and pval_func_name.lower() != 'fisher':
+            warnings.warn(f"The 'weight' propagation algorithm is only compatible with Fisher's Exact test. "
+                          f"Therefore, when calculating 'allm' p-values, the 'weight' method will use "
+                          f"Fisher's Exact test, while the rest of the methods will use the '{pval_func_name}' method.")
         return enrichment_func
 
     def get_organism(self):
