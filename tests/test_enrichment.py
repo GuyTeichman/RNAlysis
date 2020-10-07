@@ -1,11 +1,13 @@
 import pytest
 import matplotlib
 import os
+import statsmodels.stats.multitest as multitest
 
 from collections import namedtuple
 from rnalysis import filtering
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _generate_upset_srs, _fetch_sets
+from rnalysis.utils import enrichment_runner
 from tests import __attr_ref__, __biotype_ref__
 
 matplotlib.use('Agg')
@@ -143,60 +145,6 @@ def test_biotypes():
     assert np.all(df == truth)
 
 
-def _enrichment_get_ref_tests_setup(truth, bg_genes):
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-
-    attr_ref_df = io.load_csv(__attr_ref__, 0)
-
-    if not isinstance(bg_genes, str):
-        bg_en = FeatureSet(bg_genes, 'background genes')
-        res, _ = en._enrichment_get_reference(biotype='all', background_genes=bg_en,
-                                              attr_ref_df=attr_ref_df,
-                                              biotype_ref_path=__biotype_ref__)
-    else:
-        res, _ = en._enrichment_get_reference(biotype=bg_genes, background_genes=None,
-                                              attr_ref_df=attr_ref_df,
-                                              biotype_ref_path=__biotype_ref__)
-    truth.sort_index(inplace=True)
-    res.sort_index(inplace=True)
-    assert np.all(res.index == truth.index)
-    assert np.all(res.columns == truth.columns)
-    assert np.all(res.attribute1.isna() == truth.attribute1.isna())
-    assert np.all(res.attribute2.isna() == truth.attribute2.isna())
-
-
-def test_enrichment_get_ref_biotype():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_biotype.csv', 0)
-    bg_genes = 'protein_coding'
-    _enrichment_get_ref_tests_setup(truth, bg_genes)
-
-
-def test_enrichment_get_ref_custom_background():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
-    bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
-                'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
-                'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
-                'WBGene00000105', 'WBGene00001131'}
-    _enrichment_get_ref_tests_setup(truth, bg_genes)
-
-
-def test_enrichment_get_ref_custom_background_from_featureset_object():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
-    bg_genes = {'WBGene00003902', 'WBGene00000106', 'WBGene00001436', 'WBGene00000864', 'WBGene00011910',
-                'WBGene00000859', 'WBGene00268189', 'WBGene00000865', 'WBGene00003864', 'WBGene00048863',
-                'WBGene00000369', 'WBGene00000863', 'WBGene00002074', 'WBGene00000041', 'WBGene00199486',
-                'WBGene00000105', 'WBGene00001131'}
-    _enrichment_get_ref_tests_setup(truth, bg_genes)
-
-
-def test_enrichment_get_ref_custom_background_from_filter_object():
-    truth = io.load_csv('tests/test_files/attr_ref_table_for_tests_specified_bg.csv', 0)
-    bg_genes = filtering.CountFilter(r'tests/test_files/test_bg_genes_from_filter_object.csv')
-    _enrichment_get_ref_tests_setup(truth, bg_genes)
-
-
 def tests_enrichment_randomization_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     attrs = ['attribute1', 'attribute2']
@@ -324,46 +272,6 @@ def test_enrichment_parallel_validity():
     _enrichment_validity(res, truth)
 
 
-def test_enrichment_get_attrs_int_index_attributes():
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-    attrs_truth = ['attribute1', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs([0, 2, 3], 'tests/test_files/attr_ref_table_for_tests.csv')
-    assert attrs == attrs_truth
-
-    attr_truth_single = ['attribute4']
-    attr = en._enrichment_get_attrs(3, 'tests/test_files/attr_ref_table_for_tests.csv')
-    assert attr == attr_truth_single
-
-
-def test_enrichment_get_attrs_all_attributes():
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-    attrs_truth = ['attribute1', 'attribute2', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs('all', __attr_ref__)
-    plt.close('all')
-    assert attrs == attrs_truth
-
-
-def test_enrichment_get_attrs_from_string(monkeypatch):
-    monkeypatch.setattr('builtins.input', lambda x: 'attribute1\nattribute4\n')
-    genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
-             'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-    attrs_truth = ['attribute1', 'attribute4']
-    attrs = en._enrichment_get_attrs(None, __attr_ref__)
-    plt.close('all')
-    assert attrs == attrs_truth
-
-
-def test_enrichment_get_attrs_bad_path():
-    en = FeatureSet(gene_set={'_'}, set_name='test_set')
-    with pytest.raises(FileNotFoundError):
-        attrs = en._enrichment_get_attrs('attribute1', 'fakepath')
-
-
 def test_enrich_hypergeometric_api():
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
     attrs = ['attribute1', 'attribute2']
@@ -381,23 +289,6 @@ def test_enrich_hypergeometric_pvalues():
     res = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__, )
     plt.close('all')
     _enrichment_validity(res, truth)
-
-
-def test_calc_hypergeometric_pvalues():
-    [M, n, N, X] = [13588, 59, 611, 19]
-    truth = 4.989682834519698 * 10 ** -12
-    pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)
-    assert np.isclose(truth, pval, atol=0, rtol=0.00001)
-
-    [M, n, N, X] = [20000, 430, 700, 6]
-    truth = 0.006249179131697138
-    pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)
-    assert np.isclose(truth, pval, atol=0, rtol=0.00001)
-
-    [M, n, N, X] = [20000, 43, 300, 3]
-    truth = 0.0265186938062861
-    pval = FeatureSet._calc_hypergeometric_pval(M, n, N, X)
-    assert np.isclose(truth, pval, atol=0, rtol=0.00001)
 
 
 def test_save_txt():
@@ -418,24 +309,6 @@ def test_save_txt():
             pass
 
 
-def test_enrichment_save_csv():
-    try:
-        df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
-        FeatureSet._enrichment_save_csv(df, 'tests/test_files/tmp_enrichment_csv.csv')
-        df_loaded = pd.read_csv('tests/test_files/tmp_enrichment_csv.csv', index_col=0)
-        print('\n')
-        print(df)
-        print(df_loaded)
-        assert df.equals(df_loaded)
-    except Exception as e:
-        raise e
-    finally:
-        try:
-            os.remove('tests/test_files/tmp_enrichment_csv.csv')
-        except:
-            pass
-
-
 def test_featureset_from_string(monkeypatch):
     truth = {'gene1', 'gene2', 'gene 5'}
     monkeypatch.setattr('builtins.input', lambda x: 'gene1\ngene2\ngene 5\n')
@@ -448,29 +321,11 @@ def test_featureset_repr():
     assert repr(en) == "FeatureSet: 'my very important set'"
 
 
-def test_calc_randomization_pval():
-    np.random.seed(42)
-    hypergeom_pval = 0.2426153598589023
-    avg_pval = 0
-    for i in range(5):
-        avg_pval += FeatureSet._calc_randomization_pval(500, 1, np.random.random(10000) > 0.1, 100000, 0.11)
-    avg_pval /= 5
-    assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
-
-
 def test_plot_enrichment_results():
     df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
     FeatureSet.plot_enrichment_results(df)
     FeatureSet.plot_enrichment_results(df, plot_horizontal=False, ylabel='different ylabel', fdr=0.1)
     plt.close('all')
-
-
-def test_get_pval_asterisk():
-    assert FeatureSet._get_pval_asterisk(0.6) == ('ns', 'normal')
-    assert FeatureSet._get_pval_asterisk(0.001, 0.00099) == ('ns', 'normal')
-    assert FeatureSet._get_pval_asterisk(0.04) == (u'\u2217', 'bold')
-    assert FeatureSet._get_pval_asterisk(0.0099) == (u'\u2217' * 2, 'bold')
-    assert FeatureSet._get_pval_asterisk(0) == (u'\u2217' * 4, 'bold')
 
 
 def test_rankedset_api():
@@ -502,62 +357,6 @@ def _comp_go_res_df(res, truth):
     assert res.loc[:, ['n', 'obs']].equals(truth.loc[:, ['n', 'obs']])
     assert np.allclose(res.loc[:, ['exp', 'log2fc']], res.loc[:, ['exp', 'log2fc']])
     assert np.allclose(res['pval'], truth['pval'], atol=0)
-
-
-def test_classic_pvals():
-    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
-    gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('tests/test_files/go_pvalues_classic_truth.csv', index_col=0)
-    dummy_go_node = namedtuple('DummyGONode', field_names='name')
-
-    class DummyDAGTree:
-        def __init__(self):
-            self.dummy_node = dummy_go_node('content of name field')
-
-        def __getitem__(self, item):
-            return self.dummy_node
-
-    res = pd.DataFrame.from_dict(FeatureSet._go_classic_pvalues(gene_set, goa_df, DummyDAGTree()), orient='index',
-                                 columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval'])
-    _comp_go_res_df(res, truth)
-
-
-def test_elim_pvals():
-    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
-    threshold = 0.2  # make sure there are both significant and non-significant examples with our small bg size (30)
-    gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('tests/test_files/go_pvalues_elim_truth.csv', index_col=0).sort_index()
-    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
-        dag_tree = parsing.DAGTreeParser(f, ['is_a'])
-
-    res = pd.DataFrame.from_dict(FeatureSet._go_elim_pvalues(gene_set, goa_df, dag_tree, threshold), orient='index',
-                                 columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
-    _comp_go_res_df(res, truth)
-
-
-def test_weight_pvals():
-    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
-    gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('tests/test_files/go_pvalues_weight_truth.csv', index_col=0).sort_index()
-    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
-        dag_tree = parsing.DAGTreeParser(f, ['is_a'])
-
-    res = pd.DataFrame.from_dict(FeatureSet._go_weight_pvalues(gene_set, goa_df, dag_tree), orient='index',
-                                 columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
-    _comp_go_res_df(res, truth)
-
-
-def test_allm_pvals():
-    goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
-    threshold = 0.2  # make sure there are both significant and non-significant examples with our small bg size (30)
-    gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
-    truth = pd.read_csv('tests/test_files/go_pvalues_allm_truth.csv', index_col=0).sort_index()
-    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
-        dag_tree = parsing.DAGTreeParser(f, ['is_a'])
-
-    res = pd.DataFrame.from_dict(FeatureSet._go_allm_pvalues(gene_set, goa_df, dag_tree, threshold), orient='index',
-                                 columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
-    _comp_go_res_df(res, truth)
 
 
 def test_rankedset_from_ndarray():
@@ -623,7 +422,8 @@ def test_enrich_non_categorial_parametric_test():
                'WBGene00000014', 'WBGene00000015', 'WBGene00000020'}
 
     fs = FeatureSet(geneset)
-    res_param = fs.enrich_non_categorical('all', fdr=0.15, parametric_test=True, attr_ref_path=ref_table, biotype='all')
+    res_param = fs.enrich_non_categorical('all', alpha=0.15, parametric_test=True, attr_ref_path=ref_table,
+                                          biotype='all')
     assert res_param.loc[:, ['samples', 'significant']].equals(res_param_truth.loc[:, ['samples', 'significant']])
     assert np.isclose(res_param.loc[:, ['obs', 'exp']].values, res_param_truth.loc[:, ['obs', 'exp']].values,
                       rtol=0.01).all()
@@ -639,7 +439,7 @@ def test_enrich_non_categorial_nonparametric_test():
 
     fs = FeatureSet(geneset)
 
-    res_nonparam = fs.enrich_non_categorical('all', fdr=0.15, attr_ref_path=ref_table, biotype='all')
+    res_nonparam = fs.enrich_non_categorical('all', alpha=0.15, attr_ref_path=ref_table, biotype='all')
     assert res_nonparam.loc[:, ['samples', 'significant']].equals(res_nonparam_truth.loc[:, ['samples', 'significant']])
     assert np.isclose(res_nonparam.loc[:, ['obs', 'exp']].values, res_nonparam_truth.loc[:, ['obs', 'exp']].values,
                       rtol=0.01).all()
