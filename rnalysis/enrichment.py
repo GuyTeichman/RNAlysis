@@ -252,7 +252,6 @@ class FeatureSet:
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                       randomization_reps: int = 10000, random_seed: int = None,
                       parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
-        # TODO: add 'reps' argument?
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set \
         using the Hypergeometric Test. The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
@@ -270,10 +269,6 @@ class FeatureSet:
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
         appears with the smallest value in the scale.
 
-        :param parallel:
-        :type parallel:
-        :param statistical_test:
-        :type statistical_test:
         :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
         :type organism: str or int
         :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
@@ -285,6 +280,9 @@ class FeatureSet:
         :type gene_id_type: str (default='UniProtKB')
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
+        :param statistical_test: determines the statistical test to be used for enrichment analysis. \
+        Note that some propagation methods support only some of the available statistical tests.
+        :type statistical_test: 'fisher', 'hypergeometric' or 'randomization' (default 'fisher')
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
@@ -297,7 +295,12 @@ class FeatureSet:
         :type biotype_ref_path: str or pathlib.Path (default 'predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
-        :param propagate_annotations: determines the propagation method of annotations. If 'elim' (default), #TODO
+        :param propagate_annotations: determines the propagation method of GO annotations. \
+        'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
+        'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
+        combination of all proopagation methods. To read more about the propagation methods, \
+        see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
         :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default 'elim')
         :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
         Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
@@ -341,6 +344,18 @@ class FeatureSet:
         :type plot_horizontal: bool (default True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :type random_seed: non-negative integer (default None)
+        :type random_seed: if using a randomization test, determine the random seed used to initialize \
+        the pseudorandom generator for the randomization test. \
+        By default it is picked at random, but you can set it to a particular integer to get consistents results \
+        over multiple runs. If not using a randomization test, this parameter will not affect the analysis.
+        :param randomization_reps: if using a randomization test, determine how many randomization repititions to run. \
+        Otherwise, this parameter will not affect the analysis.
+        :type randomization_reps: int larger than 0 (default 10000)
+        :type parallel: bool (default False)
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
@@ -528,8 +543,8 @@ class FeatureSet:
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
         :type parallel: bool (default False)
-        :param parallel: if True, will perform the randomization tests using parallel processing. \
-        In most cases, parallel processing will lead to shorter computation time, but does not affect the results of \
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
@@ -613,6 +628,10 @@ class FeatureSet:
         :type plot_horizontal: bool (default True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
+        :type parallel: bool (default False)
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
@@ -953,7 +972,12 @@ class RankedSet(FeatureSet):
         :type gene_id_type: str (default='UniProtKB')
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
-        :param propagate_annotations: determines the propagation method of annotations. If 'elim' (default), #TODO
+        :param propagate_annotations: determines the propagation method of GO annotations. \
+        'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
+        'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
+        combination of all proopagation methods. To read more about the propagation methods, \
+        see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
         :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default 'elim')
         :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
         Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
@@ -1002,6 +1026,10 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :type parallel: bool (default False)
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
@@ -1063,6 +1091,10 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
+        :type parallel: bool (default False)
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
