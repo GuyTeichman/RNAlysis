@@ -250,6 +250,7 @@ class FeatureSet:
                       qualifiers: Union[str, Iterable[str]] = 'any',
                       excluded_qualifiers: Union[str, Iterable[str]] = 'not', return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                      randomization_reps: int = 10000, random_seed: int = None,
                       parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         # TODO: add 'reps' argument?
         """
@@ -361,6 +362,10 @@ class FeatureSet:
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
         plot_dag = True
+        if statistical_test.lower() == 'randomization':
+            kwargs = dict(reps=randomization_reps, random_seed=random_seed)
+        else:
+            kwargs = {}
         runner = enrichment_runner.GOEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
