@@ -372,7 +372,7 @@ class FeatureSet:
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_dag, self.set_name,
                                                       parallel, statistical_test, biotype, background_genes,
-                                                      biotype_ref_path)
+                                                      biotype_ref_path, **kwargs)
 
         return runner.run()
 
@@ -927,7 +927,7 @@ class RankedSet(FeatureSet):
                                   excluded_qualifiers: Union[str, Iterable[str]] = 'not',
                                   return_nonsignificant: bool = False,
                                   save_csv: bool = False, fname=None,
-                                  return_fig: bool = False, plot_horizontal: bool = True, random_seed: int = None
+                                  return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = False
                                   ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
@@ -1025,13 +1025,13 @@ class RankedSet(FeatureSet):
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_dag, self.set_name,
-                                                      parallel=False, enrichment_func_name='xlmhg', single_list=True)
+                                                      parallel=parallel, enrichment_func_name='xlmhg', single_list=True)
 
         return runner.run()
 
     def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, alpha: float = 0.05,
                            attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
-                           return_fig: bool = False, plot_horizontal: bool = True):
+                           return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = False):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1082,8 +1082,8 @@ class RankedSet(FeatureSet):
 
         """
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path, save_csv,
-                                                    fname, return_fig, plot_horizontal, self.set_name, parallel=False,
-                                                    enrichment_func_name='xlmhg', single_list=True)
+                                                    fname, return_fig, plot_horizontal, self.set_name,
+                                                    parallel=parallel, enrichment_func_name='xlmhg', single_list=True)
         return runner.run()
 
 
