@@ -239,7 +239,7 @@ class FeatureSet:
             fname = str(Path)
         io.save_csv(df, filename=fname if fname.endswith('.csv') else fname + '.csv')
 
-    def go_enrichment(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
+    def go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                       statistical_test: str = 'fisher', biotype: str = 'protein_coding',
                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                       biotype_ref_path: str = 'predefined', propagate_annotations: str = 'elim',
@@ -911,8 +911,8 @@ class RankedSet(FeatureSet):
                       "the return type will always be FeatureSet and not RankedSet.")
         return super()._set_ops(others, op)
 
-    def go_enrichment_single_list(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
-                                  propagate_annotations: str = 'elim',
+    def go_enrichment_single_list(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
+                                  alpha: float = 0.05, propagate_annotations: str = 'elim',
                                   aspects: Union[str, Iterable[str]] = 'any',
                                   evidence_types: Union[str, Iterable[str]] = 'any',
                                   excluded_evidence_types: Union[str, Iterable[str]] = (),

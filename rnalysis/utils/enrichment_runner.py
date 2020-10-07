@@ -692,7 +692,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return enrichment_func
 
     def get_organism(self):
-        self.taxon_id, self.organism = io.map_taxon_id(self.organism)
+        if self.organism.lower() == 'auto':
+            self.taxon_id, self.organism = io.infer_taxon_id_from_gene_ids(self.gene_set)
+        else:
+            self.taxon_id, self.organism = io.map_taxon_id(self.organism)
+
         if self.propagate_annotations != 'no':
             print(f"Fetching and propagating GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id}).")
         else:
