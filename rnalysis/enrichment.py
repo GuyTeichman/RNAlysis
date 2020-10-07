@@ -11,30 +11,21 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
-from dask import distributed
 import matplotlib.pyplot as plt
 import matplotlib_venn as vn
-import numba
 import numpy as np
 import pandas as pd
-import statsmodels.stats.multitest as multitest
 import upsetplot
 from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
-from statsmodels.stats.descriptivestats import sign_test
-from xlmhg import get_xlmhg_test_result as xlmhg_test
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, ref_tables, validation
+from rnalysis.utils import io, parsing, ref_tables, validation, enrichment_runner
 
 
 class FeatureSet:
     """ Receives a filtered gene set and the set's name (optional) and preforms various enrichment analyses on them. """
     __slots__ = {'gene_set': 'set of feature names/indices', 'set_name': 'name of the FeatureSet'}
-    __goa_queries__ = {}
-    __go_basic__ = None
-
-    # TODO: add a half-way memoization of goa_queries (before the table stage)
 
     def __init__(self, gene_set: Union[List[str], Set[str], 'Filter'] = None, set_name: str = ''):
 
@@ -248,82 +239,19 @@ class FeatureSet:
             fname = str(Path)
         io.save_csv(df, filename=fname if fname.endswith('.csv') else fname + '.csv')
 
-    def _go_enrichment_fetch_annotations(self, organism: Union[str, int], gene_id_type: str,
-                                         aspects: Union[str, Iterable[str]],
-                                         evidence_types: Union[str, Iterable[str]],
-                                         excluded_evidence_types: Union[str, Iterable[str]],
-                                         databases: Union[str, Iterable[str]],
-                                         excluded_databases: Union[str, Iterable[str]],
-                                         qualifiers: Union[str, Iterable[str]],
-                                         excluded_qualifiers: Union[str, Iterable[str]],
-                                         propagate_annotations: str, dag_tree: parsing.DAGTreeParser) -> pd.DataFrame:
-
-        goa_query_key = (organism, gene_id_type, parsing.data_to_tuple(evidence_types), parsing.data_to_tuple(aspects),
-                         parsing.data_to_tuple(databases), parsing.data_to_tuple(qualifiers),
-                         parsing.data_to_tuple(excluded_qualifiers), propagate_annotations.lower() != 'no')
-
-        if goa_query_key in self.__goa_queries__:
-            goa_df = self.__goa_queries__[goa_query_key]
-        else:
-            taxon_id, organism_name = io.map_taxon_id(organism)
-            if propagate_annotations != 'no':
-                out = f"Fetching and propagating GO annotations for organism '{organism_name}' (taxon ID:{taxon_id})."
-            else:
-                out = f"Fetching GO annotations for organism '{organism_name}' (taxon ID:{taxon_id})."
-            print(out)
-            annotations_iter = io.golr_annotations_iterator(taxon_id, aspects, evidence_types, excluded_evidence_types,
-                                                            databases, excluded_databases,
-                                                            qualifiers, excluded_qualifiers)
-            sparse_annotation_dict = {}
-            source_to_gene_id_dict = {}
-            for annotation in annotations_iter:
-                # add annotation to annotation dictionary
-                gene_id = annotation['bioentity_internal_id']
-                go_id = dag_tree[annotation['annotation_class']].id
-                source = annotation['source']
-                if gene_id not in sparse_annotation_dict:
-                    sparse_annotation_dict[gene_id] = (set())
-                sparse_annotation_dict[gene_id].add(go_id)
-
-                # add gene id and source to source dict
-                if source not in source_to_gene_id_dict:
-                    source_to_gene_id_dict[source] = set()
-                source_to_gene_id_dict[source].add(gene_id)
-                # propagate annotations
-                if propagate_annotations != 'no':
-                    parents = set(dag_tree.upper_induced_graph_iter(go_id))
-                    sparse_annotation_dict[gene_id].update(parents)
-            print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
-            # translate gene IDs
-            translated_sparse_annotation_dict = {}
-            for source in source_to_gene_id_dict:
-                translator = io.map_gene_ids(source_to_gene_id_dict[source], source, gene_id_type)
-                for gene_id in sparse_annotation_dict.copy():
-                    if gene_id in translator:
-                        translated_sparse_annotation_dict[translator[gene_id]] = sparse_annotation_dict.pop(gene_id)
-
-            # get boolean DataFrame for enrichment
-            print("Generating Gene Ontology Reference Table...")
-            goa_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict)
-
-            self.__goa_queries__[goa_query_key] = goa_df
-
-        return goa_df
-
-    def go_enrichment(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
-                      biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                      biotype_ref_path: str = 'predefined',
-                      propagate_annotations: str = 'elim',
-                      aspects: Union[str, Iterable[str]] = 'any',
-                      evidence_types: Union[str, Iterable[str]] = 'any',
-                      excluded_evidence_types: Union[str, Iterable[str]] = None,
+    def go_enrichment(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
+                      statistical_test: str = 'fisher', biotype: str = 'protein_coding',
+                      background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                      biotype_ref_path: str = 'predefined', propagate_annotations: str = 'elim',
+                      aspects: Union[str, Iterable[str]] = 'any', evidence_types: Union[str, Iterable[str]] = 'any',
+                      excluded_evidence_types: Union[str, Iterable[str]] = (),
                       databases: Union[str, Iterable[str]] = 'any',
-                      excluded_databases: Union[str, Iterable[str]] = None,
+                      excluded_databases: Union[str, Iterable[str]] = (),
                       qualifiers: Union[str, Iterable[str]] = 'any',
-                      excluded_qualifiers: Union[str, Iterable[str]] = 'not',
-                      return_nonsignificant: bool = False,
-                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True
-                      ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                      excluded_qualifiers: Union[str, Iterable[str]] = 'not', return_nonsignificant: bool = False,
+                      save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                      parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+        # TODO: add 'reps' argument?
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set \
         using the Hypergeometric Test. The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
@@ -341,6 +269,10 @@ class FeatureSet:
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
         appears with the smallest value in the scale.
 
+        :param parallel:
+        :type parallel:
+        :param statistical_test:
+        :type statistical_test:
         :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
         :type organism: str or int
         :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
@@ -350,8 +282,8 @@ class FeatureSet:
         For a full list of legal 'gene_id_type' names, see the UniProt website: \
         https://www.uniprot.org/help/api_idmapping
         :type gene_id_type: str (default='UniProtKB')
-        :type fdr: float between 0 and 1
-        :param fdr: Indicates the FDR threshold for significance.
+        :type alpha: float between 0 and 1
+        :param alpha: Indicates the FDR threshold for significance.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
@@ -426,389 +358,18 @@ class FeatureSet:
            Example plot of go_enrichment(plot_horizontal = False)
         """
         propagate_annotations = propagate_annotations.lower()
-        dag_tree = io.fetch_go_basic() if self.__go_basic__ is None else self.__go_basic__
-        goa_df = self._go_enrichment_fetch_annotations(organism, gene_id_type, aspects,
-                                                       evidence_types, excluded_evidence_types,
-                                                       databases, excluded_databases, qualifiers,
-                                                       excluded_qualifiers, propagate_annotations,
-                                                       dag_tree)
+        if validation.isinstanceinh(background_genes, FeatureSet):
+            background_genes = background_genes.gene_set
+        plot_dag = True
+        runner = enrichment_runner.GOEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
+                                                      propagate_annotations, aspects, evidence_types,
+                                                      excluded_evidence_types, databases, excluded_databases,
+                                                      qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
+                                                      fname, return_fig, plot_horizontal, plot_dag, self.set_name,
+                                                      parallel, statistical_test, biotype, background_genes,
+                                                      biotype_ref_path)
 
-        biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
-        goa_df, gene_set = self._enrichment_get_reference(biotype, background_genes, goa_df, biotype_ref_path,
-                                                          go_printout=True)
-
-        print(f"Calculating enrichment using the '{propagate_annotations}' method...")
-        args = [gene_set, goa_df, dag_tree]
-        if propagate_annotations in {'classic', 'no'}:
-            res_dict = self._go_classic_pvalues(*args)
-        elif propagate_annotations in {'elim', 'weight', 'all.m'}:
-            if propagate_annotations == 'elim':
-                args.append(fdr)
-                res_dict = self._go_elim_pvalues(*args)
-            elif propagate_annotations == 'weight':
-                res_dict = self._go_weight_pvalues(*args)
-            else:
-                args.append(fdr)
-                res_dict = self._go_allm_pvalues(*args)
-        else:
-            raise ValueError(f"Invalid value for 'propagate_annotations': '{propagate_annotations}'.")
-        return self._go_enrichment_output(res_dict, fdr, return_nonsignificant, dag_tree, save_csv, fname, True,
-                                          return_fig, plot_horizontal)
-
-    @staticmethod
-    def _calc_go_stats(go_id: str, bg_size: int, go_size: int, de_size: int, go_de_size: int, term: str,
-                       res_dict: dict, calc_pvalue: bool = True) -> None:
-        obs, exp = go_de_size, de_size * (go_size / bg_size)
-        log2_fold_enrichment = np.log2(obs / exp) if obs > 0 else -np.inf
-        pvalue = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size) if calc_pvalue else None
-        res_dict[go_id] = [term, de_size, obs, exp, log2_fold_enrichment, pvalue]
-
-    @staticmethod
-    def _go_classic_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser) -> dict:
-        res_dict = {}
-        go_sizes = goa_df.sum(axis=0)
-        bg_size = goa_df.shape[0]
-        de_size = len(gene_set)
-        go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
-
-        for go_id in goa_df.columns:
-            go_size = go_sizes[go_id]
-            go_de_size = go_de_sizes[go_id]
-            FeatureSet._calc_go_stats(go_id, bg_size, go_size, de_size, go_de_size, dag_tree[go_id].name, res_dict)
-
-        return res_dict
-
-    @staticmethod
-    def _go_elim_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser, fdr: float) -> dict:
-
-        mod_goa_df = goa_df.copy(deep=True)
-
-        threshold = fdr  # / len(goa_df.columns)
-        res_dict = {}
-        marked_nodes = {}
-        orig_go_sizes = goa_df.sum(axis=0)
-        bg_size = goa_df.shape[0]
-        de_size = len(gene_set)
-        orig_go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
-        for go_id in dag_tree.level_iter():
-            if go_id not in mod_goa_df.columns:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
-                continue
-            if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
-                mod_goa_df.loc[marked_nodes[go_id], go_id] = False
-            go_size = mod_goa_df[go_id].sum()
-            go_de_size = mod_goa_df.loc[gene_set, go_id].sum()
-            orig_go_size = orig_go_sizes[go_id]
-            orig_go_de_size = orig_go_de_sizes[go_id]
-            FeatureSet._calc_go_stats(go_id, bg_size, orig_go_size, de_size, orig_go_de_size, dag_tree[go_id].name,
-                                      res_dict, calc_pvalue=False)
-            res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, go_size, de_size, go_de_size)
-            # if current GO ID is significantly ENRICHED, mark its ancestors
-            if res_dict[go_id][-1] <= threshold and res_dict[go_id][-2] > 0:
-                new_marked_genes = set(mod_goa_df[go_id][mod_goa_df[go_id] == 1].index)
-                for ancestor in dag_tree.upper_induced_graph_iter(go_id):
-                    if ancestor not in marked_nodes:
-                        marked_nodes[ancestor] = set()
-                    marked_nodes[ancestor] = marked_nodes[ancestor].union(new_marked_genes)
-        return res_dict
-
-    @staticmethod
-    def _go_weight_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser) -> dict:
-        mod_goa_df = goa_df.astype("float64", copy=True)
-
-        res_dict = {}
-        weights = collections.defaultdict(lambda: 1)  # default weight for all nodes is 1
-        orig_go_sizes = goa_df.sum(axis=0)
-        bg_size = goa_df.shape[0]
-        de_size = len(gene_set)
-        orig_go_de_sizes = goa_df.loc[gene_set].sum(axis=0)
-        for go_id in dag_tree.level_iter():
-            if go_id not in mod_goa_df.columns:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
-                continue
-            orig_go_size = orig_go_sizes[go_id]
-            orig_go_de_size = orig_go_de_sizes[go_id]
-            FeatureSet._calc_go_stats(go_id, bg_size, orig_go_size, de_size, orig_go_de_size,
-                                      dag_tree[go_id].name, res_dict, calc_pvalue=False)
-            children = {child for child in dag_tree[go_id].get_children() if child in mod_goa_df.columns}
-            FeatureSet._compute_term_sig(go_id, children, dag_tree, gene_set, mod_goa_df, goa_df, weights,
-                                         res_dict, bg_size, de_size)
-
-        return res_dict
-
-    @staticmethod
-    def _compute_term_sig(go_id: str, children: set, dag_tree: parsing.DAGTreeParser, gene_set: set,
-                          weighted_goa_df: pd.DataFrame, goa_df: pd.DataFrame, weights: dict, res_dict: dict,
-                          bg_size: int, de_size: int, tolerance: float = 10 ** -50) -> None:
-        # calculate stats for go_id
-        go_size = int(np.ceil(weighted_goa_df[go_id].sum()))
-        go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, go_id].sum()))
-        # res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size,go_size,de_size,go_de_size)
-        _, res_dict[go_id][-1] = fisher_exact(
-            [[go_de_size, go_size - go_de_size], [de_size - go_de_size, bg_size - go_size - de_size + go_de_size]])
-
-        if len(children) == 0:
-            return
-
-        sig_children = set()
-        for child in children:
-            a = res_dict[child][-1]
-            b = res_dict[go_id][-1]
-            if np.isclose(a, 0, rtol=0, atol=tolerance):  # if a is close to 0, add tolerance to avoid division by 0
-                sig_ratio = b / (a + tolerance)
-            elif np.isclose(a, b, rtol=0, atol=tolerance):  # if a and b are nearly identical, set their ratio to 1
-                sig_ratio = 1
-            else:
-                sig_ratio = b / a
-            weights[child] = sig_ratio
-
-            if weights[child] >= 1:
-                sig_children.add(child)
-
-        # CASE 1: if go_id is more significant than all children, re-weigh the children and recompute their stats
-        if len(sig_children) == 0:
-            for child in children:
-                weighted_goa_df.loc[goa_df[go_id] == 1, child] *= weights[child]
-                ch_go_size = int(np.ceil(weighted_goa_df[child].sum()))
-                ch_go_de_size = int(np.ceil(weighted_goa_df.loc[gene_set, child].sum()))
-                _, res_dict[child][-1] = fisher_exact([[ch_go_de_size, ch_go_size - ch_go_de_size],
-                                                       [de_size - ch_go_de_size,
-                                                        bg_size - ch_go_size - de_size + ch_go_de_size]])
-                # res_dict[go_id][-1] = FeatureSet._calc_hypergeometric_pval(bg_size, ch_go_size, de_size, ch_go_de_size)
-            return
-
-        # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
-        # and then recompute stats for go_id
-        inclusive_ancestors = {ancestor for ancestor in
-                               itertools.chain([go_id], dag_tree.upper_induced_graph_iter(go_id)) if
-                               ancestor in goa_df.columns}
-        for sig_child in sig_children:
-            for inclusive_ancestor in inclusive_ancestors:
-                weighted_goa_df.loc[goa_df[sig_child] == 1, inclusive_ancestor] *= (1 / weights[sig_child])
-        # re-run compute_term_sig, only with the children which were not more significant than their parents
-        FeatureSet._compute_term_sig(go_id, children.difference(sig_children), dag_tree, gene_set, weighted_goa_df,
-                                     goa_df, weights, res_dict, bg_size, de_size, tolerance)
-
-    @staticmethod
-    def _go_allm_pvalues(gene_set: set, goa_df: pd.DataFrame, dag_tree: parsing.DAGTreeParser, fdr: float) -> dict:
-        classic = FeatureSet._go_classic_pvalues(gene_set, goa_df, dag_tree)
-        elim = FeatureSet._go_elim_pvalues(gene_set, goa_df, dag_tree, fdr)
-        weight = FeatureSet._go_weight_pvalues(gene_set, goa_df, dag_tree)
-        # TODO: make sure no in-place shenanigans occur with goa_df
-        res_dict = {}
-        for go_id in classic.keys():
-            pvalue = np.exp(np.mean(np.log([classic[go_id][-1], elim[go_id][-1], weight[go_id][-1]])))
-            res_dict[go_id] = (*classic[go_id][:-1], pvalue)
-        return res_dict
-
-    @staticmethod
-    def _single_enrichment(gene_set, attribute, attr_ref_df: pd.DataFrame, reps: int) -> list:
-        assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-        srs = attr_ref_df[attribute]
-        bg_array = np.isnan(srs.values)
-        obs_array = np.isnan(srs.loc[gene_set].values)
-        n = len(gene_set)
-        expected_fraction = (bg_array.shape[0] - np.sum(bg_array)) / bg_array.shape[0]
-        observed_fraction = (n - np.sum(obs_array)) / n
-        log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = FeatureSet._calc_randomization_pval(n, log2_fold_enrichment, bg_array, reps, observed_fraction)
-
-        return [attribute, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
-
-    @staticmethod
-    @numba.jit(nopython=True)
-    def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float) -> float:
-        ind_range = np.arange(bg_array.shape[0])
-        success = 0
-        if log2fc >= 0:
-            for _ in range(reps):
-                success += (n - np.sum(bg_array[np.random.choice(ind_range, n, replace=False)])) / n >= obs_frac
-
-        else:
-            for _ in range(reps):
-                success += (n - np.sum(bg_array[np.random.choice(ind_range, n, replace=False)])) / n <= obs_frac
-        pval = (success + 1) / (reps + 1)
-        return pval
-
-    @staticmethod
-    def _enrichment_get_attrs(attributes, attr_ref_path):
-        if attributes is None:
-            attributes = parsing.from_string(
-                "Please insert attributes separated by newline "
-                "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
-        elif isinstance(attributes, (str, int)):
-            attributes = [attributes]
-        else:
-            assert isinstance(attributes, (list, tuple, set)), "'attributes' must be a list, tuple or set!"
-            for attr in attributes:
-                if isinstance(attr, int):
-                    assert attr >= 0, f"Error in attribute number {attr}: index must be non-negative!"
-                else:
-                    assert isinstance(attr, str), f"Invalid type of attribute {attr}: {type(attr)}"
-
-        try:
-            with open(attr_ref_path) as f:
-                all_attrs = f.readline().split(',')[1::]
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Invalid or nonexistent Attribute Reference Table path! path:'{attr_ref_path}'")
-        if all_attrs[-1].endswith('\n'):
-            all_attrs[-1] = all_attrs[-1][:-1]
-
-        if attributes == ['all']:
-            attributes = all_attrs
-        elif np.all([True if isinstance(i, int) else False for i in attributes]):
-            return [all_attrs[ind] for ind in attributes]
-        return attributes
-
-    def _enrichment_get_reference(self, biotype: Union[str, List[str], Set[str], Tuple[str]], background_genes,
-                                  attr_ref_df: pd.DataFrame, biotype_ref_path: str, go_printout: bool = False):
-        gene_set = self.gene_set
-
-        assert (isinstance(biotype, (str, list, set, tuple)))
-
-        if background_genes is not None:
-            if isinstance(background_genes, FeatureSet):
-                bg = background_genes.gene_set
-            elif validation.isinstanceinh(background_genes, Filter):
-                bg = background_genes.index_set
-            elif isinstance(background_genes, set):
-                bg = background_genes
-            else:
-                raise TypeError(f"background_genes must be a set, enrichment.FeatureSet or filtering.Filter; "
-                                f"instead got {type(background_genes)}")
-
-            if biotype != 'all':
-                warnings.warn("both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored.")
-
-        else:
-            if biotype == 'all':
-                bg = attr_ref_df.index
-            else:
-                biotype_ref_df = io.load_csv(biotype_ref_path)
-                validation.validate_biotype_table(biotype_ref_df)
-                biotype_ref_df.set_index('gene', inplace=True)
-                biotype = parsing.data_to_list(biotype)
-                mask = pd.Series(np.zeros_like(biotype_ref_df['biotype'].values, dtype=bool),
-                                 biotype_ref_df['biotype'].index,
-                                 name='biotype')
-                for bio in biotype:
-                    mask = mask | (biotype_ref_df['biotype'] == bio)
-                bg = biotype_ref_df[mask].index
-
-        if go_printout:
-            printout_params = "have any GO Annotations asocciated with them"
-        else:
-            printout_params = "appear in the Attribute Reference Table"
-        # attr_ref_df = attr_ref_df.loc[attr_ref_df.index.intersection(bg)]
-        attr_ref_df = attr_ref_df.drop(attr_ref_df.index.difference(bg))
-        if len(attr_ref_df.index) < len(bg):
-            warnings.warn(
-                f"{len(bg) - len(attr_ref_df.index)} genes out of the requested {len(bg)} background genes do not "
-                f"{printout_params}"
-                f", and are therefore ignored. \nThis leaves a total of {len(attr_ref_df.index)} background genes.")
-        print(f"{len(attr_ref_df.index)} background genes are used. ")
-
-        not_in_bg = gene_set.difference(set(attr_ref_df.index))
-        if len(not_in_bg) > 0:
-            gene_set = gene_set.difference(not_in_bg)
-            warnings.warn(f"{len(not_in_bg)} genes in the enrichment set do not {printout_params} "
-                          f"and/or do not appear in the background gene set. \n"
-                          f"Enrichment will be computed on the remaining {len(gene_set)} genes.")
-        attr_ref_df.sort_index(inplace=True)
-        return attr_ref_df, gene_set
-
-    def _enrichment_setup(self, biotype: str, background_genes: Union[Iterable[str], str, Iterable[int], int, None],
-                          attr_ref_path: str, biotype_ref_path: str, attributes: Union[str, List[str], List[int]]):
-        """
-        Perform setup for enrichment functions. This function receives most of the input variables \
-        from enrichment functions, generates a full list of attributes for enrichment, gets the relevant full path to \
-        Attribute/Biotype reference tables, loads the Reference tables into a DataFrame, \
-        filters the Attribute DataFrame to include only relevant Attributes, \
-        generates a background gene set according to the user's specifications, \
-        filters the tested gene set based on the background gene set and/or biotype, \
-        and standardizes the data scale input.
-
-        """
-        attr_ref_path = ref_tables.get_attr_ref_path(attr_ref_path)
-        biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path)
-
-        attr_ref_df = io.load_csv(attr_ref_path)
-        validation.validate_attr_table(attr_ref_df)
-        attr_ref_df.set_index('gene', inplace=True)
-
-        attr_ref_df, gene_set = self._enrichment_get_reference(biotype=biotype, background_genes=background_genes,
-                                                               attr_ref_df=attr_ref_df,
-                                                               biotype_ref_path=biotype_ref_path)
-
-        attributes = self._enrichment_get_attrs(attributes=attributes, attr_ref_path=attr_ref_path)
-        return attr_ref_df, gene_set, attributes
-
-    def _go_enrichment_output(self, res_dict: dict, fdr: float, return_nonsignificant: bool,
-                              dag_tree: parsing.DAGTreeParser, save_csv: bool,
-                              fname: str, plot: bool, return_fig: bool, plot_horizontal: bool,
-                              single_list: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
-        """
-        Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
-        plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
-        Called at the end of every enrichment function \
-        (enrich_randomization, enrich_randomization_parallel, enrich_statistic...).
-
-        """
-        n_plot = min(10, len(res_dict))
-        if single_list:
-            en_score_col = 'log2_enrichment_score'
-            columns = ['go_id', 'term', 'samples', en_score_col, 'pval']
-            title = f"Single-list enrichment for {self.set_name}\ntop {n_plot} most specific GO terms"
-            ylabel = r"$\log_2$(XL-mHG enrichment score)"
-        else:
-            en_score_col = 'log2_fold_enrichment'
-            columns = ['term', 'samples', 'obs', 'exp', en_score_col, 'pval']
-            title = f"Enrichment for {self.set_name}\ntop {n_plot} most specific GO terms"
-            ylabel = r"$\log_2$(Fold Enrichment)"
-        res_df = pd.DataFrame.from_dict(res_dict, orient='index', columns=columns)
-        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr, method='negcorr')
-        res_df['padj'] = padj
-        res_df['significant'] = significant
-        res_df.rename_axis('go_id')
-        res_df['dag_level'] = [dag_tree[ind].level for ind in res_df.index]
-        res_df = res_df.sort_values('dag_level', ascending=False).drop('dag_level', 1)
-        if not return_nonsignificant:
-            res_df = res_df[res_df['significant']]
-
-        if save_csv:
-            self._enrichment_save_csv(res_df, fname)
-
-        if plot:
-            n_plot = min(10, res_df.shape[0])
-            fig = self.plot_enrichment_results(res_df.iloc[:n_plot], fdr, en_score_col=en_score_col,
-                                               name_col=res_df.columns[0], title=title, plot_horizontal=plot_horizontal,
-                                               ylabel=ylabel)
-            if return_fig:
-                return res_df, fig
-        return res_df
-
-    def _enrichment_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, plot: bool,
-                           return_fig: bool = False, plot_horizontal: bool = True):
-        """
-        Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
-        plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
-        Called at the end of every enrichment function \
-        (enrich_randomization, enrich_randomization_parallel, enrich_statistic...).
-
-        """
-        res_df = pd.DataFrame(enriched_list,
-                              columns=['name', 'samples', 'obs', 'exp', 'log2_fold_enrichment', 'pval'])
-        significant, padj = multitest.fdrcorrection(res_df.loc[res_df['pval'].notna(), 'pval'].values, alpha=fdr)
-        res_df.loc[res_df['pval'].notna(), 'padj'] = padj
-        res_df.loc[res_df['padj'].notna(), 'significant'] = significant
-        res_df.set_index('name', inplace=True)
-        if save_csv:
-            self._enrichment_save_csv(res_df, fname)
-
-        if plot:
-            fig = self.plot_enrichment_results(res_df, fdr, title=f"Enrichment for {self.set_name}",
-                                               plot_horizontal=plot_horizontal)
-            if return_fig:
-                return res_df, fig
-        return res_df
+        return runner.run()
 
     def enrich_randomization_parallel(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                                       fdr: float = 0.05, reps: int = 10000,
@@ -901,8 +462,8 @@ class FeatureSet:
                                          biotype_ref_path, save_csv, fname, return_fig, plot_horizontal, random_seed,
                                          parallel=True)
 
-    def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
-                             reps: int = 10000, biotype: str = 'protein_coding',
+    def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+                             alpha: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
@@ -927,8 +488,8 @@ class FeatureSet:
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
-        :type fdr: float between 0 and 1 (default 0.05)
-        :param fdr: Indicates the FDR threshold for significance.
+        :type alpha: float between 0 and 1 (default 0.05)
+        :param alpha: Indicates the FDR threshold for significance.
         :type reps: int larger than 0 (default 10000)
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
@@ -983,37 +544,21 @@ class FeatureSet:
            Example plot of enrich_randomization(plot_horizontal = False)
 
         """
-        attr_ref_df, gene_set, attributes = \
-            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
+        if validation.isinstanceinh(background_genes, FeatureSet):
+            background_genes = background_genes.gene_set
+        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path, save_csv, fname,
+                                                    return_fig, plot_horizontal, self.set_name, parallel,
+                                                    'randomization', biotype, background_genes, biotype_ref_path,
+                                                    single_list=False, random_seed=random_seed, reps=reps)
+        return runner.run()
 
-        # set random seed, if requested
-        if random_seed is not None:
-            assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
-                                                                      f"Value '{random_seed}' is invalid."
-            np.random.seed(random_seed)
-
-        # parallel processing
-        if parallel:
-            with distributed.Client(processes=False) as client:
-                pval_func = FeatureSet._single_enrichment
-                futures = client.map(lambda attr: pval_func(gene_set, attr, attr_ref_df, reps), attributes)
-                enriched_list = client.gather(futures)
-        # no parallel processing
-        else:
-            enriched_list = []
-            for n_attrs, attribute in enumerate(attributes):
-                assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-                enriched_list.append(self._single_enrichment(gene_set, attribute, attr_ref_df, reps))
-                print(f"Finished {n_attrs + 1} attributes out of {len(attributes)}")
-
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
-
-    def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
-                              biotype: str = 'protein_coding',
+    def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+                              alpha: float = 0.05, biotype: str = 'protein_coding',
                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                               attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                               save_csv: bool = False, fname=None, return_fig: bool = False,
-                              plot_horizontal: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                              plot_horizontal: bool = True, parallel: bool = True
+                              ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
@@ -1036,8 +581,8 @@ class FeatureSet:
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
-        :type fdr: float between 0 and 1 (default 0.05)
-        :param fdr: Indicates the FDR threshold for significance.
+        :type alpha: float between 0 and 1 (default 0.05)
+        :param alpha: Indicates the FDR threshold for significance.
         :type attr_ref_path: str or pathlib.Path (default 'predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
         :type biotype_ref_path: str or pathlib.Path (default 'predefined')
@@ -1081,58 +626,13 @@ class FeatureSet:
            Example plot of enrich_hypergeometric(plot_horizontal = False)
 
         """
-        attr_ref_df, gene_set, attributes = \
-            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
-        enriched_list = []
-        bg_size = attr_ref_df.shape[0]
-        de_size = len(gene_set)
-        for k, attribute in enumerate(attributes):
-            srs = attr_ref_df[attribute]
-            go_size = srs.notna().sum()
-            go_de_size = srs.loc[gene_set].notna().sum()
-
-            expected_fraction = go_size / bg_size
-            observed_fraction = go_de_size / de_size
-            log2_fold_enrichment = np.log2(
-                observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-            pval = self._calc_hypergeometric_pval(bg_size=bg_size, go_size=go_size,
-                                                  de_size=de_size, go_de_size=go_de_size)
-            obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
-
-            enriched_list.append(
-                (attribute, de_size, obs, exp, log2_fold_enrichment, pval))
-
-        return self._enrichment_output(enriched_list, fdr, save_csv, fname, True, return_fig, plot_horizontal)
-
-    @staticmethod
-    def _calc_hypergeometric_pval(bg_size: int, go_size: int, de_size: int, go_de_size: int) -> float:
-
-        """
-        Performs a hypergeometric test on the given enrichment set. \
-        Given M genes in the background set, n genes in the test set, \
-        with N genes from the background set belonging to a specific attribute (or 'success') \
-        and X genes from the test set belonging to that attribute. \
-        If we were to randomly draw n genes from the background set (without replacement), \
-        what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) \
-        genes belonging to the given attribute?
-
-        :param bg_size: size of the background set. Usually denoted as 'M'.
-        :type bg_size: positive int
-        :param go_size: number of features in the background set corresponding to the attribute, \
-        or number of successes in the population. Usually denoted as 'n'.
-        :type go_size: positive int
-        :param de_size: size of the differentially-expressed set, or size of test set. usually denoted as 'N'.
-        :type de_size: positive int
-        :param go_de_size: or number of successes in the test set. Usually denoted as 'x' or 'k'. s
-        :type go_de_size: non-negative int
-        :return: p-value of the hypergeometric test.
-        :rtype: float between 0 and 1
-
-        """
-
-        if go_de_size / de_size < go_size / bg_size:
-            return hypergeom.cdf(go_de_size, bg_size, go_size, de_size)
-        return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
+        if validation.isinstanceinh(background_genes, FeatureSet):
+            background_genes = background_genes.gene_set
+        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path, save_csv, fname,
+                                                    return_fig, plot_horizontal, self.set_name, parallel,
+                                                    'hypergeometric', biotype, background_genes, biotype_ref_path,
+                                                    single_list=False)
+        return runner.run()
 
     @staticmethod
     def plot_enrichment_results(df: pd.DataFrame, fdr=0.05, en_score_col: str = 'log2_fold_enrichment',
@@ -1231,7 +731,7 @@ class FeatureSet:
         ax.set_title(title, fontsize=18)
         # add significance asterisks
         for col, sig in zip(bar, enrichment_pvalue):
-            asterisks, fontweight = FeatureSet._get_pval_asterisk(sig, fdr)
+            asterisks, fontweight = enrichment_runner.EnrichmentRunner._get_pval_asterisk(sig, fdr)
             if plot_horizontal:
                 x = col._width
                 y = col.xy[1] + 0.5 * col._height
@@ -1261,67 +761,23 @@ class FeatureSet:
         plt.show()
         return fig
 
-    @staticmethod
-    def _get_pval_asterisk(pval: float, alpha: float = 0.05):
-        fontweight = 'bold'
-        if pval > alpha:
-            asterisks = 'ns'
-            fontweight = 'normal'
-        elif pval < 0.0001:
-            asterisks = u'\u2217' * 4
-        elif pval < 0.001:
-            asterisks = u'\u2217' * 3
-        elif pval < 0.01:
-            asterisks = u'\u2217' * 2
-        else:
-            asterisks = u'\u2217'
-        return asterisks, fontweight
-
     def enrich_non_categorical(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                               fdr: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
+                               alpha: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
                                background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                                plot_log_scale: bool = True, plot_style: str = 'overlap', n_bins: int = 50,
                                save_csv: bool = False, fname=None, return_fig: bool = False
                                ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
-        attr_ref_df, gene_set, attributes = \
-            self._enrichment_setup(biotype, background_genes, attr_ref_path, biotype_ref_path, attributes)
-        enriched_list = []
-        for k, attribute in enumerate(attributes):
-            srs = attr_ref_df[attribute]
-            if not parametric_test:
-                exp, obs = srs.median(), srs[gene_set].median(skipna=False)
-                if np.isnan(obs):
-                    pval = np.nan
-                else:
-                    _, pval = sign_test(srs[gene_set].values, exp)
-            else:
-                exp, obs = srs.mean(), srs[gene_set].mean(skipna=False)
-                if np.isnan(obs):
-                    pval = np.nan
-                else:
-                    _, pval = ttest_1samp(srs[gene_set], popmean=exp)
 
-            enriched_list.append(
-                (attribute, len(gene_set), obs, exp, np.nan, pval))
-
-        results_df = self._enrichment_output(enriched_list, fdr, save_csv, fname, plot=False).drop(
-            'log2_fold_enrichment', axis=1)
-        if results_df['padj'].isna().any():
-            warnings.warn(f"One or more of the genes in the {type(self)} contained NaN values in "
-                          f"{len(results_df['padj'].isna())} of the attributes. "
-                          f"P-values and plots will not be generated for those attributes. ")
-        if return_fig:
-            output = (results_df, [])
-        else:
-            output = results_df
-        for attribute, padj in zip(attributes, results_df['padj']):
-            if not np.isnan(padj):
-                fig = self.plot_enrichment_hist(attribute, gene_set, self.set_name, attr_ref_df[attribute],
-                                                plot_log_scale, plot_style, n_bins, parametric_test, padj)
-                if return_fig:
-                    output[1].append(fig)
-        return output
+        if validation.isinstanceinh(background_genes, FeatureSet):
+            background_genes = background_genes.gene_set
+        runner = enrichment_runner.NonCategoricalEnrichmentRunner(self.gene_set, attributes, alpha, biotype,
+                                                                  background_genes, attr_ref_path,
+                                                                  biotype_ref_path, save_csv, fname,
+                                                                  return_fig, plot_log_scale, plot_style,
+                                                                  n_bins, self.set_name, parallel=False,
+                                                                  parametric_test=parametric_test)
+        return runner.run()
 
     @staticmethod
     def plot_enrichment_hist(attribute: str, gene_set: set, set_name: str, attr_srs: pd.Series,
@@ -1455,18 +911,18 @@ class RankedSet(FeatureSet):
                       "the return type will always be FeatureSet and not RankedSet.")
         return super()._set_ops(others, op)
 
-    def go_enrichment_single_list(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', fdr: float = 0.05,
+    def go_enrichment_single_list(self, organism: Union[str, int], gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                                   propagate_annotations: str = 'elim',
                                   aspects: Union[str, Iterable[str]] = 'any',
                                   evidence_types: Union[str, Iterable[str]] = 'any',
-                                  excluded_evidence_types: Union[str, Iterable[str]] = None,
+                                  excluded_evidence_types: Union[str, Iterable[str]] = (),
                                   databases: Union[str, Iterable[str]] = 'any',
-                                  excluded_databases: Union[str, Iterable[str]] = None,
+                                  excluded_databases: Union[str, Iterable[str]] = (),
                                   qualifiers: Union[str, Iterable[str]] = 'any',
                                   excluded_qualifiers: Union[str, Iterable[str]] = 'not',
                                   return_nonsignificant: bool = False,
                                   save_csv: bool = False, fname=None,
-                                  return_fig: bool = False, plot_horizontal: bool = True
+                                  return_fig: bool = False, plot_horizontal: bool = True, random_seed: int = None
                                   ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
@@ -1490,8 +946,8 @@ class RankedSet(FeatureSet):
         For a full list of legal 'gene_id_type' names, see the UniProt website: \
         https://www.uniprot.org/help/api_idmapping
         :type gene_id_type: str (default='UniProtKB')
-        :type fdr: float between 0 and 1
-        :param fdr: Indicates the FDR threshold for significance.
+        :type alpha: float between 0 and 1
+        :param alpha: Indicates the FDR threshold for significance.
         :param propagate_annotations: determines the propagation method of annotations. If 'elim' (default), #TODO
         :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default 'elim')
         :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
@@ -1558,26 +1014,17 @@ class RankedSet(FeatureSet):
 
            Example plot of go_enrichment_single_list(plot_horizontal = False)
         """
-        goa_df, go_id_to_term_dict = self._go_enrichment_fetch_annotations(organism, gene_id_type, aspects,
-                                                                           evidence_types, excluded_evidence_types,
-                                                                           databases, excluded_databases, qualifiers,
-                                                                           excluded_qualifiers, propagate_annotations)
+        plot_dag = True
+        runner = enrichment_runner.GOEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
+                                                      propagate_annotations, aspects, evidence_types,
+                                                      excluded_evidence_types, databases, excluded_databases,
+                                                      qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
+                                                      fname, return_fig, plot_horizontal, plot_dag, self.set_name,
+                                                      parallel=False, enrichment_func_name='xlmhg', single_list=True)
 
-        print("Calculating enrichment...")
-        goa_df, gene_set = self._enrichment_get_reference('all', self.gene_set, goa_df, '', go_printout=True)
-        goa_df.fillna(False)
-        # TODO: implement propagate_annotations in go_enrichment_single_list()
-        res_dict = {}
-        for k, go_id in enumerate(goa_df.columns):
-            pval, en_score = self._calc_xlmhg_stats(
-                self._xlmhg_index_vector(self.ranked_genes, go_id, goa_df, notna=False), len(self.ranked_genes))
-            log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
-            res_dict[go_id] = [go_id_to_term_dict[go_id], len(self.ranked_genes), log2_en_score, pval]
+        return runner.run()
 
-        return self._go_enrichment_output(res_dict, fdr, return_nonsignificant, None, save_csv, fname, True, return_fig,
-                                          plot_horizontal)
-
-    def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, fdr: float = 0.05,
+    def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, alpha: float = 0.05,
                            attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
                            return_fig: bool = False, plot_horizontal: bool = True):
         """
@@ -1597,8 +1044,8 @@ class RankedSet(FeatureSet):
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
-        :type fdr: float between 0 and 1
-        :param fdr: Indicates the FDR threshold for significance.
+        :type alpha: float between 0 and 1
+        :param alpha: Indicates the FDR threshold for significance.
         :type attr_ref_path: str or pathlib.Path (default 'predefined')
         :param attr_ref_path: path of the Attribute Reference Table from which user-defined attributes will be drawn.
         :type save_csv: bool, default False
@@ -1629,91 +1076,10 @@ class RankedSet(FeatureSet):
            Example plot of enrich_single_list(plot_horizontal = False)
 
         """
-        # TODO: prevent printout of 'XYZ background genes are used' when doing single-list enrichment!!
-        # TODO: look into floating point precision for XL-mHG p-values
-        attr_ref_df, gene_set, attributes = self._enrichment_setup(biotype='all', background_genes=None,
-                                                                   attr_ref_path=attr_ref_path, biotype_ref_path='',
-                                                                   attributes=attributes)
-        if len(gene_set) == len(self.ranked_genes):
-            ranked_genes = self.ranked_genes
-        else:
-            ranked_genes = np.empty((len(gene_set),), dtype=self.ranked_genes.dtype)
-            i = 0
-            for elem in self.ranked_genes:
-                if elem in gene_set:
-                    ranked_genes[i] = elem
-                    i += 1
-
-        enriched_list = []
-        for attribute in attributes:
-            assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
-            pval, en_score = self._calc_xlmhg_stats(self._xlmhg_index_vector(ranked_genes, attribute, attr_ref_df),
-                                                    len(ranked_genes))
-            log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
-            enriched_list.append([attribute, len(ranked_genes), log2_en_score, pval])
-
-        return self._xlmhg_output(enriched_list, fdr, save_csv, fname, return_fig, plot_horizontal)
-
-    def _xlmhg_output(self, enriched_list: list, fdr: float, save_csv: bool, fname: str, return_fig: bool,
-                      plot_horizontal: bool):
-        """
-        Formats the enrich list into a results Dataframe, saves the DataFrame to csv if requested, \
-        plots the enrichment results, and returns either the Dataframe alone or the Dataframe and the Figure object.
-        Called at the end of enrich_single_list().
-
-        """
-        en_score_col = 'log2_enrichment_score'
-        res_df = pd.DataFrame(enriched_list, columns=['name', 'samples', en_score_col, 'pval'])
-        res_df.replace(-np.inf, -np.max(np.abs(res_df['log2_enrichment_score'].values)))
-        significant, padj = multitest.fdrcorrection(res_df['pval'].values, alpha=fdr)
-        res_df['padj'] = padj
-        res_df['significant'] = significant
-        res_df.set_index('name', inplace=True)
-
-        if save_csv:
-            self._enrichment_save_csv(res_df, fname)
-
-        fig = self.plot_enrichment_results(res_df, fdr, en_score_col=en_score_col,
-                                           title=f"Single-list enrichment for {self.set_name}",
-                                           plot_horizontal=plot_horizontal, ylabel=r"$\log_2$(XL-mHG enrichment score)")
-        if return_fig:
-            return res_df, fig
-        return res_df
-
-    @staticmethod
-    def _calc_xlmhg_stats(index_vec: np.ndarray, ranked_genes_len: int):
-        index_vec = np.uint16(index_vec)
-        rev_index_vec = np.uint16([ranked_genes_len - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
-        # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all of the positive
-        # elements in the ranked set. Determined to be the minimum between x_min and ceil(x_frac * k),
-        # where 'k' is the number of 'positive' elements in the ranked set.
-        x_frac = 0.5
-        x_min = 10
-        # L = the lowest possible cutoff (n) to be tested out of the entire list.
-        # Determined to be floor(l_frac * N), where 'N' is total number of elements in the ranked set (ranked_genes_len).
-        l_frac = 0.1
-        # pre-allocate empty array to speed up computation
-        table = np.empty((len(index_vec) + 1, ranked_genes_len - len(index_vec) + 1), dtype=np.longdouble)
-        res_obj_fwd = xlmhg_test(N=ranked_genes_len, indices=index_vec, L=int(np.floor(l_frac * ranked_genes_len)),
-                                 X=min(x_min, int(np.ceil(x_frac * len(index_vec)))), table=table)
-        res_obj_rev = xlmhg_test(N=ranked_genes_len, indices=rev_index_vec, L=int(np.floor(l_frac * ranked_genes_len)),
-                                 X=min(x_min, int(np.ceil(x_frac * len(index_vec)))), table=table)
-
-        if res_obj_fwd.pval <= res_obj_rev.pval:
-            pval, en_score = res_obj_fwd.pval, res_obj_fwd.escore
-        else:
-            pval, en_score = res_obj_rev.pval, 1 / res_obj_rev.escore
-        pval = pval if not np.isnan(pval) else 1
-        en_score = en_score if not np.isnan(en_score) else 1
-        return pval, en_score
-
-    @staticmethod
-    def _xlmhg_index_vector(ranked_genes, attribute, attr_ref_df, notna: bool = True):
-        ranked_srs = attr_ref_df.loc[ranked_genes, attribute]
-        assert ranked_srs.shape[0] == len(ranked_genes)
-        if notna:
-            return np.uint16(np.nonzero(ranked_srs.notna().values)[0])
-        return np.uint16(np.nonzero(ranked_srs.values)[0])
+        runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path, save_csv,
+                                                    fname, return_fig, plot_horizontal, self.set_name, parallel=False,
+                                                    enrichment_func_name='xlmhg', single_list=True)
+        return runner.run()
 
 
 def _fetch_sets(objs: dict, ref: str = 'predefined'):
