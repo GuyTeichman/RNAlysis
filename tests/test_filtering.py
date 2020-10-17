@@ -112,17 +112,6 @@ def test_from_string(monkeypatch):
     assert Filter._from_string("msg", delimiter=',') == ["first-word", "second word", "third. word"]
 
 
-def test_color_gen():
-    gen = Filter._color_gen()
-    preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
-                     'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
-                     'mediumblue', 'black', 'lawngreen']
-    for i in range(150):
-        color = next(gen)
-        assert color in preset_colors or (isinstance(color, np.ndarray) and len(color) == 3 and
-                                          np.max(color) <= 1 and np.min(color) >= 0)
-
-
 def test_countfilter_normalize_to_rpm():
     truth = io.load_csv(r"tests/test_files/test_norm_reads_rpm.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
@@ -1308,12 +1297,12 @@ def test_pipeline_apply_to_with_split_function():
 
     pl_c.remove_last_function()
     pl_c.remove_last_function()
-    pl_c.add_function('split_kmeans', k=[2, 3, 4], random_state=42)
+    pl_c.add_function('split_kmeans', n_clusters=[2, 3, 4], random_state=42)
     pl_c.add_function(CountFilter.filter_top_n, by='cond1', n=5)
     c = CountFilter('tests/test_files/counted.csv')
     c_pipeline_res = pl_c.apply_to(c, inplace=False)
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
-    c_res = c_res.split_kmeans(k=[2, 3, 4], random_state=42)
+    c_res = c_res.split_kmeans(n_clusters=[2, 3, 4], random_state=42)
     c_res_cont = []
     for i in c_res:
         c_res_cont.extend(i)
@@ -1336,7 +1325,7 @@ def test_pipeline_apply_to_multiple_splits():
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.filter_top_n, by='cond2', n=2, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=3, return_probabilities=True)
-    pl_c.add_function(CountFilter.split_kmedoids, k=2, random_state=42)
+    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=2, random_state=42)
     pl_c.add_function(CountFilter.split_by_reads, 15)
 
     c = CountFilter('tests/test_files/counted.csv')
@@ -1345,7 +1334,7 @@ def test_pipeline_apply_to_multiple_splits():
     c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_probabilities=True)
     c_res_cont = []
     for i in c_res:
-        c_res_cont.extend(i.split_kmedoids(k=2, random_state=42))
+        c_res_cont.extend(i.split_kmedoids(n_clusters=2, random_state=42))
     c_res_cont_fin = []
     for i in c_res_cont:
         c_res_cont_fin.extend(i.split_by_reads(15))
@@ -1366,7 +1355,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
-    pl_c.add_function(CountFilter.split_kmedoids, k=[2, 3, 7], random_state=42, n_init=1)
+    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 3, 7], random_state=42, n_init=1)
     pl_c.add_function(CountFilter.sort, by='cond2rep3')
     pl_c.add_function(CountFilter.biotypes, 'long', __biotype_ref__)
 
@@ -1386,7 +1375,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     c_dict['clustergram_1'] = tuple(clustergrams)
     c_res_cont = []
     for obj in c_res:
-        k_out = obj.split_kmedoids(k=[2, 3, 7], random_state=42, n_init=1)
+        k_out = obj.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, random_state=42)
         for k in k_out:
             c_res_cont.extend(k)
     for obj in c_res_cont:
@@ -1411,11 +1400,11 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
 
 def test_split_kmeans_api():
     c = CountFilter('tests/test_files/big_counted.csv')
-    res = c.split_kmeans(k=4)
+    res = c.split_kmeans(n_clusters=4)
     assert isinstance(res, tuple)
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
-    res2 = c.split_kmeans(k=[2, 3, 7], random_state=42, n_init=1, max_iter=10, plot_style='std_bar')
+    res2 = c.split_kmeans(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_state=42, plot_style='std_bar')
     assert isinstance(res2, list)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
@@ -1461,11 +1450,11 @@ def test_split_hdbscan_api():
 def test_split_kmedoids_api():
     c = CountFilter('tests/test_files/big_counted.csv')
     c.filter_top_n(by='cond1rep1', n=2000)
-    res = c.split_kmedoids(k=4, n_init=3)
+    res = c.split_kmedoids(n_clusters=4, n_init=3)
     assert isinstance(res, tuple)
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
-    res2 = c.split_kmedoids(k=[2, 3, 7], random_state=42, n_init=1, max_iter=10, plot_style='std_bar')
+    res2 = c.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_state=42, plot_style='std_bar')
     assert isinstance(res2, list)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
@@ -1483,43 +1472,6 @@ def _test_correct_clustering_split(counts, res, missing_indices: bool = False):
     if not missing_indices:
         assert len(res[0].union(*res[1:])) == counts.shape[0]
         # if all values are clustered, make sure that all clusters sum up to the original object
-
-
-def test_compute_dispersion():
-    clust_with_inertia = namedtuple('Clusterer', ['inertia_'])
-    clust_without_inertia = namedtuple('Clusterer', ['labels_'])
-    data = io.load_csv('tests/test_files/counted.csv', 0).values
-    for k in [1, 3, data.shape[0]]:
-        kmeans = KMeans(k, random_state=42).fit(data)
-        assert CountFilter._compute_dispersion(clust_with_inertia(kmeans.inertia_), data, k) == kmeans.inertia_
-        print(k, kmeans.inertia_, sorted(kmeans.labels_))
-        assert np.isclose(CountFilter._compute_dispersion(clust_without_inertia(kmeans.labels_), data, k),
-                          kmeans.inertia_)
-
-
-def test_parse_k(monkeypatch):
-    c = CountFilter('tests/test_files/counted.csv')
-    args = (KMeans, preprocessing.standardize, 0, {}, 0)
-    monkeypatch.setattr(CountFilter, "_silhouette",
-                        lambda self, clusterer_class, transform, clusterer_kwargs, max_clusters: (6, None))
-    assert c._parse_k('silhouette', *args) == [6]
-
-    monkeypatch.setattr(CountFilter, "_gap_statistic",
-                        lambda self, clusterer_class, transform, random_state, clusterer_kwargs, max_clusters: (
-                            7, None))
-    assert c._parse_k('gap', *args) == [7]
-
-    assert list(c._parse_k(10, *args)) == [10]
-    assert list(c._parse_k([7, 2, 5], *args)) == [7, 2, 5]
-    assert list(c._parse_k(range(2, 9), *args)) == list(range(2, 9))
-    with pytest.raises(AssertionError):
-        print(list(c._parse_k([5, 2, '3'], *args)))
-    with pytest.raises(AssertionError):
-        c._parse_k('a string', *args)
-    with pytest.raises(AssertionError):
-        c._parse_k(1, *args)
-    with pytest.raises(AssertionError):
-        c._parse_k([3, 5, 1], *args)
 
 
 def test_fc_randomization():
@@ -1551,7 +1503,6 @@ def test_filter_save_csv():
     assert np.isclose(DESeqFilter(pth_sig_suffix).df, d_sig.df).all()
     pth_sig.unlink()
     pth_sig_suffix.unlink()
-
 
 
 def test_assert_padj_col():
@@ -1592,8 +1543,4 @@ def test_plot_clustering_api():
 
 
 def test_plot_gap_api():
-    assert False
-
-
-def test_clustering_get_transforms():
     assert False

@@ -1,5 +1,5 @@
 import pytest
-from rnalysis.utils.preprocessing import *
+from rnalysis.utils.generic import *
 import numpy as np
 
 
@@ -26,3 +26,14 @@ def test_standard_box_cos():
     assert np.isclose(res.mean(axis=0), 0).all()
     assert np.isclose(res.std(axis=0), 1).all()
     assert not np.isclose(res, standardize(data)).all()
+
+
+def test_color_generator():
+    gen = color_generator()
+    preset_colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:orange', 'tab:purple', 'tab:brown', 'tab:pink',
+                     'tab:gray', 'tab:olive', 'tab:cyan', 'gold', 'maroon', 'mediumslateblue', 'fuchsia',
+                     'mediumblue', 'black', 'lawngreen']
+    for i in range(150):
+        color = next(gen)
+        assert color in preset_colors or (isinstance(color, np.ndarray) and len(color) == 3 and
+                                          np.max(color) <= 1 and np.min(color) >= 0)
