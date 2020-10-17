@@ -350,7 +350,7 @@ class EnrichmentRunner:
         for n_attrs, attribute in enumerate(self.attributes):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             result.append(self.enrichment_func(attribute, **self.pvalue_kwargs))
-            print(f"Finished {n_attrs + 1} attributes out of {len(self.attributes)}")
+            print(f"Finished {n_attrs + 1} attributes out of {len(self.attributes)}", end='\r')
         return result
 
     def _calculate_enrichment_parallel(self) -> list:
