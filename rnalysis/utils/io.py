@@ -162,11 +162,15 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
 def _ensmbl_lookup_post(gene_ids: Tuple[str]) -> dict:
     url = 'https://rest.ensembl.org/lookup/id'
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    data = {"ids": parsing.data_to_list(gene_ids)}
-    req = requests.post(url, headers=headers, data=data.__repr__().replace("'", '"'))
-    if not req.ok:
-        req.raise_for_status()
-    return req.json()
+    data_chunks = parsing.partition_list(gene_ids, 1000)
+    output = {}
+    for chunk in data_chunks:
+        data = {"ids": parsing.data_to_list(chunk)}
+        req = requests.post(url, headers=headers, data=data.__repr__().replace("'", '"'))
+        if not req.ok:
+            req.raise_for_status()
+        output.update(req.json())
+    return output
 
 
 def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
