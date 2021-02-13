@@ -1,5 +1,5 @@
-numpy>=1.18.1
-pandas>=1.0.1
+numpy>=1.19.5
+pandas>=1.2.0
 matplotlib>=3.3.1
 seaborn>=0.10.0
 statsmodels>=0.12.0
@@ -16,5 +16,5 @@ numba>=0.51.0
 pairwisedist>=1.2.0
 requests>=2.24.0
 pydot
-distributed>=2.24.0
-dask>=2.24.0
+joblib>=0.17.0
+tqdm>=4.51.0
