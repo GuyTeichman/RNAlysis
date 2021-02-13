@@ -850,7 +850,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return self._go_classic_over_chunk(self.attributes)
 
     def _go_classic_pvalues_parallel(self) -> dict:
-        # split GO terms into chunks of size 100 to reduce overhead of parallel jobs
+        # split GO terms into chunks of size 2000 to reduce overhead of parallel jobs
         return self._parallel_over_grouping(self._go_classic_over_chunk, parsing.partition_list(self.attributes, 2000))
 
     def _go_classic_over_chunk(self, chunk: Union[list, tuple]):
