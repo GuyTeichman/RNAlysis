@@ -2,6 +2,29 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from typing import Union
+from scipy.special import comb
+from functools import lru_cache
+from tqdm.auto import tqdm
+from joblib import Parallel
+
+
+class ProgressParallel(Parallel):
+    def __init__(self, use_tqdm=True, total=None, desc: str = '', unit: str = 'it', *args, **kwargs):
+        self._use_tqdm = use_tqdm
+        self._total = total
+        self._desc = desc
+        self._unit = unit
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        with tqdm(disable=not self._use_tqdm, total=self._total, desc=self._desc, unit=self._unit) as self._pbar:
+            return Parallel.__call__(self, *args, **kwargs)
+
+    def print_progress(self):
+        if self._total is None:
+            self._pbar.total = self.n_dispatched_tasks
+        self._pbar.n = self.n_completed_tasks
+        self._pbar.refresh()
 
 
 def standard_box_cox(data: np.ndarray):
