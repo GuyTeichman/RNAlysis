@@ -21,7 +21,7 @@ from pathlib import Path
 from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
-import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
 from rnalysis.utils import io, parsing, ref_tables, validation
@@ -355,18 +355,15 @@ class EnrichmentRunner:
 
     def _calculate_enrichment_serial(self) -> list:
         result = []
-        for n_attrs, attribute in enumerate(self.attributes):
+        for attribute in tqdm(self.attributes, desc="Calculating enrichment", unit='attribute'):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             result.append(self.enrichment_func(attribute, **self.pvalue_kwargs))
-            print(f"Finished {n_attrs + 1} attributes out of {len(self.attributes)}", end='\r')
+            # print(f"Finished {n_attrs + 1} attributes out of {len(self.attributes)}", end='\r')
         return result
 
     def _calculate_enrichment_parallel(self) -> list:
-        with distributed.Client(processes=False) as client:
-            enrichment_func = self.enrichment_func
-            futures = client.map(
-                lambda attribute: enrichment_func(attribute, **self.pvalue_kwargs), self.attributes, pure=False)
-            result = client.gather(futures)
+        result = generic.ProgressParallel(n_jobs=-1, desc="Calculating enrichment", unit='attribute')(
+            joblib.delayed(self.enrichment_func)(attribute, **self.pvalue_kwargs) for attribute in self.attributes)
         return result
 
     def format_results(self, unformatted_results_list: list):
