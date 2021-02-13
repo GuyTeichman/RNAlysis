@@ -74,3 +74,8 @@ def color_generator():
         yield color
     while True:
         yield np.random.random(3)
+
+
+@lru_cache(maxsize=2 ** 16)
+def combination(a: int, b: int) -> int:
+    return int(comb(a, b))
