@@ -95,6 +95,8 @@ def data_to_list(data: Any) -> list:
         return list(data)
     elif isinstance(data, (int, float, bool, str)):
         return [data]
+    elif data is None:
+        return [None]
     else:
         try:
             return list(data)
@@ -108,7 +110,9 @@ def data_to_tuple(data: Any) -> tuple:
     elif isinstance(data, (set, list, np.ndarray)):
         return tuple(data)
     elif isinstance(data, (int, float, bool, str)):
-        return (data,)
+        return data,
+    elif data is None:
+        return None,
     else:
         try:
             return tuple(data)
@@ -123,6 +127,8 @@ def data_to_set(data: Any) -> set:
         return set(data)
     elif isinstance(data, (int, float, bool, str)):
         return {data}
+    elif data is None:
+        return {None}
     else:
         try:
             return set(data)
