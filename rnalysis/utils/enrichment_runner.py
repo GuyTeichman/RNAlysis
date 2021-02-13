@@ -11,20 +11,14 @@ import matplotlib.pyplot as plt
 import numba
 import numpy as np
 import pandas as pd
-import numpy as np
-import numba
-from functools import lru_cache
-from typing import Dict, Iterable, List, Set, Tuple, Union, Collection
-import distributed
 import statsmodels.stats.multitest as multitest
-from pathlib import Path
 from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
-from rnalysis.utils import io, parsing, ref_tables, validation
+from rnalysis.utils import io, parsing, ref_tables, validation, generic
 
 logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
 
