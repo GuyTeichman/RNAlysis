@@ -662,7 +662,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  background_set: set = None, biotype_ref_path: str = None, single_list: bool = False,
                  random_seed: int = None, **pvalue_kwargs):
         self.dag_tree: parsing.DAGTree = io.fetch_go_basic()
-        self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = pd.DataFrame(),
+        self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
         self.organism = organism
         self.taxon_id = None
         self.gene_id_type = gene_id_type
