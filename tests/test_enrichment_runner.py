@@ -212,10 +212,10 @@ def test_classic_pvals(monkeypatch):
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
                            False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
     e.annotation_df = goa_df
-    e.mod_annotation_df = goa_df
+    e.mod_annotation_dfs = goa_df,
     e.attributes = list(goa_df.columns)
 
-    res = pd.DataFrame.from_dict(e._go_classic_over_chunk(tuple(goa_df.columns)), orient='index',
+    res = pd.DataFrame.from_dict(e._go_classic_over_chunk(tuple(goa_df.columns), 0), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
     _comp_go_res_df(res, truth)
 
@@ -232,8 +232,9 @@ def test_elim_pvals(monkeypatch):
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
                            None, False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
     e.annotation_df = goa_df
-    e.mod_annotation_df = goa_df.copy(deep=True)
+    e.mod_annotation_dfs = goa_df.copy(deep=True),
     e.attributes = list(goa_df.columns)
+    e.attributes_set = set(e.attributes)
 
     res = pd.DataFrame.from_dict(e._go_elim_on_aspect('all'), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
@@ -253,8 +254,9 @@ def test_weight_pvals(monkeypatch):
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
                            None, False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
     e.annotation_df = goa_df
-    e.mod_annotation_df = goa_df.copy(deep=True)
+    e.mod_annotation_dfs = goa_df.copy(deep=True),
     e.attributes = list(goa_df.columns)
+    e.attributes_set = set(e.attributes)
 
     res = pd.DataFrame.from_dict(e._go_weight_on_aspect('all'), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
@@ -273,8 +275,9 @@ def test_allm_pvals(monkeypatch):
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
                            None, False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
     e.annotation_df = goa_df
-    e.mod_annotation_df = goa_df.copy(deep=True)
+    e.mod_annotation_dfs = goa_df.copy(deep=True),
     e.attributes = list(goa_df.columns)
+    e.attributes_set = set(e.attributes)
 
     res = pd.DataFrame.from_dict(e._go_allm_pvalues_parallel(), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()

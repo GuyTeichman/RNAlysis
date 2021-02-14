@@ -631,7 +631,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                   label=label_obs)
 
         # add significance notation
-        asterisks, fontweight = self._get_pval_asterisk(self.results.loc[attribute, 'padj'], self.alpha)
+        asterisks, fontweight = self._get_pval_asterisk(self.results.at[attribute, 'padj'], self.alpha)
         ax.vlines([x_exp, x_obs], ymin=max_y_val * 1.12, ymax=max_y_val * 1.16, color='k', linewidth=1)
         ax.hlines(max_y_val * 1.16, xmin=min(x_exp, x_obs), xmax=max(x_exp, x_obs), color='k', linewidth=1)
         ax.text(np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center',
@@ -662,7 +662,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  background_set: set = None, biotype_ref_path: str = None, single_list: bool = False,
                  random_seed: int = None, **pvalue_kwargs):
         self.dag_tree: parsing.DAGTree = io.fetch_go_basic()
-        self.mod_annotation_df: pd.DataFrame = pd.DataFrame()
+        self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = pd.DataFrame(),
         self.organism = organism
         self.taxon_id = None
         self.gene_id_type = gene_id_type
@@ -676,6 +676,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.excluded_qualifiers = excluded_qualifiers
         self.return_nonsignificant = return_nonsignificant
         self.plot_go_network = plot_go_network
+        self.attributes_set: set = set()
         super().__init__(genes, [], alpha, '', save_csv, fname, return_fig, plot_horizontal, set_name, parallel,
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_list, random_seed,
                          **pvalue_kwargs)
@@ -773,6 +774,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def fetch_attributes(self):
         self.attributes = parsing.data_to_list(self.annotation_df.columns)
+        self.attributes_set = parsing.data_to_set(self.attributes)
 
     def _correct_multiple_comparisons(self):
         significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
@@ -816,13 +818,13 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _calculate_enrichment_serial(self) -> dict:
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
-            self.mod_annotation_df = self.annotation_df
+            self.mod_annotation_dfs = (self.annotation_df,)
             result = self._go_classic_pvalues_serial()
         elif self.propagate_annotations == 'elim':
-            self.mod_annotation_df = self.annotation_df.copy(deep=True)
+            self.mod_annotation_dfs = (self.annotation_df.copy(deep=True),)
             result = self._go_elim_pvalues_serial()
         elif self.propagate_annotations == 'weight':
-            self.mod_annotation_df = self.annotation_df.astype("float64", copy=True)
+            self.mod_annotation_dfs = (self.annotation_df.astype("float64", copy=True),)
             result = self._go_weight_pvalues_serial()
         elif self.propagate_annotations == 'all.m':
             result = self._go_allm_pvalues_serial()
@@ -832,13 +834,17 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _calculate_enrichment_parallel(self) -> dict:
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
-            self.mod_annotation_df = self.annotation_df
+            self.mod_annotation_dfs = (self.annotation_df,)
             result = self._go_classic_pvalues_parallel()
         elif self.propagate_annotations == 'elim':
-            self.mod_annotation_df = self.annotation_df.copy(deep=True)
+            self.mod_annotation_dfs = tuple(
+                self.annotation_df.loc[:, self._go_level_iterator(namespace)].copy(deep=True) for namespace in
+                self.dag_tree.namespaces)
             result = self._go_elim_pvalues_parallel()
         elif self.propagate_annotations == 'weight':
-            self.mod_annotation_df = self.annotation_df.astype("float64", copy=True)
+            self.mod_annotation_dfs = tuple(
+                self.annotation_df.loc[:, self._go_level_iterator(namespace)].astype("float64", copy=True) for namespace
+                in self.dag_tree.namespaces)
             result = self._go_weight_pvalues_parallel()
         elif self.propagate_annotations == 'all.m':
             result = self._go_allm_pvalues_parallel()
@@ -851,39 +857,40 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _go_classic_pvalues_parallel(self) -> dict:
         # split GO terms into chunks of size 2000 to reduce overhead of parallel jobs
-        return self._parallel_over_grouping(self._go_classic_over_chunk, parsing.partition_list(self.attributes, 2000))
+        partitioned = parsing.partition_list(self.attributes, 2000)
+        return self._parallel_over_grouping(self._go_classic_over_chunk, partitioned,
+                                            (0 for _ in range(len(partitioned))))
 
-    def _go_classic_over_chunk(self, chunk: Union[list, tuple]):
-        return {go_id: self.enrichment_func(go_id, **self.pvalue_kwargs) for go_id in chunk}
+    def _go_classic_over_chunk(self, chunk: Union[list, tuple], mod_df_ind: int):
+        return {go_id: self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs) for go_id in chunk}
 
     def _go_elim_pvalues_serial(self) -> dict:
         result = self._go_elim_on_aspect('all')
         return result
 
-    def _parallel_over_grouping(self, func, grouping: Iterable) -> dict:
-        with distributed.Client(processes=True) as client:
-            futures = client.map(func, grouping, pure=False)
-            result_dicts = client.gather(futures)
-        # merge the outputs from all aspects into one dictionary
-        result = result_dicts[0]
-        if len(result_dicts) > 1:
-            for d in result_dicts[1:]:
-                result.update(d)
+    def _parallel_over_grouping(self, func, grouping: Iterable, mod_df_inds: Iterable[int]) -> dict:
+        result_dicts = generic.ProgressParallel(n_jobs=-1, max_nbytes=None)(
+            joblib.delayed(func)(group, ind) for group, ind in zip(grouping, mod_df_inds))
+        result = {}
+        for d in result_dicts:
+            result.update(d)
         return result
 
     def _go_elim_pvalues_parallel(self) -> dict:
-        return self._parallel_over_grouping(self._go_elim_on_aspect, parsing.data_to_tuple(self.dag_tree.namespaces))
+        go_aspects = parsing.data_to_tuple(self.dag_tree.namespaces)
+        return self._parallel_over_grouping(self._go_elim_on_aspect, go_aspects, range(len(go_aspects)))
 
-    def _go_elim_on_aspect(self, go_aspect: str) -> dict:
+    def _go_elim_on_aspect(self, go_aspect: str, mod_df_ind: int = 0) -> dict:
         result_dict = {}
         marked_nodes = {}
         for go_id in self._go_level_iterator(go_aspect):
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
-                self.mod_annotation_df.loc[marked_nodes[go_id], go_id] = False
-            result_dict[go_id] = self.enrichment_func(go_id, **self.pvalue_kwargs)
+                self.mod_annotation_dfs[mod_df_ind].loc[marked_nodes[go_id], go_id] = False
+            result_dict[go_id] = self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs)
             # if current GO ID is significantly ENRICHED, mark its ancestors
             if result_dict[go_id][-1] <= self.alpha and result_dict[go_id][-2] > 0:
-                new_marked_genes = set(self.mod_annotation_df[go_id][self.mod_annotation_df[go_id]].index)
+                new_marked_genes = set(
+                    self.mod_annotation_dfs[mod_df_ind][go_id][self.mod_annotation_dfs[mod_df_ind][go_id]].index)
                 for ancestor in self.dag_tree.upper_induced_graph_iter(go_id):
                     if ancestor not in marked_nodes:
                         marked_nodes[ancestor] = set()
@@ -894,14 +901,15 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return self._go_weight_on_aspect('all')
 
     def _go_weight_pvalues_parallel(self) -> dict:
-        return self._parallel_over_grouping(self._go_weight_on_aspect, parsing.data_to_tuple(self.dag_tree.namespaces))
+        go_aspects = parsing.data_to_tuple(self.dag_tree.namespaces)
+        return self._parallel_over_grouping(self._go_weight_on_aspect, go_aspects, range(len(go_aspects)))
 
-    def _go_weight_on_aspect(self, aspect: str) -> dict:
+    def _go_weight_on_aspect(self, aspect: str, mod_df_ind: int = 0) -> dict:
         result_dict = {}
         weights = collections.defaultdict(lambda: 1)  # default weight for all nodes is 1
         for go_id in self._go_level_iterator(aspect):
-            children = {child for child in self.dag_tree[go_id].get_children() if child in self.attributes}
-            self._compute_term_sig(go_id, children, weights, result_dict)
+            children = {child for child in self.dag_tree[go_id].get_children() if child in self.attributes_set}
+            self._compute_term_sig(mod_df_ind, go_id, children, weights, result_dict)
         return result_dict
 
     def _go_allm_pvalues_serial(self):
@@ -930,15 +938,17 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _go_level_iterator(self, namespace: str = 'all'):
         for go_id in self.dag_tree.level_iter(namespace):
-            if go_id in self.attributes:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
+            if go_id in self.attributes_set:  # skip GO IDs that have no annotations whatsoever (direct or inherited)
                 yield go_id
 
-    def _compute_term_sig(self, go_id: str, children: set, weights: dict, result: dict, tolerance: float = 10 ** -50):
+    def _compute_term_sig(self, mod_df_ind: int, go_id: str, children: set, weights: dict, result: dict,
+                          tolerance: float = 10 ** -50):
         # calculate stats OR update p-value for go_id
         if go_id in result:
-            result[go_id][-1] = self._calc_fisher_pval(*self._get_hypergeometric_parameters(go_id))
+            result[go_id][-1] = self._calc_fisher_pval(
+                *self._get_hypergeometric_parameters(go_id, mod_df_ind=mod_df_ind))
         else:
-            result[go_id] = self._fisher_enrichment(go_id)
+            result[go_id] = self._fisher_enrichment(go_id, mod_df_ind=mod_df_ind)
         # if go_id has no children left to compare to, stop the calculation here
         if len(children) == 0:
             return
@@ -961,25 +971,26 @@ class GOEnrichmentRunner(EnrichmentRunner):
         # CASE 1: if go_id is more significant than all children, re-weigh the children and recompute their stats
         if len(sig_children) == 0:
             for child in children:
-                self.mod_annotation_df.loc[self.annotation_df[go_id], child] *= weights[child]
-                result[child][-1] = self._calc_fisher_pval(*self._get_hypergeometric_parameters(child))
+                self.mod_annotation_dfs[mod_df_ind].loc[self.annotation_df[go_id], child] *= weights[child]
+                result[child][-1] = self._calc_fisher_pval(
+                    *self._get_hypergeometric_parameters(child, mod_df_ind=mod_df_ind))
             return
 
         # CASE 2: if some children are more significant than parent, re-weigh ancesctors (including 'go_id'),
         # and then recompute stats for go_id
         inclusive_ancestors = {ancestor for ancestor in
                                itertools.chain([go_id], self.dag_tree.upper_induced_graph_iter(go_id)) if
-                               ancestor in self.attributes}
+                               ancestor in self.attributes_set}
         for sig_child in sig_children:
             for inclusive_ancestor in inclusive_ancestors:
-                self.mod_annotation_df.loc[self.annotation_df[sig_child], inclusive_ancestor] *= (
+                self.mod_annotation_dfs[mod_df_ind].loc[self.annotation_df[sig_child], inclusive_ancestor] *= (
                     1 / weights[sig_child])
         # re-run compute_term_sig, only with the children which were not more significant than their parents
-        self._compute_term_sig(go_id, children.difference(sig_children), weights, result, tolerance)
+        self._compute_term_sig(mod_df_ind, go_id, children.difference(sig_children), weights, result, tolerance)
 
-    def _randomization_enrichment(self, go_id: str, reps: int) -> list:
+    def _randomization_enrichment(self, go_id: str, reps: int, mod_df_ind: int = None) -> list:
         go_name = self.dag_tree[go_id].name
-        bg_array = self.mod_annotation_df[go_id].values
+        bg_array = self.mod_annotation_dfs[mod_df_ind][go_id].values
         bg_size = self.annotation_df.shape[0]
         n = len(self.gene_set)
         expected_fraction = (bg_size - self.annotation_df[go_id].sum()) / bg_size
@@ -989,7 +1000,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_array, reps, mod_observed_fraction)
         return [go_name, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
-    def _xlmhg_enrichment(self, go_id: str) -> list:
+    def _xlmhg_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
         go_name = self.dag_tree[go_id].name
         res = super()._xlmhg_enrichment(go_id)
         res[0] = go_name
@@ -1000,8 +1011,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         assert ranked_srs.shape[0] == len(self.ranked_genes)
         return np.uint16(np.nonzero(ranked_srs.values)[0])
 
-    def _hypergeometric_enrichment(self, go_id: str) -> list:
-        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id)
+    def _hypergeometric_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
+        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id, mod_df_ind=mod_df_ind)
 
         go_name = self.dag_tree[go_id].name
         expected_fraction = self.annotation_df[go_id].sum() / bg_size
@@ -1011,8 +1022,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
         return [go_name, de_size, obs, exp, log2_fold_enrichment, pval]
 
-    def _fisher_enrichment(self, go_id: str) -> list:
-        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id)
+    def _fisher_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
+        bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id, mod_df_ind)
 
         expected_fraction = self.annotation_df[go_id].sum() / bg_size
         observed_fraction = self.annotation_df.loc[self.gene_set, go_id].sum() / de_size
@@ -1021,9 +1032,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
         obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
         return [self.dag_tree[go_id].name, de_size, obs, exp, log2_fold_enrichment, pval]
 
-    def _get_hypergeometric_parameters(self, go_id: str) -> Tuple[int, int, int, int]:
-        bg_size = self.mod_annotation_df.shape[0]
+    def _get_hypergeometric_parameters(self, go_id: str, mod_df_ind: int = None) -> Tuple[int, int, int, int]:
+        bg_size = self.mod_annotation_dfs[mod_df_ind].shape[0]
         de_size = len(self.gene_set)
-        go_size = int(np.ceil(self.mod_annotation_df[go_id].sum()))
-        go_de_size = int(np.ceil(self.mod_annotation_df.loc[self.gene_set, go_id].sum()))
+        go_size = int(np.ceil(self.mod_annotation_dfs[mod_df_ind][go_id].sum()))
+        go_de_size = int(np.ceil(self.mod_annotation_dfs[mod_df_ind].loc[self.gene_set, go_id].sum()))
         return bg_size, de_size, go_size, go_de_size

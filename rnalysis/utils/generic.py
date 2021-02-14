@@ -9,6 +9,9 @@ from joblib import Parallel
 
 
 class ProgressParallel(Parallel):
+    # tqdm progress bar for parallel tasks based upon:
+    # https://stackoverflow.com/questions/37804279/how-can-we-use-tqdm-in-a-parallel-execution-with-joblib/50925708
+    # answer by 'user394430'
     def __init__(self, use_tqdm=True, total=None, desc: str = '', unit: str = 'it', *args, **kwargs):
         self._use_tqdm = use_tqdm
         self._total = total
