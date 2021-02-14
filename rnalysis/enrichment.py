@@ -4,7 +4,6 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
-import collections
 import itertools
 import types
 import warnings
@@ -17,7 +16,6 @@ import numpy as np
 import pandas as pd
 import upsetplot
 from matplotlib.cm import ScalarMappable
-from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 
 from rnalysis.filtering import Filter
 from rnalysis.utils import io, parsing, ref_tables, validation, enrichment_runner

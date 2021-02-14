@@ -13,11 +13,9 @@ When you save filtered/modified data, its new file name will include by default 
 import os
 import types
 import warnings
-from itertools import tee
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple, Union
 
-import hdbscan
 import matplotlib.pyplot as plt
 import numba
 import numpy as np
@@ -25,9 +23,7 @@ import pairwisedist as pwdist
 import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
-from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import pairwise_distances, silhouette_score
 
 from rnalysis.utils import clustering, io, parsing, generic, ref_tables, validation
 
