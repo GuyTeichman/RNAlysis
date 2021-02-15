@@ -207,6 +207,15 @@ def infer_taxon_id_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
 
 @lru_cache(maxsize=32, typed=False)
 def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
+    """
+    Maps a given query (taxon name or NCBI Taxon ID) to the best-matching taxon from the NCBI taxonomy database. \
+    Mapping is done through UniProt Taxonomy.
+
+    :param taxon_name: a partial/full taxon name (str) or NCBI Taxon ID (int) to map
+    :type taxon_name: int or str
+    :return: a tuple of the best-matching taxon's NCBI Taxon ID and full scientific name.
+    :rtype: Tuple[int ,str]
+    """
     url = 'https://www.uniprot.org/taxonomy/?'
 
     params = {
@@ -234,9 +243,25 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
 
 
 class GeneIDTranslator:
+    """
+    A dictionary-like class used for mapping gene IDs from one type to another \
+    (for example, from UniProtKB Accession to Entrez Gene ID), or from one type to itself.
+
+
+    **Attributes**
+
+    mapping_dict: dict or None
+        The underlying dictionary that contains mapping from one gene ID type to another. \
+        If mapping_dict is None, the GeneIDTranslator will automatically map any given gene ID to itself.
+    """
     __slots__ = {'mapping_dict': 'dictionary mapping gene IDs from one type to another'}
 
     def __init__(self, mapping_dict: Union[dict, None] = None):
+        """
+        :param mapping_dict: a dictionary mapping gene IDs from one type to another. \
+        If mappping_dict is None, gene IDs will be automatically mapped to themselves.
+        :type mapping_dict: dict or None (default None)
+        """
         self.mapping_dict = mapping_dict
 
     def __getitem__(self, key):
@@ -322,7 +347,13 @@ def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'unipr
 
 
 @lru_cache(maxsize=2)
-def fetch_go_basic():
+def fetch_go_basic() -> parsing.DAGTree:
+    """
+    Fetches the basic Gene Ontology OBO file from the geneontology.org website ('go-basic.obo') and parses it into a \
+    DAGTree data structure.
+    :return: a parsed DAGTree for gene ontology propagation and visualization.
+    :rtype: parsing.DAGTree
+    """
     url = 'http://current.geneontology.org/ontology/go-basic.obo'
     with requests.get(url, stream=True) as obo_stream:
         return parsing.DAGTree(obo_stream.iter_lines())
