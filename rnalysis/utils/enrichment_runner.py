@@ -853,13 +853,16 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return result
 
     def _go_classic_pvalues_serial(self) -> dict:
-        return self._go_classic_over_chunk(self.attributes)
+        return self._go_classic_over_chunk(self.attributes, 0)
 
     def _go_classic_pvalues_parallel(self) -> dict:
-        # split GO terms into chunks of size 2000 to reduce overhead of parallel jobs
-        partitioned = parsing.partition_list(self.attributes, 2000)
+        # split GO terms into chunks of size 1000 to reduce overhead of parallel jobs
+        partitioned = parsing.partition_list(self.attributes, 1000)
+        # max_nbytes is set to None to prevent joblib from turning the mod_annotation_df into a memory map.
+        # since this algorithm modifies the dataframe while running, turning the dataframe into a memory map
+        # would raise an exception ("...trying to write into a read-only location...").
         return self._parallel_over_grouping(self._go_classic_over_chunk, partitioned,
-                                            (0 for _ in range(len(partitioned))))
+                                            (0 for _ in range(len(partitioned))), max_nbytes=None)
 
     def _go_classic_over_chunk(self, chunk: Union[list, tuple], mod_df_ind: int):
         return {go_id: self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs) for go_id in chunk}
@@ -868,8 +871,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
         result = self._go_elim_on_aspect('all')
         return result
 
-    def _parallel_over_grouping(self, func, grouping: Iterable, mod_df_inds: Iterable[int]) -> dict:
-        result_dicts = generic.ProgressParallel(n_jobs=-1, max_nbytes=None)(
+    def _parallel_over_grouping(self, func, grouping: Iterable, mod_df_inds: Iterable[int],
+                                max_nbytes: Union[str, None] = '1M') -> dict:
+        result_dicts = generic.ProgressParallel(n_jobs=-1, max_nbytes=max_nbytes)(
             joblib.delayed(func)(group, ind) for group, ind in zip(grouping, mod_df_inds))
         result = {}
         for d in result_dicts:
@@ -878,7 +882,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _go_elim_pvalues_parallel(self) -> dict:
         go_aspects = parsing.data_to_tuple(self.dag_tree.namespaces)
-        return self._parallel_over_grouping(self._go_elim_on_aspect, go_aspects, range(len(go_aspects)))
+        # max_nbytes is set to None to prevent joblib from turning the mod_annotation_df into a memory map.
+        # since this algorithm modifies the dataframe while running, turning the dataframe into a memory map
+        # would raise an exception ("...trying to write into a read-only location...").
+        return self._parallel_over_grouping(self._go_elim_on_aspect, go_aspects, range(len(go_aspects)),
+                                            max_nbytes=None)
 
     def _go_elim_on_aspect(self, go_aspect: str, mod_df_ind: int = 0) -> dict:
         result_dict = {}
