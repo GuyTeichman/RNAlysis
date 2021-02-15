@@ -78,8 +78,8 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
                               excluded_databases: Union[str, Iterable[str]] = None,
                               qualifiers: Union[str, Iterable[str]] = 'any',
                               excluded_qualifiers: Union[str, Iterable[str]] = None,
-                              iter_size: int = 200000):
-    url = 'http://golr-aux.geneontology.io/solr/select?'
+                              iter_size: int = 10000):
+    # define constants
     legal_aspects = {'P', 'F', 'C'}
     aspects_dict = {'biological_process': 'P', 'molecular_function': 'F', 'cellular_component': 'C',
                     'biological process': 'P', 'molecular function': 'F', 'cellular component': 'C'}
@@ -94,9 +94,8 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
                           'curator': curator_evidence,
                           'electronic': electronic_evidence}
     legal_evidence = set.union(*[parsing.data_to_set(s) for s in evidence_type_dict.values()])
-
     legal_qualifiers = {'not', 'contributes_to', 'colocalizes_with'}
-
+    # parse aspects, databases, qualifiers
     aspects = parsing.parse_go_aspects(aspects, aspects_dict)
     databases = parsing.data_to_set(databases)
     qualifiers = () if qualifiers == 'any' else parsing.data_to_set(qualifiers)
@@ -110,7 +109,7 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
                               chain(qualifiers, excluded_qualifiers)),
                              (legal_aspects, legal_evidence, legal_qualifiers)):
         for item in field:
-            assert item in legals, f"Illegal item {item}. Legal items are {legals}.."
+            assert item in legals, f"Illegal item {item}. Legal items are {legals}."
     # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
     query = [f'document_category:"annotation"',
              f'taxon:"NCBITaxon:{taxon_id}"',
@@ -136,26 +135,37 @@ def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] 
         "fl": "source,bioentity_internal_id,annotation_class"  # fields
     }
     # get number of annotations found in the query
-    req = requests.get(url, params=params)
-    if not req.ok:
-        req.raise_for_status()
-    n_annotations = json.loads(req.text)['response']['numFound']
-
+    output = _golr_request(params)
+    n_annotations = json.loads(output)['response']['numFound']
     print(f"Fetching {n_annotations} annotations...")
 
     # fetch all annotations in batches of size iter_size, and yield them one-by-one
     start = 0
     max_iters = n_annotations // iter_size + 1
     params['omitHeader'] = "true"  # omit the header from the json response
+    param_dicts_list = []
+
     for i in range(max_iters):
         params['start'] = start
         start += iter_size
         params['rows'] = iter_size if i < max_iters - 1 else n_annotations % iter_size
-        req = requests.get(url, params=params)
-        if not req.ok:
-            req.raise_for_status()
-        for record in json.loads(req.text)['response']['docs']:
+        param_dicts_list.append({key: val for key, val in zip(params.keys(), params.values())})
+
+    processes = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for param_dict in param_dicts_list:
+            processes.append(executor.submit(_golr_request, param_dict))
+    for task in concurrent.futures.as_completed(processes):
+        for record in json.loads(task.result())['response']['docs']:
             yield record
+
+
+def _golr_request(params: dict) -> str:
+    url = 'http://golr-aux.geneontology.io/solr/select?'
+    req = requests.get(url, params=params)
+    if not req.ok:
+        req.raise_for_status()
+    return req.text
 
 
 @lru_cache(maxsize=32, typed=False)
