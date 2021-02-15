@@ -143,7 +143,7 @@ def sparse_dict_to_bool_df(sparse_dict: Dict[str, set]) -> pd.DataFrame:
         columns.update(val)
     df = pd.DataFrame(np.zeros((len(rows), len(columns)), dtype=bool), columns=columns, index=rows)
     for key in sparse_dict:
-        df.loc[key, sparse_dict[key]] = True
+        df.at[key, sparse_dict[key]] = True
     return df
 
 
