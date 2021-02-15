@@ -69,7 +69,7 @@ def test_parse_go_id():
 def test_dag_tree_parser_api():
     file = 'tests/test_files/go_mini.obo'
     with open(file, 'rb') as f:
-        dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
+        dag_tree = DAGTree(f, ('is_a', 'part_of', 'regulates'))
     with open(file, 'rb') as f:
         dag_tree._parse_file(f)
 
@@ -84,7 +84,7 @@ def test_dag_tree_parser_construction():
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
 
     assert dag_tree.data_version == data_version_truth
-    assert dag_tree.parent_relationship_types == ['is_a', 'part_of', 'regulates']
+    assert dag_tree.parent_relationship_types == ('is_a', 'part_of', 'regulates')
 
     assert dag_tree.alt_ids == {'GO:0034619': 'GO:0006040'}
     assert dag_tree['GO:0034619'] == dag_tree['GO:0006040']

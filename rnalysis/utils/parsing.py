@@ -1,3 +1,4 @@
+import functools
 import queue
 import re
 import warnings
@@ -188,16 +189,16 @@ class GOTerm:
         self.relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
         self.children_relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
 
-    def get_parents(self, relationships: Union[str, list] = ('is_a', 'part_of')) -> List[str]:
-        go_ids = []
-        _ = [go_ids.extend(self.relationships[relationship]) for relationship in data_to_list(relationships) if
-             relationship in self.relationships]
+    @functools.lru_cache(maxsize=2)
+    def get_parents(self, relationships: Union[str, tuple] = ('is_a', 'part_of')) -> List[str]:
+        relationships_filt = [rel for rel in data_to_list(relationships) if rel in self.relationships]
+        go_ids = [go_id for rel in relationships_filt for go_id in self.relationships[rel]]
         return go_ids
 
-    def get_children(self, relationships: Union[str, list] = ('is_a', 'part_of')) -> List[str]:
-        go_ids = []
-        _ = [go_ids.extend(self.children_relationships[relationship]) for relationship in data_to_list(relationships) if
-             relationship in self.children_relationships]
+    @functools.lru_cache(maxsize=2)
+    def get_children(self, relationships: Union[str, Tuple[str]] = ('is_a', 'part_of')) -> List[str]:
+        relationships_filt = [rel for rel in data_to_list(relationships) if rel in self.children_relationships]
+        go_ids = [go_id for rel in relationships_filt for go_id in self.children_relationships[rel]]
         return go_ids
 
 
@@ -220,7 +221,7 @@ class DAGTree:
         self.alt_ids: Dict[str, str] = {}
         self.namespaces: Set[str] = set()
         self.levels: List[dict] = []
-        self.parent_relationship_types: list = data_to_list(parent_relationship_types)
+        self.parent_relationship_types: tuple = data_to_tuple(parent_relationship_types)
 
         self._parse_file(line_iterator)
         self._populate_levels()
