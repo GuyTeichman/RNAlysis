@@ -9,7 +9,7 @@ from joblib import Parallel
 
 
 class ProgressParallel(Parallel):
-    # tqdm progress bar for parallel tasks based upon:
+    # tqdm progress bar for parallel tasks based on:
     # https://stackoverflow.com/questions/37804279/how-can-we-use-tqdm-in-a-parallel-execution-with-joblib/50925708
     # answer by 'user394430'
     def __init__(self, use_tqdm=True, total=None, desc: str = '', unit: str = 'it', *args, **kwargs):
@@ -20,7 +20,9 @@ class ProgressParallel(Parallel):
         super().__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
-        with tqdm(disable=not self._use_tqdm, total=self._total, desc=self._desc, unit=self._unit) as self._pbar:
+        fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]'
+        with tqdm(disable=not self._use_tqdm, total=self._total, desc=self._desc, unit=self._unit,
+                  bar_format=fmt) as self._pbar:
             return Parallel.__call__(self, *args, **kwargs)
 
     def print_progress(self):
