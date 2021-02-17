@@ -18,7 +18,7 @@ def test_standardize():
     assert np.isclose(res.std(axis=0), 1).all()
 
 
-def test_standard_box_cos():
+def test_standard_box_cox():
     np.random.seed(42)
     data = np.random.randint(-200, 100000, (100, 5))
     res = standard_box_cox(data)
@@ -26,6 +26,13 @@ def test_standard_box_cos():
     assert np.isclose(res.mean(axis=0), 0).all()
     assert np.isclose(res.std(axis=0), 1).all()
     assert not np.isclose(res, standardize(data)).all()
+
+    data_df = pd.DataFrame(data, index=[f'ind{i}' for i in range(100)], columns=[f'col{j}' for j in range(5)])
+    res_df = standard_box_cox(data_df)
+    assert isinstance(res_df, pd.DataFrame)
+    assert res_df.shape == data_df.shape
+    assert np.all(res_df.index == data_df.index)
+    assert np.all(res_df.columns == data_df.columns)
 
 
 def test_color_generator():

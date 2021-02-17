@@ -32,7 +32,7 @@ class ProgressParallel(Parallel):
         self._pbar.refresh()
 
 
-def standard_box_cox(data: np.ndarray):
+def standard_box_cox(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.DataFrame]:
     """
 
     :param data:
@@ -46,7 +46,7 @@ def standard_box_cox(data: np.ndarray):
     return res_array
 
 
-def standardize(data: Union[np.ndarray, pd.DataFrame]):
+def standardize(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.DataFrame]:
     """
 
     :param data:
