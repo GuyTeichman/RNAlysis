@@ -11,9 +11,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from rnalysis.utils import parsing, __path__
-from utils import validation, ontology
-from utils.parsing import data_to_set
+from rnalysis.utils import parsing, validation, ontology, __path__
 
 
 def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
@@ -158,28 +156,28 @@ class GOlrAnnotationIterator:
     @staticmethod
     def _parse_evidence_types(evidence_types: Union[str, Iterable[str]]) -> Set[str]:
         if evidence_types == 'any':
-            return set.union(*[data_to_set(s) for s in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT.values()])
+            return set.union(*[parsing.data_to_set(s) for s in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT.values()])
 
         elif isinstance(evidence_types, str) and evidence_types.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT:
-            return data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[evidence_types.lower()])
+            return parsing.data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[evidence_types.lower()])
 
         elif validation.isiterable(evidence_types) and any(
             [isinstance(ev_type, str) and ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT for ev_type in
              evidence_types]):
-            return set.union(*[data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[ev_type.lower()])
+            return set.union(*[parsing.data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[ev_type.lower()])
                                if ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT else
-                               data_to_set(ev_type) for ev_type in evidence_types])
+                               parsing.data_to_set(ev_type) for ev_type in evidence_types])
 
         elif evidence_types is None:
             return set()
 
         else:
-            return data_to_set(evidence_types)
+            return parsing.data_to_set(evidence_types)
 
     @staticmethod
     def _parse_go_aspects(aspects: Union[str, Iterable[str]]) -> Set[str]:
         if aspects == 'any':
-            return set.union(*[data_to_set(s) for s in GOlrAnnotationIterator._ASPECTS_DICT.values()])
+            return set.union(*[parsing.data_to_set(s) for s in GOlrAnnotationIterator._ASPECTS_DICT.values()])
 
         elif any(
             [isinstance(aspect, str) and aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT
@@ -188,7 +186,7 @@ class GOlrAnnotationIterator:
                     if aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT else aspect for aspect in aspects}
 
         else:
-            return data_to_set(aspects)
+            return parsing.data_to_set(aspects)
 
     def _generate_query(self) -> List[str]:
         # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
