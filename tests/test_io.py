@@ -165,6 +165,21 @@ def test_golr_annotation_iterator_parse_go_aspects(monkeypatch, test_input, expe
     assert GOlrAnnotationIterator._parse_go_aspects(test_input) == expected
 
 
+def test_golr_annotation_iterator_api(monkeypatch):
+    def null_method(self):
+        pass
+
+    def parse_method(self, param):
+        return set()
+
+    monkeypatch.setattr(GOlrAnnotationIterator, '_generate_query', null_method)
+    monkeypatch.setattr(GOlrAnnotationIterator, '_get_n_annotations', null_method)
+    monkeypatch.setattr(GOlrAnnotationIterator, '_parse_go_aspects', parse_method)
+    monkeypatch.setattr(GOlrAnnotationIterator, '_parse_evidence_types', parse_method)
+
+    golr = GOlrAnnotationIterator(1234)
+
+
 @pytest.mark.parametrize("test_input,expected", [
     ('any', {'eva', 'evb', 'evc', 'evd', 'eve'}),
     ('bc', {'evb', 'evc'}),
@@ -177,12 +192,6 @@ def test_golr_annotation_iterator_parse_evidence_types(monkeypatch, test_input, 
     ev_dict = {'a': 'eva', 'b': 'evb', 'c': 'evc', 'ab': {'eva', 'evb'}, 'bc': {'evb', 'evc'}, 'de': {'evd', 'eve'}}
     monkeypatch.setattr(GOlrAnnotationIterator, '_EVIDENCE_TYPE_DICT', ev_dict)
     assert GOlrAnnotationIterator._parse_evidence_types(test_input) == expected
-
-
-def test_golr_annotation_iterator_validate_parameters(monkeypatch, test_input, expected):
-    golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
-    golr.taxon_id = "1234"
-    assert False
 
 
 def test_golr_annotation_iterator_get_n_annotations(monkeypatch):

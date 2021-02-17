@@ -223,6 +223,9 @@ class GOlrAnnotationIterator:
         if evidence_types == 'any':
             return set.union(*[parsing.data_to_set(s) for s in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT.values()])
 
+        elif evidence_types is None:
+            return set()
+
         elif isinstance(evidence_types, str) and evidence_types.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT:
             return parsing.data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[evidence_types.lower()])
 
@@ -232,9 +235,6 @@ class GOlrAnnotationIterator:
             return set.union(*[parsing.data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[ev_type.lower()])
                                if ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT else
                                parsing.data_to_set(ev_type) for ev_type in evidence_types])
-
-        elif evidence_types is None:
-            return set()
 
         else:
             return parsing.data_to_set(evidence_types)
