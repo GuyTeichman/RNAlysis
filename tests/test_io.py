@@ -181,17 +181,47 @@ def test_golr_annotation_iterator_parse_evidence_types(monkeypatch, test_input, 
 
 def test_golr_annotation_iterator_validate_parameters(monkeypatch, test_input, expected):
     golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
+    golr.taxon_id = "1234"
     assert False
 
 
 def test_golr_annotation_iterator_get_n_annotations(monkeypatch):
+    num_found_truth = 126311
+
+    def fake_request(self, params):
+        assert isinstance(self, GOlrAnnotationIterator)
+        assert isinstance(params, dict)
+        with open(f'tests/test_files/golr_header.txt') as f:
+            return f.readline()
+
+    monkeypatch.setattr(GOlrAnnotationIterator, '_golr_request', fake_request)
     golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
-    assert False
+    golr.default_params = {}
+    assert golr._get_n_annotations() == num_found_truth
 
 
-def test_golr_annotation_iterator_generate_query(monkeypatch):
+def test_golr_annotation_iterator_generate_query():
     golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
-    assert False
+    golr.aspects = {'P', 'C'}
+    golr.databases = {'DB1', 'DB2'}
+    golr.evidence_types = {'IEA', 'IMP'}
+    golr.excluded_databases = set()
+    golr.excluded_evidence_types = {'EXP', 'IDA'}
+    golr.excluded_qualifiers = {'not_a'}
+    golr.qualifiers = set()
+    golr.taxon_id = 6239
+
+    aspects_iter = iter(golr.aspects)
+    db_iter = iter(golr.databases)
+    evidence_iter = iter(golr.evidence_types)
+
+    query_truth = ['document_category:"annotation"', 'taxon:"NCBITaxon:6239"',
+                   f'source:"{next(db_iter)}" OR source:"{next(db_iter)}"',
+                   f'evidence_type:"{next(evidence_iter)}" OR evidence_type:"{next(evidence_iter)}"',
+                   '-qualifier:"not_a"', '-evidence_type:"EXP"',
+                   '-evidence_type:"IDA"', f'aspect:"{next(aspects_iter)}" OR aspect:"{next(aspects_iter)}"']
+
+    assert sorted(golr._generate_query()) == sorted(query_truth)
 
 
 def test_golr_annotation_iterator_golr_request_connectivity(monkeypatch):
@@ -222,8 +252,46 @@ def test_golr_annotation_iterator_golr_request(monkeypatch):
 
 
 def test_golr_annotation_iterator_parsing(monkeypatch):
+    truth_params = {
+        "q": "*:*",
+        "wt": "json",  # return format
+        "rows": 5,  # how many rows to return
+        # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
+        "start": 0,  # from which annotation number to start fetching
+        "fq": [f'document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
+        "fl": "source,bioentity_internal_id,annotation_class",  # fields
+        "omitHeader": 'true'}
+
+    records_truth = [{"source": "WB", "bioentity_internal_id": "WBGene00011482", "annotation_class": "GO:0003923"},
+                     {"source": "WB", "bioentity_internal_id": "WBGene00011482", "annotation_class": "GO:0016255"},
+                     {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0004190"},
+                     {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0005783"},
+                     {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0005789"}]
+
+    def fake_request(self, params):
+        assert isinstance(self, GOlrAnnotationIterator)
+        assert params == truth_params
+        with open(f'tests/test_files/golr_response.txt') as f:
+            return f.readline()
+
+    monkeypatch.setattr(GOlrAnnotationIterator, '_golr_request', fake_request)
+
+    request_params = {
+        "q": "*:*",
+        "wt": "json",  # return format
+        "rows": 5,  # how many rows to return
+        # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
+        "fq": [f'document_category:"annotation"', 'taxon:"NCBITaxon:6239"'],  # search query
+        "fl": "source,bioentity_internal_id,annotation_class"}  # fields
+
     golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
-    assert False
+    golr.default_params = request_params
+    golr.iter_size = 5
+    golr.n_annotations = 5
+    records = [i for i in golr]
+    assert len(records) == len(records_truth)
+    for record, true_record in zip(records, records_truth):
+        assert record == true_record
 
 
 def test_map_taxon_id_parsing(monkeypatch):

@@ -3,7 +3,7 @@ import os
 import warnings
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict
-from tqdm.auto import tqdm
+import numpy as np
 import requests
 import pandas as pd
 import json
@@ -11,7 +11,7 @@ from itertools import chain
 from functools import lru_cache
 
 import utils.ontology
-from rnalysis.utils import parsing, validation, __path__
+from rnalysis.utils import parsing, __path__
 from utils import validation
 from utils.parsing import data_to_set
 
@@ -209,16 +209,16 @@ class GOlrAnnotationIterator:
         return query
 
     def _annotation_generator_func(self):
-        start = 0
-        max_iters = self.n_annotations // self.iter_size + 1
+        max_iters = int(np.ceil(self.n_annotations / self.iter_size))
         params = self.default_params.copy()
         params['omitHeader'] = "true"  # omit the header from the json response
         param_dicts_list = []
+        start = 0
 
         for i in range(max_iters):
             params['start'] = start
             start += self.iter_size
-            params['rows'] = self.iter_size if i < max_iters - 1 else self.n_annotations % self.iter_size
+            params['rows'] = self.iter_size if i <= max_iters - 1 else self.n_annotations % self.iter_size
             param_dicts_list.append(params.copy())
 
         processes = []

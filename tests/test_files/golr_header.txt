@@ -1,0 +1,1 @@
+{"responseHeader":{"status":0,"QTime":0,"params":{"q":"*:*","fq":["document_category:\"annotation\"","taxon:\"NCBITaxon:6239\""],"rows":"0","wt":"json"}},"response":{"numFound":126311,"start":0,"docs":[]}}
