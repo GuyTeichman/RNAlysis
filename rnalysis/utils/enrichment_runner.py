@@ -18,8 +18,7 @@ from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
-import utils.ontology
-from rnalysis.utils import io, parsing, ref_tables, validation, generic
+from rnalysis.utils import ontology, io, parsing, ref_tables, validation, generic
 
 logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
 
@@ -662,7 +661,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  plot_go_network: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_list: bool = False,
                  random_seed: int = None, **pvalue_kwargs):
-        self.dag_tree: utils.ontology.DAGTree = io.fetch_go_basic()
+        self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
         self.organism = organism
         self.taxon_id = None

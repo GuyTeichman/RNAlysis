@@ -1,18 +1,18 @@
 import concurrent.futures
+import json
 import os
 import warnings
+from functools import lru_cache
+from itertools import chain
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict
-import numpy as np
-import requests
-import pandas as pd
-import json
-from itertools import chain
-from functools import lru_cache
 
-import utils.ontology
+import numpy as np
+import pandas as pd
+import requests
+
 from rnalysis.utils import parsing, __path__
-from utils import validation
+from utils import validation, ontology
 from utils.parsing import data_to_set
 
 
@@ -422,7 +422,7 @@ def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'unipr
 
 
 @lru_cache(maxsize=2)
-def fetch_go_basic() -> utils.ontology.DAGTree:
+def fetch_go_basic() -> ontology.DAGTree:
     """
     Fetches the basic Gene Ontology OBO file from the geneontology.org website ('go-basic.obo') and parses it into a \
     DAGTree data structure.
@@ -431,4 +431,4 @@ def fetch_go_basic() -> utils.ontology.DAGTree:
     """
     url = 'http://current.geneontology.org/ontology/go-basic.obo'
     with requests.get(url, stream=True) as obo_stream:
-        return utils.ontology.DAGTree(obo_stream.iter_lines())
+        return ontology.DAGTree(obo_stream.iter_lines())
