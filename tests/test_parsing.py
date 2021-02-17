@@ -1,6 +1,6 @@
 import pytest
+
 from rnalysis.utils.parsing import *
-from utils.ontology import parse_go_id, DAGTree
 
 
 class DummyClass:
