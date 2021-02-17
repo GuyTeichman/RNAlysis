@@ -75,6 +75,16 @@ def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = 
 
 
 class GOlrAnnotationIterator:
+    """
+    A class that fetches GO annotations from the GOlr (Gene Ontology Solr) server. \
+    This class can be used as an iterable.
+
+
+    **Attributes**
+
+    n_annotations: int
+        The number of annotations found on the server that match the user's query.
+    """
     URL = 'http://golr-aux.geneontology.io/solr/select?'
 
     _EXPERIMENTAL_EVIDENCE = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
@@ -102,6 +112,43 @@ class GOlrAnnotationIterator:
                  qualifiers: Union[str, Iterable[str]] = 'any',
                  excluded_qualifiers: Union[str, Iterable[str]] = None,
                  iter_size: int = 10000):
+        """
+        :param taxon_id: NCBI Taxon ID to fetch annotations for.
+        :type taxon_id: int
+        :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
+        Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
+        :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
+        or 'any' (default='any')
+        :param evidence_types: only annotations with the specified evidence types will be included in the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+        'curator', 'electronic', or 'any' (default='any')
+        :param excluded_evidence_types: annotations with the specified evidence types will be \
+        excluded from the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
+        'author', 'curator', 'electronic', or None (default=None)
+        :param databases: only annotations from the specified databases will be included in the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type databases: str, Iterable of str, or 'any' (default)
+        :param excluded_databases: annotations from the specified databases will be excluded from the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type excluded_databases: str, Iterable of str, or None (default)
+        :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type qualifiers: str, Iterable of str, or 'any' (default)
+        :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type excluded_qualifiers: str, Iterable of str, or None (default 'not')
+        :type excluded_qualifiers: str, iterable of str, or None (default)
+        :param iter_size: if the number of fetched annotations is larger than iter_size, the request will be \
+        split into multiple requests of size iter_size.
+        :type iter_size: int (default 10000)
+        """
         self.taxon_id: int = taxon_id
         self.iter_size: int = iter_size
         # parse aspects
@@ -133,9 +180,15 @@ class GOlrAnnotationIterator:
         self.n_annotations = self._get_n_annotations()
 
     def _get_n_annotations(self) -> int:
+        """
+        Check and return the number of annotations on the GOlr server matching the user's query.
+        """
         return json.loads(self._golr_request(self.default_params))['response']['numFound']
 
     def _validate_parameters(self):
+        """
+        Validate the type and legality of the user's inputs.
+        """
         assert isinstance(self.taxon_id, int), f"'taxon_id' must be an integer. Instead got type {type(self.taxon_id)}."
         assert isinstance(self.iter_size, int), \
             f"'iter_size' must be an integer. Instead got type {type(self.iter_size)}."
@@ -148,6 +201,11 @@ class GOlrAnnotationIterator:
 
     @staticmethod
     def _golr_request(params: dict) -> str:
+        """
+        Run a get request to the GOlr server with the specified parameters, and return the server's text response.
+        :param params: the get request's parameters.
+        :type params: dict
+        """
         req = requests.get(GOlrAnnotationIterator.URL, params=params)
         if not req.ok:
             req.raise_for_status()
@@ -155,6 +213,13 @@ class GOlrAnnotationIterator:
 
     @staticmethod
     def _parse_evidence_types(evidence_types: Union[str, Iterable[str]]) -> Set[str]:
+        """
+        Parse the user's specified evidence types and excluded evidence types into a set of evidence type codes \
+        which are supported by GOlr.
+        :param evidence_types: evidence types to be parsed
+        :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+        'curator', 'electronic', or 'any'
+        """
         if evidence_types == 'any':
             return set.union(*[parsing.data_to_set(s) for s in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT.values()])
 
@@ -176,6 +241,13 @@ class GOlrAnnotationIterator:
 
     @staticmethod
     def _parse_go_aspects(aspects: Union[str, Iterable[str]]) -> Set[str]:
+        """
+        Parse the user's specified GO aspects (namespaces) into a set of GO aspect codes \
+        which are supported by GOlr.
+        :param aspects: evidence types to be parsed
+        :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
+        or 'any'
+        """
         if aspects == 'any':
             return set.union(*[parsing.data_to_set(s) for s in GOlrAnnotationIterator._ASPECTS_DICT.values()])
 
@@ -189,6 +261,9 @@ class GOlrAnnotationIterator:
             return parsing.data_to_set(aspects)
 
     def _generate_query(self) -> List[str]:
+        """
+        Generate a Solr filter query (fq=...) to filter annotations based on the user's input.
+        """
         # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
         query = [f'document_category:"annotation"',
                  f'taxon:"NCBITaxon:{self.taxon_id}"',
@@ -207,6 +282,9 @@ class GOlrAnnotationIterator:
         return query
 
     def _annotation_generator_func(self):
+        """
+        Generator function that fetches all annotations from GOlr that match the user's input and yields them.
+        """
         max_iters = int(np.ceil(self.n_annotations / self.iter_size))
         params = self.default_params.copy()
         params['omitHeader'] = "true"  # omit the header from the json response
