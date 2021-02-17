@@ -180,26 +180,49 @@ def test_golr_annotation_iterator_parse_evidence_types(monkeypatch, test_input, 
 
 
 def test_golr_annotation_iterator_validate_parameters(monkeypatch, test_input, expected):
+    golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
     assert False
 
 
 def test_golr_annotation_iterator_get_n_annotations(monkeypatch):
+    golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
     assert False
 
 
 def test_golr_annotation_iterator_generate_query(monkeypatch):
+    golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
     assert False
 
 
-def test_golr_annotation_iterator_golr_request_connectivity():
-    assert False
+def test_golr_annotation_iterator_golr_request_connectivity(monkeypatch):
+    fake_params = {'param': 'value', 'other_param': 'other_value'}
+    assert isinstance(GOlrAnnotationIterator._golr_request(fake_params), str)
 
 
 def test_golr_annotation_iterator_golr_request(monkeypatch):
-    assert False
+    correct_url = GOlrAnnotationIterator.URL
+    correct_params = {'param': 'value', 'other_param': 'other_value'}
+
+    def mock_get(url, params: dict):
+        assert url == correct_url
+        assert params == correct_params
+        return MockResponse(text='the correct text')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    assert GOlrAnnotationIterator._golr_request(correct_params) == 'the correct text'
+
+    def mock_get_failed(url, params: dict):
+        assert url == correct_url
+        assert params == correct_params
+        return MockResponse(text='the correct text', status_code=404)
+
+    monkeypatch.setattr(requests, 'get', mock_get_failed)
+    with pytest.raises(ConnectionError):
+        _ = GOlrAnnotationIterator._golr_request(correct_params)
 
 
 def test_golr_annotation_iterator_parsing(monkeypatch):
+    golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
     assert False
 
 

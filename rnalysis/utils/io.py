@@ -148,8 +148,9 @@ class GOlrAnnotationIterator:
             for item in field:
                 assert item in legals, f"Illegal item {item}. Legal items are {legals}."
 
-    def _golr_request(self, params: dict) -> str:
-        req = requests.get(self.URL, params=params)
+    @staticmethod
+    def _golr_request(params: dict) -> str:
+        req = requests.get(GOlrAnnotationIterator.URL, params=params)
         if not req.ok:
             req.raise_for_status()
         return req.text
