@@ -1,13 +1,11 @@
-import functools
-import queue
 import re
+from tqdm.auto import tqdm
 import warnings
 from itertools import islice
-from typing import Any, Dict, Iterable, Set, Union, List, Tuple
+from typing import Any, Dict, Union, List, Tuple
 
 import numpy as np
 import pandas as pd
-from rnalysis.utils import validation
 
 
 def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
@@ -137,203 +135,17 @@ def data_to_set(data: Any) -> set:
             raise TypeError(f"Invalid type {type(data)}.")
 
 
-def sparse_dict_to_bool_df(sparse_dict: Dict[str, set]) -> pd.DataFrame:
+def sparse_dict_to_bool_df(sparse_dict: Dict[str, set], progress_bar_desc: str = '') -> pd.DataFrame:
+    fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}]'
+
     rows = list(sparse_dict.keys())
     columns = set()
     for val in sparse_dict.values():
         columns.update(val)
     df = pd.DataFrame(np.zeros((len(rows), len(columns)), dtype=bool), columns=columns, index=rows)
-    for key in sparse_dict:
-        df.at[key, sparse_dict[key]] = True
+    for row, col in zip(tqdm(sparse_dict.keys(), desc=progress_bar_desc, bar_format=fmt), sparse_dict.values()):
+        df.loc[row, col] = True
     return df
-
-
-def parse_evidence_types(evidence_types: Union[str, Iterable[str]], evidence_type_dict: dict) -> Set[str]:
-    if evidence_types == 'any':
-        return set.union(*[data_to_set(s) for s in evidence_type_dict.values()])
-    elif isinstance(evidence_types, str) and evidence_types.lower() in evidence_type_dict:
-        return data_to_set(evidence_type_dict[evidence_types.lower()])
-    elif validation.isiterable(evidence_types) and \
-        any([isinstance(ev_type, str) and ev_type.lower() in evidence_type_dict for ev_type in evidence_types]):
-        return set.union(
-            *[data_to_set(
-                evidence_type_dict[ev_type.lower()]) if ev_type.lower() in evidence_type_dict else data_to_set(ev_type)
-              for ev_type in evidence_types])
-    elif evidence_types is None:
-        return set()
-    else:
-        return data_to_set(evidence_types)
-
-
-def parse_go_aspects(aspects: Union[str, Iterable[str]], aspects_dict: dict) -> Set[str]:
-    if aspects == 'any':
-        return set.union(*[data_to_set(s) for s in aspects_dict.values()])
-    elif any([isinstance(aspect, str) and aspect.lower() in aspects_dict for aspect in aspects]):
-        return {aspects_dict[aspect.lower()] if aspect.lower() in aspects_dict else aspect for aspect in aspects}
-    else:
-        return data_to_set(aspects)
-
-
-class GOTerm:
-    __slots__ = {'id': 'GO ID', 'name': 'GO Term name',
-                 'namespace': 'biological_process, cellular_component or molecular_function',
-                 'level': "GO Term's level in the DAG Tree",
-                 'relationships': 'direct parent relationships of the GO Term',
-                 'children_relationships': 'direct children relationships of the GO Term'}
-
-    def __init__(self):
-        self.id = None
-        self.name = None
-        self.namespace = None
-        self.level = None
-        self.relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
-        self.children_relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
-
-    @functools.lru_cache(maxsize=2)
-    def get_parents(self, relationships: Union[str, tuple] = ('is_a', 'part_of')) -> List[str]:
-        relationships_filt = [rel for rel in data_to_list(relationships) if rel in self.relationships]
-        go_ids = [go_id for rel in relationships_filt for go_id in self.relationships[rel]]
-        return go_ids
-
-    @functools.lru_cache(maxsize=2)
-    def get_children(self, relationships: Union[str, Tuple[str]] = ('is_a', 'part_of')) -> List[str]:
-        relationships_filt = [rel for rel in data_to_list(relationships) if rel in self.children_relationships]
-        go_ids = [go_id for rel in relationships_filt for go_id in self.children_relationships[rel]]
-        return go_ids
-
-
-def parse_go_id(byte_sequence: bytes) -> str:
-    return re.findall(b"GO:[0-9]{7}", byte_sequence)[0].decode('utf8')
-
-
-class DAGTree:
-    __slots__ = {'data_version': 'version of the go-basic.obo file',
-                 'go_terms': 'dictionary of GO Terms in the DAG Tree',
-                 'alt_ids': 'mapping of alternagive GO IDs to their main GO ID',
-                 'namespaces': "namespaces included in the DAGTree",
-                 'levels': 'list of levels in the DAG Tree',
-                 'parent_relationship_types': 'the types of relationships that constitute parenthood in the DAG Tree'}
-
-    def __init__(self, line_iterator: Iterable[bytes],
-                 parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
-        self.data_version = None
-        self.go_terms: Dict[str, GOTerm] = {}
-        self.alt_ids: Dict[str, str] = {}
-        self.namespaces: Set[str] = set()
-        self.levels: List[dict] = []
-        self.parent_relationship_types: tuple = data_to_tuple(parent_relationship_types)
-
-        self._parse_file(line_iterator)
-        self._populate_levels()
-        self._populate_children()
-
-    def __getitem__(self, key) -> 'GOTerm':
-        if key in self.go_terms:
-            return self.go_terms[key]
-        elif key in self.alt_ids:
-            return self.go_terms[self.alt_ids[key]]
-        raise KeyError(key)
-
-    def __contains__(self, item):
-        try:
-            _ = self[item]
-            return True
-        except KeyError:
-            return False
-
-    def _parse_file(self, line_iterator: Iterable[bytes]):
-        current_term = None
-        in_frame = False
-        for line in line_iterator:
-            if in_frame:
-                if line.startswith(b'id: '):
-                    current_term.id = parse_go_id(line)
-                elif line.startswith(b'namespace: '):
-                    current_term.namespace = line[11:].decode('utf8').replace('\n', '')
-                    if current_term.namespace not in self.namespaces:
-                        self.namespaces.add(current_term.namespace)
-                elif line.startswith(b'name: '):
-                    current_term.name = line[6:].decode('utf8').replace('\n', '')
-                elif line.startswith(b'alt_id: '):
-                    self.alt_ids[parse_go_id(line)] = current_term.id
-                elif line.startswith(b'is_a: '):
-                    current_term.relationships['is_a'].append(parse_go_id(line))
-                elif line.startswith(b'relationship: '):
-                    relationship_type = line.split(b' ')[1].decode('utf8')
-                    if relationship_type not in current_term.relationships:
-                        current_term.relationships[relationship_type] = []
-                    current_term.relationships[relationship_type].append(parse_go_id(line))
-                elif line.startswith(b'is_obsolete: true'):
-                    in_frame = False
-                elif line in {b'', b'\n', b'\r\n'}:
-                    self.go_terms[current_term.id] = current_term
-                    in_frame = False
-            else:
-                if line.startswith(b'[Term]'):
-                    current_term = GOTerm()
-                    in_frame = True
-                elif line.startswith(b'data-version:'):
-                    self.data_version = line[14:].decode('utf8').replace('\n', '')
-
-        if in_frame:  # add last go term to the set, if it was not already added
-            self.go_terms[current_term.id] = current_term
-
-    def _populate_levels(self):
-        levels_dict = {}
-        for go_term in self.go_terms.values():
-            if go_term.level is None:
-                go_term.level = self._get_term_level_rec(go_term)
-            if go_term.level not in levels_dict:
-                levels_dict[go_term.level] = {}
-            levels_dict[go_term.level][go_term.id] = go_term
-        if len(levels_dict) == 0:
-            self.levels = [{}]
-        else:
-            self.levels = [levels_dict[i] for i in range(0, max(levels_dict.keys()) + 1)]
-
-    def _get_term_level_rec(self, go_term: GOTerm):
-        if go_term.level is not None:
-            pass
-        elif len(go_term.get_parents(self.parent_relationship_types)) == 0:
-            go_term.level = 0
-        else:
-            go_term.level = 1 + max(
-                [self._get_term_level_rec(self[parent_id]) for parent_id in
-                 go_term.get_parents(self.parent_relationship_types)])
-        return go_term.level
-
-    def _populate_children(self):
-        for go_id in self.level_iter():
-            for rel_type in self.parent_relationship_types:
-                for parent_id in self[go_id].get_parents(rel_type):
-                    if rel_type not in self[parent_id].children_relationships:
-                        self[parent_id].children_relationships[rel_type] = []
-                    self[parent_id].children_relationships[rel_type].append(go_id)
-
-    def level_iter(self, namespace: str = 'all'):
-        if namespace == 'all':
-            for level in self.levels[::-1]:
-                for go_id in level:
-                    yield go_id
-        else:
-            for level in self.levels[::-1]:
-                for go_id in level:
-                    if self[go_id].namespace == namespace:
-                        yield go_id
-
-    def upper_induced_graph_iter(self, go_id: str):
-        node_queue = queue.SimpleQueue()
-        processed_nodes = set()
-        for parent in self[go_id].get_parents(self.parent_relationship_types):
-            node_queue.put(parent)
-        while not node_queue.empty():
-            this_node = node_queue.get()
-            parents = self[this_node].get_parents(self.parent_relationship_types)
-            for parent in parents:
-                if parent not in processed_nodes:
-                    node_queue.put(parent)
-            processed_nodes.update(parents)
-            yield this_node
 
 
 def partition_list(lst: Union[list, tuple], chunk_size: int) -> Union[List[tuple], List[list]]:

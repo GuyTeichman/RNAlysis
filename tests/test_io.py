@@ -151,6 +151,58 @@ def test_map_taxon_id_connectivity():
         map_taxon_id('Lorem ipsum dolor sit amet')
 
 
+@pytest.mark.parametrize("test_input,expected", [
+    ('any', {'aspect a', 'aspect b', 'aspect c'}),
+    ('B', {'aspect b'}),
+    (['b'], {'aspect b'}),
+    (['a', 'z', 'c'], {'aspect a', 'aspect c', 'z'}),
+    (['b', 'c', 'A'], {'aspect a', 'aspect b', 'aspect c'}),
+    (['aspect z'], {'aspect z'})
+])
+def test_golr_annotation_iterator_parse_go_aspects(monkeypatch, test_input, expected):
+    go_dict = {'a': 'aspect a', 'b': 'aspect b', 'c': 'aspect c', '_a_': 'aspect a'}
+    monkeypatch.setattr(GOlrAnnotationIterator, '_ASPECTS_DICT', go_dict)
+    assert GOlrAnnotationIterator._parse_go_aspects(test_input) == expected
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ('any', {'eva', 'evb', 'evc', 'evd', 'eve'}),
+    ('bc', {'evb', 'evc'}),
+    ('c', {'evc'}),
+    ({'a', 'bc', 'f'}, {'eva', 'evb', 'evc', 'f'}),
+    ({'a', 'ab'}, {'eva', 'evb'}),
+    ({'z', 'v'}, {'z', 'v'})
+])
+def test_golr_annotation_iterator_parse_evidence_types(monkeypatch, test_input, expected):
+    ev_dict = {'a': 'eva', 'b': 'evb', 'c': 'evc', 'ab': {'eva', 'evb'}, 'bc': {'evb', 'evc'}, 'de': {'evd', 'eve'}}
+    monkeypatch.setattr(GOlrAnnotationIterator, '_EVIDENCE_TYPE_DICT', ev_dict)
+    assert GOlrAnnotationIterator._parse_evidence_types(test_input) == expected
+
+
+def test_golr_annotation_iterator_validate_parameters(monkeypatch, test_input, expected):
+    assert False
+
+
+def test_golr_annotation_iterator_get_n_annotations(monkeypatch):
+    assert False
+
+
+def test_golr_annotation_iterator_generate_query(monkeypatch):
+    assert False
+
+
+def test_golr_annotation_iterator_golr_request_connectivity():
+    assert False
+
+
+def test_golr_annotation_iterator_golr_request(monkeypatch):
+    assert False
+
+
+def test_golr_annotation_iterator_parsing(monkeypatch):
+    assert False
+
+
 def test_map_taxon_id_parsing(monkeypatch):
     assert False
 
@@ -164,14 +216,6 @@ def test_map_taxon_id_multiple_results(monkeypatch):
 
 
 def test_map_taxon_id_no_connection(monkeypatch):
-    assert False
-
-
-def test_golr_annotation_iterator_connectivity():
-    assert False
-
-
-def test_golr_annotation_iterator_parsing(monkeypatch):
     assert False
 
 

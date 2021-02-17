@@ -18,6 +18,7 @@ from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
+import utils.ontology
 from rnalysis.utils import io, parsing, ref_tables, validation, generic
 
 logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
@@ -349,7 +350,7 @@ class EnrichmentRunner:
 
     def _calculate_enrichment_serial(self) -> list:
         result = []
-        for attribute in tqdm(self.attributes, desc="Calculating enrichment", unit='attribute'):
+        for attribute in tqdm(self.attributes, desc="Calculating enrichment", unit='attributes'):
             assert isinstance(attribute, str), f"Error in attribute {attribute}: attributes must be strings!"
             result.append(self.enrichment_func(attribute, **self.pvalue_kwargs))
             # print(f"Finished {n_attrs + 1} attributes out of {len(self.attributes)}", end='\r')
@@ -661,7 +662,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  plot_go_network: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_list: bool = False,
                  random_seed: int = None, **pvalue_kwargs):
-        self.dag_tree: parsing.DAGTree = io.fetch_go_basic()
+        self.dag_tree: utils.ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
         self.organism = organism
         self.taxon_id = None
@@ -701,21 +702,22 @@ class GOEnrichmentRunner(EnrichmentRunner):
         else:
             self.taxon_id, self.organism = io.map_taxon_id(self.organism)
 
-        if self.propagate_annotations != 'no':
-            print(f"Fetching and propagating GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id}).")
-        else:
-            print(f"Fetching GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id}).")
-
     def fetch_annotations(self):
+        # check if annotations for the requested query were already fetched and cached
         query_key = self._get_query_key()
         if query_key in self.GOA_DF_QUERIES:
             self.annotation_df = self.GOA_DF_QUERIES[query_key]
             return
 
+        if self.propagate_annotations != 'no':
+            desc = f"Fetching and propagating GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
+        else:
+            desc = f"Fetching GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
+
         sparse_annotation_dict = {}
         source_to_gene_id_dict = {}
-        annotation_iterator = self._get_annotation_iterator()
-        for annotation in annotation_iterator:
+        annotation_iter = self._get_annotation_iterator()
+        for annotation in tqdm(annotation_iter, desc=desc, total=annotation_iter.n_annotations, unit=' annotations'):
             # extract gene_id, go_id, source from the annotation
             gene_id = annotation['bioentity_internal_id']
             go_id = self.dag_tree[annotation['annotation_class']].id
@@ -731,25 +733,24 @@ class GOEnrichmentRunner(EnrichmentRunner):
                 source_to_gene_id_dict[source] = set()
             source_to_gene_id_dict[source].add(gene_id)
             # propagate annotations
-            self._propagate_annotation(gene_id, go_id, sparse_annotation_dict
-                                       )
+            self._propagate_annotation(gene_id, go_id, sparse_annotation_dict)
         print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
 
         # translate gene IDs
         translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
 
         # get boolean DataFrame for enrichment
-        print("Generating Gene Ontology Reference Table...")
-        self.annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict)
+        self.annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
+                                                            progress_bar_desc="Generating Gene Ontology Referene Table")
 
         # save query results to GOA_DF_QUERIES
         self.GOA_DF_QUERIES[query_key] = self.annotation_df
 
     def _get_annotation_iterator(self):
-        return io.golr_annotations_iterator(self.taxon_id, self.aspects,
-                                            self.evidence_types, self.excluded_evidence_types,
-                                            self.databases, self.excluded_databases,
-                                            self.qualifiers, self.excluded_qualifiers)
+        return io.GOlrAnnotationIterator(self.taxon_id, self.aspects,
+                                         self.evidence_types, self.excluded_evidence_types,
+                                         self.databases, self.excluded_databases,
+                                         self.qualifiers, self.excluded_qualifiers)
 
     def _propagate_annotation(self, gene_id: str, go_id: str, sparse_annotation_dict: dict):
         if self.propagate_annotations != 'no':
@@ -795,6 +796,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return bar_plot
 
     def go_dag_plot(self):
+        # TODO: implement me with pydot/graphviz!
         pass
 
     def format_results(self, unformatted_results_dict: dict):
@@ -811,21 +813,18 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.results['dag_level'] = [self.dag_tree[ind].level for ind in self.results.index]
         self.results = self.results.sort_values('dag_level', ascending=False).drop('dag_level', 1).rename_axis('go_id')
 
-    def calculate_enrichment(self):
-        print(f"Calculating enrichment for {len(self.attributes)} GO terms "
-              f"using the '{self.propagate_annotations}' method...")
-        return super().calculate_enrichment()
-
     def _calculate_enrichment_serial(self) -> dict:
+        desc = f"Calculating enrichment for {len(self.attributes)} GO terms " \
+               f"using the '{self.propagate_annotations}' method"
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
             self.mod_annotation_dfs = (self.annotation_df,)
-            result = self._go_classic_pvalues_serial()
+            result = self._go_classic_pvalues_serial(desc)
         elif self.propagate_annotations == 'elim':
             self.mod_annotation_dfs = (self.annotation_df.copy(deep=True),)
-            result = self._go_elim_pvalues_serial()
+            result = self._go_elim_pvalues_serial(desc)
         elif self.propagate_annotations == 'weight':
             self.mod_annotation_dfs = (self.annotation_df.astype("float64", copy=True),)
-            result = self._go_weight_pvalues_serial()
+            result = self._go_weight_pvalues_serial(desc)
         elif self.propagate_annotations == 'all.m':
             result = self._go_allm_pvalues_serial()
         else:
@@ -833,65 +832,68 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return result
 
     def _calculate_enrichment_parallel(self) -> dict:
+        desc = f"Calculating enrichment for {len(self.attributes)} GO terms " \
+               f"using the '{self.propagate_annotations}' method"
         if self.propagate_annotations == 'classic' or self.propagate_annotations == 'no':
             self.mod_annotation_dfs = (self.annotation_df,)
-            result = self._go_classic_pvalues_parallel()
+            result = self._go_classic_pvalues_parallel(desc)
         elif self.propagate_annotations == 'elim':
             self.mod_annotation_dfs = tuple(
                 self.annotation_df.loc[:, self._go_level_iterator(namespace)].copy(deep=True) for namespace in
                 self.dag_tree.namespaces)
-            result = self._go_elim_pvalues_parallel()
+            result = self._go_elim_pvalues_parallel(desc)
         elif self.propagate_annotations == 'weight':
             self.mod_annotation_dfs = tuple(
                 self.annotation_df.loc[:, self._go_level_iterator(namespace)].astype("float64", copy=True) for namespace
                 in self.dag_tree.namespaces)
-            result = self._go_weight_pvalues_parallel()
+            result = self._go_weight_pvalues_parallel(desc)
         elif self.propagate_annotations == 'all.m':
             result = self._go_allm_pvalues_parallel()
         else:
             raise ValueError(f"invalid propagation method '{self.propagate_annotations}'.")
         return result
 
-    def _go_classic_pvalues_serial(self) -> dict:
-        return self._go_classic_over_chunk(self.attributes, 0)
+    def _go_classic_pvalues_serial(self, progress_bar_desc: str = '') -> dict:
+        return self._go_classic_over_chunk(tqdm(self.attributes, desc=progress_bar_desc, unit=' GO terms'), 0)
 
-    def _go_classic_pvalues_parallel(self) -> dict:
+    def _go_classic_pvalues_parallel(self, progress_bar_desc: str = '') -> dict:
         # split GO terms into chunks of size 1000 to reduce overhead of parallel jobs
         partitioned = parsing.partition_list(self.attributes, 1000)
-        # max_nbytes is set to None to prevent joblib from turning the mod_annotation_df into a memory map.
-        # since this algorithm modifies the dataframe while running, turning the dataframe into a memory map
-        # would raise an exception ("...trying to write into a read-only location...").
         return self._parallel_over_grouping(self._go_classic_over_chunk, partitioned,
-                                            (0 for _ in range(len(partitioned))), max_nbytes=None)
+                                            (0 for _ in range(len(partitioned))), progress_bar_desc=progress_bar_desc)
 
-    def _go_classic_over_chunk(self, chunk: Union[list, tuple], mod_df_ind: int):
+    def _go_classic_over_chunk(self, chunk: Iterable[str], mod_df_ind: int):
         return {go_id: self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs) for go_id in chunk}
 
-    def _go_elim_pvalues_serial(self) -> dict:
-        result = self._go_elim_on_aspect('all')
+    def _go_elim_pvalues_serial(self, progress_bar_desc: str = '') -> dict:
+        result = self._go_elim_on_aspect('all', progress_bar_desc=progress_bar_desc)
         return result
 
-    def _parallel_over_grouping(self, func, grouping: Iterable, mod_df_inds: Iterable[int],
-                                max_nbytes: Union[str, None] = '1M') -> dict:
-        result_dicts = generic.ProgressParallel(n_jobs=-1, max_nbytes=max_nbytes)(
+    @staticmethod
+    def _parallel_over_grouping(func, grouping: Iterable, mod_df_inds: Iterable[int],
+                                max_nbytes: Union[str, None] = '1M', progress_bar_desc: str = '') -> dict:
+        result_dicts = generic.ProgressParallel(n_jobs=-1, max_nbytes=max_nbytes, desc=progress_bar_desc)(
             joblib.delayed(func)(group, ind) for group, ind in zip(grouping, mod_df_inds))
         result = {}
         for d in result_dicts:
             result.update(d)
         return result
 
-    def _go_elim_pvalues_parallel(self) -> dict:
+    def _go_elim_pvalues_parallel(self, progress_bar_desc: str = '') -> dict:
         go_aspects = parsing.data_to_tuple(self.dag_tree.namespaces)
         # max_nbytes is set to None to prevent joblib from turning the mod_annotation_df into a memory map.
         # since this algorithm modifies the dataframe while running, turning the dataframe into a memory map
         # would raise an exception ("...trying to write into a read-only location...").
         return self._parallel_over_grouping(self._go_elim_on_aspect, go_aspects, range(len(go_aspects)),
-                                            max_nbytes=None)
+                                            max_nbytes=None, progress_bar_desc=progress_bar_desc)
 
-    def _go_elim_on_aspect(self, go_aspect: str, mod_df_ind: int = 0) -> dict:
+    def _go_elim_on_aspect(self, go_aspect: str, mod_df_ind: int = 0, progress_bar_desc: str = None) -> dict:
         result_dict = {}
         marked_nodes = {}
-        for go_id in self._go_level_iterator(go_aspect):
+        go_id_iter = self._go_level_iterator(go_aspect) if progress_bar_desc is None \
+            else tqdm(self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc,
+                      total=len(self.attributes))
+        for go_id in go_id_iter:
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
                 self.mod_annotation_dfs[mod_df_ind].loc[marked_nodes[go_id], go_id] = False
             result_dict[go_id] = self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs)
@@ -905,17 +907,24 @@ class GOEnrichmentRunner(EnrichmentRunner):
                     marked_nodes[ancestor] = marked_nodes[ancestor].union(new_marked_genes)
         return result_dict
 
-    def _go_weight_pvalues_serial(self) -> dict:
-        return self._go_weight_on_aspect('all')
+    def _go_weight_pvalues_serial(self, progress_bar_desc: str = '') -> dict:
+        return self._go_weight_on_aspect('all', progress_bar_desc=progress_bar_desc)
 
-    def _go_weight_pvalues_parallel(self) -> dict:
+    def _go_weight_pvalues_parallel(self, progress_bar_desc: str = '') -> dict:
         go_aspects = parsing.data_to_tuple(self.dag_tree.namespaces)
-        return self._parallel_over_grouping(self._go_weight_on_aspect, go_aspects, range(len(go_aspects)))
+        # max_nbytes is set to None to prevent joblib from turning the mod_annotation_df into a memory map.
+        # since this algorithm modifies the dataframe while running, turning the dataframe into a memory map
+        # would raise an exception ("...trying to write into a read-only location...").
+        return self._parallel_over_grouping(self._go_weight_on_aspect, go_aspects, range(len(go_aspects)),
+                                            max_nbytes=None, progress_bar_desc=progress_bar_desc)
 
-    def _go_weight_on_aspect(self, aspect: str, mod_df_ind: int = 0) -> dict:
+    def _go_weight_on_aspect(self, go_aspect: str, mod_df_ind: int = 0, progress_bar_desc: str = None) -> dict:
         result_dict = {}
         weights = collections.defaultdict(lambda: 1)  # default weight for all nodes is 1
-        for go_id in self._go_level_iterator(aspect):
+        go_id_iter = self._go_level_iterator(go_aspect) if progress_bar_desc is None \
+            else tqdm(self._go_level_iterator(go_aspect), unit=' GO terms', desc=progress_bar_desc,
+                      total=len(self.attributes))
+        for go_id in go_id_iter:
             children = {child for child in self.dag_tree[go_id].get_children() if child in self.attributes_set}
             self._compute_term_sig(mod_df_ind, go_id, children, weights, result_dict)
         return result_dict
@@ -929,6 +938,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return self._calculate_allm(outputs)
 
     def _go_allm_pvalues_parallel(self):
+        # TODO: progress bar, desc
         outputs = {}
         for method in ['classic', 'elim', 'weight']:
             self.propagate_annotations = method
@@ -998,14 +1008,14 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _randomization_enrichment(self, go_id: str, reps: int, mod_df_ind: int = None) -> list:
         go_name = self.dag_tree[go_id].name
-        bg_array = self.mod_annotation_dfs[mod_df_ind][go_id].values
+        bg_df = self.mod_annotation_dfs[mod_df_ind][go_id]
         bg_size = self.annotation_df.shape[0]
         n = len(self.gene_set)
         expected_fraction = (bg_size - self.annotation_df[go_id].sum()) / bg_size
         observed_fraction = self.annotation_df.loc[self.gene_set, go_id].sum() / n
-        mod_observed_fraction = bg_array.loc[self.gene_set].sum() / n
+        mod_observed_fraction = bg_df.loc[self.gene_set].sum() / n
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
-        pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_array, reps, mod_observed_fraction)
+        pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_df.values, reps, mod_observed_fraction)
         return [go_name, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
 
     def _xlmhg_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:

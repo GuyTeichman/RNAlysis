@@ -2,6 +2,8 @@ import pytest
 from collections import namedtuple
 
 import statsmodels.stats.multitest as multitest
+
+import utils.ontology
 from rnalysis import filtering
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
@@ -226,7 +228,7 @@ def test_elim_pvals(monkeypatch):
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
     truth = pd.read_csv('tests/test_files/go_pvalues_elim_truth.csv', index_col=0).sort_index()
     with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
-        dag_tree = parsing.DAGTree(f, ['is_a'])
+        dag_tree = utils.ontology.DAGTree(f, ['is_a'])
     monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
@@ -247,7 +249,7 @@ def test_weight_pvals(monkeypatch):
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
     truth = pd.read_csv('tests/test_files/go_pvalues_weight_truth.csv', index_col=0).sort_index()
     with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
-        dag_tree = parsing.DAGTree(f, ['is_a'])
+        dag_tree = utils.ontology.DAGTree(f, ['is_a'])
 
     monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
 
@@ -269,7 +271,7 @@ def test_allm_pvals(monkeypatch):
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
     truth = pd.read_csv('tests/test_files/go_pvalues_allm_truth.csv', index_col=0).sort_index()
     with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
-        dag_tree = parsing.DAGTree(f, ['is_a'])
+        dag_tree = utils.ontology.DAGTree(f, ['is_a'])
     monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',

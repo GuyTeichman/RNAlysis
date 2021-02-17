@@ -3,13 +3,17 @@ import os
 import warnings
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict
+from tqdm.auto import tqdm
 import requests
 import pandas as pd
 import json
 from itertools import chain
 from functools import lru_cache
 
+import utils.ontology
 from rnalysis.utils import parsing, validation, __path__
+from utils import validation
+from utils.parsing import data_to_set
 
 
 def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
@@ -72,101 +76,160 @@ def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = 
     df.to_csv(new_fname, header=True, index=index)
 
 
-def golr_annotations_iterator(taxon_id: int, aspects: Union[str, Iterable[str]] = 'any',
-                              evidence_types: Union[str, Iterable[str]] = 'any',
-                              excluded_evidence_types: Union[str, Iterable[str]] = None,
-                              databases: Union[str, Iterable[str]] = 'any',
-                              excluded_databases: Union[str, Iterable[str]] = None,
-                              qualifiers: Union[str, Iterable[str]] = 'any',
-                              excluded_qualifiers: Union[str, Iterable[str]] = None,
-                              iter_size: int = 10000):
-    # define constants
-    legal_aspects = {'P', 'F', 'C'}
-    aspects_dict = {'biological_process': 'P', 'molecular_function': 'F', 'cellular_component': 'C',
-                    'biological process': 'P', 'molecular function': 'F', 'cellular component': 'C'}
-    experimental_evidence = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
-    phylogenetic_evidence = {'IBA', 'IBD', 'IKR', 'IRD'}
-    computational_evidence = {'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA'}
-    author_evidence = {'TAS', 'NAS'}
-    curator_evidence = {'IC', 'ND'}
-    electronic_evidence = {'IEA'}
-    evidence_type_dict = {'experimental': experimental_evidence, 'phylogenetic': phylogenetic_evidence,
-                          'computational': computational_evidence, 'author': author_evidence,
-                          'curator': curator_evidence,
-                          'electronic': electronic_evidence}
-    legal_evidence = set.union(*[parsing.data_to_set(s) for s in evidence_type_dict.values()])
-    legal_qualifiers = {'not', 'contributes_to', 'colocalizes_with'}
-    # parse aspects, databases, qualifiers
-    aspects = parsing.parse_go_aspects(aspects, aspects_dict)
-    databases = parsing.data_to_set(databases)
-    qualifiers = () if qualifiers == 'any' else parsing.data_to_set(qualifiers)
-    excluded_qualifiers = set() if excluded_qualifiers is None else parsing.data_to_set(excluded_qualifiers)
-    excluded_databases = set() if excluded_databases is None else parsing.data_to_set(excluded_databases)
-    # parse evidence types
-    evidence_types = parsing.parse_evidence_types(evidence_types, evidence_type_dict)
-    excluded_evidence_types = parsing.parse_evidence_types(excluded_evidence_types, evidence_type_dict)
-    # assert legality of inputs
-    for field, legals in zip((aspects, chain(evidence_types, excluded_evidence_types),
-                              chain(qualifiers, excluded_qualifiers)),
-                             (legal_aspects, legal_evidence, legal_qualifiers)):
-        for item in field:
-            assert item in legals, f"Illegal item {item}. Legal items are {legals}."
-    # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
-    query = [f'document_category:"annotation"',
-             f'taxon:"NCBITaxon:{taxon_id}"',
-             ' OR '.join([f'aspect:"{aspect}"' for aspect in aspects]),
-             ' OR '.join([f'evidence_type:"{evidence_type}"' for evidence_type in evidence_types])]
-    # exclude all 'excluded' items from query
-    query.extend([f'-evidence_type:"{evidence_type}"' for evidence_type in excluded_evidence_types])
-    query.extend([f'-source:"{db}"' for db in excluded_databases])
-    query.extend([f'-qualifier:"{qual}"' for qual in excluded_qualifiers])
-    # add union of all requested databases to query
-    if not databases == {'any'}:
-        query.append(' OR '.join(f'source:"{db}"' for db in databases))
-    # add union of all requested qualifiers to query
-    if len(qualifiers) > 0:
-        query.append(' OR '.join([f'qualifier:"{qual}"' for qual in qualifiers]))
+class GOlrAnnotationIterator:
+    URL = 'http://golr-aux.geneontology.io/solr/select?'
 
-    params = {
-        "q": "*:*",
-        "wt": "json",  # return format
-        "rows": 0,  # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
-        "start": None,  # from which annotation number to start fetching
-        "fq": query,  # search query
-        "fl": "source,bioentity_internal_id,annotation_class"  # fields
-    }
-    # get number of annotations found in the query
-    output = _golr_request(params)
-    n_annotations = json.loads(output)['response']['numFound']
-    print(f"Fetching {n_annotations} annotations...")
+    _EXPERIMENTAL_EVIDENCE = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
+    _PHYLOGENETIC_EVIDENCE = {'IBA', 'IBD', 'IKR', 'IRD'}
+    _COMPUTATIONAL_EVIDENCE = {'ISS', 'ISO', 'ISA', 'ISM', 'IGC', 'RCA'}
+    _AUTHOR_EVIDENCE = {'TAS', 'NAS'}
+    _CURATOR_EVIDENCE = {'IC', 'ND'}
+    _ELECTRONIC_EVIDENCE = {'IEA'}
+    _EVIDENCE_TYPE_DICT = {'experimental': _EXPERIMENTAL_EVIDENCE, 'phylogenetic': _PHYLOGENETIC_EVIDENCE,
+                           'computational': _COMPUTATIONAL_EVIDENCE, 'author': _AUTHOR_EVIDENCE,
+                           'curator': _CURATOR_EVIDENCE, 'electronic': _ELECTRONIC_EVIDENCE}
 
-    # fetch all annotations in batches of size iter_size, and yield them one-by-one
-    start = 0
-    max_iters = n_annotations // iter_size + 1
-    params['omitHeader'] = "true"  # omit the header from the json response
-    param_dicts_list = []
+    _ASPECTS_DICT = {'biological_process': 'P', 'molecular_function': 'F', 'cellular_component': 'C',
+                     'biological process': 'P', 'molecular function': 'F', 'cellular component': 'C'}
 
-    for i in range(max_iters):
-        params['start'] = start
-        start += iter_size
-        params['rows'] = iter_size if i < max_iters - 1 else n_annotations % iter_size
-        param_dicts_list.append({key: val for key, val in zip(params.keys(), params.values())})
+    LEGAL_ASPECTS = {'P', 'F', 'C'}
+    LEGAL_EVIDENCES = set.union(*[parsing.data_to_set(s) for s in _EVIDENCE_TYPE_DICT.values()])
+    LEGAL_QUALIFIERS = {'not', 'contributes_to', 'colocalizes_with'}
 
-    processes = []
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        for param_dict in param_dicts_list:
-            processes.append(executor.submit(_golr_request, param_dict))
-    for task in concurrent.futures.as_completed(processes):
-        for record in json.loads(task.result())['response']['docs']:
-            yield record
+    def __init__(self, taxon_id: int, aspects: Union[str, Iterable[str]] = 'any',
+                 evidence_types: Union[str, Iterable[str]] = 'any',
+                 excluded_evidence_types: Union[str, Iterable[str]] = None,
+                 databases: Union[str, Iterable[str]] = 'any',
+                 excluded_databases: Union[str, Iterable[str]] = None,
+                 qualifiers: Union[str, Iterable[str]] = 'any',
+                 excluded_qualifiers: Union[str, Iterable[str]] = None,
+                 iter_size: int = 10000):
+        self.taxon_id: int = taxon_id
+        self.iter_size: int = iter_size
+        # parse aspects
+        self.aspects: Set[str] = self._parse_go_aspects(aspects)
+        # parse qualifiers
+        self.qualifiers: Set[str] = set() if qualifiers == 'any' else parsing.data_to_set(qualifiers)
+        self.excluded_qualifiers: Set[str] = set() if excluded_qualifiers is None else \
+            parsing.data_to_set(excluded_qualifiers)
+        # parse databases
+        self.databases: Set[str] = parsing.data_to_set(databases)
+        self.excluded_databases: Set[str] = set() if excluded_databases is None else \
+            parsing.data_to_set(excluded_databases)
+        # parse evidence types
+        self.evidence_types: Set[str] = self._parse_evidence_types(evidence_types)
+        self.excluded_evidence_types: Set[str] = self._parse_evidence_types(excluded_evidence_types)
+        # validate parameters
+        self._validate_parameters()
+        # generate default request parameter dictionary
+        self.default_params: dict = {
+            "q": "*:*",
+            "wt": "json",  # return format
+            "rows": 0,  # how many rows to return
+            # how many annotations to fetch (fetch 0 to find n_annotations, then fetch in iter_size increments
+            "start": None,  # from which annotation number to start fetching
+            "fq": self._generate_query(),  # search query
+            "fl": "source,bioentity_internal_id,annotation_class"  # fields
+        }
 
+        self.n_annotations = self._get_n_annotations()
 
-def _golr_request(params: dict) -> str:
-    url = 'http://golr-aux.geneontology.io/solr/select?'
-    req = requests.get(url, params=params)
-    if not req.ok:
-        req.raise_for_status()
-    return req.text
+    def _get_n_annotations(self) -> int:
+        return json.loads(self._golr_request(self.default_params))['response']['numFound']
+
+    def _validate_parameters(self):
+        assert isinstance(self.taxon_id, int), f"'taxon_id' must be an integer. Instead got type {type(self.taxon_id)}."
+        assert isinstance(self.iter_size, int), \
+            f"'iter_size' must be an integer. Instead got type {type(self.iter_size)}."
+        assert self.iter_size > 0, f"Invalid value for 'iter_size': {self.iter_size}."
+        for field, legals in zip((self.aspects, chain(self.evidence_types, self.excluded_evidence_types),
+                                  chain(self.qualifiers, self.excluded_qualifiers)),
+                                 (self.LEGAL_ASPECTS, self.LEGAL_EVIDENCES, self.LEGAL_QUALIFIERS)):
+            for item in field:
+                assert item in legals, f"Illegal item {item}. Legal items are {legals}."
+
+    def _golr_request(self, params: dict) -> str:
+        req = requests.get(self.URL, params=params)
+        if not req.ok:
+            req.raise_for_status()
+        return req.text
+
+    @staticmethod
+    def _parse_evidence_types(evidence_types: Union[str, Iterable[str]]) -> Set[str]:
+        if evidence_types == 'any':
+            return set.union(*[data_to_set(s) for s in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT.values()])
+
+        elif isinstance(evidence_types, str) and evidence_types.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT:
+            return data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[evidence_types.lower()])
+
+        elif validation.isiterable(evidence_types) and any(
+            [isinstance(ev_type, str) and ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT for ev_type in
+             evidence_types]):
+            return set.union(*[data_to_set(GOlrAnnotationIterator._EVIDENCE_TYPE_DICT[ev_type.lower()])
+                               if ev_type.lower() in GOlrAnnotationIterator._EVIDENCE_TYPE_DICT else
+                               data_to_set(ev_type) for ev_type in evidence_types])
+
+        elif evidence_types is None:
+            return set()
+
+        else:
+            return data_to_set(evidence_types)
+
+    @staticmethod
+    def _parse_go_aspects(aspects: Union[str, Iterable[str]]) -> Set[str]:
+        if aspects == 'any':
+            return set.union(*[data_to_set(s) for s in GOlrAnnotationIterator._ASPECTS_DICT.values()])
+
+        elif any(
+            [isinstance(aspect, str) and aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT
+             for aspect in aspects]):
+            return {GOlrAnnotationIterator._ASPECTS_DICT[aspect.lower()]
+                    if aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT else aspect for aspect in aspects}
+
+        else:
+            return data_to_set(aspects)
+
+    def _generate_query(self) -> List[str]:
+        # add fields with known legal inputs and cardinality >= 1 to query (taxon ID, aspect, evidence type)
+        query = [f'document_category:"annotation"',
+                 f'taxon:"NCBITaxon:{self.taxon_id}"',
+                 ' OR '.join([f'aspect:"{aspect}"' for aspect in self.aspects]),
+                 ' OR '.join([f'evidence_type:"{evidence_type}"' for evidence_type in self.evidence_types])]
+        # exclude all 'excluded' items from query
+        query.extend([f'-evidence_type:"{evidence_type}"' for evidence_type in self.excluded_evidence_types])
+        query.extend([f'-source:"{db}"' for db in self.excluded_databases])
+        query.extend([f'-qualifier:"{qual}"' for qual in self.excluded_qualifiers])
+        # add union of all requested databases to query
+        if not self.databases == {'any'}:
+            query.append(' OR '.join(f'source:"{db}"' for db in self.databases))
+        # add union of all requested qualifiers to query
+        if len(self.qualifiers) > 0:
+            query.append(' OR '.join([f'qualifier:"{qual}"' for qual in self.qualifiers]))
+        return query
+
+    def _annotation_generator_func(self):
+        start = 0
+        max_iters = self.n_annotations // self.iter_size + 1
+        params = self.default_params.copy()
+        params['omitHeader'] = "true"  # omit the header from the json response
+        param_dicts_list = []
+
+        for i in range(max_iters):
+            params['start'] = start
+            start += self.iter_size
+            params['rows'] = self.iter_size if i < max_iters - 1 else self.n_annotations % self.iter_size
+            param_dicts_list.append(params.copy())
+
+        processes = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for param_dict in param_dicts_list:
+                processes.append(executor.submit(self._golr_request, param_dict))
+        for task in concurrent.futures.as_completed(processes):
+            for record in json.loads(task.result())['response']['docs']:
+                yield record
+
+    def __iter__(self):
+        return self._annotation_generator_func()
 
 
 @lru_cache(maxsize=32, typed=False)
@@ -358,13 +421,13 @@ def _load_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'unipr
 
 
 @lru_cache(maxsize=2)
-def fetch_go_basic() -> parsing.DAGTree:
+def fetch_go_basic() -> utils.ontology.DAGTree:
     """
     Fetches the basic Gene Ontology OBO file from the geneontology.org website ('go-basic.obo') and parses it into a \
     DAGTree data structure.
     :return: a parsed DAGTree for gene ontology propagation and visualization.
-    :rtype: parsing.DAGTree
+    :rtype: utils.ontology.DAGTree
     """
     url = 'http://current.geneontology.org/ontology/go-basic.obo'
     with requests.get(url, stream=True) as obo_stream:
-        return parsing.DAGTree(obo_stream.iter_lines())
+        return utils.ontology.DAGTree(obo_stream.iter_lines())
