@@ -186,7 +186,8 @@ def test_golr_annotation_iterator_api(monkeypatch):
     ('c', {'evc'}),
     ({'a', 'bc', 'f'}, {'eva', 'evb', 'evc', 'f'}),
     ({'a', 'ab'}, {'eva', 'evb'}),
-    ({'z', 'v'}, {'z', 'v'})
+    ({'z', 'v'}, {'z', 'v'}),
+    (None, set())
 ])
 def test_golr_annotation_iterator_parse_evidence_types(monkeypatch, test_input, expected):
     ev_dict = {'a': 'eva', 'b': 'evb', 'c': 'evc', 'ab': {'eva', 'evb'}, 'bc': {'evb', 'evc'}, 'de': {'evd', 'eve'}}
