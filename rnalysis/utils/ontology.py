@@ -3,7 +3,7 @@ import queue
 import re
 from typing import Dict, List, Union, Tuple, Iterable, Set
 
-from utils.parsing import data_to_list, data_to_tuple
+from rnalysis.utils import parsing
 
 
 class GOTerm:
@@ -23,13 +23,13 @@ class GOTerm:
 
     @functools.lru_cache(maxsize=2)
     def get_parents(self, relationships: Union[str, tuple] = ('is_a', 'part_of')) -> List[str]:
-        relationships_filt = [rel for rel in data_to_list(relationships) if rel in self.relationships]
+        relationships_filt = [rel for rel in parsing.data_to_list(relationships) if rel in self.relationships]
         go_ids = [go_id for rel in relationships_filt for go_id in self.relationships[rel]]
         return go_ids
 
     @functools.lru_cache(maxsize=2)
     def get_children(self, relationships: Union[str, Tuple[str]] = ('is_a', 'part_of')) -> List[str]:
-        relationships_filt = [rel for rel in data_to_list(relationships) if rel in self.children_relationships]
+        relationships_filt = [rel for rel in parsing.data_to_list(relationships) if rel in self.children_relationships]
         go_ids = [go_id for rel in relationships_filt for go_id in self.children_relationships[rel]]
         return go_ids
 
@@ -54,7 +54,7 @@ class DAGTree:
         self.alt_ids: Dict[str, str] = {}
         self.namespaces: Set[str] = set()
         self.levels: List[dict] = []
-        self.parent_relationship_types: tuple = data_to_tuple(parent_relationship_types)
+        self.parent_relationship_types: tuple = parsing.data_to_tuple(parent_relationship_types)
 
         self._upper_induced_graphs: Dict[str, Set[str]] = {}
 

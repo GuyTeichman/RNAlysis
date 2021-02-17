@@ -3,7 +3,7 @@ from collections import namedtuple
 
 import statsmodels.stats.multitest as multitest
 
-import utils.ontology
+from utils.ontology import *
 from rnalysis import filtering
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
