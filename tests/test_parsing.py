@@ -16,6 +16,7 @@ def test_data_to_list():
         ['three', 'different', 'elements'])
     assert data_to_list(np.array([6, 9, 2])) == [6, 9, 2]
     assert data_to_list(67.2) == [67.2]
+    assert data_to_list(None) == [None]
 
 
 def test_data_to_list_invalid_type():
@@ -40,6 +41,7 @@ def test_data_to_set():
     assert data_to_set({'three', 'different', 'elements'}) == {'three', 'different', 'elements'}
     assert data_to_set(np.array([6, 9, 2])) == {6, 9, 2}
     assert data_to_set(67.2) == {67.2}
+    assert data_to_set(None) == {None}
 
 
 def test_data_to_tuple():
@@ -50,6 +52,7 @@ def test_data_to_tuple():
     assert data_to_tuple(np.array([6, 9, 2])) == (6, 9, 2)
     assert data_to_tuple((67.2,)) == (67.2,)
     assert data_to_tuple(67.2) == (67.2,)
+    assert data_to_tuple(None) == (None,)
 
 
 def test_from_string(monkeypatch):
@@ -104,3 +107,7 @@ def test_sparse_dict_to_bool_df():
                    'gene5': set()}
     res = sparse_dict_to_bool_df(sparse_dict).sort_index(axis=1)
     assert res.equals(truth)
+
+
+def test_partition_list():
+    assert False
