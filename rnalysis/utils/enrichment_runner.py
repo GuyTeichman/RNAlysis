@@ -97,11 +97,16 @@ class EnrichmentRunner:
             return
         else:
             ranked_genes = np.empty((len(self.gene_set),), dtype=self.ranked_genes.dtype)
+            processed_genes = set()
             i = 0
             for elem in self.ranked_genes:
-                if elem in self.gene_set:
+                if elem in self.gene_set and elem not in processed_genes:
                     ranked_genes[i] = elem
+                    processed_genes.add(elem)
                     i += 1
+
+                    if len(processed_genes) == len(self.gene_set):
+                        break
             self.ranked_genes = ranked_genes
 
     def results_to_csv(self):
@@ -124,6 +129,7 @@ class EnrichmentRunner:
         print(f"{len(self.background_set)} background genes are used.")
 
     def _get_enrichment_func(self, pval_func_name: str):
+        assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
         pval_func_name = pval_func_name.lower()
         if pval_func_name == 'fisher':
             return self._fisher_enrichment

@@ -1,9 +1,5 @@
 import pytest
 from collections import namedtuple
-
-import statsmodels.stats.multitest as multitest
-
-from rnalysis.utils.ontology import *
 from rnalysis import filtering
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
@@ -285,3 +281,81 @@ def test_allm_pvals(monkeypatch):
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
 
     _comp_go_res_df(res, truth)
+
+
+def test_enrichment_runner_update_ranked_genes():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    truth = np.array([['111', '000', '222', '777', '333', '888']], dtype='str')
+    runner.ranked_genes = np.array(['111', '000', '222', '777', '333', '000', '111', '888', '000'], dtype='str')
+    runner.gene_set = {'111', '000', '222', '777', '333', '888'}
+    runner._update_ranked_genes()
+    assert np.all(truth == runner.ranked_genes)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    ('fisher', EnrichmentRunner._fisher_enrichment),
+    ('HYPERGEOMETRIC', EnrichmentRunner._hypergeometric_enrichment),
+    ('Randomization', EnrichmentRunner._randomization_enrichment),
+    ('XLmHG', EnrichmentRunner._xlmhg_enrichment)])
+def test_enrichment_runner_get_enrichment_func(test_input, expected):
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.lower()).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.capitalize()).__name__ == expected.__name__
+
+
+@pytest.mark.parametrize("test_input,err", [
+    ('fifty', ValueError),
+    (50, AssertionError),
+    (True, AssertionError),
+    (max, AssertionError)])
+def test_enrichment_runner_get_enrichment_func_invalid_value(test_input, err):
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    with pytest.raises(err):
+        runner._get_enrichment_func(test_input)
+
+
+def test_enrichment_runner_get_hypergeometric_parameters():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_xlmhg_enrichment():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_xlmhg_index_vector():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_fisher_enrichment():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_randomization_enrichment():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_hypergeometric_enrichment():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_update_gene_set():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_filter_annotations_single_list():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_format_results_single_list():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
