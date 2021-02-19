@@ -1,5 +1,7 @@
-import pytest
 from collections import namedtuple
+
+import pytest
+
 from rnalysis import filtering
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
@@ -386,10 +388,32 @@ def test_enrichment_runner_fisher_enrichment(monkeypatch, params, truth):
 
 def test_enrichment_runner_update_gene_set():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    runner.single_list = False
+    runner.background_set = set(pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).index)
+    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
+                       'WBGene99991111'}
+    updated_gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915'}
+    runner.update_gene_set()
+    assert runner.gene_set == updated_gene_set_truth
+
+
+def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
+    monkeypatch.setattr(EnrichmentRunner, '_update_ranked_genes', lambda x: None)
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    runner.single_list = True
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
+                       'WBGene99991111'}
+    updated_gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915'}
+    runner.update_gene_set()
+    assert runner.gene_set == updated_gene_set_truth
+
+
+def test_enrichment_runner_api():
     assert False
 
 
-def test_enrichment_runner_filter_annotations_single_list():
+def test_enrichment_runner_format_results():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     assert False
 
@@ -406,4 +430,264 @@ def test_enrichment_runner_xlmhg_enrichment():
 
 def test_enrichment_runner_xlmhg_index_vector():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_fetch_annotations():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_fetch_attributes():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_validate_attributes():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_filter_annotations():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_filter_annotations_single_list():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_calculate_enrichment():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_set_random_seed():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_calculate_enrichment_parallel():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_calculate_enrichment_serial():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_correct_multiple_comparisons():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_plot_results():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_enrichment_bar_plot():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_noncategorical_enrichment_runner_api():
+    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_noncategorical_enrichment_runner_get_enrichment_func():
+    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_noncategorical_enrichment_runner_sign_test_enrichment():
+    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_noncategorical_enrichment_runner_one_sample_t_test_enrichment():
+    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_noncategorical_enrichment_runner_format_results():
+    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_noncategorical_enrichment_runner_plot_results():
+    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_noncategorical_enrichment_runner_enrichment_histogram():
+    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_api():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_run():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_get_enrichment_func():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_get_organism():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_fetch_annotations():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_get_annotation_iterator():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_propagate_annotations():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_translate_gene_ids():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_get_query_key():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_fetch_attributes():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_correct_multiple_comparisons():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_plot_results():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_format_results():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_calculate_enrichment_serial():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_calculate_enrichment_parallel():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_classic_pvalues_serial():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_classic_pvalues_parallel():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_elim_pvalues_serial():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_elim_pvalues_parallel():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_weight_pvalues_serial():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_weight_pvalues_parallel():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_allm_pvalues_serial():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_allm_pvalues_parallel():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_parallel_over_grouping():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_calculate_allm():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_go_level_iterator():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_compute_term_sig():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_randomization_enrichment():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_xlmhg_enrichment():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_xlmhg_index_vector():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_hypergeometric_enrichment():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_fisher_enrichment():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_go_enrichment_runner_get_hypergeometric_parameters():
+    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
     assert False
