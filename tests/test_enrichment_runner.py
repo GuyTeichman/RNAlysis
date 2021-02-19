@@ -316,34 +316,72 @@ def test_enrichment_runner_get_enrichment_func_invalid_value(test_input, err):
         runner._get_enrichment_func(test_input)
 
 
-def test_enrichment_runner_get_hypergeometric_parameters():
+@pytest.mark.parametrize('attr,results',
+                         [('attribute1', (38, 6, 11, 3)),
+                          ('attribute3', (38, 6, 14, 4)),
+                          ('attribute4', (38, 6, 13, 4))])
+def test_enrichment_runner_get_hypergeometric_parameters(attr, results):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
+                       'WBGene00268195'}
+    assert runner._get_hypergeometric_parameters(attr) == results
 
 
-def test_enrichment_runner_xlmhg_enrichment():
+@pytest.mark.parametrize('params,truth',
+                         [((38, 11, 6, 5), ['attribute', 11, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11)), 0.05]),
+                          ((40, 10, 15, 0), ['attribute', 10, 0, (15 / 40) * 10, -np.inf, 0.05])])
+def test_enrichment_runner_hypergeometric_enrichment(monkeypatch, params, truth):
+    monkeypatch.setattr(EnrichmentRunner, '_get_hypergeometric_parameters', lambda self, attr: params)
+
+    def alt_calc_pval(self, bg_size, de_size, go_size, go_de_size):
+        assert (bg_size, de_size, go_size, go_de_size) == params
+        return 0.05
+
+    monkeypatch.setattr(EnrichmentRunner, '_calc_hypergeometric_pval', alt_calc_pval)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    assert runner._hypergeometric_enrichment('attribute') == truth
 
 
-def test_enrichment_runner_xlmhg_index_vector():
+@pytest.mark.parametrize('truth',
+                         [(['attribute1', 6, 3, (11 / 38) * 6, np.log2(3 / ((11 / 38) * 6)), 0.05]),
+                          (['attribute4', 6, 4, (13 / 38) * 6, np.log2(4 / ((13 / 38) * 6)), 0.05])])
+def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
+    reps_truth = 100
+    df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    bg_array_truth = pd.read_csv('tests/test_files/annotation_df_bg_array_truth.csv', index_col=0)[truth[0]]
+    gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106',
+                      'WBGene00001133', 'WBGene00003915', 'WBGene00268195'}
+
+    def alt_calc_pval(self, n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float):
+        assert reps == reps_truth
+        assert n == len(gene_set_truth)
+        assert log2fc == truth[4]
+        assert isinstance(bg_array, np.ndarray)
+        assert obs_frac == truth[2] / truth[1]
+        assert np.all(bg_array == bg_array_truth)
+        return 0.05
+
+    monkeypatch.setattr(EnrichmentRunner, '_calc_randomization_pval', alt_calc_pval)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.gene_set = gene_set_truth
+    runner.annotation_df = df
+    assert runner._randomization_enrichment(truth[0], reps_truth) == truth
 
 
-def test_enrichment_runner_fisher_enrichment():
+@pytest.mark.parametrize('params,truth',
+                         [((38, 11, 6, 5), ['attribute', 11, 5, (6 / 38) * 11, np.log2(5 / ((6 / 38) * 11)), 0.05]),
+                          ((40, 10, 15, 0), ['attribute', 10, 0, (15 / 40) * 10, -np.inf, 0.05])])
+def test_enrichment_runner_fisher_enrichment(monkeypatch, params, truth):
+    monkeypatch.setattr(EnrichmentRunner, '_get_hypergeometric_parameters', lambda self, attr: params)
+
+    def alt_calc_pval(self, bg_size, de_size, go_size, go_de_size):
+        assert (bg_size, de_size, go_size, go_de_size) == params
+        return 0.05
+
+    monkeypatch.setattr(EnrichmentRunner, '_calc_fisher_pval', alt_calc_pval)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
-
-
-def test_enrichment_runner_randomization_enrichment():
-    runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
-
-
-def test_enrichment_runner_hypergeometric_enrichment():
-    runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    assert runner._fisher_enrichment('attribute') == truth
 
 
 def test_enrichment_runner_update_gene_set():
@@ -357,5 +395,15 @@ def test_enrichment_runner_filter_annotations_single_list():
 
 
 def test_enrichment_runner_format_results_single_list():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_xlmhg_enrichment():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    assert False
+
+
+def test_enrichment_runner_xlmhg_index_vector():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     assert False
