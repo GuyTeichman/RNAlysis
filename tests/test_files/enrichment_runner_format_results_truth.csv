@@ -1,0 +1,4 @@
+name,samples,obs,exp,colName,pval
+name1,50,10,5.5, 2.3, 0.05
+name2,17,0,3, 0, 1
+name3,1,NaN,-2, -0.7, 0.04

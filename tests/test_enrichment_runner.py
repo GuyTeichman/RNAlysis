@@ -413,14 +413,28 @@ def test_enrichment_runner_api():
     assert False
 
 
-def test_enrichment_runner_format_results():
+def test_enrichment_runner_format_results(monkeypatch):
+    monkeypatch.setattr(EnrichmentRunner, '_correct_multiple_comparisons', lambda self: None)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    results_list = [['name1', 50, 10, 5.5, 2.3, 0.05], ['name2', 17, 0, 3, 0, 1], ['name3', 1, np.nan, -2, -0.7, 0.04]]
+    truth = pd.read_csv('tests/test_files/enrichment_runner_format_results_truth.csv', index_col=0)
+    runner.en_score_col = 'colName'
+    runner.single_list = False
+
+    runner.format_results(results_list)
+    assert truth.equals(runner.results)
 
 
-def test_enrichment_runner_format_results_single_list():
+def test_enrichment_runner_format_results_single_list(monkeypatch):
+    monkeypatch.setattr(EnrichmentRunner, '_correct_multiple_comparisons', lambda self: None)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    results_list = [['name1', 50, 2.3, 0.05], ['name2', 17, 0, 1], ['name3', 1, -0.7, np.nan]]
+    truth = pd.read_csv('tests/test_files/enrichment_runner_single_list_format_results_truth.csv', index_col=0)
+    runner.en_score_col = 'colName'
+    runner.single_list = True
+
+    runner.format_results(results_list)
+    assert truth.equals(runner.results)
 
 
 def test_enrichment_runner_xlmhg_enrichment():
@@ -428,9 +442,15 @@ def test_enrichment_runner_xlmhg_enrichment():
     assert False
 
 
-def test_enrichment_runner_xlmhg_index_vector():
+@pytest.mark.parametrize('attribute,truth',
+                         [('attribute1', np.array([0, 1], dtype='uint16')),
+                          ('attribute4', np.array([0, 2], dtype='uint16'))])
+def test_enrichment_runner_xlmhg_index_vector(attribute, truth):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.ranked_genes = np.array(['WBGene00000106', 'WBGene00000019', 'WBGene00000865', 'WBGene00001131'],
+                                   dtype='str')
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    assert np.all(runner._xlmhg_index_vector(attribute) == truth)
 
 
 def test_enrichment_runner_fetch_annotations():
@@ -438,8 +458,11 @@ def test_enrichment_runner_fetch_annotations():
     assert False
 
 
-def test_enrichment_runner_fetch_attributes():
+@pytest.mark.parametrize('attributes,truth',
+                         [])
+def test_enrichment_runner_fetch_attributes(attributes, truth):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    runner.attributes = attributes
     assert False
 
 
@@ -480,7 +503,28 @@ def test_enrichment_runner_calculate_enrichment_serial():
 
 def test_enrichment_runner_correct_multiple_comparisons():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+
+    runner.results = pd.DataFrame([[0, 0, 0, 0, 0, 0.005],
+                                   [0, 0, 0, 0, 0, 0.017],
+                                   [0, 0, 0, 0, 0, np.nan],
+                                   [0, 0, 0, 0, -3, np.nan],
+                                   [0, 0, 0, 0, 0, 0.92]],
+                                  columns=['name', 'samples', 'obs', 'exp', 'colName', 'pval']).set_index('name')
+    runner.alpha = 0.02
+    truth = pd.DataFrame([[0, 0, 0, 0, 0, 0.005, 0.015, True],
+                          [0, 0, 0, 0, 0, 0.017, 0.0255, False],
+                          [0, 0, 0, 0, 0, np.nan, np.nan, np.nan],
+                          [0, 0, 0, 0, -3, np.nan, np.nan, np.nan],
+                          [0, 0, 0, 0, 0, 0.92, 0.92, False]],
+                         columns=['name', 'samples', 'obs', 'exp', 'colName', 'pval', 'padj', 'significant']).set_index(
+        'name')
+
+    runner._correct_multiple_comparisons()
+
+    assert np.all(np.isclose(truth['padj'].values, runner.results['padj'].values, atol=0, equal_nan=True))
+    for val, val_truth in zip(runner.results['significant'], truth['significant']):
+        assert val == val_truth or (np.isnan(val) and np.isnan(val_truth))
+    assert truth.loc['name':'pval'].equals(runner.results.loc['name':'pval'])
 
 
 def test_enrichment_runner_plot_results():
@@ -494,200 +538,271 @@ def test_enrichment_runner_enrichment_bar_plot():
 
 
 def test_noncategorical_enrichment_runner_api():
-    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     assert False
 
 
 def test_noncategorical_enrichment_runner_get_enrichment_func():
-    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     assert False
 
 
 def test_noncategorical_enrichment_runner_sign_test_enrichment():
-    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     assert False
 
 
 def test_noncategorical_enrichment_runner_one_sample_t_test_enrichment():
-    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     assert False
 
 
 def test_noncategorical_enrichment_runner_format_results():
-    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     assert False
 
 
 def test_noncategorical_enrichment_runner_plot_results():
-    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     assert False
 
 
 def test_noncategorical_enrichment_runner_enrichment_histogram():
-    runner = NonCategoricalEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_api():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_run():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_get_enrichment_func():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_get_organism():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_fetch_annotations():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_get_annotation_iterator():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_propagate_annotations():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_translate_gene_ids():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_get_query_key():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_fetch_attributes():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_correct_multiple_comparisons():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+
+    runner.results = pd.DataFrame([[0, 0, 0, 0, 0, 0.005],
+                                   [0, 0, 0, 0, 0, 0.017],
+                                   [0, 0, 0, 0, 0, np.nan],
+                                   [0, 0, 0, 0, -3, np.nan],
+                                   [0, 0, 0, 0, 0, 0.92]],
+                                  columns=['go_id', 'samples', 'obs', 'exp', 'colName', 'pval']).set_index('go_id')
+    runner.alpha = 0.04
+    truth = pd.DataFrame([[0, 0, 0, 0, 0, 0.005, 0.0275, True],
+                          [0, 0, 0, 0, 0, 0.017, 0.04675, False],
+                          [0, 0, 0, 0, 0, np.nan, np.nan, np.nan],
+                          [0, 0, 0, 0, -3, np.nan, np.nan, np.nan],
+                          [0, 0, 0, 0, 0, 0.92, 1.0, False]],
+                         columns=['go_id', 'samples', 'obs', 'exp', 'colName', 'pval', 'padj',
+                                  'significant']).set_index('go_id')
+
+    runner._correct_multiple_comparisons()
+
+    assert np.all(np.isclose(truth['padj'].values, runner.results['padj'].values, atol=0, equal_nan=True))
+    for val, val_truth in zip(runner.results['significant'], truth['significant']):
+        assert val == val_truth or (np.isnan(val) and np.isnan(val_truth))
+    assert truth.loc['go_id':'pval'].equals(runner.results.loc['go_id':'pval'])
 
 
 def test_go_enrichment_runner_plot_results():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_format_results():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+def test_go_enrichment_runner_format_results(monkeypatch):
+    monkeypatch.setattr(GOEnrichmentRunner, '_correct_multiple_comparisons', lambda self: None)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    results_dict = {'name1': ['name1', 50, 10, 5.5, 2.3, 0.05], 'name2': ['name2', 17, 0, 3, 0, 1],
+                    'name3': ['name3', 1, np.nan, -2, -0.7, 0.04]}
+    truth = pd.read_csv('tests/test_files/go_enrichment_runner_format_results_truth.csv', index_col=0)
+    runner.en_score_col = 'colName'
+    runner.single_list = False
+    runner.return_nonsignificant = False
+
+    runner.format_results(results_dict)
+    assert truth.equals(runner.results)
+
+
+@pytest.mark.parametrize('return_nonsignificant,truth_file',
+                         [(True, 'tests/test_files/go_enrichment_runner_format_results_with_nonsignificant_truth.csv'),
+                          (False, 'tests/test_files/go_enrichment_runner_format_results_truth.csv')])
+def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant, truth_file):
+    truth = pd.read_csv(truth_file, index_col=0)
+    results_dict = {'name1': ['desc1', 50, 10, 5, 2.3, 0.05], 'name2': ['desc2', 17, 0, 3, 0, 1],
+                    'name3': ['desc3', 1, np.nan, -2, -0.7, 0.04]}
+
+    def add_sig(self):
+        self.results['significant'] = [False, True, True]
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_correct_multiple_comparisons', add_sig)
+
+    dag_tree = ontology.DAGTree.__new__(ontology.DAGTree)
+    dag_tree.go_terms = {'name1': ontology.GOTerm(), 'name2': ontology.GOTerm(), 'name3': ontology.GOTerm()}
+    dag_tree['name1'].level = 2
+    dag_tree['name2'].level = 1
+    dag_tree['name3'].level = 5
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.dag_tree = dag_tree
+    runner.en_score_col = 'colName'
+    runner.single_list = False
+    runner.return_nonsignificant = return_nonsignificant
+
+    runner.format_results(results_dict)
+
+    print('\n')
+    print(truth)
+    print('-----------')
+    print(runner.results)
+
+    assert truth.equals(runner.results)
 
 
 def test_go_enrichment_runner_calculate_enrichment_serial():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_calculate_enrichment_parallel():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_classic_pvalues_serial():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_classic_pvalues_parallel():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_elim_pvalues_serial():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_elim_pvalues_parallel():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_weight_pvalues_serial():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_weight_pvalues_parallel():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_allm_pvalues_serial():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_allm_pvalues_parallel():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_parallel_over_grouping():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_calculate_allm():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_go_level_iterator():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_compute_term_sig():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_randomization_enrichment():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_xlmhg_enrichment():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_xlmhg_index_vector():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+@pytest.mark.parametrize('attribute,truth',
+                         [('attribute1', np.array([0, 1], dtype='uint16')),
+                          ('attribute4', np.array([0, 2], dtype='uint16'))])
+def test_go_enrichment_runner_xlmhg_index_vector(attribute, truth):
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.ranked_genes = np.array(['WBGene00000106', 'WBGene00000019', 'WBGene00000865', 'WBGene00001131'],
+                                   dtype='str')
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).notna()
+    assert np.all(runner._xlmhg_index_vector(attribute) == truth)
 
 
 def test_go_enrichment_runner_hypergeometric_enrichment():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_fisher_enrichment():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
 def test_go_enrichment_runner_get_hypergeometric_parameters():
-    runner = GOEnrichmentRunner.__new__(EnrichmentRunner)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
