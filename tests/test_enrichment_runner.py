@@ -466,39 +466,108 @@ def test_enrichment_runner_fetch_attributes(attributes, truth):
     assert False
 
 
-def test_enrichment_runner_validate_attributes():
+@pytest.mark.parametrize('attibute_list,all_attrs,is_legal',
+                         [(['a', 'b', 'c'], {'c', 'a', 'b', 'd', 'A', 'f'}, True),
+                          (['a', 'c', 1], ['c', 'b', 'a'], True),
+                          ([3, 2, 1], {'a', 'b', 'c'}, False),
+                          (['a', -1, 2], ['a', 'b', 'c'], False),
+                          (['A', 'b', 'c'], {'c', 'b', 'a'}, False),
+                          (['a', 'b', True], {'a', 'b', True}, False),
+                          (['a', 'b', 'c'], 'abc', False),
+                          ('abc', {'a', 'b', 'c', 'abc'}, False)])
+def test_enrichment_runner_validate_attributes(attibute_list, all_attrs, is_legal):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    if is_legal:
+        runner._validate_attributes(attibute_list, all_attrs)
+    else:
+        with pytest.raises(AssertionError):
+            runner._validate_attributes(attibute_list, all_attrs)
 
 
 def test_enrichment_runner_filter_annotations():
+    truth = pd.read_csv('tests/test_files/enrichment_runner_filter_annotations_truth.csv', index_col=0)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    runner.background_set = {'WBGene00000019', 'WBGene00000106', 'WBGene00000137', 'WBGene00000369', 'WBGene00000860',
+                             'WBGene00048865', 'WBGene00268195'}
+    runner.attributes = ['attribute1', 'attribute3', 'attribute4']
+    runner.single_list = False
+    runner.filter_annotations()
+    assert truth.equals(runner.annotation_df)
 
 
 def test_enrichment_runner_filter_annotations_single_list():
+    truth = pd.read_csv('tests/test_files/enrichment_runner_filter_annotations_single_list_truth.csv', index_col=0)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    runner.attributes = ['attribute1', 'attribute3', 'attribute4']
+    runner.single_list = True
+    runner.filter_annotations()
+    assert truth.equals(runner.annotation_df)
 
 
-def test_enrichment_runner_calculate_enrichment():
+def test_enrichment_runner_calculate_enrichment(monkeypatch):
+    random_seed_status = [False]
+
+    def set_seed(self):
+        random_seed_status[0] = True
+
+    monkeypatch.setattr(EnrichmentRunner, 'set_random_seed', set_seed)
+    monkeypatch.setattr(EnrichmentRunner, '_calculate_enrichment_parallel', lambda self: 'parallel')
+    monkeypatch.setattr(EnrichmentRunner, '_calculate_enrichment_serial', lambda self: 'serial')
+
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.parallel = True
+    assert runner.calculate_enrichment() == 'parallel'
+    assert random_seed_status[0]
+
+    random_seed_status[0] = False
+    runner.parallel = False
+    assert runner.calculate_enrichment() == 'serial'
+    assert random_seed_status[0]
 
 
-def test_enrichment_runner_set_random_seed():
+@pytest.mark.parametrize('seed,is_legal',
+                         [(5, True),
+                          (42, True),
+                          (-1, False),
+                          (0.1, False),
+                          ('seed', False)])
+def test_enrichment_runner_set_random_seed(seed, is_legal):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.random_seed = seed
+    if is_legal:
+        runner.set_random_seed()
+        val = np.random.random()
+        np.random.seed(seed)
+        truth = np.random.random()
+        assert val == truth
+    else:
+        with pytest.raises(AssertionError):
+            runner.set_random_seed()
+
+
+def _test_enrichment_runner_calculate_enrichment_get_constants():
+    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    runner.attributes = ['attribute1', 'attribute2', 'attribute4']
+    runner.pvalue_kwargs = {'arg1': 'val1', 'arg2': 'val2'}
+
+    def enrichment_func(attr, **kwargs):
+        return [attr, kwargs]
+
+    runner.enrichment_func = enrichment_func
+    truth = [[attr, runner.pvalue_kwargs] for attr in runner.attributes]
+    return runner, truth
 
 
 def test_enrichment_runner_calculate_enrichment_parallel():
-    runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner, truth = _test_enrichment_runner_calculate_enrichment_get_constants()
+    assert truth == runner._calculate_enrichment_parallel()
 
 
 def test_enrichment_runner_calculate_enrichment_serial():
-    runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner, truth = _test_enrichment_runner_calculate_enrichment_get_constants()
+    assert truth == runner._calculate_enrichment_serial()
 
 
 def test_enrichment_runner_correct_multiple_comparisons():
@@ -693,11 +762,6 @@ def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant,
     runner.return_nonsignificant = return_nonsignificant
 
     runner.format_results(results_dict)
-
-    print('\n')
-    print(truth)
-    print('-----------')
-    print(runner.results)
 
     assert truth.equals(runner.results)
 

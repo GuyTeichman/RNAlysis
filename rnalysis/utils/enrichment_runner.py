@@ -327,8 +327,10 @@ class EnrichmentRunner:
 
     @staticmethod
     def _validate_attributes(attribute_list: list, all_attrs: Collection):
+        assert isinstance(attribute_list, list), f"Invalid type for 'attribute_list': {type(attribute_list)}."
+        all_attrs = parsing.data_to_set(all_attrs)
         for attr in attribute_list:
-            if isinstance(attr, int):
+            if type(attr) in {int}:
                 assert attr >= 0, f"Error in attribute number {attr}: index must be non-negative!"
                 assert attr < len(all_attrs), f"Attribute index {attr} out of range."
             else:
