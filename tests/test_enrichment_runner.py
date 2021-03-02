@@ -453,17 +453,31 @@ def test_enrichment_runner_xlmhg_index_vector(attribute, truth):
     assert np.all(runner._xlmhg_index_vector(attribute) == truth)
 
 
-def test_enrichment_runner_fetch_annotations():
+def test_enrichment_runner_fetch_annotations(monkeypatch):
+    monkeypatch.setattr(validation, 'validate_attr_table', lambda x: None)
+    truth = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.attr_ref_path = 'tests/test_files/attr_ref_table_for_tests.csv'
+    runner.fetch_annotations()
+    assert truth.equals(runner.annotation_df)
 
 
-@pytest.mark.parametrize('attributes,truth',
-                         [])
-def test_enrichment_runner_fetch_attributes(attributes, truth):
+@pytest.mark.parametrize('attributes,truth,annotation_df_cols',
+                         [(['all', ['col1', 'col2', 'col3'], ['col1', 'col2', 'col3']]),
+                          (None, ['first-attr', 'second attr', 'third. attr '],
+                           ['first-attr', 'second attr', 'third. attr ', 'fourth', 'fifth']),
+                          (['col2', 'col3'], ['col2', 'col3'], ['col1', 'col2', 'col3']),
+                          ([0, 2], ['col1', 'col3'], ['col1', 'col2', 'col3']),
+                          ({0, 2}, ['col1', 'col3'], ['col1', 'col2', 'col3']),
+                          ({'col2', 'col3'}, ['col2', 'col3'], ['col1', 'col2', 'col3'])])
+def test_enrichment_runner_fetch_attributes(attributes, truth, annotation_df_cols, monkeypatch):
+    monkeypatch.setattr(EnrichmentRunner, '_validate_attributes', lambda self, attrs, all_attrs: None)
+    monkeypatch.setattr('builtins.input', lambda x: 'first-attr\nsecond attr\nthird. attr \n')
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.attributes = attributes
-    assert False
+    runner.annotation_df = pd.DataFrame([], columns=annotation_df_cols)
+    runner.fetch_attributes()
+    assert runner.attributes == truth
 
 
 @pytest.mark.parametrize('attibute_list,all_attrs,is_legal',
