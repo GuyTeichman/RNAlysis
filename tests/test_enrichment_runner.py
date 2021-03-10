@@ -825,9 +825,18 @@ def test_noncategorical_enrichment_runner_enrichment_histogram(plot_style, plot_
     assert isinstance(res, plt.Figure)
 
 
-def test_go_enrichment_runner_api():
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+@pytest.mark.parametrize('single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,kwargs',
+                         [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, {}),
+                          (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
+                           {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
+                           'path/to/biotype/ref', 42, {'reps': 10000})])
+def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
+                                  biotype_ref_path, random_seed, kwargs):
+    monkeypatch.setattr(io, 'fetch_go_basic', lambda: 'dag_tree')
+    runner = GOEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, 'elim', 'any', 'any', None, 'any', None, 'any',
+                                None, False, False, 'fname', False, False, False, 'set_name', False, pval_func,
+                                biotypes, background_set, biotype_ref_path, single_list, random_seed, **kwargs)
+    assert runner.dag_tree == 'dag_tree'
 
 
 def test_go_enrichment_runner_run():
@@ -840,9 +849,23 @@ def test_go_enrichment_runner_get_enrichment_func():
     assert False
 
 
-def test_go_enrichment_runner_get_organism():
+@pytest.mark.parametrize('organism,truth',
+                         [('auto', ('inferred_id', 'inferred_organism')),
+                          ('c elegans', ('c elegans_mapped_id', 'organism'))])
+def test_go_enrichment_runner_get_organism(monkeypatch, organism, truth):
+    def alt_infer_taxon_id(gene_set):
+        assert isinstance(gene_set, set)
+        return 'inferred_id', 'inferred_organism'
+
+    monkeypatch.setattr(io, 'map_taxon_id', lambda input_organism: (input_organism + 'mapped_id', 'organism'))
+    monkeypatch.setattr(io, 'infer_taxon_id_from_gene_ids', alt_infer_taxon_id)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.gene_set = {'gene1', 'gene2', 'gene4'}
+    runner.organism = organism
+
+    runner.get_organism()
+
+    assert runner.taxon_id, runner.organism == truth
 
 
 def test_go_enrichment_runner_fetch_annotations():
