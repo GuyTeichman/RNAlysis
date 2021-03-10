@@ -530,7 +530,7 @@ def test_enrichment_runner_fetch_attributes(attributes, truth, annotation_df_col
     runner.attributes = attributes
     runner.annotation_df = pd.DataFrame([], columns=annotation_df_cols)
     runner.fetch_attributes()
-    assert runner.attributes == truth
+    assert sorted(runner.attributes) == sorted(truth)
 
 
 @pytest.mark.parametrize('attibute_list,all_attrs,is_legal',
