@@ -56,7 +56,7 @@ class EnrichmentRunner:
             assert background_set is None, "Enrichment in single_list mode does not accept a 'background_set' argument."
             assert biotype_ref_path is None, \
                 "Enrichment in single_list mode does not accept a 'biotype_ref_path' argument."
-            assert random_seed is None, "Enrichment in single_list mode does not accept a 'random_seet' argument."
+            assert random_seed is None, "Enrichment in single_list mode does not accept a 'random_seed' argument."
             assert isinstance(genes, np.ndarray), f"Invalid type for argument 'genes' in single_list mode: " \
                                                   f"expected np.ndarray, instead got '{type(genes)}'."
 
@@ -586,9 +586,9 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         columns = ['name', 'samples', 'obs', 'exp', 'pval']
         self.results = pd.DataFrame(unformatted_results_list, columns=columns).set_index('name')
         self._correct_multiple_comparisons()
-        if self.results['padj'].isna().any():
+        if self.results['pval'].isna().any():
             warnings.warn(f"One or more of the genes in the background set contained NaN values in "
-                          f"{len(self.results['padj'].isna())} of the attributes. "
+                          f"{len(self.results['pval'].isna())} of the attributes. "
                           f"P-values and plots will not be generated for those attributes. ")
 
     def plot_results(self) -> List[plt.Figure]:
