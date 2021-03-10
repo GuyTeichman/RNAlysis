@@ -868,7 +868,21 @@ def test_go_enrichment_runner_get_organism(monkeypatch, organism, truth):
     assert runner.taxon_id, runner.organism == truth
 
 
-def test_go_enrichment_runner_fetch_annotations():
+def test_go_enrichment_runner_fetch_annotations(monkeypatch):
+    monkeypatch.setattr(GOEnrichmentRunner, '_get_query_key', lambda self: 'the_query_key')
+    monkeypatch.setattr(GOEnrichmentRunner, '_generate_goa_df', lambda self: 'goa_df')
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.fetch_annotations()
+    assert runner.annotation_df == 'goa_df'
+    assert runner.GOA_DF_QUERIES['the_query_key'] == 'goa_df'
+
+    runner.GOA_DF_QUERIES['the_query_key'] = 'another_goa_df'
+    runner.fetch_annotations()
+    assert runner.annotation_df == 'another_goa_df'
+    assert runner.GOA_DF_QUERIES['the_query_key'] == 'another_goa_df'
+
+
+def test_go_enrichment_runner_generate_goa_df(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 

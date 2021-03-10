@@ -719,7 +719,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
         if query_key in self.GOA_DF_QUERIES:
             self.annotation_df = self.GOA_DF_QUERIES[query_key]
             return
+        else:
+            self.annotation_df = self._generate_goa_df()
+            # save query results to GOA_DF_QUERIES
+            self.GOA_DF_QUERIES[query_key] = self.annotation_df
 
+    def _generate_goa_df(self) -> pd.DataFrame:
         if self.propagate_annotations != 'no':
             desc = f"Fetching and propagating GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
         else:
@@ -751,11 +756,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
         translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
 
         # get boolean DataFrame for enrichment
-        self.annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
-                                                            progress_bar_desc="Generating Gene Ontology Referene Table")
-
-        # save query results to GOA_DF_QUERIES
-        self.GOA_DF_QUERIES[query_key] = self.annotation_df
+        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
+                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
+        return annotation_df
 
     def _get_annotation_iterator(self):
         return io.GOlrAnnotationIterator(self.taxon_id, self.aspects,
