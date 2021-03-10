@@ -781,10 +781,13 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return translated_sparse_annotation_dict
 
     def _get_query_key(self):
-        return (self.taxon_id, self.gene_id_type, parsing.data_to_tuple(self.aspects),
-                parsing.data_to_tuple(self.evidence_types), parsing.data_to_tuple(self.excluded_evidence_types),
-                parsing.data_to_tuple(self.databases), parsing.data_to_tuple(self.excluded_databases),
-                parsing.data_to_tuple(self.qualifiers), parsing.data_to_tuple(self.excluded_qualifiers),
+        return (self.taxon_id, self.gene_id_type, parsing.data_to_tuple(self.aspects, sort=True),
+                parsing.data_to_tuple(self.evidence_types, sort=True),
+                parsing.data_to_tuple(self.excluded_evidence_types, sort=True),
+                parsing.data_to_tuple(self.databases, sort=True),
+                parsing.data_to_tuple(self.excluded_databases, sort=True),
+                parsing.data_to_tuple(self.qualifiers, sort=True),
+                parsing.data_to_tuple(self.excluded_qualifiers, sort=True),
                 self.propagate_annotations != 'no')
 
     def fetch_attributes(self):
