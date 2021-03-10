@@ -555,6 +555,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_list=False)
 
     def _get_enrichment_func(self, pval_func_name: str):
+        assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
         pval_func_name = pval_func_name.lower()
         if pval_func_name == 't_test':
             return self._one_sample_t_test_enrichment
@@ -564,7 +565,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
             raise ValueError(f"Unknown enrichment function '{pval_func_name}'.")
 
     def _sign_test_enrichment(self, attribute: str) -> list:
-        exp = self.annotation_df[attribute].median()
+        exp = self.annotation_df[attribute].median(skipna=True)
         obs = self.annotation_df.loc[self.gene_set, attribute].median(skipna=False)
         if np.isnan(obs):
             pval = np.nan
@@ -573,7 +574,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         return [attribute, len(self.gene_set), obs, exp, pval]
 
     def _one_sample_t_test_enrichment(self, attribute: str) -> list:
-        exp = self.annotation_df[attribute].mean()
+        exp = self.annotation_df[attribute].mean(skipna=True)
         obs = self.annotation_df.loc[self.gene_set, attribute].mean(skipna=False)
         if np.isnan(obs):
             pval = np.nan
