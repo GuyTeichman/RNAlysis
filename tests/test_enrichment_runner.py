@@ -849,6 +849,35 @@ def test_go_enrichment_runner_get_enrichment_func():
     assert False
 
 
+@pytest.mark.parametrize("test_input,expected", [
+    ('fisher', EnrichmentRunner._fisher_enrichment),
+    ('HYPERGEOMETRIC', EnrichmentRunner._hypergeometric_enrichment),
+    ('Randomization', EnrichmentRunner._randomization_enrichment),
+    ('XLmHG', EnrichmentRunner._xlmhg_enrichment)])
+@pytest.mark.parametrize("propagate_annotations", ["no", "elim"])
+def test_go_enrichment_runner_get_enrichment_func(test_input, expected, propagate_annotations):
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = propagate_annotations
+    assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.lower()).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.capitalize()).__name__ == expected.__name__
+
+
+@pytest.mark.parametrize("test_input,err", [
+    ('fifty', ValueError),
+    (50, AssertionError),
+    (True, AssertionError),
+    (max, AssertionError),
+    ('randomization', NotImplementedError),
+    ('xlmhg', NotImplementedError)])
+def test_go_enrichment_runner_get_enrichment_func_invalid_value(test_input, err):
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = 'weight'
+    with pytest.raises(err):
+        runner._get_enrichment_func(test_input)
+
+
 @pytest.mark.parametrize('organism,truth',
                          [('auto', ('inferred_id', 'inferred_organism')),
                           ('c elegans', ('c elegans_mapped_id', 'organism'))])
@@ -887,9 +916,30 @@ def test_go_enrichment_runner_generate_goa_df(monkeypatch):
     assert False
 
 
-def test_go_enrichment_runner_get_annotation_iterator():
+def test_go_enrichment_runner_get_annotation_iterator(monkeypatch):
+    def alt_init(self, taxon_id, aspects, evidence_types, excluded_evidence_types, databases, excluded_databases,
+                 qualifiers, excluded_qualifiers):
+        assert taxon_id == 'taxon_id'
+        assert aspects == 'aspects'
+        assert evidence_types == 'evidence_types'
+        assert excluded_evidence_types == 'exc_evidence_types'
+        assert databases == 'databases'
+        assert excluded_databases == 'exc_databases'
+        assert qualifiers == 'qualifiers'
+        assert excluded_qualifiers == 'exc_qualifiers'
+
+    monkeypatch.setattr(io.GOlrAnnotationIterator, '__init__', alt_init)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.taxon_id = 'taxon_id'
+    runner.aspects = 'aspects'
+    runner.evidence_types = 'evidence_types'
+    runner.excluded_evidence_types = 'exc_evidence_types'
+    runner.databases = 'databases'
+    runner.excluded_databases = 'exc_databases'
+    runner.qualifiers = 'qualifiers'
+    runner.excluded_qualifiers = 'exc_qualifiers'
+    res = runner._get_annotation_iterator()
+    assert isinstance(res, io.GOlrAnnotationIterator)
 
 
 def test_go_enrichment_runner_propagate_annotations():
