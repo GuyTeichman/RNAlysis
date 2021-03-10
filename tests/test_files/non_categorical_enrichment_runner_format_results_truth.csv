@@ -1,0 +1,4 @@
+name,samples,obs,exp,pval
+name1,50,10,5.5, 0.05
+name2,17,0,3, 1.00
+name3,1,NaN,-2,NaN

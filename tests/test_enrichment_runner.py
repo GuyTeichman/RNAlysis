@@ -413,8 +413,16 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
     assert runner.gene_set == updated_gene_set_truth
 
 
-def test_enrichment_runner_api():
-    assert False
+@pytest.mark.parametrize('single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,kwargs',
+                         [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, {}),
+                          (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
+                           {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
+                           'path/to/biotype/ref', 42, {'reps': 10000})])
+def test_enrichment_runner_api(single_list, genes, biotypes, pval_func, background_set, biotype_ref_path, random_seed,
+                               kwargs):
+    _ = EnrichmentRunner(genes, ['attr1', 'attr2'], 0.05, 'path/to/attr/ref', False,
+                         'fname', False, False, 'set_name', False, pval_func, biotypes,
+                         background_set, biotype_ref_path, single_list, random_seed, **kwargs)
 
 
 def test_enrichment_runner_format_results(monkeypatch):
@@ -681,8 +689,10 @@ def test_enrichment_runner_enrichment_bar_plot(plot_horizontal):
 
 
 def test_noncategorical_enrichment_runner_api():
-    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
-    assert False
+    runner = NonCategoricalEnrichmentRunner({'gene1', 'gene2', 'gene4'}, ['attr1', 'attr2'], 0.05, 'protein_coding',
+                                            {'gene1', 'gene2', 'gene3', 'gene4'}, 'path/to/attr/ref',
+                                            'path/to/biotype/ref', False, 'fname', False, False, 'overlap', 5,
+                                            'set_name', False, True)
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -765,9 +775,14 @@ def test_noncategorical_enrichment_runner_one_sample_t_test_enrichment(monkeypat
             assert truth_val == res_val
 
 
-def test_noncategorical_enrichment_runner_format_results():
+def test_noncategorical_enrichment_runner_format_results(monkeypatch):
+    monkeypatch.setattr(NonCategoricalEnrichmentRunner, '_correct_multiple_comparisons', lambda self: None)
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
-    assert False
+    results_list = [['name1', 50, 10, 5.5, 0.05], ['name2', 17, 0, 3, 1], ['name3', 1, np.nan, -2, np.nan]]
+    truth = pd.read_csv('tests/test_files/non_categorical_enrichment_runner_format_results_truth.csv', index_col=0)
+
+    runner.format_results(results_list)
+    assert truth.equals(runner.results)
 
 
 def test_noncategorical_enrichment_runner_plot_results(monkeypatch):
