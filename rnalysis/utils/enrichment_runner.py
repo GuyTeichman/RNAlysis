@@ -150,9 +150,9 @@ class EnrichmentRunner:
         return bg_size, de_size, go_size, go_de_size
 
     def _xlmhg_enrichment(self, attribute: str) -> list:
-        index_vec = np.uint16(self._xlmhg_index_vector(attribute))
         n = len(self.ranked_genes)
-        rev_index_vec = np.uint16([n - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
+        index_vec, rev_index_vec = self._xlmhg_index_vectors(attribute)
+
         # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all of the positive
         # elements in the ranked set. Determined to be the minimum between x_min and ceil(x_frac * k),
         # where 'k' is the number of 'positive' elements in the ranked set.
@@ -179,10 +179,13 @@ class EnrichmentRunner:
 
         return [attribute, n, log2_en_score, pval]
 
-    def _xlmhg_index_vector(self, attribute) -> np.ndarray:
+    def _xlmhg_index_vectors(self, attribute) -> Tuple[np.ndarray, np.ndarray]:
+        n = len(self.ranked_genes)
         ranked_srs = self.annotation_df.loc[self.ranked_genes, attribute]
-        assert ranked_srs.shape[0] == len(self.ranked_genes)
-        return np.uint16(np.nonzero(ranked_srs.notna().values)[0])
+        assert ranked_srs.shape[0] == n
+        index_vec = np.uint16(np.nonzero(ranked_srs.notna().values)[0])
+        rev_index_vec = np.uint16([n - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
+        return index_vec, rev_index_vec
 
     def _fisher_enrichment(self, attribute: str) -> list:
         bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(attribute)
@@ -1031,7 +1034,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         res[0] = go_name
         return res
 
-    def _xlmhg_index_vector(self, attribute) -> np.ndarray:
+    def _xlmhg_index_vectors(self, attribute) -> np.ndarray:
         ranked_srs = self.annotation_df.loc[self.ranked_genes, attribute]
         assert ranked_srs.shape[0] == len(self.ranked_genes)
         return np.uint16(np.nonzero(ranked_srs.values)[0])

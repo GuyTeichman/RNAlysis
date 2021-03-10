@@ -1,10 +1,12 @@
 from collections import namedtuple
+import xlmhg
 
 import pytest
 
 from rnalysis import filtering
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
+from rnalysis.utils import enrichment_runner
 from tests import __attr_ref__, __biotype_ref__
 
 
@@ -437,20 +439,61 @@ def test_enrichment_runner_format_results_single_list(monkeypatch):
     assert truth.equals(runner.results)
 
 
-def test_enrichment_runner_xlmhg_enrichment():
+@pytest.mark.parametrize('attr,index_vector, pvalue_kwargs,p_values,e_scores,params_truth',
+                         [('attr1', [3, 5, 2], {}, (0.05, 0.9), (2, 1.5),
+                           {'L': 1, 'X': 2, 'N': 10, 'table': np.empty((3 + 1, 10 - 3 + 1), dtype=np.longdouble)}),
+                          ('attr 2', [1, 2, 3, 4], {'L': 2, 'X': 7}, (0, 0), (0, 0),
+                           {'L': 2, 'X': 7, 'N': 10, 'table': np.empty((4 + 1, 10 - 4 + 1), dtype=np.longdouble)}),
+                          ('attr,3', [2, 9], {'other_arg': 13}, (0.8, 0.1), (1, 1.2),
+                           {'L': 1, 'X': 1, 'N': 10, 'table': np.empty((2 + 1, 10 - 2 + 1), dtype=np.longdouble)})])
+def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pvalue_kwargs, p_values, e_scores,
+                                            params_truth):
+    n_calls_xlmhg_test = [0]
+    params_truth['indices'] = index_vector
+
+    class ResultObject:
+        def __init__(self, pval, escore):
+            self.pval = pval
+            self.escore = escore
+
+    monkeypatch.setattr(EnrichmentRunner, '_xlmhg_index_vectors', lambda self, attribute: (index_vector, index_vector))
+
+    def _xlmhg_test_validate_parameters(**kwargs):
+        for key in ['X', 'L', 'N', 'indices']:
+            assert params_truth[key] == kwargs[key]
+        assert params_truth['table'].shape == kwargs['table'].shape
+        assert params_truth['table'].dtype == kwargs['table'].dtype
+
+        pval = p_values[n_calls_xlmhg_test[0]]
+        escore = e_scores[n_calls_xlmhg_test[0]]
+        n_calls_xlmhg_test[0] += 1
+        return ResultObject(pval, escore)
+
+    monkeypatch.setattr(enrichment_runner, 'xlmhg_test', _xlmhg_test_validate_parameters)
+
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.ranked_genes = np.array(
+        ['gene0', 'gene1', 'gene2', 'gene3', 'gene4', 'gene5', 'gene6', 'gene7', 'gene8', 'gene9'], dtype='str')
+    runner.pvalue_kwargs = pvalue_kwargs
+
+    log2fc = np.log2(e_scores[0] if p_values[0] <= p_values[1] else (1 / e_scores[1]))
+    output_truth = [attr, len(runner.ranked_genes), log2fc, min(p_values)]
+
+    result = runner._xlmhg_enrichment(attr)
+    assert result == output_truth
 
 
-@pytest.mark.parametrize('attribute,truth',
-                         [('attribute1', np.array([0, 1], dtype='uint16')),
-                          ('attribute4', np.array([0, 2], dtype='uint16'))])
-def test_enrichment_runner_xlmhg_index_vector(attribute, truth):
+@pytest.mark.parametrize('attribute,truth, truth_rev',
+                         [('attribute1', np.array([0, 1], dtype='uint16'), np.array([2, 3], dtype='uint16')),
+                          ('attribute4', np.array([0, 2], dtype='uint16'), np.array([1, 3], dtype='uint16'))])
+def test_enrichment_runner_xlmhg_index_vectors(attribute, truth, truth_rev):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.ranked_genes = np.array(['WBGene00000106', 'WBGene00000019', 'WBGene00000865', 'WBGene00001131'],
                                    dtype='str')
     runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
-    assert np.all(runner._xlmhg_index_vector(attribute) == truth)
+    vec, rev_vec = runner._xlmhg_index_vectors(attribute)
+    assert np.all(vec == truth)
+    assert np.all(rev_vec == truth_rev)
 
 
 def test_enrichment_runner_fetch_annotations(monkeypatch):
@@ -868,7 +911,7 @@ def test_go_enrichment_runner_xlmhg_index_vector(attribute, truth):
     runner.ranked_genes = np.array(['WBGene00000106', 'WBGene00000019', 'WBGene00000865', 'WBGene00001131'],
                                    dtype='str')
     runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).notna()
-    assert np.all(runner._xlmhg_index_vector(attribute) == truth)
+    assert np.all(runner._xlmhg_index_vectors(attribute) == truth)
 
 
 def test_go_enrichment_runner_hypergeometric_enrichment():
