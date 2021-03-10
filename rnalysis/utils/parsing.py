@@ -87,36 +87,43 @@ def uniprot_tab_with_score_to_dict(tab_input: str, reverse_key_value: bool = Fal
     return key_to_id
 
 
-def data_to_list(data: Any) -> list:
+def data_to_list(data: Any, sort: bool = False) -> list:
     if isinstance(data, list):
-        return data
+        lst = data
     elif isinstance(data, (set, tuple, np.ndarray)):
-        return list(data)
+        lst = list(data)
     elif isinstance(data, (int, float, bool, str)):
-        return [data]
+        lst = [data]
     elif data is None:
-        return [None]
+        lst = [None]
     else:
         try:
-            return list(data)
+            lst = list(data)
         except TypeError:
             raise TypeError(f"Invalid type {type(data)}.")
 
+    if sort:
+        lst.sort()
+    return lst
 
-def data_to_tuple(data: Any) -> tuple:
+
+def data_to_tuple(data: Any, sort: bool = False) -> tuple:
     if isinstance(data, tuple):
-        return data
+        tpl = data
     elif isinstance(data, (set, list, np.ndarray)):
-        return tuple(data)
+        tpl = tuple(data)
     elif isinstance(data, (int, float, bool, str)):
-        return data,
+        tpl = data,
     elif data is None:
-        return None,
+        tpl = None,
     else:
         try:
-            return tuple(data)
+            tpl = tuple(data)
         except TypeError:
             raise TypeError(f"Invalid type {type(data)}.")
+    if sort:
+        tpl = tuple(sorted(tpl))
+    return tpl
 
 
 def data_to_set(data: Any) -> set:

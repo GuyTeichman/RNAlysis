@@ -8,15 +8,33 @@ class DummyClass:
         pass
 
 
-def test_data_to_list():
-    assert data_to_list([1, 2, 'hi']) == [1, 2, 'hi']
-    assert data_to_list((1, 2, 'hi')) == [1, 2, 'hi']
-    assert data_to_list('fifty seven brave men') == ['fifty seven brave men']
-    assert sorted(data_to_list({'three', 'different', 'elements'})) == sorted(
-        ['three', 'different', 'elements'])
-    assert data_to_list(np.array([6, 9, 2])) == [6, 9, 2]
-    assert data_to_list(67.2) == [67.2]
-    assert data_to_list(None) == [None]
+@pytest.mark.parametrize('input_val,sort,truth',
+                         [([1, 2, 'hi'], False, [1, 2, 'hi']),
+                          ((1, 2, 'hi'), False, [1, 2, 'hi']),
+                          ('fifty seven brave men', False, ['fifty seven brave men']),
+                          ('fifty seven brave men', True, ['fifty seven brave men']),
+                          ({'three', 'different', 'elements'}, True, ['different', 'elements', 'three']),
+                          (np.array([6, 9, 2]), False, [6, 9, 2]),
+                          (np.array([6, 9, 2]), True, [2, 6, 9]),
+                          (None, False, [None])])
+def test_data_to_list(input_val, sort, truth):
+    assert data_to_list(input_val, sort=sort) == truth
+
+
+@pytest.mark.parametrize('input_val,sort,truth',
+                         [([1, 2, 'hi'], False, (1, 2, 'hi')),
+                          ((1, 2, 'hi'), False, (1, 2, 'hi')),
+                          ('fifty seven brave men', False, ('fifty seven brave men',)),
+                          ('fifty seven brave men', True, ('fifty seven brave men',)),
+                          ({'three', 'different', 'elements'}, True, ('different', 'elements', 'three')),
+                          (np.array([6, 9, 2]), False, (6, 9, 2)),
+                          (np.array([6, 9, 2]), True, (2, 6, 9)),
+                          (67.2, False, (67.2,)),
+                          ((67.2,), False, (67.2,)),
+                          ((67.5,), True, (67.5,)),
+                          (None, False, (None,))])
+def test_data_to_tuple(input_val, sort, truth):
+    assert data_to_tuple(input_val, sort=sort) == truth
 
 
 def test_data_to_list_invalid_type():
@@ -42,17 +60,6 @@ def test_data_to_set():
     assert data_to_set(np.array([6, 9, 2])) == {6, 9, 2}
     assert data_to_set(67.2) == {67.2}
     assert data_to_set(None) == {None}
-
-
-def test_data_to_tuple():
-    assert data_to_tuple([1, 2, 'hi']) == (1, 2, 'hi')
-    assert data_to_tuple('fifty seven brave men') == ('fifty seven brave men',)
-    assert sorted(data_to_tuple({'three', 'different', 'elements'})) == sorted(
-        ('three', 'different', 'elements'))
-    assert data_to_tuple(np.array([6, 9, 2])) == (6, 9, 2)
-    assert data_to_tuple((67.2,)) == (67.2,)
-    assert data_to_tuple(67.2) == (67.2,)
-    assert data_to_tuple(None) == (None,)
 
 
 def test_from_string(monkeypatch):
