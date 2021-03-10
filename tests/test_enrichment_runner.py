@@ -954,9 +954,31 @@ def test_go_enrichment_runner_translate_gene_ids():
     assert False
 
 
-def test_go_enrichment_runner_get_query_key():
+@pytest.mark.parametrize('propagate_annotations', ['no', 'elim'])
+def test_go_enrichment_runner_get_query_key(propagate_annotations):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.propagate_annotations = propagate_annotations
+    runner.taxon_id = 'taxon_id'
+    runner.gene_id_type = 'id_type'
+    runner.aspects = {'aspect1', 'aspect2'}
+    runner.evidence_types = {'ev2', 'ev1', 'ev5'}
+    runner.excluded_evidence_types = {'ev3'}
+    runner.databases = {'db1'}
+    runner.excluded_databases = set()
+    runner.qualifiers = {'qual1'}
+    runner.excluded_qualifiers = set()
+
+    propagate = True if propagate_annotations != 'no' else False
+
+    truth = (
+        'taxon_id', 'id_type', ('aspect1', 'aspect2'), ('ev1', 'ev2', 'ev5'), ('ev3',), ('db1',), tuple(), ('qual1',),
+        tuple(), propagate)
+    key = runner._get_query_key()
+    assert key == truth
+    try:
+        _ = hash(key)
+    except TypeError:
+        assert False
 
 
 def test_go_enrichment_runner_fetch_attributes():
