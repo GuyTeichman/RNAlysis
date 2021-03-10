@@ -663,7 +663,8 @@ def test_enrichment_runner_correct_multiple_comparisons():
     assert truth.loc['name':'pval'].equals(runner.results.loc['name':'pval'])
 
 
-def test_enrichment_runner_plot_results(monkeypatch):
+@pytest.mark.parametrize('single_list', [True, False])
+def test_enrichment_runner_plot_results(monkeypatch, single_list):
     def validate_params(self, title, ylabel=''):
         assert isinstance(title, str)
         assert self.set_name in title
@@ -672,20 +673,21 @@ def test_enrichment_runner_plot_results(monkeypatch):
 
     monkeypatch.setattr(EnrichmentRunner, 'enrichment_bar_plot', validate_params)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    runner.single_list = False
+    runner.single_list = single_list
     runner.set_name = 'name of the set'
     res = runner.plot_results()
     assert isinstance(res, plt.Figure)
 
 
+@pytest.mark.parametrize('n_bars', ['all', 2])
 @pytest.mark.parametrize('plot_horizontal', [True, False])
-def test_enrichment_runner_enrichment_bar_plot(plot_horizontal):
+def test_enrichment_runner_enrichment_bar_plot(plot_horizontal, n_bars):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.results = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
     runner.en_score_col = 'log2_fold_enrichment'
     runner.alpha = 0.05
     runner.plot_horizontal = plot_horizontal
-    runner.enrichment_bar_plot()
+    runner.enrichment_bar_plot(n_bars=n_bars)
 
 
 def test_noncategorical_enrichment_runner_api():
@@ -959,7 +961,12 @@ def test_go_enrichment_runner_get_query_key():
 
 def test_go_enrichment_runner_fetch_attributes():
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    truth_attributes = ['attribute1', 'attribute2', 'attribute3', 'attribute4']
+    truth_attributes_set = {'attribute1', 'attribute2', 'attribute3', 'attribute4'}
+    runner.fetch_attributes()
+    assert runner.attributes == truth_attributes
+    assert runner.attributes_set == truth_attributes_set
 
 
 def test_go_enrichment_runner_correct_multiple_comparisons():
@@ -988,9 +995,31 @@ def test_go_enrichment_runner_correct_multiple_comparisons():
     assert truth.loc['go_id':'pval'].equals(runner.results.loc['go_id':'pval'])
 
 
-def test_go_enrichment_runner_plot_results():
+@pytest.mark.parametrize('single_list', [True, False])
+@pytest.mark.parametrize('results,n_bars_truth', [([1, 2, 3], 3), (list(range(15)), 10)])
+@pytest.mark.parametrize('plot_go_network', [False, True])
+def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_bars_truth, plot_go_network):
+    def validate_params(self, title, n_bars, ylabel=''):
+        assert isinstance(title, str)
+        assert self.set_name in title
+        assert isinstance(ylabel, str)
+        assert isinstance(n_bars, int)
+        assert n_bars == n_bars_truth
+        return plt.Figure()
+
+    monkeypatch.setattr(GOEnrichmentRunner, 'enrichment_bar_plot', validate_params)
+    monkeypatch.setattr(GOEnrichmentRunner, 'go_dag_plot', lambda self: plt.Figure())
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.single_list = single_list
+    runner.set_name = 'name of the set'
+    runner.results = results
+    runner.plot_go_network = plot_go_network
+    res = runner.plot_results()
+    if plot_go_network:
+        assert isinstance(res[0], plt.Figure)
+        assert isinstance(res[1], plt.Figure)
+    else:
+        assert isinstance(res, plt.Figure)
 
 
 def test_go_enrichment_runner_format_results(monkeypatch):

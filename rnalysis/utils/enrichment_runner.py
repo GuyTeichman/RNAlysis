@@ -797,7 +797,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.results.loc[self.results['pval'].notna(), 'padj'] = padj
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
-    def plot_results(self):
+    def plot_results(self) -> Union[plt.Figure, Tuple[plt.Figure, plt.Figure]]:
         n_bars = min(10, len(self.results))
         if self.single_list:
             title = f"Single-list GO enrichment for {self.set_name}" + f"\ntop {n_bars} most specific GO terms"
@@ -811,7 +811,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def go_dag_plot(self):
         # TODO: implement me with pydot/graphviz!
-        pass
+        raise NotImplementedError
 
     def format_results(self, unformatted_results_dict: dict):
         if self.single_list:
