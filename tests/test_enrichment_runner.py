@@ -1,13 +1,15 @@
 from collections import namedtuple
-import xlmhg
 
+import matplotlib
 import pytest
 
 from rnalysis import filtering
+from rnalysis.utils import enrichment_runner
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
-from rnalysis.utils import enrichment_runner
 from tests import __attr_ref__, __biotype_ref__
+
+matplotlib.use('Agg')
 
 
 def test_get_pval_asterisk():
@@ -653,14 +655,29 @@ def test_enrichment_runner_correct_multiple_comparisons():
     assert truth.loc['name':'pval'].equals(runner.results.loc['name':'pval'])
 
 
-def test_enrichment_runner_plot_results():
+def test_enrichment_runner_plot_results(monkeypatch):
+    def validate_params(self, title, ylabel=''):
+        assert isinstance(title, str)
+        assert self.set_name in title
+        assert isinstance(ylabel, str)
+        return plt.Figure()
+
+    monkeypatch.setattr(EnrichmentRunner, 'enrichment_bar_plot', validate_params)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.single_list = False
+    runner.set_name = 'name of the set'
+    res = runner.plot_results()
+    assert isinstance(res, plt.Figure)
 
 
-def test_enrichment_runner_enrichment_bar_plot():
+@pytest.mark.parametrize('plot_horizontal', [True, False])
+def test_enrichment_runner_enrichment_bar_plot(plot_horizontal):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    assert False
+    runner.results = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
+    runner.en_score_col = 'log2_fold_enrichment'
+    runner.alpha = 0.05
+    runner.plot_horizontal = plot_horizontal
+    runner.enrichment_bar_plot()
 
 
 def test_noncategorical_enrichment_runner_api():
@@ -668,19 +685,84 @@ def test_noncategorical_enrichment_runner_api():
     assert False
 
 
-def test_noncategorical_enrichment_runner_get_enrichment_func():
+@pytest.mark.parametrize("test_input,expected", [
+    ('T_Test', NonCategoricalEnrichmentRunner._one_sample_t_test_enrichment),
+    ('sign_test', NonCategoricalEnrichmentRunner._sign_test_enrichment),
+    ('SIGN_TEST', NonCategoricalEnrichmentRunner._sign_test_enrichment), ])
+def test_noncategorical_enrichment_runner_get_enrichment_func(test_input, expected):
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
-    assert False
+    assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.lower()).__name__ == expected.__name__
+    assert runner._get_enrichment_func(test_input.capitalize()).__name__ == expected.__name__
 
 
-def test_noncategorical_enrichment_runner_sign_test_enrichment():
+@pytest.mark.parametrize("test_input,expected_exception",
+                         [('ttest', ValueError),
+                          (55, AssertionError),
+                          (True, AssertionError),
+                          (None, AssertionError),
+                          ('other', ValueError)])
+def test_noncategorical_enrichment_runner_get_enrichment_func_invalid_value(test_input, expected_exception):
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
-    assert False
+    with pytest.raises(expected_exception):
+        runner._get_enrichment_func(test_input)
 
 
-def test_noncategorical_enrichment_runner_one_sample_t_test_enrichment():
+@pytest.mark.parametrize("attr,gene_set,truth",
+                         [('attr5', {f'WBGene0000000{i + 1}' for i in range(4)},
+                           ['attr5', 4, 16.85912542, 6.986579003, 0.05]),
+                          ('attr4', {f'WBGene0000000{i + 1}' for i in range(4)},
+                           ['attr4', 4, 15.5, 14, 0.05]),
+                          ('attr1', {'WBGene00000001', 'WBGene00000029', 'WBGene00000030'},
+                           ['attr1', 3, np.nan, 3, np.nan])])
+def test_noncategorical_enrichment_runner_sign_test_enrichment(monkeypatch, attr, gene_set, truth):
+    df = pd.read_csv('tests/test_files/attr_ref_table_for_non_categorical.csv', index_col=0)
+
+    def validate_params(values, exp):
+        assert np.isclose(exp, truth[3])
+        assert np.all(values == df.loc[gene_set, attr].values)
+        return None, 0.05
+
+    monkeypatch.setattr(enrichment_runner, 'sign_test', validate_params)
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
-    assert False
+    runner.annotation_df = df
+    runner.gene_set = gene_set
+
+    res = runner._sign_test_enrichment(attr)
+    for res_val, truth_val in zip(res, truth):
+        if isinstance(truth_val, float):
+            assert np.isclose(truth_val, res_val, equal_nan=True)
+        else:
+            assert truth_val == res_val
+
+
+@pytest.mark.parametrize("attr,gene_set,truth",
+                         [('attr5', {f'WBGene0000000{i + 1}' for i in range(4)},
+                           ['attr5', 4, 14.93335321, 7.709139128, 0.05]),
+                          ('attr4', {f'WBGene0000000{i + 1}' for i in range(4)},
+                           ['attr4', 4, 14.25, 13.60714286, 0.05]),
+                          ('attr1', {'WBGene00000001', 'WBGene00000029', 'WBGene00000030'},
+                           ['attr1', 3, np.nan, 4.75, np.nan])])
+def test_noncategorical_enrichment_runner_one_sample_t_test_enrichment(monkeypatch, attr, gene_set, truth):
+    df = pd.read_csv('tests/test_files/attr_ref_table_for_non_categorical.csv', index_col=0)
+
+    def validate_params(values, popmean):
+        assert np.isclose(popmean, truth[3])
+        assert np.all(values == df.loc[gene_set, attr].values)
+        return None, 0.05
+
+    monkeypatch.setattr(enrichment_runner, 'ttest_1samp', validate_params)
+    runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
+    runner.annotation_df = df
+    runner.gene_set = gene_set
+
+    res = runner._one_sample_t_test_enrichment(attr)
+    for res_val, truth_val in zip(res, truth):
+        if isinstance(truth_val, float):
+            assert np.isclose(truth_val, res_val, equal_nan=True)
+        else:
+            assert truth_val == res_val
 
 
 def test_noncategorical_enrichment_runner_format_results():
@@ -688,14 +770,44 @@ def test_noncategorical_enrichment_runner_format_results():
     assert False
 
 
-def test_noncategorical_enrichment_runner_plot_results():
+def test_noncategorical_enrichment_runner_plot_results(monkeypatch):
+    attrs_without_nan_truth = ['attr1', 'attr2', 'attr4']
+    attrs_without_nan = []
+
+    def proccess_attr(self, attr):
+        attrs_without_nan.append(attr)
+        return plt.Figure()
+
+    monkeypatch.setattr(NonCategoricalEnrichmentRunner, 'enrichment_histogram', proccess_attr)
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
-    assert False
+    runner.attributes = ['attr1', 'attr2', 'attr3', 'attr4']
+    runner.results = {'padj': [0.05, 0.3, np.nan, 1]}
+
+    res = runner.plot_results()
+    assert attrs_without_nan == attrs_without_nan_truth
+    assert len(res) == len(attrs_without_nan)
+    for plot in res:
+        assert isinstance(plot, plt.Figure)
 
 
-def test_noncategorical_enrichment_runner_enrichment_histogram():
+@pytest.mark.parametrize('plot_style', ['interleaved', 'overlap'])
+@pytest.mark.parametrize('plot_log_scale', [True, False])
+@pytest.mark.parametrize('parametric_test', [True, False])
+@pytest.mark.parametrize('n_bins', [2, 8])
+def test_noncategorical_enrichment_runner_enrichment_histogram(plot_style, plot_log_scale, parametric_test, n_bins):
     runner = NonCategoricalEnrichmentRunner.__new__(NonCategoricalEnrichmentRunner)
-    assert False
+    runner.plot_style = plot_style
+    runner.plot_log_scale = plot_log_scale
+    runner.parametric_test = parametric_test
+    runner.n_bins = n_bins
+    runner.alpha = 0.15
+    runner.set_name = 'set_name'
+    runner.results = pd.read_csv('tests/test_files/enrich_non_categorical_nan_parametric_truth.csv', index_col=0)
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_non_categorical.csv', index_col=0)
+    runner.gene_set = {f'WBGene0000000{i + 1}' for i in range(5)}
+
+    res = runner.enrichment_histogram('attr5')
+    assert isinstance(res, plt.Figure)
 
 
 def test_go_enrichment_runner_api():
