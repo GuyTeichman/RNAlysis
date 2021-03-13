@@ -1,5 +1,6 @@
 from collections import namedtuple
 
+import copy
 import matplotlib
 import pytest
 
@@ -944,14 +945,53 @@ def test_go_enrichment_runner_get_annotation_iterator(monkeypatch):
     assert isinstance(res, io.GOlrAnnotationIterator)
 
 
-def test_go_enrichment_runner_propagate_annotations():
+@pytest.mark.parametrize('propagate', ['other', 'no'])
+@pytest.mark.parametrize("gene_id,go_id,truth",
+                         [('gene1', 'GO1',
+                           {'gene1': {'GO1', 'GO2', 'GO3', 'GO4', 'GO5'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}),
+                          ('gene2', 'GO1',
+                           {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1', 'GO3', 'GO4', 'GO5'}, 'gene3': {'GO2'}}),
+                          ('gene1', 'GO2',
+                           {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}),
+                          ('gene3', 'GO2',
+                           {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}),
+                          ])
+def test_go_enrichment_runner_propagate_annotation(monkeypatch, propagate, gene_id, go_id, truth):
+    annotation_dict = {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}
+    if propagate == 'no':
+        truth = copy.deepcopy(annotation_dict)
+
+    def upper_induced_graph_iter(self, go_id):
+        if go_id == 'GO1':
+            for upper_go_id in {'GO3', 'GO4', 'GO5'}:
+                yield upper_go_id
+
+    monkeypatch.setattr(ontology.DAGTree, 'upper_induced_graph_iter', upper_induced_graph_iter)
+    dag = ontology.DAGTree.__new__(ontology.DAGTree)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.dag_tree = dag
+    runner.propagate_annotations = propagate
+    runner._propagate_annotation(gene_id, go_id, annotation_dict)
+
+    assert annotation_dict == truth
 
 
-def test_go_enrichment_runner_translate_gene_ids():
+@pytest.mark.parametrize("mapping_dict,truth", [
+    ({}, {}),
+    ({'gene1': 'gene1_translated', 'gene3': 'gene3_translated'},
+     {'gene1_translated': {'GO1', 'GO2'}, 'gene3_translated': {'GO2'}}),
+    ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
+     {'gene1_translated': {'GO1', 'GO2'}, 'gene2_translated': {'GO1'}, 'gene3_translated': {'GO2'}})])
+def test_go_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
+    monkeypatch.setattr(io, 'map_gene_ids', lambda gene_id, source, gene_id_type: mapping_dict)
+    source_to_gene_id_dict = {'source1': {'gene1', 'gene3'}, 'source2': {'gene2'}}
+    sparse_annotation_dict = {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.gene_id_type = 'gene_id_type'
+
+    res = runner._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
+    assert res == truth
 
 
 @pytest.mark.parametrize('propagate_annotations', ['no', 'elim'])
@@ -1088,14 +1128,84 @@ def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant,
     assert truth.equals(runner.results)
 
 
-def test_go_enrichment_runner_calculate_enrichment_serial():
+@pytest.mark.parametrize("propagate_annotations,truth",
+                         [('no', 'classic'),
+                          ('classic', 'classic'),
+                          ('elim', 'elim'),
+                          ('weight', 'weight'),
+                          ('all.m', 'all.m')])
+def test_go_enrichment_runner_calculate_enrichment_serial(monkeypatch, propagate_annotations, truth):
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_classic_pvalues_serial', lambda self, desc: 'classic')
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_pvalues_serial', lambda self, desc: 'elim')
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_weight_pvalues_serial', lambda self, desc: 'weight')
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_allm_pvalues_serial', lambda self: 'all.m')
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.propagate_annotations = propagate_annotations
+    runner.attributes = []
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).notna()
+
+    res = runner._calculate_enrichment_serial()
+
+    assert len(runner.mod_annotation_dfs) == 1
+    if propagate_annotations in {'classic', 'no'}:
+        assert runner.annotation_df is runner.mod_annotation_dfs[0]
+    elif propagate_annotations == 'elim':
+        assert runner.annotation_df.equals(runner.mod_annotation_dfs[0])
+        assert runner.annotation_df is not runner.mod_annotation_dfs[0]
+    elif propagate_annotations == 'weight':
+        assert runner.annotation_df.equals((runner.mod_annotation_dfs[0] == 1))
+        assert runner.mod_annotation_dfs[0].values.dtype.name == 'float64'
+        assert runner.annotation_df is not runner.mod_annotation_dfs[0]
+
+    assert res == truth
 
 
-def test_go_enrichment_runner_calculate_enrichment_parallel():
+@pytest.mark.parametrize("propagate_annotations,truth",
+                         [('no', 'classic'),
+                          ('classic', 'classic'),
+                          ('elim', 'elim'),
+                          ('weight', 'weight'),
+                          ('all.m', 'all.m')])
+def test_go_enrichment_runner_calculate_enrichment_parallel(monkeypatch, propagate_annotations, truth):
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_classic_pvalues_parallel', lambda self, desc: 'classic')
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_pvalues_parallel', lambda self, desc: 'elim')
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_weight_pvalues_parallel', lambda self, desc: 'weight')
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_allm_pvalues_parallel', lambda self: 'all.m')
+
+    def go_level_iter(self, namespace):
+        mapper = {'namespace1': ['attribute1', 'attribute4'], 'namespace2': ['attribute2', 'attribute3']}
+        if namespace == 'all':
+            return [f'attribute{i + 1}' for i in range(4)]
+        return mapper[namespace]
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_level_iterator', go_level_iter)
+
+    class DAGTreePlaceHolder:
+        def __init__(self):
+            self.namespaces = ['namespace1', 'namespace2']
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.propagate_annotations = propagate_annotations
+    runner.attributes = []
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).notna()
+    runner.dag_tree = DAGTreePlaceHolder()
+
+    res = runner._calculate_enrichment_parallel()
+
+    if propagate_annotations in {'classic', 'no'}:
+        assert runner.annotation_df is runner.mod_annotation_dfs[0]
+        assert len(runner.mod_annotation_dfs) == 1
+    elif propagate_annotations == 'elim':
+        assert len(runner.mod_annotation_dfs) == len(runner.dag_tree.namespaces)
+        for namespace, mod_df in zip(runner.dag_tree.namespaces, runner.mod_annotation_dfs):
+            assert runner.annotation_df[go_level_iter(None, namespace)].equals(mod_df)
+    elif propagate_annotations == 'weight':
+        assert len(runner.mod_annotation_dfs) == len(runner.dag_tree.namespaces)
+        for namespace, mod_df in zip(runner.dag_tree.namespaces, runner.mod_annotation_dfs):
+            assert runner.annotation_df[go_level_iter(None, namespace)].equals(mod_df == 1)
+            assert mod_df.values.dtype.name == 'float64'
+
+    assert res == truth
 
 
 def test_go_enrichment_runner_go_classic_pvalues_serial():
