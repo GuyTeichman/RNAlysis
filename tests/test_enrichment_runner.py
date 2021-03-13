@@ -13,6 +13,19 @@ from tests import __attr_ref__, __biotype_ref__
 matplotlib.use('Agg')
 
 
+def test_enrichment_runner_from_results():
+    alpha = 0.05
+    plot_horizontal = False
+    set_name = 'set_name'
+    results = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv', index_col=0)
+    runner = EnrichmentRunner.from_results_df(results, alpha, plot_horizontal, set_name)
+
+    assert runner.results is results
+    assert runner.alpha == 0.05
+    assert runner.plot_horizontal == plot_horizontal
+    assert runner.set_name == set_name
+
+
 def test_get_pval_asterisk():
     assert EnrichmentRunner._get_pval_asterisk(0.6) == ('ns', 'normal')
     assert EnrichmentRunner._get_pval_asterisk(0.001, 0.00099) == ('ns', 'normal')

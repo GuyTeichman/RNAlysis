@@ -76,6 +76,15 @@ class EnrichmentRunner:
             self.biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path) if biotypes != 'all' else None
             self.en_score_col = 'log2_fold_enrichment'
 
+    @classmethod
+    def from_results_df(cls, results: pd.DataFrame, alpha: float, plot_horizontal: bool, set_name: str):
+        runner = cls.__new__(cls)
+        runner.results = results
+        runner.alpha = alpha
+        runner.plot_horizontal = plot_horizontal
+        runner.set_name = set_name
+        return runner
+
     def run(self) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         self.fetch_annotations()
         self.fetch_attributes()
@@ -714,7 +723,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             self.taxon_id, self.organism = io.map_taxon_id(self.organism)
 
     def fetch_annotations(self):
-        # check if annotations for the requested query were already fetched and cached
+        # check if annotations for the requested query were previously fetched and cached
         query_key = self._get_query_key()
         if query_key in self.GOA_DF_QUERIES:
             self.annotation_df = self.GOA_DF_QUERIES[query_key]
