@@ -14,10 +14,10 @@ class GOTerm:
                  'children_relationships': 'direct children relationships of the GO Term'}
 
     def __init__(self):
-        self._id = None
-        self._name = None
-        self._namespace = None
-        self._level = None
+        self._id: str = None
+        self._name: str = None
+        self._namespace: str = None
+        self._level: int = None
         self.relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
         self.children_relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
 
@@ -31,19 +31,19 @@ class GOTerm:
         return go_term
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self._id
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def namespace(self):
+    def namespace(self) -> str:
         return self._namespace
 
     @property
-    def level(self):
+    def level(self) -> int:
         return self._level
 
     def set_id(self, go_id: str):
