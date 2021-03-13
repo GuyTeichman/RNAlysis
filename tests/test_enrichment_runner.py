@@ -1073,9 +1073,9 @@ def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant,
 
     dag_tree = ontology.DAGTree.__new__(ontology.DAGTree)
     dag_tree.go_terms = {'name1': ontology.GOTerm(), 'name2': ontology.GOTerm(), 'name3': ontology.GOTerm()}
-    dag_tree['name1'].level = 2
-    dag_tree['name2'].level = 1
-    dag_tree['name3'].level = 5
+    dag_tree['name1'].set_level(2)
+    dag_tree['name2'].set_level(1)
+    dag_tree['name3'].set_level(5)
 
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.dag_tree = dag_tree

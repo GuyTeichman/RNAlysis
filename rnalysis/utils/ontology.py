@@ -7,19 +7,56 @@ from rnalysis.utils import parsing
 
 
 class GOTerm:
-    __slots__ = {'id': 'GO ID', 'name': 'GO Term name',
-                 'namespace': 'biological_process, cellular_component or molecular_function',
-                 'level': "GO Term's level in the DAG Tree",
+    __slots__ = {'_id': 'GO ID', '_name': 'GO Term name',
+                 '_namespace': 'biological_process, cellular_component or molecular_function',
+                 '_level': "GO Term's level in the DAG Tree",
                  'relationships': 'direct parent relationships of the GO Term',
                  'children_relationships': 'direct children relationships of the GO Term'}
 
     def __init__(self):
-        self.id = None
-        self.name = None
-        self.namespace = None
-        self.level = None
+        self._id = None
+        self._name = None
+        self._namespace = None
+        self._level = None
         self.relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
         self.children_relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
+
+    @classmethod
+    def with_properties(cls, go_id: str, name: str, namespace: str, level: int):
+        go_term = cls()
+        go_term.set_id(go_id)
+        go_term.set_name(name)
+        go_term.set_namespace(namespace)
+        go_term.set_level(level)
+        return go_term
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def namespace(self):
+        return self._namespace
+
+    @property
+    def level(self):
+        return self._level
+
+    def set_id(self, go_id: str):
+        self._id = go_id
+
+    def set_name(self, name: str):
+        self._name = name
+
+    def set_namespace(self, namespace: str):
+        self._namespace = namespace
+
+    def set_level(self, level: int):
+        self._level = level
 
     @functools.lru_cache(maxsize=2)
     def get_parents(self, relationships: Union[str, tuple] = ('is_a', 'part_of')) -> List[str]:
@@ -82,13 +119,13 @@ class DAGTree:
         for line in line_iterator:
             if in_frame:
                 if line.startswith(b'id: '):
-                    current_term.id = parse_go_id(line)
+                    current_term.set_id(parse_go_id(line))
                 elif line.startswith(b'namespace: '):
-                    current_term.namespace = line[11:].decode('utf8').replace('\n', '')
+                    current_term.set_namespace(line[11:].decode('utf8').replace('\n', ''))
                     if current_term.namespace not in self.namespaces:
                         self.namespaces.add(current_term.namespace)
                 elif line.startswith(b'name: '):
-                    current_term.name = line[6:].decode('utf8').replace('\n', '')
+                    current_term.set_name(line[6:].decode('utf8').replace('\n', ''))
                 elif line.startswith(b'alt_id: '):
                     self.alt_ids[parse_go_id(line)] = current_term.id
                 elif line.startswith(b'is_a: '):
@@ -117,7 +154,7 @@ class DAGTree:
         levels_dict = {}
         for go_term in self.go_terms.values():
             if go_term.level is None:
-                go_term.level = self._get_term_level_rec(go_term)
+                go_term.set_level(self._get_term_level_rec(go_term))
             if go_term.level not in levels_dict:
                 levels_dict[go_term.level] = {}
             levels_dict[go_term.level][go_term.id] = go_term
@@ -130,11 +167,10 @@ class DAGTree:
         if go_term.level is not None:
             pass
         elif len(go_term.get_parents(self.parent_relationship_types)) == 0:
-            go_term.level = 0
+            go_term.set_level(0)
         else:
-            go_term.level = 1 + max(
-                [self._get_term_level_rec(self[parent_id]) for parent_id in
-                 go_term.get_parents(self.parent_relationship_types)])
+            go_term.set_level(1 + max([self._get_term_level_rec(self[parent_id]) for parent_id in
+                                       go_term.get_parents(self.parent_relationship_types)]))
         return go_term.level
 
     def _populate_children(self):
