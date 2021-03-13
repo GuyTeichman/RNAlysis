@@ -191,9 +191,6 @@ def test_results_to_csv():
         en.results = df
         en.results_to_csv()
         df_loaded = pd.read_csv('tests/test_files/tmp_enrichment_csv.csv', index_col=0)
-        print('\n')
-        print(df)
-        print(df_loaded)
         assert df.equals(df_loaded)
     except Exception as e:
         raise e
@@ -855,14 +852,19 @@ def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pva
     assert runner.dag_tree == 'dag_tree'
 
 
-def test_go_enrichment_runner_run():
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+def test_go_enrichment_runner_run(monkeypatch):
+    def get_taxon(self):
+        self.taxon_id = 'taxon_id'
 
+    def run(self):
+        self.results = 'results'
 
-def test_go_enrichment_runner_get_enrichment_func():
+    monkeypatch.setattr(EnrichmentRunner, 'run', run)
+    monkeypatch.setattr(GOEnrichmentRunner, 'get_organism', get_taxon)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.run()
+    assert runner.results == 'results'
+    assert runner.taxon_id == 'taxon_id'
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -925,11 +927,6 @@ def test_go_enrichment_runner_fetch_annotations(monkeypatch):
     runner.fetch_annotations()
     assert runner.annotation_df == 'another_goa_df'
     assert runner.GOA_DF_QUERIES['the_query_key'] == 'another_goa_df'
-
-
-def test_go_enrichment_runner_generate_goa_df(monkeypatch):
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
 
 
 def test_go_enrichment_runner_get_annotation_iterator(monkeypatch):
@@ -1221,72 +1218,149 @@ def test_go_enrichment_runner_calculate_enrichment_parallel(monkeypatch, propaga
     assert res == truth
 
 
-def test_go_enrichment_runner_go_classic_pvalues_serial():
+def test_go_enrichment_runner_generate_goa_df(monkeypatch):
+    annotation_dict = {}
+    source_to_id_dict = {}
+
+    def process_annotations(self):
+        annotation_dict['proccess_annotations'] = True
+        source_to_id_dict['process_annotations_source'] = True
+        return annotation_dict, source_to_id_dict
+
+    def translate_gene_ids(self, annotation_dict, source_dict):
+        assert annotation_dict['proccess_annotations']
+        assert source_to_id_dict['process_annotations_source']
+        return {'translate_annotation': True}
+
+    def sparse_dict_to_bool_df(annotation_dict, progress_bar_desc):
+        assert annotation_dict['translate_annotation']
+        return 'bool_df'
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_process_annotations', process_annotations)
+    monkeypatch.setattr(GOEnrichmentRunner, '_translate_gene_ids', translate_gene_ids)
+    monkeypatch.setattr(parsing, 'sparse_dict_to_bool_df', sparse_dict_to_bool_df)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+
+    res = runner._generate_goa_df()
+    assert res == 'bool_df'
+
+
+def test_go_enrichment_runner_process_annotations(monkeypatch):
+    propagated_annotations = set()
+    propagated_annotations_truth = {('gene_id1', 'go_id1'), ('gene_id1', 'go_id2'), ('gene_id2', 'go_id1'),
+                                    ('gene_id2', 'go_id3'), ('gene_id3', 'go_id4')}
+    annotation_dict_truth = {'gene_id1': {'go_id1', 'go_id2'}, 'gene_id2': {'go_id1', 'go_id3'}, 'gene_id3': {'go_id4'}}
+    source_dict_truth = {'source1': {'gene_id1', 'gene_id3'}, 'source2': {'gene_id2'}}
+
+    def get_annotation_iter(self):
+        iterator = io.GOlrAnnotationIterator.__new__(io.GOlrAnnotationIterator)
+        iterator.n_annotations = 5
+        return iterator
+
+    def annotation_iter(self):
+        annotations = [{'bioentity_internal_id': 'gene_id1', 'annotation_class': 'go_id1', 'source': 'source1'},
+                       {'bioentity_internal_id': 'gene_id1', 'annotation_class': 'go_id2', 'source': 'source1'},
+                       {'bioentity_internal_id': 'gene_id2', 'annotation_class': 'go_id1', 'source': 'source2'},
+                       {'bioentity_internal_id': 'gene_id2', 'annotation_class': 'go_id3', 'source': 'source2'},
+                       {'bioentity_internal_id': 'gene_id3', 'annotation_class': 'go_id4', 'source': 'source1'}]
+        for annotation in annotations:
+            yield annotation
+
+    def propagate_annotation(self, gene_id, go_id, sparse_annotation_dict):
+        propagated_annotations.add((gene_id, go_id))
+
+    monkeypatch.setattr(io.GOlrAnnotationIterator, '_annotation_generator_func', annotation_iter)
+    monkeypatch.setattr(GOEnrichmentRunner, '_propagate_annotation', propagate_annotation)
+    monkeypatch.setattr(GOEnrichmentRunner, '_get_annotation_iterator', get_annotation_iter)
+
+    dag = ontology.DAGTree.__new__(ontology.DAGTree)
+    dag.alt_ids = {}
+    dag.go_terms = {'go_id1': ontology.GOTerm(), 'go_id2': ontology.GOTerm(), 'go_id3': ontology.GOTerm(),
+                    'go_id4': ontology.GOTerm()}
+    dag.go_terms['go_id1'].set_id('go_id1')
+    dag.go_terms['go_id2'].set_id('go_id2')
+    dag.go_terms['go_id3'].set_id('go_id3')
+    dag.go_terms['go_id4'].set_id('go_id4')
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.propagate_annotations = 'classic'
+    runner.organism = 'organism'
+    runner.taxon_id = 'taxon_id'
+    runner.dag_tree = dag
+
+    annotation_dict, source_dict = runner._process_annotations()
+
+    assert propagated_annotations == propagated_annotations_truth
+    assert annotation_dict == annotation_dict_truth
+    assert source_dict == source_dict_truth
+
+
+def test_go_enrichment_runner_go_classic_pvalues_serial(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_classic_pvalues_parallel():
+def test_go_enrichment_runner_go_classic_pvalues_parallel(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_elim_pvalues_serial():
+def test_go_enrichment_runner_go_elim_pvalues_serial(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_elim_pvalues_parallel():
+def test_go_enrichment_runner_go_elim_pvalues_parallel(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_weight_pvalues_serial():
+def test_go_enrichment_runner_go_weight_pvalues_serial(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_weight_pvalues_parallel():
+def test_go_enrichment_runner_go_weight_pvalues_parallel(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_allm_pvalues_serial():
+def test_go_enrichment_runner_go_allm_pvalues_serial(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_allm_pvalues_parallel():
+def test_go_enrichment_runner_go_allm_pvalues_parallel(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_parallel_over_grouping():
+def test_go_enrichment_runner_parallel_over_grouping(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_calculate_allm():
+def test_go_enrichment_runner_calculate_allm(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_go_level_iterator():
+def test_go_enrichment_runner_go_level_iterator(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_compute_term_sig():
+def test_go_enrichment_runner_compute_term_sig(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_randomization_enrichment():
+def test_go_enrichment_runner_randomization_enrichment(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_xlmhg_enrichment():
+def test_go_enrichment_runner_xlmhg_enrichment(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
@@ -1302,16 +1376,16 @@ def test_go_enrichment_runner_xlmhg_index_vector(attribute, truth):
     assert np.all(runner._xlmhg_index_vectors(attribute) == truth)
 
 
-def test_go_enrichment_runner_hypergeometric_enrichment():
+def test_go_enrichment_runner_hypergeometric_enrichment(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_fisher_enrichment():
+def test_go_enrichment_runner_fisher_enrichment(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_get_hypergeometric_parameters():
+def test_go_enrichment_runner_get_hypergeometric_parameters(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False

@@ -4,7 +4,7 @@ import logging
 import warnings
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable, List, Tuple, Union, Collection
+from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
 
 import joblib
 import matplotlib.pyplot as plt
@@ -734,6 +734,19 @@ class GOEnrichmentRunner(EnrichmentRunner):
             self.GOA_DF_QUERIES[query_key] = self.annotation_df
 
     def _generate_goa_df(self) -> pd.DataFrame:
+        # fetch and process GO annotations
+        sparse_annotation_dict, source_to_gene_id_dict = self._process_annotations()
+        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
+
+        # translate gene IDs
+        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
+
+        # get boolean DataFrame for enrichment
+        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
+                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
+        return annotation_df
+
+    def _process_annotations(self) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
         if self.propagate_annotations != 'no':
             desc = f"Fetching and propagating GO annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
         else:
@@ -744,9 +757,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
         annotation_iter = self._get_annotation_iterator()
         for annotation in tqdm(annotation_iter, desc=desc, total=annotation_iter.n_annotations, unit=' annotations'):
             # extract gene_id, go_id, source from the annotation
-            gene_id = annotation['bioentity_internal_id']
+            gene_id: str = annotation['bioentity_internal_id']
             go_id = self.dag_tree[annotation['annotation_class']].id
-            source = annotation['source']
+            source: str = annotation['source']
 
             # add annotation to annotation dictionary
             if gene_id not in sparse_annotation_dict:
@@ -759,15 +772,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
             source_to_gene_id_dict[source].add(gene_id)
             # propagate annotations
             self._propagate_annotation(gene_id, go_id, sparse_annotation_dict)
-        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
-
-        # translate gene IDs
-        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict, source_to_gene_id_dict)
-
-        # get boolean DataFrame for enrichment
-        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
-                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
-        return annotation_df
+        return sparse_annotation_dict, source_to_gene_id_dict
 
     def _get_annotation_iterator(self):
         return io.GOlrAnnotationIterator(self.taxon_id, self.aspects,
