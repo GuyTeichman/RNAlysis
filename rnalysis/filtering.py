@@ -2716,8 +2716,8 @@ class CountFilter(Filter):
     # TODO: add ranksum test
     # TODO: generate new sample figure
 
-    @staticmethod
-    def from_folder(folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, counted_fname: str = None,
+    @classmethod
+    def from_folder(cls, folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, counted_fname: str = None,
                     uncounted_fname: str = None, input_format: str = '.txt') -> 'CountFilter':
         """
         Iterates over HTSeq count .txt files in a given folder and combines them into a single CountFilter table. \
@@ -2783,7 +2783,7 @@ class CountFilter(Filter):
             io.save_csv(df=uncounted, filename=uncounted_fname)
 
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
-        count_filter_obj = CountFilter((Path(fname), counts))
+        count_filter_obj = cls((Path(fname), counts))
         if norm_to_rpm:
             count_filter_obj.normalize_to_rpm(uncounted)
         return count_filter_obj
