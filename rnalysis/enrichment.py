@@ -1045,7 +1045,7 @@ class RankedSet(FeatureSet):
 
            Example plot of go_enrichment_single_list(plot_horizontal = False)
         """
-        plot_dag = True
+        plot_dag = False
         runner = enrichment_runner.GOEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
