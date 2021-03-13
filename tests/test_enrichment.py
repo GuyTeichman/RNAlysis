@@ -376,14 +376,6 @@ def test_rankedset_init_invalid_type():
         _ = RankedSet(5)
 
 
-def test_go_enrichment_fetch_annotations(monkeypatch):
-    assert False
-
-
-def test_go_enrichment_fetch_annotations_pre_fetched():
-    assert False
-
-
 def test_go_enrichment_output():
     assert False
 
@@ -483,15 +475,7 @@ def test_enrich_single_list_api():
     assert False
 
 
-def test_xlmhg_output():
-    assert False
-
-
-def test_calc_xlmhg_stats():
-    assert False
-
-
-def test_xlmhg_index_vector():
+def test_enrich_single_list_api_output():
     assert False
 
 
