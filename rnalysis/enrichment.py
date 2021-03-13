@@ -374,7 +374,7 @@ class FeatureSet:
         propagate_annotations = propagate_annotations.lower()
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
-        plot_dag = True
+        plot_dag = False
         if statistical_test.lower() == 'randomization':
             kwargs = dict(reps=randomization_reps, random_seed=random_seed)
         else:
