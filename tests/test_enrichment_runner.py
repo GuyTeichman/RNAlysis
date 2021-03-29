@@ -1376,6 +1376,22 @@ def test_go_enrichment_runner_calculate_allm(monkeypatch):
 
 
 def test_go_enrichment_runner_go_level_iterator(monkeypatch):
+    this_namespace = 'this_namespace'
+
+    class FakeDAG:
+        def __init__(self, go_ids_to_yield: list):
+            self.go_ids = go_ids_to_yield
+
+        def level_iter(self, namespace):
+            assert namespace == this_namespace
+            for go_id in self.go_ids:
+                yield go_id
+
+    go_ids_by_level = ['ID1', 'ID5', 'ID4', 'ID10', 'ID2']
+    go_ids_in_runner = {'ID1', 'ID2', 'ID3', 'ID4', 'ID10'}
+
+    go_ids_by_level_truth = ['ID1', 'ID4', 'ID10', 'ID2']
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.attributes_set = go_ids_in_runner
     runner.dag_tree = FakeDAG(go_ids_by_level)
