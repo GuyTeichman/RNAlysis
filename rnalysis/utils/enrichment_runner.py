@@ -207,11 +207,11 @@ class EnrichmentRunner:
         return [attribute, de_size, obs, exp, log2_fold_enrichment, pval]
 
     def _randomization_enrichment(self, attribute: str, reps: int) -> list:
-        bg_array = self.annotation_df[attribute].isna().values
-        obs_array = self.annotation_df.loc[self.gene_set, attribute].isna().values
+        bg_array = self.annotation_df[attribute].notna().values
+        obs_array = self.annotation_df.loc[self.gene_set, attribute].notna().values
         n = len(self.gene_set)
-        expected_fraction = (bg_array.shape[0] - np.sum(bg_array)) / bg_array.shape[0]
-        observed_fraction = (n - np.sum(obs_array)) / n
+        expected_fraction = np.sum(bg_array) / bg_array.shape[0]
+        observed_fraction = np.sum(obs_array) / n
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
         pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_array, reps, observed_fraction)
 
@@ -235,11 +235,11 @@ class EnrichmentRunner:
         success = 0
         if log2fc >= 0:
             for _ in range(reps):
-                success += (n - np.sum(bg_array[np.random.choice(ind_range, n, replace=False)])) / n >= obs_frac
+                success += np.sum(bg_array[np.random.choice(ind_range, n, replace=False)]) / n >= obs_frac
 
         else:
             for _ in range(reps):
-                success += (n - np.sum(bg_array[np.random.choice(ind_range, n, replace=False)])) / n <= obs_frac
+                success += np.sum(bg_array[np.random.choice(ind_range, n, replace=False)]) / n <= obs_frac
         pval = (success + 1) / (reps + 1)
         return pval
 
@@ -1038,11 +1038,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self._compute_term_sig(mod_df_ind, go_id, children.difference(sig_children), weights, result, tolerance)
 
     def _randomization_enrichment(self, go_id: str, reps: int, mod_df_ind: int = None) -> list:
+        mod_df_ind = 0 if mod_df_ind is None else mod_df_ind
         go_name = self.dag_tree[go_id].name
         bg_df = self.mod_annotation_dfs[mod_df_ind][go_id]
         bg_size = self.annotation_df.shape[0]
         n = len(self.gene_set)
-        expected_fraction = (bg_size - self.annotation_df[go_id].sum()) / bg_size
+        expected_fraction = self.annotation_df[go_id].sum() / bg_size
         observed_fraction = self.annotation_df.loc[self.gene_set, go_id].sum() / n
         mod_observed_fraction = bg_df.loc[self.gene_set].sum() / n
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf

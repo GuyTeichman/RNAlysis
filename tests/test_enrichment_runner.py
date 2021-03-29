@@ -39,7 +39,7 @@ def test_calc_randomization_pval():
     hypergeom_pval = 0.2426153598589023
     avg_pval = 0
     for i in range(5):
-        avg_pval += EnrichmentRunner._calc_randomization_pval(500, 1, np.random.random(10000) > 0.1, 100000, 0.11)
+        avg_pval += EnrichmentRunner._calc_randomization_pval(500, 1, np.random.random(10000) < 0.1, 100000, 0.11)
     avg_pval /= 5
     assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
 
@@ -230,7 +230,7 @@ def test_classic_pvals(monkeypatch):
     e.mod_annotation_dfs = goa_df,
     e.attributes = list(goa_df.columns)
 
-    res = pd.DataFrame.from_dict(e._go_classic_over_chunk(tuple(goa_df.columns), 0), orient='index',
+    res = pd.DataFrame.from_dict(e._go_classic_on_batch(tuple(goa_df.columns), 0), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
     _comp_go_res_df(res, truth)
 
@@ -360,13 +360,14 @@ def test_enrichment_runner_hypergeometric_enrichment(monkeypatch, params, truth)
     assert runner._hypergeometric_enrichment('attribute') == truth
 
 
-@pytest.mark.parametrize('truth',
-                         [(['attribute1', 6, 3, (11 / 38) * 6, np.log2(3 / ((11 / 38) * 6)), 0.05]),
-                          (['attribute4', 6, 4, (13 / 38) * 6, np.log2(4 / ((13 / 38) * 6)), 0.05])])
-def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
+def _randomization_enrichment_setup_runner(monkeypatch, truth, runner_class, notna: bool = False):
     reps_truth = 100
     df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
-    bg_array_truth = pd.read_csv('tests/test_files/annotation_df_bg_array_truth.csv', index_col=0)[truth[0]]
+    bg_array_truth = pd.read_csv('tests/test_files/annotation_df_bg_array_truth.csv', index_col=0)[truth[0]].values
+
+    if notna:
+        df = df.notna()
+
     gene_set_truth = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106',
                       'WBGene00001133', 'WBGene00003915', 'WBGene00268195'}
 
@@ -380,10 +381,18 @@ def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
         return 0.05
 
     monkeypatch.setattr(EnrichmentRunner, '_calc_randomization_pval', alt_calc_pval)
-    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    runner = runner_class.__new__(runner_class)
     runner.gene_set = gene_set_truth
     runner.annotation_df = df
-    assert runner._randomization_enrichment(truth[0], reps_truth) == truth
+    runner.pvalue_kwargs = {'reps': reps_truth}
+    return runner
+
+
+@pytest.mark.parametrize('truth', [(['attribute1', 6, 3, (11 / 38) * 6, np.log2(3 / ((11 / 38) * 6)), 0.05]),
+                                   (['attribute4', 6, 4, (13 / 38) * 6, np.log2(4 / ((13 / 38) * 6)), 0.05])])
+def test_enrichment_runner_randomization_enrichment(monkeypatch, truth):
+    runner = _randomization_enrichment_setup_runner(monkeypatch, truth, EnrichmentRunner)
+    assert runner._randomization_enrichment(truth[0], runner.pvalue_kwargs['reps']) == truth
 
 
 @pytest.mark.parametrize('params,truth',
@@ -1297,7 +1306,8 @@ def test_go_enrichment_runner_process_annotations(monkeypatch):
 
 def test_go_enrichment_runner_go_classic_pvalues_serial(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.attributes = go_ids
+    runner._go_classic_pvalues_serial()
 
 
 def test_go_enrichment_runner_go_classic_pvalues_parallel(monkeypatch):
@@ -1347,7 +1357,9 @@ def test_go_enrichment_runner_calculate_allm(monkeypatch):
 
 def test_go_enrichment_runner_go_level_iterator(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.attributes_set = go_ids_in_runner
+    runner.dag_tree = FakeDAG(go_ids_by_level)
+    assert list(runner._go_level_iterator(this_namespace)) == go_ids_by_level_truth
 
 
 def test_go_enrichment_runner_compute_term_sig(monkeypatch):
@@ -1355,9 +1367,27 @@ def test_go_enrichment_runner_compute_term_sig(monkeypatch):
     assert False
 
 
-def test_go_enrichment_runner_randomization_enrichment(monkeypatch):
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+@pytest.mark.parametrize('truth',
+                         [(['attribute1', 6, 3, (11 / 38) * 6, np.log2(3 / ((11 / 38) * 6)), 0.05]),
+                          (['attribute4', 6, 4, (13 / 38) * 6, np.log2(4 / ((13 / 38) * 6)), 0.05])])
+def test_go_enrichment_runner_randomization_enrichment(monkeypatch, truth):
+    class FakeGOTerm:
+        def __init__(self, go_id):
+            self.go_id = go_id
+            self.name = go_id
+
+    class FakeDAG:
+        def __init__(self):
+            pass
+
+        def __getitem__(self, item):
+            return FakeGOTerm(item)
+
+    runner = _randomization_enrichment_setup_runner(monkeypatch=monkeypatch, truth=truth,
+                                                    runner_class=GOEnrichmentRunner, notna=True)
+    runner.mod_annotation_dfs = (runner.annotation_df,)
+    runner.dag_tree = FakeDAG()
+    assert runner._randomization_enrichment(truth[0], runner.pvalue_kwargs['reps']) == truth
 
 
 def test_go_enrichment_runner_xlmhg_enrichment(monkeypatch):
