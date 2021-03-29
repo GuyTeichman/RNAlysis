@@ -885,16 +885,28 @@ class GOEnrichmentRunner(EnrichmentRunner):
         return result
 
     def _go_classic_pvalues_serial(self, progress_bar_desc: str = '') -> dict:
-        return self._go_classic_over_chunk(tqdm(self.attributes, desc=progress_bar_desc, unit=' GO terms'), 0)
+        return self._go_classic_on_batch(tqdm(self.attributes, desc=progress_bar_desc, unit=' GO terms'))
 
     def _go_classic_pvalues_parallel(self, progress_bar_desc: str = '') -> dict:
-        # split GO terms into chunks of size 1000 to reduce overhead of parallel jobs
+        # split GO terms into batches of size 1000 to reduce the overhead of parallel jobs.
+        # the GO terms in each batch are calculated serially in a single process
         partitioned = parsing.partition_list(self.attributes, 1000)
-        return self._parallel_over_grouping(self._go_classic_over_chunk, partitioned,
+        return self._parallel_over_grouping(self._go_classic_on_batch, partitioned,
                                             (0 for _ in range(len(partitioned))), progress_bar_desc=progress_bar_desc)
 
-    def _go_classic_over_chunk(self, chunk: Iterable[str], mod_df_ind: int):
-        return {go_id: self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs) for go_id in chunk}
+    def _go_classic_on_batch(self, go_term_batch: Iterable[str], mod_df_index: int = 0):
+        """
+        calculate stats and p-values with the 'classic' propagation algorithm for an iterable batch of GO terms.
+
+        :param go_term_batch: batch of GO terms to calculate enrichment for
+        :type go_term_batch: an iterable of str (GO IDs)
+        :param mod_df_index:
+        :type mod_df_index: int between 0 and 2 (default 0)
+        :return:
+        :rtype:
+        """
+        return {go_id: self.enrichment_func(go_id, mod_df_ind=mod_df_index, **self.pvalue_kwargs) for go_id in
+                go_term_batch}
 
     def _go_elim_pvalues_serial(self, progress_bar_desc: str = '') -> dict:
         result = self._go_elim_on_aspect('all', progress_bar_desc=progress_bar_desc)

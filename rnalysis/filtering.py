@@ -2003,11 +2003,11 @@ class CountFilter(Filter):
 
         """
         Normalizes the reads in the CountFilter using pre-calculated scaling factors. \
-        Receives a table of sample names and their corresponding size factors, \
+        Receives a table of sample names and their corresponding scaling factors, \
         and divides each column in the CountFilter by the corresponding scaling factor.
 
         :type scaling_factor_fname: str or pathlib.Path
-        :param scaling_factor_fname: the .csv file which contains size factors for the different libraries.
+        :param scaling_factor_fname: the .csv file which contains scaling factors for the different libraries.
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return: If inplace is False, returns a new instance of the Filter object.

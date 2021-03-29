@@ -1305,12 +1305,32 @@ def test_go_enrichment_runner_process_annotations(monkeypatch):
 
 
 def test_go_enrichment_runner_go_classic_pvalues_serial(monkeypatch):
+    go_ids = ['attr1', 'attr2', 'attr3']
+
+    def validate_input_params_classic_on_batch(self, go_term_batch, mod_df_index):
+        try:
+            chunk_iterator = iter(go_term_batch)
+            assert go_ids == list(chunk_iterator)
+        except TypeError:
+            assert False
+
+        assert mod_df_index == 0
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_classic_on_batch', validate_input_params_classic_on_batch)
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.attributes = go_ids
     runner._go_classic_pvalues_serial()
 
 
 def test_go_enrichment_runner_go_classic_pvalues_parallel(monkeypatch):
+    go_ids = [f'id_{i}' for i in range(1500)]
+    go_ids_batch_truth = [[f'id_{i}' for i in range(1000)], [f'id_{i}' for i in range(1000, 1500)]]
+
+    def validate_input_params_parallel_over_grouping(self, func, go_term_batches, mod_df_index):
+        assert go_term_batches == go_ids_batch_truth
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_parallel_over_grouping', validate_input_params_parallel_over_grouping)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
