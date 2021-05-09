@@ -43,6 +43,43 @@ def test_dag_tree_parser_construction():
     assert 'GO:0003840' not in dag_tree
 
 
+def test_go_term_with_properties():
+    term = GOTerm.with_properties('go_id', 'name', 'namespace', 'level')
+    assert isinstance(term, GOTerm)
+    assert term.id == 'go_id'
+    assert term.name == 'name'
+    assert term.namespace == 'namespace'
+    assert term.level == 'level'
+
+
+def test_go_term_set_get_id():
+    term = GOTerm()
+    assert term.id is None
+    term.set_id('id')
+    assert term.id == 'id'
+
+
+def test_go_term_set_get_name():
+    term = GOTerm()
+    assert term.name is None
+    term.set_name('name')
+    assert term.name == 'name'
+
+
+def test_go_term_set_get_namespace():
+    term = GOTerm()
+    assert term.namespace is None
+    term.set_namespace('namespace')
+    assert term.namespace == 'namespace'
+
+
+def test_go_term_set_get_level():
+    term = GOTerm()
+    assert term.level is None
+    term.set_level('level')
+    assert term.level == 'level'
+
+
 def test_go_term_get_parents():
     file = 'tests/test_files/go_mini.obo'
     with open(file, 'rb') as f:
