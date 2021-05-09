@@ -974,19 +974,25 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _go_allm_pvalues_serial(self):
         outputs = {}
-        for method in ['classic', 'elim', 'weight']:
-            self.propagate_annotations = method
-            outputs[method] = self._calculate_enrichment_serial()
-        self.propagate_annotations = 'all.m'
+        try:
+            for method in ['classic', 'elim', 'weight']:
+                self.propagate_annotations = method
+                outputs[method] = self._calculate_enrichment_serial()
+        finally:
+            self.propagate_annotations = 'all.m'  # make sure 'propagate_annotations' is correctly set to its
+            # original value if something goes wrong in runtime
         return self._calculate_allm(outputs)
 
     def _go_allm_pvalues_parallel(self):
         # TODO: progress bar, desc
         outputs = {}
-        for method in ['classic', 'elim', 'weight']:
-            self.propagate_annotations = method
-            outputs[method] = self._calculate_enrichment_parallel()
-        self.propagate_annotations = 'all.m'
+        try:
+            for method in ['classic', 'elim', 'weight']:
+                self.propagate_annotations = method
+                outputs[method] = self._calculate_enrichment_parallel()
+        finally:
+            self.propagate_annotations = 'all.m'  # make sure 'propagate_annotations' is correctly set to its
+            # original value if something goes wrong in runtime
         return self._calculate_allm(outputs)
 
     def _calculate_allm(self, outputs: dict) -> dict:
