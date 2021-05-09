@@ -1,11 +1,12 @@
 from collections import namedtuple
 
 import copy
+import joblib
 import matplotlib
 import pytest
 
 from rnalysis import filtering
-from rnalysis.utils import enrichment_runner
+from rnalysis.utils import enrichment_runner, validation
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
 from tests import __attr_ref__, __biotype_ref__
@@ -294,7 +295,7 @@ def test_allm_pvals(monkeypatch):
     e.attributes = list(goa_df.columns)
     e.attributes_set = set(e.attributes)
 
-    res = pd.DataFrame.from_dict(e._go_allm_pvalues_parallel(), orient='index',
+    res = pd.DataFrame.from_dict(e._go_allm_pvalues_serial(), orient='index',
                                  columns=['name', 'n', 'obs', 'exp', 'log2fc', 'pval']).sort_index()
 
     _comp_go_res_df(res, truth)
@@ -1165,7 +1166,9 @@ def test_go_enrichment_runner_calculate_enrichment_serial(monkeypatch, propagate
 
     res = runner._calculate_enrichment_serial()
 
-    assert len(runner.mod_annotation_dfs) == 1
+    if propagate_annotations is not 'all.m':
+        assert len(runner.mod_annotation_dfs) == 1
+
     if propagate_annotations in {'classic', 'no'}:
         assert runner.annotation_df is runner.mod_annotation_dfs[0]
     elif propagate_annotations == 'elim':
@@ -1307,7 +1310,7 @@ def test_go_enrichment_runner_process_annotations(monkeypatch):
 def test_go_enrichment_runner_go_classic_pvalues_serial(monkeypatch):
     go_ids = ['attr1', 'attr2', 'attr3']
 
-    def validate_input_params_classic_on_batch(self, go_term_batch, mod_df_index):
+    def validate_input_params_classic_on_batch(self, go_term_batch, mod_df_index=0):
         try:
             chunk_iterator = iter(go_term_batch)
             assert go_ids == list(chunk_iterator)
@@ -1336,13 +1339,40 @@ def test_go_enrichment_runner_go_classic_pvalues_parallel(monkeypatch):
 
 
 def test_go_enrichment_runner_go_elim_pvalues_serial(monkeypatch):
+    def validate_input_params_elim_on_aspect(self, aspect, progress_bar_desc):
+        assert isinstance(progress_bar_desc, str)
+        assert aspect == 'all'
+        return 'success'
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_on_aspect', validate_input_params_elim_on_aspect)
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    assert runner._go_elim_pvalues_serial() == 'success'
 
 
-def test_go_enrichment_runner_go_elim_pvalues_parallel(monkeypatch):
+@pytest.mark.parametrize('aspects', [['aspect0', 'aspect1'], ['aspect0'], ['aspect0', 'aspect1', 'aspect2']])
+def test_go_enrichment_runner_go_elim_pvalues_parallel(monkeypatch, aspects):
+    class FakeDAG:
+        def __init__(self, aspect_list):
+            self.namespaces = aspect_list
+
+    @joblib.wrap_non_picklable_objects
+    def validate_input_params_elim_on_aspect(self, aspect, mod_df_ind):
+        assert mod_df_ind == int(aspect[-1])
+        assert aspect in aspects
+        return {aspect: 'success'}
+
+    def is_method_of_class(mthd, cls):
+        assert cls == GOEnrichmentRunner
+        assert mthd == validate_input_params_elim_on_aspect
+        return True
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_on_aspect', validate_input_params_elim_on_aspect)
+    monkeypatch.setattr(validation, 'is_method_of_class', is_method_of_class)
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.dag_tree = FakeDAG(aspects)
+    assert runner._go_elim_pvalues_parallel() == {aspect: 'success' for aspect in aspects}
 
 
 def test_go_enrichment_runner_go_weight_pvalues_serial(monkeypatch):
