@@ -100,3 +100,22 @@ def test_validate_hdbscan_parameters():
 ])
 def test_isinstanceiter(test_input, expected_type, expected):
     assert isinstanceiter(test_input, expected_type) == expected
+
+
+class TestClass:
+    def cls_method(self):
+        pass
+
+    def other_cls_method(self):
+        pass
+
+
+@pytest.mark.parametrize('mthd,cls,truth',
+                         [(str.lower, str, True),
+                          (str.lower, int, False),
+                          (lambda x: x + 1, str, False),
+                          (TestClass.cls_method, TestClass, True),
+                          (TestClass().cls_method, TestClass, True),
+                          (str.lower, TestClass, False)])
+def test_is_method_of_class(mthd, cls, truth):
+    assert is_method_of_class(mthd, cls) == truth

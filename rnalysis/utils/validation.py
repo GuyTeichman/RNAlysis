@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Union, Iterable
+import types
 import pandas as pd
 import warnings
 
@@ -22,6 +23,23 @@ def check_is_df_like(inp):
         if inp.suffix == '.csv':
             return False
     raise ValueError("The input is neither a pandas DataFrame or a csv file")
+
+
+def is_method_of_class(mthd, cls):
+    """
+    returns True if function 'mthd' is a method of class 'cls'
+    :type mthd: function
+    :type cls: class
+    :return: returns True
+    :rtype: bool
+    """
+    try:
+        class_method = getattr(cls, mthd.__name__)
+    except AttributeError:
+        return False
+    if isinstance(mthd, types.MethodType):
+        return class_method == mthd.__func__
+    return class_method == mthd
 
 
 def isinstanceinh(obj, parent_class):
