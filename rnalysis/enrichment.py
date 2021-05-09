@@ -657,7 +657,7 @@ class FeatureSet:
         return runner.run()
 
     @staticmethod
-    def plot_enrichment_results(df: pd.DataFrame, fdr=0.05, en_score_col: str = 'log2_fold_enrichment',
+    def plot_enrichment_results(results_df: pd.DataFrame, fdr=0.05, en_score_col: str = 'log2_fold_enrichment',
                                 name_col: str = None, title: str = '', center_bars: bool = True,
                                 plot_horizontal: bool = True, ylabel: str = r"$\log_2$(Fold Enrichment)") -> plt.Figure:
 
@@ -670,8 +670,8 @@ class FeatureSet:
         :type fdr:
         :param name_col:
         :type name_col:
-        :param df: a pandas DataFrame created by FeatureSet.enrich_randomization.
-        :type df: pd.DataFrame
+        :param results_df: a pandas DataFrame created by FeatureSet.enrich_randomization.
+        :type results_df: pd.DataFrame
         :param en_score_col: name of the DataFrame column that contains the enrichment scores.
         :type en_score_col: str (default 'log2_fold_enrichment')
         :param title: plot title.
@@ -685,19 +685,20 @@ class FeatureSet:
         :return: Figure object containing the bar plot
         :rtype: matplotlib.figure.Figure instance
         """
+        runner = enrichment_runner.EnrichmentRunner()
         plt.style.use('seaborn-white')
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
         if plot_horizontal:
-            figsize = [14, 0.4 * (6.4 + df.shape[0])]
+            figsize = [14, 0.4 * (6.4 + results_df.shape[0])]
             bar_func = plt.Axes.barh
             line_func = plt.Axes.axvline
             cbar_kwargs = dict(location='bottom')
             tick_func = plt.Axes.set_yticks
             ticklabels_func = plt.Axes.set_yticklabels
             ticklabels_kwargs = dict(fontsize=13, rotation=0)
-            df = df[::-1]
+            results_df = results_df[::-1]
         else:
-            figsize = [0.5 * (6.4 + df.shape[0]), 5.6]
+            figsize = [0.5 * (6.4 + results_df.shape[0]), 5.6]
             bar_func = plt.Axes.bar
             line_func = plt.Axes.axhline
             cbar_kwargs = dict(location='left')
@@ -706,9 +707,10 @@ class FeatureSet:
             ticklabels_kwargs = dict(fontsize=13, rotation=45)
 
         # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
-        enrichment_names = df.index.values.tolist() if name_col is None else df[name_col].values.tolist()
-        enrichment_scores = df[en_score_col].values.tolist()
-        enrichment_pvalue = df['padj'].values.tolist()
+        enrichment_names = results_df.index.values.tolist() if name_col is None else results_df[
+            name_col].values.tolist()
+        enrichment_scores = results_df[en_score_col].values.tolist()
+        enrichment_pvalue = results_df['padj'].values.tolist()
 
         # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
         scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf and i < 0]
