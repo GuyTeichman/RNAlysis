@@ -156,6 +156,9 @@ def sparse_dict_to_bool_df(sparse_dict: Dict[str, set], progress_bar_desc: str =
 
 
 def partition_list(lst: Union[list, tuple], chunk_size: int) -> Union[List[tuple], List[list]]:
+    assert isinstance(lst, (list, tuple)), f"'lst' must be a list or tuple; instead got type {type(lst)}."
+    assert isinstance(chunk_size, int), f"'chunk_size' must be an integer; instead got type {type(chunk_size)}."
+    assert chunk_size > 0, f"'chunk_size' must be >0; instead got {chunk_size}."
     if len(lst) == 0:
         return [type(lst)()]
     return [lst[i: i + chunk_size] for i in range(0, len(lst), chunk_size)]

@@ -116,5 +116,24 @@ def test_sparse_dict_to_bool_df():
     assert res.equals(truth)
 
 
-def test_partition_list():
-    assert False
+@pytest.mark.parametrize("lst,chunk_size,truth", [([1, 2, 3, 4, 5], 1, [[1], [2], [3], [4], [5]]),
+                                                  ([1, 2, 3, 4], 2, [[1, 2], [3, 4]]),
+                                                  ([1, 2, 3, 4, 5], 2, [[1, 2], [3, 4], [5]]),
+                                                  ([], 3, [[]]),
+                                                  ((1, 2, 3, 4), 3, [(1, 2, 3), (4,)]),
+                                                  ((1, 2, 3, 4, 5), 5, [(1, 2, 3, 4, 5)]),
+                                                  ((1, 2, 3, 4), 5, [(1, 2, 3, 4)]),
+                                                  (tuple(), 1, [tuple()])])
+def test_partition_list(lst, chunk_size, truth):
+    res = partition_list(lst, chunk_size)
+    assert res == truth
+
+
+@pytest.mark.parametrize("lst,chunk_size", [([1, 2, 3, 4], 0),
+                                            ([1, 2], -1),
+                                            ({1, 2}, 2),
+                                            ([1, 2, 3], 1.0),
+                                            ((i for i in range(3)), 2)])
+def test_partition_list_invalid_input(lst, chunk_size):
+    with pytest.raises(AssertionError):
+        _ = partition_list(lst, chunk_size)
