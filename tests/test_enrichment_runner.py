@@ -1330,12 +1330,19 @@ def test_go_enrichment_runner_go_classic_pvalues_parallel(monkeypatch):
     go_ids = [f'id_{i}' for i in range(1500)]
     go_ids_batch_truth = [[f'id_{i}' for i in range(1000)], [f'id_{i}' for i in range(1000, 1500)]]
 
-    def validate_input_params_parallel_over_grouping(self, func, go_term_batches, mod_df_index):
+    def validate_input_params_parallel_over_grouping(self, func, go_term_batches, mod_df_inds, progress_bar_desc):
         assert go_term_batches == go_ids_batch_truth
+        assert func.__func__ == GOEnrichmentRunner._go_classic_on_batch
+        assert isinstance(progress_bar_desc, str)
+        mod_df_inds_lst = [i for i in mod_df_inds]
+        for ind in mod_df_inds_lst:
+            assert ind == 0
+        assert len(mod_df_inds_lst) == len(go_ids_batch_truth)
 
     monkeypatch.setattr(GOEnrichmentRunner, '_parallel_over_grouping', validate_input_params_parallel_over_grouping)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.attributes = go_ids
+    runner._go_classic_pvalues_parallel()
 
 
 def test_go_enrichment_runner_go_elim_pvalues_serial(monkeypatch):
