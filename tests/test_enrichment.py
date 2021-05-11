@@ -462,13 +462,13 @@ def test_enrich_non_categorical_nan_values():
     plt.close('all')
 
 
-def test_plot_enrichment_hist_api():
-    res = pd.read_csv('tests/test_files/enrich_non_categorical_parametric_truth_fdr15.csv', index_col=0)
-    args_list = []
-    for row, args in zip(res.iterrows(), args_list):
-        FeatureSet.plot_enrichment_hist(row[0], *args)
-    plt.close('all')
-    assert False
+# def test_plot_enrichment_hist_api():
+#     res = pd.read_csv('tests/test_files/enrich_non_categorical_parametric_truth_fdr15.csv', index_col=0)
+#     args_list = []
+#     for row, args in zip(res.iterrows(), args_list):
+#         FeatureSet.plot_enrichment_hist(row[0], *args)
+#     plt.close('all')
+#     assert False
 
 
 def test_enrich_single_list_api():

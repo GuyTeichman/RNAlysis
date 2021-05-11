@@ -685,105 +685,11 @@ class FeatureSet:
         :return: Figure object containing the bar plot
         :rtype: matplotlib.figure.Figure instance
         """
-        runner = enrichment_runner.EnrichmentRunner()
-        plt.style.use('seaborn-white')
-        # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
-        if plot_horizontal:
-            figsize = [14, 0.4 * (6.4 + results_df.shape[0])]
-            bar_func = plt.Axes.barh
-            line_func = plt.Axes.axvline
-            cbar_kwargs = dict(location='bottom')
-            tick_func = plt.Axes.set_yticks
-            ticklabels_func = plt.Axes.set_yticklabels
-            ticklabels_kwargs = dict(fontsize=13, rotation=0)
-            results_df = results_df[::-1]
-        else:
-            figsize = [0.5 * (6.4 + results_df.shape[0]), 5.6]
-            bar_func = plt.Axes.bar
-            line_func = plt.Axes.axhline
-            cbar_kwargs = dict(location='left')
-            tick_func = plt.Axes.set_xticks
-            ticklabels_func = plt.Axes.set_xticklabels
-            ticklabels_kwargs = dict(fontsize=13, rotation=45)
-
-        # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
-        enrichment_names = results_df.index.values.tolist() if name_col is None else results_df[
-            name_col].values.tolist()
-        enrichment_scores = results_df[en_score_col].values.tolist()
-        enrichment_pvalue = results_df['padj'].values.tolist()
-
-        # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
-        scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf and i < 0]
-        if len(scores_no_inf) == 0:
-            scores_no_inf.append(-1)
-        for i in range(len(enrichment_scores)):
-            if enrichment_scores[i] == -np.inf:
-                enrichment_scores[i] = min(scores_no_inf)
-        max_score = max(np.max(np.abs(enrichment_scores)), 2)
-
-        # get color values for bars
-        data_color_norm = [0.5 * (1 + i / (np.floor(max_score) + 1)) * 255 for i in enrichment_scores]
-        data_color_norm_8bit = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for
-                                i in data_color_norm]
-        my_cmap = plt.cm.get_cmap('coolwarm')
-        colors = my_cmap(data_color_norm_8bit)
-
-        # generate bar plot
-        fig, ax = plt.subplots(constrained_layout=True, figsize=figsize)
-        bar = bar_func(ax, range(len(enrichment_names)), enrichment_scores, color=colors, edgecolor='black',
-                       linewidth=1, zorder=2)
-        bar.tick_labels = enrichment_names
-        # determine bound, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
-        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
-        # add black line at y=0 and grey lines at every round positive/negative integer in range
-        for ind in range(int(bounds[0]) + 1, int(bounds[1]) + 1):
-            color = 'black' if ind == 0 else 'grey'
-            linewidth = 1 if ind == 0 else 0.5
-            linestyle = '-' if ind == 0 else '-.'
-            line_func(ax, ind, color=color, linewidth=linewidth, linestyle=linestyle, zorder=0)
-        # add colorbar
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
-        sm.set_array(np.array([]))
-        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15)
-        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), **cbar_kwargs)
-        cbar.set_label(**cbar_label_kwargs)
-        cbar.ax.tick_params(labelsize=14, pad=6)
-        # apply xticks
-        tick_func(ax, range(len(enrichment_names)))
-        ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
-        # title
-        ax.set_title(title, fontsize=18)
-        # add significance asterisks
-        for col, sig in zip(bar, enrichment_pvalue):
-            asterisks, fontweight = enrichment_runner.EnrichmentRunner._get_pval_asterisk(sig, fdr)
-            if plot_horizontal:
-                x = col._width
-                y = col.xy[1] + 0.5 * col._height
-                valign = 'center'
-                halign = 'left' if np.sign(col._width) == 1 else 'right'
-                rotation = 270 if np.sign(col._width) == 1 else 90
-            else:
-                x = col.xy[0] + 0.5 * col._width
-                y = col._height
-                valign = 'bottom' if np.sign(col._height) == 1 else 'top'
-                halign = 'center'
-                rotation = 0
-
-            ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight, rotation=rotation,
-                    fontsize=9, horizontalalignment=halign, verticalalignment=valign, zorder=1)
-        # despine
-        _ = [ax.spines[side].set_visible(False) for side in ['top', 'right']]
-        # center bars
-        if center_bars:
-            if plot_horizontal:
-                ax.set_xbound(bounds)
-                plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
-            else:
-                ax.set_ybound(bounds)
-                plt.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
-
-        plt.show()
-        return fig
+        runner = enrichment_runner.EnrichmentRunner(set(), results_df['name'], fdr, '', False, '', True,
+                                                    plot_horizontal, '', False, 'hypergeometric', 'all')
+        runner.en_score_col = en_score_col
+        runner.results = results_df
+        return runner.enrichment_bar_plot(name_col=name_col, center_bars=center_bars, ylabel=ylabel, title=title)
 
     def enrich_non_categorical(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                                alpha: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
@@ -802,71 +708,6 @@ class FeatureSet:
                                                                   n_bins, self.set_name, parallel=False,
                                                                   parametric_test=parametric_test)
         return runner.run()
-
-    @staticmethod
-    def plot_enrichment_hist(attribute: str, gene_set: set, set_name: str, attr_srs: pd.Series,
-                             plot_log_scale: bool, plot_style: str, n_bins: int, parametric_test: bool,
-                             pval: float) -> plt.Figure:
-        assert isinstance(n_bins,
-                          int) and n_bins > 0, f"'n_bins' must be a positive integer. Instead got {type(n_bins)}."
-        # generate observed and expected Series, either linear or in log10 scale
-        exp = attr_srs
-        obs = exp.loc[gene_set]
-        if plot_log_scale:
-            xlabel = r"$\log_{10}$" + f"({attribute})"
-            exp = np.log10(exp)
-            obs = np.log10(obs)
-        else:
-            xlabel = f"{attribute}"
-
-        # determine bins according to value range and 'n_bins'
-        bins = np.linspace(np.min(exp), np.max(exp), n_bins).squeeze()
-
-        # generate histogram according to plot style
-        fig = plt.figure(figsize=(12, 6))
-        ax = fig.add_subplot(111)
-        kwargs = dict(bins=bins, density=True, alpha=0.5, edgecolor='black', linewidth=1)
-        colors = ['C0', 'C1']
-        if plot_style.lower() == 'interleaved':
-            y, x, _ = ax.hist([exp.values, obs.values], **kwargs, color=colors, label=['Expected', 'Observed'])
-            max_y_val = np.max(y)
-        elif plot_style.lower() == 'overlap':
-            y, _, _ = ax.hist(exp.values, **kwargs, color=colors[0], label='Expected')
-            y2, _, _ = ax.hist(obs.values, **kwargs, color=colors[1], label='Observed')
-            max_y_val = np.max([np.max(y), np.max(y2)])
-        else:
-            raise ValueError(f"Invalid value for 'plot_style': '{plot_style}'")
-
-        # set either mean or median as the measure of centrality
-        if parametric_test:
-            x_exp, x_obs = exp.mean(), obs.mean()
-            label_exp, label_obs = 'Expected mean', 'Observed mean'
-        else:
-            x_exp, x_obs = exp.median(), obs.median()
-            label_exp, label_obs = 'Expected median', 'Observed median'
-
-        # add lines for mean/median of observed and expected distributions
-        ax.vlines(x_exp, ymin=0, ymax=max_y_val * 1.1, color='blue', linestyle='dashed', linewidth=2,
-                  label=label_exp)
-        ax.vlines(x_obs, ymin=0, ymax=max_y_val * 1.1, color='red', linestyle='dashed', linewidth=2,
-                  label=label_obs)
-
-        # add significance notation
-        asterisks, fontweight = FeatureSet._get_pval_asterisk(pval)
-        ax.vlines([x_exp, x_obs], ymin=max_y_val * 1.12, ymax=max_y_val * 1.16, color='k', linewidth=1)
-        ax.hlines(max_y_val * 1.16, xmin=min(x_exp, x_obs), xmax=max(x_exp, x_obs), color='k', linewidth=1)
-        ax.text(np.mean([x_exp, x_obs]), max_y_val * 1.17, asterisks, horizontalalignment='center',
-                fontweight=fontweight)
-
-        # legend and titles
-        ax.legend()
-        obs_name = 'Observed' if set_name == '' else set_name
-        ax.set_title(f"Histogram of {attribute} - {obs_name} vs Expected", fontsize=17)
-        ax.set_ylabel("Probability density", fontsize=14)
-        ax.set_xlabel(xlabel, fontsize=14)
-        plt.show()
-
-        return fig
 
     def biotypes(self, ref: str = 'predefined'):
 
