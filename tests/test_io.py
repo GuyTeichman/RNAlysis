@@ -149,13 +149,6 @@ def test_gene_id_translator_contains():
         assert something in translator
 
 
-def test_map_taxon_id_connectivity():
-    assert map_taxon_id(6239) == (6239, 'Caenorhabditis elegans')
-    assert map_taxon_id('canis lupus familiaris') == (9615, 'Canis lupus familiaris')
-    with pytest.raises(ValueError):
-        map_taxon_id('Lorem ipsum dolor sit amet')
-
-
 @pytest.mark.parametrize("test_input,expected", [
     ('any', {'aspect a', 'aspect b', 'aspect c'}),
     ('B', {'aspect b'}),
@@ -309,20 +302,56 @@ def test_golr_annotation_iterator_parsing(monkeypatch):
         assert record == true_record
 
 
-def test_map_taxon_id_parsing(monkeypatch):
-    assert False
+def test_map_taxon_id_connectivity():
+    assert map_taxon_id(6239) == (6239, 'Caenorhabditis elegans')
+    assert map_taxon_id('canis lupus familiaris') == (9615, 'Canis lupus familiaris')
+    with pytest.raises(ValueError):
+        map_taxon_id('Lorem ipsum dolor sit amet')
+
+
+def test_map_taxon_id(monkeypatch):
+    taxon_name = 'c elegans'
+
+    def mock_requests_get(url, params):
+        assert url == 'https://www.uniprot.org/taxonomy/?'
+        assert params == {'format': 'tab', 'query': taxon_name, 'sort': 'score'}
+        return MockResponse(text='Taxon\tMnemonic\tScientific name\tCommon name\tSynonym\tOther Names\tReviewed\t'
+                                 'Rank\tLineage\tParent\tVirus hosts\n6239\tCAEEL\tCaenorhabditis elegans\t\t\t'
+                                 'Caenorhabditis elegans (Maupas, 1900); Rhabditis elegans; Rhabditis elegans Maupas, '
+                                 '1900; roundworm\treviewed\tSpecies\tEukaryota; Metazoa; Ecdysozoa; Nematoda; '
+                                 'Chromadorea; Rhabditida; Rhabditina; Rhabditomorpha; Rhabditoidea; Rhabditidae; '
+                                 'Peloderinae; Caenorhabditis\t6237\t\n')
+
+    monkeypatch.setattr(requests, 'get', mock_requests_get)
+    assert map_taxon_id(taxon_name) == (6239, 'Caenorhabditis elegans')
 
 
 def test_map_taxon_id_no_results(monkeypatch):
-    assert False
+    def mock_requests_get(url, params):
+        return MockResponse(text='')
+
+    monkeypatch.setattr(requests, 'get', mock_requests_get)
+    with pytest.raises(ValueError):
+        map_taxon_id('')
 
 
 def test_map_taxon_id_multiple_results(monkeypatch):
-    assert False
+    def mock_requests_get(url, params):
+        return MockResponse(
+            text='Taxon\tScientific name\n9615\tCanis lupus familiaris\n2509620\t'
+                 'Wlobachia endosymbiont of Canis lupus familiaris\n990119\tCanis lupus x Canis lupus familiaris')
+
+    monkeypatch.setattr(requests, 'get', mock_requests_get)
+    assert map_taxon_id('') == (9615, 'Canis lupus familiaris')
 
 
 def test_map_taxon_id_no_connection(monkeypatch):
-    assert False
+    def mock_requests_get(url, params):
+        return MockResponse(status_code=100)
+
+    monkeypatch.setattr(requests, 'get', mock_requests_get)
+    with pytest.raises(ConnectionError):
+        map_taxon_id('name')
 
 
 def test_load_id_abbreviation_dict():
