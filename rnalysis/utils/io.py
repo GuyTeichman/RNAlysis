@@ -5,7 +5,7 @@ import warnings
 from functools import lru_cache
 from itertools import chain
 from pathlib import Path
-from typing import List, Set, Union, Iterable, Tuple, Dict
+from typing import List, Set, Union, Iterable, Tuple, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -310,9 +310,18 @@ class GOlrAnnotationIterator:
 
 
 @lru_cache(maxsize=32, typed=False)
-def _ensmbl_lookup_post(gene_ids: Tuple[str]) -> dict:
+def _ensmbl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any]]:
+    """
+    Perform an Ensembl 'lookup/id' POST request to find the species and database for several identifiers. \
+    See full POST API at https://rest.ensembl.org/documentation/info/lookup_post
+
+    :param gene_ids: a tuple of gene IDs to look up
+    :type gene_ids: tuple of str
+    :return: a dictionary with gene IDs as keys and dictionaries of attributes as values
+    """
     url = 'https://rest.ensembl.org/lookup/id'
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    # split the gene IDs into chunks of 1000 (the maximum allowed POST request size)
     data_chunks = parsing.partition_list(gene_ids, 1000)
     output = {}
     for chunk in data_chunks:
@@ -325,7 +334,7 @@ def _ensmbl_lookup_post(gene_ids: Tuple[str]) -> dict:
 
 
 def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
-    output = _ensmbl_lookup_post(parsing.data_to_tuple(gene_ids))
+    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(gene_ids))
     sources = {}
     for gene_id in output:
         if output[gene_id] is not None:
@@ -337,7 +346,7 @@ def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
 
 
 def infer_taxon_id_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
-    output = _ensmbl_lookup_post(parsing.data_to_tuple(gene_ids))
+    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(gene_ids))
     species = dict()
     for gene_id in output:
         if output[gene_id] is not None:

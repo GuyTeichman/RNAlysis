@@ -1,20 +1,25 @@
 import pytest
+from rnalysis.utils import io
 from rnalysis.utils.io import *
-from rnalysis.utils.io import _format_ids_iter
+from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
 
 
 class MockResponse(object):
     def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = {'blaa': '1234'},
-                 text: str = ''):
+                 text: str = '', json_output: dict = dict()):
         self.status_code = status_code
         self.url = url
         self.headers = headers
         self.text = text
         self.ok = self.status_code == 200
+        self._json = json_output
 
     def raise_for_status(self):
         if not self.ok:
             raise ConnectionError('request not ok')
+
+    def json(self):
+        return self._json
 
 
 def test_load_csv_bad_input():
@@ -320,5 +325,54 @@ def test_map_taxon_id_no_connection(monkeypatch):
     assert False
 
 
-def _load_id_abbreviation_dict():
+def test_load_id_abbreviation_dict():
+    assert False
+
+
+def test_ensmbl_lookup_post_request(monkeypatch):
+    ids = ('id1', 'id2', 'id3')
+
+    def mock_post_request(url, headers, data):
+        assert url == 'https://rest.ensembl.org/lookup/id'
+        assert headers == {"Content-Type": "application/json", "Accept": "application/json"}
+        assert isinstance(data, str)
+        assert json.loads(data) == {'ids': list(ids)}
+
+        return MockResponse(json_output={this_id: {} for this_id in ids})
+
+    monkeypatch.setattr(requests, 'post', mock_post_request)
+    assert _ensmbl_lookup_post_request(ids) == {'id1': {}, 'id2': {}, 'id3': {}}
+
+
+@pytest.mark.parametrize("gene_id_info,truth", [
+    ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}}, {'src1': {'id1', 'id2'}}),
+    ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}, 'id3': None}, {'src1': {'id1', 'id2'}}),
+    ({'id1': {'source': 'src1'}, 'id2': {'source': 'src1'}, 'id3': {'source': 'src2'}},
+     {'src1': {'id1', 'id2'}, 'src2': {'id3'}}),
+    ({'id1': None, 'id2': None}, {}),
+    ({}, {})
+])
+def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
+    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    assert infer_sources_from_gene_ids([]) == truth
+
+
+@pytest.mark.parametrize("gene_id_info,truth", [
+    ({'id1': {'species': 'c_elegans'}, 'id2': {'species': 'c_elegans'}, 'id3': None}, 'c elegans'),
+    ({'id1': {'species': 'c_elegans'}, 'id2': {'species': 'm_musculus'}, 'id3': {'species': 'm_musculus'}},
+     'm musculus')])
+def test_infer_taxon_id_from_gene_ids(monkeypatch, gene_id_info, truth):
+    monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
+    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    assert infer_taxon_id_from_gene_ids([]) == truth
+
+
+def test_infer_taxon_id_from_gene_ids_no_species(monkeypatch):
+    gene_id_info = {'id1': None, 'id2': None}
+    monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
+    with pytest.raises(ValueError):
+        infer_taxon_id_from_gene_ids([])
+
+
+def test_map_gene_ids_with_duplicates():
     assert False

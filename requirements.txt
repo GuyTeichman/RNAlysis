@@ -18,3 +18,4 @@ requests>=2.24.0
 pydot
 joblib>=0.17.0
 tqdm>=4.51.0
+appdirs>=1.4.0
