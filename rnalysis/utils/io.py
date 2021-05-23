@@ -454,6 +454,22 @@ class GeneIDTranslator:
 
 
 def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'UniProtKB AC') -> GeneIDTranslator:
+    """
+    Map gene IDs from one identifier type to another using the UniProt ID Mapping service. \
+    If some IDs cannot be mapped uniquely, duplicate mappings will be resolved by their UniProtKB Annotation Score. \
+    Gene IDs that could not be mapped or were not recognized will be dropped from the output.
+
+    :param ids: gene IDs to be mapped
+    :type ids: str or an Iterable of strings
+    :param map_from: identifier type to map from (for example 'UniProtKB AC' or 'WormBase')
+    :type map_from: str
+    :param map_to: identifier type to map to (for example 'UniProtKB AC' or 'WormBase'). \
+    can be identical to 'map_from'
+    :type map_to: str
+    :return:a GeneIDTranslator object that uniquely maps each given gene ID in 'map_from' identifier type \
+    to its matching gene ID in 'map_to' identifier type.
+    :rtype: GeneIDTranslator
+    """
     url = 'https://www.uniprot.org/uploadlists/'
     id_dict = _load_id_abbreviation_dict()
     validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
@@ -464,7 +480,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
         return GeneIDTranslator()
     # since the Uniprot service can only translate to or from 'UniProtKB AC' identifier type,
     # if we need to map gene IDs between two other identifier types,
-    # then we will map from 'map_from' to 'UniProtKB AC' and then from 'UniProtKB AC' to 'map_to'. 
+    # then we will map from 'map_from' to 'UniProtKB AC' and then from 'UniProtKB AC' to 'map_to'.
     print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
     if id_dict[map_to] != id_dict['UniProtKB AC'] and id_dict[map_from] != id_dict['UniProtKB AC']:
         to_uniprot = map_gene_ids(ids, map_from, 'UniProtKB AC').mapping_dict
@@ -474,23 +490,31 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     else:
         output = {}
         duplicates = []
+        # make sure that 'map_from' and 'map_to' are recognized identifier types
         if id_dict[map_to] != 'Null' and id_dict[map_from] != 'Null':
+            # split ids into chunks to keep the Get Request size from getting too big
             for chunk in _format_ids_iter(ids):
                 params = {
                     'from': id_dict[map_from],
                     'to': id_dict[map_to],
                     'format': 'tab',
                     'query': chunk,
+                    # get 'annotation_score' data if possible (only when mapping to 'UniProtKB AC')
                     'columns': 'id,annotation_score' if id_dict[map_to] == id_dict['UniProtKB AC'] else 'id'}
                 req = requests.get(url, params=params)
                 if not req.ok:
                     req.raise_for_status()
+                # if 'annotation_score' is available (only when mapping to 'UniProtKB AC'), parse it accordingly
+                # using 'uniprot_tab_with_score_to_dict' which automatically keeps the best match for duplicates
                 if id_dict[map_to] == id_dict['UniProtKB AC']:
                     output.update(parsing.uniprot_tab_with_score_to_dict(req.text))
+                # if 'annotation_score' is not available, get a list of duplicate matches to process later
                 else:
                     this_output, this_duplicates = parsing.uniprot_tab_to_dict(req.text)
                     output.update(this_output)
                     duplicates.extend(this_duplicates)
+        # if there are unprocessed duplicates, map them in reverse (to 'UniProtKB AC' instead of from 'UniProtKB AC')
+        # and then use the resulting 'annotation_score' to automatically keep the best match for duplicates
         if len(duplicates) > 0:
             for chunk in _format_ids_iter(duplicates):
                 params = {
@@ -502,7 +526,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                 req = requests.get(url, params=params)
                 if not req.ok:
                     req.raise_for_status()
-                output.update(parsing.uniprot_tab_with_score_to_dict(req.text, reverse_key_value=True))
+                output.update(parsing.uniprot_tab_with_score_to_dict(req.text))
 
     if len(output) < n_queries:
         warnings.warn(f"Failed to map {n_queries - len(output)} entries from '{map_from}' to '{map_to}'. "
