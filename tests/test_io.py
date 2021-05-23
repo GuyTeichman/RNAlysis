@@ -390,17 +390,17 @@ def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
     ({'id1': {'species': 'c_elegans'}, 'id2': {'species': 'c_elegans'}, 'id3': None}, 'c elegans'),
     ({'id1': {'species': 'c_elegans'}, 'id2': {'species': 'm_musculus'}, 'id3': {'species': 'm_musculus'}},
      'm musculus')])
-def test_infer_taxon_id_from_gene_ids(monkeypatch, gene_id_info, truth):
+def test_infer_taxon_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
     monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
-    assert infer_taxon_id_from_gene_ids([]) == truth
+    assert infer_taxon_from_gene_ids([]) == truth
 
 
-def test_infer_taxon_id_from_gene_ids_no_species(monkeypatch):
+def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
     gene_id_info = {'id1': None, 'id2': None}
     monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
     with pytest.raises(ValueError):
-        infer_taxon_id_from_gene_ids([])
+        infer_taxon_from_gene_ids([])
 
 
 def test_map_gene_ids_with_duplicates():

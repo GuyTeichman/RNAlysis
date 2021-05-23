@@ -334,6 +334,13 @@ def _ensmbl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any
 
 
 def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
+    """
+    Infer the
+    :param gene_ids:
+    :type gene_ids:
+    :return:
+    :rtype:
+    """
     output = _ensmbl_lookup_post_request(parsing.data_to_tuple(gene_ids))
     sources = {}
     for gene_id in output:
@@ -345,7 +352,16 @@ def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
     return sources
 
 
-def infer_taxon_id_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
+def infer_taxon_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
+    """
+    Infer the NCBI Taxon ID and name of a collection of gene IDs. \
+    In cases where not all gene IDs map to the same taxon, the best-fitting taxon will be picked by a majority vote.
+
+    :param gene_ids: a collection of gene IDs
+    :type gene_ids: Iterable of str
+    :return: a tuple of the best-matching taxon's NCBI Taxon ID and full scientific name.
+    :rtype: Tuple[int ,str]
+    """
     output = _ensmbl_lookup_post_request(parsing.data_to_tuple(gene_ids))
     species = dict()
     for gene_id in output:
@@ -369,7 +385,7 @@ def infer_taxon_id_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
 def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     """
     Maps a given query (taxon name or NCBI Taxon ID) to the best-matching taxon from the NCBI taxonomy database. \
-    Mapping is done through UniProt Taxonomy.
+    Mapping is done through UniProt Taxonomy: https://www.uniprot.org/taxonomy/?
 
     :param taxon_name: a partial/full taxon name (str) or NCBI Taxon ID (int) to map
     :type taxon_name: int or str
@@ -443,8 +459,12 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
     ids = parsing.data_to_list(ids)
     n_queries = len(ids)
+    # if map_from and map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
     if id_dict[map_to] == id_dict[map_from]:
         return GeneIDTranslator()
+    # since the Uniprot service can only translate to or from 'UniProtKB AC' identifier type,
+    # if we need to map gene IDs between two other identifier types,
+    # then we will map from 'map_from' to 'UniProtKB AC' and then from 'UniProtKB AC' to 'map_to'. 
     print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
     if id_dict[map_to] != id_dict['UniProtKB AC'] and id_dict[map_from] != id_dict['UniProtKB AC']:
         to_uniprot = map_gene_ids(ids, map_from, 'UniProtKB AC').mapping_dict

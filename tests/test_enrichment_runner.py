@@ -915,7 +915,7 @@ def test_go_enrichment_runner_get_organism(monkeypatch, organism, truth):
         return 'inferred_id', 'inferred_organism'
 
     monkeypatch.setattr(io, 'map_taxon_id', lambda input_organism: (input_organism + 'mapped_id', 'organism'))
-    monkeypatch.setattr(io, 'infer_taxon_id_from_gene_ids', alt_infer_taxon_id)
+    monkeypatch.setattr(io, 'infer_taxon_from_gene_ids', alt_infer_taxon_id)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.gene_set = {'gene1', 'gene2', 'gene4'}
     runner.organism = organism

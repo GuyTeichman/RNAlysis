@@ -718,7 +718,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def get_organism(self):
         if isinstance(self.organism, str) and self.organism.lower() == 'auto':
-            self.taxon_id, self.organism = io.infer_taxon_id_from_gene_ids(self.gene_set)
+            self.taxon_id, self.organism = io.infer_taxon_from_gene_ids(self.gene_set)
         else:
             self.taxon_id, self.organism = io.map_taxon_id(self.organism)
 
