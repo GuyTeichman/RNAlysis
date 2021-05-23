@@ -3,6 +3,7 @@ from collections import namedtuple
 import copy
 import joblib
 import matplotlib
+import numpy as np
 import pytest
 
 from rnalysis import filtering
@@ -1491,9 +1492,24 @@ def test_go_enrichment_runner_parallel_over_grouping(monkeypatch):
     assert False
 
 
-def test_go_enrichment_runner_calculate_allm(monkeypatch):
+@pytest.mark.parametrize('attrs,output_dict,truth_dict',
+                         [(['attr1', 'attr2'],
+                           {'classic': {'attr1': ['classic_val1', 'classic_val2', 0.05],
+                                        'attr2': ['classic_val3', 'classic_val4', 1]},
+                            'elim': {'attr1': ['elim_val1', 'elim_val2', 0.3],
+                                     'attr2': ['elim_val3', 'elim_val4', 0.9999]},
+                            'weight': {'attr1': ['weight_val1', 'weight_val2', 0.12],
+                                       'attr2': ['weight_val3', 'weight_val4', 0.5]}},
+                           {'attr1': ('classic_val1', 'classic_val2', 0.12164404),
+                            'attr2': ('classic_val3', 'classic_val4', 0.793674068)})])
+def test_go_enrichment_runner_calculate_allm(monkeypatch, attrs, output_dict, truth_dict):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.attributes = attrs
+    res = runner._calculate_allm(output_dict)
+    assert res.keys() == truth_dict.keys()
+    for attr in attrs:
+        assert res[attr][:-1] == truth_dict[attr][:-1]
+        assert np.isclose(res[attr][-1], truth_dict[attr][-1], atol=0)
 
 
 def test_go_enrichment_runner_go_level_iterator(monkeypatch):

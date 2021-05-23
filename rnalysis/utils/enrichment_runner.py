@@ -995,7 +995,17 @@ class GOEnrichmentRunner(EnrichmentRunner):
             # original value if something goes wrong in runtime
         return self._calculate_allm(outputs)
 
-    def _calculate_allm(self, outputs: dict) -> dict:
+    def _calculate_allm(self, outputs: Dict[str, Dict[str, list]]) -> Dict[str, tuple]:
+        """
+        Implementation of 'combining algorithms' (section 2.4) from Alexa et al 2006: \
+        https://academic.oup.com/bioinformatics/article/22/13/1600/193669
+
+        :param outputs: a dictionary containing output dictionaries from all 3 propagation algorithms \
+        (classic, elim, weight)
+        :type outputs: Dict[str, Dict[str, list]]
+        :return: a combined output dictionary containing p-values that were averaged on a logarithmic scale.
+        :rtype: Dict[str, tuple]
+        """
         result = {}
         for go_id in self.attributes:
             pvalue = np.exp(np.mean(
@@ -1010,6 +1020,25 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _compute_term_sig(self, mod_df_ind: int, go_id: str, children: set, weights: dict, result: dict,
                           tolerance: float = 10 ** -50):
+        """
+        Implementation of the computeTermSig(u, children) function from Alexa et al 2006: \
+        https://doi.org/10.1093/bioinformatics/btl140
+
+        :param mod_df_ind: index of the annotation dataframe to be used for the algorithm \
+        (in case the algorithm runs in parallel and multiple dataframes are used)
+        :type mod_df_ind: int
+        :param go_id: the current GO ID (node/'u') on which the function is calculated
+        :type go_id: str
+        :param children: a set of the children of go_id
+        :type children: set
+        :param weights: a dictionary of weight multipliers for each GO ID/node to be used in p-value calculations
+        :type weights: dict
+        :param result: a dictionary containing the results of the enrichment analysis (p-value, fold-change, etc')
+        :type result: dict
+        :param tolerance: absolute tolerance for float equality in the algorithm
+        :type tolerance: float
+
+        """
         # calculate stats OR update p-value for go_id
         if go_id in result:
             result[go_id][-1] = self._calc_fisher_pval(
