@@ -471,6 +471,7 @@ def test_enrichment_runner_format_results_single_list(monkeypatch):
     assert truth.equals(runner.results)
 
 
+@pytest.mark.parametrize('mode', ['EnrichmentRunner', 'GOEnrichmentRunner'])
 @pytest.mark.parametrize('attr,index_vector, pvalue_kwargs,p_values,e_scores,params_truth',
                          [('attr1', [3, 5, 2], {}, (0.05, 0.9), (2, 1.5),
                            {'L': 1, 'X': 2, 'N': 10, 'table': np.empty((3 + 1, 10 - 3 + 1), dtype=np.longdouble)}),
@@ -479,7 +480,7 @@ def test_enrichment_runner_format_results_single_list(monkeypatch):
                           ('attr,3', [2, 9], {'other_arg': 13}, (0.8, 0.1), (1, 1.2),
                            {'L': 1, 'X': 1, 'N': 10, 'table': np.empty((2 + 1, 10 - 2 + 1), dtype=np.longdouble)})])
 def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pvalue_kwargs, p_values, e_scores,
-                                            params_truth):
+                                            params_truth, mode):
     n_calls_xlmhg_test = [0]
     params_truth['indices'] = index_vector
 
@@ -489,6 +490,8 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
             self.escore = escore
 
     monkeypatch.setattr(EnrichmentRunner, '_xlmhg_index_vectors', lambda self, attribute: (index_vector, index_vector))
+    monkeypatch.setattr(GOEnrichmentRunner, '_xlmhg_index_vectors',
+                        lambda self, attribute: (index_vector, index_vector))
 
     def _xlmhg_test_validate_parameters(**kwargs):
         for key in ['X', 'L', 'N', 'indices']:
@@ -503,13 +506,24 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
 
     monkeypatch.setattr(enrichment_runner, 'xlmhg_test', _xlmhg_test_validate_parameters)
 
-    runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    if mode == 'GOEnrichmentRunner':
+        runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+
+        class FakeGOTerm:
+            def __init__(self, go_id, name):
+                self.go_id = go_id
+                self.name = name
+
+        runner.dag_tree = {attr: FakeGOTerm(attr, attr + '_name')}
+    else:
+        runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.ranked_genes = np.array(
         ['gene0', 'gene1', 'gene2', 'gene3', 'gene4', 'gene5', 'gene6', 'gene7', 'gene8', 'gene9'], dtype='str')
     runner.pvalue_kwargs = pvalue_kwargs
 
     log2fc = np.log2(e_scores[0] if p_values[0] <= p_values[1] else (1 / e_scores[1]))
-    output_truth = [attr, len(runner.ranked_genes), log2fc, min(p_values)]
+    output_truth = [attr + '_name' if mode == 'GOEnrichmentRunner' else attr, len(runner.ranked_genes), log2fc,
+                    min(p_values)]
 
     result = runner._xlmhg_enrichment(attr)
     assert result == output_truth
@@ -1487,11 +1501,6 @@ def test_go_enrichment_runner_go_allm_pvalues_parallel_error_state(monkeypatch):
         assert runner.propagate_annotations == 'all.m'
 
 
-def test_go_enrichment_runner_parallel_over_grouping(monkeypatch):
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
-
-
 @pytest.mark.parametrize('attrs,output_dict,truth_dict',
                          [(['attr1', 'attr2'],
                            {'classic': {'attr1': ['classic_val1', 'classic_val2', 0.05],
@@ -1535,11 +1544,6 @@ def test_go_enrichment_runner_go_level_iterator(monkeypatch):
     assert list(runner._go_level_iterator(this_namespace)) == go_ids_by_level_truth
 
 
-def test_go_enrichment_runner_compute_term_sig(monkeypatch):
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
-
-
 @pytest.mark.parametrize('truth',
                          [(['attribute1', 6, 3, (11 / 38) * 6, np.log2(3 / ((11 / 38) * 6)), 0.05]),
                           (['attribute4', 6, 4, (13 / 38) * 6, np.log2(4 / ((13 / 38) * 6)), 0.05])])
@@ -1563,11 +1567,6 @@ def test_go_enrichment_runner_randomization_enrichment(monkeypatch, truth):
     assert runner._randomization_enrichment(truth[0], runner.pvalue_kwargs['reps']) == truth
 
 
-def test_go_enrichment_runner_xlmhg_enrichment(monkeypatch):
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
-
-
 @pytest.mark.parametrize('attribute,truth',
                          [('attribute1', np.array([0, 1], dtype='uint16')),
                           ('attribute4', np.array([0, 2], dtype='uint16'))])
@@ -1579,16 +1578,75 @@ def test_go_enrichment_runner_xlmhg_index_vector(attribute, truth):
     assert np.all(runner._xlmhg_index_vectors(attribute) == truth)
 
 
-def test_go_enrichment_runner_hypergeometric_enrichment(monkeypatch):
+@pytest.mark.parametrize('params,go_id,truth',
+                         [((38, 6, 11, 3), 'attribute1',
+                           ['attribute1_name', 6, 3, (13 / 38) * 6, np.log2(3 / ((13 / 38) * 6)), 0.05]), ])
+def test_go_enrichment_runner_hypergeometric_enrichment(monkeypatch, params, go_id, truth):
+    monkeypatch.setattr(GOEnrichmentRunner, '_get_hypergeometric_parameters', lambda self, go_id, mod_df_ind: params)
+
+    def alt_calc_pval(self, bg_size, de_size, go_size, go_de_size):
+        assert (bg_size, de_size, go_size, go_de_size) == params
+        return 0.05
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_calc_hypergeometric_pval', alt_calc_pval)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).apply(np.ceil)
+    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
+                       'WBGene00268195'}
+
+    class FakeGOTerm:
+        def __init__(self, go_id, name):
+            self.go_id = go_id
+            self.name = name
+
+    runner.dag_tree = {go_id: FakeGOTerm(go_id, go_id + '_name')}
+    assert runner._hypergeometric_enrichment(go_id) == truth
+
+
+@pytest.mark.parametrize('params,go_id,truth',
+                         [((38, 6, 11, 3), 'attribute1',
+                           ['attribute1_name', 6, 3, (13 / 38) * 6, np.log2(3 / ((13 / 38) * 6)), 0.05]), ])
+def test_go_enrichment_runner_fisher_enrichment(monkeypatch, params, go_id, truth):
+    monkeypatch.setattr(GOEnrichmentRunner, '_get_hypergeometric_parameters', lambda self, go_id, mod_df_ind: params)
+
+    def alt_calc_pval(self, bg_size, de_size, go_size, go_de_size):
+        assert (bg_size, de_size, go_size, go_de_size) == params
+        return 0.05
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_calc_fisher_pval', alt_calc_pval)
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).apply(np.ceil)
+    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
+                       'WBGene00268195'}
+
+    class FakeGOTerm:
+        def __init__(self, go_id, name):
+            self.go_id = go_id
+            self.name = name
+
+    runner.dag_tree = {go_id: FakeGOTerm(go_id, go_id + '_name')}
+    assert runner._fisher_enrichment(go_id) == truth
+
+
+@pytest.mark.parametrize('go_id,results, mod_df_ind',
+                         [('attribute1', (38, 6, 13, 3), 0),
+                          ('attribute3', (38, 6, 60, 9), 1),
+                          ('attribute4', (38, 6, 1, 2), 2)])
+def test_go_enrichment_runner_get_hypergeometric_parameters(monkeypatch, go_id, results, mod_df_ind):
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    runner.mod_annotation_dfs = [None, None, None]
+    runner.mod_annotation_dfs[mod_df_ind] = annotation_df
+    runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
+                       'WBGene00268195'}
+    assert runner._get_hypergeometric_parameters(go_id, mod_df_ind) == results
+
+
+def test_go_enrichment_runner_parallel_over_grouping(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
 
 
-def test_go_enrichment_runner_fisher_enrichment(monkeypatch):
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
-
-
-def test_go_enrichment_runner_get_hypergeometric_parameters(monkeypatch):
+def test_go_enrichment_runner_compute_term_sig(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     assert False
