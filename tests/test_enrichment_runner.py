@@ -1642,11 +1642,15 @@ def test_go_enrichment_runner_get_hypergeometric_parameters(monkeypatch, go_id, 
     assert runner._get_hypergeometric_parameters(go_id, mod_df_ind) == results
 
 
-def test_go_enrichment_runner_parallel_over_grouping(monkeypatch):
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+@pytest.mark.parametrize('grouping,inds,truth',
+                         [([['a', 'b', 'c'], ['d', 'e', 'f'], ['g', 'h']], [1, 2, 1],
+                           {'a': 1, 'b': 1, 'c': 1, 'd': 2, 'e': 2, 'f': 2, 'g': 1, 'h': 1})])
+def test_go_enrichment_runner_parallel_over_grouping(monkeypatch, grouping, inds, truth):
+    monkeypatch.setattr(validation, 'is_method_of_class', lambda func, obj_type: True)
 
+    def my_func(_, group, ind):
+        return {obj: ind for obj in group}
 
-def test_go_enrichment_runner_compute_term_sig(monkeypatch):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    res = runner._parallel_over_grouping(my_func, grouping, inds)
+    assert res == truth
