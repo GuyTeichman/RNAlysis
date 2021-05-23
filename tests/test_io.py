@@ -73,51 +73,6 @@ def test_fetch_go_basic_connectivity():
     _ = fetch_go_basic()
 
 
-def test_map_gene_ids_connectivity():
-    ids_uniprot = ['P34544', 'Q27395', 'P12844']
-    ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
-    entrez_to_wb_truth = {'176183': 'WBGene00019883', '173203': 'WBGene00012343'}
-    wb_to_entrez_truth = {val: key for key, val in zip(entrez_to_wb_truth.keys(), entrez_to_wb_truth.values())}
-    mapped_ids_truth = {uniprot: wb for uniprot, wb in zip(ids_uniprot, ids_wormbase)}
-    mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids_truth.values())}
-
-    mapped_ids = map_gene_ids(ids_uniprot, map_from='UniProtKB', map_to='WormBase')
-    for geneid in ids_uniprot:
-        assert geneid in mapped_ids
-        assert mapped_ids[geneid] == mapped_ids_truth[geneid]
-    assert mapped_ids.mapping_dict == mapped_ids_truth
-
-    mapped_ids = map_gene_ids(ids_wormbase, map_from='WormBase', map_to='UniProtKB')
-    for geneid in ids_wormbase:
-        assert geneid in mapped_ids
-        assert mapped_ids[geneid] == mapped_ids_truth_rev[geneid]
-    assert mapped_ids.mapping_dict == mapped_ids_truth_rev
-
-    mapped_ids = map_gene_ids(entrez_to_wb_truth.keys(), 'Entrez Gene ID', 'WormBase')
-    for geneid in entrez_to_wb_truth:
-        assert mapped_ids[geneid] == entrez_to_wb_truth[geneid]
-
-    mapped_ids = map_gene_ids(wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID')
-    for geneid in wb_to_entrez_truth:
-        assert mapped_ids[geneid] == wb_to_entrez_truth[geneid]
-
-
-def test_map_gene_ids_request(monkeypatch):
-    def mock_get(url):
-        return MockResponse()
-
-    monkeypatch.setattr(requests, 'get', mock_get)
-    assert False
-
-
-def test_map_gene_ids_to_same_set():
-    mapper = map_gene_ids(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'], 'UniProtKB', 'UniProtKB')
-    assert mapper.mapping_dict is None
-    for i in ['it', 'not', False, 42, 3.14]:
-        assert i in mapper
-        assert mapper[i] == i
-
-
 def test_format_ids_iter():
     assert list(_format_ids_iter('one two three')) == ['one two three']
     assert list(_format_ids_iter(123)) == ['123']
@@ -403,5 +358,84 @@ def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
         infer_taxon_from_gene_ids([])
 
 
-def test_map_gene_ids_with_duplicates():
-    assert False
+def test_map_gene_ids_connectivity():
+    ids_uniprot = ['P34544', 'Q27395', 'P12844']
+    ids_wormbase = ['WBGene00019883', 'WBGene00023497', 'WBGene00003515']
+    entrez_to_wb_truth = {'176183': 'WBGene00019883', '173203': 'WBGene00012343'}
+    wb_to_entrez_truth = {val: key for key, val in zip(entrez_to_wb_truth.keys(), entrez_to_wb_truth.values())}
+    mapped_ids_truth = {uniprot: wb for uniprot, wb in zip(ids_uniprot, ids_wormbase)}
+    mapped_ids_truth_rev = {b: a for a, b in zip(mapped_ids_truth.keys(), mapped_ids_truth.values())}
+
+    mapped_ids = map_gene_ids(ids_uniprot, map_from='UniProtKB', map_to='WormBase')
+    for geneid in ids_uniprot:
+        assert geneid in mapped_ids
+        assert mapped_ids[geneid] == mapped_ids_truth[geneid]
+    assert mapped_ids.mapping_dict == mapped_ids_truth
+
+    mapped_ids = map_gene_ids(ids_wormbase, map_from='WormBase', map_to='UniProtKB')
+    for geneid in ids_wormbase:
+        assert geneid in mapped_ids
+        assert mapped_ids[geneid] == mapped_ids_truth_rev[geneid]
+    assert mapped_ids.mapping_dict == mapped_ids_truth_rev
+
+    mapped_ids = map_gene_ids(entrez_to_wb_truth.keys(), 'Entrez Gene ID', 'WormBase')
+    for geneid in entrez_to_wb_truth:
+        assert mapped_ids[geneid] == entrez_to_wb_truth[geneid]
+
+    mapped_ids = map_gene_ids(wb_to_entrez_truth.keys(), 'WormBase', 'Entrez Gene ID')
+    for geneid in wb_to_entrez_truth:
+        assert mapped_ids[geneid] == wb_to_entrez_truth[geneid]
+
+
+def test_map_gene_ids_to_same_set():
+    mapper = map_gene_ids(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'], 'UniProtKB', 'UniProtKB')
+    assert mapper.mapping_dict is None
+    for i in ['it', 'not', False, 42, 3.14]:
+        assert i in mapper
+        assert mapper[i] == i
+
+
+@pytest.mark.parametrize('ids,map_from,map_to,req_from,req_to,req_query,txt,truth',
+                         [(['P34544', 'Q27395', 'P12844'], 'UniProtKB', 'WormBase', 'ACC', 'WORMBASE_ID',
+                           'P34544 Q27395 P12844',
+                           'From\tTo\nP34544\tWBGene00019883\nQ27395\tWBGene00023497\nP12844\tWBGene00003515\n',
+                           {'P34544': 'WBGene00019883', 'Q27395': 'WBGene00023497', 'P12844': 'WBGene00003515'}
+                           )])
+def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_to, req_query, txt, truth):
+    def mock_get(url, params):
+        assert url == 'https://www.uniprot.org/uploadlists/'
+        assert params == {'from': req_from,
+                          'to': req_to,
+                          'format': 'tab',
+                          'query': req_query,
+                          'columns': 'id'}
+        return MockResponse(text=txt)
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    res = map_gene_ids(ids, map_from, map_to)
+    for gene_id in truth:
+        assert res[gene_id] == truth[gene_id]
+
+
+@pytest.mark.parametrize('ids,map_from,map_to,txt,rev_txt,truth',
+                         [(['WBGene00000003', 'WBGene00000004'], 'WormBase', 'UniProtKB',
+                           'Entry\tAnnotation\tyourlist:M202105238471C63D39733769F8E060B506551E1220FD37S\nQ19151\t1 out of 5\tWBGene00000003\nA0A0K3AVL7\t1 out of 5\tWBGene00000004\nO17395\t2 out of 5\tWBGene00000004\n'
+                           , '', {'WBGene00000003': 'Q19151', 'WBGene00000004': 'O17395'}),
+                          (
+                              ['id1', 'id2'], 'UniProtKB', 'WormBase',
+                              'From\tTo\nid1\tWBID1\nid2\tWBID2.2\nid2\tWBID2.1\n',
+                              'Entry\tAnnotation\tyourlist:M202105238471C63D39733769F8E060B506551E1220FD37S\nWBID1\t1 out of 5\tid1\nWBID2.1\t1 out of 5\tid2\nWBID2.2\t2 out of 5\tid2\n'
+                              , {'id1': 'WBID1', 'id2': 'WBID2.2'})
+                          ])
+def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, rev_txt, truth):
+    def mock_get(url, params):
+        if params['to'] == 'ACC':
+            return_txt = txt if map_to == 'UniProtKB' else rev_txt
+        else:
+            return_txt = txt if map_from == 'UniProtKB' else rev_txt
+        return MockResponse(text=return_txt)
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    res = map_gene_ids(ids, map_from, map_to)
+    for gene_id in truth:
+        assert res[gene_id] == truth[gene_id]
