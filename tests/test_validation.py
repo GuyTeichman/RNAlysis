@@ -119,3 +119,7 @@ class TestClass:
                           (str.lower, TestClass, False)])
 def test_is_method_of_class(mthd, cls, truth):
     assert is_method_of_class(mthd, cls) == truth
+
+
+def test_validate_clustering_parameters():
+    assert False

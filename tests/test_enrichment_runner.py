@@ -1346,9 +1346,9 @@ def test_go_enrichment_runner_go_classic_pvalues_parallel(monkeypatch):
 
 
 def test_go_enrichment_runner_go_elim_pvalues_serial(monkeypatch):
-    def validate_input_params_elim_on_aspect(self, aspect, progress_bar_desc):
+    def validate_input_params_elim_on_aspect(self, go_aspect, progress_bar_desc):
         assert isinstance(progress_bar_desc, str)
-        assert aspect == 'all'
+        assert go_aspect == 'all'
         return 'success'
 
     monkeypatch.setattr(GOEnrichmentRunner, '_go_elim_on_aspect', validate_input_params_elim_on_aspect)
@@ -1383,23 +1383,107 @@ def test_go_enrichment_runner_go_elim_pvalues_parallel(monkeypatch, aspects):
 
 
 def test_go_enrichment_runner_go_weight_pvalues_serial(monkeypatch):
+    def validate_input_params_weight_on_aspect(self, go_aspect, mod_df_ind=0, progress_bar_desc=''):
+        assert isinstance(progress_bar_desc, str)
+        assert go_aspect == 'all'
+        assert mod_df_ind == 0
+        return 'success'
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_weight_on_aspect', validate_input_params_weight_on_aspect)
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    assert runner._go_weight_pvalues_serial() == 'success'
 
 
-def test_go_enrichment_runner_go_weight_pvalues_parallel(monkeypatch):
+@pytest.mark.parametrize('aspects', [['aspect0', 'aspect1'], ['aspect0'], ['aspect0', 'aspect1', 'aspect2']])
+def test_go_enrichment_runner_go_weight_pvalues_parallel(monkeypatch, aspects):
+    class FakeDAG:
+        def __init__(self, aspect_list):
+            self.namespaces = aspect_list
+
+    @joblib.wrap_non_picklable_objects
+    def validate_input_params_weight_on_aspect(self, aspect, mod_df_ind):
+        assert mod_df_ind == int(aspect[-1])
+        assert aspect in aspects
+        return {aspect: 'success'}
+
+    def is_method_of_class(mthd, cls):
+        assert cls == GOEnrichmentRunner
+        assert mthd == validate_input_params_weight_on_aspect
+        return True
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_go_weight_on_aspect', validate_input_params_weight_on_aspect)
+    monkeypatch.setattr(validation, 'is_method_of_class', is_method_of_class)
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner.dag_tree = FakeDAG(aspects)
+    assert runner._go_weight_pvalues_parallel() == {aspect: 'success' for aspect in aspects}
 
 
 def test_go_enrichment_runner_go_allm_pvalues_serial(monkeypatch):
+    methods_called = {}
+    methods_called_truth = {'classic': True, 'elim': True, 'weight': True}
+    outputs_truth = {'classic': 'classic', 'elim': 'elim', 'weight': 'weight'}
+
+    def _calculate_enrichment_serial(self: GOEnrichmentRunner):
+        methods_called[self.propagate_annotations] = True
+        return self.propagate_annotations
+
+    def _calculate_allm(self, outputs):
+        assert outputs == outputs_truth
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_calculate_enrichment_serial', _calculate_enrichment_serial)
+    monkeypatch.setattr(GOEnrichmentRunner, '_calculate_allm', _calculate_allm)
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner._go_allm_pvalues_serial()
+    assert methods_called == methods_called_truth
+    assert runner.propagate_annotations == 'all.m'
+
+
+def test_go_enrichment_runner_go_allm_pvalues_serial_error_state(monkeypatch):
+    def _calculate_enrichment_serial(self: GOEnrichmentRunner):
+        raise AssertionError
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_calculate_enrichment_serial', _calculate_enrichment_serial)
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    with pytest.raises(AssertionError):
+        runner._go_allm_pvalues_serial()
+        assert runner.propagate_annotations == 'all.m'
 
 
 def test_go_enrichment_runner_go_allm_pvalues_parallel(monkeypatch):
+    methods_called = {}
+    methods_called_truth = {'classic': True, 'elim': True, 'weight': True}
+    outputs_truth = {'classic': 'classic', 'elim': 'elim', 'weight': 'weight'}
+
+    def _calculate_enrichment_parallel(self: GOEnrichmentRunner):
+        methods_called[self.propagate_annotations] = True
+        return self.propagate_annotations
+
+    def _calculate_allm(self, outputs):
+        assert outputs == outputs_truth
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_calculate_enrichment_parallel', _calculate_enrichment_parallel)
+    monkeypatch.setattr(GOEnrichmentRunner, '_calculate_allm', _calculate_allm)
+
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    assert False
+    runner._go_allm_pvalues_parallel()
+    assert methods_called == methods_called_truth
+    assert runner.propagate_annotations == 'all.m'
+
+
+def test_go_enrichment_runner_go_allm_pvalues_parallel_error_state(monkeypatch):
+    def _calculate_enrichment_parallel(self: GOEnrichmentRunner):
+        raise AssertionError
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_calculate_enrichment_parallel', _calculate_enrichment_parallel)
+
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    with pytest.raises(AssertionError):
+        runner._go_allm_pvalues_parallel()
+        assert runner.propagate_annotations == 'all.m'
 
 
 def test_go_enrichment_runner_parallel_over_grouping(monkeypatch):
