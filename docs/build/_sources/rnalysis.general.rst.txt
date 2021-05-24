@@ -1,4 +1,4 @@
-rnalysis.general
+﻿rnalysis.general
 ================
 
 .. rubric:: Description
@@ -30,7 +30,5 @@ rnalysis.general
     set_attr_ref_table_path
     
     set_biotype_ref_table_path
-    
-    start_parallel_session
     
 

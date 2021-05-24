@@ -403,9 +403,23 @@ We would then supply the normalization function with the path to the special cou
 The resulting :term:`CountFilter` object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
 
-Data visualization and clustering analysis with CountFilter
--------------------------------------------------------------
-:term:`CountFilter` includes multiple methods for visualization and clustering of count data.
+Data clustering with CountFilter
+----------------------------------
+RNAlysis supports a wide variety of clustering methods... TODO
+
+With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:
+
+ .. figure::  clustergram.png
+           :align:   center
+           :scale: 40 %
+
+           Example plot of CountFilter.clustergram()
+
+TODO
+
+Data visualization and exploratory data analysis with CountFilter
+------------------------------------------------------------------------
+:term:`CountFilter` includes multiple methods for visualization and exploratory analysis of count data.
 
 
 With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
@@ -415,14 +429,6 @@ With CountFilter.pairplot, you can get a quick overview of the distribution of c
            :scale: 40 %
 
            Example output of CountFilter.pairplot()
-
-With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:
-
- .. figure::  clustergram.png
-           :align:   center
-           :scale: 40 %
-
-           Example plot of CountFilter.clustergram()
 
 With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:
 
@@ -520,17 +526,145 @@ The output table would look like this:
 |   7        |       2.806873       |  2.51828             |0.36026 | False       |
 +------------+----------------------+----------------------+--------+-------------+
 
+Sequentially applying filtering operations using Pipelines
+============================================================
+:term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects' of your choice in a specific and consistent order.
+Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
+
+
+Creating a new Pipeline
+________________________
+To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
+
+    >>> from rnalysis import filtering
+    >>> pipe = Pipeline()
+
+Because every :term:`Filter object` has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
+By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the *filtering* module that can apply to any Filter object.
+If we wanted, for example, to create a Pipeline for DESeqFilter objects, we would have to specify the parameter `filter_type`::
+
+    >>> from rnalysis import filtering
+    >>> deseq_pipe = filtering.Pipeline('deseqfilter')
+
+One we have an empty :term:`Pipeline`, we can start adding functions to it.
+We can do that either via the function's name::
+
+    >>> from rnalysis import filtering
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function('filter_significant')
+    Added function 'DESeqFilter.filter_significant()' to the pipeline.
+
+or via the function itself::
+
+    >>> from rnalysis import filtering
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function(filtering.DESeqFilter.filter_significant)
+    Added function 'DESeqFilter.filter_significant()' to the pipeline.
+
+We can also specify the function's arguments. We can specify both non-keyworded and keyworded arguments, just as we would if we called the function normally::
+
+    >>> from rnalysis import filtering
+    >>> pipe = filtering.Pipeline()
+    >>> pipe.add_function(filtering.Filter.filter_biotype, biotype='protein_coding')
+    Added function 'Filter.filter_biotype(biotype='protein_coding')' to the pipeline.
+    >>> pipe.add_function('number_filters', 'column1', 'gt', value=5, opposite=True)
+    Added function 'Filter.number_filters('column1', 'gt', value=5, opposite=True)' to the pipeline.
+
+We can also view the functions currently in the Pipeline object, their arguments, and their order::
+
+    >>> print(pipe)
+    Pipeline for Filter objects:
+        Filter.filter_biotype(biotype='protein_coding')
+        Filter.number_filters('column1', 'gt', value=5, opposite=True)
+    >>> print(repr(pipe))
+    Pipeline('Filter'): Filter.filter_biotype(biotype='protein_coding')-->Filter.number_filters('column1', 'gt', value=5, opposite=True)
+
+
+We can also remove functions from the Pipeline::
+
+    >>> pipe.remove_last_function()
+    Removed function number_filters with parameters ['column1', 'gt', value=5, opposite=True] from the pipeline.
+
+Now that we have a Pipeline with multiple functions, we can apply it to our Filter objects.
+
+Applying Pipelines to Filter objects
+_____________________________________
+Just like with other functions in the *filtering* module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
+You can determine that via the `inplace` argument of the function `Pipeline.apply_to()`::
+
+    >>> from rnalysis import filtering
+    >>> # create the pipeline
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function(filtering.DESeqFilter.filter_missing_values)
+    Added function 'DESeqFilter.filter_missing_values()' to the pipeline.
+    >>> pipe.add_function(filtering.DESeqFilter.filter_top_n, by='padj', n=3)
+    Added function 'DESeqFilter.filter_top_n(by='padj', n=3)' to the pipeline.
+    >>> pipe.add_function('sort', by='baseMean')
+    Added function 'DESeqFilter.sort(by='baseMean')' to the pipeline.
+    >>> # load the Filter object
+    >>> d = filtering.DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
+    >>> # apply the Pipeline not-inplace
+    >>> d_filtered = pipe.apply_to(d, inplace=False)
+    Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.
+    Filtered 22 features, leaving 3 of the original 25 features. Filtering result saved to new object.
+    Sorted 3 features. Sorting result saved to a new object.
+    >>> # apply the Pipeline inplace
+    >>> pipe.apply_to(d)
+    Filtered 3 features, leaving 25 of the original 28 features. Filtered inplace.
+    Filtered 22 features, leaving 3 of the original 25 features. Filtered inplace.
+    Sorted 3 features. Sorted inplace.
+
+Note that only functions that can be applied inplace (such as filtering/normalizing) will be applied inplace.
+If our pipeline contained other types of functions, they will not be applied inplace, and will instead be returned at the end of the Pipeline.
+
+If we apply a Pipeline with functions that return additional outputs (such as Figures, DataFrames, etc), they will be returned in a dictionary alongside the Filter object::
+
+    >>> from rnalysis import filtering
+    >>> # create the pipeline
+    >>> pipe = filtering.Pipeline('DESeqFilter')
+    >>> pipe.add_function('biotypes', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes(ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('filter_biotype', 'protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.filter_biotype('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('biotypes', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes(ref='tests/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> # load the Filter object
+    >>> d = filtering.DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
+    >>> # apply the Pipeline not-inplace
+    >>> d_filtered, output_dict = pipe.apply_to(d, inplace=False)
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    >>> print(output_dict['biotypes_1'])
+                    gene
+    biotype
+    protein_coding    26
+    pseudogene         1
+    unknown            1
+    >>> print(output_dict['biotypes_2'])
+                    gene
+    biotype
+    protein_coding    26
+    >>> # apply the Pipeline inplace
+    >>> output_dict_inplace = pipe.apply_to(d)
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+    Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
+    Biotype Reference Table used: tests/test_files/biotype_ref_table_for_tests.csv
+
+When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes' is under the key 'biotypes_1', and the second call to 'biotypes' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
+We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
 
 ****************************
 RNAlysis enrichment module
 ****************************
-RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including gene ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
+RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including Gene Ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
 
 
 Working with FeatureSet objects
 =========================================
-
-The enrichment module is built around FeatureSet objects, which are a container for a set of genomic features and their name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the FeatureSet object.
+The enrichment module is built around :term:`FeatureSet` objects. A Featureset is a container for a set of gene/genomic feature IDs, and the set's name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the :term:`FeatureSet` object.
 
 
 Initialize an FeatureSet object
@@ -539,18 +673,18 @@ We will start by importing the enrichment module::
 
     >>> from rnalysis import enrichment
 
-An FeatureSet object can now be initialized by one of three methods.
+An :term:`FeatureSet` object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
 
-    >>> c = filtering.CountFilter('tests/counted.csv')
-    >>> en = enrichment.FeatureSet(filt, 'a name for my set')
+    >>> my_filter_obj = filtering.CountFilter('tests/counted.csv') # create a Filter object
+    >>> my_set = enrichment.FeatureSet(my_filter_obj, 'a name for my set')
 
 The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing :term:`Filter object` (see above for more information about :term:`Filter objects` and the filtering module) using the function 'index_set'::
 
-    >>> myset = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
-    >>> en = enrichment.FeatureSet(myset, 'a name for my set')
+    >>> my_python_set = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
+    >>> my_set = enrichment.FeatureSet(my_python_set, 'a name for my set')
     # alternatively, using 'index_set' on an existing Filter object:
-    >>> en2 = enrichment.FeatureSet(filt.index_set,' a name for my set')
+    >>> my_other_set = enrichment.FeatureSet(my_filter_obj.index_set,' a name for my set')
 
 The third method is not to specify a gene set at all::
 
@@ -561,14 +695,14 @@ At this point, you will be prompted to enter a string of feature indices seperat
 FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
 
-Randomization test enrichment analysis for user-defined attributes
--------------------------------------------------------------------
-Using the enrichment module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis is performed using a randomization test.
+Performing enrichment analysis for user-defined attributes
+-----------------------------------------------------------
+Using the *enrichment* module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
 
-Enrichment analysis is performed using either FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
+Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
 
     >>> c = filtering.CountFilter('path_to_my_file.csv')
-    >>> en = enrichment.FeatureSet(h.index_set, 'my set')
+    >>> en = enrichment.FeatureSet(c.index_set, 'my set')
 
 Our attributes should be defined in a Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
@@ -588,7 +722,7 @@ When specifying a biotype, an internal reference file is used to categorize diff
 The second method of changing the background set is to define a specific set of genomic features to be used as background::
 
     >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> en.enrich_randomization(['attribute1','attribute2'], background_genes=my_background_set)
+    >>> en.enrich_hypergeometric(['attribute1','attribute2'], background_genes=my_background_set)
 
 In this example, our background set consists of feature1, feature2 and feature3.
 
@@ -596,7 +730,7 @@ It is not possible to specify both a biotype and a specific background set.
 
 If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
 
-Calling enrich_randomization will perform a randomization test for each of the specified attributes, and return a pandas DataFrame with the following format:
+Calling enrich_randomization/enrich_hypergeometric will perform a randomization/hypergeometric test for each of the specified attributes, and return a pandas DataFrame with the following format:
 
 +----------------+--------------+-------+-------+----------------------+----------+----------+-------------+
 |     name       |    samples   | n obs | n exp | log2_fold_enrichment |   pval   |   padj   | significant |
@@ -608,9 +742,14 @@ Calling enrich_randomization will perform a randomization test for each of the s
 
 'samples' is the number of features that were used in the enrichment set. 'n obs' is the observed number of features positive for the attribute in the enrichment set.
 'n exp' is the expected number of features positive for the attribute in the enrichment set. 'log2_fold_enrichment' is log2 of the fold change 'n obs'/'n exp'.
+
+enrich_hypergeometric performs the hypergeometric test: Given M genes in the background set, n genes in the test set, with N genes from the background set belonging to a specific attribute (or 'success') and X genes from the test set belonging to that attribute.
+If we were to randomly draw n genes from the background set (without replacement), what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) genes belonging to the given attribute?
+
 enrich_randomization performs the number of randomizations specified by the user (10,000 by default), and marks each randomization as either a success or a failure.
 The p values specified in 'pval' are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
 
+Randomization tests can be computationally heavy, and take a while to run, especially if we test a large number of attributes.
 If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
 To use it, you must first start a parallel session::
 
@@ -621,6 +760,12 @@ To use it, you must first start a parallel session::
 
 To read more about parallel sessions, visit the :ref:`parallel-ref` section.
 Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.
+
+Performing enrichment analysis for non-categorical user-defined attributes
+---------------------------------------------------------------------------
+TODO
+
+
 
 Performing set operations and visualisation on multiple FeatureSet objects
 -------------------------------------------------------------------------------
@@ -662,6 +807,29 @@ It is possible to save the feature indices from an FeatureSet object to a .txt f
 
 The feature indices will be saved to the text file in the specified path, separated by newline ('\n').
 
+Working with RankedSet objects
+=========================================
+TODO
+
+Initialize an RankedSet object
+------------------------------------------
+TODO
+
+Performing single-list enrichment analysis without a background set
+---------------------------------------------------------------------------
+TODO
+
+Visualizing sets, intersections and enrichment
+================================================
+TODO
+
+Plotting results of enrichment analysis
+-----------------------------------------
+TODO
+
+Plotting Venn Diagrams and UpSet Plots
+---------------------------------------
+TODO
 
 ****************************
 RNAlysis general module

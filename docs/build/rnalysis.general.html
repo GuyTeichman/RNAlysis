@@ -1,73 +1,68 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>rnalysis.general &mdash; RNAlysis 1.3.4 documentation</title>
-  
+    <meta charset="utf-8"/>
 
-  
-  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <title>rnalysis.general &mdash; RNAlysis 2.0.0 documentation</title>
+
+
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
+
+
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  
-  
-  
 
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+
+    <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+    <![endif]-->
+
+
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script src="_static/copybutton.js"></script>
-    
+
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
-    
 
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.general.parse_gene_name_string" href="rnalysis.general.parse_gene_name_string.html" />
-    <link rel="prev" title="rnalysis.enrichment.venn_diagram" href="rnalysis.enrichment.venn_diagram.html" /> 
+    <link rel="prev" title="rnalysis.enrichment.venn_diagram" href="rnalysis.enrichment.venn_diagram.html" />
 </head>
 
 <body class="wy-body-for-nav">
 
-   
+
   <div class="wy-grid-for-nav">
-    
+
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
 
-          
+
+
             <a href="index.html">
-          
 
-          
-            
+
+
+
             <img src="_static/logo.png" class="logo" alt="Logo"/>
-          
+
           </a>
 
-          
-            
-            
-          
 
-          
+
+
+
+
+
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,16 +71,17 @@
   </form>
 </div>
 
-          
+
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+
+          <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+
+
+
+
+
+
               <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
@@ -119,7 +115,6 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.save_to_csv.html">rnalysis.general.save_to_csv</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_attr_ref_table_path.html">rnalysis.general.set_attr_ref_table_path</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.general.set_biotype_ref_table_path.html">rnalysis.general.set_biotype_ref_table_path</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.general.start_parallel_session.html">rnalysis.general.start_parallel_session</a></li>
 </ul>
 </li>
 </ul>
@@ -129,68 +124,54 @@
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
 </ul>
 
-            
-          
+
+
         </div>
+
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-      
+
       <nav class="wy-nav-top" aria-label="top navigation">
-        
+
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-        
+
       </nav>
 
 
       <div class="wy-nav-content">
-        
+
         <div class="rst-content">
-        
-          
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
+            <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
+
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+
       <li>rnalysis.general</li>
-    
-    
+
+
       <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/rnalysis.general.rst.txt" rel="nofollow"> View page source</a>
-          
-        
+
+
+          <a href="_sources/rnalysis.general.rst.txt" rel="nofollow"> View page source</a>
+
+
       </li>
-    
+
   </ul>
 
-  
+
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+
   <div class="section" id="rnalysis-general">
 <h1>rnalysis.general<a class="headerlink" href="#rnalysis-general" title="Permalink to this headline">¶</a></h1>
 <p class="rubric">Description</p>
@@ -226,48 +207,47 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.general.set_biotype_ref_table_path.html#rnalysis.general.set_biotype_ref_table_path" title="rnalysis.general.set_biotype_ref_table_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_biotype_ref_table_path</span></code></a>([path])</p></td>
 <td><p>Defines/updates the Biotype Reference Table path in the settings file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.general.start_parallel_session.html#rnalysis.general.start_parallel_session" title="rnalysis.general.start_parallel_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_parallel_session</span></code></a>([n_engines])</p></td>
-<td><p>Stop previous ipyparallel ipcluster and start a new one in order to perform parallelized computation.</p></td>
-</tr>
 </tbody>
 </table>
 </div>
 
 
            </div>
-           
+
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="rnalysis.general.parse_gene_name_string.html" class="btn btn-neutral float-right" title="rnalysis.general.parse_gene_name_string" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="rnalysis.enrichment.venn_diagram.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.venn_diagram" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
+              <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+                  <a href="rnalysis.general.parse_gene_name_string.html" class="btn btn-neutral float-right"
+                     title="rnalysis.general.parse_gene_name_string" accesskey="n" rel="next">Next <span
+                      class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+                  <a href="rnalysis.enrichment.venn_diagram.html" class="btn btn-neutral float-left"
+                     title="rnalysis.enrichment.venn_diagram" accesskey="p" rel="prev"><span
+                      class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+              </div>
 
-  <hr/>
+              <hr/>
 
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, Guy Teichman
+              <div role="contentinfo">
+                  <p>
+                      &#169; Copyright 2019, Guy Teichman.
 
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+                  </p>
+              </div>
 
-</footer>
 
+              Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+
+              <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+
+              provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+          </footer>
         </div>
       </div>
 
     </section>
 
   </div>
-  
 
 
   <script type="text/javascript">
@@ -276,10 +256,10 @@
       });
   </script>
 
-  
-  
-    
-   
+
+
+
+
 
 </body>
 </html>
