@@ -5,7 +5,7 @@
 
 **Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
 `Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
-`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |versionssupported| | |travisci| | |downloads|
+`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |versionssupported| | |githubactions| | |coveralls| | |downloads|
 
 ----
 
@@ -56,18 +56,20 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `scipy <https://www.scipy.org/>`_
 * `matplotlib <https://matplotlib.org/>`_
 * `numba <http://numba.pydata.org/>`_
+* `requests <https://github.com/psf/requests/>`_
 * `scikit-learn <https://scikit-learn.org/>`_
 * `scikit-learn-extra <https://github.com/scikit-learn-contrib/scikit-learn-extra>`_
 * `hdbscan <https://github.com/scikit-learn-contrib/hdbscan>`_
 * `seaborn <https://seaborn.pydata.org/>`_
 * `statsmodels <https://www.statsmodels.org/>`_
-* `ipyparallel <https://github.com/ipython/ipyparallel>`_
+* `joblib <https://joblib.readthedocs.io/en/latest/>`_
+* `tqdm <https://github.com/tqdm/tqdm>`_
+* `appdirs <https://github.com/ActiveState/appdirs>`_
 * `grid_strategy <https://github.com/matplotlib/grid-strategy>`_
 * `pyyaml <https://github.com/yaml/pyyaml>`_
 * `UpSetPlot <https://github.com/jnothman/UpSetPlot>`_
 * `matplotlib-venn <https://github.com/konstantint/matplotlib-venn>`_
 * `xlmhg <https://github.com/flo-compbio/xlmhg>`_
-* `requests <https://github.com/psf/requests/>`_
 * `pairwisedist <https://github.com/GuyTeichman/pairwisedist/>`_
 
 ----
@@ -105,11 +107,15 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
     :alt: PyPI version
 .. |downloads| image:: https://pepy.tech/badge/rnalysis
     :target: https://pepy.tech/project/rnalysis
-    :alt: downloads
+    :alt: Downloads
 .. |versionssupported| image:: https://img.shields.io/pypi/pyversions/RNAlysis.svg
     :target: https://pypi.python.org/pypi/rnalysis
     :alt: Python versions supported
 
-..  |travisci| image:: https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master
-    :target: https://travis-ci.org/GuyTeichman/RNAlysis
-    :alt: Travis-CI build status
+..  |githubactions| image:: https://github.com/guyteichman/RNAlysis/actions/workflows/python-package.yml/badge.svg?branch=V1.4.0_unstable
+    :target: https://github.com/GuyTeichman/RNAlysis/actions/workflows/python-package.yml
+    :alt: Build status
+
+.. |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg?branch=V1.4.0_unstable
+    :target: https://coveralls.io/github/GuyTeichman/RNAlysis?branch=master
+    :alt: Coverage
