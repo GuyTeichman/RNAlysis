@@ -7,6 +7,27 @@ class DummyClass:
         pass
 
 
+class DummyClassChild(DummyClass):
+    def mthd(self):
+        pass
+
+
+class DummyClassNotChild(dict):
+    pass
+
+
+@pytest.mark.parametrize('obj,cls,expected', [
+    ([2, 3], list, True),
+    ([2, 3], dict, False),
+    (DummyClass(), DummyClass, True),
+    (DummyClass(), DummyClassChild, False),
+    (DummyClassChild(), DummyClass, True),
+    (DummyClassChild(), DummyClassChild, True),
+    (DummyClassNotChild(), DummyClass, False)])
+def test_isinstanceinh(obj, cls, expected):
+    assert isinstanceinh(obj, cls) == expected
+
+
 def test_is_df_dataframe():
     my_df = pd.DataFrame()
     assert (check_is_df_like(my_df))
