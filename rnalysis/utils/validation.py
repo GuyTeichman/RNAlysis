@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Iterable
+from typing import Union, Iterable, Tuple
 import types
 import pandas as pd
 import warnings
@@ -27,10 +27,11 @@ def check_is_df_like(inp):
 
 def is_method_of_class(mthd, cls):
     """
-    returns True if function 'mthd' is a method of class 'cls'
+    Returns True if function 'mthd' is a method of class 'cls'
+
     :type mthd: function
     :type cls: class
-    :return: returns True
+    :return: True if 'mthd' is a method of class 'cls', and False otherwise.
     :rtype: bool
     """
     try:
@@ -43,15 +44,45 @@ def is_method_of_class(mthd, cls):
 
 
 def isinstanceinh(obj, parent_class):
+    """
+    Returns True if 'obj' is is an instance of class 'parent_class', or of a subclass of 'parent_class'.
+
+    :param obj: object to be tested
+    :type obj: Any
+    :param parent_class: class to be checked against
+    :type parent_class: type (e.g. list, tuple, int, bool)
+    :return: True if 'obj' is an instance of 'parent_class' or one of its subclasses, and False otherwise.
+    :rtype: bool
+    """
     return True if issubclass(obj.__class__, parent_class) else False
 
 
-def isinstanceiter(iterable: Iterable, object_class: type):
+def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...]]):
+    """
+    Returns True if all members of an Iterable object are instances of a class or of a subclass thereof. \
+    This function consumes iterators/generators.
+
+    :param iterable: the Iterable object whose members' types should be checked.
+    :type iterable: Iterable (list, tuple, str, dict, set, etc')
+    :param object_class: the class/classes to check 'isinstance' against
+    :type object_class: type (e.g. list, tuple, int, bool) or tuple of types
+    :return: True if all members of 'iterable' are of type 'object_class', and False otherwise.
+    :rtype: bool
+    """
     assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
     return all([isinstance(i, object_class) for i in iterable])
 
 
 def isiterable(obj):
+    """
+    Returns True if obj is Iterable (list, str, tuple, set, dict, etc'), and False otherwise. \
+    This function does not consume iterators/generators.
+
+    :param obj: the object to be tested for iterability
+    :type obj: Any
+    :return: True if obj is Iterable, False otherwise.
+    :rtype: bool
+    """
     try:
         _ = iter(obj)
     except TypeError:
