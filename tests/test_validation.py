@@ -154,3 +154,20 @@ def test_validate_attr_table():
 
 def test_validate_biotype_table():
     assert False
+
+
+@pytest.mark.parametrize('threshold,expected_to_pass', [
+    (5, True),
+    (0.1, True),
+    ('5', False),
+    ([5, 6], False),
+    (0, True),
+    (0.0, True),
+    (-2, False),
+    (-3.14, False)])
+def test_validate_threshold(threshold, expected_to_pass):
+    if expected_to_pass:
+        validate_threshold(threshold)
+    else:
+        with pytest.raises(AssertionError):
+            validate_threshold(threshold)
