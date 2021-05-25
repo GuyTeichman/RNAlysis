@@ -9,7 +9,7 @@ from rnalysis import __attr_file_key__, __biotype_file_key__, __path__
 
 def get_settings_file_path():
     """
-    Generates the full path of the settings.yaml file.
+    Generates the full path of the 'settings.yaml' file.
     :returns: the path of the settings.yaml file.
     :rtype: pathlib.Path
     """
@@ -108,11 +108,14 @@ def get_attr_ref_path(ref):
 
 
 def make_temp_copy_of_settings_file():
+    """
+    Make a temporary copy ('temp_settings.yaml') of the default settings file ('settings.yaml').
+    """
     pth = get_settings_file_path()
     try:
         remove_temp_copy_of_settings_file()
     except FileNotFoundError:
-        print("no previous temporary test file existed")
+        print("no previous temporary settings file existed")
     if not pth.exists():
         print("no previous settings file exists")
         return
@@ -121,17 +124,24 @@ def make_temp_copy_of_settings_file():
 
 
 def set_temp_copy_of_settings_file_as_default():
+    """
+    Copy the contents of the temporary settings file ('temp_settings.yaml') into the default settings file \
+    ('settings.yaml'), if a temporary settings file exists.
+    """
     pth = get_settings_file_path()
     if pth.exists():
         pth.unlink()
     if not Path(os.path.join(str(pth.parent), 'temp_settings.yaml')).exists():
         print("no temporary settings file exists")
         return
-    with open(os.path.join(str(pth.parent), 'temp_settings.yaml')) as tempfile, pth.open('w') as originfile:
-        originfile.writelines(tempfile.readlines())
+    with open(os.path.join(str(pth.parent), 'temp_settings.yaml')) as temp_file, pth.open('w') as original_file:
+        original_file.writelines(temp_file.readlines())
 
 
 def remove_temp_copy_of_settings_file():
+    """
+    Remove the temporary copy of the settings file ('temp_settings.yaml'), if such file exists.
+    """
     pth = get_settings_file_path()
     tmp_pth = Path(os.path.join(str(pth.parent), 'temp_settings.yaml'))
     if tmp_pth.exists():

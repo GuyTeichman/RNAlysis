@@ -1,18 +1,22 @@
 import pytest
+import pathlib
 from rnalysis.utils.ref_tables import *
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
 
-def test_get_settings_file_path():
+@pytest.fixture
+def use_temp_settings_file(request):
     make_temp_copy_of_settings_file()
-
-    set_temp_copy_of_settings_file_as_default()
-    remove_temp_copy_of_settings_file()
-    assert False
+    request.addfinalizer(remove_temp_copy_of_settings_file)
+    request.addfinalizer(set_temp_copy_of_settings_file_as_default)
 
 
-def test_get_attr_ref_path():
-    make_temp_copy_of_settings_file()
+def test_get_settings_file_path(use_temp_settings_file):
+    true_path = pathlib.Path(os.path.join(os.getcwd(), 'rnalysis', 'settings.yaml'))
+    assert true_path == get_settings_file_path()
+
+
+def test_update_attr_ref_path(use_temp_settings_file):
     update_settings_file('path/to/attr/ref/file', __attr_file_key__)
     with get_settings_file_path().open() as f:
         success = False
@@ -21,14 +25,10 @@ def test_get_attr_ref_path():
                 success = line.startswith('attribute_reference_table: path/to/attr/ref/file')
                 if not success:
                     print(f'failiure at: {line}')
-
-    set_temp_copy_of_settings_file_as_default()
-    remove_temp_copy_of_settings_file()
     assert success
 
 
-def test_get_biotype_ref_path():
-    make_temp_copy_of_settings_file()
+def test_update_biotype_ref_path(use_temp_settings_file):
     update_settings_file('path/to/biotype/ref/file', __biotype_file_key__)
     with get_settings_file_path().open() as f:
         success = False
@@ -37,14 +37,10 @@ def test_get_biotype_ref_path():
                 success = line.startswith('biotype_reference_table: path/to/biotype/ref/file')
                 if not success:
                     print(f'failiure at: {line}')
-
-    set_temp_copy_of_settings_file_as_default()
-    remove_temp_copy_of_settings_file()
     assert success
 
 
-def test_update_ref_table_attributes():
-    make_temp_copy_of_settings_file()
+def test_update_ref_table_attributes(use_temp_settings_file):
     try:
         get_settings_file_path().unlink()
     except FileNotFoundError:
@@ -75,16 +71,49 @@ def test_update_ref_table_attributes():
                 if not success_2:
                     print(f'Failure at: {line}')
 
-    set_temp_copy_of_settings_file_as_default()
-    remove_temp_copy_of_settings_file()
     assert success
     assert counter == 1
     assert counter_2 == 1
+    assert success_2
 
 
-def test_biotype_table_assertions():
-    assert False
+def test_read_get_attr_ref_path_no_settings(use_temp_settings_file, monkeypatch):
+    true_path = 'new/path/file.csv'
+    monkeypatch.setattr('builtins.input', lambda __prompt: true_path)
+    try:
+        get_settings_file_path().unlink()
+    except FileNotFoundError:
+        pass
+    assert get_attr_ref_path('predefined') == true_path
 
 
-def test_attr_table_assertions():
-    assert False
+def test_read_get_biotype_ref_path_no_settings(use_temp_settings_file, monkeypatch):
+    true_path = 'new/path/file.csv'
+    monkeypatch.setattr('builtins.input', lambda __prompt: true_path)
+    try:
+        get_settings_file_path().unlink()
+    except FileNotFoundError:
+        pass
+    assert get_biotype_ref_path('predefined') == true_path
+
+
+def test_get_biotype_ref_path(use_temp_settings_file):
+    pth = 'path/to/biotype/ref/file'
+    update_settings_file(pth, __biotype_file_key__)
+    assert get_biotype_ref_path('predefined') == pth
+
+
+def test_get_attr_ref_path(use_temp_settings_file):
+    pth = 'path/to/attr/ref/file'
+    update_settings_file(pth, __attr_file_key__)
+    assert get_attr_ref_path('predefined') == pth
+
+
+def test_get_biotype_ref_path_not_predefined():
+    pth = 'some/biotype/path'
+    assert get_biotype_ref_path(pth) == pth
+
+
+def test_get_attr_ref_path_not_predefined():
+    pth = 'some/attr/ref/path'
+    assert get_biotype_ref_path(pth) == pth

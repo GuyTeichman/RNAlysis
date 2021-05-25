@@ -123,3 +123,11 @@ def test_is_method_of_class(mthd, cls, truth):
 
 def test_validate_clustering_parameters():
     assert False
+
+
+def test_validate_attr_table():
+    assert False
+
+
+def test_validate_biotype_table():
+    assert False
