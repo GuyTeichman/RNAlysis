@@ -114,7 +114,9 @@ def test_validate_hdbscan_parameters():
 @pytest.mark.parametrize("test_input,expected_type,expected", [
     (["3", "hello world", "", ], str, True),
     ({5, 3, 7, 8}, int, True),
+    ({-0.1, 3, 7.2, 8, 0}, (int, float), True),
     ((5, 3, '7', 8), int, False),
+    ((5, 3, [7, '8'], 8), (int, list), True),
     ([[], [1], [1, 2]], int, False),
     ([], DummyClass, True),
     ({'one': DummyClass(), 'two': DummyClass()}.values(), DummyClass, True)
