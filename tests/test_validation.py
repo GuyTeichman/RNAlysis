@@ -92,23 +92,19 @@ def test_validate_uniprot_dataset_name():
         validate_uniprot_dataset_name({'one': 1, 'two': 2, 'three': 3}, 'one', 'Two', 'three')
 
 
-def test_validate_hdbscan_parameters():
-    with pytest.raises(AssertionError):
-        validate_hdbscan_parameters(1, 'euclidean', 'eom', 1)
-
-    with pytest.raises(AssertionError):
-        validate_hdbscan_parameters(2.0, 'euclidean', 'eom', 13)
-
-    with pytest.raises(AssertionError):
-        validate_hdbscan_parameters(14, 'euclidean', 'eom', 13)
-
-    validate_hdbscan_parameters(13, 'euclidean', 'eom', 13)
-
-    with pytest.raises(AssertionError):
-        validate_hdbscan_parameters(2, 'euclidean', 5, 13)
-
-    with pytest.raises(AssertionError):
-        validate_hdbscan_parameters(2, 5, 'EOM', 13)
+@pytest.mark.parametrize('min_cluster_size,metric,cluster_selection_method,n_features,expected_to_pass',
+                         [(1, 'euclidean', 'eom', 1, False),
+                          (2.0, 'euclidean', 'eom', 13, False),
+                          (14, 'euclidean', 'eom', 13, False),
+                          (13, 'euclidean', 'eom', 13, True),
+                          (2, 'euclidean', 5, 13, False),
+                          (2, 5, 'EOM', 13, False)])
+def test_validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, n_features, expected_to_pass):
+    if expected_to_pass:
+        validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, n_features)
+    else:
+        with pytest.raises(AssertionError):
+            validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, n_features)
 
 
 @pytest.mark.parametrize("test_input,expected_type,expected", [
@@ -144,8 +140,24 @@ def test_is_method_of_class(mthd, cls, truth):
     assert is_method_of_class(mthd, cls) == truth
 
 
-def test_validate_clustering_parameters():
-    assert False
+@pytest.mark.parametrize('metric,linkage,expected_to_pass', [
+    ('euclidean', 'single', True),
+    (1, 'single', False),
+    ('euclidean', 1, False),
+    ('Spearman', 'COMPLETE', True),
+    ('sportman', 'complete', False),
+    ('spearman', 'compete', False),
+    ('jackknife', None, True),
+    (None, None, False),
+    (None, 'single', False),
+    ('sportman', None, False)])
+def test_validate_clustering_parameters(metric, linkage, expected_to_pass):
+    if expected_to_pass:
+        truth = (metric.lower(), linkage.lower()) if linkage is not None else metric.lower()
+        assert validate_clustering_parameters(metric, linkage) == truth
+    else:
+        with pytest.raises(AssertionError):
+            validate_clustering_parameters(metric, linkage)
 
 
 def test_validate_attr_table():
