@@ -160,12 +160,39 @@ def test_validate_clustering_parameters(metric, linkage, expected_to_pass):
             validate_clustering_parameters(metric, linkage)
 
 
-def test_validate_attr_table():
-    assert False
+@pytest.mark.parametrize('table_path,expected_to_pass',
+                         [('attr_ref_table_for_tests.csv', True),
+                          ('attr_ref_table_one_col.csv', False),
+                          ('attr_ref_table_one_row.csv', False),
+                          ('attr_ref_table_no_index_title.csv', True),
+                          ('attr_ref_table_wrong_index_title.csv', True)])
+def test_validate_attr_table(table_path, expected_to_pass):
+    df = pd.read_csv('tests/test_files/' + table_path)
+    if expected_to_pass:
+        validate_attr_table(df)
+        assert df.columns[0] == 'gene'
+    else:
+        with pytest.raises(AssertionError):
+            validate_attr_table(df)
 
 
-def test_validate_biotype_table():
-    assert False
+@pytest.mark.parametrize('table_path,expected_to_pass',
+                         [('biotype_ref_table_for_tests.csv', True),
+                          ('biotype_ref_table_one_col.csv', False),
+                          ('biotype_ref_table_too_many_cols.csv', False),
+                          ('biotype_ref_table_one_row.csv', False),
+                          ('biotype_ref_table_no_titles.csv', True),
+                          ('biotype_ref_table_wrong_titles.csv', True)])
+def test_validate_biotype_table(table_path, expected_to_pass):
+    df = pd.read_csv('tests/test_files/' + table_path)
+    if expected_to_pass:
+        validate_biotype_table(df)
+        assert df.columns[0] == 'gene'
+        assert df.columns[1] == 'biotype'
+        assert len(df.columns) == 2
+    else:
+        with pytest.raises(AssertionError):
+            validate_biotype_table(df)
 
 
 @pytest.mark.parametrize('threshold,expected_to_pass', [

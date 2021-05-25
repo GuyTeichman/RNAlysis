@@ -91,32 +91,32 @@ def isiterable(obj):
         return True
 
 
-def validate_biotype_table(ref_df: pd.DataFrame):
+def validate_biotype_table(biotype_df: pd.DataFrame):
     """
     Assert legality of Biotype Reference Table, and rename column names to standard names ('gene' and 'biotype').
-    :param ref_df: the loaded Biotype Reference Table
-    :type ref_df: pandas DataFrame
+    :param biotype_df: the loaded Biotype Reference Table
+    :type biotype_df: pandas DataFrame
 
     """
-    assert ref_df.shape[
-               1] == 2, f"Invalid number of columns in Biotype Reference Table: found {ref_df.shape[1]} columns instead of 2!"
-    assert ref_df.shape[
-               0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
-    ref_df.rename(columns={ref_df.columns[0]: 'gene', ref_df.columns[1]: 'biotype'}, inplace=True)
+    assert biotype_df.shape[
+               1] == 2, f"Invalid number of columns in Biotype Reference Table: found {biotype_df.shape[1]} columns instead of 2!"
+    assert biotype_df.shape[
+               0] >= 2, f"Biotype Reference Table must have at least two rows, found only  {biotype_df.shape[0]}!"
+    biotype_df.rename(columns={biotype_df.columns[0]: 'gene', biotype_df.columns[1]: 'biotype'}, inplace=True)
 
 
-def validate_attr_table(ref_df: pd.DataFrame):
+def validate_attr_table(attr_df: pd.DataFrame):
     """
     Assert legality of Attribute Reference Table, and renames the first column to standard name ('gene').
-    :param ref_df:
-    :type ref_df: pandas DataFrame
+    :param attr_df:
+    :type attr_df: pandas DataFrame
 
     """
-    assert ref_df.shape[
-               1] >= 2, f"Attribute Reference Table must have at least two columns, found only  {ref_df.shape[1]}!"
-    assert ref_df.shape[
-               0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {ref_df.shape[0]}!"
-    ref_df.rename(columns={ref_df.columns[0]: 'gene'}, inplace=True)
+    assert attr_df.shape[
+               1] >= 2, f"Attribute Reference Table must have at least two columns, found only  {attr_df.shape[1]}!"
+    assert attr_df.shape[
+               0] >= 2, f"Attribute Reference Table must have at least two rows, found only  {attr_df.shape[0]}!"
+    attr_df.rename(columns={attr_df.columns[0]: 'gene'}, inplace=True)
 
 
 def validate_uniprot_dataset_name(dataset_dict: dict, *names: str):
