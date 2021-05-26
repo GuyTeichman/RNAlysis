@@ -1181,7 +1181,7 @@ def test_go_enrichment_runner_calculate_enrichment_serial(monkeypatch, propagate
 
     res = runner._calculate_enrichment_serial()
 
-    if propagate_annotations is not 'all.m':
+    if propagate_annotations != 'all.m':
         assert len(runner.mod_annotation_dfs) == 1
 
     if propagate_annotations in {'classic', 'no'}:
