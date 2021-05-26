@@ -309,10 +309,6 @@ def test_map_taxon_id_no_connection(monkeypatch):
         map_taxon_id('name')
 
 
-def test_load_id_abbreviation_dict():
-    assert False
-
-
 def test_ensmbl_lookup_post_request(monkeypatch):
     ids = ('id1', 'id2', 'id3')
 
