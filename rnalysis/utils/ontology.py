@@ -71,8 +71,8 @@ class GOTerm:
         return go_ids
 
 
-def parse_go_id(byte_sequence: bytes) -> str:
-    return re.findall(b"GO:[0-9]{7}", byte_sequence)[0].decode('utf8')
+def parse_go_id(sequence: str) -> str:
+    return re.findall("GO:[0-9]{7}", sequence)[0]
 
 
 class DAGTree:
@@ -117,35 +117,36 @@ class DAGTree:
         current_term = None
         in_frame = False
         for line in line_iterator:
+            line = line.decode('utf8').strip()
             if in_frame:
-                if line.startswith(b'id: '):
+                if line.startswith('id: '):
                     current_term.set_id(parse_go_id(line))
-                elif line.startswith(b'namespace: '):
-                    current_term.set_namespace(line[11:].decode('utf8').replace('\n', ''))
+                elif line.startswith('namespace: '):
+                    current_term.set_namespace(line[11:])
                     if current_term.namespace not in self.namespaces:
                         self.namespaces.add(current_term.namespace)
-                elif line.startswith(b'name: '):
-                    current_term.set_name(line[6:].decode('utf8').replace('\n', ''))
-                elif line.startswith(b'alt_id: '):
+                elif line.startswith('name: '):
+                    current_term.set_name(line[6:])
+                elif line.startswith('alt_id: '):
                     self.alt_ids[parse_go_id(line)] = current_term.id
-                elif line.startswith(b'is_a: '):
+                elif line.startswith('is_a: '):
                     current_term.relationships['is_a'].append(parse_go_id(line))
-                elif line.startswith(b'relationship: '):
-                    relationship_type = line.split(b' ')[1].decode('utf8')
+                elif line.startswith('relationship: '):
+                    relationship_type = line.split(' ')[1]
                     if relationship_type not in current_term.relationships:
                         current_term.relationships[relationship_type] = []
                     current_term.relationships[relationship_type].append(parse_go_id(line))
-                elif line.startswith(b'is_obsolete: true'):
+                elif line.startswith('is_obsolete: true'):
                     in_frame = False
-                elif line in {b'', b'\n', b'\r\n'}:
+                elif line == '':
                     self.go_terms[current_term.id] = current_term
                     in_frame = False
             else:
-                if line.startswith(b'[Term]'):
+                if line.startswith('[Term]'):
                     current_term = GOTerm()
                     in_frame = True
-                elif line.startswith(b'data-version:'):
-                    self.data_version = line[14:].decode('utf8').replace('\n', '')
+                elif line.startswith('data-version:'):
+                    self.data_version = line[14:]
 
         if in_frame:  # add last go term to the set, if it was not already added
             self.go_terms[current_term.id] = current_term

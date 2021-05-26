@@ -3,10 +3,10 @@ from rnalysis.utils.ontology import *
 
 
 def test_parse_go_id():
-    line = b"is_a: 123456 GO1234567 GO:123456 GO:7654321! primary alcohol metabolic process"
+    line = "is_a: 123456 GO1234567 GO:123456 GO:7654321! primary alcohol metabolic process"
     truth = "GO:7654321"
     assert parse_go_id(line) == truth
-    line_2 = b"is_a: GO:1234567 GO:0034308 ! primary alcohol metabolic process"
+    line_2 = "is_a: GO:1234567 GO:0034308 ! primary alcohol metabolic process"
     truth_2 = "GO:1234567"
     assert parse_go_id(line_2) == truth_2
 
@@ -44,12 +44,12 @@ def test_dag_tree_parser_construction():
 
 
 def test_go_term_with_properties():
-    term = GOTerm.with_properties('go_id', 'name', 'namespace', 'level')
+    term = GOTerm.with_properties('go_id', 'name', 'namespace', 42)
     assert isinstance(term, GOTerm)
     assert term.id == 'go_id'
     assert term.name == 'name'
     assert term.namespace == 'namespace'
-    assert term.level == 'level'
+    assert term.level == 42
 
 
 def test_go_term_set_get_id():
@@ -76,8 +76,8 @@ def test_go_term_set_get_namespace():
 def test_go_term_set_get_level():
     term = GOTerm()
     assert term.level is None
-    term.set_level('level')
-    assert term.level == 'level'
+    term.set_level(42)
+    assert term.level == 42
 
 
 def test_go_term_get_parents():
@@ -169,5 +169,4 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
         parents_truth_file_2[node].sort()
         ui_tree = list(dag_tree.upper_induced_graph_iter(node))
         ui_tree.sort()
-        print(node)
         assert ui_tree == parents_truth_file_2[node]
