@@ -34,12 +34,13 @@ class BinaryFormatClusters:
             self.n_features = None
             self.n_solutions = None
             self.cluster_sets = None
-        self.clustering_solutions = clustering_solutions
-        self.len_index = [sol.shape[0] for sol in clustering_solutions]
-        self.n_clusters = sum(self.len_index)
-        self.n_features = self.clustering_solutions[0].shape[1]
-        self.n_solutions = len(self.clustering_solutions)
-        self.cluster_sets: List[Set[int]] = [set(np.where(cluster)[0]) for cluster in self]
+        else:
+            self.clustering_solutions = clustering_solutions
+            self.len_index = [sol.shape[0] for sol in clustering_solutions]
+            self.n_clusters = sum(self.len_index)
+            self.n_features = self.clustering_solutions[0].shape[1]
+            self.n_solutions = len(self.clustering_solutions)
+            self.cluster_sets: List[Set[int]] = [set(np.where(cluster)[0]) for cluster in self]
 
     def __copy__(self):
         new_obj = type(self)(None)
