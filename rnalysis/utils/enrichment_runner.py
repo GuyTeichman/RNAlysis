@@ -569,6 +569,13 @@ class EnrichmentRunner:
 
 
 class NonCategoricalEnrichmentRunner(EnrichmentRunner):
+    __slots__ = {
+        'parametric_test': 'indicates whether to calculate enrichment using a '
+                           'parametric or a-parametric statistical test',
+        'plot_log_scale': 'indicates whether to plot the results on a logarithmic or linear scale',
+        'plot_style': 'indicates the style of histogram to plot the results in',
+        'n_bins': 'number of bins in histogram plot of results'}
+
     def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: float, biotypes, background_set: set,
                  attr_ref_path: str, biotype_ref_path: str, save_csv: bool, fname: str,
                  return_fig: bool, plot_log_scale: bool, plot_style: str, n_bins: int, set_name: str,
@@ -694,6 +701,23 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
 
 
 class GOEnrichmentRunner(EnrichmentRunner):
+    __slots__ = {'dag_tree': 'DAG tree containing the hierarchical structure of all GO Terms',
+                 'mod_annotation_dfs': "Additional copies of 'annotation_df' which are "
+                                       "actively modified by propagation algorithms",
+                 'organism': 'the organism name for which to fetch GO Annotations',
+                 'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations', 'gene_id_type': '',
+                 'propagate_annotations': 'indicates whether to propagate GO Annotations, and with which algorithm',
+                 'aspects': 'the GO Aspects for which GO Annotations should be fetched',
+                 'evidence_types': 'the evidence types for which GO Annotations should be fetched',
+                 'excluded_evidence_types': 'the evidence types for which GO Annotations should NOT be fetched',
+                 'databases': 'the ontology databases from which GO Annotations should be fetched',
+                 'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
+                 'qualifiers': 'the evidence types for which GO Annotations should be fetched',
+                 'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
+                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
+                                          'statistically significant after enrichment analysis',
+                 'plot_go_network': 'indicates whether to plot GO network of the statistically significant GO Terms',
+                 'attributes_set': 'set of the attributes/GO Terms for which enrichment should be calculated'}
     printout_params = "have any GO Annotations asocciated with them"
     GOA_DF_QUERIES = {}
 
