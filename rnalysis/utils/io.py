@@ -85,6 +85,17 @@ class GOlrAnnotationIterator:
     n_annotations: int
         The number of annotations found on the server that match the user's query.
     """
+    __slots__ = {'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
+                 'iter_size': 'number of annotations to be fetched per request',
+                 'aspects': 'the GO Aspects for which GO Annotations should be fetched',
+                 'qualifiers': 'the evidence types for which GO Annotations should be fetched',
+                 'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
+                 'databases': 'the ontology databases from which GO Annotations should be fetched',
+                 'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
+                 'evidence_types': 'the evidence types for which GO Annotations should be fetched',
+                 'excluded_evidence_types': 'the evidence types for which GO Annotations should NOT be fetched',
+                 'default_params': 'the default parameters for GET requests',
+                 'n_annotations': 'number of annotations matching the filtering criteria'}
     URL = 'http://golr-aux.geneontology.io/solr/select?'
 
     _EXPERIMENTAL_EVIDENCE = {'EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'}
