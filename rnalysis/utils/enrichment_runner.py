@@ -75,6 +75,7 @@ class EnrichmentRunner:
             self.background_set = background_set
             self.biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path) if biotypes != 'all' else None
             self.en_score_col = 'log2_fold_enrichment'
+            self.ranked_genes = None
 
     @classmethod
     def from_results_df(cls, results: pd.DataFrame, alpha: float, plot_horizontal: bool, set_name: str):
