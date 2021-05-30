@@ -24,6 +24,29 @@ logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
 
 
 class EnrichmentRunner:
+    __slots__ = {'results': 'DataFrame containing enrichment analysis results',
+                 'annotation_df': 'DataFrame containing all annotation data per gene',
+                 'gene_set': 'the set of genes/genomic features whose enrichment to calculate',
+                 'attributes': 'the list of attributes/terms to calculate enrichment for',
+                 'alpha': 'the statistical signifiacnce threshold',
+                 'attr_ref_path': 'path of the Attribute Reference Table to load, if such table exists',
+                 'save_csv': 'indicates whether the results should be saved to a csv file',
+                 'fname': 'name of the file to save results to',
+                 'return_fig': 'indicates whether to return a matplotlib Figure after plotting the results',
+                 'plot_horizontal': 'indicates whether to plot the results horizontally or vertically',
+                 'set_name': 'name of the set of genes/genomic features whose enrichment is calculated',
+                 'parallel': 'indicates whether to calculate the enrichment using parallel processing',
+                 'enrichment_func': 'the function to be used to calculate enrichment p-values',
+                 'pvalue_kwargs': 'key-worded arguments for the function which calculates enrichment p-values',
+                 'single_set': 'indicates whether enrichment is calculated on a single set of genes '
+                               '(without background) or on a set of target genes and a set of background genes',
+                 'biotypes': 'the requested biotype of the background gene set',
+                 'background_set': 'the background set of genes for enrichment analysis',
+                 'biotype_ref_path': 'path of the Biotype Reference Table to load, if such table exists',
+                 'random_seed': 'random seed to be used when non-deterministic functions are used',
+                 'en_score_col': 'name of the enrichment score column in the results DataFrame',
+                 'ranked_genes': 'the set of genes/genomic features whose enrichment to calculate, '
+                                 'pre-sorted and ranked by the user'}
     printout_params = "appear in the Attribute Reference Table"
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int], alpha: float,
