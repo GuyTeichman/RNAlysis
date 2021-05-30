@@ -705,7 +705,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  'mod_annotation_dfs': "Additional copies of 'annotation_df' which are "
                                        "actively modified by propagation algorithms",
                  'organism': 'the organism name for which to fetch GO Annotations',
-                 'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations', 'gene_id_type': '',
+                 'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
+                 'gene_id_type': 'the type of gene ID index that is used',
                  'propagate_annotations': 'indicates whether to propagate GO Annotations, and with which algorithm',
                  'aspects': 'the GO Aspects for which GO Annotations should be fetched',
                  'evidence_types': 'the evidence types for which GO Annotations should be fetched',
