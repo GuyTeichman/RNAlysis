@@ -17,8 +17,8 @@ Added
 * Added CountFilter.split_kmeans(), CountFilter.split_kmedoids(), CountFilter.split_hierarchical() and CountFilter.split_hdbscan(), which split your read count matrices into clusters with similar expression patterns.
 * Added CountFilter.split_ensemble_clustering() which splits your read count matrices into clusters based on the aggregated results of multiple clustering solutions with multiple parameter combinations.
 * Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis
-* Added RankedSet.enrich_single_list(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see `Eden et al. (PLoS Comput Biol, 2007) <https://dx.doi.org/10.1371/journal.pcbi.0030039>`_  and `Wagner (PLoS One, 2015) <https://dx.doi.org/10.1371/journal.pone.0143196>`_ ).
-* Added FeatureSet.go_enrichment() and RankedSet.go_enrichment_single_list(), which let you compute Gene Ontology enrichment for any organism of your choice, and filter the GO annotations used according to your preferences.
+* Added RankedSet.enrich_single_set(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see `Eden et al. (PLoS Comput Biol, 2007) <https://dx.doi.org/10.1371/journal.pcbi.0030039>`_  and `Wagner (PLoS One, 2015) <https://dx.doi.org/10.1371/journal.pone.0143196>`_ ).
+* Added FeatureSet.go_enrichment() and RankedSet.go_enrichment_single_set(), which let you compute Gene Ontology enrichment for any organism of your choice, and filter the GO annotations used according to your preferences.
 * Added FeatureSet.enrich_hypergeometric(), which can perform enrichment analysis using the Hypergeometric Test.
 * Added more visualization functions, such CountFilter.enhanced_box_plot().
 * Added FeatureSet.change_set_name(), to give a new 'set_name' to a FeatureSet object.

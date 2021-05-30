@@ -29,7 +29,7 @@ class EnrichmentRunner:
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int], alpha: float,
                  attr_ref_path: str, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool, set_name: str,
                  parallel: bool, enrichment_func_name: str, biotypes=None, background_set: set = None,
-                 biotype_ref_path: str = None, single_list: bool = False, random_seed: int = None, **pvalue_kwargs):
+                 biotype_ref_path: str = None, single_set: bool = False, random_seed: int = None, **pvalue_kwargs):
         self.results: pd.DataFrame = pd.DataFrame()
         self.annotation_df: pd.DataFrame = pd.DataFrame()
         self.gene_set = parsing.data_to_set(genes)
@@ -50,19 +50,19 @@ class EnrichmentRunner:
         self.parallel = parallel
         self.enrichment_func = self._get_enrichment_func(enrichment_func_name)
         self.pvalue_kwargs = pvalue_kwargs
-        self.single_list = single_list
-        if self.single_list:
-            assert biotypes is None, "Enrichment in single_list mode does not accept a 'biotypes' argument."
-            assert background_set is None, "Enrichment in single_list mode does not accept a 'background_set' argument."
+        self.single_set = single_set
+        if self.single_set:
+            assert biotypes is None, "Enrichment in single_set mode does not accept a 'biotypes' argument."
+            assert background_set is None, "Enrichment in single_set mode does not accept a 'background_set' argument."
             assert biotype_ref_path is None, \
-                "Enrichment in single_list mode does not accept a 'biotype_ref_path' argument."
-            assert random_seed is None, "Enrichment in single_list mode does not accept a 'random_seed' argument."
-            assert isinstance(genes, np.ndarray), f"Invalid type for argument 'genes' in single_list mode: " \
+                "Enrichment in single_set mode does not accept a 'biotype_ref_path' argument."
+            assert random_seed is None, "Enrichment in single_set mode does not accept a 'random_seed' argument."
+            assert isinstance(genes, np.ndarray), f"Invalid type for argument 'genes' in single_set mode: " \
                                                   f"expected np.ndarray, instead got '{type(genes)}'."
 
             legal_enrichment_funcs = {'xlmhg'}
             assert enrichment_func_name.lower() in legal_enrichment_funcs, \
-                f"Invalid enrichment_func_name for single_list mode: '{enrichment_func_name}'."
+                f"Invalid enrichment_func_name for single_set mode: '{enrichment_func_name}'."
 
             self.biotypes, self.background_set, self.biotype_ref_path, self.random_seed = None, None, None, None
             self.en_score_col = 'log2_enrichment_score'
@@ -88,7 +88,7 @@ class EnrichmentRunner:
     def run(self) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         self.fetch_annotations()
         self.fetch_attributes()
-        if not self.single_list:
+        if not self.single_set:
             self.get_background_set()
         self.update_gene_set()
         self.filter_annotations()
@@ -299,7 +299,7 @@ class EnrichmentRunner:
             warnings.warn("both 'biotype' and 'background_genes' were specified. Therefore 'biotype' is ignored.")
 
     def update_gene_set(self):
-        if self.single_list:
+        if self.single_set:
             updated_gene_set = self.gene_set.intersection(self.annotation_df.index)
             not_annotated = len(self.gene_set) - len(updated_gene_set)
             self.gene_set = updated_gene_set
@@ -350,7 +350,7 @@ class EnrichmentRunner:
                 assert attr in all_attrs, f"Attribute {attr} does not appear in the Attribute Refernce Table."
 
     def filter_annotations(self):
-        if self.single_list:
+        if self.single_set:
             self.annotation_df = self.annotation_df.loc[:, self.attributes].sort_index()
         else:
             self.annotation_df = self.annotation_df.loc[self.background_set, self.attributes].sort_index()
@@ -381,7 +381,7 @@ class EnrichmentRunner:
         return result
 
     def format_results(self, unformatted_results_list: list):
-        if self.single_list:
+        if self.single_set:
             columns = ['name', 'samples', self.en_score_col, 'pval']
         else:
             columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
@@ -395,7 +395,7 @@ class EnrichmentRunner:
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
     def plot_results(self) -> plt.Figure:
-        if self.single_list:
+        if self.single_set:
             return self.enrichment_bar_plot(ylabel=r"$\log_2$(XL-mHG enrichment score)",
                                             title=f"Single-list enrichment for {self.set_name}")
         return self.enrichment_bar_plot(title=f"Enrichment for {self.set_name}")
@@ -561,7 +561,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         self.plot_style = plot_style
         self.n_bins = n_bins
         super().__init__(genes, attributes, alpha, attr_ref_path, save_csv, fname, return_fig, True, set_name, parallel,
-                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_list=False)
+                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set=False)
 
     def _get_enrichment_func(self, pval_func_name: str):
         assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
@@ -680,7 +680,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  qualifiers: Union[str, Iterable[str]], excluded_qualifiers: Union[str, Iterable[str]],
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
                  plot_go_network: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
-                 background_set: set = None, biotype_ref_path: str = None, single_list: bool = False,
+                 background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
                  random_seed: int = None, **pvalue_kwargs):
         self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
@@ -699,7 +699,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.plot_go_network = plot_go_network
         self.attributes_set: set = set()
         super().__init__(genes, [], alpha, '', save_csv, fname, return_fig, plot_horizontal, set_name, parallel,
-                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_list, random_seed,
+                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
                          **pvalue_kwargs)
 
     def run(self):
@@ -816,7 +816,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def plot_results(self) -> Union[plt.Figure, Tuple[plt.Figure, plt.Figure]]:
         n_bars = min(10, len(self.results))
-        if self.single_list:
+        if self.single_set:
             title = f"Single-list GO enrichment for {self.set_name}" + f"\ntop {n_bars} most specific GO terms"
             bar_plot = self.enrichment_bar_plot(n_bars=n_bars, title=title, ylabel=r"$\log_2$(XL-mHG enrichment score)")
         else:
@@ -831,7 +831,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         raise NotImplementedError
 
     def format_results(self, unformatted_results_dict: dict):
-        if self.single_list:
+        if self.single_set:
             columns = ['name', 'samples', self.en_score_col, 'pval']
         else:
             columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']

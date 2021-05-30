@@ -567,7 +567,7 @@ class FeatureSet:
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path, save_csv, fname,
                                                     return_fig, plot_horizontal, self.set_name, parallel,
                                                     'randomization', biotype, background_genes, biotype_ref_path,
-                                                    single_list=False, random_seed=random_seed, reps=reps)
+                                                    single_set=False, random_seed=random_seed, reps=reps)
         return runner.run()
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
@@ -626,7 +626,7 @@ class FeatureSet:
         :type plot_horizontal: bool (default True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
-        :type parallel: bool (default False)
+        :type parallel: bool (default True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -653,7 +653,7 @@ class FeatureSet:
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path, save_csv, fname,
                                                     return_fig, plot_horizontal, self.set_name, parallel,
                                                     'hypergeometric', biotype, background_genes, biotype_ref_path,
-                                                    single_list=False)
+                                                    single_set=False)
         return runner.run()
 
     @staticmethod
@@ -776,19 +776,19 @@ class RankedSet(FeatureSet):
                       "the return type will always be FeatureSet and not RankedSet.")
         return super()._set_ops(others, op)
 
-    def go_enrichment_single_list(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
-                                  alpha: float = 0.05, propagate_annotations: str = 'elim',
-                                  aspects: Union[str, Iterable[str]] = 'any',
-                                  evidence_types: Union[str, Iterable[str]] = 'any',
-                                  excluded_evidence_types: Union[str, Iterable[str]] = (),
-                                  databases: Union[str, Iterable[str]] = 'any',
-                                  excluded_databases: Union[str, Iterable[str]] = (),
-                                  qualifiers: Union[str, Iterable[str]] = 'any',
-                                  excluded_qualifiers: Union[str, Iterable[str]] = 'not',
-                                  return_nonsignificant: bool = False,
-                                  save_csv: bool = False, fname=None,
-                                  return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = False
-                                  ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+    def go_enrichment_single_set(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
+                                 alpha: float = 0.05, propagate_annotations: str = 'elim',
+                                 aspects: Union[str, Iterable[str]] = 'any',
+                                 evidence_types: Union[str, Iterable[str]] = 'any',
+                                 excluded_evidence_types: Union[str, Iterable[str]] = (),
+                                 databases: Union[str, Iterable[str]] = 'any',
+                                 excluded_databases: Union[str, Iterable[str]] = (),
+                                 qualifiers: Union[str, Iterable[str]] = 'any',
+                                 excluded_qualifiers: Union[str, Iterable[str]] = 'not',
+                                 return_nonsignificant: bool = False,
+                                 save_csv: bool = False, fname=None,
+                                 return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True
+                                 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -867,7 +867,7 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
-        :type parallel: bool (default False)
+        :type parallel: bool (default True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -879,14 +879,14 @@ class RankedSet(FeatureSet):
            :align:   center
            :scale: 60 %
 
-           Example plot of go_enrichment_single_list()
+           Example plot of go_enrichment_single_set()
 
 
         .. figure::  plot_enrichment_results_go_singlelist_vertical.png
            :align:   center
            :scale: 60 %
 
-           Example plot of go_enrichment_single_list(plot_horizontal = False)
+           Example plot of go_enrichment_single_set(plot_horizontal = False)
         """
         plot_dag = False
         runner = enrichment_runner.GOEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
@@ -894,13 +894,13 @@ class RankedSet(FeatureSet):
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_dag, self.set_name,
-                                                      parallel=parallel, enrichment_func_name='xlmhg', single_list=True)
+                                                      parallel=parallel, enrichment_func_name='xlmhg', single_set=True)
 
         return runner.run()
 
-    def enrich_single_list(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, alpha: float = 0.05,
-                           attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
-                           return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = False):
+    def enrich_single_set(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, alpha: float = 0.05,
+                          attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
+                          return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -932,7 +932,7 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
-        :type parallel: bool (default False)
+        :type parallel: bool (default True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -940,23 +940,23 @@ class RankedSet(FeatureSet):
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  plot_enrichment_results_single_list.png
+        .. figure::  plot_enrichment_results_single_set.png
            :align:   center
            :scale: 60 %
 
-           Example plot of enrich_single_list()
+           Example plot of enrich_single_set()
 
 
-        .. figure::  plot_enrichment_results_single_list_vertical.png
+        .. figure::  plot_enrichment_results_single_set_vertical.png
            :align:   center
            :scale: 60 %
 
-           Example plot of enrich_single_list(plot_horizontal = False)
+           Example plot of enrich_single_set(plot_horizontal = False)
 
         """
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path, save_csv,
                                                     fname, return_fig, plot_horizontal, self.set_name,
-                                                    parallel=parallel, enrichment_func_name='xlmhg', single_list=True)
+                                                    parallel=parallel, enrichment_func_name='xlmhg', single_set=True)
         return runner.run()
 
 

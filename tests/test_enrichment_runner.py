@@ -414,7 +414,7 @@ def test_enrichment_runner_fisher_enrichment(monkeypatch, params, truth):
 
 def test_enrichment_runner_update_gene_set():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    runner.single_list = False
+    runner.single_set = False
     runner.background_set = set(pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).index)
     runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
                        'WBGene99991111'}
@@ -426,7 +426,7 @@ def test_enrichment_runner_update_gene_set():
 def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
     monkeypatch.setattr(EnrichmentRunner, '_update_ranked_genes', lambda x: None)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    runner.single_list = True
+    runner.single_set = True
     runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
     runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
                        'WBGene99991111'}
@@ -453,7 +453,7 @@ def test_enrichment_runner_format_results(monkeypatch):
     results_list = [['name1', 50, 10, 5.5, 2.3, 0.05], ['name2', 17, 0, 3, 0, 1], ['name3', 1, np.nan, -2, -0.7, 0.04]]
     truth = pd.read_csv('tests/test_files/enrichment_runner_format_results_truth.csv', index_col=0)
     runner.en_score_col = 'colName'
-    runner.single_list = False
+    runner.single_set = False
 
     runner.format_results(results_list)
     assert truth.equals(runner.results)
@@ -465,7 +465,7 @@ def test_enrichment_runner_format_results_single_list(monkeypatch):
     results_list = [['name1', 50, 2.3, 0.05], ['name2', 17, 0, 1], ['name3', 1, -0.7, np.nan]]
     truth = pd.read_csv('tests/test_files/enrichment_runner_single_list_format_results_truth.csv', index_col=0)
     runner.en_score_col = 'colName'
-    runner.single_list = True
+    runner.single_set = True
 
     runner.format_results(results_list)
     assert truth.equals(runner.results)
@@ -594,7 +594,7 @@ def test_enrichment_runner_filter_annotations():
     runner.background_set = {'WBGene00000019', 'WBGene00000106', 'WBGene00000137', 'WBGene00000369', 'WBGene00000860',
                              'WBGene00048865', 'WBGene00268195'}
     runner.attributes = ['attribute1', 'attribute3', 'attribute4']
-    runner.single_list = False
+    runner.single_set = False
     runner.filter_annotations()
     assert truth.equals(runner.annotation_df)
 
@@ -604,7 +604,7 @@ def test_enrichment_runner_filter_annotations_single_list():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
     runner.attributes = ['attribute1', 'attribute3', 'attribute4']
-    runner.single_list = True
+    runner.single_set = True
     runner.filter_annotations()
     assert truth.equals(runner.annotation_df)
 
@@ -709,7 +709,7 @@ def test_enrichment_runner_plot_results(monkeypatch, single_list):
 
     monkeypatch.setattr(EnrichmentRunner, 'enrichment_bar_plot', validate_params)
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    runner.single_list = single_list
+    runner.single_set = single_list
     runner.set_name = 'name of the set'
     res = runner.plot_results()
     assert isinstance(res, plt.Figure)
@@ -1107,7 +1107,7 @@ def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_
     monkeypatch.setattr(GOEnrichmentRunner, 'enrichment_bar_plot', validate_params)
     monkeypatch.setattr(GOEnrichmentRunner, 'go_dag_plot', lambda self: plt.Figure())
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    runner.single_list = single_list
+    runner.single_set = single_list
     runner.set_name = 'name of the set'
     runner.results = results
     runner.plot_go_network = plot_go_network
@@ -1126,7 +1126,7 @@ def test_go_enrichment_runner_format_results(monkeypatch):
                     'name3': ['name3', 1, np.nan, -2, -0.7, 0.04]}
     truth = pd.read_csv('tests/test_files/go_enrichment_runner_format_results_truth.csv', index_col=0)
     runner.en_score_col = 'colName'
-    runner.single_list = False
+    runner.single_set = False
     runner.return_nonsignificant = False
 
     runner.format_results(results_dict)
@@ -1155,7 +1155,7 @@ def test_go_enrichment_runner_format_results(monkeypatch, return_nonsignificant,
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.dag_tree = dag_tree
     runner.en_score_col = 'colName'
-    runner.single_list = False
+    runner.single_set = False
     runner.return_nonsignificant = return_nonsignificant
 
     runner.format_results(results_dict)
