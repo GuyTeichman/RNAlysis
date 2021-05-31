@@ -35,12 +35,27 @@ class BinaryFormatClusters:
             self.n_solutions = None
             self.cluster_sets = None
         else:
+            self._validate_clustering_solutions(clustering_solutions)
             self.clustering_solutions = clustering_solutions
             self.len_index = [sol.shape[0] for sol in clustering_solutions]
             self.n_clusters = sum(self.len_index)
             self.n_features = self.clustering_solutions[0].shape[1]
             self.n_solutions = len(self.clustering_solutions)
             self.cluster_sets: List[Set[int]] = [set(np.where(cluster)[0]) for cluster in self]
+
+    @staticmethod
+    def _validate_clustering_solutions(clustering_solutions: List[np.ndarray]):
+        assert isinstance(clustering_solutions, list), \
+            f"'clustering_solutions' must be a list; instead got {type(clustering_solutions)}"
+        assert len(clustering_solutions) > 0, f"'clustering_solutions' must contain at least one clustering solution"
+        assert validation.isinstanceiter(clustering_solutions, np.ndarray), \
+            f"'clustering_solutions' must exclusively contain numpy arrays"
+        for solution in clustering_solutions:
+            # in each clustering solution, every feature must be included in one cluster at most
+            # clustering algorithms such as HDBSCAN can classify some features as 'noise',
+            # and therefore we accept features that are included in 0 clusters.
+            assert np.all(solution.sum(axis=0) <= 1), \
+                'each feature must be included in one cluster at most per clustering solution'
 
     def __copy__(self):
         new_obj = type(self)(None)
