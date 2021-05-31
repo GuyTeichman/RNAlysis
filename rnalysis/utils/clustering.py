@@ -15,13 +15,15 @@ from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
 from sklearn_extra.cluster import KMedoids
+from tqdm.auto import tqdm
 
 from rnalysis.utils import generic, parsing, validation
 
-array_type = numba.types.boolean[:]
-spec = [('clustering_solutions', numba.types.ListType(array_type)),
-        ('len_index', numba.types.ListType(numba.types.int64)),
-        ('n_clusters', numba.types.int64), ('n_features', numba.types.int64), ('n_solutions', numba.types.int64)]
+
+# array_type = numba.types.boolean[:]
+# spec = [('clustering_solutions', numba.types.ListType(array_type)),
+#         ('len_index', numba.types.ListType(numba.types.int64)),
+#         ('n_clusters', numba.types.int64), ('n_features', numba.types.int64), ('n_solutions', numba.types.int64)]
 
 
 # @numba.jitclass(spec)
@@ -157,22 +159,20 @@ class CLICOM:
                     neighbor_sets[i].add(j)
 
         # sequentially construct K1..K|V|
-        for pivot in range(n_objs):
-            for i in range(n_objs):
-                print(
-                    f"Finding cliques... {int(100 * (i * n_objs + (pivot + 1) * n_objs ** 2) / n_objs ** 3)}% complete",
-                    end='\r')
-                for j in range(n_objs):
-                    # empty-set entries stay the same; if Kij(p-1) is subset of neighbors[p], add p to Kij(p-1)
-                    if len(clique_mat[i, j]) > 0 and clique_mat[i, j].issubset(neighbor_sets[pivot]):
-                        clique_mat[i, j].add(pivot)
+        with tqdm(total=n_objs ** 2, desc='Finding cliques') as pbar:
+            for pivot in range(n_objs):
+                for i in range(n_objs):
+                    for j in range(n_objs):
+                        # empty-set entries stay the same; if Kij(p-1) is subset of neighbors[p], add p to Kij(p-1)
+                        if len(clique_mat[i, j]) > 0 and clique_mat[i, j].issubset(neighbor_sets[pivot]):
+                            clique_mat[i, j].add(pivot)
+                    pbar.update(1)
 
         # extract cliques
         for i in range(self.binary_mat.shape[0]):
             for j in range(i + 1, self.binary_mat.shape[0]):
                 if len(clique_mat[i, j]) > 0:
                     self.clique_set.add(frozenset(clique_mat[i, j]))
-        print("Finding cliques... 100% complete")
 
     def cliques_to_clusters(self, allowed_overlap: float = 0.2, cluster_unclustered: bool = True):
         sorted_cliques = [set(clique) for clique in sorted(self.clique_set, reverse=True, key=len)]
@@ -259,7 +259,7 @@ class CLICOM:
 
         n_calculations = (n_clusters ** 2) // 2
         batch_size = 1 + n_calculations // joblib.cpu_count()
-        similarities = generic.ProgressParallel(n_jobs=-1, batch_size=batch_size, verbose=50,
+        similarities = generic.ProgressParallel(n_jobs=-1, batch_size=batch_size,
                                                 desc='Generating cluster similarity matrix')(
             joblib.delayed(CLICOM.inter_cluster_similarity)(*ind, self.clustering_solutions.cluster_sets,
                                                             self.n_features, len(self.clustering_solutions)) for ind in
@@ -277,7 +277,6 @@ class CLICOM:
         #         mat[i, j] = similarity
         #         mat[j, i] = similarity
         #         n_found += 2
-        print("Building adjacency matrix... 100% complete")
         return mat
 
     @staticmethod
@@ -843,10 +842,8 @@ class CLICOMRunner(ClusteringRunner):
         valid_setups = self.find_valid_clustering_setups()
         n_setups = len(valid_setups)
         print(f"Found {n_setups} legal clustering setups.")
-        for i, setup in enumerate(valid_setups):
-            print(f"Running clustering setups... {int(100 * i / n_setups)}% complete", end='\r')
+        for setup in tqdm(valid_setups, desc='Running clustering setups', unit=' setup'):
             self.clustering_solutions.extend(self.run_clustering_setup(setup))
-        print(f"Running clustering setups... 100% complete")
         solutions_binary_format = self.clusterers_to_binary_format()
         if solutions_binary_format.n_clusters >= solutions_binary_format.n_features:
             print("Number of clusters found in all clustering solutions exceeds number of features. \n"
