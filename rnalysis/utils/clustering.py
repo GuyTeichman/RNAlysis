@@ -59,11 +59,15 @@ class BinaryFormatClusters:
 
     def __copy__(self):
         new_obj = type(self)(None)
-        new_obj.clustering_solutions = [sol.copy() for sol in self.clustering_solutions]
+        new_obj.clustering_solutions = [sol.copy() for sol in self.clustering_solutions] \
+            if self.clustering_solutions is not None else None
+        new_obj.len_index = self.len_index.copy() if self.len_index is not None else None
         new_obj.n_clusters = self.n_clusters
         new_obj.n_features = self.n_features
         new_obj.n_solutions = self.n_solutions
-        new_obj.cluster_sets = [this_set.copy() for this_set in self.cluster_sets]
+        new_obj.cluster_sets = [this_set.copy() for this_set in self.cluster_sets] \
+            if self.cluster_sets is not None else None
+
         return new_obj
 
     def __repr__(self):
