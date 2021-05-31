@@ -26,6 +26,13 @@ spec = [('clustering_solutions', numba.types.ListType(array_type)),
 
 # @numba.jitclass(spec)
 class BinaryFormatClusters:
+    __slots__ = {'clustering_solutions': 'list of clustering solutions dividing a set of items into clusters',
+                 'len_index': 'the number of clusters in each clustering solution',
+                 'n_clusters': 'the total number of clusters within all clustering solutions',
+                 'n_features': 'the total number of items/genomic features which are split into clusters',
+                 'n_solutions': "the number of clustering solutions contained within 'clustering_solutions'",
+                 'cluster_sets': "a set representation of all clusters"}
+
     def __init__(self, clustering_solutions: List[np.ndarray] = None):
         if clustering_solutions is None:
             self.clustering_solutions = None
