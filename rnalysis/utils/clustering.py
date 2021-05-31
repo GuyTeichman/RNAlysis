@@ -264,11 +264,10 @@ class CLICOM:
             joblib.delayed(CLICOM.inter_cluster_similarity)(*ind, self.clustering_solutions.cluster_sets,
                                                             self.n_features, len(self.clustering_solutions)) for ind in
             indices)
-        print("Populating similarity matrix...")
-
-        for (i, j), similarity in zip(indices, similarities):
-            mat[i, j] = similarity
-            mat[j, i] = similarity
+        # populate the upper triangle of the matrix
+        np.put(mat, np.ravel_multi_index(np.triu_indices(n_clusters, 1), (n_clusters, n_clusters)), similarities)
+        # copy the upper triangle of the matrix to the lower triangle of the matrix
+        mat = mat + mat.T
         # n_found = 0
         # for i in range(n_clusters):
         #     n_found += 1
