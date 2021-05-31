@@ -78,10 +78,10 @@ class BinaryFormatClusters:
         return new_obj
 
     def __repr__(self):
-        return repr(self.clustering_solutions)
+        return f'BinaryFormatClusters({repr(self.clustering_solutions)})'
 
     def __str__(self):
-        return str(self.clustering_solutions)
+        return f'BinaryFormatClusters({str(self.clustering_solutions)})'
 
     def __len__(self):
         return len(self.clustering_solutions)
