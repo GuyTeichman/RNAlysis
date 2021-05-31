@@ -162,7 +162,7 @@ class CLICOM:
         with tqdm(total=n_objs ** 2, desc='Finding cliques') as pbar:
             for pivot in range(n_objs):
                 for i in range(n_objs):
-                    for j in range(n_objs):
+                    for j in range(i, n_objs):
                         # empty-set entries stay the same; if Kij(p-1) is subset of neighbors[p], add p to Kij(p-1)
                         if len(clique_mat[i, j]) > 0 and clique_mat[i, j].issubset(neighbor_sets[pivot]):
                             clique_mat[i, j].add(pivot)
