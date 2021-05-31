@@ -1,7 +1,29 @@
 import pytest
+import numpy as np
 from rnalysis.utils.clustering import *
 from rnalysis.utils.io import load_csv
 from collections import namedtuple
+
+
+@pytest.fixture
+def valid_clustering_solutions():
+    return [np.array([[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1]]),
+            np.array([[1, 1, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 1, 1]]), np.array(
+            [[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 1]])]
+
+
+@pytest.fixture
+def valid_clustering_solutions_with_noise():
+    return [np.array([[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1]]),
+            np.array([[1, 1, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 1, 1]]), np.array(
+            [[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0, 1, 1]])]
+
+
+@pytest.fixture
+def invalid_clustering_solutions():
+    return [np.array([[1, 1, 1, 0, 0, 0, 0, 0], [0, 0, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 0, 1, 1, 1]]),
+            np.array([[1, 1, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 1, 1]]), np.array(
+            [[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 1]])]
 
 
 def test_kmedoidsiter_api():
@@ -152,7 +174,7 @@ def test_clicomrunner_find_valid_clustering_setups():
     runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), True, 0.5,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife', 'l1'],
-                               linkage=['ward', 'average','doesnt exist']),
+                               linkage=['ward', 'average', 'doesnt exist']),
                           dict(method='hierarchical', n_clusters=None, distance_threshold=[0.5, 1], metric='euclidean'))
     setups = runner.find_valid_clustering_setups()
     assert setups == truth
@@ -167,13 +189,8 @@ def test_find_cliques(monkeypatch):
     assert clicom.clique_set == truth
 
 
-def test_clicom_cluster_wise_result():
-    clustering_collection = [np.array([[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 1, 0, 0, 0],
-                                       [0, 0, 0, 0, 0, 1, 1, 1]]),
-                             np.array([[1, 1, 1, 1, 0, 0, 0, 0], [0, 0, 0, 0, 1, 1, 1, 1]]),
-                             np.array([[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0],
-                                       [0, 0, 0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 1]])]
-    bin_format = BinaryFormatClusters(clustering_collection)
+def test_clicom_cluster_wise_result(valid_clustering_solutions):
+    bin_format = BinaryFormatClusters(valid_clustering_solutions)
 
     truth = {frozenset({0, 1, 2, 3}), frozenset({4, 5, 6, 7})}
     clusterer = CLICOM(bin_format, 1 / 3)
@@ -192,6 +209,51 @@ def test_clicom_cluster_wise_result():
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth_threshold_max == results
+
+
+def test_binary_format_clusters_init(valid_clustering_solutions):
+    cl = BinaryFormatClusters()
+    for attr in cl.__slots__:
+        assert getattr(cl, attr) is None
+
+    cl2 = BinaryFormatClusters(valid_clustering_solutions)
+    assert cl2.n_solutions == 3
+    assert cl2.n_features == 8
+    assert cl2.n_clusters == 9
+    assert cl2.len_index == [3, 2, 4]
+    assert cl2.cluster_sets == [{0, 1}, {2, 3, 4}, {5, 6, 7}, {0, 1, 2, 3}, {4, 5, 6, 7}, {0, 1}, {2, 3}, {4, 5},
+                                {6, 7}]
+    assert cl2.clustering_solutions == valid_clustering_solutions
+
+
+def test_binary_format_clusters_copy(valid_clustering_solutions):
+    cl = BinaryFormatClusters(valid_clustering_solutions)
+    cl2 = cl.__copy__()
+    for attr in cl.__slots__:
+        if attr == 'clustering_solutions':
+            for sol1, sol2 in zip(getattr(cl, attr), getattr(cl2, attr)):
+                assert np.all(sol1 == sol2)
+        else:
+            assert np.all(getattr(cl, attr) == getattr(cl2, attr))
+        if not isinstance(getattr(cl, attr), (int, float)):
+            assert getattr(cl, attr) is not getattr(cl2, attr)
+
+    _ = BinaryFormatClusters(None).__copy__()
+
+
+def test_binary_format_clusters_validate_clustering_solutions(valid_clustering_solutions,
+                                                              valid_clustering_solutions_with_noise,
+                                                              invalid_clustering_solutions):
+    BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions)
+    BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions_with_noise)
+    with pytest.raises(AssertionError):
+        BinaryFormatClusters._validate_clustering_solutions(invalid_clustering_solutions)
+    with pytest.raises(AssertionError):
+        BinaryFormatClusters._validate_clustering_solutions(tuple(valid_clustering_solutions))
+    with pytest.raises(AssertionError):
+        BinaryFormatClusters._validate_clustering_solutions([])
+    with pytest.raises(AssertionError):
+        BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions + [[0, 0, 0]])
 
 
 def test_clicom_majority_voter():
