@@ -2,7 +2,7 @@
 History
 =======
 
-2.0.0 (2020-??-??)
+2.0.0 (2021-??-??)
 ------------------
 * This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering, HDBSCAN, and Ensmble clustering.
 * This version introduces many new ways to perform enrichment analysis and to visualize your results, including highly customizable GO Enrichment, enrichment based on ranked lists of genes, and enrichment for non-categorical attributes.
@@ -36,7 +36,8 @@ Changed
 * The DataFrame returned by enrich_randomization() and enrich_randomization_parallel() now contains the additional column 'data_scale', determined by the new optional argument 'data_scale'.
 * The columns 'n obs' and 'n exp' in the DataFrame returned by enrich_randomization() and enrich_randomization_parallel() were renamed to 'obs' and 'exp' respectively.
 * FeatureSets no longer support in-place set operations (intersection, union, difference, symmetric difference). Instead, these functions return a new FeatureSet.
-
+* Filter.biotypes() now accepts the boolean parameter 'long_format' instead of the str parameter 'format'.
+* Filter.biotypes() and FeatureSet.biotypes() now count features which do not appear in the Biotype Reference Table as '_missing_from_biotype_reference' instead of 'not_in_biotype_reference'.
 
 Fixed
 ******
