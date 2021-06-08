@@ -730,12 +730,12 @@ class Filter:
         """
         print(self.index_string)
 
-    def biotypes(self, return_format: str = 'short', ref: str = 'predefined') -> pd.DataFrame:
+    def biotypes(self, long_format: bool = False, ref: str = 'predefined') -> pd.DataFrame:
 
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
-        :type return_format: 'short' or 'long' (default 'short')
-        :param return_format: 'short' returns a short-form DataFrame, which states the biotypes \
+        :type long_format: 'short' or 'long' (default 'short')
+        :param long_format: 'short' returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. 'long' returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
@@ -756,7 +756,7 @@ class Filter:
             unknown            1
 
             >>> # long-form view
-            >>> d.biotypes(return_format='long', ref='tests/biotype_ref_table_for_tests.csv')
+            >>> d.biotypes(long_format=True,ref='tests/biotype_ref_table_for_tests.csv')
                            baseMean               ...           padj
                               count         mean  ...            75%            max
             biotype                               ...
@@ -767,10 +767,6 @@ class Filter:
             [3 rows x 48 columns]
 
         """
-        # validate 'return_format'
-        assert isinstance(return_format, str), f"'return_format' must be a string!"
-        return_format = return_format.lower()
-        assert return_format in {'short', 'long'}, f"Invalid format '{return_format}'. Must be 'short' or 'long'."
         # load the Biotype Reference Table
         ref = ref_tables.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
@@ -779,16 +775,17 @@ class Filter:
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:
             warnings.warn(
-                f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
-            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': 'not_in_biotype_reference'}))
-        # return just the number of genes/indices belonging to each biotype
-        if return_format == 'short':
-            return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
-        # additionally return descriptive statistics for each biotype
-        elif return_format == 'long':
+                f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table')
+            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'}))
+        if long_format:
+            # additionally return descriptive statistics for each biotype
             self_df = self.df.__deepcopy__()
             self_df['biotype'] = ref_df.set_index('gene').loc[self.df.index]
             return self_df.groupby('biotype').describe()
+
+        else:
+            # return just the number of genes/indices belonging to each biotype
+            return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
 
     def number_filters(self, column: str, operator: str, value, opposite: bool = False, inplace: bool = True):
 

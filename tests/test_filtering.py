@@ -934,23 +934,19 @@ def test_count_filter_from_folder():
 
 
 def test_biotypes():
-    truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0)
-    c = CountFilter(r'tests/test_files/counted_biotype.csv')
-    df = c.biotypes(ref=__biotype_ref__)
-    truth.sort_index(inplace=True)
-    df.sort_index(inplace=True)
-    assert np.all(df == truth)
-    c.biotypes(return_format='Short', ref=__biotype_ref__)
+    truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0).sort_index()
+    c = CountFilter('tests/test_files/counted_biotype.csv')
+    df = c.biotypes(ref=__biotype_ref__).sort_index()
+    print('\n')
+    print(df, truth)
+    assert df.equals(truth)
 
 
 def test_biotypes_long_form():
-    assert False
-
-
-def test_biotypes_invalid_return_format():
-    f = CountFilter(r'tests/test_files/counted_biotype.csv')
-    with pytest.raises(AssertionError):
-        f.biotypes(return_format='medium')
+    truth = pd.read_csv('tests/test_files/biotypes_long_format_truth.csv', index_col=0, header=[0, 1]).sort_index()
+    c = CountFilter('tests/test_files/counted_biotype.csv')
+    df = c.biotypes(long_format=True, ref=__biotype_ref__).sort_index()
+    assert np.isclose(df, truth, equal_nan=True).all()
 
 
 def test_filter_by_row_sum():

@@ -739,7 +739,7 @@ class FeatureSet:
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
-            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': 'not_in_biotype_reference'}))
+            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'}))
         return ref_df.set_index('gene', drop=False).loc[self.gene_set].groupby('biotype').count()
 
 
