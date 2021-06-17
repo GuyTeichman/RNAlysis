@@ -1,74 +1,67 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8">
+    <meta charset="utf-8"/>
+    <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/"/>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>rnalysis.filtering.FoldChangeFilter.filter_biotype &mdash; RNAlysis 1.3.6 documentation</title>
+    <title>rnalysis.filtering.FoldChangeFilter.filter_biotype &mdash; RNAlysis 1.3.6 documentation</title>
 
 
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css"/>
 
 
     <link rel="shortcut icon" href="_static/favicon.ico"/>
 
 
+    <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+    <![endif]-->
 
 
-
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-
-
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script src="_static/copybutton.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/copybutton.js"></script>
 
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
 
-
-
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html" />
-    <link rel="prev" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html" />
+    <link rel="index" title="Index" href="genindex.html"/>
+    <link rel="search" title="Search" href="search.html"/>
+    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"
+          href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html"/>
+    <link rel="prev" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change"
+          href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html"/>
 </head>
 
 <body class="wy-body-for-nav">
 
 
-  <div class="wy-grid-for-nav">
+<div class="wy-grid-for-nav">
 
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
 
 
-
             <a href="index.html">
 
 
+                <img src="_static/logo.png" class="logo" alt="Logo"/>
+
+            </a>
 
 
-            <img src="_static/logo.png" class="logo" alt="Logo"/>
-
-          </a>
-
-
-
-
-
-
-
-<div role="search">
+            <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
@@ -79,23 +72,27 @@
 
         </div>
 
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
 
-
-
-
+          <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
 
 
               <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">What is RNAlysis?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#main-features">Main Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get it</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
-<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
-</ul>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What
+                      can I do with <em>RNAlysis</em>?</a></li>
+                  <li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I
+                      install it?</a></li>
+                  <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get
+                      it</a></li>
+                  <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+                  <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub
+                      page</a></li>
+                  <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+              </ul>
 <p class="caption"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -140,87 +137,105 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
 </ul>
 
 
+          </div>
 
-        </div>
       </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
 
-      <nav class="wy-nav-top" aria-label="top navigation">
+        <nav class="wy-nav-top" aria-label="top navigation">
 
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+            <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
 
-      </nav>
+        </nav>
 
 
       <div class="wy-nav-content">
 
-        <div class="rst-content">
+          <div class="rst-content">
 
 
+              <div role="navigation" aria-label="breadcrumbs navigation">
+
+                  <ul class="wy-breadcrumbs">
+
+                      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+
+                      <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
+
+                      <li><a href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a>
+                          &raquo;
+                      </li>
+
+                      <li>rnalysis.filtering.FoldChangeFilter.filter_biotype</li>
 
 
+                      <li class="wy-breadcrumbs-aside">
 
 
+                          <a href="_sources/rnalysis.filtering.FoldChangeFilter.filter_biotype.rst.txt" rel="nofollow"> View page source</a>
 
 
+                      </li>
+
+                  </ul>
 
 
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-
-      <li><a href="index.html">Docs</a> &raquo;</li>
-
-          <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
-
-          <li><a href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a> &raquo;</li>
-
-      <li>rnalysis.filtering.FoldChangeFilter.filter_biotype</li>
-
-
-      <li class="wy-breadcrumbs-aside">
-
-
-            <a href="_sources/rnalysis.filtering.FoldChangeFilter.filter_biotype.rst.txt" rel="nofollow"> View page source</a>
-
-
-      </li>
-
-  </ul>
-
-
-  <hr/>
+                  <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+              <div itemprop="articleBody">
 
-  <div class="section" id="rnalysis-filtering-foldchangefilter-filter-biotype">
-<h1>rnalysis.filtering.FoldChangeFilter.filter_biotype<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-filter-biotype" title="Permalink to this headline">¶</a></h1>
-<dl class="py method">
-<dt id="rnalysis.filtering.FoldChangeFilter.filter_biotype">
-<code class="sig-prename descclassname">FoldChangeFilter.</code><code class="sig-name descname">filter_biotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">biotype</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'protein_coding'</span></em>, <em class="sig-param"><span class="n">ref</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'predefined'</span></em>, <em class="sig-param"><span class="n">opposite</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.filter_biotype" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filters out all features that do not match the indicated biotype/biotypes.         Legal inputs: ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
-<dl class="field-list">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>biotype</strong> (<em>string</em><em> or </em><em>list of strings</em>) – the biotypes which will not be filtered out.</p></li>
-<li><p><strong>ref</strong> – Name of the biotype reference file used to determine biotypes.         Default is the path defined by the user in the settings.yaml file.</p></li>
+                  <section id="rnalysis-filtering-foldchangefilter-filter-biotype">
+                      <h1>rnalysis.filtering.FoldChangeFilter.filter_biotype<a class="headerlink"
+                                                                               href="#rnalysis-filtering-foldchangefilter-filter-biotype"
+                                                                               title="Permalink to this headline">¶</a>
+                      </h1>
+                      <dl class="py method">
+                          <dt class="sig sig-object py" id="rnalysis.filtering.FoldChangeFilter.filter_biotype">
+                              <span class="sig-prename descclassname"><span
+                                  class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span
+                              class="pre">filter_biotype</span></span><span class="sig-paren">(</span><em
+                              class="sig-param"><span class="n"><span class="pre">biotype</span></span><span
+                              class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span
+                              class="p"><span class="pre">[</span></span><span class="pre">str</span><span
+                              class="p"><span class="pre">,</span> </span><span class="pre">List</span><span
+                              class="p"><span class="pre">[</span></span><span class="pre">str</span><span
+                              class="p"><span class="pre">]</span></span><span class="p"><span
+                              class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span
+                              class="default_value"><span class="pre">'protein_coding'</span></span></em>, <em
+                              class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span
+                              class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span
+                              class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em>,
+                              <em class="sig-param"><span class="n"><span class="pre">opposite</span></span><span
+                                  class="p"><span class="pre">:</span></span> <span class="n"><span
+                                  class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span
+                                  class="default_value"><span class="pre">False</span></span></em>, <em
+                              class="sig-param"><span class="n"><span class="pre">inplace</span></span><span
+                              class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span>
+                              <span class="o"><span class="pre">=</span></span> <span class="default_value"><span
+                                  class="pre">True</span></span></em><span class="sig-paren">)</span><a
+                              class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.filter_biotype"
+                              title="Permalink to this definition">¶</a></dt>
+                          <dd><p>Filters out all features that do not match the indicated biotype/biotypes. Legal
+                              inputs:
+                              ‘protein_coding’,’pseudogene’,’piRNA’,’miRNA’,’ncRNA’,’lincRNA’,’rRNA’,’snRNA’,’snoRNA’.</p>
+                              <dl class="field-list">
+                                  <dt class="field-odd">Parameters</dt>
+                                  <dd class="field-odd">
+                                      <ul class="simple">
+                                          <li><p><strong>biotype</strong> (<em>string</em><em> or </em><em>list of
+                                              strings</em>) – the biotypes which will not be filtered out.</p></li>
+                                          <li><p><strong>ref</strong> – Name of the biotype reference file used to
+                                              determine biotypes. Default is the path defined by the user in the
+                                              settings.yaml file.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -236,46 +251,60 @@
 <span class="go">Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span class="p">)</span>
+    <div class="doctest highlight-default notranslate">
+        <div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span
+            class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span
+            class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span
+            class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># keep only rows whose biotype is &#39;protein_coding&#39; or &#39;pseudogene&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">([</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span><span class="s1">&#39;pseudogene&#39;</span><span class="p">],</span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span
+                class="n">filter_biotype</span><span class="p">([</span><span class="s1">&#39;protein_coding&#39;</span><span
+                class="p">,</span><span class="s1">&#39;pseudogene&#39;</span><span class="p">],</span><span class="n">ref</span><span
+                class="o">=</span><span class="s1">&#39;tests/biotype_ref_table_for_tests.csv&#39;</span><span
+                class="p">)</span>
 <span class="go">Filtered 0 features, leaving 22 of the original 22 features. Filtered inplace.</span>
-</pre></div>
-</div>
+</pre>
+        </div>
+    </div>
 </dd>
-</dl>
-</dd></dl>
+                              </dl>
+                          </dd>
+                      </dl>
 
-</div>
+                  </section>
 
 
            </div>
 
           </div>
           <footer>
+              <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+                  <a href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html"
+                     class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute"
+                     accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+                  <a href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html"
+                     class="btn btn-neutral float-left"
+                     title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" accesskey="p"
+                     rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+              </div>
 
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+              <hr/>
 
-        <a href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.filter_by_attribute" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+              <div role="contentinfo">
+                  <p>
+                      &#169; Copyright 2019, Guy Teichman.
+
+                  </p>
+              </div>
 
 
-        <a href="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change.html" class="btn btn-neutral float-left" title="rnalysis.filtering.FoldChangeFilter.filter_abs_log2_fold_change" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+              Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
 
-    </div>
+              <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
 
+              provided by <a href="https://readthedocs.org">Read the Docs</a>.
 
-  <hr/>
-
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2019, Guy Teichman
-
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
-</footer>
-
+          </footer>
         </div>
       </div>
 
@@ -284,16 +313,11 @@
   </div>
 
 
-
-  <script type="text/javascript">
+<script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-
-
-
 
 
 </body>
