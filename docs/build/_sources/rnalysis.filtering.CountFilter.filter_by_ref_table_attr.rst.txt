@@ -1,6 +1,0 @@
-rnalysis.filtering.CountFilter.filter\_by\_ref\_table\_attr
-=============================================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. automethod:: CountFilter.filter_by_attribute

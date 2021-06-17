@@ -1,6 +1,0 @@
-rnalysis.general.start\_ipcluster
-=================================
-
-.. currentmodule:: rnalysis.general
-
-.. autofunction:: _start_ipcluster

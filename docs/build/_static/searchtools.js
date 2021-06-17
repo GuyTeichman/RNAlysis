@@ -162,24 +162,24 @@ var Search = {
     var tmp = splitQuery(query);
     var objectterms = [];
     for (i = 0; i < tmp.length; i++) {
-      if (tmp[i] !== "") {
-          objectterms.push(tmp[i].toLowerCase());
-      }
+        if (tmp[i] !== "") {
+            objectterms.push(tmp[i].toLowerCase());
+        }
 
         if ($u.indexOf(stopwords, tmp[i].toLowerCase()) != -1 || tmp[i] === "") {
             // skip this "word"
             continue;
         }
-      // stem the word
-      var word = stemmer.stemWord(tmp[i].toLowerCase());
-      // prevent stemmer from cutting word smaller than two chars
-      if(word.length < 3 && tmp[i].length >= 3) {
-        word = tmp[i];
-      }
-      var toAppend;
-      // select the correct list
-      if (word[0] == '-') {
-        toAppend = excluded;
+        // stem the word
+        var word = stemmer.stemWord(tmp[i].toLowerCase());
+        // prevent stemmer from cutting word smaller than two chars
+        if (word.length < 3 && tmp[i].length >= 3) {
+            word = tmp[i];
+        }
+        var toAppend;
+        // select the correct list
+        if (word[0] == '-') {
+            toAppend = excluded;
         word = word.substr(1);
       }
       else {
@@ -250,16 +250,16 @@ var Search = {
           var item = results.pop();
           var listItem = $('<li></li>');
           var requestUrl = "";
-        var linkUrl = "";
-        if (DOCUMENTATION_OPTIONS.BUILDER === 'dirhtml') {
-          // dirhtml builder
-          var dirname = item[0] + '/';
-          if (dirname.match(/\/index\/$/)) {
-            dirname = dirname.substring(0, dirname.length-6);
-          } else if (dirname == 'index/') {
-            dirname = '';
-          }
-          requestUrl = DOCUMENTATION_OPTIONS.URL_ROOT + dirname;
+          var linkUrl = "";
+          if (DOCUMENTATION_OPTIONS.BUILDER === 'dirhtml') {
+              // dirhtml builder
+              var dirname = item[0] + '/';
+              if (dirname.match(/\/index\/$/)) {
+                  dirname = dirname.substring(0, dirname.length - 6);
+              } else if (dirname == 'index/') {
+                  dirname = '';
+              }
+              requestUrl = DOCUMENTATION_OPTIONS.URL_ROOT + dirname;
           linkUrl = requestUrl;
 
         } else {
@@ -271,7 +271,7 @@ var Search = {
             linkUrl +
             highlightstring + item[2]).html(item[1]));
         if (item[3]) {
-          listItem.append($('<span> (' + item[3] + ')</span>'));
+            listItem.append($('<span> (' + item[3] + ')</span>'));
             Search.output.append(listItem);
             setTimeout(function () {
                 displayNextItem();
@@ -280,17 +280,17 @@ var Search = {
           $.ajax({url: requestUrl,
                   dataType: "text",
                   complete: function(jqxhr, textstatus) {
-                    var data = jqxhr.responseText;
-                    if (data !== '' && data !== undefined) {
-                      listItem.append(Search.makeSearchSummary(data, searchterms, hlterms));
-                    }
+                      var data = jqxhr.responseText;
+                      if (data !== '' && data !== undefined) {
+                          listItem.append(Search.makeSearchSummary(data, searchterms, hlterms));
+                      }
                       Search.output.append(listItem);
                       setTimeout(function () {
                           displayNextItem();
                       }, 5);
                   }});
         } else {
-          // no source available, just display title
+            // no source available, just display title
             Search.output.append(listItem);
             setTimeout(function () {
                 displayNextItem();
@@ -395,14 +395,14 @@ var Search = {
         var titles = this._index.titles;
 
         var i, j, file;
-    var fileMap = {};
-    var scoreMap = {};
-    var results = [];
+        var fileMap = {};
+        var scoreMap = {};
+        var results = [];
 
-    // perform the search on the required terms
-    for (i = 0; i < searchterms.length; i++) {
-      var word = searchterms[i];
-      var files = [];
+        // perform the search on the required terms
+        for (i = 0; i < searchterms.length; i++) {
+            var word = searchterms[i];
+            var files = [];
       var _o = [
         {files: terms[word], score: Scorer.term},
         {files: titleterms[word], score: Scorer.title}
@@ -497,23 +497,23 @@ var Search = {
    * latter for highlighting it.
    */
   makeSearchSummary : function(htmlText, keywords, hlwords) {
-    var text = Search.htmlToText(htmlText);
-    var textLower = text.toLowerCase();
-    var start = 0;
-    $.each(keywords, function() {
-      var i = textLower.indexOf(this.toLowerCase());
-      if (i > -1)
-        start = i;
-    });
-    start = Math.max(start - 120, 0);
+      var text = Search.htmlToText(htmlText);
+      var textLower = text.toLowerCase();
+      var start = 0;
+      $.each(keywords, function () {
+          var i = textLower.indexOf(this.toLowerCase());
+          if (i > -1)
+              start = i;
+      });
+      start = Math.max(start - 120, 0);
       var excerpt = ((start > 0) ? '...' : '') +
           $.trim(text.substr(start, 240)) +
           ((start + 240 - text.length) ? '...' : '');
       var rv = $('<p class="context"></p>').text(excerpt);
-    $.each(hlwords, function() {
-      rv = rv.highlightText(this, 'highlighted');
-    });
-    return rv;
+      $.each(hlwords, function () {
+          rv = rv.highlightText(this, 'highlighted');
+      });
+      return rv;
   }
 };
 
