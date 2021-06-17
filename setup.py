@@ -11,10 +11,8 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels', 'scikit-learn',
-                'ipyparallel', 'grid_strategy', 'Distance', 'pyyaml', 'UpSetPlot', 'matplotlib-venn']
-# requirements = ['numpy', 'pandas', 'matplotlib', 'seaborn', 'tissue_enrichment_analysis', 'statsmodels',
-# 'scikit-learn', 'matplotlib-venn', 'simple-venn']
+with open('requirements.txt') as requirements_file:
+    requirements = requirements_file.read().split('\n')
 
 setup_requirements = ['pytest-runner', ]
 
