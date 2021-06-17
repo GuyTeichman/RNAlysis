@@ -30,14 +30,14 @@ def test_countfilter_api():
 def test_countfilter_normalize_to_rpm():
     truth = general.load_csv(r"tests/test_files/test_norm_reads_rpm.csv", 0)
     h = CountFilter(r"tests/test_files/counted.csv")
-    h.normalize_to_rpm(r"uncounted.csv")
+    h.normalize_to_rpm(r"tests/test_files/uncounted.csv")
     assert np.isclose(truth, h.df).all()
 
 
 def test_countfilter_norm_reads_with_scaling_factors():
     truth = general.load_csv(r"tests/test_files/test_norm_scaling_factors.csv", 0)
     h = CountFilter(r"tests/test_files/counted.csv")
-    h.normalize_with_scaling_factors(r"scaling_factors.csv")
+    h.normalize_with_scaling_factors(r"tests/test_files/scaling_factors.csv")
     assert np.isclose(truth, h.df).all()
 
 
@@ -629,21 +629,21 @@ def test_count_filter_from_folder():
     truth_all_expr = general.load_csv(r'tests/test_files/test_count_from_folder_all_expr.csv', 0)
     truth_all_feature = general.load_csv(r'tests/test_files/test_count_from_folder_all_feature.csv', 0)
     truth_norm = general.load_csv(r'tests/test_files/test_count_from_folder_norm.csv', 0)
-    h_notnorm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=False, save_csv=True,
+    h_notnorm = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
                                         counted_fname='__allexpr_temporary_testfile.csv',
                                         uncounted_fname='__allfeature_temporary_testfile.csv')
 
-    os.remove('test_count_from_folder/__allexpr_temporary_testfile.csv')
+    os.remove('tests/test_files/test_count_from_folder/__allexpr_temporary_testfile.csv')
     assert np.all(np.isclose(h_notnorm.df, truth_all_expr))
 
-    h_norm = CountFilter.from_folder('test_count_from_folder', norm_to_rpm=True, save_csv=False)
+    h_norm = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True, save_csv=False)
     assert np.all(np.isclose(h_norm.df, truth_norm))
 
-    all_feature = general.load_csv('test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
+    all_feature = general.load_csv('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
     all_feature.sort_index(inplace=True)
     truth_all_feature.sort_index(inplace=True)
 
-    os.remove('test_count_from_folder/__allfeature_temporary_testfile.csv')
+    os.remove('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
     assert np.all(np.isclose(all_feature, truth_all_feature))
 
 def test_biotypes():
