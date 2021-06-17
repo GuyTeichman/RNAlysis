@@ -5,6 +5,8 @@ general.start_parallel_session()
 import matplotlib
 from rnalysis.enrichment import *
 
+from tests import __attr_ref__, __biotype_ref__
+
 matplotlib.use('Agg')
 
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',
@@ -101,7 +103,7 @@ def test_biotypes():
              'index_that_is_not_in_biotype_ref_table'}
 
     en = FeatureSet(genes)
-    df = en.biotypes(ref='biotype_ref_table_for_tests.csv')
+    df = en.biotypes(ref=__biotype_ref__)
     df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(df == truth)
@@ -333,11 +335,11 @@ def test_randomization_int_index_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['attribute1', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs([0, 2, 3], 'attr_ref_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs([0, 2, 3], __attr_ref__)
     assert attrs == attrs_truth
 
     attr_truth_single = ['attribute4']
-    attr = en._enrichment_get_attrs(3, 'attr_ref_table_for_tests.csv')
+    attr = en._enrichment_get_attrs(3, __attr_ref__)
     assert attr == attr_truth_single
 
 
@@ -346,5 +348,5 @@ def test_randomization_all_attributes():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     en = FeatureSet(gene_set=genes, set_name='test_set')
     attrs_truth = ['attribute1', 'attribute2', 'attribute3', 'attribute4']
-    attrs = en._enrichment_get_attrs('all', 'attr_ref_table_for_tests.csv')
+    attrs = en._enrichment_get_attrs('all', __attr_ref__)
     assert attrs == attrs_truth

@@ -5,6 +5,7 @@ from pathlib import Path
 from rnalysis.general import *
 from rnalysis.general import _check_is_df,_remove_unindexed_rows
 
+from tests import __attr_ref__, __biotype_ref__
 
 def test_is_df_dataframe():
     my_df = pd.DataFrame()
