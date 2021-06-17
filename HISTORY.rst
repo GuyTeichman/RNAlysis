@@ -2,6 +2,23 @@
 History
 =======
 
+1.3.6 (2021-06-17)
+------------------
+* This version introduces minor bug fixes.
+
+
+Changed
+*******
+* Relinquished support for Python versions below 3.7.
+
+Fixed
+******
+* Fixed bug with dependency collisions when installing RNAlysis in an empty Python environment.
+* Fixed security vulnerability in developer test environment.
+
+
+
+
 
 1.3.5 (2020-05-27)
 ------------------
