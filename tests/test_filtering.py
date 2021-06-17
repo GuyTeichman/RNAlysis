@@ -504,6 +504,14 @@ def test_symmetric_difference():
     assert set1.symmetric_difference(set2) == set1_unique.union(set2_unique)
 
 
+def test_set_ops_symmetric_difference_more_than_two_objects():
+    set1 = DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv')
+    set2 = DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv')
+    set3 = {1, 2, 3}
+    with pytest.raises(TypeError):
+        _ = set1._set_ops([set2, set3], 'set', set.symmetric_difference)
+
+
 def test_deseq_feature_set():
     truth = {'WBGene00008447', 'WBGene00021018', 'WBGene00012452', 'WBGene00010507', 'WBGene00022730',
              'WBGene00012648',
