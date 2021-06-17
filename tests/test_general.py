@@ -58,8 +58,8 @@ def test_load_csv():
 
 
 def test_remove_unindexed_rows():
-    truth = load_csv("counted_missing_rows_deleted.csv", 0)
-    missing = load_csv("counted_missing_rows.csv", 0)
+    truth = load_csv("tests/test_files/counted_missing_rows_deleted.csv", 0)
+    missing = load_csv("tests/test_files/counted_missing_rows.csv", 0)
     assert (truth == _remove_unindexed_rows(missing)).all().all()
 
 
