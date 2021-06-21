@@ -219,24 +219,6 @@ class FeatureSet:
         """
         return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
-    @staticmethod
-    def _enrichment_save_csv(df: pd.DataFrame, fname: str):
-
-        """
-        Internal method, used to save enrichment results to .csv files. Static class method.
-
-        :param df: pandas DataFrame to be saved.
-        :param fname: Name and full path under which the DataFrame will be saved
-
-        """
-        if fname is None:
-            fname = input("Please insert the full name and path to save the file to")
-        else:
-            assert isinstance(fname, (str, Path))
-        if isinstance(fname, Path):
-            fname = str(Path)
-        io.save_csv(df, filename=fname if fname.endswith('.csv') else fname + '.csv')
-
     def go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                       statistical_test: str = 'fisher', biotype: str = 'protein_coding',
                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
