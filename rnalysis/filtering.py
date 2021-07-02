@@ -107,11 +107,6 @@ class Filter:
         yield from self.df.index
 
     def __copy__(self):
-
-        """
-        :rtype: Filter
-
-        """
         return type(self)((self.fname, self.df.copy(deep=True)))
 
     @property
@@ -1562,17 +1557,20 @@ class DESeqFilter(Filter):
     __slots__ = {'log2fc_col': 'name of the log2 fold change column', 'padj_col': 'name of the adjusted p-value column'}
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
-                 log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj'):
+                 log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', suppress_warnings: bool = False):
         super().__init__(fname, drop_columns)
         self.log2fc_col = log2fc_col
         self.padj_col = padj_col
-        if log2fc_col not in self.columns:
+        if not suppress_warnings and log2fc_col not in self.columns:
             warnings.warn(f"The specified log2fc_col '{log2fc_col}' does not appear in the DESeqFilter's columns: "
                           f"{self.columns}. DESeqFilter-specific functions that depend on "
                           f"log2(fold change) may fail to run. ")
-        if padj_col not in self.columns:
+        if not suppress_warnings and padj_col not in self.columns:
             warnings.warn(f"The specified padj_col '{padj_col}' does not appear in the DESeqFilter's columns: "
                           f"{self.columns}. DESeqFilter-specific functions that depend on p-values may fail to run. ")
+
+    def __copy__(self):
+        return type(self)((self.fname, self.df.copy(deep=True)), suppress_warnings=True)
 
     def _assert_padj_col(self):
         if self.padj_col not in self.df.columns:
