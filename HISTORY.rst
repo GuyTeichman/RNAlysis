@@ -28,6 +28,7 @@ Changed
 *******
 * FeatureSet.enrich_randomization_parallel() was deprecated. Instead, you can compute your enrichment analysis with parallel computing by calling FeatureSet.enrich_randomization() with the argument 'parallel_processing=True'. Moreover, parallel session will now start automatically if one was not already active.
 * Improved running time of enrich_randomization() about six-fold.
+* Filter objects can be created from any delimiter-separated file format (.csv, .tsv, .txt, etc).
 * CountFilter.pca() can now be plotted without labeled points.
 * Filter.index_string is now sorted by the current order of indices in the Filter object, instead of by alphabetical order.
 * CountFilter.violin_plot() now accepts a y_title argument.
@@ -46,7 +47,7 @@ Fixed
 * Generally improved performance of RNAlysis.
 * Fixed bug in Filter.filter_percentile() where the value at the exact percentile speficied (e.g. the median for percentile=0.5) would be removed from the Filter object.
 * Fixed bug in enrichment.FeatureSet, where creating a FeatureSet from input string would result in an empty set.
-* Various other bug fixes.
+* Various minor bug fixes.
 
 
 
