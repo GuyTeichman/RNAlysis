@@ -260,7 +260,9 @@ class GOlrAnnotationIterator:
         :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
         or 'any'
         """
-        if aspects == 'any':
+        aspects = parsing.data_to_set(aspects)
+
+        if aspects == {'any'}:
             return set.union(*[parsing.data_to_set(s) for s in GOlrAnnotationIterator._ASPECTS_DICT.values()])
 
         elif any(
@@ -270,7 +272,7 @@ class GOlrAnnotationIterator:
                     if aspect.lower() in GOlrAnnotationIterator._ASPECTS_DICT else aspect for aspect in aspects}
 
         else:
-            return parsing.data_to_set(aspects)
+            return aspects
 
     def _generate_query(self) -> List[str]:
         """

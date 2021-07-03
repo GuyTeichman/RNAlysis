@@ -106,14 +106,14 @@ def test_gene_id_translator_contains():
 
 @pytest.mark.parametrize("test_input,expected", [
     ('any', {'aspect a', 'aspect b', 'aspect c'}),
-    ('B', {'aspect b'}),
-    (['b'], {'aspect b'}),
+    ('Asp_B', {'aspect b'}),
+    (['asp_b'], {'aspect b'}),
     (['a', 'z', 'c'], {'aspect a', 'aspect c', 'z'}),
-    (['b', 'c', 'A'], {'aspect a', 'aspect b', 'aspect c'}),
+    (['asp_b', 'c', 'A'], {'aspect a', 'aspect b', 'aspect c'}),
     (['aspect z'], {'aspect z'})
 ])
 def test_golr_annotation_iterator_parse_go_aspects(monkeypatch, test_input, expected):
-    go_dict = {'a': 'aspect a', 'b': 'aspect b', 'c': 'aspect c', '_a_': 'aspect a'}
+    go_dict = {'a': 'aspect a', 'asp_b': 'aspect b', 'c': 'aspect c', '_a_': 'aspect a'}
     monkeypatch.setattr(GOlrAnnotationIterator, '_ASPECTS_DICT', go_dict)
     assert GOlrAnnotationIterator._parse_go_aspects(test_input) == expected
 
