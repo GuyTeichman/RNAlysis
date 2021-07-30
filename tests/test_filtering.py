@@ -922,7 +922,7 @@ def test_count_filter_from_folder():
                                         uncounted_fname='__allfeature_temporary_testfile.csv')
 
     try:
-        assert h_notnorm.df.equals(truth_all_expr)
+        assert np.all(np.isclose(h_notnorm.df, truth_all_expr, atol=0, rtol=0.0001))
 
         h_norm = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True, save_csv=False)
         assert np.all(np.isclose(h_norm.df, truth_norm, atol=0, rtol=0.0001))
