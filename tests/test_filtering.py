@@ -915,30 +915,29 @@ def test_text_filters_invalid_input():
 
 def test_count_filter_from_folder():
     truth_all_expr = io.load_csv(r'tests/test_files/test_count_from_folder_all_expr.csv', 0)
-    truth_all_feature = io.load_csv(r'tests/test_files/test_count_from_folder_all_feature.csv', 0)
+    truth_all_feature = io.load_csv(r'tests/test_files/test_count_from_folder_all_feature.csv', 0).sort_index()
     truth_norm = io.load_csv(r'tests/test_files/test_count_from_folder_norm.csv', 0)
     h_notnorm = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
                                         counted_fname='__allexpr_temporary_testfile.csv',
                                         uncounted_fname='__allfeature_temporary_testfile.csv')
 
-    os.remove('tests/test_files/test_count_from_folder/__allexpr_temporary_testfile.csv')
-    assert np.all(np.isclose(h_notnorm.df, truth_all_expr))
+    try:
+        assert h_notnorm.df.equals(truth_all_expr)
 
-    h_norm = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True, save_csv=False)
-    assert np.all(np.isclose(h_norm.df, truth_norm))
+        h_norm = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True, save_csv=False)
+        assert np.all(np.isclose(h_norm.df, truth_norm, atol=0, rtol=0.0001))
 
-    all_feature = io.load_csv('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv', 0)
-    all_feature.sort_index(inplace=True)
-    truth_all_feature.sort_index(inplace=True)
+        all_feature = io.load_csv('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv',
+                                  0).sort_index()
+        assert all_feature.equals(truth_all_feature)
 
-    os.remove('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
-    assert np.all(np.isclose(all_feature, truth_all_feature))
-
-    h_nosuffix = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=False, save_csv=True,
-                                         counted_fname='__allexpr_temporary_testfile',
-                                         uncounted_fname='__allfeature_temporary_testfile')
-    os.remove('tests/test_files/test_count_from_folder/__allexpr_temporary_testfile.csv')
-    os.remove('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
+        h_nosuffix = CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=False,
+                                             save_csv=True,
+                                             counted_fname='__allexpr_temporary_testfile',
+                                             uncounted_fname='__allfeature_temporary_testfile')
+    finally:
+        os.remove('tests/test_files/test_count_from_folder/__allexpr_temporary_testfile.csv')
+        os.remove('tests/test_files/test_count_from_folder/__allfeature_temporary_testfile.csv')
 
 
 def test_biotypes():
