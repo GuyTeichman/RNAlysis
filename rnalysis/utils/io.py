@@ -40,14 +40,17 @@ def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[s
     if idx_col is not None:
         kwargs['index_col'] = idx_col
     df = pd.read_csv(filename, **kwargs)
-    df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
     df.index = [ind.strip() if isinstance(ind, str) else ind for ind in df.index]
+    if isinstance(df, pd.DataFrame):
+        df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
 
-    for col in df.columns:
-        # check if the columns contains string data
-        if pd.api.types.is_string_dtype(df[col]):
-            df[col] = df[col].str.strip()
-
+        for col in df.columns:
+            # check if the columns contains string data
+            if pd.api.types.is_string_dtype(df[col]):
+                df[col] = df[col].str.strip()
+    else:
+        if pd.api.types.is_string_dtype(df):
+            df = df.str.strip()
     # if there remained only empty string "", change to Nan
     df = df.replace({"": np.nan})
 
