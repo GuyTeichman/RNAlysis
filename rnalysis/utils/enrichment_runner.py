@@ -983,7 +983,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                                 max_nbytes: Union[str, None] = '1M', progress_bar_desc: str = '') -> dict:
         assert validation.is_method_of_class(func, type(self))
         result_dicts = generic.ProgressParallel(n_jobs=-1, max_nbytes=max_nbytes, desc=progress_bar_desc)(
-            joblib.delayed(func)(self, group, ind) for group, ind in zip(grouping, mod_df_inds))
+            joblib.delayed(func)(group, ind) for group, ind in zip(grouping, mod_df_inds))
         result = {}
         for d in result_dicts:
             result.update(d)
