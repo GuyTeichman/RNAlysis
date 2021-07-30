@@ -961,7 +961,7 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
             pass
         elif validation.isinstanceinh(objs[obj], Filter):
             objs[obj] = objs[obj].index_set
-        elif isinstance(objs[obj], FeatureSet):
+        elif validation.isinstanceinh(objs[obj], FeatureSet):
             objs[obj] = objs[obj].gene_set
         elif isinstance(objs[obj], str):
             if 'attr_table' not in locals():
