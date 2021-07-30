@@ -489,9 +489,10 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
             self.pval = pval
             self.escore = escore
 
-    monkeypatch.setattr(EnrichmentRunner, '_xlmhg_index_vectors', lambda self, attribute: (index_vector, index_vector))
-    monkeypatch.setattr(GOEnrichmentRunner, '_xlmhg_index_vectors',
+    monkeypatch.setattr(EnrichmentRunner, '_generate_xlmhg_index_vectors',
                         lambda self, attribute: (index_vector, index_vector))
+    monkeypatch.setattr(GOEnrichmentRunner, '_generate_xlmhg_index_vectors',
+                        lambda self, attribute, mod_df_ind: (index_vector, index_vector))
 
     def _xlmhg_test_validate_parameters(**kwargs):
         for key in ['X', 'L', 'N', 'indices']:
@@ -532,12 +533,12 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
 @pytest.mark.parametrize('attribute,truth, truth_rev',
                          [('attribute1', np.array([0, 1], dtype='uint16'), np.array([2, 3], dtype='uint16')),
                           ('attribute4', np.array([0, 2], dtype='uint16'), np.array([1, 3], dtype='uint16'))])
-def test_enrichment_runner_xlmhg_index_vectors(attribute, truth, truth_rev):
+def test_enrichment_runner_generate_xlmhg_index_vectors(attribute, truth, truth_rev):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.ranked_genes = np.array(['WBGene00000106', 'WBGene00000019', 'WBGene00000865', 'WBGene00001131'],
                                    dtype='str')
     runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
-    vec, rev_vec = runner._xlmhg_index_vectors(attribute)
+    vec, rev_vec = runner._generate_xlmhg_index_vectors(attribute)
     assert np.all(vec == truth)
     assert np.all(rev_vec == truth_rev)
 
@@ -1272,6 +1273,11 @@ def test_go_enrichment_runner_generate_goa_df(monkeypatch):
     assert res == 'bool_df'
 
 
+def test_go_enrichment_runner_process_annotations_no_annotations():
+    with pytest.raises(AssertionError):
+        assert True
+
+
 def test_go_enrichment_runner_process_annotations(monkeypatch):
     propagated_annotations = set()
     propagated_annotations_truth = {('gene_id1', 'go_id1'), ('gene_id1', 'go_id2'), ('gene_id2', 'go_id1'),
@@ -1379,7 +1385,7 @@ def test_go_enrichment_runner_go_elim_pvalues_parallel(monkeypatch, aspects):
             self.namespaces = aspect_list
 
     @joblib.wrap_non_picklable_objects
-    def validate_input_params_elim_on_aspect(self, aspect, mod_df_ind):
+    def validate_input_params_elim_on_aspect(aspect, mod_df_ind):
         assert mod_df_ind == int(aspect[-1])
         assert aspect in aspects
         return {aspect: 'success'}
@@ -1417,7 +1423,7 @@ def test_go_enrichment_runner_go_weight_pvalues_parallel(monkeypatch, aspects):
             self.namespaces = aspect_list
 
     @joblib.wrap_non_picklable_objects
-    def validate_input_params_weight_on_aspect(self, aspect, mod_df_ind):
+    def validate_input_params_weight_on_aspect(aspect, mod_df_ind):
         assert mod_df_ind == int(aspect[-1])
         assert aspect in aspects
         return {aspect: 'success'}
@@ -1568,14 +1574,16 @@ def test_go_enrichment_runner_randomization_enrichment(monkeypatch, truth):
 
 
 @pytest.mark.parametrize('attribute,truth',
-                         [('attribute1', np.array([0, 1], dtype='uint16')),
-                          ('attribute4', np.array([0, 2], dtype='uint16'))])
-def test_go_enrichment_runner_xlmhg_index_vector(attribute, truth):
+                         [('attribute1', (np.array([0, 1], dtype='uint16'), np.array([2, 3], dtype='uint16'))),
+                          ('attribute4', (np.array([0, 2], dtype='uint16'), np.array([1, 3], dtype='uint16')))])
+def test_go_enrichment_runner_generate_xlmhg_index_vectors(attribute, truth):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.ranked_genes = np.array(['WBGene00000106', 'WBGene00000019', 'WBGene00000865', 'WBGene00001131'],
                                    dtype='str')
-    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).notna()
-    assert np.all(runner._xlmhg_index_vectors(attribute) == truth)
+    runner.mod_annotation_dfs = (pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).notna(),)
+    res = runner._generate_xlmhg_index_vectors(attribute, 0)
+    assert np.all(res[0] == truth[0])
+    assert np.all(res[1] == truth[1])
 
 
 @pytest.mark.parametrize('params,go_id,truth',
@@ -1648,9 +1656,13 @@ def test_go_enrichment_runner_get_hypergeometric_parameters(monkeypatch, go_id, 
 def test_go_enrichment_runner_parallel_over_grouping(monkeypatch, grouping, inds, truth):
     monkeypatch.setattr(validation, 'is_method_of_class', lambda func, obj_type: True)
 
-    def my_func(_, group, ind):
+    def my_func(group, ind):
         return {obj: ind for obj in group}
 
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     res = runner._parallel_over_grouping(my_func, grouping, inds)
     assert res == truth
+
+
+def test_enrichment_runner_extract_xlmhg_results():
+    assert False

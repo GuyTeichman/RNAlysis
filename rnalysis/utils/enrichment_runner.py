@@ -16,6 +16,7 @@ from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
+import xlmhg
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
 from rnalysis.utils import ontology, io, parsing, ref_tables, validation, generic
@@ -182,10 +183,8 @@ class EnrichmentRunner:
         go_de_size = self.annotation_df.loc[self.gene_set, attribute].notna().sum()
         return bg_size, de_size, go_size, go_de_size
 
-    def _xlmhg_enrichment(self, attribute: str) -> list:
+    def _get_xlmhg_parameters(self, index_vec):
         n = len(self.ranked_genes)
-        index_vec, rev_index_vec = self._xlmhg_index_vectors(attribute)
-
         # X = the minimal amount of 'positive' elements above the hypergeometric cutoffs out of all of the positive
         # elements in the ranked set. Determined to be the minimum between x_min and ceil(x_frac * k),
         # where 'k' is the number of 'positive' elements in the ranked set.
@@ -199,9 +198,20 @@ class EnrichmentRunner:
         L = int(np.floor(l_frac * n)) if 'L' not in self.pvalue_kwargs else self.pvalue_kwargs['L']
         # pre-allocate empty array to speed up computation
         table = np.empty((len(index_vec) + 1, n - len(index_vec) + 1), dtype=np.longdouble)
-        res_obj_fwd = xlmhg_test(N=n, indices=index_vec, L=L, X=X, table=table)
-        res_obj_rev = xlmhg_test(N=n, indices=rev_index_vec, L=L, X=X, table=table)
+        return n, X, L, table
 
+    def _xlmhg_enrichment(self, attribute: str) -> list:
+        index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(attribute)
+        n, X, L, table = self._get_xlmhg_parameters(index_vec)
+
+        res_obj_fwd = xlmhg_test(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhg_test(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+
+        en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
+        return [attribute, n, en_score, pval]
+
+    @staticmethod
+    def _extract_xlmhg_results(res_obj_fwd: xlmhg.mHGResult, res_obj_rev: xlmhg.mHGResult) -> Tuple[float, float]:
         if res_obj_fwd.pval <= res_obj_rev.pval:
             pval, en_score = res_obj_fwd.pval, res_obj_fwd.escore
         else:
@@ -210,9 +220,9 @@ class EnrichmentRunner:
         en_score = en_score if not np.isnan(en_score) else 1
         log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
 
-        return [attribute, n, log2_en_score, pval]
+        return log2_en_score, pval
 
-    def _xlmhg_index_vectors(self, attribute) -> Tuple[np.ndarray, np.ndarray]:
+    def _generate_xlmhg_index_vectors(self, attribute) -> Tuple[np.ndarray, np.ndarray]:
         n = len(self.ranked_genes)
         ranked_srs = self.annotation_df.loc[self.ranked_genes, attribute]
         assert ranked_srs.shape[0] == n
@@ -299,9 +309,12 @@ class EnrichmentRunner:
         :rtype: float between 0 and 1
 
         """
-        if go_de_size / de_size < go_size / bg_size:
+        try:
+            if go_de_size / de_size < go_size / bg_size:
+                return hypergeom.cdf(go_de_size, bg_size, go_size, de_size)
+            return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
+        except ZeroDivisionError:
             return hypergeom.cdf(go_de_size, bg_size, go_size, de_size)
-        return hypergeom.sf(go_de_size - 1, bg_size, go_size, de_size)
 
     def _get_background_set_from_biotype(self):
         if self.biotypes == 'all':
@@ -1149,14 +1162,22 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _xlmhg_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
         go_name = self.dag_tree[go_id].name
-        res = super()._xlmhg_enrichment(go_id)
-        res[0] = go_name
-        return res
+        index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(go_id, mod_df_ind)
+        n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
-    def _xlmhg_index_vectors(self, attribute) -> np.ndarray:
-        ranked_srs = self.annotation_df.loc[self.ranked_genes, attribute]
+        res_obj_fwd = xlmhg_test(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhg_test(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+
+        en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
+        return [go_name, n, en_score, pval]
+
+    def _generate_xlmhg_index_vectors(self, attribute: str, mod_df_ind: int = None) -> Tuple[np.ndarray, np.ndarray]:
+        n = len(self.ranked_genes)
+        ranked_srs = self.mod_annotation_dfs[mod_df_ind].loc[self.ranked_genes, attribute]
         assert ranked_srs.shape[0] == len(self.ranked_genes)
-        return np.uint16(np.nonzero(ranked_srs.values)[0])
+        index_vec = np.uint16(np.nonzero(ranked_srs.values)[0])
+        rev_index_vec = np.uint16([n - 1 - index_vec[i - 1] for i in range(len(index_vec), 0, -1)])
+        return index_vec, rev_index_vec
 
     def _hypergeometric_enrichment(self, go_id: str, mod_df_ind: int = None) -> list:
         bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id, mod_df_ind=mod_df_ind)
