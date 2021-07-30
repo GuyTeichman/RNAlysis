@@ -1273,9 +1273,25 @@ def test_go_enrichment_runner_generate_goa_df(monkeypatch):
     assert res == 'bool_df'
 
 
-def test_go_enrichment_runner_process_annotations_no_annotations():
-    with pytest.raises(AssertionError):
-        assert True
+def test_go_enrichment_runner_process_annotations_no_annotations(monkeypatch):
+    class AnnotationIterator:
+        def __init__(self, n_annotations):
+            self.n_annotations = n_annotations
+
+        def __iter__(self):
+            return [None].__iter__()
+
+    def _get_annotation_iter_zero(self):
+        return AnnotationIterator(0)
+
+    monkeypatch.setattr(GOEnrichmentRunner, '_get_annotation_iterator', _get_annotation_iter_zero)
+    with pytest.raises(AssertionError) as e:
+        runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+        runner.propagate_annotations = "no"
+        runner.organism = "organism"
+        runner.taxon_id = "taxon id"
+        runner._process_annotations()
+    print(e)
 
 
 def test_go_enrichment_runner_process_annotations(monkeypatch):
