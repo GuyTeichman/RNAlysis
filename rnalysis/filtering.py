@@ -2764,7 +2764,7 @@ class CountFilter(Filter):
 
         folder = Path(folder_path)
         df = pd.DataFrame()
-        for item in folder.iterdir():
+        for item in sorted(folder.iterdir()):
             if item.is_file() and item.suffix == input_format:
                 df = pd.concat([df, pd.read_csv(item, sep='\t', index_col=0, names=[item.stem])], axis=1)
         assert not df.empty, f"Error: no valid files with the suffix '{input_format}' were found in '{folder_path}'."
