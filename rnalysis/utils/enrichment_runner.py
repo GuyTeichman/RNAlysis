@@ -820,6 +820,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         sparse_annotation_dict = {}
         source_to_gene_id_dict = {}
         annotation_iter = self._get_annotation_iterator()
+        assert annotation_iter.n_annotations > 0, "No GO annotations were found for the given parameters. " \
+                                                  "Please try again with a different set of parameters. "
         for annotation in tqdm(annotation_iter, desc=desc, total=annotation_iter.n_annotations, unit=' annotations'):
             # extract gene_id, go_id, source from the annotation
             gene_id: str = annotation['bioentity_internal_id']
