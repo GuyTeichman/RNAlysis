@@ -32,7 +32,8 @@ def test_load_csv_bad_input():
 def test_load_csv(pth):
     truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
     truth.set_index('idxcol', inplace=True)
-    assert load_csv(pth, 0).equals(truth)
+    loaded = load_csv(pth, 0)
+    assert loaded.equals(truth)
 
 
 def test_load_csv_drop_columns():
