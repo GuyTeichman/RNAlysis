@@ -28,7 +28,9 @@ def test_load_csv_bad_input():
         a = load_csv(invalid_input)
 
 
-@pytest.mark.parametrize('pth', ("tests/test_files/test_load_csv.csv", "tests/test_files/test_load_csv.tsv"))
+@pytest.mark.parametrize('pth', ("tests/test_files/test_load_csv.csv", "tests/test_files/test_load_csv.tsv",
+                                 "tests/test_files/test_load_csv_tabs.txt",
+                                 "tests/test_files/test_load_csv_other_sep.txt"))
 def test_load_csv(pth):
     truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
     truth.set_index('idxcol', inplace=True)
