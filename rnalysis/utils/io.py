@@ -14,15 +14,15 @@ import requests
 from rnalysis.utils import parsing, validation, ontology, __path__
 
 
-def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
+def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
              comment: str = None):
     """
     loads a csv df into a pandas dataframe.
 
     :type filename: str or pathlib.Path
     :param filename: name of the csv file to be loaded
-    :type idx_col: int, default None
-    :param idx_col: number of column to be used as index. default is None, meaning no column will be used as index.
+    :type index_col: int, default None
+    :param index_col: number of column to be used as index. default is None, meaning no column will be used as index.
     :type drop_columns: str, list of str, or False (default False)
     :param drop_columns: if a string or list of strings are specified, \
     the columns of the same name/s will be dropped from the loaded DataFrame.
@@ -37,8 +37,8 @@ def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[s
                       (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
     encoding = 'ISO-8859-1'
     kwargs = dict(sep=None, engine='python', encoding=encoding, squeeze=squeeze, comment=comment, skipinitialspace=True)
-    if idx_col is not None:
-        kwargs['index_col'] = idx_col
+    if index_col is not None:
+        kwargs['index_col'] = index_col
     df = pd.read_csv(filename, **kwargs)
     df.index = [ind.strip() if isinstance(ind, str) else ind for ind in df.index]
     if isinstance(df, pd.DataFrame):
