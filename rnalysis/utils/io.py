@@ -36,21 +36,30 @@ def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[s
     assert isinstance(filename,
                       (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
     encoding = 'ISO-8859-1'
-    kwargs = dict(sep=None, engine='python', encoding=encoding, squeeze=squeeze, comment=comment)
+    kwargs = dict(sep=None, engine='python', encoding=encoding, squeeze=squeeze, comment=comment, skipinitialspace=True)
     if idx_col is not None:
         kwargs['index_col'] = idx_col
     df = pd.read_csv(filename, **kwargs)
+    df.columns = df.columns.str.strip()
+    df.index = df.index.str.strip()
+
+    for col in df.columns:
+        # check if the columns contains string data
+        if pd.api.types.is_string_dtype(df[col]):
+            df[col] = df[col].str.strip()
+
+    # if there remained only empty string "", change to Nan
+    df = df.replace({"": np.nan})
 
     if drop_columns:
-        if isinstance(drop_columns, str):
-            drop_columns = [drop_columns]
-        assert isinstance(drop_columns,
-                          list), f"'drop_columns' must be str, list, or False; is instead {type(drop_columns)}."
-        for col in drop_columns:
-            assert isinstance(col, str), f"'drop_columns' must contain strings only. " \
-                                         f"Member {col} is of type {type(col)}."
-            if col in df:
-                df.drop(col, axis=1, inplace=True)
+        drop_columns_lst = parsing.data_to_list(drop_columns)
+        assert validation.isinstanceiter(drop_columns_lst,
+                                         str), f"'drop_columns' must be str, list of str, or False; " \
+                                               f"is instead {type(drop_columns)}."
+        for col in drop_columns_lst:
+            col_stripped = col.strip()
+            if col_stripped in df:
+                df.drop(col_stripped, axis=1, inplace=True)
             else:
                 raise IndexError(f"The argument {col} in 'drop_columns' is not a column in the loaded csv file!")
     return df
