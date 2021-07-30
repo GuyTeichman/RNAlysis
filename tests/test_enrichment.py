@@ -376,18 +376,6 @@ def test_rankedset_init_invalid_type():
         _ = RankedSet(5)
 
 
-def test_go_enrichment_output():
-    assert False
-
-
-def test_go_enrichment_api():
-    assert False
-
-
-def test_enrichment_output():
-    assert False
-
-
 def test_enrich_non_categorical_api():
     ref_table = 'tests/test_files/attr_ref_table_for_non_categorical.csv'
     s = FeatureSet(
@@ -462,29 +450,51 @@ def test_enrich_non_categorical_nan_values():
     plt.close('all')
 
 
-# def test_plot_enrichment_hist_api():
-#     res = pd.read_csv('tests/test_files/enrich_non_categorical_parametric_truth_fdr15.csv', index_col=0)
-#     args_list = []
-#     for row, args in zip(res.iterrows(), args_list):
-#         FeatureSet.plot_enrichment_hist(row[0], *args)
-#     plt.close('all')
-#     assert False
+def test_enrich_single_set_api():
+    genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
+                    'WBGene00001436', 'WBGene00001996', 'WBGene00002074', 'WBGene00003864', 'WBGene00003865',
+                    'WBGene00003902', 'WBGene00003915', 'WBGene00000369', 'WBGene00000859', 'WBGene00000860',
+                    'WBGene00000861', 'WBGene00000863', 'WBGene00000864', 'WBGene00000865', 'WBGene00001131',
+                    'WBGene00001132', 'WBGene00001133', 'WBGene00001134', 'WBGene00048863', 'WBGene00048864',
+                    'WBGene00048865', 'WBGene00199484', 'WBGene00199485', 'WBGene00199486', 'WBGene00255734',
+                    'WBGene00255735', 'WBGene00268189', 'WBGene00268190', 'WBGene00268191', 'WBGene00268195',
+                    'WBGene00004920', 'WBGene00011910', 'WBGene00014208']
+
+    attrs = ['attribute1', 'attribute2']
+    en = RankedSet(genes_ranked, set_name='test_set')
+    _ = en.enrich_single_set(attrs, attr_ref_path=__attr_ref__)
+    plt.close('all')
 
 
-def test_enrich_single_list_api():
-    assert False
+@pytest.mark.parametrize("organism,propagate_annotations", [('auto', 'classic'), ('caenorhabditis elegans', 'elim')])
+def test_go_enrichment_single_set_api(organism, propagate_annotations):
+    genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
+                    'WBGene00001436', 'WBGene00001996', 'WBGene00002074', 'WBGene00003864', 'WBGene00003865',
+                    'WBGene00003902', 'WBGene00003915', 'WBGene00000369', 'WBGene00000859', 'WBGene00000860',
+                    'WBGene00000861', 'WBGene00000863', 'WBGene00000864', 'WBGene00000865', 'WBGene00001131',
+                    'WBGene00001132', 'WBGene00001133', 'WBGene00001134', 'WBGene00048863', 'WBGene00048864',
+                    'WBGene00048865', 'WBGene00199484', 'WBGene00199485', 'WBGene00199486', 'WBGene00255734',
+                    'WBGene00255735', 'WBGene00268189', 'WBGene00268190', 'WBGene00268191', 'WBGene00268195',
+                    'WBGene00004920', 'WBGene00011910', 'WBGene00014208']
+
+    en = RankedSet(genes_ranked, set_name='test_set')
+    _ = en.go_enrichment_single_set(organism, 'WBGene', excluded_evidence_types='electronic',
+                                    aspects='biological_process', propagate_annotations=propagate_annotations)
+    plt.close('all')
 
 
-def test_enrich_single_list_api_output():
-    assert False
-
-
-def test_go_enrichment_single_list_api():
-    assert False
-
-
-def test_fetch_sets():
-    assert False
+@pytest.mark.parametrize("organism,statistical_test,propagate_annotations,kwargs",
+                         [('auto', 'hypergeometric', 'classic', {}),
+                          ('auto', 'fisher', 'elim', {}),
+                          ('caenorhabditis elegans', 'randomization', 'no', dict(randomization_reps=100))])
+def test_go_enrichment_api(organism, statistical_test, propagate_annotations, kwargs):
+    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
+    en = FeatureSet(gene_set=genes, set_name='test_set')
+    _ = en.go_enrichment(organism, 'WBGene', statistical_test=statistical_test,
+                         propagate_annotations=propagate_annotations, evidence_types='IMP',
+                         aspects='biological_process', databases='WB', biotype='protein_coding',
+                         biotype_ref_path=__biotype_ref__, **kwargs)
+    plt.close('all')
 
 
 def test_upset_plot_api():
@@ -535,3 +545,7 @@ def test_generate_upset_srs():
         {'a': {'1', '2', '3', '6'}, 'b': {'2', '3', '4', '5', '6'}, 'c': {'1', '5', '6'}}).sort_index()
     assert srs.index.sort_values().equals(multi_index_truth)
     assert srs.sort_index().equals(srs_truth.sort_index())
+
+
+def test_fetch_sets():
+    assert False
