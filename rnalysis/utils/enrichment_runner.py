@@ -463,7 +463,9 @@ class EnrichmentRunner:
         plt.style.use('seaborn-white')
         # determine number of entries/bars to plot
         if n_bars != 'all':
-            assert isinstance(n_bars, int) and n_bars > 0
+            assert isinstance(n_bars, int)
+            if n_bars < 1:
+                return
             results = self.results.iloc[:n_bars]
         else:
             results = self.results
