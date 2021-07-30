@@ -40,8 +40,8 @@ def load_csv(filename: str, idx_col: int = None, drop_columns: Union[str, List[s
     if idx_col is not None:
         kwargs['index_col'] = idx_col
     df = pd.read_csv(filename, **kwargs)
-    df.columns = df.columns.str.strip()
-    df.index = df.index.str.strip()
+    df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
+    df.index = [ind.strip() if isinstance(ind, str) else ind for ind in df.index]
 
     for col in df.columns:
         # check if the columns contains string data
