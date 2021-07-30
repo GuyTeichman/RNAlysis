@@ -416,6 +416,7 @@ class EnrichmentRunner:
         significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
                                                     alpha=self.alpha)
         self.results.loc[self.results['pval'].notna(), 'padj'] = padj
+        self.results['significant'] = False  # set default value as False
         self.results.loc[self.results['padj'].notna(), 'significant'] = significant
 
     def plot_results(self) -> plt.Figure:

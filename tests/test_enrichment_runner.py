@@ -685,8 +685,8 @@ def test_enrichment_runner_correct_multiple_comparisons():
     runner.alpha = 0.02
     truth = pd.DataFrame([[0, 0, 0, 0, 0, 0.005, 0.015, True],
                           [0, 0, 0, 0, 0, 0.017, 0.0255, False],
-                          [0, 0, 0, 0, 0, np.nan, np.nan, np.nan],
-                          [0, 0, 0, 0, -3, np.nan, np.nan, np.nan],
+                          [0, 0, 0, 0, 0, np.nan, np.nan, False],
+                          [0, 0, 0, 0, -3, np.nan, np.nan, False],
                           [0, 0, 0, 0, 0, 0.92, 0.92, False]],
                          columns=['name', 'samples', 'obs', 'exp', 'colName', 'pval', 'padj', 'significant']).set_index(
         'name')
