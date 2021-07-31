@@ -67,7 +67,7 @@ class EnrichmentRunner:
                 self.fname = input("Please insert the full name and path to save the file to")
             else:
                 assert isinstance(fname, (str, Path))
-            self.fname = str(fname)
+                self.fname = str(fname)
         self.return_fig = return_fig
         self.plot_horizontal = plot_horizontal
         self.set_name = set_name

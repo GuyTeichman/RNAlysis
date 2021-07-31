@@ -435,16 +435,26 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
     assert runner.gene_set == updated_gene_set_truth
 
 
-@pytest.mark.parametrize('single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,kwargs',
-                         [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, {}),
-                          (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
-                           {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
-                           'path/to/biotype/ref', 42, {'reps': 10000})])
-def test_enrichment_runner_api(single_list, genes, biotypes, pval_func, background_set, biotype_ref_path, random_seed,
-                               kwargs):
-    _ = EnrichmentRunner(genes, ['attr1', 'attr2'], 0.05, 'path/to/attr/ref', False,
-                         'fname', False, False, 'set_name', False, pval_func, biotypes,
-                         background_set, biotype_ref_path, single_list, random_seed, **kwargs)
+@pytest.mark.parametrize('save_csv,', [True, False])
+@pytest.mark.parametrize('fname', ['fname', None])
+@pytest.mark.parametrize(
+    'single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,kwargs',
+    [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, {}),
+     (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
+      {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
+      'path/to/biotype/ref', 42, {'reps': 10000})])
+def test_enrichment_runner_api(save_csv, fname, single_list, genes, biotypes, pval_func, background_set,
+                               biotype_ref_path, random_seed, kwargs, monkeypatch):
+    monkeypatch.setattr('builtins.input', lambda x: 'fname')
+
+    runner = EnrichmentRunner(genes, ['attr1', 'attr2'], 0.05, 'path/to/attr/ref', save_csv,
+                              fname, False, False, 'set_name', False, pval_func, biotypes,
+                              background_set, biotype_ref_path, single_list, random_seed, **kwargs)
+    if save_csv:
+        assert runner.fname == 'fname'
+    else:
+        with pytest.raises(AttributeError):
+            _ = runner.fname
 
 
 def test_enrichment_runner_format_results(monkeypatch):
