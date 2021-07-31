@@ -162,7 +162,7 @@ def test_deseqfilter_volcano_plot_api():
 def test_countfilter_pairplot_api():
     c = CountFilter("tests/test_files/counted.csv")
     c.pairplot(log2=False)
-    c.pairplot(['cond1', 'cond3'])
+    c.pairplot(['cond1', 'cond3'], log2=True)
     plt.close('all')
 
 

@@ -1903,7 +1903,8 @@ class CountFilter(Filter):
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :type log2: bool
-        :param log2: if True, the pairplot will be calculated with log2 of the dataframe, and not with the raw data. \
+        :param log2: if True, the pairplot will be calculated with log2 of the dataframe (pseudocount+1 added), \
+        and not with the raw data. \
         If False (default), the pairplot will be calculated with the raw data.
         :return: An instance of seaborn.PairGrid.
 
@@ -1919,7 +1920,7 @@ class CountFilter(Filter):
         else:
             sample_df = self._avg_subsamples(sample_list)
         if log2:
-            pairplt = sns.pairplot(np.log2(sample_df))
+            pairplt = sns.pairplot(np.log2(sample_df + 1))
         else:
             pairplt = sns.pairplot(sample_df)
         plt.show()
