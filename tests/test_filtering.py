@@ -1542,5 +1542,32 @@ def test_assert_log2fc_col():
         d._assert_log2fc_col()
 
 
+@pytest.mark.parametrize('input_set,return_type,expected_output',
+                         [({'gene1', 'gene3', 'gene2'}, 'set', {'gene1', 'gene3', 'gene2'}),
+                          ({'gene1', 'gene3', 'gene2'}, 'str', 'gene1\ngene2\ngene3')])
+def test_return_type(input_set, return_type, expected_output):
+    assert Filter._return_type(input_set, return_type) == expected_output
+
+
+def test_set_ops_wrong_type():
+    with pytest.raises(TypeError):
+        Filter('tests/test_files/counted.csv')._set_ops([{1, 2, 3}, 'string'], 'set')
+
+
+@pytest.mark.parametrize('sample_list,truth_path',
+                         [([['cond1', 'cond2'], ('cond3', 'cond4')], 'tests/test_files/counted_averaged_1.csv'),
+                          ([['cond1'], ['cond2', 'cond3', 'cond4']], 'tests/test_files/counted_averaged_2.csv'),
+                          (['cond1', ['cond2', 'cond3', 'cond4']], 'tests/test_files/counted_averaged_2.csv'),
+                          (['cond1', 'cond2', 'cond3', 'cond4'], 'tests/test_files/counted.csv')])
+def test_avg_subsamples(sample_list, truth_path):
+    counts = filtering.CountFilter('tests/test_files/counted.csv')
+    truth = io.load_csv(truth_path, 0)
+    res = counts._avg_subsamples(sample_list)
+
+    assert np.all(res.columns == truth.columns)
+    assert np.all(res.index == truth.index)
+    assert np.isclose(res, truth, atol=0, rtol=0.001).all()
+
+
 def test_triplicates():
     assert False

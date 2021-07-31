@@ -1081,9 +1081,9 @@ class Filter:
         if return_type == 'set':
             return index_set
         elif return_type == 'str':
-            return "\n".join(index_set)
+            return "\n".join(sorted(index_set))
         else:
-            raise ValueError(f"'return type' must be either 'set' or 'str', is instead '{return_type}'!")
+            raise ValueError(f"'return type' must be either 'set' or 'str', instead got '{return_type}'.")
 
     def _set_ops(self, others, return_type, op: Any):
         """
@@ -1098,14 +1098,16 @@ class Filter:
         :return: a set/string of indices resulting from the set operation
         :rtype: set or str
         """
-        others = list(others)
+        others = parsing.data_to_list(others).copy()
+
         for i, other in enumerate(others):
             if isinstance(other, Filter):
                 others[i] = other.index_set
             elif isinstance(other, set):
                 pass
             else:
-                raise TypeError("'other' must be a Filter object or a set!")
+                raise TypeError(f"'others' must contain only Filter objects or sets, "
+                                f"instaed got object {other} of type {type(other)}.")
         try:
             op_indices = op(set(self.df.index), *others)
         except TypeError as e:
@@ -1943,14 +1945,17 @@ class CountFilter(Filter):
         :return: a pandas DataFrame containing samples/averaged subsamples according to the specified sample_list.
 
         """
-        samples_df = pd.DataFrame()
+        averaged_df = pd.DataFrame(index=self.df.index)
         for sample in sample_list:
             if isinstance(sample, str):
-                samples_df[sample] = self.df[sample].values
-            elif isinstance(sample, (list, str, tuple)):
-                samples_df[",".join(sample)] = self.df[sample].mean(axis=1).values
+                averaged_df[sample] = self.df[sample].values
+            elif isinstance(sample, (list, tuple, set)):
+                sample = parsing.data_to_list(sample)
+                averaged_df[",".join(sample)] = self.df[sample].mean(axis=1).values
+            else:
+                raise TypeError(f"'sample_list' cannot contain objects of type {type(sample)}.")
 
-        return samples_df
+        return averaged_df
 
     def normalize_to_rpm(self, special_counter_fname: Union[str, Path], inplace: bool = True):
 
