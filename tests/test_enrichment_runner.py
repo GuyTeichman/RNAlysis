@@ -1690,5 +1690,18 @@ def test_go_enrichment_runner_parallel_over_grouping(monkeypatch, grouping, inds
     assert res == truth
 
 
-def test_enrichment_runner_extract_xlmhg_results():
-    assert False
+@pytest.mark.parametrize('pval_fwd,pval_rev,escore_fwd,escore_rev,pval_truth,log2escore_truth',
+                         [(0.05, 0.7, 2, 0.5, 0.05, 1), (0.6, 0.3, 1.2, 4, 0.3, -2),
+                          (np.nan, np.nan, 2, np.inf, 1, -np.inf)])
+def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd, escore_rev, pval_truth,
+                                                 log2escore_truth):
+    class XLmHGResultObject:
+        def __init__(self, pval, escore):
+            self.pval = pval
+            self.escore = escore
+
+    log2escore, pval = EnrichmentRunner._extract_xlmhg_results(XLmHGResultObject(pval_fwd, escore_fwd),
+                                                               XLmHGResultObject(pval_rev, escore_rev))
+
+    assert pval == pval_truth
+    assert log2escore == log2escore_truth

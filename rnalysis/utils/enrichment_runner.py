@@ -211,11 +211,13 @@ class EnrichmentRunner:
         return [attribute, n, en_score, pval]
 
     @staticmethod
-    def _extract_xlmhg_results(res_obj_fwd: xlmhg.mHGResult, res_obj_rev: xlmhg.mHGResult) -> Tuple[float, float]:
-        if res_obj_fwd.pval <= res_obj_rev.pval:
-            pval, en_score = res_obj_fwd.pval, res_obj_fwd.escore
+    def _extract_xlmhg_results(result_obj_fwd: xlmhg.mHGResult, result_obj_rev: xlmhg.mHGResult) -> Tuple[float, float]:
+        if result_obj_fwd.pval <= result_obj_rev.pval:
+            pval = result_obj_fwd.pval
+            en_score = result_obj_fwd.escore if not np.isnan(result_obj_fwd.escore) else 1
         else:
-            pval, en_score = res_obj_rev.pval, 1 / res_obj_rev.escore
+            pval = result_obj_rev.pval
+            en_score = 1 / result_obj_rev.escore if not np.isnan(result_obj_rev.escore) else 1
         pval = pval if not np.isnan(pval) else 1
         en_score = en_score if not np.isnan(en_score) else 1
         log2_en_score = np.log2(en_score) if en_score > 0 else -np.inf
