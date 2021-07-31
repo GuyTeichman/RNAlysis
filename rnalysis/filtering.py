@@ -1865,17 +1865,11 @@ class CountFilter(Filter):
         assert isinstance(denom_name, str), "denominator name must be a string or 'default'!"
         numer_name = f"Mean of {numerator}" if numer_name == 'default' else numer_name
         denom_name = f"Mean of {denominator}" if denom_name == 'default' else denom_name
-        # numerator and denominator should end up as a list of column names (strings)
-        assert isinstance(numerator, (str, list, tuple)), "numerator must be a string or a list!"
-        assert isinstance(denominator, (str, list, tuple)), "denominator must be a string or a list!"
-        if isinstance(numerator, str):
-            numerator = [numerator]
-        elif isinstance(numerator, tuple):
-            numerator = list(numerator)
-        if isinstance(denominator, str):
-            denominator = [denominator]
-        elif isinstance(denominator, tuple):
-            denominator = list(denominator)
+
+        numerator = parsing.data_to_list(numerator)
+        denominator = parsing.data_to_list(denominator)
+        assert validation.isinstanceiter(numerator, str), "numerator must be str or a list of str!"
+        assert validation.isinstanceiter(denominator, str), "denominator must be str or a list of str"
 
         numeric_cols = self._numeric_columns
         for num in numerator:
