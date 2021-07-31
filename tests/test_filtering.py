@@ -1560,7 +1560,7 @@ def test_set_ops_wrong_type():
                           (['cond1', ['cond2', 'cond3', 'cond4']], 'tests/test_files/counted_averaged_2.csv'),
                           (['cond1', 'cond2', 'cond3', 'cond4'], 'tests/test_files/counted.csv')])
 def test_avg_subsamples(sample_list, truth_path):
-    counts = filtering.CountFilter('tests/test_files/counted.csv')
+    counts = CountFilter('tests/test_files/counted.csv')
     truth = io.load_csv(truth_path, 0)
     res = counts._avg_subsamples(sample_list)
 
@@ -1569,5 +1569,10 @@ def test_avg_subsamples(sample_list, truth_path):
     assert np.isclose(res, truth, atol=0, rtol=0.001).all()
 
 
-def test_triplicates():
-    assert False
+@pytest.mark.parametrize('input_file,expected_triplicates',
+                         [('tests/test_files/counted.csv', [['cond1', 'cond2', 'cond3'], ['cond4']]),
+                          ('tests/test_files/counted_6cols.csv',
+                           [['cond1', 'cond2', 'cond3'], ['cond4', 'cond5', 'cond6']])])
+def test_triplicates(input_file, expected_triplicates):
+    counted = CountFilter(input_file)
+    assert counted.triplicates == expected_triplicates

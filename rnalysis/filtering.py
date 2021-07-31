@@ -1818,11 +1818,11 @@ class CountFilter(Filter):
         """
 
         multiplier = 3
-        numeric_cols = self._numeric_columns
+        numeric_cols = sorted(self._numeric_columns)
         n_cols = len(numeric_cols)
         triplicate = [numeric_cols[i * multiplier:(1 + i) * multiplier] for i in range(n_cols // multiplier)]
         if len(numeric_cols[(n_cols // multiplier) * multiplier::]) > 0:
-            triplicate.append([numeric_cols[(n_cols // multiplier) * multiplier::]])
+            triplicate.append(numeric_cols[(n_cols // multiplier) * multiplier::])
             warnings.warn(f'Number of samples {n_cols} is not divisible by 3. '
                           f'Appending the remaining {n_cols % multiplier} as an inncomplete triplicate.')
         return triplicate
