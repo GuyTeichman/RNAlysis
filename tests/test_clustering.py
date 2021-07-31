@@ -256,6 +256,23 @@ def test_binary_format_clusters_validate_clustering_solutions(valid_clustering_s
         BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions + [[0, 0, 0]])
 
 
+def test_gap_statistic():
+    assert False
+
+
+def test_silhouette_method():
+    assert False
+
+
+def test_plot_clustering_api():
+    assert False
+    # split_plots = True
+
+
+def test_plot_gap_api():
+    assert False
+
+
 def test_clicom_majority_voter():
     assert False
 

@@ -1542,22 +1542,5 @@ def test_assert_log2fc_col():
         d._assert_log2fc_col()
 
 
-def test_gap_statistic():
-    assert False
-
-
-def test_silhouette_method():
-    assert False
-
-
 def test_triplicates():
-    assert False
-
-
-def test_plot_clustering_api():
-    assert False
-    # split_plots = True
-
-
-def test_plot_gap_api():
     assert False
