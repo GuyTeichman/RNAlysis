@@ -956,23 +956,26 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     :return: a dictionary, where the keys are names of sets and the values are python sets of feature indices.
     """
     assert isinstance(objs, dict), f"objs must be a dictionary. Instaed got {type(objs)}"
-    for obj in objs:
-        if isinstance(objs[obj], set):
-            pass
-        elif validation.isinstanceinh(objs[obj], Filter):
-            objs[obj] = objs[obj].index_set
-        elif validation.isinstanceinh(objs[obj], FeatureSet):
-            objs[obj] = objs[obj].gene_set
-        elif isinstance(objs[obj], str):
-            if 'attr_table' not in locals():
-                pth = ref_tables.get_attr_ref_path(ref)
-                attr_table = io.load_csv(pth, 0)
-            attr = objs[obj]
-            myset = set(attr_table[attr].loc[attr_table[attr].notna()].index)
-            objs[obj] = myset
+    fetched_sets = dict()
+
+    if validation.isinstanceiter_any(objs, str):
+        attr_ref_table = io.load_csv(ref_tables.get_attr_ref_path(ref))
+        validation.validate_attr_table(attr_ref_table)
+        attr_ref_table.set_index('gene', inplace=True)
+
+    for set_name, set_obj in zip(objs.keys(), objs.values()):
+        if isinstance(objs[set_name], (set, list, tuple)):
+            fetched_sets[set_name] = parsing.data_to_set(set_obj)
+        elif validation.isinstanceinh(set_obj, Filter):
+            fetched_sets[set_name] = set_obj.index_set
+        elif validation.isinstanceinh(set_obj, FeatureSet):
+            fetched_sets[set_name] = set_obj.gene_set
+        elif isinstance(set_obj, str):
+            fetched_sets[set_name] = set(attr_ref_table[set_obj].loc[attr_ref_table[set_obj].notna()].index)
         else:
-            raise TypeError
-    return objs
+            raise TypeError(f"Invalid type for the set '{set_name}': {set_obj}.")
+
+    return fetched_sets
 
 
 def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '', ref: str = 'predefined'):

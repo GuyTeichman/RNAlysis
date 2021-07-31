@@ -2,6 +2,7 @@ import pytest
 import matplotlib
 import os
 import statsmodels.stats.multitest as multitest
+import copy
 
 from collections import namedtuple
 from rnalysis import filtering
@@ -547,5 +548,22 @@ def test_generate_upset_srs():
     assert srs.sort_index().equals(srs_truth.sort_index())
 
 
-def test_fetch_sets():
-    assert False
+@pytest.mark.parametrize('objs,truth', [
+    ({'set1': ['one', 'two'], 'set2': {'one', 'two', 'three'}, 'set3': FeatureSet({'two', 'three'})},
+     {'set1': {'one', 'two'}, 'set2': {'one', 'two', 'three'}, 'set3': {'two', 'three'}}),
+    ({'set1': RankedSet(['one', 'two']), 'set2': Filter('tests/test_files/test_fetch_sets_table.csv'),
+      'set3': 'attribute2'},
+     {'set1': {'one', 'two'}, 'set2': {'one', 'two', 'three'},
+      'set3': {'WBGene00000369', 'WBGene00003864', 'WBGene00003865', 'WBGene00003902', 'WBGene00003915',
+               'WBGene00004920', 'WBGene00011910', 'WBGene00014208'}})])
+def test_fetch_sets(objs: dict, truth: dict):
+    objs_original = objs.copy()
+    res = _fetch_sets(objs, __attr_ref__)
+    assert res == truth
+    assert dict(objs_original) == objs
+
+
+@pytest.mark.parametrize('objs', [{'set1': {1, 2, 3}, 'set2': True}])
+def test_fetch_sets_bad_type(objs: dict):
+    with pytest.raises(TypeError):
+        _ = _fetch_sets(objs, __attr_ref__)
