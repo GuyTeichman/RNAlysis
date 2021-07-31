@@ -77,6 +77,7 @@ Fixed
 * Fixed bug where saving csv files on Linux systems would save the files under the wrong directory.
 * Fixed a bug where UTF-8-encoded Reference Tables won't be loaded correctly
 * Fixed a bug where enrichment.upsetplot() and enrichment.venn_diagram() would sometimes modify the user dict input 'objs'.
+* Fixed a bug in CountFilter.pairplot where log2 would be calculated without a pseudocount added, leading to division by 0.
 
 
 
