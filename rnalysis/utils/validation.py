@@ -60,7 +60,7 @@ def isinstanceinh(obj, parent_class):
 def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...]]):
     """
     Returns True if all members of an Iterable object are instances of a class or of a subclass thereof. \
-    This function consumes iterators/generators.
+    This function consumes iterators/generators. Always returns True when 'iterable' is empty.
 
     :param iterable: the Iterable object whose members' types should be checked.
     :type iterable: Iterable (list, tuple, str, dict, set, etc')
@@ -71,6 +71,22 @@ def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...
     """
     assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
     return all([isinstance(i, object_class) for i in iterable])
+
+
+def isinstanceiter_any(iterable: Iterable, object_class: Union[type, Tuple[type, ...]]):
+    """
+    Returns True if at least one member of an Iterable object is an instance of a class or of a subclass thereof. \
+    This function consumes iterators/generators. Always returns False when 'iterable' is empty.
+
+    :param iterable: the Iterable object whose members' types should be checked.
+    :type iterable: Iterable (list, tuple, str, dict, set, etc')
+    :param object_class: the class/classes to check 'isinstance' against
+    :type object_class: type (e.g. list, tuple, int, bool) or tuple of types
+    :return: True if at least one of the members of 'iterable' is of type 'object_class', and False otherwise.
+    :rtype: bool
+    """
+    assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
+    return any([isinstance(i, object_class) for i in iterable])
 
 
 def isiterable(obj):

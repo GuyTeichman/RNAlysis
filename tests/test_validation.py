@@ -121,6 +121,21 @@ def test_isinstanceiter(test_input, expected_type, expected):
     assert isinstanceiter(test_input, expected_type) == expected
 
 
+@pytest.mark.parametrize("test_input,expected_type,expected", [
+    (["3", "hello world", "", ], str, True),
+    ({5, 3, '7', 8}, int, True),
+    ({-0.1, 3, 7.2, 8, 0}, (int, float), True),
+    ((5, 3, '7', 8), float, False),
+    ((5, 3, [7, '8'], 8), list, True),
+    ([[], [1], [1, 2]], int, False),
+    ([1, [], [1], [1, 2]], (str, int), True),
+    ([], DummyClass, False),
+    ({'one': DummyClass(), 'two': DummyClass()}.values(), DummyClass, True)
+])
+def test_isinstanceiter_any(test_input, expected_type, expected):
+    assert isinstanceiter_any(test_input, expected_type) == expected
+
+
 class TestClass:
     def cls_method(self):
         pass
