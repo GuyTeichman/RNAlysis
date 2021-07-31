@@ -958,7 +958,7 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     assert isinstance(objs, dict), f"objs must be a dictionary. Instaed got {type(objs)}"
     fetched_sets = dict()
 
-    if validation.isinstanceiter_any(objs, str):
+    if validation.isinstanceiter_any(objs.values(), str):
         attr_ref_table = io.load_csv(ref_tables.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
