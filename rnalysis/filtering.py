@@ -1815,14 +1815,14 @@ class CountFilter(Filter):
 
         """
 
-        mltplr = 3
+        multiplier = 3
         numeric_cols = self._numeric_columns
         n_cols = len(numeric_cols)
-        triplicate = [numeric_cols[i * mltplr:(1 + i) * mltplr] for i in range(n_cols // mltplr)]
-        if len(numeric_cols[(n_cols // mltplr) * mltplr::]) > 0:
-            triplicate.append([numeric_cols[(n_cols // mltplr) * mltplr::]])
+        triplicate = [numeric_cols[i * multiplier:(1 + i) * multiplier] for i in range(n_cols // multiplier)]
+        if len(numeric_cols[(n_cols // multiplier) * multiplier::]) > 0:
+            triplicate.append([numeric_cols[(n_cols // multiplier) * multiplier::]])
             warnings.warn(f'Number of samples {n_cols} is not divisible by 3. '
-                          f'Appending the remaining {n_cols % mltplr} as an inncomplete triplicate.')
+                          f'Appending the remaining {n_cols % multiplier} as an inncomplete triplicate.')
         return triplicate
 
     def fold_change(self, numerator: Union[str, List[str]], denominator: Union[str, List[str]],
