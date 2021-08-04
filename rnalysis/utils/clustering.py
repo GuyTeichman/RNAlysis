@@ -107,10 +107,12 @@ class BinaryFormatClusters:
 
 
 class CLICOM:
-    def __init__(self, clustering_solutions: BinaryFormatClusters, threshold: float, cluster_wise_cliques: bool = True):
+    def __init__(self, clustering_solutions: BinaryFormatClusters, threshold: float, cluster_wise_cliques: bool = True,
+                 cluster_unclustered_features: bool = True):
         self.clustering_solutions: BinaryFormatClusters = clustering_solutions
         self.threshold: float = threshold
         self.cluster_wise_cliques: bool = cluster_wise_cliques
+        self.cluster_unclustered_features = cluster_unclustered_features
 
         self.n_features: int = self.clustering_solutions.n_features
 
@@ -132,7 +134,7 @@ class CLICOM:
             clusters = self.cliques_to_clusters()
             self.labels_ = self.clusters_to_labels(clusters)
 
-    def clusters_to_labels(self, clusters: List[Set[int]]):
+    def clusters_to_labels(self, clusters: List[Set[int]]) -> np.ndarray:
         labels = np.zeros((self.clustering_solutions.n_features,)) - 1
         for i, cluster in enumerate(clusters):
             for feature in cluster:
@@ -174,7 +176,7 @@ class CLICOM:
                 if len(clique_mat[i, j]) > 0:
                     self.clique_set.add(frozenset(clique_mat[i, j]))
 
-    def cliques_to_clusters(self, allowed_overlap: float = 0.2, cluster_unclustered: bool = True):
+    def cliques_to_clusters(self, allowed_overlap: float = 0.2) -> List[Set[int]]:
         sorted_cliques = [set(clique) for clique in sorted(self.clique_set, reverse=True, key=len)]
         all_features = set(range(self.binary_mat.shape[0]))
         assigned = set()
@@ -184,7 +186,7 @@ class CLICOM:
                 clusters.append(sorted_cliques[m] - assigned)
                 assigned = assigned.union(clusters[-1])
 
-        if cluster_unclustered:
+        if self.cluster_unclustered_features:
             for feature in all_features - assigned:
                 best_match = None
                 best_score = 0
@@ -201,7 +203,7 @@ class CLICOM:
         assert not self.cluster_wise_cliques
         return np.mean([self.adj_mat[feature, i] for i in cluster])
 
-    def cliques_to_blocks(self, allowed_overlap: float = 0.2, cluster_unclustered: bool = True):
+    def cliques_to_blocks(self, allowed_overlap: float = 0.2) -> list:
         cluster_blocks = []
         sorted_cliques = sorted(self.clique_set, reverse=True, key=self.cumulative_cluster_similarity)
         all_clusters = set(range(self.binary_mat.shape[0]))
@@ -211,7 +213,7 @@ class CLICOM:
                 cluster_blocks.append(sorted_cliques[m] - assigned)
                 assigned = assigned.union(cluster_blocks[-1])
 
-        if cluster_unclustered:
+        if self.cluster_unclustered_features:
             for cluster in all_clusters - assigned:
                 nearest_cluster = np.argmax(self.adj_mat[cluster, :])
                 if not self.binary_mat[cluster, nearest_cluster]:
@@ -222,7 +224,7 @@ class CLICOM:
                         cluster_blocks[i] = block.union({cluster})
         return cluster_blocks
 
-    def majority_voter(self, cluster_blocks: list):
+    def majority_voter(self, cluster_blocks: list) -> np.ndarray:
         if len(cluster_blocks) == 0:  # if no cluster blocks were found, return an empty clustering result
             labels = np.zeros((self.n_features,)) - 1
             return labels
@@ -517,9 +519,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         # generate 'n_refs' random reference arrays:
         # draw uniform features Z' over the ranges of the columns of X', and back-transform via Z = dot(Z', V.T), then
         # transform the random reference data using Box-Cox, and then standardize it
-        refs = [self.transform(pca.inverse_transform(
-            np.random.random_sample(size=raw_data.shape) * (b - a) + a))
-            for _ in range(n_refs)]
+        refs = [self.transform(pca.inverse_transform(np.random.random_sample(size=raw_data.shape) * (b - a) + a)) for _
+                in range(n_refs)]
         # allocate empty arrays for observed/expected log(inertia), gap scores Gap(K) and gap error S(K)
         log_disp_obs = np.zeros((len(n_clusters_range)))
         log_disp_exp = np.zeros((len(n_clusters_range)))

@@ -273,8 +273,29 @@ def test_plot_gap_api():
     assert False
 
 
-def test_clicom_majority_voter():
-    assert False
+def _sort_clusters(clusters: np.ndarray):
+    return sorted([np.where(clusters == i)[0] for i in np.unique(clusters) if i >= 0], key=lambda x: x.sum())
+
+
+def test_clicom_majority_voter(valid_clustering_solutions):
+    truth = _sort_clusters(np.array([0, 0, 0, 0, 1, 1, 1, 1]))
+    n_features = 8
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.n_features = n_features
+    clusterer.clustering_solutions = BinaryFormatClusters(valid_clustering_solutions)
+    cluster_blocks = [frozenset({2, 4, 7, 8}), frozenset({0, 1, 3, 5, 6})]
+
+    res = _sort_clusters(clusterer.majority_voter(cluster_blocks))
+    assert np.all([np.all(arr_res == arr_truth) for arr_res, arr_truth in zip(res, truth)])
+
+
+def test_clicom_majority_voter_no_solutions():
+    truth = np.array([-1, -1, -1, -1, -1])
+    n_features = 5
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.n_features = n_features
+
+    assert np.all(clusterer.majority_voter([]) == truth)
 
 
 def test_clicom_cliques_to_clusters():
@@ -282,16 +303,57 @@ def test_clicom_cliques_to_clusters():
 
 
 def test_clicom_cliques_to_blocks():
-    assert False
+    truth = sorted([frozenset({0, 1, 3, 5, 6}), frozenset({2, 4, 7, 8})], key=len)
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.cluster_unclustered_features = True
+    clusterer.clique_set = {frozenset({2, 4, 7, 8}),
+                            frozenset({1, 7}),
+                            frozenset({1, 3, 6}),
+                            frozenset({0, 3, 5, 6})}
+    clusterer.binary_mat = np.array(
+        [[0, 0, 0, 1, 0, 1, 1, 0, 0],
+         [0, 0, 0, 1, 0, 0, 1, 1, 0],
+         [0, 0, 0, 0, 1, 0, 0, 1, 1],
+         [1, 1, 0, 0, 0, 1, 1, 0, 0],
+         [0, 0, 1, 0, 0, 0, 0, 1, 1],
+         [1, 0, 0, 1, 0, 0, 1, 0, 0],
+         [1, 1, 0, 1, 0, 1, 0, 0, 0],
+         [0, 1, 1, 0, 1, 0, 0, 0, 1],
+         [0, 0, 1, 0, 1, 0, 0, 1, 0]])
+    clusterer.adj_mat = clusterer.binary_mat
+
+    assert sorted(clusterer.cliques_to_blocks(), key=len) == truth
 
 
 def test_clicom_get_cluster_similarity_matrix():
     assert False
 
 
-def test_clicom_get_evidence_accumulation_matrix():
-    assert False
+def test_clicom_get_evidence_accumulation_matrix(valid_clustering_solutions):
+    n_solutions = 3
+    truth = np.array([
+        [0, 3, 1, 1, 0, 0, 0, 0],
+        [3, 0, 1, 1, 0, 0, 0, 0],
+        [1, 1, 0, 3, 1, 0, 0, 0],
+        [1, 1, 3, 0, 1, 0, 0, 0],
+        [0, 0, 1, 1, 0, 2, 1, 1],
+        [0, 0, 0, 0, 2, 0, 2, 2],
+        [0, 0, 0, 0, 1, 2, 0, 3],
+        [0, 0, 0, 0, 1, 2, 3, 0]]) / n_solutions
+
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.clustering_solutions = BinaryFormatClusters(valid_clustering_solutions)
+    clusterer.n_features = 8
+    assert np.all(clusterer.get_evidence_accumulation_matrix() == truth)
 
 
 def test_clicom_clusters_to_labels():
-    assert False
+    n_features = 9
+    clusters = [{0, 1, 2, 3}, {4, 5, 6, 7}]
+    binary_format_clusters = BinaryFormatClusters.__new__(BinaryFormatClusters)
+    binary_format_clusters.n_features = n_features
+    truth = np.array([[0, 0, 0, 0, 1, 1, 1, 1, -1]])
+
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.clustering_solutions = binary_format_clusters
+    assert np.all(clusterer.clusters_to_labels(clusters) == truth)
