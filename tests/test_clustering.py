@@ -325,8 +325,24 @@ def test_clicom_cliques_to_blocks():
     assert sorted(clusterer.cliques_to_blocks(), key=len) == truth
 
 
-def test_clicom_get_cluster_similarity_matrix():
-    assert False
+def test_clicom_get_cluster_similarity_matrix(valid_clustering_solutions):
+    truth = np.array([
+        [0, 48, 0, 144, 0, 216, 72, 0, 0],
+        [48, 0, 32, 108, 54, 48, 168, 84, 24],
+        [0, 32, 0, 0, 162, 0, 0, 132, 192],
+        [144, 108, 0, 0, 9, 144, 144, 18, 0],
+        [0, 54, 162, 9, 0, 0, 18, 144, 162],
+        [216, 48, 0, 144, 0, 0, 72, 0, 0],
+        [72, 168, 0, 144, 18, 72, 0, 36, 0],
+        [0, 84, 132, 18, 144, 0, 36, 0, 108],
+        [0, 24, 192, 0, 162, 0, 0, 108, 0], ]) / 216
+
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.clustering_solutions = BinaryFormatClusters(valid_clustering_solutions)
+    clusterer.n_features = 8
+
+    res = clusterer.get_cluster_similarity_matrix()
+    assert np.isclose(res, truth).all()
 
 
 def test_clicom_get_evidence_accumulation_matrix(valid_clustering_solutions):
