@@ -278,23 +278,6 @@ def test_binary_format_clusters_validate_clustering_solutions(valid_clustering_s
         BinaryFormatClusters._validate_clustering_solutions(valid_clustering_solutions + [[0, 0, 0]])
 
 
-def test_gap_statistic():
-    assert False
-
-
-def test_silhouette_method():
-    assert False
-
-
-def test_plot_clustering_api():
-    assert False
-    # split_plots = True
-
-
-def test_plot_gap_api():
-    assert False
-
-
 def _sort_clusters(clusters: np.ndarray):
     return sorted([np.where(clusters == i)[0] for i in np.unique(clusters) if i >= 0], key=lambda x: x.sum())
 
@@ -318,10 +301,6 @@ def test_clicom_majority_voter_no_solutions():
     clusterer.n_features = n_features
 
     assert np.all(clusterer.majority_voter([]) == truth)
-
-
-def test_clicom_cliques_to_clusters():
-    assert False
 
 
 def test_clicom_cliques_to_blocks():
@@ -395,3 +374,36 @@ def test_clicom_clusters_to_labels():
     clusterer = CLICOM.__new__(CLICOM)
     clusterer.clustering_solutions = binary_format_clusters
     assert np.all(clusterer.clusters_to_labels(clusters) == truth)
+
+
+def test_clicom_cliques_to_clusters():
+    assert False
+
+
+def test_clicom_feature_cluster_similarity():
+    assert False
+
+
+def test_clicom_inter_cluster_similarity():
+    assert False
+
+
+def test_clicom_cumulative_cluster_similarity():
+    assert False
+
+
+def test_gap_statistic():
+    assert False
+
+
+def test_silhouette_method():
+    assert False
+
+
+def test_plot_clustering_api():
+    assert False
+    # split_plots = True
+
+
+def test_plot_gap_api():
+    assert False
