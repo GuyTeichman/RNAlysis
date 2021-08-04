@@ -205,7 +205,29 @@ def test_clicom_cluster_wise_result(valid_clustering_solutions):
     assert truth_threshold_0 == results
 
     truth_threshold_max = set()
-    clusterer = CLICOM(bin_format, 1.1)
+    clusterer = CLICOM(bin_format, 1.01)
+    clusterer.run()
+    results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
+    assert truth_threshold_max == results
+
+
+def test_clicom_feature_wise_result(valid_clustering_solutions):
+    bin_format = BinaryFormatClusters(valid_clustering_solutions)
+
+    truth = {frozenset({0, 1, 2, 3}), frozenset({4, 5, 6, 7})}
+    clusterer = CLICOM(bin_format, 0.33, cluster_wise_cliques=False)
+    clusterer.run()
+    results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
+    assert truth == results
+
+    truth_threshold_0 = {frozenset({0, 1, 2, 3, 4, 5, 6, 7})}
+    clusterer = CLICOM(bin_format, 0, cluster_wise_cliques=False)
+    clusterer.run()
+    results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
+    assert truth_threshold_0 == results
+
+    truth_threshold_max = set()
+    clusterer = CLICOM(bin_format, 1.01, cluster_wise_cliques=False)
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth_threshold_max == results
