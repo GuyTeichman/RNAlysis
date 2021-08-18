@@ -9,17 +9,17 @@
     <defs>
         <font id="FontAwesome" horiz-adv-x="1536">
             <font-face
-                font-family="FontAwesome"
-                font-weight="400"
-                font-stretch="normal"
-                units-per-em="1792"
-                panose-1="0 0 0 0 0 0 0 0 0 0"
-                ascent="1536"
-                descent="-256"
-                bbox="-1.02083 -256.962 2304.6 1537.02"
-                underline-thickness="0"
-                underline-position="0"
-                unicode-range="U+0020-F500"
+                    font-family="FontAwesome"
+                    font-weight="400"
+                    font-stretch="normal"
+                    units-per-em="1792"
+                    panose-1="0 0 0 0 0 0 0 0 0 0"
+                    ascent="1536"
+                    descent="-256"
+                    bbox="-1.02083 -256.962 2304.6 1537.02"
+                    underline-thickness="0"
+                    underline-position="0"
+                    unicode-range="U+0020-F500"
             />
             <missing-glyph horiz-adv-x="896"
                            d="M224 112h448v1312h-448v-1312zM112 0v1536h672v-1536h-672z"/>

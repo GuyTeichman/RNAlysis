@@ -5,17 +5,17 @@
 
 .. autoclass:: RankedSet
 
-
-
-
+   
+   
+   
     .. automethod:: __init__
+    
+    
 
-
-
-
+   
 .. autosummary::
     :toctree: .
-
+    
     RankedSet.biotypes
     RankedSet.change_set_name
     RankedSet.difference
@@ -31,4 +31,5 @@
     RankedSet.save_txt
     RankedSet.symmetric_difference
     RankedSet.union
-
+    
+    
