@@ -43,11 +43,12 @@ def test_filter_contains():
             assert false_ind not in obj
 
 
-def test_filter_len():
-    objs = [Filter('tests/test_files/test_deseq.csv'), CountFilter('tests/test_files/counted.csv'),
-            DESeqFilter('tests/test_files/counted.csv'), FoldChangeFilter('tests/test_files/fc_1.csv', 'num', 'denom')]
-    for obj in objs:
-        assert len(obj) == obj.df.shape[0]
+@pytest.mark.parametrize('filter_obj',
+                         [Filter('tests/test_files/test_deseq.csv'), CountFilter('tests/test_files/counted.csv'),
+                          DESeqFilter('tests/test_files/counted.csv'),
+                          FoldChangeFilter('tests/test_files/fc_1.csv', 'num', 'denom')])
+def test_filter_len(filter_obj):
+    assert len(filter_obj) == filter_obj.df.shape[0]
 
 
 def test_filter_inplace():
