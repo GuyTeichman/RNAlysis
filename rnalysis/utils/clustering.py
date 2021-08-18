@@ -603,6 +603,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
                     arrowprops=dict(facecolor='black'))
         ax.set_xticks(n_clusters_range)
         sns.despine()
+        plt.tight_layout()
         plt.show()
         return fig
 
@@ -610,26 +611,34 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         print(f"Estimating the optimal number of clusters using the Silhouette method in range "
               f"{2}:{self.max_n_clusters_estimate}...")
         data = self.transform(self.data.values)
-        sil_scores = []
-        k_range = np.arange(2, self.max_n_clusters_estimate + 1)
-        for n_clusters in k_range:
+        silhouette_scores = []
+        n_clusters_range = np.arange(2, self.max_n_clusters_estimate + 1)
+        for n_clusters in n_clusters_range:
             clusterer = self.clusterer_class(n_clusters=n_clusters, **self.clusterer_kwargs)
-            sil_scores.append(silhouette_score(data, clusterer.fit_predict(data)))
+            silhouette_scores.append(silhouette_score(data, clusterer.fit_predict(data)))
+        best_n_clusters = int(n_clusters_range[int(np.argmax(silhouette_scores))])
+
+        fig = self._plot_silhouette(best_n_clusters, n_clusters_range, silhouette_scores)
+        print(f"Using the Silhouette method, {best_n_clusters} was chosen as the best number of clusters (k).")
+        return best_n_clusters
+
+    @staticmethod
+    def _plot_silhouette(best_n_clusters, n_clusters_range, silhouette_scores):
         fig = plt.figure(figsize=(7, 9))
         ax = fig.add_subplot(111)
-        ax.plot(k_range, sil_scores, '--o', color='r')
+        ax.plot(n_clusters_range, silhouette_scores, '--o', color='r')
         ax.set_ylim(-1.0, 1.0)
         ax.set_title("Silhouette method for estimating optimal number of clusters")
         ax.set_ylabel('Average silhouette score')
         ax.set_xlabel("Number of clusters (k)")
         ax.axhline(0, color='grey', linewidth=2, linestyle='--')
-        best_n_clusters = int(k_range[int(np.argmax(sil_scores))])
-        ax.annotate(f'Best n_clusters={best_n_clusters}', xy=(best_n_clusters, max(sil_scores)),
+        ax.annotate(f'Best n_clusters={best_n_clusters}', xy=(best_n_clusters, max(silhouette_scores)),
                     xytext=(best_n_clusters + 1, 0.75),
                     arrowprops=dict(facecolor='black', shrink=0.15))
-        ax.set_xticks(k_range)
-        print(f"Using the Silhouette method, {best_n_clusters} was chosen as the best number of clusters (k).")
-        return best_n_clusters
+        ax.set_xticks(n_clusters_range)
+        sns.despine()
+        plt.tight_layout()
+        return fig
 
 
 class KMeansRunner(ClusteringRunnerWithNClusters):
