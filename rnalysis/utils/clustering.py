@@ -555,7 +555,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         k_candidates = n_clusters_range[:-1][diff >= 0]
         # if no K fulfilled the condition (the gap function is monotonically increasing),
         # return the last value of K as the best K
-        best_n_clusters = k_candidates[0] if len(k_candidates) > 0 else n_clusters_range[-1]
+        best_n_clusters = int(k_candidates[0]) if len(k_candidates) > 0 else int(n_clusters_range[-1])
         n_clusters_ind = np.argmax(n_clusters_range == best_n_clusters)
         print(f"Using the Gap Statistic method, {best_n_clusters} was chosen as the best number of clusters (K).")
         if len(k_candidates) >= 2:
@@ -609,7 +609,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
     def silhouette(self) -> int:
         print(f"Estimating the optimal number of clusters using the Silhouette method in range "
               f"{2}:{self.max_n_clusters_estimate}...")
-        data = self.transform(self.data.loc[:, self._numeric_columns].values)
+        data = self.transform(self.data.values)
         sil_scores = []
         k_range = np.arange(2, self.max_n_clusters_estimate + 1)
         for n_clusters in k_range:
@@ -623,7 +623,7 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         ax.set_ylabel('Average silhouette score')
         ax.set_xlabel("Number of clusters (k)")
         ax.axhline(0, color='grey', linewidth=2, linestyle='--')
-        best_n_clusters = k_range[int(np.argmax(sil_scores))]
+        best_n_clusters = int(k_range[int(np.argmax(sil_scores))])
         ax.annotate(f'Best n_clusters={best_n_clusters}', xy=(best_n_clusters, max(sil_scores)),
                     xytext=(best_n_clusters + 1, 0.75),
                     arrowprops=dict(facecolor='black', shrink=0.15))
