@@ -63,9 +63,9 @@ var Search = {
       var htmlElement = $(htmlString, virtualDocument);
       htmlElement.find('.headerlink').remove();
       docContent = htmlElement.find('[role=main]')[0];
-      if (docContent === undefined) {
+      if(docContent === undefined) {
           console.warn("Content block not found. Sphinx search tries to obtain it " +
-              "via '[role=main]'. Could you check your theme or template.");
+                       "via '[role=main]'. Could you check your theme or template.");
           return "";
       }
       return docContent.textContent || docContent.innerText;
@@ -162,24 +162,24 @@ var Search = {
     var tmp = splitQuery(query);
     var objectterms = [];
     for (i = 0; i < tmp.length; i++) {
-        if (tmp[i] !== "") {
-            objectterms.push(tmp[i].toLowerCase());
-        }
+      if (tmp[i] !== "") {
+          objectterms.push(tmp[i].toLowerCase());
+      }
 
-        if ($u.indexOf(stopwords, tmp[i].toLowerCase()) != -1 || tmp[i] === "") {
-            // skip this "word"
-            continue;
-        }
-        // stem the word
-        var word = stemmer.stemWord(tmp[i].toLowerCase());
-        // prevent stemmer from cutting word smaller than two chars
-        if (word.length < 3 && tmp[i].length >= 3) {
-            word = tmp[i];
-        }
-        var toAppend;
-        // select the correct list
-        if (word[0] == '-') {
-            toAppend = excluded;
+      if ($u.indexOf(stopwords, tmp[i].toLowerCase()) != -1 || tmp[i] === "") {
+        // skip this "word"
+        continue;
+      }
+      // stem the word
+      var word = stemmer.stemWord(tmp[i].toLowerCase());
+      // prevent stemmer from cutting word smaller than two chars
+      if(word.length < 3 && tmp[i].length >= 3) {
+        word = tmp[i];
+      }
+      var toAppend;
+      // select the correct list
+      if (word[0] == '-') {
+        toAppend = excluded;
         word = word.substr(1);
       }
       else {
@@ -247,19 +247,19 @@ var Search = {
     function displayNextItem() {
       // results left, load the summary and display it
       if (results.length) {
-          var item = results.pop();
-          var listItem = $('<li></li>');
-          var requestUrl = "";
-          var linkUrl = "";
-          if (DOCUMENTATION_OPTIONS.BUILDER === 'dirhtml') {
-              // dirhtml builder
-              var dirname = item[0] + '/';
-              if (dirname.match(/\/index\/$/)) {
-                  dirname = dirname.substring(0, dirname.length - 6);
-              } else if (dirname == 'index/') {
-                  dirname = '';
-              }
-              requestUrl = DOCUMENTATION_OPTIONS.URL_ROOT + dirname;
+        var item = results.pop();
+        var listItem = $('<li></li>');
+        var requestUrl = "";
+        var linkUrl = "";
+        if (DOCUMENTATION_OPTIONS.BUILDER === 'dirhtml') {
+          // dirhtml builder
+          var dirname = item[0] + '/';
+          if (dirname.match(/\/index\/$/)) {
+            dirname = dirname.substring(0, dirname.length-6);
+          } else if (dirname == 'index/') {
+            dirname = '';
+          }
+          requestUrl = DOCUMENTATION_OPTIONS.URL_ROOT + dirname;
           linkUrl = requestUrl;
 
         } else {
@@ -271,30 +271,30 @@ var Search = {
             linkUrl +
             highlightstring + item[2]).html(item[1]));
         if (item[3]) {
-            listItem.append($('<span> (' + item[3] + ')</span>'));
-            Search.output.append(listItem);
-            setTimeout(function () {
-                displayNextItem();
-            }, 5);
+          listItem.append($('<span> (' + item[3] + ')</span>'));
+          Search.output.append(listItem);
+          setTimeout(function() {
+            displayNextItem();
+          }, 5);
         } else if (DOCUMENTATION_OPTIONS.HAS_SOURCE) {
           $.ajax({url: requestUrl,
                   dataType: "text",
                   complete: function(jqxhr, textstatus) {
-                      var data = jqxhr.responseText;
-                      if (data !== '' && data !== undefined) {
-                          listItem.append(Search.makeSearchSummary(data, searchterms, hlterms));
-                      }
-                      Search.output.append(listItem);
-                      setTimeout(function () {
-                          displayNextItem();
-                      }, 5);
+                    var data = jqxhr.responseText;
+                    if (data !== '' && data !== undefined) {
+                      listItem.append(Search.makeSearchSummary(data, searchterms, hlterms));
+                    }
+                    Search.output.append(listItem);
+                    setTimeout(function() {
+                      displayNextItem();
+                    }, 5);
                   }});
         } else {
-            // no source available, just display title
-            Search.output.append(listItem);
-            setTimeout(function () {
-                displayNextItem();
-            }, 5);
+          // no source available, just display title
+          Search.output.append(listItem);
+          setTimeout(function() {
+            displayNextItem();
+          }, 5);
         }
       }
       // search finished, update title and status message
@@ -369,56 +369,56 @@ var Search = {
           if (Scorer.objPrio.hasOwnProperty(match[2])) {
             score += Scorer.objPrio[match[2]];
           } else {
-              score += Scorer.objPrioDefault;
+            score += Scorer.objPrioDefault;
           }
-            results.push([docnames[match[0]], fullname, '#' + anchor, descr, score, filenames[match[0]]]);
+          results.push([docnames[match[0]], fullname, '#'+anchor, descr, score, filenames[match[0]]]);
         }
       }
     }
 
-      return results;
+    return results;
   },
 
-    /**
-     * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-     */
-    escapeRegExp: function (string) {
-        return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-    },
+  /**
+   * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+   */
+  escapeRegExp : function(string) {
+    return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+  },
 
-    /**
-     * search for full-text terms in the index
-     */
-    performTermsSearch: function (searchterms, excluded, terms, titleterms) {
-        var docnames = this._index.docnames;
-        var filenames = this._index.filenames;
-        var titles = this._index.titles;
+  /**
+   * search for full-text terms in the index
+   */
+  performTermsSearch : function(searchterms, excluded, terms, titleterms) {
+    var docnames = this._index.docnames;
+    var filenames = this._index.filenames;
+    var titles = this._index.titles;
 
-        var i, j, file;
-        var fileMap = {};
-        var scoreMap = {};
-        var results = [];
+    var i, j, file;
+    var fileMap = {};
+    var scoreMap = {};
+    var results = [];
 
-        // perform the search on the required terms
-        for (i = 0; i < searchterms.length; i++) {
-            var word = searchterms[i];
-            var files = [];
+    // perform the search on the required terms
+    for (i = 0; i < searchterms.length; i++) {
+      var word = searchterms[i];
+      var files = [];
       var _o = [
         {files: terms[word], score: Scorer.term},
         {files: titleterms[word], score: Scorer.title}
       ];
       // add support for partial matches
       if (word.length > 2) {
-          var word_regex = this.escapeRegExp(word);
+        var word_regex = this.escapeRegExp(word);
         for (var w in terms) {
-            if (w.match(word_regex) && !terms[word]) {
-                _o.push({files: terms[w], score: Scorer.partialTerm})
-            }
+          if (w.match(word_regex) && !terms[word]) {
+            _o.push({files: terms[w], score: Scorer.partialTerm})
+          }
         }
         for (var w in titleterms) {
-            if (w.match(word_regex) && !titleterms[word]) {
-                _o.push({files: titleterms[w], score: Scorer.partialTitle})
-            }
+          if (w.match(word_regex) && !titleterms[word]) {
+              _o.push({files: titleterms[w], score: Scorer.partialTitle})
+          }
         }
       }
 
@@ -506,10 +506,10 @@ var Search = {
         start = i;
     });
     start = Math.max(start - 120, 0);
-      var excerpt = ((start > 0) ? '...' : '') +
-          $.trim(text.substr(start, 240)) +
-          ((start + 240 - text.length) ? '...' : '');
-      var rv = $('<p class="context"></p>').text(excerpt);
+    var excerpt = ((start > 0) ? '...' : '') +
+      $.trim(text.substr(start, 240)) +
+      ((start + 240 - text.length) ? '...' : '');
+    var rv = $('<p class="context"></p>').text(excerpt);
     $.each(hlwords, function() {
       rv = rv.highlightText(this, 'highlighted');
     });

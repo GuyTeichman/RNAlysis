@@ -386,6 +386,7 @@ Normalizing reads with CountFilter
 :term:`CountFilter` offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
 
 To normalize a :term:`CountFilter` with user-generated scaling factors, we need a `csv` table with the size factor for each sample:
+
 +----------------+----------------+----------------+----------------+
 |    sample1     |    sample2     |    sample3     |    sample4     |
 +================+================+================+================+

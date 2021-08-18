@@ -33,10 +33,10 @@ if (!window.console || !console.firebug) {
  * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent#Decoding_query_parameters_from_a_URL
  */
 jQuery.urldecode = function(x) {
-    if (!x) {
-        return x
-    }
-    return decodeURIComponent(x.replace(/\+/g, ' '));
+  if (!x) {
+    return x
+  }
+  return decodeURIComponent(x.replace(/\+/g, ' '));
 };
 
 /**
@@ -289,28 +289,28 @@ var Documentation = {
 
   initOnKeyListeners: function() {
     $(document).keydown(function(event) {
-        var activeElementType = document.activeElement.tagName;
-        // don't navigate when in search box, textarea, dropdown or button
-        if (activeElementType !== 'TEXTAREA' && activeElementType !== 'INPUT' && activeElementType !== 'SELECT'
-            && activeElementType !== 'BUTTON' && !event.altKey && !event.ctrlKey && !event.metaKey
-            && !event.shiftKey) {
-            switch (event.keyCode) {
-                case 37: // left
-                    var prevHref = $('link[rel="prev"]').prop('href');
-                    if (prevHref) {
-                        window.location.href = prevHref;
-                        return false;
-                    }
-                    break;
-                case 39: // right
-                    var nextHref = $('link[rel="next"]').prop('href');
-                    if (nextHref) {
-                        window.location.href = nextHref;
-                        return false;
-                    }
-                    break;
+      var activeElementType = document.activeElement.tagName;
+      // don't navigate when in search box, textarea, dropdown or button
+      if (activeElementType !== 'TEXTAREA' && activeElementType !== 'INPUT' && activeElementType !== 'SELECT'
+          && activeElementType !== 'BUTTON' && !event.altKey && !event.ctrlKey && !event.metaKey
+          && !event.shiftKey) {
+        switch (event.keyCode) {
+          case 37: // left
+            var prevHref = $('link[rel="prev"]').prop('href');
+            if (prevHref) {
+              window.location.href = prevHref;
+              return false;
             }
+            break;
+          case 39: // right
+            var nextHref = $('link[rel="next"]').prop('href');
+            if (nextHref) {
+              window.location.href = nextHref;
+              return false;
+            }
+            break;
         }
+      }
     });
   }
 };

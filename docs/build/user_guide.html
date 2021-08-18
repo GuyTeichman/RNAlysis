@@ -747,12 +747,29 @@ An HTSeq-count output file would follow the following format:</p>
 <section id="normalizing-reads-with-countfilter">
 <h4>Normalizing reads with CountFilter<a class="headerlink" href="#normalizing-reads-with-countfilter" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.</p>
-<p>To normalize a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> with user-generated scaling factors, we need a <cite>csv</cite> table with the size factor for each sample:
-+—————-+—————-+—————-+—————-+
-|    sample1     |    sample2     |    sample3     |    sample4     |
-+================+================+================+================+
-|      0.96      |       1        |      0.78      |      1.23      |
-+—————-+—————-+—————-+—————-+</p>
+<p>To normalize a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> with user-generated scaling factors, we need a <cite>csv</cite> table with the size factor for each sample:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>sample1</p></th>
+<th class="head"><p>sample2</p></th>
+<th class="head"><p>sample3</p></th>
+<th class="head"><p>sample4</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0.96</p></td>
+<td><p>1</p></td>
+<td><p>0.78</p></td>
+<td><p>1.23</p></td>
+</tr>
+</tbody>
+</table>
 <p>We would then supply the function with the path to the scaling factors file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize</span> <span class="n">with_scaling_factors</span><span class="p">(</span><span class="s1">&#39;scaling_factors.csv&#39;</span><span class="p">)</span>
