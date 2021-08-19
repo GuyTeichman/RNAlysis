@@ -673,13 +673,13 @@ class FeatureSet:
         runner.results = results_df
         return runner.enrichment_bar_plot(name_col=name_col, center_bars=center_bars, ylabel=ylabel, title=title)
 
-    def enrich_non_categorical(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                               alpha: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
-                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                               attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                               plot_log_scale: bool = True, plot_style: str = 'overlap', n_bins: int = 50,
-                               save_csv: bool = False, fname=None, return_fig: bool = False
-                               ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
+    def non_categorical_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+                                   alpha: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
+                                   background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                                   attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                                   plot_log_scale: bool = True, plot_style: str = 'overlap', n_bins: int = 50,
+                                   save_csv: bool = False, fname=None, return_fig: bool = False
+                                   ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
 
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
@@ -758,7 +758,7 @@ class RankedSet(FeatureSet):
                       "the return type will always be FeatureSet and not RankedSet.")
         return super()._set_ops(others, op)
 
-    def go_enrichment_single_set(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
+    def single_set_go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
                                  alpha: float = 0.05, propagate_annotations: str = 'elim',
                                  aspects: Union[str, Iterable[str]] = 'any',
                                  evidence_types: Union[str, Iterable[str]] = 'any',
@@ -861,16 +861,16 @@ class RankedSet(FeatureSet):
            :align:   center
            :scale: 60 %
 
-           Example plot of go_enrichment_single_set()
+           Example plot of single_set_go_enrichment()
 
 
         .. figure::  plot_enrichment_results_go_singlelist_vertical.png
            :align:   center
            :scale: 60 %
 
-           Example plot of go_enrichment_single_set(plot_horizontal = False)
+           Example plot of single_set_go_enrichment(plot_horizontal = False)
         """
-        plot_dag = False
+        plot_dag = False  # to be implemented in version 2.1.0
         runner = enrichment_runner.GOEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
@@ -880,9 +880,10 @@ class RankedSet(FeatureSet):
 
         return runner.run()
 
-    def enrich_single_set(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None, alpha: float = 0.05,
-                          attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
-                          return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True):
+    def single_set_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+                              alpha: float = 0.05,
+                              attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
+                              return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -926,14 +927,14 @@ class RankedSet(FeatureSet):
            :align:   center
            :scale: 60 %
 
-           Example plot of enrich_single_set()
+           Example plot of single_set_enrichment()
 
 
         .. figure::  plot_enrichment_results_single_set_vertical.png
            :align:   center
            :scale: 60 %
 
-           Example plot of enrich_single_set(plot_horizontal = False)
+           Example plot of single_set_enrichment(plot_horizontal = False)
 
         """
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path, save_csv,

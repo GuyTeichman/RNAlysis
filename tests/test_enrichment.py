@@ -382,12 +382,12 @@ def test_enrich_non_categorical_api():
     s = FeatureSet(
         {'WBGene00000001', 'WBGene00000002', 'WBGene00000003', 'WBGene00000004', 'WBGene00000005', 'WBGene00000006',
          'WBGene00000007', 'WBGene00000008', 'WBGene00000009', 'WBGene00000010', 'WBGene00000011', 'WBGene00000012'})
-    res = s.enrich_non_categorical('attr1', biotype='all', parametric_test=True, attr_ref_path=ref_table,
-                                   biotype_ref_path=__biotype_ref__)
+    res = s.non_categorical_enrichment('attr1', biotype='all', parametric_test=True, attr_ref_path=ref_table,
+                                       biotype_ref_path=__biotype_ref__)
     assert isinstance(res, pd.DataFrame)
-    res = s.enrich_non_categorical(['attr3', 'attr2', 'attr4'], biotype='protein_coding', attr_ref_path=ref_table,
-                                   biotype_ref_path=__biotype_ref__, plot_log_scale=False, n_bins=30,
-                                   plot_style='interleaved', return_fig=True)
+    res = s.non_categorical_enrichment(['attr3', 'attr2', 'attr4'], biotype='protein_coding', attr_ref_path=ref_table,
+                                       biotype_ref_path=__biotype_ref__, plot_log_scale=False, n_bins=30,
+                                       plot_style='interleaved', return_fig=True)
     assert isinstance(res, tuple)
     assert isinstance(res[0], pd.DataFrame)
     assert isinstance(res[1], list)
@@ -403,8 +403,8 @@ def test_enrich_non_categorial_parametric_test():
                'WBGene00000014', 'WBGene00000015', 'WBGene00000020'}
 
     fs = FeatureSet(geneset)
-    res_param = fs.enrich_non_categorical('all', alpha=0.15, parametric_test=True, attr_ref_path=ref_table,
-                                          biotype='all')
+    res_param = fs.non_categorical_enrichment('all', alpha=0.15, parametric_test=True, attr_ref_path=ref_table,
+                                              biotype='all')
     assert res_param.loc[:, ['samples', 'significant']].equals(res_param_truth.loc[:, ['samples', 'significant']])
     assert np.isclose(res_param.loc[:, ['obs', 'exp']].values, res_param_truth.loc[:, ['obs', 'exp']].values,
                       rtol=0.01).all()
@@ -420,7 +420,7 @@ def test_enrich_non_categorial_nonparametric_test():
 
     fs = FeatureSet(geneset)
 
-    res_nonparam = fs.enrich_non_categorical('all', alpha=0.15, attr_ref_path=ref_table, biotype='all')
+    res_nonparam = fs.non_categorical_enrichment('all', alpha=0.15, attr_ref_path=ref_table, biotype='all')
     assert res_nonparam.loc[:, ['samples', 'significant']].equals(res_nonparam_truth.loc[:, ['samples', 'significant']])
     assert np.isclose(res_nonparam.loc[:, ['obs', 'exp']].values, res_nonparam_truth.loc[:, ['obs', 'exp']].values,
                       rtol=0.01).all()
@@ -437,8 +437,8 @@ def test_enrich_non_categorical_nan_values():
     truth_param = pd.read_csv('tests/test_files/enrich_non_categorical_nan_parametric_truth.csv', index_col=0)
     fs = FeatureSet(geneset)
     attrs = ['attr1', 'attr5', 'attr2', 'attr3', 'attr4']
-    res_param = fs.enrich_non_categorical(attrs, parametric_test=True, attr_ref_path=ref_table, biotype='all')
-    res_nonparam = fs.enrich_non_categorical(attrs, attr_ref_path=ref_table, biotype='all')
+    res_param = fs.non_categorical_enrichment(attrs, parametric_test=True, attr_ref_path=ref_table, biotype='all')
+    res_nonparam = fs.non_categorical_enrichment(attrs, attr_ref_path=ref_table, biotype='all')
     print(res_param, res_nonparam)
 
     for df, df_truth in zip((res_nonparam, res_param), (truth, truth_param)):
@@ -463,7 +463,7 @@ def test_enrich_single_set_api():
 
     attrs = ['attribute1', 'attribute2']
     en = RankedSet(genes_ranked, set_name='test_set')
-    _ = en.enrich_single_set(attrs, attr_ref_path=__attr_ref__)
+    _ = en.single_set_enrichment(attrs, attr_ref_path=__attr_ref__)
     plt.close('all')
 
 
@@ -479,7 +479,7 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations):
                     'WBGene00004920', 'WBGene00011910', 'WBGene00014208']
 
     en = RankedSet(genes_ranked, set_name='test_set')
-    _ = en.go_enrichment_single_set(organism, 'WBGene', excluded_evidence_types='electronic',
+    _ = en.single_set_go_enrichment(organism, 'WBGene', excluded_evidence_types='electronic',
                                     aspects='biological_process', propagate_annotations=propagate_annotations)
     plt.close('all')
 
