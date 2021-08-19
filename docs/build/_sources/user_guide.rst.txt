@@ -795,7 +795,7 @@ We will start by importing the enrichment module::
 
     >>> from rnalysis import enrichment
 
-An :term:`FeatureSet` object can now be initialized by one of three methods.
+A :term:`FeatureSet` object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
 
     >>> my_filter_obj = filtering.CountFilter('tests/test_files/counted.csv') # create a Filter object
@@ -816,9 +816,12 @@ At this point, you will be prompted to enter a string of feature indices seperat
 
 FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
+GO enrichment
+---------------
+TODO
 
-Performing enrichment analysis for user-defined attributes
------------------------------------------------------------
+Enrichment analysis for user-defined attributes
+--------------------------------------------------
 Using the *enrichment* module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
 
 Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
@@ -871,17 +874,6 @@ If we were to randomly draw n genes from the background set (without replacement
 enrich_randomization performs the number of randomizations specified by the user (10,000 by default), and marks each randomization as either a success or a failure.
 The p values specified in 'pval' are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
 
-Randomization tests can be computationally heavy, and take a while to run, especially if we test a large number of attributes.
-If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
-To use it, you must first start a parallel session::
-
-    >>> from rnalysis import enrichment, general
-    >>> general.start_parallel_session()
-    Starting parallel session...
-    Parallel session started successfully
-
-To read more about parallel sessions, visit the :ref:`parallel-ref` section.
-Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.
 
 Performing enrichment analysis for non-categorical user-defined attributes
 ---------------------------------------------------------------------------
@@ -931,17 +923,38 @@ The feature indices will be saved to the text file in the specified path, separa
 
 Working with RankedSet objects
 =========================================
-TODO
+The :term:`RankedSet` class represents a set of genomic features which are ranked by an inherent order. For example, genes could be ranked based on their mean expression level, their fold change between a pair of conditions, etc.
+:term:`RankedSet` objects behave similarly to :term:`FeatureSet` objects, but in addition they support *single-set enrichment analysis* - enrichment analysis without a background set.
+You can read more about single-set enrichment analysis below
 
 Initialize an RankedSet object
 ------------------------------------------
-TODO
+We will start by importing the enrichment module::
 
-Performing single-list enrichment analysis without a background set
+    >>> from rnalysis import enrichment
+
+:term:`RankedSet` objects can be initialized by one of two methods.
+The first method is to specify an existing Filter object::
+
+    >>> my_filter_obj = filtering.CountFilter('tests/test_files/counted.csv') # create a Filter object
+    >>> my_ranked_set = enrichment.RankedSet(my_filter_obj, 'a name for my set')
+
+When using this method, the ranking of the genomic features will be determined by their current order within the :term:`Filter` object. You can use the 'sort' method of your Filter object to modify the current order of genomic features within the Filter object.
+
+The second method is to directly specify a list, tuple, or numpy array of genomic feature names::
+
+    >>> my_list = ['WBGene00000001','WBGene0245200',' WBGene00402029']
+    >>> my_ranked_set = enrichment.RankedSet(my_list, 'a name for my set')
+
+
+RankedSet objects have three attributes: ranked_genes, a numpy array containing the ranked genomic features; gene_set, a python set containing the genomic features; and set_name, a string that describes the feature set (optional).
+
+
+Performing single-set enrichment analysis without a background set
 ---------------------------------------------------------------------------
 TODO
 
-Visualizing sets, intersections and enrichment
+Visualizing sets, intersections, and enrichment
 ================================================
 TODO
 
@@ -957,29 +970,6 @@ TODO
 RNAlysis general module
 ****************************
 RNAlysis's general module (rnalysis.general) contains general functions that can be useful during analysis of RNA sequencing data, including regular expression parsers and setting the Reference Table path.
-
-.. _parallel-ref:
-
-Start and stop a parallel processing session
-==============================================
-
-Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: https://ipyparallel.readthedocs.io/en/latest/
-To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function::
-
-    >>> from rnalysis import general
-    >>> general.start_parallel_session()
-    Starting parallel session...
-    Parallel session started successfully
-
-Your python console will  become unavailable for about 30 seconds while the ipcluster is being started.
-By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.
-
-start_parallel_session() will automatically close the previous parallel session, start a new session, and block the console while the ipcluster is being started. You can perform the same operations manually in order to skip the blocking period::
-
-    >>> from rnalysis import general
-    >>> general._start_ipcluster()
-    #perform parallel processing here
-    >>> general._stop_ipcluster()
 
 .. _reference-table-ref:
 

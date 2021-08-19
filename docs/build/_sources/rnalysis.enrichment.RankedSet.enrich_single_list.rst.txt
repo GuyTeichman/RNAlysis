@@ -3,4 +3,4 @@ rnalysis.enrichment.RankedSet.enrich\_single\_list
 
 .. currentmodule:: rnalysis.enrichment
 
-.. automethod:: RankedSet.enrich_single_set
+.. automethod:: RankedSet.single_set_enrichment

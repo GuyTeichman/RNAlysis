@@ -146,7 +146,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">RNAlysis enrichment module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-featureset-objects">Working with FeatureSet objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-an-featureset-object">Initialize an FeatureSet object</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#performing-enrichment-analysis-for-user-defined-attributes">Performing enrichment analysis for user-defined attributes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#go-enrichment">GO enrichment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enrichment-analysis-for-user-defined-attributes">Enrichment analysis for user-defined attributes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-enrichment-analysis-for-non-categorical-user-defined-attributes">Performing enrichment analysis for non-categorical user-defined attributes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-and-visualisation-on-multiple-featureset-objects">Performing set operations and visualisation on multiple FeatureSet objects</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#saving-indices-from-featureset-to-a-txt-file">Saving indices from FeatureSet to a .txt file</a></li>
@@ -154,10 +155,10 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-rankedset-objects">Working with RankedSet objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-an-rankedset-object">Initialize an RankedSet object</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#performing-single-list-enrichment-analysis-without-a-background-set">Performing single-list enrichment analysis without a background set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-single-set-enrichment-analysis-without-a-background-set">Performing single-set enrichment analysis without a background set</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#visualizing-sets-intersections-and-enrichment">Visualizing sets, intersections and enrichment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#visualizing-sets-intersections-and-enrichment">Visualizing sets, intersections, and enrichment</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#plotting-results-of-enrichment-analysis">Plotting results of enrichment analysis</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#plotting-venn-diagrams-and-upset-plots">Plotting Venn Diagrams and UpSet Plots</a></li>
 </ul>
@@ -165,7 +166,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module">RNAlysis general module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#start-and-stop-a-parallel-processing-session">Start and stop a parallel processing session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-an-attribute-reference-table">What is an Attribute Reference Table?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-a-biotype-reference-table">What is a Biotype Reference Table?</a></li>
@@ -1197,7 +1197,7 @@ We can apply the same Pipeline to as many Filter objects as we want, as long as 
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
 </pre></div>
 </div>
-<p>An <a class="reference internal" href="glossary.html#term-FeatureSet"><span class="xref std std-term">FeatureSet</span></a> object can now be initialized by one of three methods.
+<p>A <a class="reference internal" href="glossary.html#term-FeatureSet"><span class="xref std std-term">FeatureSet</span></a> object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_filter_obj</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span> <span class="c1"># create a Filter object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">my_filter_obj</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
@@ -1217,8 +1217,12 @@ The first method is to specify an existing Filter object:</p>
 <p>At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.</p>
 <p>FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).</p>
 </section>
-<section id="performing-enrichment-analysis-for-user-defined-attributes">
-<h4>Performing enrichment analysis for user-defined attributes<a class="headerlink" href="#performing-enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
+<section id="go-enrichment">
+<h4>GO enrichment<a class="headerlink" href="#go-enrichment" title="Permalink to this headline">¶</a></h4>
+<p>TODO</p>
+</section>
+<section id="enrichment-analysis-for-user-defined-attributes">
+<h4>Enrichment analysis for user-defined attributes<a class="headerlink" href="#enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
 <p>Using the <em>enrichment</em> module, you can perform enrichment analysis for user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’, ‘genes that have paralogs’). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.</p>
 <p>Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
@@ -1295,17 +1299,6 @@ When specifying a biotype, an internal reference file is used to categorize diff
 If we were to randomly draw n genes from the background set (without replacement), what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) genes belonging to the given attribute?</p>
 <p>enrich_randomization performs the number of randomizations specified by the user (10,000 by default), and marks each randomization as either a success or a failure.
 The p values specified in ‘pval’ are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
-<p>Randomization tests can be computationally heavy, and take a while to run, especially if we test a large number of attributes.
-If we want to perform the enrichment analysis in parallel and save time, we could use the enrich_randomization_parallel function instead of enrich_randomization.
-To use it, you must first start a parallel session:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
-<span class="go">Starting parallel session...</span>
-<span class="go">Parallel session started successfully</span>
-</pre></div>
-</div>
-<p>To read more about parallel sessions, visit the <a class="reference internal" href="#parallel-ref"><span class="std std-ref">Start and stop a parallel processing session</span></a> section.
-Afterwards, enrich_randomization_parallel is used exactly like enrich_randomization.</p>
 </section>
 <section id="performing-enrichment-analysis-for-non-categorical-user-defined-attributes">
 <h4>Performing enrichment analysis for non-categorical user-defined attributes<a class="headerlink" href="#performing-enrichment-analysis-for-non-categorical-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
@@ -1353,18 +1346,36 @@ Venn diagrams are limited to 2-3 sets:</p>
 </section>
 <section id="working-with-rankedset-objects">
 <h3>Working with RankedSet objects<a class="headerlink" href="#working-with-rankedset-objects" title="Permalink to this headline">¶</a></h3>
-<p>TODO</p>
+<p>The <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> class represents a set of genomic features which are ranked by an inherent order. For example, genes could be ranked based on their mean expression level, their fold change between a pair of conditions, etc.
+<a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> objects behave similarly to <a class="reference internal" href="glossary.html#term-FeatureSet"><span class="xref std std-term">FeatureSet</span></a> objects, but in addition they support <em>single-set enrichment analysis</em> - enrichment analysis without a background set.
+You can read more about single-set enrichment analysis below</p>
 <section id="initialize-an-rankedset-object">
 <h4>Initialize an RankedSet object<a class="headerlink" href="#initialize-an-rankedset-object" title="Permalink to this headline">¶</a></h4>
-<p>TODO</p>
+<p>We will start by importing the enrichment module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> objects can be initialized by one of two methods.
+The first method is to specify an existing Filter object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_filter_obj</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span> <span class="c1"># create a Filter object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_ranked_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">RankedSet</span><span class="p">(</span><span class="n">my_filter_obj</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When using this method, the ranking of the genomic features will be determined by their current order within the <a class="reference internal" href="glossary.html#term-Filter"><span class="xref std std-term">Filter</span></a> object. You can use the ‘sort’ method of your Filter object to modify the current order of genomic features within the Filter object.</p>
+<p>The second method is to directly specify a list, tuple, or numpy array of genomic feature names:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene0245200&#39;</span><span class="p">,</span><span class="s1">&#39; WBGene00402029&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_ranked_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">RankedSet</span><span class="p">(</span><span class="n">my_list</span><span class="p">,</span> <span class="s1">&#39;a name for my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>RankedSet objects have three attributes: ranked_genes, a numpy array containing the ranked genomic features; gene_set, a python set containing the genomic features; and set_name, a string that describes the feature set (optional).</p>
 </section>
-<section id="performing-single-list-enrichment-analysis-without-a-background-set">
-<h4>Performing single-list enrichment analysis without a background set<a class="headerlink" href="#performing-single-list-enrichment-analysis-without-a-background-set" title="Permalink to this headline">¶</a></h4>
+<section id="performing-single-set-enrichment-analysis-without-a-background-set">
+<h4>Performing single-set enrichment analysis without a background set<a class="headerlink" href="#performing-single-set-enrichment-analysis-without-a-background-set" title="Permalink to this headline">¶</a></h4>
 <p>TODO</p>
 </section>
 </section>
 <section id="visualizing-sets-intersections-and-enrichment">
-<h3>Visualizing sets, intersections and enrichment<a class="headerlink" href="#visualizing-sets-intersections-and-enrichment" title="Permalink to this headline">¶</a></h3>
+<h3>Visualizing sets, intersections, and enrichment<a class="headerlink" href="#visualizing-sets-intersections-and-enrichment" title="Permalink to this headline">¶</a></h3>
 <p>TODO</p>
 <section id="plotting-results-of-enrichment-analysis">
 <h4>Plotting results of enrichment analysis<a class="headerlink" href="#plotting-results-of-enrichment-analysis" title="Permalink to this headline">¶</a></h4>
@@ -1379,26 +1390,6 @@ Venn diagrams are limited to 2-3 sets:</p>
 <section id="rnalysis-general-module">
 <h2>RNAlysis general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline">¶</a></h2>
 <p>RNAlysis’s general module (rnalysis.general) contains general functions that can be useful during analysis of RNA sequencing data, including regular expression parsers and setting the Reference Table path.</p>
-<section id="start-and-stop-a-parallel-processing-session">
-<span id="parallel-ref"></span><h3>Start and stop a parallel processing session<a class="headerlink" href="#start-and-stop-a-parallel-processing-session" title="Permalink to this headline">¶</a></h3>
-<p>Parallel processing in RNAlysis is performed using the ipyparallel package. You can read more about it here: <a class="reference external" href="https://ipyparallel.readthedocs.io/en/latest/">https://ipyparallel.readthedocs.io/en/latest/</a>
-To use parallel processing features, you must first start an ipyparallel ipcluster. This is done using the general.start_parallel_session() function:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">start_parallel_session</span><span class="p">()</span>
-<span class="go">Starting parallel session...</span>
-<span class="go">Parallel session started successfully</span>
-</pre></div>
-</div>
-<p>Your python console will  become unavailable for about 30 seconds while the ipcluster is being started.
-By default, the parallel session will use all available processors on the machine to perform parallel processing. You can specify the exact number of processors you want to use in the current session.</p>
-<p>start_parallel_session() will automatically close the previous parallel session, start a new session, and block the console while the ipcluster is being started. You can perform the same operations manually in order to skip the blocking period:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">_start_ipcluster</span><span class="p">()</span>
-<span class="go">#perform parallel processing here</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">_stop_ipcluster</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
 <section id="set-and-load-a-reference-table">
 <span id="reference-table-ref"></span><h3>Set and load a Reference Table<a class="headerlink" href="#set-and-load-a-reference-table" title="Permalink to this headline">¶</a></h3>
 <section id="what-is-an-attribute-reference-table">

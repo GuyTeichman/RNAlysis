@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>rnalysis.enrichment.RankedSet.save_txt &mdash; RNAlysis 2.0.0 documentation</title>
+  <title>rnalysis.enrichment.RankedSet.non_categorical_enrichment &mdash; RNAlysis 2.0.0 documentation</title>
   
 
   
@@ -45,8 +45,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.enrichment.RankedSet.single_set_enrichment" href="rnalysis.enrichment.RankedSet.single_set_enrichment.html" />
-    <link rel="prev" title="rnalysis.enrichment.RankedSet.plot_enrichment_results" href="rnalysis.enrichment.RankedSet.plot_enrichment_results.html" /> 
+    <link rel="next" title="rnalysis.enrichment.RankedSet.plot_enrichment_results" href="rnalysis.enrichment.RankedSet.plot_enrichment_results.html" />
+    <link rel="prev" title="rnalysis.enrichment.RankedSet.intersection" href="rnalysis.enrichment.RankedSet.intersection.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -128,9 +128,9 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization_parallel.html">rnalysis.enrichment.RankedSet.enrich_randomization_parallel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html">rnalysis.enrichment.RankedSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html">rnalysis.enrichment.RankedSet.intersection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.non_categorical_enrichment.html">rnalysis.enrichment.RankedSet.non_categorical_enrichment</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.non_categorical_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.plot_enrichment_results.html">rnalysis.enrichment.RankedSet.plot_enrichment_results</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.save_txt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.save_txt.html">rnalysis.enrichment.RankedSet.save_txt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_enrichment.html">rnalysis.enrichment.RankedSet.single_set_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_go_enrichment.html">rnalysis.enrichment.RankedSet.single_set_go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference.html">rnalysis.enrichment.RankedSet.symmetric_difference</a></li>
@@ -199,13 +199,13 @@
         
           <li><a href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a> &raquo;</li>
         
-      <li>rnalysis.enrichment.RankedSet.save_txt</li>
+      <li>rnalysis.enrichment.RankedSet.non_categorical_enrichment</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/rnalysis.enrichment.RankedSet.save_txt.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rnalysis.enrichment.RankedSet.non_categorical_enrichment.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -218,18 +218,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="rnalysis-enrichment-rankedset-save-txt">
-<h1>rnalysis.enrichment.RankedSet.save_txt<a class="headerlink" href="#rnalysis-enrichment-rankedset-save-txt" title="Permalink to this headline">¶</a></h1>
+  <section id="rnalysis-enrichment-rankedset-non-categorical-enrichment">
+<h1>rnalysis.enrichment.RankedSet.non_categorical_enrichment<a class="headerlink" href="#rnalysis-enrichment-rankedset-non-categorical-enrichment" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
-<dt class="sig sig-object py" id="rnalysis.enrichment.RankedSet.save_txt">
-<span class="sig-prename descclassname"><span class="pre">RankedSet.</span></span><span class="sig-name descname"><span class="pre">save_txt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.save_txt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the list of features in the FeatureSet object under the specified filename and path.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – full filename/path for the output file. Can include the ‘.txt’ suffix but doesn’t have to.</p>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="rnalysis.enrichment.RankedSet.non_categorical_enrichment">
+<span class="sig-prename descclassname"><span class="pre">RankedSet.</span></span><span class="sig-name descname"><span class="pre">non_categorical_enrichment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parametric_test</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biotype</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'protein_coding'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_genes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html#rnalysis.enrichment.FeatureSet" title="rnalysis.enrichment.FeatureSet"><span class="pre">rnalysis.enrichment.FeatureSet</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attr_ref_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biotype_ref_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_log_scale</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'overlap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_csv</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_fig</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">matplotlib.figure.Figure</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#rnalysis.enrichment.RankedSet.non_categorical_enrichment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </section>
 
@@ -239,8 +233,8 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="rnalysis.enrichment.RankedSet.single_set_enrichment.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet.single_set_enrichment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="rnalysis.enrichment.RankedSet.plot_enrichment_results.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.RankedSet.plot_enrichment_results" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.enrichment.RankedSet.plot_enrichment_results.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet.plot_enrichment_results" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.enrichment.RankedSet.intersection.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.RankedSet.intersection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
