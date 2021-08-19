@@ -816,9 +816,131 @@ At this point, you will be prompted to enter a string of feature indices seperat
 
 FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
 
-GO enrichment
+GO Enrichment
 ---------------
+Using the *enrichment* module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
+You can read more about Gene Ontology here: http://geneontology.org/docs/ontology-documentation/
+
+To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
+
+    >>> counts = filtering.CountFilter('path_to_my_file.csv')
+    >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
+
+Define the correct *organism* and *gene ID type* for your dataset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TODO
+
+It is recommended to manually determine the *NCBI Taxon ID* of your organism and the *gene ID type* of your genomic features, to avoid mischaracterization of genomic features and annotations.
+However, if you are not sure, RNAlysis will try to automatically determine the correct `organism` and `gene_id_type` by default.
+
+Define the background set
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain *GO Term*, in comparison to a more generalized set of genomic features that we determined as 'background'.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that have at least one GO Annotation as a background set.
+If you don't want to use the default setting, there are two methods of defining the background set:
+
+The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
+
+    >>> en.go_enrichment(biotype='all')
+
+In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
+
+The second method of defining the background set is to define a specific set of genomic features to be used as background::
+
+    >>> my_background_set = {'feature1','feature2','feature3'}
+    >>> en.go_enrichment(background_genes=my_background_set)
+
+In this example, our background set consists of *feature1*, *feature2* and *feature3*.
+
+It is not possible to specify both a biotype and a specific background set.
+
+If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
+
+Choose the statistical test (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Significance testing for GO enrichment analysis can be done using either the Hypergeometric Test, Fisher's Exact Test, or a randomization test.
+
+The hypergeometric test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute ('success') and *X* genes from the test set belonging to that attribute.
+If we were to randomly draw *n* genes from the background set (without replacement), what is the probability of drawing *X* or more (in case of enrichment)/*X* or less (in case of depletion) genes belonging to the given attribute?
+
+The Fisher's Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.
+
+The randomization test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute and *X* genes from the test set belonging to that attribute.
+We performs the number of randomizations specified by the user (10,000 by default).
+In each randomization we randomly draw a set of *n* genes from the background set (without replacement), and marks the randomization as a 'success' if the number of genes in the random set belonging to the attribute is >= *X* (in case of enrichment) or <= *X* (in case of depletion).
+The p-values are calculated as *(number of sucesses + 1)/(number of repetitions + 1)*.
+This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
+You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
+
+If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
+
+To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
+If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+
+Choose which GO Annotations and GO Aspects to use (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TODO
+
+If you don't specify which GO Annotations to use for enrichment analysis, TODO will be fetched by default.
+
+If you don't specify which Go Aspects to test for, all GO Aspects will be tested for by default.
+
+
+Choose annotation propagation method (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Gene Ontology terms have a somewhat hierarchical relationship that is defined as a directed a-cyclic graph (DAG). This means that each GO term is a node in the graph, and that each node has defined parents that are less specific than itself, going up to the top of the graph.
+
+For example:
+
+        .. figure::  http://geneontology.org/assets/hexose-biosynthetic-process.png
+           :align:   center
+           :scale: 35 %
+
+           taken from the Gene Ontology Consortium site
+
+We can see that in this example the GO term 'hexose biosynthetic process' has two parents, one of which is the less specific term 'hexose metabolic process', and these relationships go all the way up to the GO term 'metabolic process'.
+
+Due to the relationships defined between GO terms, when a gene is annotated with a specific GO term, it makes sense that all of the less-specific parents of this GO term will also apply to said gene.
+Therefore, when performing GO enrichment, we would usually 'propagate' every GO annotation to all of the GO terms upstream to it, all the way to the top of the GO graph.
+
+Unfortunately, propagating GO annotations comes with some issues:
+the defined relationship between GO terms introduces dependencies between neighboring GO terms, leading to correlation between enrichment results of different GO terms, and under-estimation of the False Discovery Rate of our analysis.
+Moreover, since more specific GO terms by definition have less annotations than their less-specific parents, the most statistically significant enrichment results usually belong to the least-specific GO terms, which are not very biologically relevant.
+
+To deal with this problem, several alternative propagation methods were developed to help de-correlate the GO graph structure and increase the specificity of our results without compromising accuracy.
+You can read more about some suggested methods in the following publication:
+https://pubmed.ncbi.nlm.nih.gov/16606683/
+
+RNAlysis implements three of these propagation methods: *elim*, *weight*, and *all.m*.
+You can decide which propagation method to use by specifying the `propagation_method` parameter: 'no' for no propagation of GO annotations, 'classic' for classic propagation of GO annotations, and 'elim'/'weight'/'all.m' for propagation using the *elim*/*weight*/*all.m* propagation algorithms.
+
+If you don't specify which propagation method to use in enrichment analysis, the *elim* method will be used by default.
+
+Choose plotting parameters (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TODO
+
+If you don't specify plotting parameters, TODO will be used by default.
+
+Enrichment analysis output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
++=============+==================+==============+=====+=======+======================+==========+==========+=============+
+|  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|  GO:0043186 |     P granule    |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+
+'samples' is the number of features that were used in the enrichment set. 'obs' is the observed number of features positive for the attribute in the enrichment set.
+'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
+
+#TODO: fix table according to the correct format
 
 Enrichment analysis for user-defined attributes
 --------------------------------------------------
@@ -829,25 +951,32 @@ Enrichment analysis for user-defined attributes is performed using either Featur
     >>> counts = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
 
+Choose which user-defined attributes to calculate enrichment for
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Our attributes should be defined in a Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
 If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables' path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
 
-Next, we need to determine the set of genes to be used as background. Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, enrich_randomization uses all of the protein-coding genes that appear in the Reference Table as a background set.
-There are two methods of changing the default background set:
+Define the background set
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+If you don't want to use the default setting, there are two methods of defining the background set:
 
 The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
 
-    >>> en.enrich_randomization(['attribute1','attribute2'], biotype='all')
+    >>> result = en.enrich_randomization(['attribute1','attribute2'], biotype='all')
 
-In this example, instead of using all of the protein-coding genes in the Reference Table as background, we use all of the genomic features in the Reference Table as background.
-When specifying a biotype, an internal reference file is used to categorize different genomic features into different biotypes.
+In this example, instead of using all of the protein-coding genes in the Attribute Reference Table as background, we use all of the genomic features in the Attribute Reference Table as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
 
-The second method of changing the background set is to define a specific set of genomic features to be used as background::
+The second method of defining the background set is to define a specific set of genomic features to be used as background::
 
     >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> en.enrich_hypergeometric(['attribute1','attribute2'], background_genes=my_background_set)
+    >>> result = en.enrich_hypergeometric(['attribute1','attribute2'], background_genes=my_background_set)
 
 In this example, our background set consists of feature1, feature2 and feature3.
 
@@ -855,30 +984,135 @@ It is not possible to specify both a biotype and a specific background set.
 
 If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
 
-Calling enrich_randomization/enrich_hypergeometric will perform a randomization/hypergeometric test for each of the specified attributes, and return a pandas DataFrame with the following format:
+Choose the statistical test (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Significance testing for GO enrichment analysis can be done using either the Hypergeometric Test, Fisher's Exact Test, or a randomization test.
 
-+----------------+--------------+-------+-------+----------------------+----------+----------+-------------+
-|     name       |    samples   | n obs | n exp | log2_fold_enrichment |   pval   |   padj   | significant |
-+================+==============+=======+=======+======================+==========+==========+=============+
-|     attribute1 |    1327      | 451   | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
-+----------------+--------------+-------+-------+----------------------+----------+----------+-------------+
-|     attribute2 |    1327      | 89    | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
-+----------------+--------------+-------+-------+----------------------+----------+----------+-------------+
+The hypergeometric test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute ('success') and *X* genes from the test set belonging to that attribute.
+If we were to randomly draw *n* genes from the background set (without replacement), what is the probability of drawing *X* or more (in case of enrichment)/*X* or less (in case of depletion) genes belonging to the given attribute?
 
-'samples' is the number of features that were used in the enrichment set. 'n obs' is the observed number of features positive for the attribute in the enrichment set.
-'n exp' is the expected number of features positive for the attribute in the enrichment set. 'log2_fold_enrichment' is log2 of the fold change 'n obs'/'n exp'.
+The Fisher's Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.
 
-enrich_hypergeometric performs the hypergeometric test: Given M genes in the background set, n genes in the test set, with N genes from the background set belonging to a specific attribute (or 'success') and X genes from the test set belonging to that attribute.
-If we were to randomly draw n genes from the background set (without replacement), what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) genes belonging to the given attribute?
+The randomization test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute and *X* genes from the test set belonging to that attribute.
+We performs the number of randomizations specified by the user (10,000 by default).
+In each randomization we randomly draw a set of *n* genes from the background set (without replacement), and marks the randomization as a 'success' if the number of genes in the random set belonging to the attribute is >= *X* (in case of enrichment) or <= *X* (in case of depletion).
+The p-values are calculated as *(number of sucesses + 1)/(number of repetitions + 1)*.
+This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
+You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
 
-enrich_randomization performs the number of randomizations specified by the user (10,000 by default), and marks each randomization as either a success or a failure.
-The p values specified in 'pval' are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
+If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
 
+To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
+If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+
+# TODO: update according to the chosen API
+
+Enrichment analysis output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+
++----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|                |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
++================+==============+=====+=======+======================+==========+==========+=============+
+|     attribute1 |    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
++----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|     attribute2 |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
++----------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+
+'samples' is the number of features that were used in the enrichment set. 'obs' is the observed number of features positive for the attribute in the enrichment set.
+'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
 
 Performing enrichment analysis for non-categorical user-defined attributes
 ---------------------------------------------------------------------------
 TODO
 
+Choose which user-defined non-categorical attributes to calculate enrichment for
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Our attributes should be defined in an Attribute Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
+Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using the function `FeatureSet.non_categorical_enrichment`.
+If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling non_categorical_enrichment. Otherwise, you need to specify your Reference Tables' path.
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
+
+Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every genomic feature in the background and test sets (meaning, no NaN values).
+
+Define the background set
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+If you don't want to use the default setting, there are two methods of defining the background set:
+
+The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
+
+    >>> result = en.non_categorical_enrichment(['attribute1','attribute2'], biotype='all')
+
+In this example, instead of using all of the protein-coding genes in the Attribute Reference Table as background, we use all of the genomic features in the Attribute Reference Table as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
+
+The second method of defining the background set is to define a specific set of genomic features to be used as background::
+
+    >>> my_background_set = {'feature1','feature2','feature3'}
+    >>> result = en.non_categorical_enrichment(['attribute1','attribute2'], background_genes=my_background_set)
+
+In this example, our background set consists of feature1, feature2 and feature3.
+
+It is not possible to specify both a biotype and a specific background set.
+
+If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
+
+Choose the statistical test (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When calculating enrichment for a non-categorical attribute, you can use either a parametric or non-parametric statistical test.
+
+If the `parametric_test` parameter is True, RNAlysis will calculate enrichment using the *one-sample Student's T-test*, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.
+
+If the `parametric_test` parameter is False, RNAlysis will calculate enrichment using the non-parametric *one-sample Sign test*, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.
+
+The parametric T-test assumes that the values of your non-categorical attribute distribute normally. Therefore, if you are not sure your data meets this assumption, it is recommended to use the less-powerful non-parametric test.
+
+If you don't specify the statistical test, RNAlysis will automatically use a non-parametric test.
+
+Choose plotting parameters (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The results of non-categorical enrichment analysis will be plotted as a histogram, comparing the distribution of the non-categorical attribute within the enrichment set compared to the background set.
+If you used a parametric test, the mean of each set will be marked on the histogram. Alternatively, if you used a non-parametric test, the median of each set will be marked on the graph.
+The enrichment results of each attribute will be plotted in a different Figure.
+
+To better fit the visualization of the results to your needs, you can specify two parameters:
+
+`plot_log_scale` can accept either `True` or `False`, and will determine whether the X-axis of the histogram will be plotting on a logarithmic or linear scale.
+
+`plot_style' can accept either 'overlap' or 'interleaved', and will draw the histogram in one of the following two styles:
+
+        .. figure::  hist_overlap.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_style`='overlap'
+
+        .. figure::  hist_interleaved.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_style`='interleaved'
+
+If you don't specify plotting parameters, RNAlysis will plot the histogram on a logarithmic scale using the 'overlap' style by default.
+
+Non-Categorical Enrichment analysis output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+
++----------------+--------------+-------+--------+----------+----------+-------------+
+|                |    samples   |  obs  |  exp   |   pval   |   padj   | significant |
++================+==============+=======+========+==========+==========+=============+
+|     attribute1 |    1327      | 451   | 319.52 | 0.0000999| 0.0000999| True        |
++----------------+--------------+-------+--------+----------+----------+-------------+
+|     attribute2 |    1327      | 89    | 244.87 | 0.0000999| 0.0000999| True        |
++----------------+--------------+-------+--------+----------+----------+-------------+
+
+'samples' is the number of features that were used in the enrichment set. 'obs' is the observed mean/median (depending if the statistical test was parametric or not) value of the non-categorical attribute in the enrichment set.
+'exp' is the expected mean/median value of the non-categorical attribute in the background set.
 
 
 Performing set operations and visualisation on multiple FeatureSet objects
@@ -925,7 +1159,11 @@ Working with RankedSet objects
 =========================================
 The :term:`RankedSet` class represents a set of genomic features which are ranked by an inherent order. For example, genes could be ranked based on their mean expression level, their fold change between a pair of conditions, etc.
 :term:`RankedSet` objects behave similarly to :term:`FeatureSet` objects, but in addition they support *single-set enrichment analysis* - enrichment analysis without a background set.
-You can read more about single-set enrichment analysis below
+
+The statistical test used to test significance in *single-set enrichment analysis* is the *generalized minimum hypergeometric test (XL-mHG)*, which measures the enrichment of the genomic features at the top and bottom of your ranked gene set compared to the rest of the gene set.
+You can read more about the *minimum hypergeometric test* and its generalized version the *XL-mHG test* in the following publications:
+https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.0030039
+https://arxiv.org/abs/1507.07905
 
 Initialize an RankedSet object
 ------------------------------------------
@@ -950,9 +1188,28 @@ The second method is to directly specify a list, tuple, or numpy array of genomi
 RankedSet objects have three attributes: ranked_genes, a numpy array containing the ranked genomic features; gene_set, a python set containing the genomic features; and set_name, a string that describes the feature set (optional).
 
 
+Performing single-set GO Enrichment analysis without a background set
+-----------------------------------------------------------------------
+Single-set GO Enrichment works much the same as normal Go Enrichment analysis, with two key differences:
+
+First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
+
+An example for running single-set GO Enrichment would look like so::
+
+    >>> TODO
+
 Performing single-set enrichment analysis without a background set
----------------------------------------------------------------------------
-TODO
+--------------------------------------------------------------------
+Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:
+
+First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
+
+An example for running single-set enrichment analysis would look like so::
+
+    >>> TODO
+
 
 Visualizing sets, intersections, and enrichment
 ================================================

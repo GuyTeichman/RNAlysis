@@ -146,7 +146,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">RNAlysis enrichment module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-featureset-objects">Working with FeatureSet objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-an-featureset-object">Initialize an FeatureSet object</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#go-enrichment">GO enrichment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#go-enrichment">GO Enrichment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#enrichment-analysis-for-user-defined-attributes">Enrichment analysis for user-defined attributes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-enrichment-analysis-for-non-categorical-user-defined-attributes">Performing enrichment analysis for non-categorical user-defined attributes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-set-operations-and-visualisation-on-multiple-featureset-objects">Performing set operations and visualisation on multiple FeatureSet objects</a></li>
@@ -155,6 +155,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-rankedset-objects">Working with RankedSet objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-an-rankedset-object">Initialize an RankedSet object</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-single-set-go-enrichment-analysis-without-a-background-set">Performing single-set GO Enrichment analysis without a background set</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-single-set-enrichment-analysis-without-a-background-set">Performing single-set enrichment analysis without a background set</a></li>
 </ul>
 </li>
@@ -574,10 +575,10 @@ By default, RNAlysis assumes that log2 fold change values will be specified unde
 <h4>Data visualization and exploratory data analysis with DESeqFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-deseqfilter" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> supports methods for visualization and exploratory analysis of differential expression data.</p>
 <p>With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:</p>
-<figure class="align-center" id="id3">
+<figure class="align-center" id="id15">
 <a class="reference internal image-reference" href="volcano_plot.png"><img alt="volcano_plot.png" src="volcano_plot.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
@@ -840,22 +841,22 @@ We would then supply the normalization function with the path to the special cou
 <p>When clustering genomic features in a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object, the called function returns a tuple of <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> objects, with each object corresponding to one cluster of genomic features.</p>
 <p>Expression plots of the resulting clusters can be generated in one of multiple styles:</p>
 <blockquote>
-<div><figure class="align-center" id="id4">
+<div><figure class="align-center" id="id16">
 <a class="reference internal image-reference" href="_images/kmeans_all.png"><img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" style="width: 560.0px; height: 358.40000000000003px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id5">
+<figure class="align-center" id="id17">
 <a class="reference internal image-reference" href="_images/kmeans_std_area.png"><img alt="_images/kmeans_std_area.png" src="_images/kmeans_std_area.png" style="width: 560.0px; height: 358.40000000000003px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id6">
+<figure class="align-center" id="id18">
 <a class="reference internal image-reference" href="_images/kmeans_std_bar.png"><img alt="_images/kmeans_std_bar.png" src="_images/kmeans_std_bar.png" style="width: 560.0px; height: 358.40000000000003px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -932,36 +933,36 @@ You can specify a single value:</p>
 <h4>Data visualization and exploratory data analysis with CountFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-countfilter" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> includes multiple methods for visualization and exploratory analysis of count data.</p>
 <p>With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:</p>
-<figure class="align-center" id="id7">
+<figure class="align-center" id="id19">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:</p>
 <blockquote>
-<div><figure class="align-center" id="id8">
+<div><figure class="align-center" id="id20">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:</p>
 <blockquote>
-<div><figure class="align-center" id="id9">
+<div><figure class="align-center" id="id21">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 605.4px; height: 441.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:</p>
 <blockquote>
-<div><figure class="align-center" id="id10">
+<div><figure class="align-center" id="id22">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1218,8 +1219,147 @@ The first method is to specify an existing Filter object:</p>
 <p>FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).</p>
 </section>
 <section id="go-enrichment">
-<h4>GO enrichment<a class="headerlink" href="#go-enrichment" title="Permalink to this headline">¶</a></h4>
+<h4>GO Enrichment<a class="headerlink" href="#go-enrichment" title="Permalink to this headline">¶</a></h4>
+<p>Using the <em>enrichment</em> module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
+You can read more about Gene Ontology here: <a class="reference external" href="http://geneontology.org/docs/ontology-documentation/">http://geneontology.org/docs/ontology-documentation/</a></p>
+<p>To perform GO Enrichment analysis, we will start by creating an FeatureSet object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="define-the-correct-organism-and-gene-id-type-for-your-dataset">
+<h5>Define the correct <em>organism</em> and <em>gene ID type</em> for your dataset<a class="headerlink" href="#define-the-correct-organism-and-gene-id-type-for-your-dataset" title="Permalink to this headline">¶</a></h5>
 <p>TODO</p>
+<p>It is recommended to manually determine the <em>NCBI Taxon ID</em> of your organism and the <em>gene ID type</em> of your genomic features, to avoid mischaracterization of genomic features and annotations.
+However, if you are not sure, RNAlysis will try to automatically determine the correct <cite>organism</cite> and <cite>gene_id_type</cite> by default.</p>
+</section>
+<section id="define-the-background-set">
+<h5>Define the background set<a class="headerlink" href="#define-the-background-set" title="Permalink to this headline">¶</a></h5>
+<p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain <em>GO Term</em>, in comparison to a more generalized set of genomic features that we determined as ‘background’.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
+<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that have at least one GO Annotation as a background set.
+If you don’t want to use the default setting, there are two methods of defining the background set:</p>
+<p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">go_enrichment</span><span class="p">(</span><span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.</p>
+<p>The second method of defining the background set is to define a specific set of genomic features to be used as background:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_background_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;feature1&#39;</span><span class="p">,</span><span class="s1">&#39;feature2&#39;</span><span class="p">,</span><span class="s1">&#39;feature3&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">go_enrichment</span><span class="p">(</span><span class="n">background_genes</span><span class="o">=</span><span class="n">my_background_set</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, our background set consists of <em>feature1</em>, <em>feature2</em> and <em>feature3</em>.</p>
+<p>It is not possible to specify both a biotype and a specific background set.</p>
+<p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
+</section>
+<section id="choose-the-statistical-test-optional">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#choose-the-statistical-test-optional" title="Permalink to this headline">¶</a></h5>
+<p>Significance testing for GO enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
+<p>The hypergeometric test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute (‘success’) and <em>X</em> genes from the test set belonging to that attribute.
+If we were to randomly draw <em>n</em> genes from the background set (without replacement), what is the probability of drawing <em>X</em> or more (in case of enrichment)/<em>X</em> or less (in case of depletion) genes belonging to the given attribute?</p>
+<p>The Fisher’s Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.</p>
+<p>The randomization test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute and <em>X</em> genes from the test set belonging to that attribute.
+We performs the number of randomizations specified by the user (10,000 by default).
+In each randomization we randomly draw a set of <em>n</em> genes from the background set (without replacement), and marks the randomization as a ‘success’ if the number of genes in the random set belonging to the attribute is &gt;= <em>X</em> (in case of enrichment) or &lt;= <em>X</em> (in case of depletion).
+The p-values are calculated as <em>(number of sucesses + 1)/(number of repetitions + 1)</em>.
+This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
+You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
+<p>If you don’t specify which statistical test you want to use, the Fisher’s Exact Test will be used by default.</p>
+<p>To choose the statistical test you want to use, utilize the <cite>statistical_test</cite> parameter, which accepts either ‘fisher’, ‘hypergeometric’, or ‘randomization’.
+If you choose to use a randomization test, you can specify the number of randomization repititions to run using the <cite>randomization_reps</cite> parameter, and set the random seed using the <cite>random_seed</cite> parameter.</p>
+</section>
+<section id="choose-which-go-annotations-and-go-aspects-to-use-optional">
+<h5>Choose which GO Annotations and GO Aspects to use (optional)<a class="headerlink" href="#choose-which-go-annotations-and-go-aspects-to-use-optional" title="Permalink to this headline">¶</a></h5>
+<p>TODO</p>
+<p>If you don’t specify which GO Annotations to use for enrichment analysis, TODO will be fetched by default.</p>
+<p>If you don’t specify which Go Aspects to test for, all GO Aspects will be tested for by default.</p>
+</section>
+<section id="choose-annotation-propagation-method-optional">
+<h5>Choose annotation propagation method (optional)<a class="headerlink" href="#choose-annotation-propagation-method-optional" title="Permalink to this headline">¶</a></h5>
+<p>Gene Ontology terms have a somewhat hierarchical relationship that is defined as a directed a-cyclic graph (DAG). This means that each GO term is a node in the graph, and that each node has defined parents that are less specific than itself, going up to the top of the graph.</p>
+<p>For example:</p>
+<blockquote>
+<div><figure class="align-center" id="id23">
+<a class="reference internal image-reference" href="http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="http://geneontology.org/assets/hexose-biosynthetic-process.png" src="http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
+<figcaption>
+<p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id23" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</div></blockquote>
+<p>We can see that in this example the GO term ‘hexose biosynthetic process’ has two parents, one of which is the less specific term ‘hexose metabolic process’, and these relationships go all the way up to the GO term ‘metabolic process’.</p>
+<p>Due to the relationships defined between GO terms, when a gene is annotated with a specific GO term, it makes sense that all of the less-specific parents of this GO term will also apply to said gene.
+Therefore, when performing GO enrichment, we would usually ‘propagate’ every GO annotation to all of the GO terms upstream to it, all the way to the top of the GO graph.</p>
+<p>Unfortunately, propagating GO annotations comes with some issues:
+the defined relationship between GO terms introduces dependencies between neighboring GO terms, leading to correlation between enrichment results of different GO terms, and under-estimation of the False Discovery Rate of our analysis.
+Moreover, since more specific GO terms by definition have less annotations than their less-specific parents, the most statistically significant enrichment results usually belong to the least-specific GO terms, which are not very biologically relevant.</p>
+<p>To deal with this problem, several alternative propagation methods were developed to help de-correlate the GO graph structure and increase the specificity of our results without compromising accuracy.
+You can read more about some suggested methods in the following publication:
+<a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p>
+<p>RNAlysis implements three of these propagation methods: <em>elim</em>, <em>weight</em>, and <em>all.m</em>.
+You can decide which propagation method to use by specifying the <cite>propagation_method</cite> parameter: ‘no’ for no propagation of GO annotations, ‘classic’ for classic propagation of GO annotations, and ‘elim’/’weight’/’all.m’ for propagation using the <em>elim</em>/<em>weight</em>/<em>all.m</em> propagation algorithms.</p>
+<p>If you don’t specify which propagation method to use in enrichment analysis, the <em>elim</em> method will be used by default.</p>
+</section>
+<section id="choose-plotting-parameters-optional">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#choose-plotting-parameters-optional" title="Permalink to this headline">¶</a></h5>
+<p>TODO</p>
+<p>If you don’t specify plotting parameters, TODO will be used by default.</p>
+</section>
+<section id="enrichment-analysis-output">
+<h5>Enrichment analysis output<a class="headerlink" href="#enrichment-analysis-output" title="Permalink to this headline">¶</a></h5>
+<p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 16%" />
+<col style="width: 13%" />
+<col style="width: 4%" />
+<col style="width: 6%" />
+<col style="width: 20%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>name</p></th>
+<th class="head"><p>samples</p></th>
+<th class="head"><p>obs</p></th>
+<th class="head"><p>exp</p></th>
+<th class="head"><p>log2_fold_enrichment</p></th>
+<th class="head"><p>pval</p></th>
+<th class="head"><p>padj</p></th>
+<th class="head"><p>significant</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="GO:0001556">GO:0001556</a></p></td>
+<td><p>oocyte maturation</p></td>
+<td><p>1327</p></td>
+<td><p>451</p></td>
+<td><p>319.52</p></td>
+<td><p>0.49722119558</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="GO:0043186">GO:0043186</a></p></td>
+<td><p>P granule</p></td>
+<td><p>1327</p></td>
+<td><p>89</p></td>
+<td><p>244.87</p></td>
+<td><p>-1.46013879322</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+</tbody>
+</table>
+<p>‘samples’ is the number of features that were used in the enrichment set. ‘obs’ is the observed number of features positive for the attribute in the enrichment set.
+‘exp’ is the expected number of features positive for the attribute in the background set. ‘log2_fold_enrichment’ is log2 of the fold change ‘obs’/’exp’.</p>
+<p>#TODO: fix table according to the correct format</p>
+</section>
 </section>
 <section id="enrichment-analysis-for-user-defined-attributes">
 <h4>Enrichment analysis for user-defined attributes<a class="headerlink" href="#enrichment-analysis-for-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
@@ -1229,43 +1369,70 @@ The first method is to specify an existing Filter object:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<section id="choose-which-user-defined-attributes-to-calculate-enrichment-for">
+<h5>Choose which user-defined attributes to calculate enrichment for<a class="headerlink" href="#choose-which-user-defined-attributes-to-calculate-enrichment-for" title="Permalink to this headline">¶</a></h5>
 <p>Our attributes should be defined in a Reference Table <cite>csv</cite> file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
 If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables’ path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
-<p>Next, we need to determine the set of genes to be used as background. Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, enrich_randomization uses all of the protein-coding genes that appear in the Reference Table as a background set.
-There are two methods of changing the default background set:</p>
+</section>
+<section id="id3">
+<h5>Define the background set<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h5>
+<p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
+<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+If you don’t want to use the default setting, there are two methods of defining the background set:</p>
 <p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">enrich_randomization</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">enrich_randomization</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In this example, instead of using all of the protein-coding genes in the Reference Table as background, we use all of the genomic features in the Reference Table as background.
-When specifying a biotype, an internal reference file is used to categorize different genomic features into different biotypes.</p>
-<p>The second method of changing the background set is to define a specific set of genomic features to be used as background:</p>
+<p>In this example, instead of using all of the protein-coding genes in the Attribute Reference Table as background, we use all of the genomic features in the Attribute Reference Table as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.</p>
+<p>The second method of defining the background set is to define a specific set of genomic features to be used as background:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_background_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;feature1&#39;</span><span class="p">,</span><span class="s1">&#39;feature2&#39;</span><span class="p">,</span><span class="s1">&#39;feature3&#39;</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">enrich_hypergeometric</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">background_genes</span><span class="o">=</span><span class="n">my_background_set</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">enrich_hypergeometric</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">background_genes</span><span class="o">=</span><span class="n">my_background_set</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this example, our background set consists of feature1, feature2 and feature3.</p>
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
-<p>Calling enrich_randomization/enrich_hypergeometric will perform a randomization/hypergeometric test for each of the specified attributes, and return a pandas DataFrame with the following format:</p>
+</section>
+<section id="id4">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h5>
+<p>Significance testing for GO enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
+<p>The hypergeometric test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute (‘success’) and <em>X</em> genes from the test set belonging to that attribute.
+If we were to randomly draw <em>n</em> genes from the background set (without replacement), what is the probability of drawing <em>X</em> or more (in case of enrichment)/<em>X</em> or less (in case of depletion) genes belonging to the given attribute?</p>
+<p>The Fisher’s Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.</p>
+<p>The randomization test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute and <em>X</em> genes from the test set belonging to that attribute.
+We performs the number of randomizations specified by the user (10,000 by default).
+In each randomization we randomly draw a set of <em>n</em> genes from the background set (without replacement), and marks the randomization as a ‘success’ if the number of genes in the random set belonging to the attribute is &gt;= <em>X</em> (in case of enrichment) or &lt;= <em>X</em> (in case of depletion).
+The p-values are calculated as <em>(number of sucesses + 1)/(number of repetitions + 1)</em>.
+This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
+You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
+<p>If you don’t specify which statistical test you want to use, the Fisher’s Exact Test will be used by default.</p>
+<p>To choose the statistical test you want to use, utilize the <cite>statistical_test</cite> parameter, which accepts either ‘fisher’, ‘hypergeometric’, or ‘randomization’.
+If you choose to use a randomization test, you can specify the number of randomization repititions to run using the <cite>randomization_reps</cite> parameter, and set the random seed using the <cite>random_seed</cite> parameter.</p>
+<p># TODO: update according to the chosen API</p>
+</section>
+<section id="id5">
+<h5>Enrichment analysis output<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h5>
+<p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 16%" />
 <col style="width: 14%" />
+<col style="width: 5%" />
 <col style="width: 7%" />
-<col style="width: 7%" />
-<col style="width: 22%" />
+<col style="width: 23%" />
 <col style="width: 10%" />
 <col style="width: 10%" />
 <col style="width: 13%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>name</p></th>
+<tr class="row-odd"><th class="head"></th>
 <th class="head"><p>samples</p></th>
-<th class="head"><p>n obs</p></th>
-<th class="head"><p>n exp</p></th>
+<th class="head"><p>obs</p></th>
+<th class="head"><p>exp</p></th>
 <th class="head"><p>log2_fold_enrichment</p></th>
 <th class="head"><p>pval</p></th>
 <th class="head"><p>padj</p></th>
@@ -1293,16 +1460,123 @@ When specifying a biotype, an internal reference file is used to categorize diff
 </tr>
 </tbody>
 </table>
-<p>‘samples’ is the number of features that were used in the enrichment set. ‘n obs’ is the observed number of features positive for the attribute in the enrichment set.
-‘n exp’ is the expected number of features positive for the attribute in the enrichment set. ‘log2_fold_enrichment’ is log2 of the fold change ‘n obs’/’n exp’.</p>
-<p>enrich_hypergeometric performs the hypergeometric test: Given M genes in the background set, n genes in the test set, with N genes from the background set belonging to a specific attribute (or ‘success’) and X genes from the test set belonging to that attribute.
-If we were to randomly draw n genes from the background set (without replacement), what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) genes belonging to the given attribute?</p>
-<p>enrich_randomization performs the number of randomizations specified by the user (10,000 by default), and marks each randomization as either a success or a failure.
-The p values specified in ‘pval’ are calculated as (sucesses+1)/(repetitions+1). This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values. You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
+<p>‘samples’ is the number of features that were used in the enrichment set. ‘obs’ is the observed number of features positive for the attribute in the enrichment set.
+‘exp’ is the expected number of features positive for the attribute in the background set. ‘log2_fold_enrichment’ is log2 of the fold change ‘obs’/’exp’.</p>
+</section>
 </section>
 <section id="performing-enrichment-analysis-for-non-categorical-user-defined-attributes">
 <h4>Performing enrichment analysis for non-categorical user-defined attributes<a class="headerlink" href="#performing-enrichment-analysis-for-non-categorical-user-defined-attributes" title="Permalink to this headline">¶</a></h4>
 <p>TODO</p>
+<section id="choose-which-user-defined-non-categorical-attributes-to-calculate-enrichment-for">
+<h5>Choose which user-defined non-categorical attributes to calculate enrichment for<a class="headerlink" href="#choose-which-user-defined-non-categorical-attributes-to-calculate-enrichment-for" title="Permalink to this headline">¶</a></h5>
+<p>Our attributes should be defined in an Attribute Reference Table <cite>csv</cite> file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
+Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using the function <cite>FeatureSet.non_categorical_enrichment</cite>.
+If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling non_categorical_enrichment. Otherwise, you need to specify your Reference Tables’ path.
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
+<p>Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every genomic feature in the background and test sets (meaning, no NaN values).</p>
+</section>
+<section id="id6">
+<h5>Define the background set<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h5>
+<p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
+<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+If you don’t want to use the default setting, there are two methods of defining the background set:</p>
+<p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">non_categorical_enrichment</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, instead of using all of the protein-coding genes in the Attribute Reference Table as background, we use all of the genomic features in the Attribute Reference Table as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.</p>
+<p>The second method of defining the background set is to define a specific set of genomic features to be used as background:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_background_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;feature1&#39;</span><span class="p">,</span><span class="s1">&#39;feature2&#39;</span><span class="p">,</span><span class="s1">&#39;feature3&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">non_categorical_enrichment</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">background_genes</span><span class="o">=</span><span class="n">my_background_set</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, our background set consists of feature1, feature2 and feature3.</p>
+<p>It is not possible to specify both a biotype and a specific background set.</p>
+<p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
+</section>
+<section id="id7">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h5>
+<p>When calculating enrichment for a non-categorical attribute, you can use either a parametric or non-parametric statistical test.</p>
+<p>If the <cite>parametric_test</cite> parameter is True, RNAlysis will calculate enrichment using the <em>one-sample Student’s T-test</em>, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.</p>
+<p>If the <cite>parametric_test</cite> parameter is False, RNAlysis will calculate enrichment using the non-parametric <em>one-sample Sign test</em>, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.</p>
+<p>The parametric T-test assumes that the values of your non-categorical attribute distribute normally. Therefore, if you are not sure your data meets this assumption, it is recommended to use the less-powerful non-parametric test.</p>
+<p>If you don’t specify the statistical test, RNAlysis will automatically use a non-parametric test.</p>
+</section>
+<section id="id8">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h5>
+<p>The results of non-categorical enrichment analysis will be plotted as a histogram, comparing the distribution of the non-categorical attribute within the enrichment set compared to the background set.
+If you used a parametric test, the mean of each set will be marked on the histogram. Alternatively, if you used a non-parametric test, the median of each set will be marked on the graph.
+The enrichment results of each attribute will be plotted in a different Figure.</p>
+<p>To better fit the visualization of the results to your needs, you can specify two parameters:</p>
+<p><cite>plot_log_scale</cite> can accept either <cite>True</cite> or <cite>False</cite>, and will determine whether the X-axis of the histogram will be plotting on a logarithmic or linear scale.</p>
+<p><a href="#id9"><span class="problematic" id="id10">`</span></a>plot_style’ can accept either ‘overlap’ or ‘interleaved’, and will draw the histogram in one of the following two styles:</p>
+<blockquote>
+<div><figure class="align-center" id="id24">
+<a class="reference internal image-reference" href="_images/hist_overlap.png"><img alt="_images/hist_overlap.png" src="_images/hist_overlap.png" style="width: 480.0px; height: 238.4px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id11"><span class="problematic" id="id12">`</span></a>plot_style`=’overlap’</span><a class="headerlink" href="#id24" title="Permalink to this image">¶</a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+<figure class="align-center" id="id25">
+<a class="reference internal image-reference" href="_images/hist_interleaved.png"><img alt="_images/hist_interleaved.png" src="_images/hist_interleaved.png" style="width: 480.0px; height: 238.4px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id13"><span class="problematic" id="id14">`</span></a>plot_style`=’interleaved’</span><a class="headerlink" href="#id25" title="Permalink to this image">¶</a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+</div></blockquote>
+<p>If you don’t specify plotting parameters, RNAlysis will plot the histogram on a logarithmic scale using the ‘overlap’ style by default.</p>
+</section>
+<section id="non-categorical-enrichment-analysis-output">
+<h5>Non-Categorical Enrichment analysis output<a class="headerlink" href="#non-categorical-enrichment-analysis-output" title="Permalink to this headline">¶</a></h5>
+<p>Running non-categorical enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 18%" />
+<col style="width: 9%" />
+<col style="width: 10%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>samples</p></th>
+<th class="head"><p>obs</p></th>
+<th class="head"><p>exp</p></th>
+<th class="head"><p>pval</p></th>
+<th class="head"><p>padj</p></th>
+<th class="head"><p>significant</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>attribute1</p></td>
+<td><p>1327</p></td>
+<td><p>451</p></td>
+<td><p>319.52</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-odd"><td><p>attribute2</p></td>
+<td><p>1327</p></td>
+<td><p>89</p></td>
+<td><p>244.87</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+</tbody>
+</table>
+<p>‘samples’ is the number of features that were used in the enrichment set. ‘obs’ is the observed mean/median (depending if the statistical test was parametric or not) value of the non-categorical attribute in the enrichment set.
+‘exp’ is the expected mean/median value of the non-categorical attribute in the background set.</p>
+</section>
 </section>
 <section id="performing-set-operations-and-visualisation-on-multiple-featureset-objects">
 <h4>Performing set operations and visualisation on multiple FeatureSet objects<a class="headerlink" href="#performing-set-operations-and-visualisation-on-multiple-featureset-objects" title="Permalink to this headline">¶</a></h4>
@@ -1318,19 +1592,19 @@ The p values specified in ‘pval’ are calculated as (sucesses+1)/(repetitions
 Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> (you can read more about attributes in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
 Venn diagrams are limited to 2-3 sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id11">
+<div><figure class="align-center" id="id26">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id26" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>While UpSet plots can include any number of sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id12">
+<div><figure class="align-center" id="id27">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1347,8 +1621,11 @@ Venn diagrams are limited to 2-3 sets:</p>
 <section id="working-with-rankedset-objects">
 <h3>Working with RankedSet objects<a class="headerlink" href="#working-with-rankedset-objects" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> class represents a set of genomic features which are ranked by an inherent order. For example, genes could be ranked based on their mean expression level, their fold change between a pair of conditions, etc.
-<a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> objects behave similarly to <a class="reference internal" href="glossary.html#term-FeatureSet"><span class="xref std std-term">FeatureSet</span></a> objects, but in addition they support <em>single-set enrichment analysis</em> - enrichment analysis without a background set.
-You can read more about single-set enrichment analysis below</p>
+<a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> objects behave similarly to <a class="reference internal" href="glossary.html#term-FeatureSet"><span class="xref std std-term">FeatureSet</span></a> objects, but in addition they support <em>single-set enrichment analysis</em> - enrichment analysis without a background set.</p>
+<p>The statistical test used to test significance in <em>single-set enrichment analysis</em> is the <em>generalized minimum hypergeometric test (XL-mHG)</em>, which measures the enrichment of the genomic features at the top and bottom of your ranked gene set compared to the rest of the gene set.
+You can read more about the <em>minimum hypergeometric test</em> and its generalized version the <em>XL-mHG test</em> in the following publications:
+<a class="reference external" href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.0030039">https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.0030039</a>
+<a class="reference external" href="https://arxiv.org/abs/1507.07905">https://arxiv.org/abs/1507.07905</a></p>
 <section id="initialize-an-rankedset-object">
 <h4>Initialize an RankedSet object<a class="headerlink" href="#initialize-an-rankedset-object" title="Permalink to this headline">¶</a></h4>
 <p>We will start by importing the enrichment module:</p>
@@ -1369,9 +1646,25 @@ The first method is to specify an existing Filter object:</p>
 </div>
 <p>RankedSet objects have three attributes: ranked_genes, a numpy array containing the ranked genomic features; gene_set, a python set containing the genomic features; and set_name, a string that describes the feature set (optional).</p>
 </section>
+<section id="performing-single-set-go-enrichment-analysis-without-a-background-set">
+<h4>Performing single-set GO Enrichment analysis without a background set<a class="headerlink" href="#performing-single-set-go-enrichment-analysis-without-a-background-set" title="Permalink to this headline">¶</a></h4>
+<p>Single-set GO Enrichment works much the same as normal Go Enrichment analysis, with two key differences:</p>
+<p>First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the <em>XL-mHG</em> test has to be used.</p>
+<p>An example for running single-set GO Enrichment would look like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">TODO</span>
+</pre></div>
+</div>
+</section>
 <section id="performing-single-set-enrichment-analysis-without-a-background-set">
 <h4>Performing single-set enrichment analysis without a background set<a class="headerlink" href="#performing-single-set-enrichment-analysis-without-a-background-set" title="Permalink to this headline">¶</a></h4>
-<p>TODO</p>
+<p>Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:</p>
+<p>First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the <em>XL-mHG</em> test has to be used.</p>
+<p>An example for running single-set enrichment analysis would look like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">TODO</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="visualizing-sets-intersections-and-enrichment">
