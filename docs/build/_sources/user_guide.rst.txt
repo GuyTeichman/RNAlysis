@@ -828,10 +828,15 @@ To perform GO Enrichment analysis, we will start by creating an FeatureSet objec
 
 Define the correct *organism* and *gene ID type* for your dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO
+Since GO annotations refer to specific gene products, which can differ between different species, RNAlysis needs to know which organism your dataset refers to.
+The organism can be specified as either the organism's name, or the organism's *NCBI Taxon ID* (for example: 6239 for *Caenorhabditis elegans*).
 
-It is recommended to manually determine the *NCBI Taxon ID* of your organism and the *gene ID type* of your genomic features, to avoid mischaracterization of genomic features and annotations.
-However, if you are not sure, RNAlysis will try to automatically determine the correct `organism` and `gene_id_type` by default.
+It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid mischaracterization of annotations.
+However, if you are not sure, RNAlysis will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
+
+
+Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), RNAlysis can translate gene IDs from one gene ID type to another.
+In order to do that, you need to specify which gene ID type your dataset uses.
 
 Define the background set
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -880,14 +885,63 @@ If you don't specify which statistical test you want to use, the Fisher's Exact 
 To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
 If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
 
-Choose which GO Annotations and GO Aspects to use (optional)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO
+Filter GO Terms by *GO aspects* (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Gene Ontology considers three discrete aspects by which gene products can be described:
 
-If you don't specify which GO Annotations to use for enrichment analysis, TODO will be fetched by default.
+1. Biological process - the general 'biological objective' the gene product contributes to (e.g. 'locomotion', 'cell-cell signaling by wnt')
+2. Molecular function - the molecular process or activity carried out by the gene product (e.g. 'antioxidant activity', 'ATP-dependent protein folding chaperone')
+3. Cellular component - the location of the gene product when it carries out its action (e.g. 'P granule', 'mitochondrion')
 
-If you don't specify which Go Aspects to test for, all GO Aspects will be tested for by default.
+Every GO term is exclusively associated with one of these *GO aspects*.
+If you are interested in testing enrichment only for GO terms associated with a subset of these *GO aspects* you can specify which *GO aspects* to use through the `aspects` parameter.
 
+If you don't specify *GO aspects* to be included, RNAlysis will test enrichment for GO Terms from all *GO aspects* by default.
+
+Filter GO Annotations by Evidence Codes (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Every GO annotations is supported by an evidence code, which specifies what kind of evidence supports this annotation.
+Evidence codes are divided into six categories:
+
+1. experimental (there is evidence from an experiment directly supporting this annotation)
+2. phylogenetic (annotations are derived from a phylogenetic model)
+3. computational (annotations are based on in-silico analysis of gene sequence or other computational analysis)
+4. author (annotations are based on the statement of the author in the cited reference)
+5. curator (annotations are based on a curator's judgement)
+6. electronic (annotations are based on homology and/or sequence information, and were not manually reviewed)
+
+Each evidence category contains multiple evidence codes, each with its own definition.
+
+You can choose to include only annotations with specific evidence codes, or to exclude annotations with specific annotation codes, using the `evidence_types` and `excluded_evidence_types` parameters.
+You can specify either specific evidence codes (e.g. 'IEA', 'IKR'), evidence categories ('experimental', 'electronic'), or any combination of those.
+
+If you don't specify evidence types to be included/excluded, RNAlysis will use annotations with all evidence codes by default.
+
+You can read more about GO evidence codes here:
+http://geneontology.org/docs/guide-go-evidence-codes/
+
+Filter GO Annotations by database (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+GO annotations are curated by different databases, such as UniProt, WormBase, or The Arabidopsis Information Resource.
+You can choose to include only annotations from specific databases, or to exclude annotations from specific databases, using the `databases` and `excluded_databases` parameters.
+
+If you don't specify databases to be included/excluded, RNAlysis will use annotations from all databases by default.
+
+Filter GO Annotations by Qualifiers (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Some GO annotations are modified by qualifiers. Each qualifier has a specific meaning within Gene Ontology:
+
+1. the *NOT* qualifier - an explicit annotation that this particular gene product has been experimentally demonstrated *not* to be associated with the particular GO term.
+Annotations with the *NOT* qualifier are usually ignored during enrichment analysis.
+2. the *contributes_to* qualifier - indicates that this gene product facilitates, but does not directly carry out a function of a protein complex.
+3. the *colocalizes_with* qualifier - indicates that this gene product associates with an organelle or complex.
+
+You can choose to include only annotations with specific qualifiers, or to exclude annotations with a specific qualifier, using the `qualifiers` and `excluded_qualifiers` parameters.
+
+If you don't specify qualifiers to be included/excluded, RNAlysis will ignore annotations with the *NOT* qualifier by default, and use annotations with any other qualifiers (or no qualifiers at all).
+
+You can read more about GO qualifiers here:
+http://geneontology.org/docs/go-annotations/
 
 Choose annotation propagation method (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -921,9 +975,14 @@ If you don't specify which propagation method to use in enrichment analysis, the
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO
+After RNALysis is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
+RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.
 
-If you don't specify plotting parameters, TODO will be used by default.
+You can modify the orientation of the bar plot (horizontal or vertical) with the `plot_horizontal` parameter.
+
+If you want to further customize this plot, you can request RNAlysis to return a Matplotlib Figure object of the barplot, by using the `return_fig` parameter.
+
+If you don't specify plotting parameters, RNALysis will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -939,8 +998,6 @@ Running enrichment analysis will calculate enrichment for each of the specified 
 
 'samples' is the number of features that were used in the enrichment set. 'obs' is the observed number of features positive for the attribute in the enrichment set.
 'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
-
-#TODO: fix table according to the correct format
 
 Enrichment analysis for user-defined attributes
 --------------------------------------------------
@@ -1007,6 +1064,10 @@ If you choose to use a randomization test, you can specify the number of randomi
 
 # TODO: update according to the chosen API
 
+Choose plotting parameters (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TODO
+
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
@@ -1024,11 +1085,11 @@ Running enrichment analysis will calculate enrichment for each of the specified 
 
 Performing enrichment analysis for non-categorical user-defined attributes
 ---------------------------------------------------------------------------
-TODO
+Instead of peforming enrichment analysis for categorical attributes ("genes which are expressed exclusively in neurons", "genes enriched in males", "epigenetic gene-products", etc), you can test whether your FeatureSet is enriched for a non-categorical attribute ("number of paralogs", "gene length", or any other numeric attribute) using the function `FeatureSet.non_categorical_enrichment()`.
 
 Choose which user-defined non-categorical attributes to calculate enrichment for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Our attributes should be defined in an Attribute Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
+The attributes should be defined in an Attribute Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
 Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using the function `FeatureSet.non_categorical_enrichment`.
 If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling non_categorical_enrichment. Otherwise, you need to specify your Reference Tables' path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
@@ -1197,7 +1258,9 @@ Second, you cannot specify which statistical test to use, since the *XL-mHG* tes
 
 An example for running single-set GO Enrichment would look like so::
 
-    >>> TODO
+    >>> from rnalysis import enrichment
+    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
+    >>> go_en_result = ranked_set.single_set_go_enrichment(gene_id_type='WormBase')
 
 Performing single-set enrichment analysis without a background set
 --------------------------------------------------------------------
@@ -1208,7 +1271,9 @@ Second, you cannot specify which statistical test to use, since the *XL-mHG* tes
 
 An example for running single-set enrichment analysis would look like so::
 
-    >>> TODO
+    >>> from rnalysis import enrichment
+    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
+    >>> en_result = ranked_set.single_set_enrichment(['attribute1', 'attribute3'], attr_ref_path='tests/test_files/attr_ref_table_for_examples.csv')
 
 
 Visualizing sets, intersections, and enrichment
