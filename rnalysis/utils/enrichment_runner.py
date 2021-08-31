@@ -911,7 +911,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
             self.results = self.results[self.results['significant']]
         # sort results by specificity (level in DAG tree)
         self.results['dag_level'] = [self.dag_tree[ind].level for ind in self.results.index]
-        self.results = self.results.sort_values('dag_level', ascending=False).drop('dag_level', 1).rename_axis('go_id')
+        self.results = self.results.sort_values('dag_level', ascending=False).drop('dag_level', axis=1).rename_axis(
+            'go_id')
 
     def _calculate_enrichment_serial(self) -> dict:
         desc = f"Calculating enrichment for {len(self.attributes)} GO terms " \
