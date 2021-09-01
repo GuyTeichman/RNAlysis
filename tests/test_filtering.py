@@ -1321,7 +1321,7 @@ def test_pipeline_apply_to_with_split_function():
     c = CountFilter('tests/test_files/counted.csv')
     c_pipeline_res = pl_c.apply_to(c, inplace=False)
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
-    c_res = c_res.split_kmeans(n_clusters=[2, 3, 4], random_state=42)
+    c_res = c_res.split_kmeans(n_clusters=[2, 3, 4], random_seed=42)
     c_res_cont = []
     for i in c_res:
         c_res_cont.extend(i)
@@ -1353,7 +1353,7 @@ def test_pipeline_apply_to_multiple_splits():
     c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_probabilities=True)
     c_res_cont = []
     for i in c_res:
-        c_res_cont.extend(i.split_kmedoids(n_clusters=2, random_state=42))
+        c_res_cont.extend(i.split_kmedoids(n_clusters=2, random_seed=42))
     c_res_cont_fin = []
     for i in c_res_cont:
         c_res_cont_fin.extend(i.split_by_reads(15))
@@ -1394,7 +1394,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     c_dict['clustergram_1'] = tuple(clustergrams)
     c_res_cont = []
     for obj in c_res:
-        k_out = obj.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, random_state=42)
+        k_out = obj.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, random_seed=42)
         for k in k_out:
             c_res_cont.extend(k)
     for obj in c_res_cont:
@@ -1423,7 +1423,7 @@ def test_split_kmeans_api():
     assert isinstance(res, tuple)
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
-    res2 = c.split_kmeans(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_state=42, plot_style='std_bar')
+    res2 = c.split_kmeans(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_seed=42, plot_style='std_bar')
     assert isinstance(res2, list)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
@@ -1473,7 +1473,7 @@ def test_split_kmedoids_api():
     assert isinstance(res, tuple)
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
-    res2 = c.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_state=42, plot_style='std_bar')
+    res2 = c.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_seed=42, plot_style='std_bar')
     assert isinstance(res2, list)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]

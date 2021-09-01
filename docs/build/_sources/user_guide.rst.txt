@@ -578,6 +578,16 @@ https://hdbscan.readthedocs.io/en/latest/index.html
 
 |
 
+Supported distance metric
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+TODO
+
+the following distance metrics are supported by RNAlysis:
+
+* TODO
+* TODO
+
 Data visualization and exploratory data analysis with CountFilter
 ------------------------------------------------------------------------
 :term:`CountFilter` includes multiple methods for visualization and exploratory analysis of count data.
