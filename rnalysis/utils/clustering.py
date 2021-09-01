@@ -481,16 +481,15 @@ class ClusteringRunner:
 
 class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
     def __init__(self, data: pd.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
-                 max_n_clusters_estimate: Union[int, str] = 'default', plot_style: str = 'none',
+                 max_n_clusters_estimate: Union[int, str] = 'auto', plot_style: str = 'none',
                  split_plots: bool = False, metric: Tuple[str, str] = None):
         super().__init__(data, power_transform, metric, plot_style, split_plots)
         self.max_n_clusters_estimate = min(20, data.shape[
-            0] // 4) if max_n_clusters_estimate == 'default' else max_n_clusters_estimate
+            0] // 4) if max_n_clusters_estimate == 'auto' else max_n_clusters_estimate
         self.n_clusters: list = self.parse_n_clusters(n_clusters)
 
     def parse_n_clusters(self, n_clusters) -> List[int]:
         # get best n_clusters value using gap statistic/silhouette method, if requested by the user
-        max_clusters = min(20, self.data.shape[0] // 4)  # if max_clusters == 'default' else max_clusters
         if isinstance(n_clusters, str) and n_clusters.lower() == 'silhouette':
             n_clusters = self.silhouette()
         elif isinstance(n_clusters, str) and n_clusters.lower() in {'gap', 'gap statistic', 'gap_statistic'}:
@@ -505,18 +504,18 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
             f"or an integer/Iterable of integers in range 2 <= n_clusters <= n_features."
         return n_clusters
 
-    def gap_statistic(self, random_state: int = None, n_refs: int = 10) -> int:
+    def gap_statistic(self, random_seed: int = None, n_refs: int = 10) -> int:
         raw_data = self.data.values
         # determine the range of k values to be tested
         n_clusters_range = np.arange(1, self.max_n_clusters_estimate + 1)
         print(f"Estimating the optimal number of clusters using the Gap Statistic method in range "
               f"{2}:{self.max_n_clusters_estimate}...")
         # set the random state, if one was supplied
-        if random_state is not None:
-            np.random.seed(random_state)
+        if random_seed is not None:
+            np.random.seed(random_seed)
         # calculate the SVD of the observed data (X), and transform via X' = x_tag = dot(X, V)
         # note: the data is centered by sklearn.decomposition.PCA, no need to pre-center it.
-        pca = PCA(random_state=random_state).fit(raw_data)
+        pca = PCA(random_state=random_seed).fit(raw_data)
         x_tag = pca.transform(raw_data)
         # determine the ranges of the columns of X' (x_tag)
         a, b = x_tag.min(axis=0, keepdims=True), x_tag.max(axis=0, keepdims=True)
@@ -651,15 +650,15 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
     clusterer_class = KMeans
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
-                 max_n_clusters_estimate: Union[int, str] = 'default', random_state: int = None, n_init: int = 3,
+                 max_n_clusters_estimate: Union[int, str] = 'auto', random_seed: int = None, n_init: int = 3,
                  max_iter: int = 300, plot_style: str = 'none', split_plots: bool = False):
-        assert isinstance(random_state, int) or random_state is None
+        assert isinstance(random_seed, int) or random_seed is None
         assert isinstance(n_init, int) and n_init >= 1
         assert isinstance(max_iter, int) and max_iter >= 1
-        self.random_state = random_state
+        self.random_seed = random_seed
         self.n_init = n_init
         self.max_iter = max_iter
-        self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_state)
+        self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_seed)
 
         super(KMeansRunner, self).__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style,
                                            split_plots)
@@ -687,19 +686,18 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
     legal_metrics = set(sklearn_pairwise._VALID_METRICS)
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
-                 max_n_clusters_estimate: Union[int, str] = 'default', metric: str = 'euclidean',
-                 random_state: int = None, n_init: int = 3, max_iter: int = 300, plot_style: str = 'none',
+                 max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
+                 random_seed: int = None, n_init: int = 3, max_iter: int = 300, plot_style: str = 'none',
                  split_plots: bool = False):
-        assert isinstance(random_state, int) or random_state is None
+        assert isinstance(random_seed, int) or random_seed is None
         assert isinstance(n_init, int) and n_init >= 1
         assert isinstance(max_iter, int) and max_iter >= 1
         assert isinstance(metric, str)
-        assert metric.lower() in self.legal_metrics or metric.lower() in self.precomputed_metrics
 
-        self.random_state = random_state
+        self.random_seed = random_seed
         self.n_init = n_init
         self.max_iter = max_iter
-        self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_state)
+        self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_seed)
         super(KMedoidsRunner, self).__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style,
                                              split_plots, ('metric', metric))
 
@@ -726,10 +724,8 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
     clusterer_class = AgglomerativeClustering
     legal_metrics = set(sklearn_pairwise.PAIRED_DISTANCES.values())
 
-    # {'euclidean', 'l1', 'l2', 'manhattan', 'cosine'}
-
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
-                 max_n_clusters_estimate: Union[int, str] = 'default', metric: str = 'euclidean',
+                 max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  linkage: str = 'average', distance_threshold: float = None, plot_style: str = 'none',
                  split_plots: bool = False):
         assert isinstance(linkage, str)
