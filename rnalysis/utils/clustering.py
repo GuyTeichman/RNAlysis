@@ -738,8 +738,7 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
         assert linkage.lower() in {'ward', 'complete', 'average', 'single'}
         assert isinstance(distance_threshold, (int, float)) or distance_threshold is None
         if linkage.lower() == 'ward':
-            assert metric.lower() == 'euclidean'
-        assert metric.lower() in self.precomputed_metrics or metric.lower() in self.legal_metrics
+            assert metric.lower() == 'euclidean', "metric must be 'euclidean' if linkage is 'ward'."
 
         self.linkage = linkage.lower()
         self.distance_threshold = distance_threshold
