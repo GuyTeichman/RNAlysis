@@ -16,6 +16,7 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
 from sklearn_extra.cluster import KMedoids
 from tqdm.auto import tqdm
+import sklearn.metrics.pairwise as sklearn_pairwise
 
 from rnalysis.utils import generic, parsing, validation
 
