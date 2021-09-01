@@ -395,18 +395,19 @@ class ClusteringRunner:
         self.transform: Callable = transform
 
         if metric is not None:
-            metric_arg_name, metric_value = metric
-            metric_value = metric_value.lower()
-            validation.validate_clustering_parameters(metric_value)
-            if metric_value in self.precomputed_metrics:
+            metric_parameter_name, metric_name = metric
+            metric_name = metric_name.lower()
+            validation.validate_clustering_parameters(metric_name)
+            if metric_name in self.precomputed_metrics:
                 def precomputed_transform(x):
-                    return self.precomputed_metrics[metric_value](transform(x))
+                    return self.precomputed_metrics[metric_name](transform(x))
 
                 self.transform = precomputed_transform
                 self.metric = 'precomputed'
             else:
-                self.metric = metric_value.lower()
-            self.clusterer_kwargs[metric_arg_name] = self.metric
+                self.metric = metric_name.lower()
+            self.clusterer_kwargs[metric_parameter_name] = self.metric
+            self.metric_name = metric_name
 
         self.plot_style: str = plot_style.lower()
         self.split_plots: bool = split_plots
@@ -669,9 +670,9 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
                 self.transform(self.data.values))
             # plot results
             centers = clusterer.cluster_centers_
-            self.plot_clustering(this_n_clusters, data_for_plot, clusterer.labels_, centers,
-                                 title=f"Results of K-Means Clustering for n_clusters={this_n_clusters} and "
-                                       f"power_transform={self.power_transform}")
+            title = f"Results of K-Means Clustering for n_clusters={this_n_clusters} and " \
+                    f"power_transform={self.power_transform}"
+            self.plot_clustering(this_n_clusters, data_for_plot, clusterer.labels_, centers, title=title)
             self.clusterers.append(clusterer)
         return self.clusterers
 
@@ -712,9 +713,9 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
             # get cluster centers
             centers = data_for_plot.values[clusterer.medoid_indices_, :]
             # plot results
-            self.plot_clustering(this_n_clusters, data_for_plot, clusterer.labels_, centers,
-                                 title=f"Results of K-Medoids Clustering for n_clusters={this_n_clusters}, "
-                                       f"metric='{self.metric}', power_transform={self.power_transform}")
+            title = f"Results of K-Medoids Clustering for n_clusters={this_n_clusters}, " \
+                    f"metric='{self.metric_name}', power_transform={self.power_transform}"
+            self.plot_clustering(this_n_clusters, data_for_plot, clusterer.labels_, centers, title=title)
             self.clusterers.append(clusterer)
         return self.clusterers
 
@@ -766,8 +767,8 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
                 centers = np.array(
                     [data_for_plot.values[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(this_n_clusters)])
                 # plot results
-                title = f"Results of Hierarchical Clustering for n_clusters={this_n_clusters}, "
-                f"metric='{self.metric}', \nlinkage='{self.linkage}', power_transform={self.power_transform}"
+                title = f"Results of Hierarchical Clustering for n_clusters={this_n_clusters}, " \
+                        f"metric='{self.metric_name}', \nlinkage='{self.linkage}', power_transform={self.power_transform}"
                 self.clusterers.append(clusterer)
                 self.plot_clustering(this_n_clusters, data_for_plot, clusterer.labels_, centers, title=title)
         else:
@@ -777,8 +778,8 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
                 [data_for_plot.values[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(clusterer.n_clusters_)])
             self.clusterers.append(clusterer)
             # plot results
-            title = f"Results of Hierarchical Clustering for distance_threshold={self.distance_threshold}, "
-            f"\nmetric='{self.metric}', linkage='{self.linkage}', " f"power_transform={self.power_transform}"
+            title = f"Results of Hierarchical Clustering for distance_threshold={self.distance_threshold}, \n" \
+                    f"metric='{self.metric_name}', linkage='{self.linkage}', " f"power_transform={self.power_transform}"
             self.plot_clustering(clusterer.n_clusters_, data_for_plot, clusterer.labels_, centers, title=title)
 
         return self.clusterers
@@ -826,9 +827,10 @@ class HDBSCANRunner(ClusteringRunner):
             # get cluster centers
             centers = np.array([data_for_plot.loc[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             # plot results
-            title = f"Results of HDBSCAN Clustering for min_cluster_size={self.min_cluster_size}, "
-            f"min_samples = {self.min_samples}, metric='{self.metric}', \nepsilon={self.cluster_selection_epsilon}, "
-            f"method='{self.cluster_selection_method}'and power_transform={self.power_transform}"
+            title = f"Results of HDBSCAN Clustering for min_cluster_size={self.min_cluster_size}, " \
+                    f"min_samples = {self.min_samples}, metric='{self.metric_name}', " \
+                    f"\nepsilon={self.cluster_selection_epsilon}, " \
+                    f"method='{self.cluster_selection_method}'and power_transform={self.power_transform}"
             self.plot_clustering(n_clusters, data_for_plot, clusterer.labels_, centers, title=title)
 
         if self.return_probabilities:
