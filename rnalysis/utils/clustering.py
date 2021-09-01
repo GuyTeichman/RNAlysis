@@ -312,6 +312,11 @@ class CLICOM:
 
 
 class KMedoidsIter:
+    """
+    A K-Medoids clusterer object with a similar API to other scikit-learn clusterers,
+    with the added capability to run the algorithm n_init times and pick the highest-scoring result.
+    """
+
     __slots__ = {'n_clusters': 'number of clusters to find', 'metric': 'distance metric',
                  'n_init': 'number of initializations to run', 'init': 'initialization algorithm',
                  'max_iter': 'max number of algorithm iterations per initialization',
