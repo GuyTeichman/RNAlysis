@@ -2135,20 +2135,24 @@ class CountFilter(Filter):
                      ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
 
-        :param n_clusters:
-        :type n_clusters:
-        :param random_state:
-        :type random_state:
-        :param n_init:
-        :type n_init:
-        :param max_iter:
-        :type max_iter:
-        :param power_transform:
-        :type power_transform:
-        :param plot_style:
-        :type plot_style:
-        :param split_plots:
-        :type split_plots:
+        :param n_clusters: The number of clusters to be found by the algorithm.
+        :type n_clusters: int, list of ints, 'gap', or 'slihouette'
+        :param random_seed: determines random number generation for centroid initialization. \
+        Use an int to make the randomness deterministic.
+        :type random_seed: int or None (default None)
+        :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
+        The final results will be the best output of n_init consecutive runs in terms of inertia.
+        :type n_init: int (default 3)
+        :param max_iter: maximum number of iterations of the k-medoids algorithm for a single run.
+        :type max_iter: int (default 300)
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to clustering.
+        :type power_transform: bool (default False)
+        :param plot_style: determines the visual style of the cluster expression plot.
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default 'all')
+        :param split_plots: if True, each discovered cluster will be plotted on its own. \
+        Otherwise, all clusters will be plotted in the same Figure.
+        :type split_plots: bool (default False)
         :param max_clusters:
         :type max_clusters:
         :return:
@@ -2171,21 +2175,25 @@ class CountFilter(Filter):
                            plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default',
                            gap_random_state: int = None) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
-
-        :param n_clusters:
-        :type n_clusters:
-        :param metric:
-        :type metric:
-        :param linkage:
-        :type linkage:
-        :param power_transform:
-        :type power_transform:
-        :param distance_threshold:
-        :type distance_threshold:
-        :param plot_style:
-        :type plot_style:
-        :param split_plots:
-        :type split_plots:
+        :param n_clusters: The number of clusters to be found by the algorithm.
+        :type n_clusters: int, list of ints, 'gap', or 'slihouette'
+        :param metric: the distance metric used to determine similarity between data points. \
+        If linkage is 'ward', only the 'euclidean' metric is accepted.
+        :type metric: 'euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default 'euclidean')
+        :param linkage: Which linkage criterion to use. The linkage criterion determines which distance to use between \
+        sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.
+        :type linkage: 'single', 'average', 'complete', or 'ward' (default 'average')
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to clustering.
+        :type power_transform: bool (default False)
+        :param distance_threshold: a distance threshold above which clusters will not be merged. \
+        If a number is specified, `n_clusters` must be None.
+        :type distance_threshold: float or None (default None)
+        :param plot_style: determines the visual style of the cluster expression plot.
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default 'all')
+        :param split_plots: if True, each discovered cluster will be plotted on its own. \
+        Otherwise, all clusters will be plotted in the same Figure.
+        :type split_plots: bool (default False)
         :param max_clusters:
         :type max_clusters:
         :param gap_random_state:
@@ -2213,22 +2221,27 @@ class CountFilter(Filter):
                        ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
 
-        :param n_clusters:
-        :type n_clusters:
-        :param random_state:
-        :type random_state:
-        :param n_init:
-        :type n_init:
-        :param max_iter:
-        :type max_iter:
-        :param metric:
-        :type metric:
-        :param power_transform:
-        :type power_transform:
-        :param plot_style:
-        :type plot_style:
-        :param split_plots:
-        :type split_plots:
+        :param n_clusters: The number of clusters to be found by the algorithm.
+        :type n_clusters: int, list of ints, 'gap', or 'slihouette'
+        :param random_seed: determines random number generation for centroid initialization. \
+        Use an int to make the randomness deterministic.
+        :type random_seed: int or None (default None)
+        :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
+        The final results will be the best output of n_init consecutive runs in terms of inertia.
+        :type n_init: int (default 3)
+        :param max_iter: maximum number of iterations of the k-medoids algorithm for a single run.
+        :type max_iter: int (default 300)
+        :param metric: the distance metric used to determine similarity between data points. \
+        For a full list of supported distance metrics see
+        :type metric: str (default 'euclidean')
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to clustering.
+        :type power_transform: bool (default False)
+        :param plot_style: determines the visual style of the cluster expression plot.
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default 'all')
+        :param split_plots: if True, each discovered cluster will be plotted on its own. \
+        Otherwise, all clusters will be plotted in the same Figure.
+        :type split_plots: bool (default False)
         :param max_clusters:
         :type max_clusters:
         :return:
