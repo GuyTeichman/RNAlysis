@@ -506,8 +506,7 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal input {mode}: mode must be either 'union' or 'intersection'"
         # load the Attribute Reference Table
-        ref = ref_tables.get_attr_ref_path(ref)
-        attr_ref_table = io.load_csv(ref)
+        attr_ref_table = io.load_csv(ref_tables.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
         # generate list of the indices that are positive for each attribute
