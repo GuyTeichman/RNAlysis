@@ -60,7 +60,7 @@ class Filter:
         :type fname: Union[str, Path]
         :param drop_columns: if a string or list of strings are specified, \
         the columns of the same name/s will be dropped from the loaded DataFrame.
-        :type drop_columns: str, list of str, or False (default False)
+        :type drop_columns: str, list of str, or False (default=False)
 
         :Examples:
             >>> from rnalysis import filtering
@@ -347,8 +347,9 @@ class Filter:
     def split_by_percentile(self, percentile: float, column: str) -> tuple:
 
         """
-        Splits the Filter object into two Filter objects: \
-        below and above the specified percentile in the spcfieid column.
+        Splits the features in the Filter object into two non-overlapping Filter objects: \
+        one containing features below the specified percentile in the specfieid column, \
+        and the other containing features about the specified percentile in the specified column.
 
         :type percentile: float between 0 and 1
         :param percentile: The percentile that all features above it will be filtered out.
@@ -445,13 +446,13 @@ class Filter:
         :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
         of the indicated attributes. If 'intersection', \
         filters out every genomic feature that does not belong to ALL of the indicated attributes.
-        :type ref: str or pathlib.Path (default 'predefined')
+        :type ref: str or pathlib.Path (default='predefined')
         :param ref: filename/path of the attribute reference table to be used as reference.
-        :type opposite: bool (default False)
+        :type opposite: bool (default=False)
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool (default True)
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new and filtered instance of the Filter object.
@@ -531,9 +532,9 @@ class Filter:
     def split_by_attribute(self, attributes: Union[List[str], Tuple[str]], ref: str = 'predefined') -> tuple:
 
         """
-        Splits the Filter object into multiple Filter objects, \
+        Splits the features in the Filter object into multiple Filter objects, \
         each corresponding to one of the specified Attribute Reference Table attributes. \
-        Each object contains only features that match its Attribute Reference Table attribute.
+        Each new Filter object will contain only features that belong to its Attribute Reference Table attribute.
 
         :param attributes: list of attribute names from the Attribute Reference Table to filter by.
         :type attributes: list of strings
@@ -729,7 +730,7 @@ class Filter:
 
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
-        :type long_format: 'short' or 'long' (default 'short')
+        :type long_format: 'short' or 'long' (default='short')
         :param long_format: 'short' returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. 'long' returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
@@ -903,7 +904,7 @@ class Filter:
         """
         Remove all rows whose values in the specified columns are missing (NaN).
 
-        :type columns: str or list of str (default 'all')
+        :type columns: str or list of str (default='all')
         :param columns:name/names of the columns to check for missing values.
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
@@ -1028,7 +1029,7 @@ class Filter:
         :param by: Names of the column or columns to sort and then filter by.
         :type n: int
         :param n: How many features to keep in the Filter object.
-        :type ascending: bool or list of bools (default True)
+        :type ascending: bool or list of bools (default=True)
         :param ascending: Sort ascending vs. descending. Specify list for multiple sort orders. \
         If this is a list of bools, it must have the same length as 'by'.
         :type na_position: 'first' or 'last', default 'last'
@@ -1362,7 +1363,7 @@ class FoldChangeFilter(Filter):
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :type random_seed: non-negative integer (default None)
+        :type random_seed: non-negative integer (default=None)
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
@@ -1510,7 +1511,7 @@ class FoldChangeFilter(Filter):
     def split_fold_change_direction(self) -> tuple:
 
         """
-        Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping \
+        Splits the features in the FoldChangeFilter object into two non-overlapping \
         FoldChangeFilter objects, based on the direction of their log2(fold change). \
         The first object will contain only features with a positive log2(fold change), \
         the second object will contain only features with a negative log2(fold change). \
@@ -1704,7 +1705,7 @@ class DESeqFilter(Filter):
     def split_fold_change_direction(self) -> tuple:
 
         """
-        Splits the features in the current DESeqFilter object into two complementary, non-overlapping DESeqFilter \
+        Splits the features in the DESeqFilter object into two non-overlapping DESeqFilter \
         objects, based on the direction of their log2foldchange. The first object will contain only features with a \
         positive log2foldchange, the second object will contain only features with a negative log2foldchange.
 
@@ -2066,7 +2067,7 @@ class CountFilter(Filter):
     def split_by_reads(self, threshold: float = 5) -> tuple:
 
         """
-        Splits the features in the current CountFilter object into two complementary, non-overlapping CountFilter \
+        Splits the features in the CountFilter object into two non-overlapping CountFilter \
         objects, based on the their maximum expression level. The first object will contain only highly-expressed \
          features (which have reads over the specified threshold in at least one sample). The second object will \
          contain only lowly-expressed features (which have reads below the specified threshold in all samples).
@@ -2074,7 +2075,7 @@ class CountFilter(Filter):
         :param threshold: The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have \
         in at least one sample in order to be \
         included in the "highly expressed" object and no the "lowly expressed" object.
-        :type threshold: float (default 5)
+        :type threshold: float (default=5)
         :rtype: Tuple[filtering.CountFilter, filtering.CountFilter]
         :return: A tuple containing two CountFilter objects: the first has only highly-expressed features, \
         and the second has only lowly-expressed features.
@@ -2130,26 +2131,29 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def split_kmeans(self, n_clusters: Union[int, List[int], str], n_init: int = 3, max_iter: int = 300,
-                     random_state: int = None, power_transform: bool = False, plot_style: str = 'all',
-                     split_plots: bool = False, max_clusters: int = 'default'
+                     random_seed: int = None, power_transform: bool = False, plot_style: str = 'all',
+                     split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
                      ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
+        Clusters the features in the CountFilter object using the K-means clustering algorithm, \
+        and then splits those features into multiple non-overlapping CountFilter objects, \
+        based on the clustering result.
 
-        :param n_clusters: The number of clusters to be found by the algorithm.
+        :param n_clusters: The number of clusters the algorithm will seek.
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
-        :type random_seed: int or None (default None)
+        :type random_seed: int or None (default=None)
         :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
         The final results will be the best output of n_init consecutive runs in terms of inertia.
-        :type n_init: int (default 3)
+        :type n_init: int (default=3)
         :param max_iter: maximum number of iterations of the k-medoids algorithm for a single run.
-        :type max_iter: int (default 300)
+        :type max_iter: int (default=300)
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default False)
+        :type power_transform: bool (default=False)
         :param plot_style: determines the visual style of the cluster expression plot.
-        :type plot_style: 'all', 'std_area', or 'std_bar' (default 'all')
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default False)
@@ -2182,15 +2186,15 @@ class CountFilter(Filter):
         :type metric: 'euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default 'euclidean')
         :param linkage: Which linkage criterion to use. The linkage criterion determines which distance to use between \
         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.
-        :type linkage: 'single', 'average', 'complete', or 'ward' (default 'average')
+        :type linkage: 'single', 'average', 'complete', or 'ward' (default='average')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default False)
+        :type power_transform: bool (default=False)
         :param distance_threshold: a distance threshold above which clusters will not be merged. \
         If a number is specified, `n_clusters` must be None.
-        :type distance_threshold: float or None (default None)
+        :type distance_threshold: float or None (default=None)
         :param plot_style: determines the visual style of the cluster expression plot.
-        :type plot_style: 'all', 'std_area', or 'std_bar' (default 'all')
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default False)
@@ -2225,20 +2229,20 @@ class CountFilter(Filter):
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
-        :type random_seed: int or None (default None)
+        :type random_seed: int or None (default=None)
         :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
         The final results will be the best output of n_init consecutive runs in terms of inertia.
-        :type n_init: int (default 3)
+        :type n_init: int (default=3)
         :param max_iter: maximum number of iterations of the k-medoids algorithm for a single run.
-        :type max_iter: int (default 300)
+        :type max_iter: int (default=300)
         :param metric: the distance metric used to determine similarity between data points. \
-        For a full list of supported distance metrics see
-        :type metric: str (default 'euclidean')
+        For a full list of supported distance metrics see the user guide.
+        :type metric: str (default='euclidean')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default False)
+        :type power_transform: bool (default=False)
         :param plot_style: determines the visual style of the cluster expression plot.
-        :type plot_style: 'all', 'std_area', or 'std_bar' (default 'all')
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default False)
@@ -2420,10 +2424,12 @@ class CountFilter(Filter):
          variance between the different samples. The function will automatically plot Principal Component #1 \
          with every other Principal Components calculated.
 
+        :param power_transform: if True, performs a power transform on the count data prior to PCA.
+        :type power_transform: bool (default=True)
         :type sample_names: 'all' or list.
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"]
-        :type n_components: positive int (default 3)
+        :type n_components: positive int (default=3)
         :param n_components: number of PCA components to return.
         :type sample_grouping: list of positive integers, 'triplicates' or None (default)
         :param sample_grouping: Optional. Indicates which samples are grouped together as replicates, \
@@ -2435,7 +2441,7 @@ class CountFilter(Filter):
         [1, 1, 1, 2, 2, 2, 2, 3]. \
         If 'triplicate', then sample_groupins will automatically group samples into triplicates. For example: \
         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].
-        :type labels: bool (default True)
+        :type labels: bool (default=True)
         :param labels: if True, labels the points on the PCA plot.
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
@@ -2602,11 +2608,11 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :type notch: bool (default True)
+        :type notch: bool (default=True)
         :param notch: if True, adds a confidence-interval notch to the box-plot.
-        :type scatter: bool (default False)
+        :type scatter: bool (default=False)
         :param scatter: if True, adds a scatter-plot on top of the box-plot.
-        :type ylabel: str (default 'Log10(RPM + 1)')
+        :type ylabel: str (default='Log10(RPM + 1)')
         :param ylabel: the label of the Y axis.
         :return: a seaborn boxplot object.
 
@@ -2649,9 +2655,9 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :type scatter: bool (default False)
+        :type scatter: bool (default=False)
         :param scatter: if True, adds a scatter-plot on top of the box-plot.
-        :type ylabel: str (default 'Log10(RPM + 1)')
+        :type ylabel: str (default='Log10(RPM + 1)')
         :param ylabel: the label of the Y axis.
         :return: a seaborn enhanced box-plot object.
 
@@ -2693,7 +2699,7 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :type ylabel: str (default 'log10(normalized reads + 1)')
+        :type ylabel: str (default='log10(normalized reads + 1)')
         :param ylabel: the label of the Y axis.
         :return: a seaborn violin object.
 

@@ -262,7 +262,7 @@ class FeatureSet:
         :param alpha: Indicates the FDR threshold for significance.
         :param statistical_test: determines the statistical test to be used for enrichment analysis. \
         Note that some propagation methods support only some of the available statistical tests.
-        :type statistical_test: 'fisher', 'hypergeometric' or 'randomization' (default 'fisher')
+        :type statistical_test: 'fisher', 'hypergeometric' or 'randomization' (default='fisher')
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
         Default 'protein_coding'.
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
@@ -272,7 +272,7 @@ class FeatureSet:
         :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
         :param background_genes: a set of specific feature indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
-        :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+        :type biotype_ref_path: str or pathlib.Path (default='predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
         :param propagate_annotations: determines the propagation method of GO annotations. \
@@ -281,7 +281,7 @@ class FeatureSet:
         weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
         combination of all proopagation methods. To read more about the propagation methods, \
         see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
-        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default 'elim')
+        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
         :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
         Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
         :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
@@ -310,29 +310,29 @@ class FeatureSet:
         :type qualifiers: str, Iterable of str, or 'any' (default)
         :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis. \
         Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
-        :type excluded_qualifiers: str, Iterable of str, or None (default 'not')
+        :type excluded_qualifiers: str, Iterable of str, or None (default='not')
         :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
         both significant and non-significant terms. If False (default), only significant GO terms will be returned.
-        :type return_nonsignificant: bool (default False)
+        :type return_nonsignificant: bool (default=False)
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :type return_fig: bool (default False)
+        :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_horizontal: bool (default True)
+        :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
-        :type random_seed: non-negative integer (default None)
+        :type random_seed: non-negative integer (default=None)
         :type random_seed: if using a randomization test, determine the random seed used to initialize \
         the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs. If not using a randomization test, this parameter will not affect the analysis.
         :param randomization_reps: if using a randomization test, determine how many randomization repititions to run. \
         Otherwise, this parameter will not affect the analysis.
-        :type randomization_reps: int larger than 0 (default 10000)
-        :type parallel: bool (default False)
+        :type randomization_reps: int larger than 0 (default=10000)
+        :type parallel: bool (default=False)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -417,9 +417,9 @@ class FeatureSet:
         Cannot be specified together with 'background_genes'.
         :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
         :param background_genes: a set of specific feature indices to be used as background genes. \
-        :type attr_ref_path: str or pathlib.Path (default 'predefined')
+        :type attr_ref_path: str or pathlib.Path (default='predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
-        :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+        :type biotype_ref_path: str or pathlib.Path (default='predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
         Cannot be specified together with 'biotype'.
@@ -428,12 +428,12 @@ class FeatureSet:
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :type return_fig: bool (default False)
+        :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_horizontal: bool (default True)
+        :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
-        :type random_seed: non-negative integer (default None)
+        :type random_seed: non-negative integer (default=None)
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
@@ -488,41 +488,41 @@ class FeatureSet:
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
-        :type alpha: float between 0 and 1 (default 0.05)
+        :type alpha: float between 0 and 1 (default=0.05)
         :param alpha: Indicates the FDR threshold for significance.
-        :type reps: int larger than 0 (default 10000)
+        :type reps: int larger than 0 (default=10000)
         :param reps: How many repetitions to run the randomization for. \
         10,000 is the default. Recommended 10,000 or higher.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
-        (default 'protein_coding')
+        (default='protein_coding')
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
         'all' will include all genomic features in the reference table, \
         'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
         :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
-        (default None)
+        (default=None)
         :param background_genes: a set of specific feature indices to be used as background genes. \
-        :type attr_ref_path: str or pathlib.Path (default 'predefined')
+        :type attr_ref_path: str or pathlib.Path (default='predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
-        :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+        :type biotype_ref_path: str or pathlib.Path (default='predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
         Cannot be specified together with 'biotype'.
-        :type save_csv: bool (default False)
+        :type save_csv: bool (default=False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
-        :type fname: str or pathlib.Path (default None)
+        :type fname: str or pathlib.Path (default=None)
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :type return_fig: bool (default False)
+        :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_horizontal: bool (default True)
+        :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
-        :type random_seed: non-negative integer (default None)
+        :type random_seed: non-negative integer (default=None)
         :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
         By default it is picked at random, but you can set it to a particular integer to get consistents results \
         over multiple runs.
-        :type parallel: bool (default False)
+        :type parallel: bool (default=False)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -581,34 +581,34 @@ class FeatureSet:
         (according to their order in the Attribute Reference Table). \
         If 'all', all of the attributes in the Attribute Reference Table will be used. \
         If None, a manual input prompt will be raised.
-        :type alpha: float between 0 and 1 (default 0.05)
+        :type alpha: float between 0 and 1 (default=0.05)
         :param alpha: Indicates the FDR threshold for significance.
-        :type attr_ref_path: str or pathlib.Path (default 'predefined')
+        :type attr_ref_path: str or pathlib.Path (default='predefined')
         :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
-        :type biotype_ref_path: str or pathlib.Path (default 'predefined')
+        :type biotype_ref_path: str or pathlib.Path (default='predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
         :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all' \
-        (default 'protein_coding')
+        (default='protein_coding')
         :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
         'all' will include all genomic features in the reference table, \
         'protein_coding' will include only protein-coding genes from the reference table, etc. \
         Cannot be specified together with 'background_genes'.
         :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
-        (default None)
+        (default=None)
         :param background_genes: a set of specific feature indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
-        :type save_csv: bool (default False)
+        :type save_csv: bool (default=False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
-        :type fname: str or pathlib.Path (default None)
+        :type fname: str or pathlib.Path (default=None)
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :type return_fig: bool (default False)
+        :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_horizontal: bool (default True)
+        :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
-        :type parallel: bool (default True)
+        :type parallel: bool (default=True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -655,15 +655,15 @@ class FeatureSet:
         :param results_df: a pandas DataFrame created by FeatureSet.enrich_randomization.
         :type results_df: pd.DataFrame
         :param en_score_col: name of the DataFrame column that contains the enrichment scores.
-        :type en_score_col: str (default 'log2_fold_enrichment')
+        :type en_score_col: str (default='log2_fold_enrichment')
         :param title: plot title.
         :type title: str
         :param ylabel: plot ylabel.
         :type ylabel: str
         :param plot_horizontal:
-        :type plot_horizontal: bool (default True)
+        :type plot_horizontal: bool (default=True)
         :param center_bars: if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.
-        :type center_bars: bool (default True)
+        :type center_bars: bool (default=True)
         :return: Figure object containing the bar plot
         :rtype: matplotlib.figure.Figure instance
         """
@@ -696,7 +696,7 @@ class FeatureSet:
         """
         Returns a DataFrame of the biotypes in the gene set and their count.
 
-        :type ref: str or pathlib.Path (default 'predefined')
+        :type ref: str or pathlib.Path (default='predefined')
         :param ref: Path of the reference file used to determine biotype. \
         Default is the path predefined in the settings file.
 
@@ -801,7 +801,7 @@ class RankedSet(FeatureSet):
         weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
         combination of all proopagation methods. To read more about the propagation methods, \
         see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
-        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default 'elim')
+        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
         :param aspects: only annotations from the specified GO aspects will be included in the analysis. \
         Legal aspects are 'biological_process' (P), 'molecular_function' (F), and 'cellular_component' (C).
         :type aspects: str, Iterable of str, 'biological_process', 'molecular_function', 'cellular_component', \
@@ -833,23 +833,23 @@ class RankedSet(FeatureSet):
         :param excluded_qualifiers: annotations with the speficied qualifiers \
         will be excluded from the analysis. \
         Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
-        :type excluded_qualifiers: str, Iterable of str, or None (default 'not')
+        :type excluded_qualifiers: str, Iterable of str, or None (default='not')
         :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
         both significant and non-significant terms. If False (default), \
         only significant GO terms will be returned.
-        :type return_nonsignificant: bool (default False)
+        :type return_nonsignificant: bool (default=False)
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), \
         fname will be requested in a manual prompt.
-        :type return_fig: bool (default False)
+        :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_horizontal: bool (default True)
+        :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
-        :type parallel: bool (default True)
+        :type parallel: bool (default=True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -903,19 +903,19 @@ class RankedSet(FeatureSet):
         If None, a manual input prompt will be raised.
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
-        :type attr_ref_path: str or pathlib.Path (default 'predefined')
+        :type attr_ref_path: str or pathlib.Path (default='predefined')
         :param attr_ref_path: path of the Attribute Reference Table from which user-defined attributes will be drawn.
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path
         :param fname: The full path and name of the file to which to save the results. For example: \
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :type return_fig: bool (default False)
+        :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_horizontal: bool (default True)
+        :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
-        :type parallel: bool (default True)
+        :type parallel: bool (default=True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
@@ -953,7 +953,7 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
      python sets, FeatureSets or names of columns in the Attribute Reference Table.
     :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
-    :type ref: str or pathlib.Path (default 'predefined')
+    :type ref: str or pathlib.Path (default='predefined')
     :return: a dictionary, where the keys are names of sets and the values are python sets of feature indices.
     """
     assert isinstance(objs, dict), f"objs must be a dictionary. Instaed got {type(objs)}"
@@ -993,7 +993,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
     :type title: str
     :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
-    :type ref: str or pathlib.Path (default 'predefined')
+    :type ref: str or pathlib.Path (default='predefined')
     :returns: a dictionary of matplotlib axes, where the keys are 'matrix', 'intersections', 'totals', 'shading'.
 
 
@@ -1027,23 +1027,23 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     :param set_colors: determines the colors of the circles in the diagram.
     :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
-    :type ref: str or pathlib.Path (default 'predefined')
+    :type ref: str or pathlib.Path (default='predefined')
     :param title: determines the title of the plot.
     :type set_colors: tuple of matplotlib-format colors, the same size as 'objs'
     :param alpha: determines the opacity of the circles.
     :type alpha: a float between 0 and 1
     :param weighted: if True, the plot will be area-weighted.
-    :type weighted: bool (default True)
+    :type weighted: bool (default=True)
     :param lines: if True, adds an outline to the circles.
-    :type lines: bool (default True)
+    :type lines: bool (default=True)
     :param linecolor: Determines the color of the circles' outline.
-    :type linecolor: matplotlib-format color (default 'black')
+    :type linecolor: matplotlib-format color (default='black')
     :param linestyle: the style of the circles' outline.
-    :type linestyle: 'solid' or 'dashed' (default 'solid')
+    :type linestyle: 'solid' or 'dashed' (default='solid')
     :param linewidth: the widdth of the circles' outlines.
-    :type linewidth: float (default 2.0)
+    :type linewidth: float (default=2.0)
     :param normalize_to:
-    :type normalize_to: float (default 1.0)
+    :type normalize_to: float (default=1.0)
     :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.
 
 
