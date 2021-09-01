@@ -2156,11 +2156,13 @@ class CountFilter(Filter):
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
-        :type split_plots: bool (default False)
-        :param max_clusters:
-        :type max_clusters:
-        :return:
-        :rtype:
+        :type split_plots: bool (default=False)
+        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to discover the optimal \
+        number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
+        an appropriate value will be picked automatically.
+        :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
+        If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                          max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style, split_plots)
@@ -2179,11 +2181,16 @@ class CountFilter(Filter):
                            plot_style: str = 'all', split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
                            ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
-        :param n_clusters: The number of clusters to be found by the algorithm.
+        Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
+        and then splits those features into multiple non-overlapping CountFilter objects, \
+        based on the clustering result.
+
+        :param n_clusters: The number of clusters the algorithm will seek.
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param metric: the distance metric used to determine similarity between data points. \
-        If linkage is 'ward', only the 'euclidean' metric is accepted.
-        :type metric: 'euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default 'euclidean')
+        If linkage is 'ward', only the 'euclidean' metric is accepted. \
+        For a full list of supported distance metrics see the user guide.
+        :type metric: 'euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default='euclidean')
         :param linkage: Which linkage criterion to use. The linkage criterion determines which distance to use between \
         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.
         :type linkage: 'single', 'average', 'complete', or 'ward' (default='average')
@@ -2197,13 +2204,13 @@ class CountFilter(Filter):
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
-        :type split_plots: bool (default False)
-        :param max_clusters:
-        :type max_clusters:
-        :param gap_random_state:
-        :type gap_random_state:
-        :return:
-        :rtype:
+        :type split_plots: bool (default=False)
+        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to discover the optimal \
+        number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
+        an appropriate value will be picked automatically.
+        :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
+        If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
         """
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                                max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
@@ -2224,8 +2231,11 @@ class CountFilter(Filter):
                        plot_style: str = 'all', split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
                        ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
+        Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
+        and then splits those features into multiple non-overlapping CountFilter objects, \
+        based on the clustering result.
 
-        :param n_clusters: The number of clusters to be found by the algorithm.
+        :param n_clusters: The number of clusters the algorithm will seek.
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
@@ -2245,11 +2255,13 @@ class CountFilter(Filter):
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
-        :type split_plots: bool (default False)
-        :param max_clusters:
-        :type max_clusters:
-        :return:
-        :rtype:
+        :type split_plots: bool (default=False)
+        :param max_n_clusters_estimate: the maximum number of clusters to test if trying to discover the optimal \
+        number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
+        an appropriate value will be picked automatically.
+        :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
+        If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
         """
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                            max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
@@ -2270,27 +2282,41 @@ class CountFilter(Filter):
                       return_probabilities: bool = False
                       ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]]]:
         """
+        Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
+        and then splits those features into multiple non-overlapping CountFilter objects, \
+        based on the clustering result.
 
-        :param min_cluster_size:
-        :type min_cluster_size:
-        :param min_samples:
-        :type min_samples:
-        :param metric:
-        :type metric:
-        :param cluster_selection_epsilon:
-        :type cluster_selection_epsilon:
-        :param cluster_selection_method:
-        :type cluster_selection_method:
-        :param power_transform:
-        :type power_transform:
-        :param plot_style:
-        :type plot_style:
-        :param split_plots:
-        :type split_plots:
-        :param return_probabilities:
-        :type return_probabilities:
-        :return:
-        :rtype:
+        :param min_cluster_size: the minimum size of clusters the algorithm will seek. \
+        Larger values will lead to fewer, larger clusters.
+        :type min_cluster_size: int
+        :param min_samples: the number of samples in a neighbourhood for a point to be considered a core point. \
+        Higher values will lead to a more conservative clustering result, \
+        with more points being classified as noise. \
+        If `min_samples` is None, the algorithm will pick a value automatically
+        :type min_samples: int or None (default=1)
+        :param metric: the distance metric used to determine similarity between data points. \
+        For a full list of supported distance metrics see the user guide.
+        :type metric: str (default='euclidean')
+        :param cluster_selection_epsilon: a distance threshold below which clusters will be merged.
+        :type cluster_selection_epsilon: float (default=0.0)
+        :param cluster_selection_method: The method used to select clusters from the condensed tree. \
+        'eom' will use an Excess of Mass algorithm to find the most persistent clusters. \
+        'leaf' will select the leaves of the tree, providing the most fine-grained and homogenous clusters.
+        :type cluster_selection_method: 'eom' or 'leaf' (default='eom')
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to clustering.
+        :type power_transform: bool (default=False)
+        :param plot_style: determines the visual style of the cluster expression plot.
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
+        :param split_plots: if True, each discovered cluster will be plotted on its own. \
+        Otherwise, all clusters will be plotted in the same Figure.
+        :type split_plots: bool (default=False)
+        :param return_probabilities: if True, the algorithm will return an array containing \
+        the probability with which each sample is a member of its assigned cluster, \
+        in addition to returning the clustering results. Points which were categorized as noise have probability 0.
+        :type return_probabilities: bool (default False)
+        :return: if `return_probabilities` is False, returns a tuple of CountFilter objects. \
+        Otherswise, returns a tuple of CountFilter objects, and a numpy array containing the probability values.
         """
         validation.validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, self.shape[0])
 
