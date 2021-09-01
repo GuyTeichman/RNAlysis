@@ -842,24 +842,25 @@ We would then supply the normalization function with the path to the special cou
 <p>Expression plots of the resulting clusters can be generated in one of multiple styles:</p>
 <blockquote>
 <div><figure class="align-center" id="id17">
-<a class="reference internal image-reference" href="_images/kmeans_all.png"><img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" style="width: 560.0px; height: 358.40000000000003px;" /></a>
+<a class="reference internal image-reference" href="_images/kmeans_all.png"><img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
 <p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id18">
-<a class="reference internal image-reference" href="_images/kmeans_std_area.png"><img alt="_images/kmeans_std_area.png" src="_images/kmeans_std_area.png" style="width: 560.0px; height: 358.40000000000003px;" /></a>
+<a class="reference internal image-reference" href="_images/kmeans_std_area.png"><img alt="_images/kmeans_std_area.png" src="_images/kmeans_std_area.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
 <p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id19">
-<a class="reference internal image-reference" href="_images/kmeans_std_bar.png"><img alt="_images/kmeans_std_bar.png" src="_images/kmeans_std_bar.png" style="width: 560.0px; height: 358.40000000000003px;" /></a>
+<a class="reference internal image-reference" href="_images/kmeans_std_bar.png"><img alt="_images/kmeans_std_bar.png" src="_images/kmeans_std_bar.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
 <p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
+<p>The expression plots can also by split into separate graphs, one for each discovered cluster.</p>
 <p>All clustering methods in RNAlysis which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
 You can specify a single value:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
@@ -912,21 +913,54 @@ You can specify a single value:</p>
 <p>To help in evaluating the result of these model selection methods, RNAlysis will also plot a summary of their outcome:</p>
 <a class="reference internal image-reference" href="_images/gap_statistic.png"><img alt="_images/gap_statistic.png" src="_images/gap_statistic.png" style="width: 60%;" /></a>
 <a class="reference internal image-reference" href="_images/silhouette.png"><img alt="_images/silhouette.png" src="_images/silhouette.png" style="width: 30%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 <section id="k-means-clustering">
 <h5>K-Means clustering<a class="headerlink" href="#k-means-clustering" title="Permalink to this headline">¶</a></h5>
-<p>TODO</p>
+<p>K-means is a clustering method which partitions all of the data points into K clusters by minimizing the squared eucliean distance between points within each cluster.</p>
+<p>The algorithm is initiated by picking a random starting point, and therefore the exact clustering results can change between runs.</p>
+<p>The main advantage of K-means clustering is its simplicity - it contains one main tuning parameter (<em>K</em>, the expected number of clusters in the data).</p>
+<a class="reference internal image-reference" href="_images/kmeans_all.png"><img alt="K-means clustering output figure" src="_images/kmeans_all.png" style="width: 450px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 </section>
 <section id="k-medoids-clustering">
 <h5>K-Medoids clustering<a class="headerlink" href="#k-medoids-clustering" title="Permalink to this headline">¶</a></h5>
-<p>TODO</p>
+<p>The K-medoids method is very similar to K-means. The main difference between the two is the way they define clusters and the distances between them:
+K-medoids picks one data point as the ‘center’ (medoid) of each cluster. In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.</p>
+<p>Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the <cite>metric</cite> parameter.</p>
+<a class="reference internal image-reference" href="_images/kmedoids_all.png"><img alt="K-medoids clustering output figure" src="_images/kmedoids_all.png" style="width: 450px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 </section>
 <section id="hierarchical-clustering">
 <h5>Hierarchical clustering<a class="headerlink" href="#hierarchical-clustering" title="Permalink to this headline">¶</a></h5>
-<p>TODO</p>
+<p>Hierarchical clustering (or agglomerative clustering) is clustering method which aims to build a hierarchy of clusters.</p>
+<p>In agglomerative hierarchical clustering, each data points starts in its own clusters. The clustering algorithm then uses a distance metric (a measure of distance between pairs of data points) and a linkage criterion (determines the distance between sets of data points as a function of the pairwise distances between observations) to group merge data points into clusters, and then further group those clusters into larger clusters based on their similarity. Eventually, all of the observations are connected into a hierarchical tree.</p>
+<p>We can decide to ‘cut’ the tree at any height in order to generate the final clustering solution. This can be done by either specifying the estimated number of clusters like in K-means, or by specifiying a distance threshold above which clusters will not be merged.</p>
+<a class="reference internal image-reference" href="_images/hierarchical_all.png"><img alt="Hierarchical clustering output figure" src="_images/hierarchical_all.png" style="width: 450px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 </section>
 <section id="hdbscan-clustering">
 <h5>HDBSCAN clustering<a class="headerlink" href="#hdbscan-clustering" title="Permalink to this headline">¶</a></h5>
-<p>TODO</p>
+<p>HDBSCAN stands for Hierarchical Density-Based Spatial Clustering of Applications with Noise (see <a class="reference external" href="https://link.springer.com/chapter/10.1007/978-3-642-37456-2_14">https://link.springer.com/chapter/10.1007/978-3-642-37456-2_14</a> ).
+HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
+<ol class="arabic simple">
+<li><p>HSBSCAN makes relatively few assumptions about the data - it assumes that the data contains noise, as well as some real clusters which we hope to discover.</p></li>
+<li><p>Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can mark data points as outliers, excluding them from the final clustering solution.</p></li>
+<li><p>HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is <em>minimum cluster size</em> (<cite>min_cluster_size</cite>), which determines the smallest “interesting” cluster size we expect to find in the data.</p></li>
+</ol>
+<p>HDBSCAN supports other tuning parameters, which you can read more about in the HDBSCAN documentation:
+<a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/index.html">https://hdbscan.readthedocs.io/en/latest/index.html</a></p>
+<a class="reference internal image-reference" href="_images/hdbscan_all.png"><img alt="HDBSCAN output figure" src="_images/hdbscan_all.png" style="width: 450px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
 </section>
 </section>
 <section id="data-visualization-and-exploratory-data-analysis-with-countfilter">

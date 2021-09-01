@@ -452,6 +452,7 @@ Expression plots of the resulting clusters can be generated in one of multiple s
 
            Example expression plot of clustering results with plot_style='std_bar'
 
+The expression plots can also by split into separate graphs, one for each discovered cluster.
 
 All clustering methods in RNAlysis which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
 You can specify a single value::
@@ -508,28 +509,66 @@ To help in evaluating the result of these model selection methods, RNAlysis will
            :width: 60 %
 .. image::  silhouette.png
            :width: 30 %
-
+|
 
 K-Means clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+K-means is a clustering method which partitions all of the data points into K clusters by minimizing the squared eucliean distance between points within each cluster.
 
-TODO
+The algorithm is initiated by picking a random starting point, and therefore the exact clustering results can change between runs.
+
+The main advantage of K-means clustering is its simplicity - it contains one main tuning parameter (*K*, the expected number of clusters in the data).
+
+.. image:: kmeans_all.png
+  :width: 450
+  :alt: K-means clustering output figure
+
+|
 
 K-Medoids clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The K-medoids method is very similar to K-means. The main difference between the two is the way they define clusters and the distances between them:
+K-medoids picks one data point as the 'center' (medoid) of each cluster. In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.
 
-TODO
+Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the `metric` parameter.
+
+.. image:: kmedoids_all.png
+  :width: 450
+  :alt: K-medoids clustering output figure
+
+|
 
 Hierarchical clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Hierarchical clustering (or agglomerative clustering) is clustering method which aims to build a hierarchy of clusters.
 
-TODO
+In agglomerative hierarchical clustering, each data points starts in its own clusters. The clustering algorithm then uses a distance metric (a measure of distance between pairs of data points) and a linkage criterion (determines the distance between sets of data points as a function of the pairwise distances between observations) to group merge data points into clusters, and then further group those clusters into larger clusters based on their similarity. Eventually, all of the observations are connected into a hierarchical tree.
+
+We can decide to 'cut' the tree at any height in order to generate the final clustering solution. This can be done by either specifying the estimated number of clusters like in K-means, or by specifiying a distance threshold above which clusters will not be merged.
+
+.. image:: hierarchical_all.png
+  :width: 450
+  :alt: Hierarchical clustering output figure
+
+|
 
 HDBSCAN clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+HDBSCAN stands for Hierarchical Density-Based Spatial Clustering of Applications with Noise (see https://link.springer.com/chapter/10.1007/978-3-642-37456-2_14 ).
+HDBSCAN offers multiple advantages over more traditional clustering methods:
 
-TODO
+1. HSBSCAN makes relatively few assumptions about the data - it assumes that the data contains noise, as well as some real clusters which we hope to discover.
+2. Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can mark data points as outliers, excluding them from the final clustering solution.
+3. HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is *minimum cluster size* (`min_cluster_size`), which determines the smallest "interesting" cluster size we expect to find in the data.
 
+HDBSCAN supports other tuning parameters, which you can read more about in the HDBSCAN documentation:
+https://hdbscan.readthedocs.io/en/latest/index.html
+
+.. image:: hdbscan_all.png
+  :width: 450
+  :alt: HDBSCAN output figure
+
+|
 
 Data visualization and exploratory data analysis with CountFilter
 ------------------------------------------------------------------------

@@ -209,7 +209,8 @@ def test_countfilter_scatter_sample_vs_sample_api():
 def test_countfilter_pca_api():
     c = CountFilter("tests/test_files/counted.csv")
     c.pca()
-    c.pca(sample_names=['cond1', 'cond2', 'cond3'], sample_grouping=[1, 1, 2], n_components=2, labels=False)
+    c.pca(sample_names=['cond1', 'cond2', 'cond3'], sample_grouping=[1, 1, 2], n_components=2, labels=False,
+          power_transform=True)
     with pytest.raises(AssertionError):
         c.pca(n_components=2.0)
     with pytest.raises(AssertionError):
