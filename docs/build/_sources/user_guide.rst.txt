@@ -528,7 +528,8 @@ The main advantage of K-means clustering is its simplicity - it contains one mai
 K-Medoids clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The K-medoids method is very similar to K-means. The main difference between the two is the way they define clusters and the distances between them:
-K-medoids picks one data point as the 'center' (medoid) of each cluster. In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.
+K-medoids picks one data point as the 'center' (medoid) of each cluster.
+In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.
 
 Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the `metric` parameter.
 
@@ -542,9 +543,16 @@ Hierarchical clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Hierarchical clustering (or agglomerative clustering) is clustering method which aims to build a hierarchy of clusters.
 
-In agglomerative hierarchical clustering, each data points starts in its own clusters. The clustering algorithm then uses a distance metric (a measure of distance between pairs of data points) and a linkage criterion (determines the distance between sets of data points as a function of the pairwise distances between observations) to group merge data points into clusters, and then further group those clusters into larger clusters based on their similarity. Eventually, all of the observations are connected into a hierarchical tree.
+In agglomerative hierarchical clustering, each data points starts in its own clusters.
+The clustering algorithm then uses a distance metric (a measure of distance between pairs of data points)
+and a linkage criterion
+(determines the distance between sets of data points as a function of the pairwise distances between observations)
+to group merge data points into clusters, and then further group those clusters into larger clusters based on their similarity.
+Eventually, all of the observations are connected into a hierarchical tree.
 
-We can decide to 'cut' the tree at any height in order to generate the final clustering solution. This can be done by either specifying the estimated number of clusters like in K-means, or by specifiying a distance threshold above which clusters will not be merged.
+We can decide to 'cut' the tree at any height in order to generate the final clustering solution.
+This can be done by either specifying the estimated number of clusters like in K-means,
+or by specifiying a distance threshold above which clusters will not be merged.
 
 .. image:: hierarchical_all.png
   :width: 450
