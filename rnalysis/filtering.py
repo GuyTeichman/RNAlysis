@@ -2163,7 +2163,7 @@ class CountFilter(Filter):
         :rtype:
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
-                                         max_clusters, random_state, n_init, max_iter, plot_style, split_plots)
+                                         max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style, split_plots)
         clusterers = runner.run()
         filt_obj_tuples = []
         for clusterer in clusterers:
@@ -2176,8 +2176,8 @@ class CountFilter(Filter):
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
                            linkage: str = 'average', power_transform: bool = False, distance_threshold: float = None,
-                           plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default',
-                           gap_random_state: int = None) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                           plot_style: str = 'all', split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
+                           ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         :param n_clusters: The number of clusters to be found by the algorithm.
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
@@ -2206,7 +2206,7 @@ class CountFilter(Filter):
         :rtype:
         """
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
-                                               max_clusters, metric, linkage, distance_threshold, plot_style,
+                                               max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
                                                split_plots)
         clusterers = runner.run()
         filt_obj_tuples = []
@@ -2220,8 +2220,8 @@ class CountFilter(Filter):
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_kmedoids(self, n_clusters: Union[int, List[int], str], n_init: int = 3, max_iter: int = 300,
-                       random_state: int = None, metric: str = 'euclidean', power_transform: bool = False,
-                       plot_style: str = 'all', split_plots: bool = False, max_clusters: int = 'default'
+                       random_seed: int = None, metric: str = 'euclidean', power_transform: bool = False,
+                       plot_style: str = 'all', split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
                        ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
 
@@ -2252,7 +2252,7 @@ class CountFilter(Filter):
         :rtype:
         """
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
-                                           max_clusters, metric, random_state, n_init, max_iter, plot_style,
+                                           max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
                                            split_plots)
         clusterers = runner.run()
         filt_obj_tuples = []
@@ -2264,7 +2264,7 @@ class CountFilter(Filter):
         # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_hdbscan(self, min_cluster_size: int = 5, min_samples: int = 1, metric: str = 'euclidean',
+    def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1, metric: str = 'euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
                       power_transform: bool = False, plot_style: str = 'all', split_plots: bool = False,
                       return_probabilities: bool = False
