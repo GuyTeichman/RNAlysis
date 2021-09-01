@@ -158,8 +158,7 @@ def validate_is_normalized(filter_obj_fname: Union[str, Path]):
         warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
 
 
-def validate_clustering_parameters(metric: str, linkage: str = None):
-    legal_metrics = {'euclidean', 'spearman', 'pearson', 'manhattan', 'cosine', 'ys1', 'yr1', 'jackknife'}
+def validate_clustering_parameters(legal_metrics: set, metric: str, linkage: str = None):
     legal_linkages = {'single', 'average', 'complete', 'ward'}
     assert isinstance(metric, str), f"'metric' must be a string. Instead got '{type(metric)}'."
     metric = metric.lower()

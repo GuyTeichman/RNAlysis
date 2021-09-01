@@ -402,7 +402,7 @@ class ClusteringRunner:
         if metric is not None:
             metric_parameter_name, metric_name = metric
             metric_name = metric_name.lower()
-            validation.validate_clustering_parameters(metric_name)
+            validation.validate_clustering_parameters(self.legal_metrics, metric_name)
             if metric_name in self.precomputed_metrics:
                 def precomputed_transform(x):
                     return self.precomputed_metrics[metric_name](transform(x))
@@ -684,10 +684,7 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
 
 class KMedoidsRunner(ClusteringRunnerWithNClusters):
     clusterer_class = KMedoidsIter
-    legal_metrics = {'cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan', 'nan_euclidean',
-                     'braycurtis', 'canberra', 'chebyshev', 'correlation', 'dice', 'hamming', 'jaccard', 'kulsinski',
-                     'mahalanobis', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener',
-                     'sokalsneath', 'sqeuclidean', 'yule'}
+    legal_metrics = set(sklearn_pairwise._VALID_METRICS)
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'default', metric: str = 'euclidean',
@@ -727,7 +724,9 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
 
 class HierarchicalRunner(ClusteringRunnerWithNClusters):
     clusterer_class = AgglomerativeClustering
-    legal_metrics = {'euclidean', 'l1', 'l2', 'manhattan', 'cosine'}
+    legal_metrics = set(sklearn_pairwise.PAIRED_DISTANCES.values())
+
+    # {'euclidean', 'l1', 'l2', 'manhattan', 'cosine'}
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'default', metric: str = 'euclidean',

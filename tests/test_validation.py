@@ -167,12 +167,13 @@ def test_is_method_of_class(mthd, cls, truth):
     (None, 'single', False),
     ('sportman', None, False)])
 def test_validate_clustering_parameters(metric, linkage, expected_to_pass):
+    legal_metrics = {'euclidean','spearman','jackknife','other'}
     if expected_to_pass:
         truth = (metric.lower(), linkage.lower()) if linkage is not None else metric.lower()
-        assert validate_clustering_parameters(metric, linkage) == truth
+        assert validate_clustering_parameters(legal_metrics, metric, linkage) == truth
     else:
         with pytest.raises(AssertionError):
-            validate_clustering_parameters(metric, linkage)
+            validate_clustering_parameters(legal_metrics, metric, linkage)
 
 
 @pytest.mark.parametrize('table_path,expected_to_pass',
