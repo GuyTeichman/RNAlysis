@@ -252,11 +252,11 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, performs a power transform on the count data prior to PCA.</p></li>
+<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, performs a power transform on the count data prior to PCA.</p></li>
 <li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”]</p></li>
-<li><p><strong>n_components</strong> (<em>positive int</em><em> (</em><em>default 3</em><em>)</em>) – number of PCA components to return.</p></li>
+<li><p><strong>n_components</strong> (<em>positive int</em><em> (</em><em>default=3</em><em>)</em>) – number of PCA components to return.</p></li>
 <li><p><strong>sample_grouping</strong> (<em>list of positive integers</em><em>, </em><em>'triplicates'</em><em> or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [1, 1, 1, 2, 2, 2, 2, 3].         If ‘triplicate’, then sample_groupins will automatically group samples into triplicates. For example:         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].</p></li>
-<li><p><strong>labels</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, labels the points on the PCA plot.</p></li>
+<li><p><strong>labels</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, labels the points on the PCA plot.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

@@ -239,7 +239,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>by</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Names of the column or columns to sort and then filter by.</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default=True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
 <li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>

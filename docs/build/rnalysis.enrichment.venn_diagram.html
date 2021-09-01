@@ -210,15 +210,15 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>objs</strong> (<em>a dictionary with 2-3 entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
 <li><p><strong>set_colors</strong> (<em>tuple of matplotlib-format colors</em><em>, </em><em>the same size as 'objs'</em>) – determines the colors of the circles in the diagram.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
 <li><p><strong>title</strong> (<em>str</em>) – determines the title of the plot.</p></li>
 <li><p><strong>alpha</strong> (<em>a float between 0 and 1</em>) – determines the opacity of the circles.</p></li>
-<li><p><strong>weighted</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, the plot will be area-weighted.</p></li>
-<li><p><strong>lines</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, adds an outline to the circles.</p></li>
-<li><p><strong>linecolor</strong> (<em>matplotlib-format color</em><em> (</em><em>default 'black'</em><em>)</em>) – Determines the color of the circles’ outline.</p></li>
-<li><p><strong>linestyle</strong> (<em>'solid'</em><em> or </em><em>'dashed'</em><em> (</em><em>default 'solid'</em><em>)</em>) – the style of the circles’ outline.</p></li>
-<li><p><strong>linewidth</strong> (<em>float</em><em> (</em><em>default 2.0</em><em>)</em>) – the widdth of the circles’ outlines.</p></li>
-<li><p><strong>normalize_to</strong> (<em>float</em><em> (</em><em>default 1.0</em><em>)</em>) – </p></li>
+<li><p><strong>weighted</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, the plot will be area-weighted.</p></li>
+<li><p><strong>lines</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, adds an outline to the circles.</p></li>
+<li><p><strong>linecolor</strong> (<em>matplotlib-format color</em><em> (</em><em>default='black'</em><em>)</em>) – Determines the color of the circles’ outline.</p></li>
+<li><p><strong>linestyle</strong> (<em>'solid'</em><em> or </em><em>'dashed'</em><em> (</em><em>default='solid'</em><em>)</em>) – the style of the circles’ outline.</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em> (</em><em>default=2.0</em><em>)</em>) – the widdth of the circles’ outlines.</p></li>
+<li><p><strong>normalize_to</strong> (<em>float</em><em> (</em><em>default=1.0</em><em>)</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

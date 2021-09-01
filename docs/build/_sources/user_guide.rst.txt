@@ -533,6 +533,11 @@ In addition, K-medoids attempts to minimize the sum of dissimilarities within ea
 
 Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the `metric` parameter.
 
+K-medoids clustering in RNALysis supports the following distance metrics:
+
+* TODO
+
+
 .. image:: kmedoids_all.png
   :width: 450
   :alt: K-medoids clustering output figure
@@ -554,6 +559,10 @@ We can decide to 'cut' the tree at any height in order to generate the final clu
 This can be done by either specifying the estimated number of clusters like in K-means,
 or by specifiying a distance threshold above which clusters will not be merged.
 
+Hierarchical clustering in RNAlysis supports the following distance metrics:
+
+* TODO
+
 .. image:: hierarchical_all.png
   :width: 450
   :alt: Hierarchical clustering output figure
@@ -572,21 +581,15 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:
 HDBSCAN supports other tuning parameters, which you can read more about in the HDBSCAN documentation:
 https://hdbscan.readthedocs.io/en/latest/index.html
 
+HDBSCAN in RNALysis supports the following distance metrics:
+
+* TODO
+
 .. image:: hdbscan_all.png
   :width: 450
   :alt: HDBSCAN output figure
 
 |
-
-Supported distance metric
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-TODO
-
-the following distance metrics are supported by RNAlysis:
-
-* TODO
-* TODO
 
 Data visualization and exploratory data analysis with CountFilter
 ------------------------------------------------------------------------

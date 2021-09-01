@@ -932,6 +932,10 @@ You can specify a single value:</p>
 K-medoids picks one data point as the ‘center’ (medoid) of each cluster.
 In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.</p>
 <p>Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the <cite>metric</cite> parameter.</p>
+<p>K-medoids clustering in RNALysis supports the following distance metrics:</p>
+<ul class="simple">
+<li><p>TODO</p></li>
+</ul>
 <a class="reference internal image-reference" href="_images/kmedoids_all.png"><img alt="K-medoids clustering output figure" src="_images/kmedoids_all.png" style="width: 450px;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -949,6 +953,10 @@ Eventually, all of the observations are connected into a hierarchical tree.</p>
 <p>We can decide to ‘cut’ the tree at any height in order to generate the final clustering solution.
 This can be done by either specifying the estimated number of clusters like in K-means,
 or by specifiying a distance threshold above which clusters will not be merged.</p>
+<p>Hierarchical clustering in RNAlysis supports the following distance metrics:</p>
+<ul class="simple">
+<li><p>TODO</p></li>
+</ul>
 <a class="reference internal image-reference" href="_images/hierarchical_all.png"><img alt="Hierarchical clustering output figure" src="_images/hierarchical_all.png" style="width: 450px;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -965,19 +973,14 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
 </ol>
 <p>HDBSCAN supports other tuning parameters, which you can read more about in the HDBSCAN documentation:
 <a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/index.html">https://hdbscan.readthedocs.io/en/latest/index.html</a></p>
+<p>HDBSCAN in RNALysis supports the following distance metrics:</p>
+<ul class="simple">
+<li><p>TODO</p></li>
+</ul>
 <a class="reference internal image-reference" href="_images/hdbscan_all.png"><img alt="HDBSCAN output figure" src="_images/hdbscan_all.png" style="width: 450px;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-</section>
-<section id="supported-distance-metric">
-<h5>Supported distance metric<a class="headerlink" href="#supported-distance-metric" title="Permalink to this headline">¶</a></h5>
-<p>TODO</p>
-<p>the following distance metrics are supported by RNAlysis:</p>
-<ul class="simple">
-<li><p>TODO</p></li>
-<li><p>TODO</p></li>
-</ul>
 </section>
 </section>
 <section id="data-visualization-and-exploratory-data-analysis-with-countfilter">

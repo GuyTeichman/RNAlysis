@@ -231,9 +231,9 @@
 <li><p><strong>fdr</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
 <li><p><strong>reps</strong> (<em>int larger than 0</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
 <li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.         Default 'protein_coding'.</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
-<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default ‘predefined’)</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default=’predefined’)</p></li>
 <li><p><strong>attr_ref_path</strong> – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
 </ul>
 </dd>
 </dl>
@@ -242,11 +242,11 @@
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
 :type fname: str or pathlib.Path
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.
-:type random_seed: non-negative integer (default None)
+:type random_seed: non-negative integer (default=None)
 :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>

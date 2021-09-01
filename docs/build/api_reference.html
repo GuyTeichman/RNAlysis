@@ -349,7 +349,7 @@ When you save filtered/modified data, its new file name will include by default 
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">biotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long_format</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
-:type long_format: ‘short’ or ‘long’ (default ‘short’)
+:type long_format: ‘short’ or ‘long’ (default=’short’)
 :param long_format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
 which also provides descriptive statistics of each column per biotype.
 :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
@@ -392,19 +392,19 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>'all'</em><em> or </em><em>list.</em>) – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
-<li><p><strong>notch</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, adds a confidence-interval notch to the box-plot.</p></li>
-<li><p><strong>scatter</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, adds a scatter-plot on top of the box-plot.</p></li>
-<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default 'Log10</em><em>(</em><em>RPM + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
+<li><p><strong>notch</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, adds a confidence-interval notch to the box-plot.</p></li>
+<li><p><strong>scatter</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, adds a scatter-plot on top of the box-plot.</p></li>
+<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default='Log10</em><em>(</em><em>RPM + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a seaborn boxplot object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id3">
+<figure class="align-center" id="id9">
 <a class="reference internal image-reference" href="???.png"><img alt="???.png" src="???.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of box_plot()</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of box_plot()</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -425,10 +425,10 @@ which also provides descriptive statistics of each column per biotype.
 <dd class="field-even"><p>A seaborn clustermap object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id4">
+<figure class="align-center" id="id10">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -554,18 +554,18 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>'all'</em><em> or </em><em>list.</em>) – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
-<li><p><strong>scatter</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, adds a scatter-plot on top of the box-plot.</p></li>
-<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default 'Log10</em><em>(</em><em>RPM + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
+<li><p><strong>scatter</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, adds a scatter-plot on top of the box-plot.</p></li>
+<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default='Log10</em><em>(</em><em>RPM + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a seaborn enhanced box-plot object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id5">
+<figure class="align-center" id="id11">
 <a class="reference internal image-reference" href="???.png"><img alt="???.png" src="???.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enhanced_box_plot()</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enhanced_box_plot()</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -613,9 +613,9 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
 <li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -783,7 +783,7 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>by</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Names of the column or columns to sort and then filter by.</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default=True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
 <li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
@@ -1138,10 +1138,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>An instance of seaborn.PairGrid.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id6">
+<figure class="align-center" id="id12">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1153,21 +1153,21 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, performs a power transform on the count data prior to PCA.</p></li>
+<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, performs a power transform on the count data prior to PCA.</p></li>
 <li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”]</p></li>
-<li><p><strong>n_components</strong> (<em>positive int</em><em> (</em><em>default 3</em><em>)</em>) – number of PCA components to return.</p></li>
+<li><p><strong>n_components</strong> (<em>positive int</em><em> (</em><em>default=3</em><em>)</em>) – number of PCA components to return.</p></li>
 <li><p><strong>sample_grouping</strong> (<em>list of positive integers</em><em>, </em><em>'triplicates'</em><em> or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [1, 1, 1, 2, 2, 2, 2, 3].         If ‘triplicate’, then sample_groupins will automatically group samples into triplicates. For example:         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].</p></li>
-<li><p><strong>labels</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, labels the points on the PCA plot.</p></li>
+<li><p><strong>labels</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, labels the points on the PCA plot.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id7">
+<figure class="align-center" id="id13">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1185,10 +1185,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </ul>
 </dd>
 </dl>
-<figure class="align-center" id="id8">
+<figure class="align-center" id="id14">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 403.6px; height: 294.40000000000003px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1261,10 +1261,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>a matplotlib axis object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id9">
+<figure class="align-center" id="id15">
 <a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 480.0px; height: 477.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1318,7 +1318,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
+<dd><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each new Filter object will contain only features that belong to its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1348,7 +1348,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
+<dd><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1377,10 +1377,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_reads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the features in the current CountFilter object into two complementary, non-overlapping CountFilter         objects, based on the their maximum expression level. The first object will contain only highly-expressed          features (which have reads over the specified threshold in at least one sample). The second object will          contain only lowly-expressed features (which have reads below the specified threshold in all samples).</p>
+<dd><p>Splits the features in the CountFilter object into two non-overlapping CountFilter         objects, based on the their maximum expression level. The first object will contain only highly-expressed          features (which have reads over the specified threshold in at least one sample). The second object will          contain only lowly-expressed features (which have reads below the specified threshold in all samples).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em><em> (</em><em>default 5</em><em>)</em>) – The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have         in at least one sample in order to be         included in the “highly expressed” object and no the “lowly expressed” object.</p>
+<dd class="field-odd"><p><strong>threshold</strong> (<em>float</em><em> (</em><em>default=5</em><em>)</em>) – The minimal number of reads (counts, RPM, RPKM, TPM etc) a feature needs to have         in at least one sample in order to be         included in the “highly expressed” object and no the “lowly expressed” object.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter">filtering.CountFilter</a>, <a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter">filtering.CountFilter</a>]</p>
@@ -1402,102 +1402,94 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">split_hdbscan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_selection_epsilon</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_selection_method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'eom'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_probabilities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">split_hdbscan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_selection_epsilon</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_selection_method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'eom'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_probabilities</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm,         and then splits those features into multiple non-overlapping CountFilter objects,         based on the clustering result.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>min_cluster_size</strong> – </p></li>
-<li><p><strong>min_samples</strong> – </p></li>
-<li><p><strong>metric</strong> – </p></li>
-<li><p><strong>cluster_selection_epsilon</strong> – </p></li>
-<li><p><strong>cluster_selection_method</strong> – </p></li>
-<li><p><strong>power_transform</strong> – </p></li>
-<li><p><strong>plot_style</strong> – </p></li>
-<li><p><strong>split_plots</strong> – </p></li>
-<li><p><strong>return_probabilities</strong> – </p></li>
+<li><p><strong>min_cluster_size</strong> (<em>int</em>) – the minimum size of clusters the algorithm will seek.         Larger values will lead to fewer, larger clusters.</p></li>
+<li><p><strong>min_samples</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default=1</em><em>)</em>) – the number of samples in a neighbourhood for a point to be considered a core point.         Higher values will lead to a more conservative clustering result,         with more points being classified as noise.         If <cite>min_samples</cite> is None, the algorithm will pick a value automatically</p></li>
+<li><p><strong>metric</strong> (<em>str</em><em> (</em><em>default='euclidean'</em><em>)</em>) – the distance metric used to determine similarity between data points.         For a full list of supported distance metrics see the user guide.</p></li>
+<li><p><strong>cluster_selection_epsilon</strong> (<em>float</em><em> (</em><em>default=0.0</em><em>)</em>) – a distance threshold below which clusters will be merged.</p></li>
+<li><p><strong>cluster_selection_method</strong> (<em>'eom'</em><em> or </em><em>'leaf'</em><em> (</em><em>default='eom'</em><em>)</em>) – The method used to select clusters from the condensed tree.         ‘eom’ will use an Excess of Mass algorithm to find the most persistent clusters.         ‘leaf’ will select the leaves of the tree, providing the most fine-grained and homogenous clusters.</p></li>
+<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
+<li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
+<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
+<li><p><strong>return_probabilities</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, the algorithm will return an array containing         the probability with which each sample is a member of its assigned cluster,         in addition to returning the clustering results. Points which were categorized as noise have probability 0.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p></p>
+<dd class="field-even"><p>if <cite>return_probabilities</cite> is False, returns a tuple of CountFilter objects.         Otherswise, returns a tuple of CountFilter objects, and a numpy array containing the probability values.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">split_hierarchical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkage</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'average'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">split_hierarchical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkage</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'average'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_clusters_estimate</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Clusters the features in the CountFilter object using the Hierarchical clustering algorithm,         and then splits those features into multiple non-overlapping CountFilter objects,         based on the clustering result.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n_clusters</strong> (<em>int</em><em>, </em><em>list of ints</em><em>, </em><em>'gap'</em><em>, or </em><em>'slihouette'</em>) – The number of clusters to be found by the algorithm.</p></li>
-<li><p><strong>metric</strong> (<em>'euclidean'</em><em>, </em><em>'l1'</em><em>, </em><em>'l2'</em><em>, </em><em>'manhattan'</em><em>, </em><em>'cosine'</em><em>,  </em><em>(</em><em>default 'euclidean'</em><em>)</em>) – the distance metric used to determine similarity between data points.</p></li>
-<li><p><strong>linkage</strong> (<em>'single'</em><em>, </em><em>'average'</em><em>, </em><em>'complete'</em><em>, or </em><em>'ward'</em><em> (</em><em>default 'average'</em><em>)</em>) – Which linkage criterion to use. The linkage criterion determines which distance to use between         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.</p></li>
-<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
-<li><p><strong>distance_threshold</strong> (<em>float</em><em> or </em><em>None</em><em> (</em><em>default None</em><em>)</em>) – a distance threshold above which clusters will not be merged.         If a number is specified, <cite>n_clusters</cite> must be None.</p></li>
-<li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default 'all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
-<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_clusters</strong> – </p></li>
+<li><p><strong>n_clusters</strong> (<em>int</em><em>, </em><em>list of ints</em><em>, </em><em>'gap'</em><em>, or </em><em>'slihouette'</em>) – The number of clusters the algorithm will seek.</p></li>
+<li><p><strong>metric</strong> (<em>'euclidean'</em><em>, </em><em>'l1'</em><em>, </em><em>'l2'</em><em>, </em><em>'manhattan'</em><em>, or </em><em>'cosine'</em><em>,  </em><em>(</em><em>default='euclidean'</em><em>)</em>) – the distance metric used to determine similarity between data points.         If linkage is ‘ward’, only the ‘euclidean’ metric is accepted.         For a full list of supported distance metrics see the user guide.</p></li>
+<li><p><strong>linkage</strong> (<em>'single'</em><em>, </em><em>'average'</em><em>, </em><em>'complete'</em><em>, or </em><em>'ward'</em><em> (</em><em>default='average'</em><em>)</em>) – Which linkage criterion to use. The linkage criterion determines which distance to use between         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.</p></li>
+<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
+<li><p><strong>distance_threshold</strong> (<em>float</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – a distance threshold above which clusters will not be merged.         If a number is specified, <cite>n_clusters</cite> must be None.</p></li>
+<li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
+<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id1"><span class="problematic" id="id2">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p></p>
+<dd class="field-even"><p>if <cite>n_clusters</cite> is an int, returns a tuple of <cite>n_clusters</cite> CountFilter objects.         If <cite>n_clusters</cite> is a list, returns one tuple of CountFilter objects per value in <cite>n_clusters</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">split_kmeans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_init</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">split_kmeans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_init</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_clusters_estimate</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Clusters the features in the CountFilter object using the K-means clustering algorithm,         and then splits those features into multiple non-overlapping CountFilter objects,         based on the clustering result.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n_clusters</strong> (<em>int</em><em>, </em><em>list of ints</em><em>, </em><em>'gap'</em><em>, or </em><em>'slihouette'</em>) – The number of clusters to be found by the algorithm.</p></li>
-<li><p><strong>random_seed</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default None</em><em>)</em>) – determines random number generation for centroid initialization.         Use an int to make the randomness deterministic.</p></li>
-<li><p><strong>n_init</strong> (<em>int</em><em> (</em><em>default 3</em><em>)</em>) – number of time the k-medoids algorithm will be run with different medoid seeds.         The final results will be the best output of n_init consecutive runs in terms of inertia.</p></li>
-<li><p><strong>max_iter</strong> (<em>int</em><em> (</em><em>default 300</em><em>)</em>) – maximum number of iterations of the k-medoids algorithm for a single run.</p></li>
-<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
-<li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default 'all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
-<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_clusters</strong> – </p></li>
+<li><p><strong>n_clusters</strong> (<em>int</em><em>, </em><em>list of ints</em><em>, </em><em>'gap'</em><em>, or </em><em>'slihouette'</em>) – The number of clusters the algorithm will seek.</p></li>
+<li><p><strong>random_seed</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – determines random number generation for centroid initialization.         Use an int to make the randomness deterministic.</p></li>
+<li><p><strong>n_init</strong> (<em>int</em><em> (</em><em>default=3</em><em>)</em>) – number of time the k-medoids algorithm will be run with different medoid seeds.         The final results will be the best output of n_init consecutive runs in terms of inertia.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em> (</em><em>default=300</em><em>)</em>) – maximum number of iterations of the k-medoids algorithm for a single run.</p></li>
+<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
+<li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
+<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id3"><span class="problematic" id="id4">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p></p>
+<dd class="field-even"><p>if <cite>n_clusters</cite> is an int, returns a tuple of <cite>n_clusters</cite> CountFilter objects.         If <cite>n_clusters</cite> is a list, returns one tuple of CountFilter objects per value in <cite>n_clusters</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">split_kmedoids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_init</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'default'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">split_kmedoids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_init</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_n_clusters_estimate</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">rnalysis.filtering.CountFilter</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Clusters the features in the CountFilter object using the K-medoids clustering algorithm,         and then splits those features into multiple non-overlapping CountFilter objects,         based on the clustering result.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n_clusters</strong> (<em>int</em><em>, </em><em>list of ints</em><em>, </em><em>'gap'</em><em>, or </em><em>'slihouette'</em>) – The number of clusters to be found by the algorithm.</p></li>
-<li><p><strong>random_seed</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default None</em><em>)</em>) – determines random number generation for centroid initialization.         Use an int to make the randomness deterministic.</p></li>
-<li><p><strong>n_init</strong> (<em>int</em><em> (</em><em>default 3</em><em>)</em>) – number of time the k-medoids algorithm will be run with different medoid seeds.         The final results will be the best output of n_init consecutive runs in terms of inertia.</p></li>
-<li><p><strong>max_iter</strong> (<em>int</em><em> (</em><em>default 300</em><em>)</em>) – maximum number of iterations of the k-medoids algorithm for a single run.</p></li>
-<li><p><strong>metric</strong> – the distance metric used to determine similarity between data points.</p></li>
-<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
-<li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default 'all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
-<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_clusters</strong> (<em>int</em><em> or </em><em>'default'</em><em> (</em><em>default 'default'</em><em>)</em>) – </p></li>
+<li><p><strong>n_clusters</strong> (<em>int</em><em>, </em><em>list of ints</em><em>, </em><em>'gap'</em><em>, or </em><em>'slihouette'</em>) – The number of clusters the algorithm will seek.</p></li>
+<li><p><strong>random_seed</strong> (<em>int</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – determines random number generation for centroid initialization.         Use an int to make the randomness deterministic.</p></li>
+<li><p><strong>n_init</strong> (<em>int</em><em> (</em><em>default=3</em><em>)</em>) – number of time the k-medoids algorithm will be run with different medoid seeds.         The final results will be the best output of n_init consecutive runs in terms of inertia.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em> (</em><em>default=300</em><em>)</em>) – maximum number of iterations of the k-medoids algorithm for a single run.</p></li>
+<li><p><strong>metric</strong> (<em>str</em><em> (</em><em>default='euclidean'</em><em>)</em>) – the distance metric used to determine similarity between data points.         For a full list of supported distance metrics see the user guide.</p></li>
+<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
+<li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
+<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id5"><span class="problematic" id="id6">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p></p>
+<dd class="field-even"><p>if <cite>n_clusters</cite> is an int, returns a tuple of <cite>n_clusters</cite> CountFilter objects.         If <cite>n_clusters</cite> is a list, returns one tuple of CountFilter objects per value in <cite>n_clusters</cite>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1667,17 +1659,17 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>'all'</em><em> or </em><em>list.</em>) – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
-<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default 'log10</em><em>(</em><em>normalized reads + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
+<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default='log10</em><em>(</em><em>normalized reads + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a seaborn violin object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id10">
+<figure class="align-center" id="id16">
 <a class="reference internal image-reference" href="_images/violin.png"><img alt="_images/violin.png" src="_images/violin.png" style="width: 1152.0px; height: 556.1999999999999px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1785,7 +1777,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">biotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long_format</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
-:type long_format: ‘short’ or ‘long’ (default ‘short’)
+:type long_format: ‘short’ or ‘long’ (default=’short’)
 :param long_format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
 which also provides descriptive statistics of each column per biotype.
 :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
@@ -2001,9 +1993,9 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
 <li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2188,7 +2180,7 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>by</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Names of the column or columns to sort and then filter by.</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default=True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
 <li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
@@ -2516,7 +2508,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
+<dd><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each new Filter object will contain only features that belong to its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2546,7 +2538,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
+<dd><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2575,7 +2567,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_fold_change_direction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the features in the current DESeqFilter object into two complementary, non-overlapping DESeqFilter         objects, based on the direction of their log2foldchange. The first object will contain only features with a         positive log2foldchange, the second object will contain only features with a negative log2foldchange.</p>
+<dd><p>Splits the features in the DESeqFilter object into two non-overlapping DESeqFilter         objects, based on the direction of their log2foldchange. The first object will contain only features with a         positive log2foldchange, the second object will contain only features with a negative log2foldchange.</p>
 <dl class="field-list">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter" title="rnalysis.filtering.DESeqFilter">filtering.DESeqFilter</a>, filteirng.DESeqFilter]</p>
@@ -2755,10 +2747,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – the significance threshold to color data points as significantly up/down-regulated.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id11">
+<figure class="align-center" id="id17">
 <a class="reference internal image-reference" href="_images/volcano.png"><img alt="_images/volcano.png" src="_images/volcano.png" style="width: 448.0px; height: 333.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2866,7 +2858,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">biotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long_format</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
-:type long_format: ‘short’ or ‘long’ (default ‘short’)
+:type long_format: ‘short’ or ‘long’ (default=’short’)
 :param long_format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
 which also provides descriptive statistics of each column per biotype.
 :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
@@ -3057,9 +3049,9 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
 <li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -3175,7 +3167,7 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>by</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Names of the column or columns to sort and then filter by.</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default=True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
 <li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
@@ -3493,7 +3485,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
+<dd><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each new Filter object will contain only features that belong to its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3523,7 +3515,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
+<dd><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -3810,7 +3802,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">biotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long_format</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
-:type long_format: ‘short’ or ‘long’ (default ‘short’)
+:type long_format: ‘short’ or ‘long’ (default=’short’)
 :param long_format: ‘short’ returns a short-form DataFrame, which states the biotypes         in the Filter object and their count. ‘long’ returns a long-form DataFrame,
 which also provides descriptive statistics of each column per biotype.
 :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
@@ -4032,9 +4024,9 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
 <li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -4189,7 +4181,7 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>by</strong> (<em>string</em><em> or </em><em>list of strings</em>) – Names of the column or columns to sort and then filter by.</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – How many features to keep in the Filter object.</p></li>
-<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
+<li><p><strong>ascending</strong> (<em>bool</em><em> or </em><em>list of bools</em><em> (</em><em>default=True</em><em>)</em>) – Sort ascending vs. descending. Specify list for multiple sort orders.         If this is a list of bools, it must have the same length as ‘by’.</p></li>
 <li><p><strong>na_position</strong> (<em>'first'</em><em> or </em><em>'last'</em><em>, </em><em>default 'last'</em>) – If ‘first’, puts NaNs at the beginning; if ‘last’, puts NaNs at the end.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
@@ -4549,7 +4541,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each object contains only features that match its Attribute Reference Table attribute.</p>
+<dd><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each new Filter object will contain only features that belong to its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4579,7 +4571,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_by_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the Filter object into two Filter objects:         below and above the specified percentile in the spcfieid column.</p>
+<dd><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -4608,7 +4600,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">split_fold_change_direction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span></dt>
-<dd><p>Splits the features in the current FoldChangeFilter object into two complementary, non-overlapping         FoldChangeFilter objects, based on the direction of their log2(fold change).         The first object will contain only features with a positive log2(fold change),         the second object will contain only features with a negative log2(fold change).         Features with log2(fold change) = 0 will be ignored.</p>
+<dd><p>Splits the features in the FoldChangeFilter object into two non-overlapping         FoldChangeFilter objects, based on the direction of their log2(fold change).         The first object will contain only features with a positive log2(fold change),         the second object will contain only features with a negative log2(fold change).         Features with log2(fold change) = 0 will be ignored.</p>
 <dl class="field-list">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">filtering.FoldChangeFilter</a>, <a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html#rnalysis.filtering.FoldChangeFilter" title="rnalysis.filtering.FoldChangeFilter">filtering.FoldChangeFilter</a>]</p>
@@ -5031,7 +5023,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">filtering</span>
@@ -5097,16 +5089,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'.</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
-<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default 0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
-<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'</em><em>         (</em><em>default 'protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
-<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p></li>
-<li><p><strong>save_csv</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
-<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default None</em><em>)</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
-<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
-<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.</p></li>
-<li><p><strong>parallel</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default=0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
+<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'</em><em>         (</em><em>default='protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default=None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default=None</em><em>)</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
+<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
+<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.</p></li>
+<li><p><strong>parallel</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -5116,16 +5108,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id12">
+<figure class="align-center" id="id18">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id13">
+<figure class="align-center" id="id19">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5138,40 +5130,40 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
-<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default 0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>reps</strong> (<em>int larger than 0</em><em> (</em><em>default 10000</em><em>)</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
-<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.</em><em>         (</em><em>default 'protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
-<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default ‘predefined’)</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default=0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
+<li><p><strong>reps</strong> (<em>int larger than 0</em><em> (</em><em>default=10000</em><em>)</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
+<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.</em><em>         (</em><em>default='protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default=None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default=’predefined’)</p></li>
 <li><p><strong>attr_ref_path</strong> – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
 </ul>
 </dd>
 </dl>
 <p>Cannot be specified together with ‘biotype’.
-:type save_csv: bool (default False)
+:type save_csv: bool (default=False)
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
-:type fname: str or pathlib.Path (default None)
+:type fname: str or pathlib.Path (default=None)
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.
-:type random_seed: non-negative integer (default None)
+:type random_seed: non-negative integer (default=None)
 :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
-:type parallel: bool (default False)
+:type parallel: bool (default=False)
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id14">
+<figure class="align-center" id="id20">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id15">
+<figure class="align-center" id="id21">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5187,9 +5179,9 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>fdr</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
 <li><p><strong>reps</strong> (<em>int larger than 0</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
 <li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.         Default 'protein_coding'.</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
-<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default ‘predefined’)</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default=’predefined’)</p></li>
 <li><p><strong>attr_ref_path</strong> – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5198,24 +5190,24 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
 :type fname: str or pathlib.Path
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.
-:type random_seed: non-negative integer (default None)
+:type random_seed: non-negative integer (default=None)
 :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id16">
+<figure class="align-center" id="id22">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id17">
+<figure class="align-center" id="id23">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id23" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5236,11 +5228,11 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>organism</strong> (<em>str</em><em> or </em><em>int</em>) – organism name or NCBI taxon ID for which the function will fetch GO annotations.</p></li>
 <li><p><strong>gene_id_type</strong> (<em>str</em><em> (</em><em>default='UniProtKB'</em><em>)</em>) – the identifier type of the genes/features in the FeatureSet object         (for example: ‘UniProtKB’, ‘WormBase’, ‘RNACentral’, ‘Entrez Gene ID’).         If the annotations fetched from the GOLR server do not match your gene_id_type, RNAlysis will attempt to map         the annotations’ gene IDs to your identifier type.         For a full list of legal ‘gene_id_type’ names, see the UniProt website:         <a class="reference external" href="https://www.uniprot.org/help/api_idmapping">https://www.uniprot.org/help/api_idmapping</a></p></li>
 <li><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>statistical_test</strong> (<em>'fisher'</em><em>, </em><em>'hypergeometric'</em><em> or </em><em>'randomization'</em><em> (</em><em>default 'fisher'</em><em>)</em>) – determines the statistical test to be used for enrichment analysis.         Note that some propagation methods support only some of the available statistical tests.</p></li>
+<li><p><strong>statistical_test</strong> (<em>'fisher'</em><em>, </em><em>'hypergeometric'</em><em> or </em><em>'randomization'</em><em> (</em><em>default='fisher'</em><em>)</em>) – determines the statistical test to be used for enrichment analysis.         Note that some propagation methods support only some of the available statistical tests.</p></li>
 <li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.         Default 'protein_coding'.</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
 <li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
-<li><p><strong>propagate_annotations</strong> (<em>'classic'</em><em>, </em><em>'elim'</em><em>, </em><em>'weight'</em><em>, </em><em>'all.m'</em><em>, or </em><em>'no'</em><em> (</em><em>default 'elim'</em><em>)</em>) – determines the propagation method of GO annotations.         ‘no’ does not propagate annotations at all; ‘classic’ propagates all annotations up to the DAG tree’s root;         ‘elim’ terminates propagation at nodes which show significant enrichment; ‘weight’ performs propagation in a         weighted manner based on the significance of children nodes relatively to their parents; and ‘allm’ uses a         combination of all proopagation methods. To read more about the propagation methods,         see Alexa et al: <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>propagate_annotations</strong> (<em>'classic'</em><em>, </em><em>'elim'</em><em>, </em><em>'weight'</em><em>, </em><em>'all.m'</em><em>, or </em><em>'no'</em><em> (</em><em>default='elim'</em><em>)</em>) – determines the propagation method of GO annotations.         ‘no’ does not propagate annotations at all; ‘classic’ propagates all annotations up to the DAG tree’s root;         ‘elim’ terminates propagation at nodes which show significant enrichment; ‘weight’ performs propagation in a         weighted manner based on the significance of children nodes relatively to their parents; and ‘allm’ uses a         combination of all proopagation methods. To read more about the propagation methods,         see Alexa et al: <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p></li>
 <li><p><strong>aspects</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'biological_process'</em><em>, </em><em>'molecular_function'</em><em>, </em><em>'cellular_component'</em><em>,         or </em><em>'any'</em><em> (</em><em>default='any'</em><em>)</em>) – only annotations from the specified GO aspects will be included in the analysis.         Legal aspects are ‘biological_process’ (P), ‘molecular_function’ (F), and ‘cellular_component’ (C).</p></li>
 <li><p><strong>evidence_types</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'experimental'</em><em>, </em><em>'phylogenetic'</em><em> ,</em><em>'computational'</em><em>, </em><em>'author'</em><em>,         </em><em>'curator'</em><em>, </em><em>'electronic'</em><em>, or </em><em>'any'</em><em> (</em><em>default='any'</em><em>)</em>) – only annotations with the specified evidence types will be included in the analysis.         For a full list of legal evidence codes and evidence code categories see the GO Consortium website:         <a class="reference external" href="http://geneontology.org/docs/guide-go-evidence-codes/">http://geneontology.org/docs/guide-go-evidence-codes/</a></p></li>
 <li><p><strong>excluded_evidence_types</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'experimental'</em><em>, </em><em>'phylogenetic'</em><em> ,</em><em>'computational'</em><em>,         </em><em>'author'</em><em>, </em><em>'curator'</em><em>, </em><em>'electronic'</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – annotations with the specified evidence types will be         excluded from the analysis.         For a full list of legal evidence codes and evidence code categories see the GO Consortium website:         <a class="reference external" href="http://geneontology.org/docs/guide-go-evidence-codes/">http://geneontology.org/docs/guide-go-evidence-codes/</a></p></li>
@@ -5256,35 +5248,35 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis.         Legal qualifiers are ‘not’, ‘contributes_to’, and/or ‘colocalizes_with’.
 :type qualifiers: str, Iterable of str, or ‘any’ (default)
 :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis.         Legal qualifiers are ‘not’, ‘contributes_to’, and/or ‘colocalizes_with’.
-:type excluded_qualifiers: str, Iterable of str, or None (default ‘not’)
+:type excluded_qualifiers: str, Iterable of str, or None (default=’not’)
 :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms -         both significant and non-significant terms. If False (default), only significant GO terms will be returned.
-:type return_nonsignificant: bool (default False)
+:type return_nonsignificant: bool (default=False)
 :type save_csv: bool, default False
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
 :type fname: str or pathlib.Path
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot.         Otherwise, results will be plotted with a vertical plot.
-:type random_seed: non-negative integer (default None)
+:type random_seed: non-negative integer (default=None)
 :type random_seed: if using a randomization test, determine the random seed used to initialize         the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs. If not using a randomization test, this parameter will not affect the analysis.
 :param randomization_reps: if using a randomization test, determine how many randomization repititions to run.         Otherwise, this parameter will not affect the analysis.
-:type randomization_reps: int larger than 0 (default 10000)
-:type parallel: bool (default False)
+:type randomization_reps: int larger than 0 (default=10000)
+:type parallel: bool (default=False)
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id18">
+<figure class="align-center" id="id24">
 <a class="reference internal image-reference" href="plot_enrichment_results_go.png"><img alt="plot_enrichment_results_go.png" src="plot_enrichment_results_go.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id24" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id19">
+<figure class="align-center" id="id25">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_vertical.png"><img alt="plot_enrichment_results_go_vertical.png" src="plot_enrichment_results_go_vertical.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id25" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5328,11 +5320,11 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>fdr</strong> – </p></li>
 <li><p><strong>name_col</strong> – </p></li>
 <li><p><strong>results_df</strong> (<em>pd.DataFrame</em>) – a pandas DataFrame created by FeatureSet.enrich_randomization.</p></li>
-<li><p><strong>en_score_col</strong> (<em>str</em><em> (</em><em>default 'log2_fold_enrichment'</em><em>)</em>) – name of the DataFrame column that contains the enrichment scores.</p></li>
+<li><p><strong>en_score_col</strong> (<em>str</em><em> (</em><em>default='log2_fold_enrichment'</em><em>)</em>) – name of the DataFrame column that contains the enrichment scores.</p></li>
 <li><p><strong>title</strong> (<em>str</em>) – plot title.</p></li>
 <li><p><strong>ylabel</strong> (<em>str</em>) – plot ylabel.</p></li>
-<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – </p></li>
-<li><p><strong>center_bars</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.</p></li>
+<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – </p></li>
+<li><p><strong>center_bars</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -5444,7 +5436,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd><p>Returns a DataFrame of the biotypes in the gene set and their count.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
+<dd class="field-odd"><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – Path of the reference file used to determine biotype.         Default is the path predefined in the settings file.</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span><span class="p">,</span> <span class="n">filtering</span>
@@ -5510,16 +5502,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'.</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
-<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default 0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
-<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'</em><em>         (</em><em>default 'protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
-<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p></li>
-<li><p><strong>save_csv</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
-<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default None</em><em>)</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
-<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
-<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.</p></li>
-<li><p><strong>parallel</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default=0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
+<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'</em><em>         (</em><em>default='protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default=None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p></li>
+<li><p><strong>save_csv</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default=None</em><em>)</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
+<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
+<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.</p></li>
+<li><p><strong>parallel</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -5529,16 +5521,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id20">
+<figure class="align-center" id="id26">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id26" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id21">
+<figure class="align-center" id="id27">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5551,40 +5543,40 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
-<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default 0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>reps</strong> (<em>int larger than 0</em><em> (</em><em>default 10000</em><em>)</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
-<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.</em><em>         (</em><em>default 'protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
-<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default ‘predefined’)</p></li>
+<li><p><strong>alpha</strong> (<em>float between 0 and 1</em><em> (</em><em>default=0.05</em><em>)</em>) – Indicates the FDR threshold for significance.</p></li>
+<li><p><strong>reps</strong> (<em>int larger than 0</em><em> (</em><em>default=10000</em><em>)</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
+<li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.</em><em>         (</em><em>default='protein_coding'</em><em>)</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em><em>         (</em><em>default=None</em><em>)</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default=’predefined’)</p></li>
 <li><p><strong>attr_ref_path</strong> – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
 </ul>
 </dd>
 </dl>
 <p>Cannot be specified together with ‘biotype’.
-:type save_csv: bool (default False)
+:type save_csv: bool (default=False)
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
-:type fname: str or pathlib.Path (default None)
+:type fname: str or pathlib.Path (default=None)
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.
-:type random_seed: non-negative integer (default None)
+:type random_seed: non-negative integer (default=None)
 :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
-:type parallel: bool (default False)
+:type parallel: bool (default=False)
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id22">
+<figure class="align-center" id="id28">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id28" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id23">
+<figure class="align-center" id="id29">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id23" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id29" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5600,9 +5592,9 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>fdr</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
 <li><p><strong>reps</strong> (<em>int larger than 0</em>) – How many repetitions to run the randomization for.         10,000 is the default. Recommended 10,000 or higher.</p></li>
 <li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.         Default 'protein_coding'.</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
-<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default ‘predefined’)</p></li>
+<li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         :type attr_ref_path: str or pathlib.Path (default=’predefined’)</p></li>
 <li><p><strong>attr_ref_path</strong> – the path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5611,24 +5603,24 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
 :type fname: str or pathlib.Path
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.
-:type random_seed: non-negative integer (default None)
+:type random_seed: non-negative integer (default=None)
 :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id24">
+<figure class="align-center" id="id30">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id24" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id30" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id25">
+<figure class="align-center" id="id31">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id25" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id31" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5648,11 +5640,11 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>organism</strong> (<em>str</em><em> or </em><em>int</em>) – organism name or NCBI taxon ID for which the function will fetch GO annotations.</p></li>
 <li><p><strong>gene_id_type</strong> (<em>str</em><em> (</em><em>default='UniProtKB'</em><em>)</em>) – the identifier type of the genes/features in the FeatureSet object         (for example: ‘UniProtKB’, ‘WormBase’, ‘RNACentral’, ‘Entrez Gene ID’).         If the annotations fetched from the GOLR server do not match your gene_id_type, RNAlysis will attempt to map         the annotations’ gene IDs to your identifier type.         For a full list of legal ‘gene_id_type’ names, see the UniProt website:         <a class="reference external" href="https://www.uniprot.org/help/api_idmapping">https://www.uniprot.org/help/api_idmapping</a></p></li>
 <li><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>statistical_test</strong> (<em>'fisher'</em><em>, </em><em>'hypergeometric'</em><em> or </em><em>'randomization'</em><em> (</em><em>default 'fisher'</em><em>)</em>) – determines the statistical test to be used for enrichment analysis.         Note that some propagation methods support only some of the available statistical tests.</p></li>
+<li><p><strong>statistical_test</strong> (<em>'fisher'</em><em>, </em><em>'hypergeometric'</em><em> or </em><em>'randomization'</em><em> (</em><em>default='fisher'</em><em>)</em>) – determines the statistical test to be used for enrichment analysis.         Note that some propagation methods support only some of the available statistical tests.</p></li>
 <li><p><strong>biotype</strong> (<em>str specifying a specific biotype</em><em>, </em><em>list/set of strings each specifying a biotype</em><em>, or </em><em>'all'.         Default 'protein_coding'.</em>) – determines the background genes by their biotype. Requires specifying a Biotype Reference Table.         ‘all’ will include all genomic features in the reference table,         ‘protein_coding’ will include only protein-coding genes from the reference table, etc.         Cannot be specified together with ‘background_genes’.</p></li>
 <li><p><strong>background_genes</strong> (<em>set of feature indices</em><em>, </em><em>filtering.Filter object</em><em>, or </em><em>enrichment.FeatureSet object</em>) – a set of specific feature indices to be used as background genes.         Cannot be specified together with ‘biotype’.</p></li>
-<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
-<li><p><strong>propagate_annotations</strong> (<em>'classic'</em><em>, </em><em>'elim'</em><em>, </em><em>'weight'</em><em>, </em><em>'all.m'</em><em>, or </em><em>'no'</em><em> (</em><em>default 'elim'</em><em>)</em>) – determines the propagation method of GO annotations.         ‘no’ does not propagate annotations at all; ‘classic’ propagates all annotations up to the DAG tree’s root;         ‘elim’ terminates propagation at nodes which show significant enrichment; ‘weight’ performs propagation in a         weighted manner based on the significance of children nodes relatively to their parents; and ‘allm’ uses a         combination of all proopagation methods. To read more about the propagation methods,         see Alexa et al: <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p></li>
+<li><p><strong>biotype_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Biotype Reference Table.         Will be used to generate background set if ‘biotype’ is specified.</p></li>
+<li><p><strong>propagate_annotations</strong> (<em>'classic'</em><em>, </em><em>'elim'</em><em>, </em><em>'weight'</em><em>, </em><em>'all.m'</em><em>, or </em><em>'no'</em><em> (</em><em>default='elim'</em><em>)</em>) – determines the propagation method of GO annotations.         ‘no’ does not propagate annotations at all; ‘classic’ propagates all annotations up to the DAG tree’s root;         ‘elim’ terminates propagation at nodes which show significant enrichment; ‘weight’ performs propagation in a         weighted manner based on the significance of children nodes relatively to their parents; and ‘allm’ uses a         combination of all proopagation methods. To read more about the propagation methods,         see Alexa et al: <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p></li>
 <li><p><strong>aspects</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'biological_process'</em><em>, </em><em>'molecular_function'</em><em>, </em><em>'cellular_component'</em><em>,         or </em><em>'any'</em><em> (</em><em>default='any'</em><em>)</em>) – only annotations from the specified GO aspects will be included in the analysis.         Legal aspects are ‘biological_process’ (P), ‘molecular_function’ (F), and ‘cellular_component’ (C).</p></li>
 <li><p><strong>evidence_types</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'experimental'</em><em>, </em><em>'phylogenetic'</em><em> ,</em><em>'computational'</em><em>, </em><em>'author'</em><em>,         </em><em>'curator'</em><em>, </em><em>'electronic'</em><em>, or </em><em>'any'</em><em> (</em><em>default='any'</em><em>)</em>) – only annotations with the specified evidence types will be included in the analysis.         For a full list of legal evidence codes and evidence code categories see the GO Consortium website:         <a class="reference external" href="http://geneontology.org/docs/guide-go-evidence-codes/">http://geneontology.org/docs/guide-go-evidence-codes/</a></p></li>
 <li><p><strong>excluded_evidence_types</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'experimental'</em><em>, </em><em>'phylogenetic'</em><em> ,</em><em>'computational'</em><em>,         </em><em>'author'</em><em>, </em><em>'curator'</em><em>, </em><em>'electronic'</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – annotations with the specified evidence types will be         excluded from the analysis.         For a full list of legal evidence codes and evidence code categories see the GO Consortium website:         <a class="reference external" href="http://geneontology.org/docs/guide-go-evidence-codes/">http://geneontology.org/docs/guide-go-evidence-codes/</a></p></li>
@@ -5668,35 +5660,35 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis.         Legal qualifiers are ‘not’, ‘contributes_to’, and/or ‘colocalizes_with’.
 :type qualifiers: str, Iterable of str, or ‘any’ (default)
 :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis.         Legal qualifiers are ‘not’, ‘contributes_to’, and/or ‘colocalizes_with’.
-:type excluded_qualifiers: str, Iterable of str, or None (default ‘not’)
+:type excluded_qualifiers: str, Iterable of str, or None (default=’not’)
 :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms -         both significant and non-significant terms. If False (default), only significant GO terms will be returned.
-:type return_nonsignificant: bool (default False)
+:type return_nonsignificant: bool (default=False)
 :type save_csv: bool, default False
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
 :type fname: str or pathlib.Path
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot.         Otherwise, results will be plotted with a vertical plot.
-:type random_seed: non-negative integer (default None)
+:type random_seed: non-negative integer (default=None)
 :type random_seed: if using a randomization test, determine the random seed used to initialize         the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs. If not using a randomization test, this parameter will not affect the analysis.
 :param randomization_reps: if using a randomization test, determine how many randomization repititions to run.         Otherwise, this parameter will not affect the analysis.
-:type randomization_reps: int larger than 0 (default 10000)
-:type parallel: bool (default False)
+:type randomization_reps: int larger than 0 (default=10000)
+:type parallel: bool (default=False)
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id26">
+<figure class="align-center" id="id32">
 <a class="reference internal image-reference" href="plot_enrichment_results_go.png"><img alt="plot_enrichment_results_go.png" src="plot_enrichment_results_go.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id26" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id32" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id27">
+<figure class="align-center" id="id33">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_vertical.png"><img alt="plot_enrichment_results_go_vertical.png" src="plot_enrichment_results_go_vertical.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id33" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5740,11 +5732,11 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>fdr</strong> – </p></li>
 <li><p><strong>name_col</strong> – </p></li>
 <li><p><strong>results_df</strong> (<em>pd.DataFrame</em>) – a pandas DataFrame created by FeatureSet.enrich_randomization.</p></li>
-<li><p><strong>en_score_col</strong> (<em>str</em><em> (</em><em>default 'log2_fold_enrichment'</em><em>)</em>) – name of the DataFrame column that contains the enrichment scores.</p></li>
+<li><p><strong>en_score_col</strong> (<em>str</em><em> (</em><em>default='log2_fold_enrichment'</em><em>)</em>) – name of the DataFrame column that contains the enrichment scores.</p></li>
 <li><p><strong>title</strong> (<em>str</em>) – plot title.</p></li>
 <li><p><strong>ylabel</strong> (<em>str</em>) – plot ylabel.</p></li>
-<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – </p></li>
-<li><p><strong>center_bars</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.</p></li>
+<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – </p></li>
+<li><p><strong>center_bars</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -5787,12 +5779,12 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>iterable</em><em> (</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>set</em><em>, </em><em>etc</em><em>) </em><em>of str/int</em><em>, or </em><em>'all'.</em>) – An iterable of attribute names or attribute numbers         (according to their order in the Attribute Reference Table).         If ‘all’, all of the attributes in the Attribute Reference Table will be used.         If None, a manual input prompt will be raised.</p></li>
 <li><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
+<li><p><strong>attr_ref_path</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – path of the Attribute Reference Table from which user-defined attributes will be drawn.</p></li>
 <li><p><strong>save_csv</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, will save the results to a .csv file, under the name specified in ‘fname’.</p></li>
 <li><p><strong>fname</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default), fname will be requested in a manual prompt.</p></li>
-<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
-<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.</p></li>
-<li><p><strong>parallel</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
+<li><p><strong>return_fig</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, returns a matplotlib Figure object in addition to the results DataFrame.</p></li>
+<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, results will be plotted with a horizontal bar plot. Otherwise, results         will be plotted with a vertical plot.</p></li>
+<li><p><strong>parallel</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -5802,16 +5794,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id28">
+<figure class="align-center" id="id34">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set.png"><img alt="_images/plot_enrichment_results_single_set.png" src="_images/plot_enrichment_results_single_set.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id28" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id34" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id29">
+<figure class="align-center" id="id35">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set_vertical.png"><img alt="_images/plot_enrichment_results_single_set_vertical.png" src="_images/plot_enrichment_results_single_set_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id29" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id35" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5826,7 +5818,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>organism</strong> (<em>str</em><em> or </em><em>int</em>) – organism name or NCBI taxon ID for which the function will fetch GO annotations.</p></li>
 <li><p><strong>gene_id_type</strong> (<em>str</em><em> (</em><em>default='UniProtKB'</em><em>)</em>) – the identifier type of the genes/features in the FeatureSet object         (for example: ‘UniProtKB’, ‘WormBase’, ‘RNACentral’, ‘Entrez Gene ID’).         If the annotations fetched from the GOLR server do not match your gene_id_type,         RNAlysis will attempt to map  the annotations’ gene IDs to your identifier type.         For a full list of legal ‘gene_id_type’ names, see the UniProt website:         <a class="reference external" href="https://www.uniprot.org/help/api_idmapping">https://www.uniprot.org/help/api_idmapping</a></p></li>
 <li><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – Indicates the FDR threshold for significance.</p></li>
-<li><p><strong>propagate_annotations</strong> (<em>'classic'</em><em>, </em><em>'elim'</em><em>, </em><em>'weight'</em><em>, </em><em>'all.m'</em><em>, or </em><em>'no'</em><em> (</em><em>default 'elim'</em><em>)</em>) – determines the propagation method of GO annotations.         ‘no’ does not propagate annotations at all; ‘classic’ propagates all annotations up to the DAG tree’s root;         ‘elim’ terminates propagation at nodes which show significant enrichment; ‘weight’ performs propagation in a         weighted manner based on the significance of children nodes relatively to their parents; and ‘allm’ uses a         combination of all proopagation methods. To read more about the propagation methods,         see Alexa et al: <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p></li>
+<li><p><strong>propagate_annotations</strong> (<em>'classic'</em><em>, </em><em>'elim'</em><em>, </em><em>'weight'</em><em>, </em><em>'all.m'</em><em>, or </em><em>'no'</em><em> (</em><em>default='elim'</em><em>)</em>) – determines the propagation method of GO annotations.         ‘no’ does not propagate annotations at all; ‘classic’ propagates all annotations up to the DAG tree’s root;         ‘elim’ terminates propagation at nodes which show significant enrichment; ‘weight’ performs propagation in a         weighted manner based on the significance of children nodes relatively to their parents; and ‘allm’ uses a         combination of all proopagation methods. To read more about the propagation methods,         see Alexa et al: <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p></li>
 <li><p><strong>aspects</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'biological_process'</em><em>, </em><em>'molecular_function'</em><em>, </em><em>'cellular_component'</em><em>,         or </em><em>'any'</em><em> (</em><em>default='any'</em><em>)</em>) – only annotations from the specified GO aspects will be included in the analysis.         Legal aspects are ‘biological_process’ (P), ‘molecular_function’ (F), and ‘cellular_component’ (C).</p></li>
 <li><p><strong>evidence_types</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'experimental'</em><em>, </em><em>'phylogenetic'</em><em> ,</em><em>'computational'</em><em>, </em><em>'author'</em><em>,         </em><em>'curator'</em><em>, </em><em>'electronic'</em><em>, or </em><em>'any'</em><em> (</em><em>default='any'</em><em>)</em>) – only annotations with the specified evidence types         will be included in the analysis.         For a full list of legal evidence codes and evidence code categories see the GO Consortium website:         <a class="reference external" href="http://geneontology.org/docs/guide-go-evidence-codes/">http://geneontology.org/docs/guide-go-evidence-codes/</a></p></li>
 <li><p><strong>excluded_evidence_types</strong> (<em>str</em><em>, </em><em>Iterable of str</em><em>, </em><em>'experimental'</em><em>, </em><em>'phylogenetic'</em><em> ,</em><em>'computational'</em><em>,         </em><em>'author'</em><em>, </em><em>'curator'</em><em>, </em><em>'electronic'</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – annotations with the specified evidence types will be         excluded from the analysis.         For a full list of legal evidence codes and evidence code categories see the GO Consortium website:         <a class="reference external" href="http://geneontology.org/docs/guide-go-evidence-codes/">http://geneontology.org/docs/guide-go-evidence-codes/</a></p></li>
@@ -5842,31 +5834,31 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis.         Legal qualifiers are ‘not’, ‘contributes_to’, and/or ‘colocalizes_with’.
 :type qualifiers: str, Iterable of str, or ‘any’ (default)
 :param excluded_qualifiers: annotations with the speficied qualifiers         will be excluded from the analysis.         Legal qualifiers are ‘not’, ‘contributes_to’, and/or ‘colocalizes_with’.
-:type excluded_qualifiers: str, Iterable of str, or None (default ‘not’)
+:type excluded_qualifiers: str, Iterable of str, or None (default=’not’)
 :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms -         both significant and non-significant terms. If False (default),         only significant GO terms will be returned.
-:type return_nonsignificant: bool (default False)
+:type return_nonsignificant: bool (default=False)
 :type save_csv: bool, default False
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
 :type fname: str or pathlib.Path
 :param fname: The full path and name of the file to which to save the results. For example:         ‘C:/dir/file’. No ‘.csv’ suffix is required. If None (default),         fname will be requested in a manual prompt.
-:type return_fig: bool (default False)
+:type return_fig: bool (default=False)
 :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-:type plot_horizontal: bool (default True)
+:type plot_horizontal: bool (default=True)
 :param plot_horizontal: if True, results will be plotted with a horizontal bar plot.         Otherwise, results will be plotted with a vertical plot.
-:type parallel: bool (default True)
+:type parallel: bool (default=True)
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id30">
+<figure class="align-center" id="id36">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_singlelist.png"><img alt="plot_enrichment_results_go_singlelist.png" src="plot_enrichment_results_go_singlelist.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id30" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id36" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id31">
+<figure class="align-center" id="id37">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_singlelist_vertical.png"><img alt="plot_enrichment_results_go_singlelist_vertical.png" src="plot_enrichment_results_go_singlelist_vertical.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id31" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id37" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5940,7 +5932,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>objs</strong> (<em>a dictionary</em><em>, </em><em>where the keys are names of sets</em><em>, </em><em>and the values are either     python sets</em><em>, </em><em>FeatureSets</em><em> or </em><em>names of columns in the Attribute Reference Table.</em>) – the ‘objs’ input given to the function enrichment.upset_plot() or enrichment.venn_diagram().</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -5972,15 +5964,15 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>objs</strong> (<em>a dictionary with 2</em><em> or </em><em>more entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
 <li><p><strong>title</strong> (<em>str</em>) – determines the title of the plot.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a dictionary of matplotlib axes, where the keys are ‘matrix’, ‘intersections’, ‘totals’, ‘shading’.</p>
-<figure class="align-center" id="id32">
+<figure class="align-center" id="id38">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id32" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id38" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </p>
@@ -5997,23 +5989,23 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>objs</strong> (<em>a dictionary with 2-3 entries</em><em>, </em><em>where the keys are the names of the sets</em><em>, </em><em>and the values are either     a FeatureSet</em><em>, </em><em>a python set of feature indices</em><em>, or </em><em>a name of a column in the Attribute Reference Table.     For example:     {'first set':{'gene1'</em><em>,</em><em>'gene2'</em><em>,</em><em>'gene3'}</em><em>, </em><em>'second set':'name_of_attribute_from_reference_table'}</em>) – the FeatureSets, python sets or user-defined attributes to plot.</p></li>
 <li><p><strong>set_colors</strong> (<em>tuple of matplotlib-format colors</em><em>, </em><em>the same size as 'objs'</em>) – determines the colors of the circles in the diagram.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – the path of the Attribute Reference Table from which user-defined attributes will be drawn,     if such attributes are included in ‘objs’.</p></li>
 <li><p><strong>title</strong> (<em>str</em>) – determines the title of the plot.</p></li>
 <li><p><strong>alpha</strong> (<em>a float between 0 and 1</em>) – determines the opacity of the circles.</p></li>
-<li><p><strong>weighted</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, the plot will be area-weighted.</p></li>
-<li><p><strong>lines</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – if True, adds an outline to the circles.</p></li>
-<li><p><strong>linecolor</strong> (<em>matplotlib-format color</em><em> (</em><em>default 'black'</em><em>)</em>) – Determines the color of the circles’ outline.</p></li>
-<li><p><strong>linestyle</strong> (<em>'solid'</em><em> or </em><em>'dashed'</em><em> (</em><em>default 'solid'</em><em>)</em>) – the style of the circles’ outline.</p></li>
-<li><p><strong>linewidth</strong> (<em>float</em><em> (</em><em>default 2.0</em><em>)</em>) – the widdth of the circles’ outlines.</p></li>
-<li><p><strong>normalize_to</strong> (<em>float</em><em> (</em><em>default 1.0</em><em>)</em>) – </p></li>
+<li><p><strong>weighted</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, the plot will be area-weighted.</p></li>
+<li><p><strong>lines</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, adds an outline to the circles.</p></li>
+<li><p><strong>linecolor</strong> (<em>matplotlib-format color</em><em> (</em><em>default='black'</em><em>)</em>) – Determines the color of the circles’ outline.</p></li>
+<li><p><strong>linestyle</strong> (<em>'solid'</em><em> or </em><em>'dashed'</em><em> (</em><em>default='solid'</em><em>)</em>) – the style of the circles’ outline.</p></li>
+<li><p><strong>linewidth</strong> (<em>float</em><em> (</em><em>default=2.0</em><em>)</em>) – the widdth of the circles’ outlines.</p></li>
+<li><p><strong>normalize_to</strong> (<em>float</em><em> (</em><em>default=1.0</em><em>)</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
-<figure class="align-center" id="id33">
+<figure class="align-center" id="id39">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id33" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id39" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </p>

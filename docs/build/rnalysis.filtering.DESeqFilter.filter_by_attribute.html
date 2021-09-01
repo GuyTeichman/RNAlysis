@@ -240,9 +240,9 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>attributes</strong> (<em>string</em><em> or </em><em>list of strings</em><em>,         </em><em>which are column titles in the user-defined Attribute Reference Table.</em>) – attributes to filter by.</p></li>
 <li><p><strong>mode</strong> (<em>'union'</em><em> or </em><em>'intersection'.</em>) – If ‘union’, filters out every genomic feature that does not belong to one or more         of the indicated attributes. If ‘intersection’,         filters out every genomic feature that does not belong to ALL of the indicated attributes.</p></li>
-<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default 'predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
-<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>ref</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em> (</em><em>default='predefined'</em><em>)</em>) – filename/path of the attribute reference table to be used as reference.</p></li>
+<li><p><strong>opposite</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
