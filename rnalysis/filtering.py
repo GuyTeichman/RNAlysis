@@ -2164,7 +2164,8 @@ class CountFilter(Filter):
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
-                                         max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style, split_plots)
+                                         max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style,
+                                         split_plots)
         clusterers = runner.run()
         filt_obj_tuples = []
         for clusterer in clusterers:
@@ -2442,15 +2443,14 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def pca(self, sample_names: list = 'all', n_components: int = 3, sample_grouping: list = None, labels: bool = True
-            ) -> Tuple[PCA, List[plt.Figure]]:
+    def pca(self, sample_names: list = 'all', n_components: int = 3, power_transform: bool = False,
+            sample_grouping: list = None, labels: bool = True) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
          variance between the different samples. The function will automatically plot Principal Component #1 \
          with every other Principal Components calculated.
-
-        :param power_transform: if True, performs a power transform on the count data prior to PCA.
-        :type power_transform: bool (default=True)
+        :param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
+        :type power_transform: bool (default=False)
         :type sample_names: 'all' or list.
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"]
@@ -2481,11 +2481,9 @@ class CountFilter(Filter):
         assert isinstance(n_components, int) and n_components >= 2, \
             f"'n_components' must be an integer >=2. Instead got {n_components}."
         if sample_names == 'all':
-            sample_names = list(self.df.columns)
-            data = self.df.transpose()
-        else:
-            data = self.df[sample_names].transpose()
-        data_standardized = generic.standardize(data)
+            sample_names = list(self._numeric_columns)
+        data = self.df[sample_names].transpose()
+        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
 
         pca_obj = PCA(n_components=n_components)
         pcomps = pca_obj.fit_transform(data_standardized)

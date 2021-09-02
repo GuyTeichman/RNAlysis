@@ -208,13 +208,14 @@ def test_countfilter_scatter_sample_vs_sample_api():
 
 def test_countfilter_pca_api():
     c = CountFilter("tests/test_files/counted.csv")
-    c.pca()
-    c.pca(sample_names=['cond1', 'cond2', 'cond3'], sample_grouping=[1, 1, 2], n_components=2, labels=False,
-          power_transform=True)
+    c.filter_low_reads(1)
+    _ = c.pca()
+    _ = c.pca(sample_names=['cond1', 'cond2', 'cond3'], sample_grouping=[1, 1, 2], n_components=2, labels=False,
+              power_transform=True)
     with pytest.raises(AssertionError):
-        c.pca(n_components=2.0)
+        _ = c.pca(n_components=2.0)
     with pytest.raises(AssertionError):
-        c.pca(n_components=1)
+        _ = c.pca(n_components=1)
     plt.close('all')
 
 
@@ -1316,7 +1317,7 @@ def test_pipeline_apply_to_with_split_function():
 
     pl_c.remove_last_function()
     pl_c.remove_last_function()
-    pl_c.add_function('split_kmeans', n_clusters=[2, 3, 4], random_state=42)
+    pl_c.add_function('split_kmeans', n_clusters=[2, 3, 4], random_seed=42)
     pl_c.add_function(CountFilter.filter_top_n, by='cond1', n=5)
     c = CountFilter('tests/test_files/counted.csv')
     c_pipeline_res = pl_c.apply_to(c, inplace=False)
@@ -1344,7 +1345,7 @@ def test_pipeline_apply_to_multiple_splits():
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.filter_top_n, by='cond2', n=2, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=3, return_probabilities=True)
-    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=2, random_state=42)
+    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=2, random_seed=42)
     pl_c.add_function(CountFilter.split_by_reads, 15)
 
     c = CountFilter('tests/test_files/counted.csv')
@@ -1374,7 +1375,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
-    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 3, 7], random_state=42, n_init=1)
+    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 3, 7], random_seed=42, n_init=1)
     pl_c.add_function(CountFilter.sort, by='cond2rep3')
     pl_c.add_function(CountFilter.biotypes, 'long', __biotype_ref__)
 
@@ -1436,8 +1437,7 @@ def test_split_hierarchical_api():
     assert isinstance(res, tuple)
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
-    res2 = c.split_hierarchical([2, 3, 7], metric='Euclidean', linkage='AVERAGE', plot_style='std_bar',
-                                gap_random_state=42)
+    res2 = c.split_hierarchical([2, 3, 7], metric='Euclidean', linkage='AVERAGE', plot_style='std_bar')
     assert isinstance(res2, list)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
@@ -1449,7 +1449,7 @@ def test_split_hierarchical_api():
     with pytest.raises(AssertionError):
         c.split_hierarchical(5, metric='badinput')
     with pytest.raises(AssertionError):
-        c.split_hierarchical(4, linkage='avg')
+        c.split_hierarchical(4, linkage='badinput')
 
 
 def test_split_hdbscan_api():
