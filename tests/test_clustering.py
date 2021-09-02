@@ -372,8 +372,50 @@ def test_clicom_clusters_to_labels():
     assert np.all(clusterer.clusters_to_labels(clusters) == truth)
 
 
-def test_clicom_cliques_to_clusters():
-    assert False
+@pytest.mark.parametrize("cluster_unclustered_features,allowed_overlap,expected_clusters", [
+    (True, 1 / 3, [{0, 1, 2, 3, 12}, {6, 7, 8, 9}, {10, 11}, {4, 5}]),
+    (False, 1 / 3, [{0, 1, 2, 3}, {6, 7, 8, 9}, {10, 11}, {4, 5}]),
+    (True, 0, [{0, 1, 2, 3, 12}, {6, 7, 8, 9, 5}, {10, 11}]),
+    (False, 0, [{0, 1, 2, 3}, {6, 7, 8, 9}, {10, 11}])
+])
+def test_clicom_cliques_to_clusters(monkeypatch, cluster_unclustered_features, allowed_overlap, expected_clusters):
+    threshold = 0.8
+
+    def mock_feature_cluster_similarity(self, feature, cluster):
+        if feature == 4:
+            best_cluster = None  # feature 4 should remain unclustered
+        elif feature == 5:
+            best_cluster = {6, 7, 8, 9}
+        elif feature == 12:
+            best_cluster = {0, 1, 2, 3}
+        else:
+            raise ValueError("an unexpected feature remained unclustered. ")
+
+        if cluster == best_cluster:
+            return threshold
+        else:
+            return np.random.random() - (1 - threshold - 0.01)
+            # return a random similarity score that's lower than the best
+
+    monkeypatch.setattr(CLICOM, 'feature_cluster_similarity', mock_feature_cluster_similarity)
+
+    n_features = 13
+    cliques_lst = [{0, 1, 2, 3}, {4, 5, 6}, {2, 3, 4}, {6, 7, 8, 9}, {10, 11}, {2, 3, 12}]
+    cliques_set = {frozenset(this_clique) for this_clique in cliques_lst}
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.binary_mat = np.zeros((n_features, 1))
+    clusterer.cluster_unclustered_features = cluster_unclustered_features
+    clusterer.clique_set = cliques_set
+    if cluster_unclustered_features:
+        clusterer.cluster_wise_cliques = False  # we are not in cluster-wise cliques mode
+        clusterer.threshold = threshold
+    res = clusterer.cliques_to_clusters(allowed_overlap)
+
+    assert isinstance(res, list)
+    for clstr in res:
+        assert isinstance(clstr, set)
+
+    assert {frozenset(clstr) for clstr in res} == {frozenset(clstr) for clstr in expected_clusters}
 
 
 def test_clicom_feature_cluster_similarity():
