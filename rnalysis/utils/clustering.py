@@ -184,8 +184,9 @@ class CLICOM:
         clusters = []
         for m in range(len(sorted_cliques)):
             if len(assigned.intersection(sorted_cliques[m])) / len(sorted_cliques[m]) <= allowed_overlap:
-                clusters.append(sorted_cliques[m] - assigned)
-                assigned = assigned.union(clusters[-1])
+                features_to_assign = sorted_cliques[m] - assigned
+                clusters.append(features_to_assign)
+                assigned = assigned.union(features_to_assign)
 
         if self.cluster_unclustered_features:
             for feature in all_features - assigned:
