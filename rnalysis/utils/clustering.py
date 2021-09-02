@@ -403,7 +403,8 @@ class ClusteringRunner:
         if metric is not None:
             metric_parameter_name, metric_name = metric
             metric_name = metric_name.lower()
-            validation.validate_clustering_parameters(self.legal_metrics, metric_name)
+            validation.validate_clustering_parameters(self.legal_metrics.union(self.precomputed_metrics),
+                                                      metric_name)
             if metric_name in self.precomputed_metrics:
                 def precomputed_transform(x):
                     return self.precomputed_metrics[metric_name](transform(x))
@@ -723,7 +724,7 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
 
 class HierarchicalRunner(ClusteringRunnerWithNClusters):
     clusterer_class = AgglomerativeClustering
-    legal_metrics = set(sklearn_pairwise.PAIRED_DISTANCES.values())
+    legal_metrics = set(sklearn_pairwise.PAIRED_DISTANCES.keys())
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
@@ -793,7 +794,6 @@ class HDBSCANRunner(ClusteringRunner):
                  metric: str = 'euclidean', cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
                  return_probabilities: bool = False, plot_style: str = 'none', split_plots: bool = False):
         assert isinstance(metric, str)
-        assert metric.lower() in self.legal_metrics
         assert isinstance(min_cluster_size, int) and min_cluster_size > 1
         assert isinstance(min_samples, int) and min_samples >= 1
         assert isinstance(cluster_selection_epsilon, (int, float))

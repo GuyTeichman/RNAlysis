@@ -148,7 +148,7 @@ def test_clicomrunner_find_valid_clustering_setups():
 
     runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [True, False], 0.5,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
-                          dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife', 'l1'],
+                          dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
                           dict(method='hierarchical', n_clusters=None, distance_threshold=[0.5, 1], metric='euclidean'))
     setups = runner.find_valid_clustering_setups()
@@ -173,7 +173,7 @@ def test_clicomrunner_find_valid_clustering_setups():
 
     runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), True, 0.5,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
-                          dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife', 'l1'],
+                          dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
                           dict(method='hierarchical', n_clusters=None, distance_threshold=[0.5, 1], metric='euclidean'))
     setups = runner.find_valid_clustering_setups()
