@@ -445,3 +445,7 @@ def test_plot_clustering_api():
 
 def test_plot_gap_api():
     assert False
+
+
+def test_plot_silhouette_api():
+    assert False
