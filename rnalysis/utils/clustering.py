@@ -203,6 +203,8 @@ class CLICOM:
 
     def feature_cluster_similarity(self, feature: int, cluster: Set[int]):
         assert not self.cluster_wise_cliques
+        # the similarity between a features and a cluster is the mean similarity to every feature in the cluster
+        # (equivalent to average linkage criterion)
         return np.mean([self.adj_mat[feature, i] for i in cluster])
 
     def cliques_to_blocks(self, allowed_overlap: float = 0.2) -> list:

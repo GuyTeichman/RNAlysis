@@ -418,8 +418,31 @@ def test_clicom_cliques_to_clusters(monkeypatch, cluster_unclustered_features, a
     assert {frozenset(clstr) for clstr in res} == {frozenset(clstr) for clstr in expected_clusters}
 
 
-def test_clicom_feature_cluster_similarity():
-    assert False
+@pytest.mark.parametrize("feature,cluster,expected", [
+    (0, {4, 5, 6}, np.mean([0, 216, 72])),
+    (0, {7, 8, 1}, np.mean([48, 0, 0])),
+    (3, {4, 5, 6}, np.mean([9, 144, 144])),
+    (3, {7, 8, 1}, np.mean([108, 18, 0])),
+])
+def test_clicom_feature_cluster_similarity(feature, cluster, expected):
+    adj_mat = np.array([
+        [0, 48, 0, 144, 0, 216, 72, 0, 0],
+        [48, 0, 32, 108, 54, 48, 168, 84, 24],
+        [0, 32, 0, 0, 162, 0, 0, 132, 192],
+        [144, 108, 0, 0, 9, 144, 144, 18, 0],
+        [0, 54, 162, 9, 0, 0, 18, 144, 162],
+        [216, 48, 0, 144, 0, 0, 72, 0, 0],
+        [72, 168, 0, 144, 18, 72, 0, 36, 0],
+        [0, 84, 132, 18, 144, 0, 36, 0, 108],
+        [0, 24, 192, 0, 162, 0, 0, 108, 0], ])
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.adj_mat = adj_mat
+    clusterer.cluster_wise_cliques = False
+    assert clusterer.feature_cluster_similarity(feature, cluster) == expected
+
+    clusterer.cluster_wise_cliques = True
+    with pytest.raises(AssertionError):
+        _ = clusterer.feature_cluster_similarity(feature, cluster)
 
 
 def test_clicom_inter_cluster_similarity():
