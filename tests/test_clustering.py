@@ -63,38 +63,34 @@ def test_kmedoidsiter_iter():
     assert np.all(kmeds.clusterer.predict(df) == truth_kmeds.predict(df))
 
 
-def test_parse_n_clusters(monkeypatch):
+@pytest.mark.parametrize("args,expected", [
+    ((False, 'silhouette', 20), [6]),
+    ((False, 'gap', 20), [7]),
+    ((False, [7, 2, 5], 20), [7, 2, 5]),
+    ((False, [10], 20), [10]),
+    ((False, 10, 20), [10]),
+    ((False, range(2, 9), 20), [2, 3, 4, 5, 6, 7, 8])
+])
+def test_parse_n_clusters(monkeypatch, args, expected):
     data = pd.read_csv('tests/test_files/counted.csv', index_col=0)
     monkeypatch.setattr(ClusteringRunnerWithNClusters, "silhouette", lambda self: 6)
     monkeypatch.setattr(ClusteringRunnerWithNClusters, "gap_statistic", lambda self: 7)
 
-    runner = ClusteringRunnerWithNClusters(data, False, 'silhouette', 20)
-    assert runner.n_clusters == [6]
-    runner = ClusteringRunnerWithNClusters(data, False, 'gap', 20)
-    assert runner.n_clusters == [7]
+    runner = ClusteringRunnerWithNClusters(data, *args)
+    assert runner.n_clusters == expected
 
-    runner = ClusteringRunnerWithNClusters(data, False, [7, 2, 5], 20)
-    assert runner.n_clusters == [7, 2, 5]
 
-    runner = ClusteringRunnerWithNClusters(data, False, [10], 20)
-    assert runner.n_clusters == [10]
-
-    runner = ClusteringRunnerWithNClusters(data, False, 10, 20)
-    assert runner.n_clusters == [10]
-
-    runner = ClusteringRunnerWithNClusters(data, False, range(2, 9), 20)
-    assert runner.n_clusters == list(range(2, 9))
-
+@pytest.mark.parametrize("args", [
+    (False, [5, 2, '3'], 20),
+    (False, [3, 23, 2], 20),
+    (False, '17', 20),
+    (False, 1, 20),
+    (False, [3, 5, 1], 20)
+])
+def test_parse_n_clusters_invalid_values(args: tuple):
+    data = pd.read_csv('tests/test_files/counted.csv', index_col=0)
     with pytest.raises(AssertionError):
-        runner = ClusteringRunnerWithNClusters(data, False, [5, 2, '3'], 20)
-    with pytest.raises(AssertionError):
-        runner = ClusteringRunnerWithNClusters(data, False, '17', 20)
-    with pytest.raises(AssertionError):
-        runner = ClusteringRunnerWithNClusters(data, False, 1, 20)
-    with pytest.raises(AssertionError):
-        runner = ClusteringRunnerWithNClusters(data, False, [3, 5, 1], 20)
-    with pytest.raises(AssertionError):
-        runner = ClusteringRunnerWithNClusters(data, False, [3, 23, 2], 20)
+        _ = ClusteringRunnerWithNClusters(data, *args)
 
 
 def test_compute_dispersion():
