@@ -825,9 +825,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
         assert annotation_iter.n_annotations > 0, "No GO annotations were found for the given parameters. " \
                                                   "Please try again with a different set of parameters. "
         for annotation in tqdm(annotation_iter, desc=desc, total=annotation_iter.n_annotations, unit=' annotations'):
-            # extract gene_id, go_id, source from the annotation
+            # extract gene_id, go_id, source from the annotation. skip annotations that don't appear in the GO DAG
+
+            if annotation['annotation_class'] not in self.dag_tree:
+                continue
+            go_id: str = self.dag_tree[annotation['annotation_class']].id  # replace alt_ids with their main id
             gene_id: str = annotation['bioentity_internal_id']
-            go_id = self.dag_tree[annotation['annotation_class']].id
             source: str = annotation['source']
 
             # add annotation to annotation dictionary
