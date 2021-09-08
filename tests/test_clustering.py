@@ -445,12 +445,36 @@ def test_clicom_feature_cluster_similarity(feature, cluster, expected):
         _ = clusterer.feature_cluster_similarity(feature, cluster)
 
 
-def test_clicom_inter_cluster_similarity():
-    assert False
+@pytest.mark.parametrize("a,b,expected", [
+    (0, 1, 4 / 18),
+    (0, 3, 16 / 24),
+    (0, 5, 1),
+    (3, 5, 16 / 24)])
+def test_clicom_inter_cluster_similarity(a, b, expected, valid_clustering_solutions):
+    clusterer = CLICOM(BinaryFormatClusters(valid_clustering_solutions), 0.5)
+    assert clusterer.inter_cluster_similarity(a, b, clusterer.clustering_solutions.cluster_sets,
+                                              clusterer.clustering_solutions.n_features,
+                                              clusterer.clustering_solutions.n_solutions) == expected
 
 
-def test_clicom_cumulative_cluster_similarity():
-    assert False
+@pytest.mark.parametrize("clique,expected", [
+    (frozenset({0, 1}), 8 / 18),
+    (frozenset({0, 5}), 2),
+    (frozenset({0, 3, 5}), (32 / 24) + 1)])
+def test_clicom_cumulative_cluster_similarity(valid_clustering_solutions, clique, expected):
+    clusterer = CLICOM.__new__(CLICOM)
+    clusterer.adj_mat = np.array([
+        [0, 48, 0, 144, 0, 216, 72, 0, 0],
+        [48, 0, 32, 108, 54, 48, 168, 84, 24],
+        [0, 32, 0, 0, 162, 0, 0, 132, 192],
+        [144, 108, 0, 0, 9, 144, 144, 18, 0],
+        [0, 54, 162, 9, 0, 0, 18, 144, 162],
+        [216, 48, 0, 144, 0, 0, 72, 0, 0],
+        [72, 168, 0, 144, 18, 72, 0, 36, 0],
+        [0, 84, 132, 18, 144, 0, 36, 0, 108],
+        [0, 24, 192, 0, 162, 0, 0, 108, 0], ]) / 216
+
+    assert clusterer.cumulative_cluster_similarity(clique) == expected
 
 
 def test_gap_statistic():
