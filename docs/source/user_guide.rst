@@ -1038,7 +1038,21 @@ Choose plotting parameters (optional)
 After RNALysis is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
 RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.
 
-You can modify the orientation of the bar plot (horizontal or vertical) with the `plot_horizontal` parameter.
+You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
+
+        .. figure::  plot_enrichment_results.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=True
+
+
+        .. figure::  plot_enrichment_results_vertical.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=False
+
 
 If you want to further customize this plot, you can request RNAlysis to return a Matplotlib Figure object of the barplot, by using the `return_fig` parameter.
 
@@ -1126,8 +1140,23 @@ If you choose to use a randomization test, you can specify the number of randomi
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-After performing enrichment analysis, RNAlysis will automatically plot a summary of your enrichment results as a bar plot of enrichment scores.
-You can determine the orientation of the plot using the `plot_horizontal` parameter.
+After performing enrichment analysis, RNAlysis will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
+You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
+
+
+        .. figure::  plot_enrichment_results.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=True
+
+
+        .. figure::  plot_enrichment_results_vertical.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=False
+
 
 If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the `return_fig` parameter.
 When it is set as 'True', RNALysis will return the Figure object it generated in addition to the results table.
