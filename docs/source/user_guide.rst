@@ -277,9 +277,9 @@ Data visualization and exploratory data analysis with DESeqFilter
 
 With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:
 
-.. figure::  volcano_plot.png
+.. figure::  volcano.png
            :align:   center
-           :scale: 40 %
+           :scale: 70 %
 
            Example output of DESeqFilter.volcano_plot()
 
@@ -528,9 +528,15 @@ The main advantage of K-means clustering is its simplicity - it contains one mai
 K-Medoids clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The K-medoids method is very similar to K-means. The main difference between the two is the way they define clusters and the distances between them:
-K-medoids picks one data point as the 'center' (medoid) of each cluster. In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.
+K-medoids picks one data point as the 'center' (medoid) of each cluster.
+In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.
 
 Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the `metric` parameter.
+
+K-medoids clustering in RNALysis supports the following distance metrics:
+
+* TODO
+
 
 .. image:: kmedoids_all.png
   :width: 450
@@ -542,9 +548,20 @@ Hierarchical clustering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Hierarchical clustering (or agglomerative clustering) is clustering method which aims to build a hierarchy of clusters.
 
-In agglomerative hierarchical clustering, each data points starts in its own clusters. The clustering algorithm then uses a distance metric (a measure of distance between pairs of data points) and a linkage criterion (determines the distance between sets of data points as a function of the pairwise distances between observations) to group merge data points into clusters, and then further group those clusters into larger clusters based on their similarity. Eventually, all of the observations are connected into a hierarchical tree.
+In agglomerative hierarchical clustering, each data points starts in its own clusters.
+The clustering algorithm then uses a distance metric (a measure of distance between pairs of data points)
+and a linkage criterion
+(determines the distance between sets of data points as a function of the pairwise distances between observations)
+to group merge data points into clusters, and then further group those clusters into larger clusters based on their similarity.
+Eventually, all of the observations are connected into a hierarchical tree.
 
-We can decide to 'cut' the tree at any height in order to generate the final clustering solution. This can be done by either specifying the estimated number of clusters like in K-means, or by specifiying a distance threshold above which clusters will not be merged.
+We can decide to 'cut' the tree at any height in order to generate the final clustering solution.
+This can be done by either specifying the estimated number of clusters like in K-means,
+or by specifiying a distance threshold above which clusters will not be merged.
+
+Hierarchical clustering in RNAlysis supports the following distance metrics:
+
+* TODO
 
 .. image:: hierarchical_all.png
   :width: 450
@@ -563,6 +580,10 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:
 
 HDBSCAN supports other tuning parameters, which you can read more about in the HDBSCAN documentation:
 https://hdbscan.readthedocs.io/en/latest/index.html
+
+HDBSCAN in RNALysis supports the following distance metrics:
+
+* TODO
 
 .. image:: hdbscan_all.png
   :width: 450
@@ -1082,7 +1103,7 @@ If some of the features in the background set or the enrichment set do no appear
 
 Choose the statistical test (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Significance testing for GO enrichment analysis can be done using either the Hypergeometric Test, Fisher's Exact Test, or a randomization test.
+Significance testing for enrichment analysis can be done using either the Hypergeometric Test, Fisher's Exact Test, or a randomization test.
 
 The hypergeometric test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute ('success') and *X* genes from the test set belonging to that attribute.
 If we were to randomly draw *n* genes from the background set (without replacement), what is the probability of drawing *X* or more (in case of enrichment)/*X* or less (in case of depletion) genes belonging to the given attribute?
@@ -1105,7 +1126,11 @@ If you choose to use a randomization test, you can specify the number of randomi
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO
+After performing enrichment analysis, RNAlysis will automatically plot a summary of your enrichment results as a bar plot of enrichment scores.
+You can determine the orientation of the plot using the `plot_horizontal` parameter.
+
+If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the `return_fig` parameter.
+When it is set as 'True', RNALysis will return the Figure object it generated in addition to the results table.
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1198,6 +1223,9 @@ To better fit the visualization of the results to your needs, you can specify tw
            `plot_style`='interleaved'
 
 If you don't specify plotting parameters, RNAlysis will plot the histogram on a logarithmic scale using the 'overlap' style by default.
+
+If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the `return_fig` parameter.
+When it is set as 'True', RNALysis will return the Figure object it generated in addition to the results table.
 
 Non-Categorical Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
