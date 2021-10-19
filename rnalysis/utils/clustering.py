@@ -142,7 +142,6 @@ class CLICOM:
                 labels[feature] = i
         return labels
 
-    # @numba.njit()
     def find_cliques(self):
         # fast_cliquer algorithm:
         n_objs = self.binary_mat.shape[0]
@@ -174,7 +173,7 @@ class CLICOM:
         # extract cliques
         for i in range(self.binary_mat.shape[0]):
             for j in range(i + 1, self.binary_mat.shape[0]):
-                if len(clique_mat[i, j]) > 0:
+                if len(clique_mat[i, j]) > 1:  # only extract cliques with 2 or more members
                     self.clique_set.add(frozenset(clique_mat[i, j]))
 
     def cliques_to_clusters(self, allowed_overlap: float = 0.2) -> List[Set[int]]:
@@ -275,15 +274,6 @@ class CLICOM:
         np.put(mat, np.ravel_multi_index(np.triu_indices(n_clusters, 1), (n_clusters, n_clusters)), similarities)
         # copy the upper triangle of the matrix to the lower triangle of the matrix
         mat = mat + mat.T
-        # n_found = 0
-        # for i in range(n_clusters):
-        #     n_found += 1
-        #     print(f"Building adjacency matrix... {int(100 * n_found / ((n_clusters ** 2) // 2))}% complete", end='\r')
-        #     for j in range(i + 1, n_clusters):
-        #         similarity = self.inter_cluster_similarity(i, j)
-        #         mat[i, j] = similarity
-        #         mat[j, i] = similarity
-        #         n_found += 2
         return mat
 
     @staticmethod
@@ -845,12 +835,15 @@ class HDBSCANRunner(ClusteringRunner):
 
 class CLICOMRunner(ClusteringRunner):
     clusterer_class = CLICOM
-    algorithm_mapper = {'kmeans': KMeansRunner, 'kmedoids': KMedoidsRunner, 'hierarchical': HierarchicalRunner}
+    algorithm_mapper = {'kmeans': KMeansRunner, 'kmedoids': KMedoidsRunner, 'hierarchical': HierarchicalRunner,
+                        'hdbscan': HDBSCANRunner}
 
     def __init__(self, data, power_transform: Union[bool, List[bool]], evidence_threshold: float,
-                 *parameter_dicts: dict, plot_style: str = 'none', split_plots: bool = False, ):
+                 cluster_unclustered_features: bool, *parameter_dicts: dict, plot_style: str = 'none',
+                 split_plots: bool = False, ):
         self.clustering_solutions: list = []
         self.evidence_threshold = evidence_threshold
+        self.cluster_unclustered_features = cluster_unclustered_features
         self.parameter_dicts = parameter_dicts
         self.clusterers = []
         super(CLICOMRunner, self).__init__(data, power_transform, plot_style=plot_style, split_plots=split_plots)
@@ -867,9 +860,11 @@ class CLICOMRunner(ClusteringRunner):
                   "Ensemble clustering will be calculated based on a feature graph instead of a cluster graph "
                   "to reduce computation time.")
             clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
+                                             cluster_unclustered_features=self.cluster_unclustered_features,
                                              cluster_wise_cliques=False)
         else:
             clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
+                                             cluster_unclustered_features=self.cluster_unclustered_features,
                                              cluster_wise_cliques=True)
 
         print("Calculating Ensemble clustering...", end='\t')
