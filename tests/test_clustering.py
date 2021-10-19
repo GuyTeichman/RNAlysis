@@ -142,7 +142,7 @@ def test_clicomrunner_find_valid_clustering_setups():
              (HierarchicalRunner,
               dict(power_transform=False, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [True, False], 0.5,
+    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [True, False], 0.5, False,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
@@ -167,7 +167,7 @@ def test_clicomrunner_find_valid_clustering_setups():
              (HierarchicalRunner,
               dict(power_transform=True, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), True, 0.5,
+    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), True, 0.5, False,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
@@ -485,14 +485,14 @@ def test_silhouette_method():
     assert False
 
 
-def test_plot_clustering_api():
-    assert False
-    # split_plots = True
-
-
 def test_plot_gap_api():
     assert False
 
 
 def test_plot_silhouette_api():
     assert False
+
+
+def test_plot_clustering_api():
+    assert False
+    # split_plots = True
