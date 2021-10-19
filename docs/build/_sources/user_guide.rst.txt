@@ -277,9 +277,9 @@ Data visualization and exploratory data analysis with DESeqFilter
 
 With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:
 
-.. figure::  volcano_plot.png
+.. figure::  volcano.png
            :align:   center
-           :scale: 40 %
+           :scale: 70 %
 
            Example output of DESeqFilter.volcano_plot()
 

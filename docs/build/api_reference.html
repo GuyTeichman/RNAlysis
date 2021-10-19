@@ -1149,21 +1149,18 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_names</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">list</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_grouping</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">sklearn.decomposition._pca.PCA</span><span class="p"><span class="pre">,</span> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">matplotlib.figure.Figure</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
-<dd><p>Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most         variance between the different samples. The function will automatically plot Principal Component #1          with every other Principal Components calculated.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, performs a power transform on the count data prior to PCA.</p></li>
-<li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”]</p></li>
-<li><p><strong>n_components</strong> (<em>positive int</em><em> (</em><em>default=3</em><em>)</em>) – number of PCA components to return.</p></li>
-<li><p><strong>sample_grouping</strong> (<em>list of positive integers</em><em>, </em><em>'triplicates'</em><em> or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [1, 1, 1, 2, 2, 2, 2, 3].         If ‘triplicate’, then sample_groupins will automatically group samples into triplicates. For example:         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].</p></li>
-<li><p><strong>labels</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, labels the points on the PCA plot.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
-</dd>
-</dl>
+<dd><p>Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most         variance between the different samples. The function will automatically plot Principal Component #1          with every other Principal Components calculated.
+:param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
+:type power_transform: bool (default=False)
+:type sample_names: ‘all’ or list.
+:param sample_names: the names of the relevant samples in a list.         Example input: [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”]
+:type n_components: positive int (default=3)
+:param n_components: number of PCA components to return.
+:type sample_grouping: list of positive integers, ‘triplicates’ or None (default)
+:param sample_grouping: Optional. Indicates which samples are grouped together as replicates,         so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample          grouping.          For example, if sample_names is:         [“1_REP_A”, “1_REP_B”, “1_REP_C”, “2_REP_A”, “2_REP_B”, “2_REP_C”, “2_REP_D”, “3_REP_A”],         then the sample_grouping will be:         [1, 1, 1, 2, 2, 2, 2, 3].         If ‘triplicate’, then sample_groupins will automatically group samples into triplicates. For example:         [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].
+:type labels: bool (default=True)
+:param labels: if True, labels the points on the PCA plot.
+:return: A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
 <figure class="align-center" id="id13">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
