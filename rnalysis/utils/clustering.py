@@ -261,6 +261,7 @@ class CLICOM:
     def get_cluster_similarity_matrix(self) -> np.ndarray:
         n_clusters = self.clustering_solutions.n_clusters
         mat = np.zeros((n_clusters, n_clusters))
+        # only calculate pairwise distance for the upper triangle of the array, to avoid doing double work
         indices = [(i, j) for i, j in zip(*np.triu_indices(n_clusters, 1))]
 
         n_calculations = (n_clusters ** 2) // 2
@@ -733,9 +734,10 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  linkage: str = 'average', distance_threshold: float = None, plot_style: str = 'none',
                  split_plots: bool = False):
-        assert isinstance(linkage, str)
-        assert isinstance(metric, str)
-        assert linkage.lower() in {'ward', 'complete', 'average', 'single'}
+        assert isinstance(linkage, str), f"'linkage' must be of type str, instead got {type(linkage)}."
+        assert isinstance(metric, str), f"'metric' must be of type str, instead got {type(metric)}."
+        assert linkage.lower() in {'ward', 'complete', 'average',
+                                   'single'}, f"Invalid linkage method '{linkage.lower()}'."
         assert isinstance(distance_threshold, (int, float)) or distance_threshold is None
         if linkage.lower() == 'ward':
             assert metric.lower() == 'euclidean', "metric must be 'euclidean' if linkage is 'ward'."
