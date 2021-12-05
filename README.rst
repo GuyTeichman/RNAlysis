@@ -116,6 +116,6 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
     :target: https://github.com/GuyTeichman/RNAlysis/actions/workflows/python-package.yml
     :alt: Build status
 
-.. |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg
+.. |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg?branch=master
     :target: https://coveralls.io/github/GuyTeichman/RNAlysis?branch=master
     :alt: Coverage
