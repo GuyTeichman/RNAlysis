@@ -475,24 +475,3 @@ def test_clicom_cumulative_cluster_similarity(valid_clustering_solutions, clique
         [0, 24, 192, 0, 162, 0, 0, 108, 0], ]) / 216
 
     assert clusterer.cumulative_cluster_similarity(clique) == expected
-
-
-def test_gap_statistic():
-    assert False
-
-
-def test_silhouette_method():
-    assert False
-
-
-def test_plot_gap_api():
-    assert False
-
-
-def test_plot_silhouette_api():
-    assert False
-
-
-def test_plot_clustering_api():
-    assert False
-    # split_plots = True
