@@ -638,41 +638,6 @@ class FeatureSet:
                                                     single_set=False)
         return runner.run()
 
-    @staticmethod
-    def plot_enrichment_results(results_df: pd.DataFrame, fdr=0.05, en_score_col: str = 'log2_fold_enrichment',
-                                name_col: str = None, title: str = '', center_bars: bool = True,
-                                plot_horizontal: bool = True, ylabel: str = r"$\log_2$(Fold Enrichment)") -> plt.Figure:
-
-        """
-        Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
-        For the clarity of display, complete depletion (linear enrichment = 0) \
-        appears with the smallest value in the scale.
-
-        :param fdr:
-        :type fdr:
-        :param name_col:
-        :type name_col:
-        :param results_df: a pandas DataFrame created by FeatureSet.enrich_randomization.
-        :type results_df: pd.DataFrame
-        :param en_score_col: name of the DataFrame column that contains the enrichment scores.
-        :type en_score_col: str (default='log2_fold_enrichment')
-        :param title: plot title.
-        :type title: str
-        :param ylabel: plot ylabel.
-        :type ylabel: str
-        :param plot_horizontal:
-        :type plot_horizontal: bool (default=True)
-        :param center_bars: if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.
-        :type center_bars: bool (default=True)
-        :return: Figure object containing the bar plot
-        :rtype: matplotlib.figure.Figure instance
-        """
-        runner = enrichment_runner.EnrichmentRunner(set(), results_df['name'], fdr, '', False, '', True,
-                                                    plot_horizontal, '', False, 'hypergeometric', 'all')
-        runner.en_score_col = en_score_col
-        runner.results = results_df
-        return runner.enrichment_bar_plot(name_col=name_col, center_bars=center_bars, ylabel=ylabel, title=title)
-
     def non_categorical_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                                    alpha: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
                                    background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
@@ -943,6 +908,45 @@ class RankedSet(FeatureSet):
         return runner.run()
 
 
+def plot_enrichment_results(results_df: pd.DataFrame, alpha=0.05, en_score_col: str = 'log2_fold_enrichment',
+                            name_col: str = None, title: str = '', center_bars: bool = True,
+                            plot_horizontal: bool = True, ylabel: str = r"$\log_2$(Fold Enrichment)") -> plt.Figure:
+    """
+    Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
+    For the clarity of display, complete depletion (linear enrichment = 0) \
+    appears with the smallest value in the scale.
+
+    :param results_df: the results DataFrame returned by enrichment functions.
+    :type results_df: pandas DataFrame
+    :param alpha: the threshold for statistical significance. Used to draw significance asterisks on the graph.
+    :type alpha: float (default=0.05)
+    :param en_score_col: name of the DataFrame column containing enrichment scores.
+    :type en_score_col: str (default='log2_fold_enrichment')
+    :param name_col: name of the DataFrame column containing attribute/GO term names.
+    :type name_col: str (default=None)
+    :param results_df: a pandas DataFrame created by FeatureSet.enrich_randomization.
+    :type results_df: pd.DataFrame
+    :param en_score_col: name of the DataFrame column that contains the enrichment scores.
+    :type en_score_col: str (default='log2_fold_enrichment')
+    :param title: plot title.
+    :type title: str
+    :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
+        Otherwise, results will be plotted with a vertical plot.
+    :type plot_horizontal: bool (default=True)
+    :param ylabel: plot ylabel.
+    :type ylabel: str (default=r"$\log_2$(Fold Enrichment)")
+    :param center_bars: if True, center the bars around Y=0. Otherwise, ylim is determined by min/max values.
+    :type center_bars: bool (default=True)
+    :return: Figure object containing the bar plot
+    :rtype: matplotlib.figure.Figure instance
+    """
+    runner = enrichment_runner.EnrichmentRunner(set(), results_df['name'], alpha, '', False, '', True,
+                                                plot_horizontal, '', False, 'hypergeometric', 'all')
+    runner.en_score_col = en_score_col
+    runner.results = results_df
+    return runner.enrichment_bar_plot(name_col=name_col, center_bars=center_bars, ylabel=ylabel, title=title)
+
+
 def _fetch_sets(objs: dict, ref: str = 'predefined'):
     """
     Receives the 'objs' input from enrichment.upset_plot() and enrichment.venn_diagram(), and turns the values in it \
@@ -1030,7 +1034,8 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     :type ref: str or pathlib.Path (default='predefined')
     :param title: determines the title of the plot.
     :type set_colors: tuple of matplotlib-format colors, the same size as 'objs'
-    :param alpha: determines the opacity of the circles.
+    :param alpha: determines the opacity of the circles. \
+    Opacity of 0 is completely transparent, while opacity of 1 is completely opaque.
     :type alpha: a float between 0 and 1
     :param weighted: if True, the plot will be area-weighted.
     :type weighted: bool (default=True)
