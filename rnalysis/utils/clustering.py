@@ -184,6 +184,7 @@ class CLICOM:
             for feature in all_features - assigned:
                 best_match = None
                 best_score = 0
+                print(feature, clusters, '\n')
                 for i, cluster in enumerate(clusters):
                     this_score = self.feature_cluster_similarity(feature, cluster)
                     if this_score > best_score:
