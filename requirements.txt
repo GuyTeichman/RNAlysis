@@ -6,7 +6,7 @@ statsmodels>=0.12.0
 scikit-learn>=1.0.1
 grid_strategy==0.0.1
 pyyaml>=6.0
-UpSetPlot==0.6.0
+UpSetPlot>=0.5.0
 matplotlib-venn==0.11.6
 scipy>=1.7.3
 hdbscan==0.8.27
