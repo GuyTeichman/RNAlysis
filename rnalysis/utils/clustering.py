@@ -5,7 +5,6 @@ from typing import List, Set, Tuple, Union, Callable
 import hdbscan
 import joblib
 import matplotlib.pyplot as plt
-import numba
 import numpy as np
 import pairwisedist as pwdist
 import pandas as pd
@@ -21,13 +20,6 @@ import sklearn.metrics.pairwise as sklearn_pairwise
 from rnalysis.utils import generic, parsing, validation
 
 
-# array_type = numba.types.boolean[:]
-# spec = [('clustering_solutions', numba.types.ListType(array_type)),
-#         ('len_index', numba.types.ListType(numba.types.int64)),
-#         ('n_clusters', numba.types.int64), ('n_features', numba.types.int64), ('n_solutions', numba.types.int64)]
-
-
-# @numba.jitclass(spec)
 class BinaryFormatClusters:
     __slots__ = {'clustering_solutions': 'list of clustering solutions dividing a set of items into clusters',
                  'len_index': 'the number of clusters in each clustering solution',
