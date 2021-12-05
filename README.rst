@@ -1,7 +1,7 @@
-.. figure:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
+.. image:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
     :target: https://guyteichman.github.io/RNAlysis
+    :width: 400
     :alt: logo
-
 
 **Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
 `Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
@@ -112,10 +112,10 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
     :target: https://pypi.python.org/pypi/rnalysis
     :alt: Python versions supported
 
-..  |githubactions| image:: https://github.com/guyteichman/RNAlysis/actions/workflows/python-package.yml/badge.svg?branch=V1.4.0_unstable
+..  |githubactions| image:: https://github.com/guyteichman/RNAlysis/actions/workflows/python-package.yml/badge.svg
     :target: https://github.com/GuyTeichman/RNAlysis/actions/workflows/python-package.yml
     :alt: Build status
 
-.. |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg?branch=V1.4.0_unstable
+.. |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg
     :target: https://coveralls.io/github/GuyTeichman/RNAlysis?branch=master
     :alt: Coverage

@@ -6,14 +6,15 @@
 RNAlysis |release| documentation
 ===================================
 
-.. figure:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
+.. image:: https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/docs/source/logo.png
     :target: https://guyteichman.github.io/RNAlysis
+    :width: 400
     :alt: logo
 
 
 **Useful links:** `Documentation <https://guyteichman.github.io/RNAlysis>`_ |
 `Source code <https://github.com/GuyTeichman/RNAlysis>`_ |
-`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |versionssupported| | |travisci| | |downloads|
+`Bug reports <https://github.com/GuyTeichman/RNAlysis/issues>`_ | |pipimage| | |versionssupported| | |githubactions| | |coveralls| | |downloads|
 
 ----
 
@@ -69,6 +70,10 @@ Modules:
     :target: https://pypi.python.org/pypi/rnalysis
     :alt: Python versions supported
 
-..  |travisci| image:: https://travis-ci.org/GuyTeichman/RNAlysis.svg?branch=master
-    :target: https://travis-ci.org/GuyTeichman/RNAlysis
-    :alt: Travis-CI build status
+..  |githubactions| image:: https://github.com/guyteichman/RNAlysis/actions/workflows/python-package.yml/badge.svg
+    :target: https://github.com/GuyTeichman/RNAlysis/actions/workflows/python-package.yml
+    :alt: Build status
+
+..  |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg
+    :target: https://coveralls.io/github/GuyTeichman/RNAlysis?branch=master
+    :alt: Coverage

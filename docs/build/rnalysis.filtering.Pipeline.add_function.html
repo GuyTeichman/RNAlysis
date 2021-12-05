@@ -211,7 +211,7 @@
 <h1>rnalysis.filtering.Pipeline.add_function<a class="headerlink" href="#rnalysis-filtering-pipeline-add-function" title="Permalink to this headline">¶</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.Pipeline.add_function">
-<span class="sig-prename descclassname"><span class="pre">Pipeline.</span></span><span class="sig-name descname"><span class="pre">add_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">function</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Pipeline.add_function" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Pipeline.</span></span><span class="sig-name descname"><span class="pre">add_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">function</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Pipeline.add_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a function to the pipeline. Arguments can be stated with or without the correspoding keywords.         For example: Pipeline.add_function(‘sort’, ‘columnName’, ascending=False, na_position=’first’).         Pipelines support virtually all functions in the filtering module, including         filtering functions, normalization functions, splitting functions and plotting functions.         Do not include the ‘inplace’ argument when adding functions to a pipeline; instead,         include it when applying the pipeline to a Filter object using Pipeline.apply_to(). 
 :param func: function to be added
 :type func: function or name of function from the filtering module
@@ -247,7 +247,7 @@
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Guy Teichman.
+        &#169; Copyright 2021, Guy Teichman.
 
     </p>
   </div>
