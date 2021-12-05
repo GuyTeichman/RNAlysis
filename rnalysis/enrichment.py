@@ -15,7 +15,6 @@ import matplotlib_venn as vn
 import numpy as np
 import pandas as pd
 import upsetplot
-from matplotlib.cm import ScalarMappable
 
 from rnalysis.filtering import Filter
 from rnalysis.utils import io, parsing, ref_tables, validation, enrichment_runner
