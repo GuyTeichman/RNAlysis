@@ -44,9 +44,7 @@
 
     
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.enrichment.FeatureSet.save_txt" href="rnalysis.enrichment.FeatureSet.save_txt.html" />
-    <link rel="prev" title="rnalysis.enrichment.FeatureSet.non_categorical_enrichment" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -115,30 +113,9 @@
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.biotypes.html">rnalysis.enrichment.FeatureSet.biotypes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.change_set_name.html">rnalysis.enrichment.FeatureSet.change_set_name</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.difference.html">rnalysis.enrichment.FeatureSet.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_hypergeometric.html">rnalysis.enrichment.FeatureSet.enrich_hypergeometric</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization.html">rnalysis.enrichment.FeatureSet.enrich_randomization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization_parallel.html">rnalysis.enrichment.FeatureSet.enrich_randomization_parallel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html">rnalysis.enrichment.FeatureSet.go_enrichment</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.intersection.html">rnalysis.enrichment.FeatureSet.intersection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html">rnalysis.enrichment.FeatureSet.non_categorical_enrichment</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.FeatureSet.plot_enrichment_results</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html">rnalysis.enrichment.FeatureSet.save_txt</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference.html">rnalysis.enrichment.FeatureSet.symmetric_difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html">rnalysis.enrichment.FeatureSet.union</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.venn_diagram.html">rnalysis.enrichment.venn_diagram</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
@@ -193,10 +170,6 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="rnalysis.enrichment.html">rnalysis.enrichment</a> &raquo;</li>
-        
-          <li><a href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a> &raquo;</li>
-        
       <li>rnalysis.enrichment.FeatureSet.plot_enrichment_results</li>
     
     
@@ -218,32 +191,6 @@
             
   <section id="rnalysis-enrichment-featureset-plot-enrichment-results">
 <h1>rnalysis.enrichment.FeatureSet.plot_enrichment_results<a class="headerlink" href="#rnalysis-enrichment-featureset-plot-enrichment-results" title="Permalink to this headline">¶</a></h1>
-<dl class="py method">
-<dt class="sig sig-object py" id="rnalysis.enrichment.FeatureSet.plot_enrichment_results">
-<em class="property"><span class="pre">static</span> </em><span class="sig-prename descclassname"><span class="pre">FeatureSet.</span></span><span class="sig-name descname"><span class="pre">plot_enrichment_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fdr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">en_score_col</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'log2_fold_enrichment'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_col</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_bars</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_horizontal</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'$\\log_2$(Fold</span> <span class="pre">Enrichment)'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">matplotlib.figure.Figure</span></span></span><a class="headerlink" href="#rnalysis.enrichment.FeatureSet.plot_enrichment_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Receives a DataFrame output from an enrichment function and plots it in a bar plot.         For the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fdr</strong> – </p></li>
-<li><p><strong>name_col</strong> – </p></li>
-<li><p><strong>results_df</strong> (<em>pd.DataFrame</em>) – a pandas DataFrame created by FeatureSet.enrich_randomization.</p></li>
-<li><p><strong>en_score_col</strong> (<em>str</em><em> (</em><em>default='log2_fold_enrichment'</em><em>)</em>) – name of the DataFrame column that contains the enrichment scores.</p></li>
-<li><p><strong>title</strong> (<em>str</em>) – plot title.</p></li>
-<li><p><strong>ylabel</strong> (<em>str</em>) – plot ylabel.</p></li>
-<li><p><strong>plot_horizontal</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – </p></li>
-<li><p><strong>center_bars</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Figure object containing the bar plot</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>matplotlib.figure.Figure instance</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 
 
@@ -251,10 +198,6 @@
            
           </div>
           <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="rnalysis.enrichment.FeatureSet.save_txt.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.FeatureSet.save_txt" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="rnalysis.enrichment.FeatureSet.non_categorical_enrichment.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet.non_categorical_enrichment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-    </div>
 
   <hr/>
 

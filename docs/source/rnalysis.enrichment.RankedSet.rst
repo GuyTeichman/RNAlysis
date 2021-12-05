@@ -1,4 +1,4 @@
-﻿rnalysis.enrichment.RankedSet
+rnalysis.enrichment.RankedSet
 =============================
 
 .. currentmodule:: rnalysis.enrichment
@@ -25,7 +25,6 @@
     RankedSet.go_enrichment
     RankedSet.intersection
     RankedSet.non_categorical_enrichment
-    RankedSet.plot_enrichment_results
     RankedSet.save_txt
     RankedSet.single_set_enrichment
     RankedSet.single_set_go_enrichment

@@ -113,7 +113,7 @@
 <p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">2.0.0 (2021-??-??)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">2.0.0 (2021-12-05)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
@@ -221,9 +221,9 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Permalink to this headline">¶</a></h1>
 <section id="id1">
-<h2>2.0.0 (2021-??-??)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>2.0.0 (2021-12-05)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering, HDBSCAN, and Ensmble clustering.</p></li>
+<li><p>This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering, and HDBSCAN.</p></li>
 <li><p>This version introduces many new ways to perform enrichment analysis and to visualize your results, including highly customizable GO Enrichment, enrichment based on ranked lists of genes, and enrichment for non-categorical attributes.</p></li>
 <li><p>This version introduces Pipelines - a quicker and more convenient way to apply a particular analysis pipeline to multiple Filter objects.</p></li>
 <li><p>This version improves the performance of many functions in RNAlysis, and in particular the performance of randomization tests.</p></li>
@@ -234,7 +234,6 @@
 <ul class="simple">
 <li><p>Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.</p></li>
 <li><p>Added CountFilter.split_kmeans(), CountFilter.split_kmedoids(), CountFilter.split_hierarchical() and CountFilter.split_hdbscan(), which split your read count matrices into clusters with similar expression patterns.</p></li>
-<li><p>Added CountFilter.split_ensemble_clustering() which splits your read count matrices into clusters based on the aggregated results of multiple clustering solutions with multiple parameter combinations.</p></li>
 <li><p>Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis</p></li>
 <li><p>Added RankedSet.single_set_enrichment(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see <a class="reference external" href="https://dx.doi.org/10.1371/journal.pcbi.0030039">Eden et al. (PLoS Comput Biol, 2007)</a>  and <a class="reference external" href="https://dx.doi.org/10.1371/journal.pone.0143196">Wagner (PLoS One, 2015)</a> ).</p></li>
 <li><p>Added FeatureSet.go_enrichment() and RankedSet.single_set_go_enrichment(), which let you compute Gene Ontology enrichment for any organism of your choice, and filter the GO annotations used according to your preferences.</p></li>

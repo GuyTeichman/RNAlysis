@@ -575,10 +575,10 @@ By default, RNAlysis assumes that log2 fold change values will be specified unde
 <h4>Data visualization and exploratory data analysis with DESeqFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-deseqfilter" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> supports methods for visualization and exploratory analysis of differential expression data.</p>
 <p>With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:</p>
-<figure class="align-center" id="id16">
+<figure class="align-center" id="id32">
 <a class="reference internal image-reference" href="_images/volcano.png"><img alt="_images/volcano.png" src="_images/volcano.png" style="width: 448.0px; height: 333.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id32" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
@@ -841,22 +841,22 @@ We would then supply the normalization function with the path to the special cou
 <p>When clustering genomic features in a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object, the called function returns a tuple of <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> objects, with each object corresponding to one cluster of genomic features.</p>
 <p>Expression plots of the resulting clusters can be generated in one of multiple styles:</p>
 <blockquote>
-<div><figure class="align-center" id="id17">
+<div><figure class="align-center" id="id33">
 <a class="reference internal image-reference" href="_images/kmeans_all.png"><img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id33" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id18">
+<figure class="align-center" id="id34">
 <a class="reference internal image-reference" href="_images/kmeans_std_area.png"><img alt="_images/kmeans_std_area.png" src="_images/kmeans_std_area.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id34" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id19">
+<figure class="align-center" id="id35">
 <a class="reference internal image-reference" href="_images/kmeans_std_bar.png"><img alt="_images/kmeans_std_bar.png" src="_images/kmeans_std_bar.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id35" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -934,7 +934,18 @@ In addition, K-medoids attempts to minimize the sum of dissimilarities within ea
 <p>Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the <cite>metric</cite> parameter.</p>
 <p>K-medoids clustering in RNALysis supports the following distance metrics:</p>
 <ul class="simple">
-<li><p>TODO</p></li>
+<li><p>eucliidean</p></li>
+<li><p>cosine</p></li>
+<li><p>pearson</p></li>
+<li><p>spearman</p></li>
+<li><p>manhattan (cityblock)</p></li>
+<li><p>l1</p></li>
+<li><p>l2</p></li>
+<li><p>jackknife (see <a class="reference external" href="https://doi.org/10.1101%2Fgr.9.11.1106">Heyer, Kruglyak and Yooseph 1999</a>)</p></li>
+<li><p>YS1 (see <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>)</p></li>
+<li><p>YR1 (see <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>)</p></li>
+<li><p>hammming</p></li>
+<li><p>all other pairwise distance metrics supported by scikit-learn</p></li>
 </ul>
 <a class="reference internal image-reference" href="_images/kmedoids_all.png"><img alt="K-medoids clustering output figure" src="_images/kmedoids_all.png" style="width: 450px;" /></a>
 <div class="line-block">
@@ -955,7 +966,16 @@ This can be done by either specifying the estimated number of clusters like in K
 or by specifiying a distance threshold above which clusters will not be merged.</p>
 <p>Hierarchical clustering in RNAlysis supports the following distance metrics:</p>
 <ul class="simple">
-<li><p>TODO</p></li>
+<li><p>eucliidean</p></li>
+<li><p>cosine</p></li>
+<li><p>pearson</p></li>
+<li><p>spearman</p></li>
+<li><p>manhattan (cityblock)</p></li>
+<li><p>l1</p></li>
+<li><p>l2</p></li>
+<li><p>jackknife (see <a class="reference external" href="https://doi.org/10.1101%2Fgr.9.11.1106">Heyer, Kruglyak and Yooseph 1999</a>)</p></li>
+<li><p>YS1 (see <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>)</p></li>
+<li><p>YR1 (see <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>)</p></li>
 </ul>
 <a class="reference internal image-reference" href="_images/hierarchical_all.png"><img alt="Hierarchical clustering output figure" src="_images/hierarchical_all.png" style="width: 450px;" /></a>
 <div class="line-block">
@@ -971,11 +991,21 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
 <li><p>Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can mark data points as outliers, excluding them from the final clustering solution.</p></li>
 <li><p>HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is <em>minimum cluster size</em> (<cite>min_cluster_size</cite>), which determines the smallest “interesting” cluster size we expect to find in the data.</p></li>
 </ol>
-<p>HDBSCAN supports other tuning parameters, which you can read more about in the HDBSCAN documentation:
-<a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/index.html">https://hdbscan.readthedocs.io/en/latest/index.html</a></p>
+<p>HDBSCAN supports additional tuning parameters, which you can read more about in the <a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html">HDBSCAN documentation</a>:</p>
 <p>HDBSCAN in RNALysis supports the following distance metrics:</p>
 <ul class="simple">
-<li><p>TODO</p></li>
+<li><p>eucliidean</p></li>
+<li><p>cosine</p></li>
+<li><p>pearson</p></li>
+<li><p>spearman</p></li>
+<li><p>manhattan (cityblock)</p></li>
+<li><p>l1</p></li>
+<li><p>l2</p></li>
+<li><p>jackknife (see <a class="reference external" href="https://doi.org/10.1101%2Fgr.9.11.1106">Heyer, Kruglyak and Yooseph 1999</a>)</p></li>
+<li><p>YS1 (see <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>)</p></li>
+<li><p>YR1 (see <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>)</p></li>
+<li><p>hammming</p></li>
+<li><p>all other pairwise distance metrics elaborated in the <a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html?#what-about-different-metrics">HDBSCAN documentation</a>.</p></li>
 </ul>
 <a class="reference internal image-reference" href="_images/hdbscan_all.png"><img alt="HDBSCAN output figure" src="_images/hdbscan_all.png" style="width: 450px;" /></a>
 <div class="line-block">
@@ -987,36 +1017,36 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
 <h4>Data visualization and exploratory data analysis with CountFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-countfilter" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> includes multiple methods for visualization and exploratory analysis of count data.</p>
 <p>With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:</p>
-<figure class="align-center" id="id20">
+<figure class="align-center" id="id36">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id36" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:</p>
 <blockquote>
-<div><figure class="align-center" id="id21">
+<div><figure class="align-center" id="id37">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id37" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:</p>
 <blockquote>
-<div><figure class="align-center" id="id22">
+<div><figure class="align-center" id="id38">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 605.4px; height: 441.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id38" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:</p>
 <blockquote>
-<div><figure class="align-center" id="id23">
+<div><figure class="align-center" id="id39">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id23" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id39" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1120,7 +1150,7 @@ To perform a randomization test you need two <a class="reference internal" href=
 </section>
 <section id="sequentially-applying-filtering-operations-using-pipelines">
 <h3>Sequentially applying filtering operations using Pipelines<a class="headerlink" href="#sequentially-applying-filtering-operations-using-pipelines" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="glossary.html#term-Pipeline"><span class="xref std std-term">Pipeline</span></a> objects allow you to group together multiple operations from the <em>filtering</em> module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:<a href="#id1"><span class="problematic" id="id2">`</span></a>Filter objects’ of your choice in a specific and consistent order.
+<p><a class="reference internal" href="glossary.html#term-Pipeline"><span class="xref std std-term">Pipeline</span></a> objects allow you to group together multiple operations from the <em>filtering</em> module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:<a href="#id9"><span class="problematic" id="id10">`</span></a>Filter objects’ of your choice in a specific and consistent order.
 Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.</p>
 <p>To create a new empty <a class="reference internal" href="glossary.html#term-Pipeline"><span class="xref std std-term">Pipeline</span></a>, simply create a new Pipeline object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -1381,10 +1411,10 @@ Annotations with the <em>NOT</em> qualifier are usually ignored during enrichmen
 <p>Gene Ontology terms have a somewhat hierarchical relationship that is defined as a directed a-cyclic graph (DAG). This means that each GO term is a node in the graph, and that each node has defined parents that are less specific than itself, going up to the top of the graph.</p>
 <p>For example:</p>
 <blockquote>
-<div><figure class="align-center" id="id24">
+<div><figure class="align-center" id="id40">
 <a class="reference internal image-reference" href="http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="http://geneontology.org/assets/hexose-biosynthetic-process.png" src="http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
 <figcaption>
-<p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id24" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id40" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1405,7 +1435,25 @@ You can decide which propagation method to use by specifying the <cite>propagati
 <h5>Choose plotting parameters (optional)<a class="headerlink" href="#choose-plotting-parameters-optional" title="Permalink to this headline">¶</a></h5>
 <p>After RNALysis is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
 RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.</p>
-<p>You can modify the orientation of the bar plot (horizontal or vertical) with the <cite>plot_horizontal</cite> parameter.</p>
+<p>You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
+<blockquote>
+<div><figure class="align-center" id="id41">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 224.0px; height: 260.8px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id11"><span class="problematic" id="id12">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id41" title="Permalink to this image">¶</a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+<figure class="align-center" id="id42">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 327.6px; height: 222.4px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id13"><span class="problematic" id="id14">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id42" title="Permalink to this image">¶</a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+</div></blockquote>
 <p>If you want to further customize this plot, you can request RNAlysis to return a Matplotlib Figure object of the barplot, by using the <cite>return_fig</cite> parameter.</p>
 <p>If you don’t specify plotting parameters, RNALysis will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.</p>
 </section>
@@ -1478,8 +1526,8 @@ Once we have a Reference Table, we can perform enrichment analysis for those att
 If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables’ path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 </section>
-<section id="id3">
-<h5>Define the background set<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h5>
+<section id="id15">
+<h5>Define the background set<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
 <p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
@@ -1499,9 +1547,9 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 </section>
-<section id="id4">
-<h5>Choose the statistical test (optional)<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h5>
-<p>Significance testing for GO enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
+<section id="id16">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h5>
+<p>Significance testing for enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
 <p>The hypergeometric test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute (‘success’) and <em>X</em> genes from the test set belonging to that attribute.
 If we were to randomly draw <em>n</em> genes from the background set (without replacement), what is the probability of drawing <em>X</em> or more (in case of enrichment)/<em>X</em> or less (in case of depletion) genes belonging to the given attribute?</p>
 <p>The Fisher’s Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.</p>
@@ -1514,14 +1562,34 @@ You can read more about the topic in the following publication: <a class="refere
 <p>If you don’t specify which statistical test you want to use, the Fisher’s Exact Test will be used by default.</p>
 <p>To choose the statistical test you want to use, utilize the <cite>statistical_test</cite> parameter, which accepts either ‘fisher’, ‘hypergeometric’, or ‘randomization’.
 If you choose to use a randomization test, you can specify the number of randomization repititions to run using the <cite>randomization_reps</cite> parameter, and set the random seed using the <cite>random_seed</cite> parameter.</p>
-<p># TODO: update according to the chosen API</p>
 </section>
-<section id="id5">
-<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h5>
-<p>TODO</p>
+<section id="id17">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h5>
+<p>After performing enrichment analysis, RNAlysis will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
+You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
+<blockquote>
+<div><figure class="align-center" id="id43">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 224.0px; height: 260.8px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id18"><span class="problematic" id="id19">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id43" title="Permalink to this image">¶</a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+<figure class="align-center" id="id44">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 327.6px; height: 222.4px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id20"><span class="problematic" id="id21">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id44" title="Permalink to this image">¶</a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+</div></blockquote>
+<p>If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the <cite>return_fig</cite> parameter.
+When it is set as ‘True’, RNALysis will return the Figure object it generated in addition to the results table.</p>
 </section>
-<section id="id6">
-<h5>Enrichment analysis output<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h5>
+<section id="id22">
+<h5>Enrichment analysis output<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h5>
 <p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -1581,8 +1649,8 @@ If your Reference Tables are set to be the default Reference Tables (as explaine
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 <p>Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every genomic feature in the background and test sets (meaning, no NaN values).</p>
 </section>
-<section id="id7">
-<h5>Define the background set<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h5>
+<section id="id23">
+<h5>Define the background set<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
 <p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
@@ -1602,41 +1670,43 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 </section>
-<section id="id8">
-<h5>Choose the statistical test (optional)<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h5>
+<section id="id24">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h5>
 <p>When calculating enrichment for a non-categorical attribute, you can use either a parametric or non-parametric statistical test.</p>
 <p>If the <cite>parametric_test</cite> parameter is True, RNAlysis will calculate enrichment using the <em>one-sample Student’s T-test</em>, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.</p>
 <p>If the <cite>parametric_test</cite> parameter is False, RNAlysis will calculate enrichment using the non-parametric <em>one-sample Sign test</em>, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.</p>
 <p>The parametric T-test assumes that the values of your non-categorical attribute distribute normally. Therefore, if you are not sure your data meets this assumption, it is recommended to use the less-powerful non-parametric test.</p>
 <p>If you don’t specify the statistical test, RNAlysis will automatically use a non-parametric test.</p>
 </section>
-<section id="id9">
-<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h5>
+<section id="id25">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h5>
 <p>The results of non-categorical enrichment analysis will be plotted as a histogram, comparing the distribution of the non-categorical attribute within the enrichment set compared to the background set.
 If you used a parametric test, the mean of each set will be marked on the histogram. Alternatively, if you used a non-parametric test, the median of each set will be marked on the graph.
 The enrichment results of each attribute will be plotted in a different Figure.</p>
 <p>To better fit the visualization of the results to your needs, you can specify two parameters:</p>
 <p><cite>plot_log_scale</cite> can accept either <cite>True</cite> or <cite>False</cite>, and will determine whether the X-axis of the histogram will be plotting on a logarithmic or linear scale.</p>
-<p><a href="#id10"><span class="problematic" id="id11">`</span></a>plot_style’ can accept either ‘overlap’ or ‘interleaved’, and will draw the histogram in one of the following two styles:</p>
+<p><a href="#id26"><span class="problematic" id="id27">`</span></a>plot_style’ can accept either ‘overlap’ or ‘interleaved’, and will draw the histogram in one of the following two styles:</p>
 <blockquote>
-<div><figure class="align-center" id="id25">
+<div><figure class="align-center" id="id45">
 <a class="reference internal image-reference" href="_images/hist_overlap.png"><img alt="_images/hist_overlap.png" src="_images/hist_overlap.png" style="width: 480.0px; height: 238.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id12"><span class="problematic" id="id13">`</span></a>plot_style`=’overlap’</span><a class="headerlink" href="#id25" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text"><a href="#id28"><span class="problematic" id="id29">`</span></a>plot_style`=’overlap’</span><a class="headerlink" href="#id45" title="Permalink to this image">¶</a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id26">
+<figure class="align-center" id="id46">
 <a class="reference internal image-reference" href="_images/hist_interleaved.png"><img alt="_images/hist_interleaved.png" src="_images/hist_interleaved.png" style="width: 480.0px; height: 238.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id14"><span class="problematic" id="id15">`</span></a>plot_style`=’interleaved’</span><a class="headerlink" href="#id26" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text"><a href="#id30"><span class="problematic" id="id31">`</span></a>plot_style`=’interleaved’</span><a class="headerlink" href="#id46" title="Permalink to this image">¶</a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>If you don’t specify plotting parameters, RNAlysis will plot the histogram on a logarithmic scale using the ‘overlap’ style by default.</p>
+<p>If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the <cite>return_fig</cite> parameter.
+When it is set as ‘True’, RNALysis will return the Figure object it generated in addition to the results table.</p>
 </section>
 <section id="non-categorical-enrichment-analysis-output">
 <h5>Non-Categorical Enrichment analysis output<a class="headerlink" href="#non-categorical-enrichment-analysis-output" title="Permalink to this headline">¶</a></h5>
@@ -1698,19 +1768,19 @@ The enrichment results of each attribute will be plotted in a different Figure.<
 Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> (you can read more about attributes in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
 Venn diagrams are limited to 2-3 sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id27">
+<div><figure class="align-center" id="id47">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id47" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>While UpSet plots can include any number of sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id28">
+<div><figure class="align-center" id="id48">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id28" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id48" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1779,14 +1849,44 @@ Second, you cannot specify which statistical test to use, since the <em>XL-mHG</
 </section>
 <section id="visualizing-sets-intersections-and-enrichment">
 <h3>Visualizing sets, intersections, and enrichment<a class="headerlink" href="#visualizing-sets-intersections-and-enrichment" title="Permalink to this headline">¶</a></h3>
-<p>TODO</p>
 <section id="plotting-results-of-enrichment-analysis">
 <h4>Plotting results of enrichment analysis<a class="headerlink" href="#plotting-results-of-enrichment-analysis" title="Permalink to this headline">¶</a></h4>
-<p>TODO</p>
+<p>If you want to plot existing enrichment results using RNAlysis, you can use the <cite>enrichment.plot_enrichment_results()</cite> function. It employs a similar API to the enrichment functions in the enrichment modules, but accepts pre-calculated DataFrames.</p>
 </section>
 <section id="plotting-venn-diagrams-and-upset-plots">
 <h4>Plotting Venn Diagrams and UpSet Plots<a class="headerlink" href="#plotting-venn-diagrams-and-upset-plots" title="Permalink to this headline">¶</a></h4>
-<p>TODO</p>
+<p>To visualize set intersection using a Venn Diagram or UpSet plot, you first need to define the sets you want to visualize.
+Those sets can be represented using a python dictionary, where each key represents the name of the set, and the corresponding value represents the set’s content (the genomic features that are part of the set).</p>
+<p>There are three ways of specifying a set’s content:</p>
+<ol class="arabic simple">
+<li><p>A python set containing the names of the genomic features</p></li>
+<li><p>A <cite>FeatureSet</cite> or <cite>RankedSet</cite> object containing the names of the genomic features</p></li>
+<li><p>A column name from an Attribute Reference Table</p></li>
+</ol>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sets_to_visualize</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;First set&#39;</span><span class="p">:{</span><span class="s1">&#39;gene1&#39;</span><span class="p">,</span> <span class="s1">&#39;gene2&#39;</span><span class="p">,</span> <span class="s1">&#39;gene3&#39;</span><span class="p">},</span> <span class="s1">&#39;Second set&#39;</span><span class="p">:</span><span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;gene2&#39;</span><span class="p">,</span><span class="s1">&#39;gene3&#39;</span><span class="p">,</span><span class="s1">&#39;gene4&#39;</span><span class="p">}),</span> <span class="s1">&#39;Third set&#39;</span><span class="p">:</span><span class="s1">&#39;attribute1&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>After defining the dictionary of sets, we can use it to plot set intersection via the <cite>enrichment.venn_diagram()</cite> or <cite>enrichment.upset_plot()</cite> functions.
+Venn diagrams in RNAlysis are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.</p>
+<blockquote>
+<div><figure class="align-center" id="id49">
+<a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id49" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</div></blockquote>
+<p>UpSet plots support the visualization of much larger groups of sets. You can read more about UpSet plots here: <a class="reference external" href="https://upset.app/">https://upset.app/</a></p>
+<blockquote>
+<div><figure class="align-center" id="id50">
+<a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id50" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</div></blockquote>
 </section>
 </section>
 </section>
