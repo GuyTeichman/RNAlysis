@@ -324,8 +324,8 @@ def test_featureset_repr():
 
 def test_plot_enrichment_results():
     df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
-    FeatureSet.plot_enrichment_results(df, plot_horizontal=True)
-    FeatureSet.plot_enrichment_results(df, plot_horizontal=False, ylabel='different ylabel', fdr=0.1)
+    plot_enrichment_results(df, plot_horizontal=True)
+    plot_enrichment_results(df, plot_horizontal=False, ylabel='different ylabel', alpha=0.1, name_col='name')
     plt.close('all')
 
 
