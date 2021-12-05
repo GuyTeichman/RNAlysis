@@ -1,4 +1,4 @@
-rnalysis.enrichment
+﻿rnalysis.enrichment
 ===================
 
 .. rubric:: Description
@@ -14,7 +14,7 @@ rnalysis.enrichment
     :toctree: .
     
     FeatureSet
-    
+    RankedSet
 
 
 
@@ -23,6 +23,8 @@ rnalysis.enrichment
 
 .. autosummary::
     :toctree: .
+    
+    plot_enrichment_results
     
     upset_plot
     

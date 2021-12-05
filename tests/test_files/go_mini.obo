@@ -1,0 +1,183 @@
+format-version: 1.2
+data-version: releases/2020-07-16
+subsetdef: chebi_ph7_3 "Rhea list of ChEBI terms representing the major species at pH 7.3."
+subsetdef: gocheck_do_not_annotate "Term not to be used for direct annotation"
+subsetdef: gocheck_do_not_manually_annotate "Term not to be used for direct manual annotation"
+subsetdef: goslim_agr "AGR slim"
+subsetdef: goslim_aspergillus "Aspergillus GO slim"
+subsetdef: goslim_candida "Candida GO slim"
+subsetdef: goslim_chembl "ChEMBL protein targets summary"
+subsetdef: goslim_drosophila "Drosophila GO slim"
+subsetdef: goslim_flybase_ribbon "FlyBase Drosophila GO ribbon slim"
+subsetdef: goslim_generic "Generic GO slim"
+subsetdef: goslim_metagenomics "Metagenomics GO slim"
+subsetdef: goslim_mouse "Mouse GO slim"
+subsetdef: goslim_pir "PIR GO slim"
+subsetdef: goslim_plant "Plant GO slim"
+subsetdef: goslim_pombe "Fission yeast GO slim"
+subsetdef: goslim_synapse "synapse GO slim"
+subsetdef: goslim_yeast "Yeast GO slim"
+synonymtypedef: syngo_official_label "label approved by the SynGO project"
+synonymtypedef: systematic_synonym "Systematic synonym" EXACT
+default-namespace: gene_ontology
+remark: cvs version: use data-version
+remark: Includes Ontology(OntologyID(OntologyIRI(<http://purl.obolibrary.org/obo/go/never_in_taxon.owl>))) [Axioms: 18 Logical Axioms: 0]
+ontology: go
+
+[Term]
+id: GO:2001313
+name: UDP-4-deoxy-4-formamido-beta-L-arabinopyranose metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving a UDP-4-deoxy-4-formamido-beta-L-arabinopyranose." [GOC:yaf]
+synonym: "UDP-4-deoxy-4-formamido-beta-L-arabinopyranose metabolism" EXACT [GOC:obol]
+is_a: GO:0006040 ! amino sugar metabolic process
+is_a: GO:0006793 ! phosphorus metabolic process
+is_a: GO:0009225 ! nucleotide-sugar metabolic process
+
+[Term]
+id: GO:2001315
+name: UDP-4-deoxy-4-formamido-beta-L-arabinopyranose biosynthetic process
+namespace: biological_process
+def: "The chemical reactions and pathways resulting in the formation of a UDP-4-deoxy-4-formamido-beta-L-arabinopyranose." [GOC:yaf, UniPathway:UPA00032]
+synonym: "UDP-4-deoxy-4-formamido-beta-L-arabinopyranose anabolism" EXACT [GOC:obol]
+synonym: "UDP-4-deoxy-4-formamido-beta-L-arabinopyranose biosynthesis" EXACT [GOC:obol]
+synonym: "UDP-4-deoxy-4-formamido-beta-L-arabinopyranose formation" EXACT [GOC:obol]
+synonym: "UDP-4-deoxy-4-formamido-beta-L-arabinopyranose synthesis" EXACT [GOC:obol]
+is_a: GO:0009226 ! nucleotide-sugar biosynthetic process
+is_a: GO:0006793 ! phosphorus metabolic process
+
+[Term]
+id: GO:0003840
+name: obsolete gamma-glutamyltransferase activity
+namespace: molecular_function
+def: "OBSOLETE. Catalysis of the reaction: (5-L-glutamyl)-peptide + an amino acid = peptide + 5-L-glutamyl-amino acid." [EC:2.3.2.2]
+comment: This term was obsoleted because it does not correspond to a physiological reaction.\nUsage comment: The gene family commonly referred to as gamma-glutamyl transferases (GGT) catalyze hydrolysis of gamma-glutamyl bonds in gamma-glutamyl compounds such as glutathione. In a test tube one can set up conditions in which the enzyme will transfer the gamma-glutamyl portion of the substrate to an acceptor molecule, but this requires non-physiologic conditions, including millmolar concentrations of an acceptor such as glygly. This reaction is used in assays to detect the presence of the enzyme, but is not a physiological function of members of the GGT family (PMC4388159), which should be annotated to a suitable hydrolysis term instead (e.g. glutathione hydrolase activity).
+synonym: "(5-L-glutamyl)-peptide:amino-acid 5-glutamyltransferase activity" EXACT [EC:2.3.2.2]
+synonym: "alpha-glutamyl transpeptidase activity" EXACT [EC:2.3.2.2]
+synonym: "gamma-glutamyl peptidyltransferase activity" EXACT [EC:2.3.2.2]
+synonym: "gamma-glutamyl transpeptidase activity" EXACT [EC:2.3.2.2]
+synonym: "gamma-GPT" RELATED [EC:2.3.2.2]
+synonym: "gamma-GT" RELATED [EC:2.3.2.2]
+synonym: "gamma-GTP" RELATED [EC:2.3.2.2]
+synonym: "glutamyl transpeptidase activity" EXACT [EC:2.3.2.2]
+synonym: "L-gamma-glutamyl transpeptidase activity" EXACT [EC:2.3.2.2]
+synonym: "L-gamma-glutamyltransferase activity" EXACT [EC:2.3.2.2]
+synonym: "L-glutamyltransferase activity" EXACT [EC:2.3.2.2]
+xref: EC:2.3.2.2
+xref: KEGG_REACTION:R04159
+xref: MetaCyc:GAMMA-GLUTAMYLTRANSFERASE-RXN
+is_obsolete: true
+consider: GO:0036374
+
+[Term]
+id: GO:0006793
+name: kojic acid metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving kojic acid." [GOC:di]
+synonym: "5-hydroxy-2-(hydroxymethyl)-4H-pyran-4-one metabolic process" EXACT [GOC:obol]
+synonym: "5-hydroxy-2-(hydroxymethyl)-4H-pyran-4-one metabolism" EXACT [GOC:obol]
+synonym: "C6H6O4 metabolic process" RELATED [GOC:obol]
+synonym: "C6H6O4 metabolism" RELATED [GOC:obol]
+synonym: "kojic acid metabolism" EXACT [GOC:obfol]
+is_a: GO:0034308 ! primary alcohol metabolic process
+relationship: negatively_regulates GO:0045010 ! actin nucleation
+
+
+
+[Term]
+id: GO:0006040
+name: amino sugar metabolic process
+alt_id: GO:0034619
+namespace: biological_process
+def: "The chemical reactions and pathways involving any amino sugar, sugars containing an amino group in place of a hydroxyl group." [GOC:jl, ISBN:0192801023]
+synonym: "amino sugar metabolism" EXACT []
+synonym: "aminosaccharide metabolic process" EXACT []
+synonym: "aminosaccharide metabolism" EXACT []
+is_a: GO:0034308 ! primary alcohol metabolic process
+
+[Term]
+id: GO:0051125
+name: regulation of actin nucleation
+namespace: molecular_function
+def: "Any process that modulates the frequency, rate or extent of actin nucleation, the initial step in the formation of an actin filament in which actin monomers combine to form a new filament." [GOC:ai]
+relationship: negatively_regulates GO:0045010 ! actin nucleation
+
+
+Term]
+id: GO:0006793
+name: phosphorus metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving the nonmetallic element phosphorus or compounds that contain phosphorus, usually in the form of a phosphate group (PO4)." [GOC:ai]
+subset: goslim_pir
+synonym: "phosphorus metabolism" EXACT []
+relationship: part_of GO:0034308 ! primary alcohol metabolic process
+
+
+[Term]
+id: GO:0034315
+name: regulation of Arp2/3 complex-mediated actin nucleation
+namespace: biological_process
+def: "Any process that modulates the frequency, rate or extent of actin nucleation mediated by the Arp2/3 complex and interacting proteins." [GOC:mah]
+relationship: regulates GO:0051125 ! regulation of actin nucleation
+
+
+[Term]
+id: GO:0034308
+name: primary alcohol metabolic process
+namespace: biological_process
+def: "The chemical reactions and pathways involving primary alcohols. A primary alcohol is any alcohol in which a hydroxy group, -OH, is attached to a saturated carbon atom which has either three hydrogen atoms attached to it or only one other carbon atom and two hydrogen atoms attached to it." [GOC:mah]
+synonym: "monohydric alcohol metabolic process" EXACT []
+synonym: "primary alcohol metabolism" EXACT [GOC:mah]
+
+[Term]
+id: GO:0009225
+name: nucleotide-sugar metabolic process
+namespace: biological_process
+def: "The cellular chemical reactions and pathways involving nucleotide-sugars, any nucleotide-carbohydrate in which the distal phosphoric residue of a nucleoside 5'-diphosphate is in glycosidic linkage with a monosaccharide or monosaccharide derivative." [ISBN:0198506732]
+subset: goslim_pir
+synonym: "nucleotide-sugar metabolism" EXACT []
+is_a: GO:0034308 ! primary alcohol metabolic process
+
+[Typedef]
+id: negatively_regulates
+name: negatively regulates
+namespace: external
+xref: RO:0002212
+is_a: regulates ! regulates
+
+[Term]
+id: GO:0009226
+name: nucleotide-sugar biosynthetic process
+namespace: biological_process
+def: "The chemical reactions and pathways resulting in the formation of nucleotide-sugars, any nucleotide-carbohydrate in which the distal phosphoric residue of a nucleoside 5'-diphosphate is in glycosidic linkage with a monosaccharide or monosaccharide derivative." [ISBN:0198506732]
+synonym: "nucleotide-sugar anabolism" EXACT []
+synonym: "nucleotide-sugar biosynthesis" EXACT []
+synonym: "nucleotide-sugar formation" EXACT []
+synonym: "nucleotide-sugar synthesis" EXACT []
+relationship: part_of GO:0034308 ! primary alcohol metabolic process
+
+
+[Typedef]
+id: positively_regulates
+name: positively regulates
+namespace: external
+xref: RO:0002213
+holds_over_chain: negatively_regulates negatively_regulates
+is_a: regulates ! regulates
+
+[Typedef]
+id: regulates
+name: regulates
+namespace: external
+xref: RO:0002211
+is_transitive: true
+
+[Typedef]
+id: term_tracker_item
+name: term tracker item
+namespace: external
+xref: IAO:0000233
+is_metadata_tag: true
+is_class_level: true
+
+

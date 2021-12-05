@@ -12,7 +12,9 @@
 .. autosummary::
     :toctree: .
     {% for class in classes %}
+    {%- if not class.startswith('_')%}
     {{ class }}
+    {%- endif -%}
     {% endfor %}
 
 {% endif %}

@@ -2,19 +2,51 @@
 History
 =======
 
-1.3.6 (2021-06-17)
+2.0.0 (2021-12-05)
 ------------------
-* This version introduces minor bug fixes.
+* This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering, and HDBSCAN.
+* This version introduces many new ways to perform enrichment analysis and to visualize your results, including highly customizable GO Enrichment, enrichment based on ranked lists of genes, and enrichment for non-categorical attributes.
+* This version introduces Pipelines - a quicker and more convenient way to apply a particular analysis pipeline to multiple Filter objects.
+* This version improves the performance of many functions in RNAlysis, and in particular the performance of randomization tests.
+* This version includes changes to names and signatures of some functions in the module, as elaborated below.
+
+
+Added
+******
+* Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.
+* Added CountFilter.split_kmeans(), CountFilter.split_kmedoids(), CountFilter.split_hierarchical() and CountFilter.split_hdbscan(), which split your read count matrices into clusters with similar expression patterns.
+* Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis
+* Added RankedSet.single_set_enrichment(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see `Eden et al. (PLoS Comput Biol, 2007) <https://dx.doi.org/10.1371/journal.pcbi.0030039>`_  and `Wagner (PLoS One, 2015) <https://dx.doi.org/10.1371/journal.pone.0143196>`_ ).
+* Added FeatureSet.go_enrichment() and RankedSet.single_set_go_enrichment(), which let you compute Gene Ontology enrichment for any organism of your choice, and filter the GO annotations used according to your preferences.
+* Added FeatureSet.enrich_hypergeometric(), which can perform enrichment analysis using the Hypergeometric Test.
+* Added more visualization functions, such CountFilter.enhanced_box_plot().
+* Added FeatureSet.change_set_name(), to give a new 'set_name' to a FeatureSet object.
 
 
 Changed
 *******
-* Relinquished support for Python versions below 3.7.
+* FeatureSet.enrich_randomization_parallel() was deprecated. Instead, you can compute your enrichment analysis with parallel computing by calling FeatureSet.enrich_randomization() with the argument 'parallel_processing=True'. Moreover, parallel session will now start automatically if one was not already active.
+* Improved running time of enrich_randomization() about six-fold.
+* Filter objects can be created from any delimiter-separated file format (.csv, .tsv, .txt, etc).
+* CountFilter.pca() can now be plotted without labeled points.
+* Filter.index_string is now sorted by the current order of indices in the Filter object, instead of by alphabetical order.
+* CountFilter.violin_plot() now accepts a y_title argument.
+* Added more optional arguments to visualization functions such as CountFilter.violin_plot() and CountFilter.clustergram().
+* Automatic filenames for Filter objects should now reflect more clearly the operations that were performed.
+* The DataFrame returned by enrich_randomization() and enrich_randomization_parallel() now contains the additional column 'data_scale', determined by the new optional argument 'data_scale'.
+* The columns 'n obs' and 'n exp' in the DataFrame returned by enrich_randomization() and enrich_randomization_parallel() were renamed to 'obs' and 'exp' respectively.
+* FeatureSets no longer support in-place set operations (intersection, union, difference, symmetric difference). Instead, these functions return a new FeatureSet.
+* Filter.biotypes() now accepts the boolean parameter 'long_format' instead of the str parameter 'format'.
+* Filter.biotypes() and FeatureSet.biotypes() now count features which do not appear in the Biotype Reference Table as '_missing_from_biotype_reference' instead of 'not_in_biotype_reference'.
 
 Fixed
 ******
-* Fixed bug with dependency collisions when installing RNAlysis in an empty Python environment.
-* Fixed security vulnerability in developer test environment.
+* Updated type-hinting of specific functions.
+* Filter.biotypes() and FeatureSet.biotypes() now support Biotype Reference Tables with different column names.
+* Generally improved performance of RNAlysis.
+* Fixed bug in Filter.filter_percentile() where the value at the exact percentile speficied (e.g. the median for percentile=0.5) would be removed from the Filter object.
+* Fixed bug in enrichment.FeatureSet, where creating a FeatureSet from input string would result in an empty set.
+* Various minor bug fixes.
 
 
 
@@ -26,6 +58,7 @@ Fixed
 
 Added
 ******
+* Added Filter.filter_missing_values(), which can remove rows with NaN values in some (or all) columns.
 * Added the visualization function CountFilter.box_plot().
 
 Changed
@@ -42,7 +75,8 @@ Fixed
 * Fixed DepracationWarning on parsing functions from the general module.
 * Fixed bug where saving csv files on Linux systems would save the files under the wrong directory.
 * Fixed a bug where UTF-8-encoded Reference Tables won't be loaded correctly
-
+* Fixed a bug where enrichment.upsetplot() and enrichment.venn_diagram() would sometimes modify the user dict input 'objs'.
+* Fixed a bug in CountFilter.pairplot where log2 would be calculated without a pseudocount added, leading to division by 0.
 
 
 

@@ -8,7 +8,6 @@ rnalysis.filtering module
    :members:
    :undoc-members:
    :noindex:
-   :exclude-members: Filter
    :show-inheritance:
    :inherited-members:
 

@@ -1,67 +1,8 @@
-import pytest
-import numpy as np
-import pandas as pd
-from pathlib import Path
 from rnalysis.general import *
-from rnalysis.general import _check_is_df,_remove_unindexed_rows
+from rnalysis import __biotype_file_key__, __attr_file_key__
+import pytest
 
-from tests import __attr_ref__, __biotype_ref__
-
-def test_is_df_dataframe():
-    my_df = pd.DataFrame()
-    assert (_check_is_df(my_df))
-
-
-def test_is_df_str():
-    correct_path = "myfile.csv"
-    correct_path_2 = r"myfolder\anotherfile.csv"
-    assert (not _check_is_df(correct_path))
-    assert (not _check_is_df(correct_path_2))
-
-
-def test_is_df_pathobj():
-    correct_pathobj = Path("all_feature_96_new.csv")
-    assert (not _check_is_df(correct_pathobj))
-
-
-def test_is_df_str_notcsv():
-    incorrect_pth = "myfile.xlsx"
-    incorrect_pth2 = "all_feature_96_new"
-    with pytest.raises(ValueError):
-        _check_is_df(incorrect_pth)
-    with pytest.raises(ValueError):
-        _check_is_df(incorrect_pth2)
-
-
-def test_is_df_pathobj_notcsv():
-    incorrect_pathobj = Path("test_general.py")
-    with pytest.raises(ValueError):
-        _check_is_df(incorrect_pathobj)
-
-
-def test_is_df_invalid_type():
-    invalid_type = 67
-    with pytest.raises(ValueError):
-        _check_is_df(invalid_type)
-
-
-def test_load_csv_bad_input():
-    invalid_input = 2349
-    with pytest.raises(AssertionError):
-        a = load_csv(invalid_input)
-
-
-def test_load_csv():
-    truth = pd.DataFrame({'idxcol': ['one', 'two', 'three'], 'othercol': [4, 5, 6]})
-    truth.set_index('idxcol', inplace=True)
-    pth = "tests/test_files/test_load_csv.csv"
-    assert (truth == load_csv(pth, 0)).all().all()
-
-
-def test_remove_unindexed_rows():
-    truth = load_csv("tests/test_files/counted_missing_rows_deleted.csv", 0)
-    missing = load_csv("tests/test_files/counted_missing_rows.csv", 0)
-    assert (truth == _remove_unindexed_rows(missing)).all().all()
+from rnalysis.filtering import Filter
 
 
 def test_parse_wbgene_string():
@@ -78,6 +19,79 @@ def test_parse_sequence_name_string():
 
 
 def test_parse_gene_name_string():
-    string = 'saeg-2 \\\ lin-15B cyp-23A1lin-15A WBGene12345678\n GHF5H.3'
+    string = 'saeg-2 /// \tlin-15B cyp-23A1lin-15A WBGene12345678\n GHF5H.3'
     truth = {'saeg-2', 'lin-15B', 'cyp-23A1', 'lin-15A'}
     assert truth == parse_gene_name_string(string)
+
+
+def test_print_settings_file(capfd):
+    ref_tables.make_temp_copy_of_settings_file()
+    set_biotype_ref_table_path('temp_path')
+    set_attr_ref_table_path('temp_path')
+
+    print_settings_file()
+
+    ref_tables.set_temp_copy_of_settings_file_as_default()
+    ref_tables.remove_temp_copy_of_settings_file()
+
+
+def test_set_attr_ref_path():
+    ref_tables.make_temp_copy_of_settings_file()
+    if ref_tables.get_settings_file_path().exists():
+        ref_tables.get_settings_file_path().unlink()
+
+    set_attr_ref_table_path('old/path')
+    success_1 = ref_tables.get_attr_ref_path('predefined') == 'old/path'
+
+    set_attr_ref_table_path('new/path')
+    success_2 = ref_tables.get_attr_ref_path('predefined') == 'new/path'
+
+    ref_tables.set_temp_copy_of_settings_file_as_default()
+    ref_tables.remove_temp_copy_of_settings_file()
+    assert success_1
+    assert success_2
+
+
+def test_set_biotype_ref_path():
+    ref_tables.make_temp_copy_of_settings_file()
+    if ref_tables.get_settings_file_path().exists():
+        ref_tables.get_settings_file_path().unlink()
+
+    set_biotype_ref_table_path('old/path')
+    success_1 = ref_tables.get_biotype_ref_path('predefined') == 'old/path'
+
+    set_biotype_ref_table_path('new/path')
+    success_2 = ref_tables.get_biotype_ref_path('predefined') == 'new/path'
+
+    ref_tables.set_temp_copy_of_settings_file_as_default()
+    ref_tables.remove_temp_copy_of_settings_file()
+    assert success_1
+    assert success_2
+
+
+def test_reset_settings_file():
+    ref_tables.make_temp_copy_of_settings_file()
+    try:
+        ref_tables.get_settings_file_path().unlink()
+    except FileNotFoundError:
+        pass
+    ref_tables.update_settings_file('path/to/biotype/ref/file', __biotype_file_key__)
+    ref_tables.update_settings_file('path/to/attr/ref/file', __attr_file_key__)
+    reset_settings_file()
+
+    success = not ref_tables.get_settings_file_path().exists()
+
+    ref_tables.set_temp_copy_of_settings_file_as_default()
+    ref_tables.remove_temp_copy_of_settings_file()
+    assert success
+
+
+def test_save_to_csv(monkeypatch):
+    monkeypatch.setattr('rnalysis.utils.io.save_csv',
+                        lambda x, y: None if isinstance(x, pd.DataFrame) else (_ for _ in ()).throw(AssertionError))
+    df = pd.DataFrame([[1, 2, 3], [4, 5, 6]])
+    save_to_csv(df, 'filename')
+    f = Filter(('filename', df))
+    save_to_csv(f, 'filename')
+    with pytest.raises(TypeError):
+        save_to_csv(5, 'filename')

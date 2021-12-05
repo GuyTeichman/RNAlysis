@@ -21,10 +21,12 @@ rnalysis.filtering.CountFilter
     CountFilter.clustergram
     CountFilter.describe
     CountFilter.difference
+    CountFilter.enhanced_box_plot
     CountFilter.filter_biotype
     CountFilter.filter_by_attribute
     CountFilter.filter_by_row_sum
     CountFilter.filter_low_reads
+    CountFilter.filter_missing_values
     CountFilter.filter_percentile
     CountFilter.filter_top_n
     CountFilter.fold_change
@@ -44,6 +46,10 @@ rnalysis.filtering.CountFilter
     CountFilter.split_by_attribute
     CountFilter.split_by_percentile
     CountFilter.split_by_reads
+    CountFilter.split_hdbscan
+    CountFilter.split_hierarchical
+    CountFilter.split_kmeans
+    CountFilter.split_kmedoids
     CountFilter.symmetric_difference
     CountFilter.tail
     CountFilter.text_filters

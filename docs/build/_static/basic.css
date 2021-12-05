@@ -290,15 +290,15 @@ img.align-right, figure.align-right, .figure.align-right, object.align-right {
 }
 
 img.align-center, figure.align-center, .figure.align-center, object.align-center {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 img.align-default, figure.align-default, .figure.align-default {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .align-left {
@@ -511,7 +511,7 @@ table.hlist td {
 /* -- object description styles --------------------------------------------- */
 
 .sig {
-    font-family: 'Consolas', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+	font-family: 'Consolas', 'Menlo', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
 }
 
 .sig-name, code.descname {
@@ -520,7 +520,7 @@ table.hlist td {
 }
 
 .sig-name {
-    font-size: 1.1em;
+	font-size: 1.1em;
 }
 
 code.descname {
@@ -540,29 +540,29 @@ code.descname {
 }
 
 .sig-param.n {
-    font-style: italic;
+	font-style: italic;
 }
 
 /* C++ specific styling */
 
 .sig-inline.c-texpr,
 .sig-inline.cpp-texpr {
-    font-family: unset;
+	font-family: unset;
 }
 
-.sig.c .k, .sig.c .kt,
+.sig.c   .k, .sig.c   .kt,
 .sig.cpp .k, .sig.cpp .kt {
-    color: #0033B3;
+	color: #0033B3;
 }
 
-.sig.c .m,
+.sig.c   .m,
 .sig.cpp .m {
-    color: #1750EB;
+	color: #1750EB;
 }
 
-.sig.c .s, .sig.c .sc,
+.sig.c   .s, .sig.c   .sc,
 .sig.cpp .s, .sig.cpp .sc {
-    color: #067D17;
+	color: #067D17;
 }
 
 
@@ -744,7 +744,7 @@ abbr, acronym {
 
 pre {
     overflow: auto;
-    overflow-y: hidden; /* fixes display issues on Chrome browsers */
+    overflow-y: hidden;  /* fixes display issues on Chrome browsers */
 }
 
 pre, div[class*="highlight-"] {
@@ -819,12 +819,12 @@ div.code-block-caption code {
 
 table.highlighttable td.linenos,
 span.linenos,
-div.doctest > div.highlight span.gp { /* gp: Generic.Prompt */
-    user-select: none;
-    -webkit-user-select: text; /* Safari fallback only */
-    -webkit-user-select: none; /* Chrome/Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+ */
+div.highlight span.gp {  /* gp: Generic.Prompt */
+  user-select: none;
+  -webkit-user-select: text; /* Safari fallback only */
+  -webkit-user-select: none; /* Chrome/Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+ */
 }
 
 div.code-block-caption span.caption-number {

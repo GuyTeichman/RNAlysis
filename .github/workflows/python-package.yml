@@ -9,8 +9,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ ubuntu-latest, windows-latest ]
-                python-version: [ 3.7, 3.8 ]
+                os: [ ubuntu-latest, macos-latest, windows-latest ]
+                python-version: [3.7, 3.8]
 
         steps:
             -   uses: actions/checkout@v2
@@ -33,6 +33,7 @@ jobs:
             -   name: Test with pytest
                 run: |
                     coverage run --source=rnalysis/ -m pytest tests/
+
                 continue-on-error: false
             -   name: Coveralls
                 env:
@@ -40,4 +41,3 @@ jobs:
                 run: |
                     coverage report -m
                     coveralls --service=github
-                continue-on-error: true

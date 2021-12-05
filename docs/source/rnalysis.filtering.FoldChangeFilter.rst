@@ -23,6 +23,7 @@ rnalysis.filtering.FoldChangeFilter
     FoldChangeFilter.filter_biotype
     FoldChangeFilter.filter_by_attribute
     FoldChangeFilter.filter_fold_change_direction
+    FoldChangeFilter.filter_missing_values
     FoldChangeFilter.filter_percentile
     FoldChangeFilter.filter_top_n
     FoldChangeFilter.head

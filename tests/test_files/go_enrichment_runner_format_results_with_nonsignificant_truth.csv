@@ -1,0 +1,4 @@
+go_id,name,samples,obs,exp,colName,pval,significant
+name3,desc3,1,NaN,-2, -0.7, 0.04,True
+name1,desc1,50,10,5, 2.3, 0.05,False
+name2,desc2,17,0.0,3, 0.0, 1.0,True

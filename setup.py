@@ -34,9 +34,10 @@ setup(
         'Topic :: Scientific/Engineering :: Visualization',
     ],
     description='RNAlysis provides a modular analysis pipeline for RNA sequencing data. '
-                'The package includes various methods for filtering, data visualisation, exploratory analyses, '
+                'RNAlysis includes various methods for filtering, data visualisation, exploratory analyses, '
                 'enrichment anslyses and clustering.',
     install_requires=requirements,
+    python_requires='>=3.7',
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
@@ -48,6 +49,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/GuyTeichman/RNAlysis',
-    version='1.3.6',
+    version='2.0.0',
     zip_safe=False,
 )

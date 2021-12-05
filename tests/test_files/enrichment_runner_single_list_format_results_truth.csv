@@ -1,0 +1,4 @@
+name,samples,colName,pval
+name1,50,2.3,0.05
+name2,17,0,1.0
+name3,1,-0.7,NaN

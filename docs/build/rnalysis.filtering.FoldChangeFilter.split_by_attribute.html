@@ -1,110 +1,120 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" >
 <head>
-    <meta charset="utf-8"/>
-    <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/"/>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>rnalysis.filtering.FoldChangeFilter.split_by_attribute &mdash; RNAlysis 2.0.0 documentation</title>
+  
 
-    <title>rnalysis.filtering.FoldChangeFilter.split_by_attribute &mdash; RNAlysis 1.3.6 documentation</title>
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
 
-
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css"/>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css"/>
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css"/>
-
-
+  
+  
     <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
 
+  
+  
 
-    <!--[if lt IE 9]>
+  
+
+  
+  <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
-    <![endif]-->
-
-
-    <script type="text/javascript" id="documentation_options" data-url_root="./"
-            src="_static/documentation_options.js"></script>
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/copybutton.js"></script>
-
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
-
-    <link rel="index" title="Index" href="genindex.html"/>
-    <link rel="search" title="Search" href="search.html"/>
-    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.split_by_percentile"
-          href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html"/>
-    <link rel="prev" title="rnalysis.filtering.FoldChangeFilter.sort"
-          href="rnalysis.filtering.FoldChangeFilter.sort.html"/>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.filtering.FoldChangeFilter.split_by_percentile" href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html" />
+    <link rel="prev" title="rnalysis.filtering.FoldChangeFilter.sort" href="rnalysis.filtering.FoldChangeFilter.sort.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
 
-
-<div class="wy-grid-for-nav">
-
+   
+  <div class="wy-grid-for-nav">
+    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-        <div class="wy-side-scroll">
-            <div class="wy-side-nav-search">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
 
+          
+            <a href="index.html">
+          
 
-                <a href="index.html">
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
 
+          
+            
+            
+          
 
-                    <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
 
-                </a>
+          
+        </div>
 
-
-                <div role="search">
-                    <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-                        <input type="text" name="q" placeholder="Search docs"/>
-                        <input type="hidden" name="check_keywords" value="yes"/>
-                        <input type="hidden" name="area" value="default"/>
-                    </form>
-                </div>
-
-
-            </div>
-
-
-            <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-
-
-                <p class="caption"><span class="caption-text">About RNAlysis:</span></p>
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="readme.html">What is
-                        <em>RNAlysis?</em></a></li>
-                    <li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What
-                        can I do with <em>RNAlysis</em>?</a></li>
-                    <li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I
-                        install it?</a></li>
-                    <li class="toctree-l1"><a class="reference internal"
-                                              href="readme.html#dependencies">Dependencies</a></li>
-                    <li class="toctree-l1"><a class="reference internal" href="readme.html#where-to-get-it">Where to get
-                        it</a></li>
-                    <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
-                    <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub
-                        page</a></li>
-                    <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
-                </ul>
-<p class="caption"><span class="caption-text">Starting with RNAlysis:</span></p>
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Change history:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Modules:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
@@ -118,6 +128,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_biotype.html">rnalysis.filtering.FoldChangeFilter.filter_biotype</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_by_attribute.html">rnalysis.filtering.FoldChangeFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.filter_fold_change_direction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_missing_values.html">rnalysis.filtering.FoldChangeFilter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_percentile.html">rnalysis.filtering.FoldChangeFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
@@ -132,199 +143,171 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html">rnalysis.filtering.FoldChangeFilter.split_fold_change_direction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.symmetric_difference.html">rnalysis.filtering.FoldChangeFilter.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.tail.html">rnalysis.filtering.FoldChangeFilter.tail</a></li>
-    <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.text_filters.html">rnalysis.filtering.FoldChangeFilter.text_filters</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.union.html">rnalysis.filtering.FoldChangeFilter.union</a>
-    </li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.text_filters.html">rnalysis.filtering.FoldChangeFilter.text_filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.union.html">rnalysis.filtering.FoldChangeFilter.union</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
 </ul>
 </li>
-    <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
-    <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
 </ul>
 
-
-            </div>
-
+            
+          
         </div>
+        
+      </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
-
-        <nav class="wy-nav-top" aria-label="top navigation">
-
-            <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-            <a href="index.html">RNAlysis</a>
-
-        </nav>
-
-
-        <div class="wy-nav-content">
-
-            <div class="rst-content">
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+        
+      </nav>
 
 
-                <div role="navigation" aria-label="breadcrumbs navigation">
-
-                    <ul class="wy-breadcrumbs">
-
-                        <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-
-                        <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
-
-                        <li><a href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a>
-                            &raquo;
-                        </li>
-
-                        <li>rnalysis.filtering.FoldChangeFilter.split_by_attribute</li>
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
 
 
-                        <li class="wy-breadcrumbs-aside">
 
 
-                            <a href="_sources/rnalysis.filtering.FoldChangeFilter.split_by_attribute.rst.txt"
-                               rel="nofollow"> View page source</a>
 
 
-                        </li>
-
-                    </ul>
 
 
-                    <hr/>
-                </div>
-                <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-                    <div itemprop="articleBody">
 
-                        <section id="rnalysis-filtering-foldchangefilter-split-by-attribute">
-                            <h1>rnalysis.filtering.FoldChangeFilter.split_by_attribute<a class="headerlink"
-                                                                                         href="#rnalysis-filtering-foldchangefilter-split-by-attribute"
-                                                                                         title="Permalink to this headline">¶</a>
-                            </h1>
-                            <dl class="py method">
-                                <dt class="sig sig-object py"
-                                    id="rnalysis.filtering.FoldChangeFilter.split_by_attribute">
-                                    <span class="sig-prename descclassname"><span
-                                        class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span
-                                    class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em
-                                    class="sig-param"><span class="n"><span class="pre">attributes</span></span><span
-                                    class="p"><span class="pre">:</span></span> <span class="n"><span
-                                    class="pre">List</span><span class="p"><span class="pre">[</span></span><span
-                                    class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>,
-                                    <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span
-                                        class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span>
-                                        <span class="o"><span class="pre">=</span></span> <span
-                                            class="default_value"><span class="pre">'predefined'</span></span></em><span
-                                    class="sig-paren">)</span> &#x2192; <span class="pre">tuple</span><a
-                                    class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.split_by_attribute"
-                                    title="Permalink to this definition">¶</a></dt>
-                                <dd><p>Splits the Filter object into multiple Filter objects, each corresponding to one
-                                    of the specified Attribute Reference Table attributes. Each object contains only
-                                    features that match its Attribute Reference Table attribute.</p>
-                                    <dl class="field-list">
-                                        <dt class="field-odd">Parameters</dt>
-                                        <dd class="field-odd">
-                                            <ul class="simple">
-                                                <li><p><strong>attributes</strong> (<em>list of strings</em>) – list of
-                                                    attribute names from the Attribute Reference Table to filter by.</p>
-                                                </li>
-                                                <li><p><strong>ref</strong> – filename/path of the reference table to be
-                                                    used as reference.</p></li>
-                                            </ul>
-                                        </dd>
-                                        <dt class="field-even">Return type</dt>
-                                        <dd class="field-even"><p>Tuple[<a class="reference internal"
-                                                                           href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter"
-                                                                           title="rnalysis.filtering.Filter">filtering.Filter</a>]
-                                        </p>
-                                        </dd>
-                                        <dt class="field-odd">Returns</dt>
-                                        <dd class="field-odd"><p>A tuple of Filter objects, each containing only
-                                            features that match one Attribute Reference Table attribute; the Filter
-                                            objects are returned in the same order the attributes were given in.</p>
-                                        </dd>
-                                        <dt class="field-even">Examples</dt>
-                                        <dd class="field-even">
-                                            <div class="doctest highlight-default notranslate">
-                                                <div class="highlight"><pre><span></span><span
-                                                    class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span
-                                                    class="nn">rnalysis</span> <span class="kn">import</span> <span
-                                                    class="n">filtering</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span
-                                                        class="n">filtering</span><span class="o">.</span><span
-                                                        class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/counted.csv&#39;</span><span
-                                                        class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span
-                                                        class="n">attribute2</span> <span class="o">=</span> <span
-                                                        class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span
-                                                        class="p">([</span><span
-                                                        class="s1">&#39;attribute1&#39;</span><span
-                                                        class="p">,</span><span
-                                                        class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
-<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span
-                                                        class="p">)</span>
-<span
-    class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.</span>
-<span
-    class="go">Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.</span>
-</pre>
-                                                </div>
-                                            </div>
-                                        </dd>
-                                    </dl>
-                                </dd>
-                            </dl>
 
-                        </section>
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
+        
+          <li><a href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a> &raquo;</li>
+        
+      <li>rnalysis.filtering.FoldChangeFilter.split_by_attribute</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/rnalysis.filtering.FoldChangeFilter.split_by_attribute.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="rnalysis-filtering-foldchangefilter-split-by-attribute">
+<h1>rnalysis.filtering.FoldChangeFilter.split_by_attribute<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-split-by-attribute" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="rnalysis.filtering.FoldChangeFilter.split_by_attribute">
+<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.split_by_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each new Filter object will contain only features that belong to its Attribute Reference Table attribute.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attributes</strong> (<em>list of strings</em>) – list of attribute names from the Attribute Reference Table to filter by.</p></li>
+<li><p><strong>ref</strong> – filename/path of the reference table to be used as reference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter">filtering.Filter</a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A tuple of Filter objects, each containing only features that match one Attribute Reference Table attribute;         the Filter objects are returned in the same order the attributes were given in.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attribute1</span><span class="p">,</span><span class="n">attribute2</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_by_attribute</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span>
+<span class="gp">... </span><span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
+<span class="go">Filtered 15 features, leaving 7 of the original 22 features. Filtering result saved to new object.</span>
+<span class="go">Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 
 
            </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.split_by_percentile" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.filtering.FoldChangeFilter.sort.html" class="btn btn-neutral float-left" title="rnalysis.filtering.FoldChangeFilter.sort" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
 
-                </div>
-                <footer>
-                    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-                        <a href="rnalysis.filtering.FoldChangeFilter.split_by_percentile.html"
-                           class="btn btn-neutral float-right"
-                           title="rnalysis.filtering.FoldChangeFilter.split_by_percentile" accesskey="n" rel="next">Next
-                            <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-                        <a href="rnalysis.filtering.FoldChangeFilter.sort.html" class="btn btn-neutral float-left"
-                           title="rnalysis.filtering.FoldChangeFilter.sort" accesskey="p" rel="prev"><span
-                            class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-                    </div>
+  <hr/>
 
-                    <hr/>
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2019, Guy Teichman.
 
-                    <div role="contentinfo">
-                        <p>
-                            &#169; Copyright 2019, Guy Teichman.
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-                        </p>
-                    </div>
-
-
-                    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-
-                    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-
-                    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
-                </footer>
+</footer>
         </div>
       </div>
 
     </section>
 
   </div>
+  
 
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
 
-<script type="text/javascript">
-    jQuery(function () {
-        SphinxRtdTheme.Navigation.enable(true);
-    });
-</script>
-
+  
+  
+    
+   
 
 </body>
 </html>

@@ -48,3 +48,13 @@ Glossary
       You can define such table to be your default Biotype Reference Table using the function `general.set_biotype_ref_table_path()`.
       Various functions in RNAlysis, such `Filter.biotypes()` and `Filter.filter_biotype()` will use the information in the Biotype Reference Table
       to filter data based on biotype, or display information about the biotype of the genomic features in your Filter objects.
+
+   FeatureSet
+      A container for a set of gene/feature IDs. A FeatureSet can optionally be named.
+      Using the Enrichmemt module, you can run various enrichment analyses on FeatureSet objects.
+
+   RankedSet
+      A subtype of :term:`FeatureSet` that, instead of storing an unsorted set of gene/feature IDs,
+      also stores their order. You can run enrichment analyses on RankedSet objects as you would on a FeatureSet object.
+      However, you can also perform single-list enrichment (enrichment analysis without a background set, based on the ranking/order of the gene IDs)
+      on RankedSet objects.
