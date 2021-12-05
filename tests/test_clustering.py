@@ -394,8 +394,8 @@ def test_clicom_cliques_to_clusters(monkeypatch, cluster_unclustered_features, a
         if cluster == best_cluster:
             return threshold
         else:
-            return np.random.random() - (1 - threshold - 0.01)
-            # return a random similarity score that's lower than the best
+            return threshold-0.01
+            # return a similarity score that's lower than the best
 
     monkeypatch.setattr(CLICOM, 'feature_cluster_similarity', mock_feature_cluster_similarity)
 
