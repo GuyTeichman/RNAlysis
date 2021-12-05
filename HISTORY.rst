@@ -2,9 +2,9 @@
 History
 =======
 
-2.0.0 (2021-??-??)
+2.0.0 (2021-12-05)
 ------------------
-* This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering, HDBSCAN, and Ensmble clustering.
+* This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering, and HDBSCAN.
 * This version introduces many new ways to perform enrichment analysis and to visualize your results, including highly customizable GO Enrichment, enrichment based on ranked lists of genes, and enrichment for non-categorical attributes.
 * This version introduces Pipelines - a quicker and more convenient way to apply a particular analysis pipeline to multiple Filter objects.
 * This version improves the performance of many functions in RNAlysis, and in particular the performance of randomization tests.
@@ -15,7 +15,6 @@ Added
 ******
 * Added class Pipeline to filtering module, which applies a series of filter functions to specified Filter objects.
 * Added CountFilter.split_kmeans(), CountFilter.split_kmedoids(), CountFilter.split_hierarchical() and CountFilter.split_hdbscan(), which split your read count matrices into clusters with similar expression patterns.
-* Added CountFilter.split_ensemble_clustering() which splits your read count matrices into clusters based on the aggregated results of multiple clustering solutions with multiple parameter combinations.
 * Added class RankedSet to enrichment module, which accepts a ranked list of genes/features, and can perform single-list enrichment analysis
 * Added RankedSet.single_set_enrichment(), which can perfofm single-list enrichment analysis of user-defined attributes using XL-mHG test (see `Eden et al. (PLoS Comput Biol, 2007) <https://dx.doi.org/10.1371/journal.pcbi.0030039>`_  and `Wagner (PLoS One, 2015) <https://dx.doi.org/10.1371/journal.pone.0143196>`_ ).
 * Added FeatureSet.go_enrichment() and RankedSet.single_set_go_enrichment(), which let you compute Gene Ontology enrichment for any organism of your choice, and filter the GO annotations used according to your preferences.

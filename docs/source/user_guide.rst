@@ -535,8 +535,18 @@ Due to these differences, the K-medoids algorithm supports the use of distance m
 
 K-medoids clustering in RNALysis supports the following distance metrics:
 
-* TODO
-
+* eucliidean
+* cosine
+* pearson
+* spearman
+* manhattan (cityblock)
+* l1
+* l2
+* jackknife (see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_)
+* YS1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
+* YR1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
+* hammming
+* all other pairwise distance metrics supported by scikit-learn
 
 .. image:: kmedoids_all.png
   :width: 450
@@ -561,7 +571,17 @@ or by specifiying a distance threshold above which clusters will not be merged.
 
 Hierarchical clustering in RNAlysis supports the following distance metrics:
 
-* TODO
+* eucliidean
+* cosine
+* pearson
+* spearman
+* manhattan (cityblock)
+* l1
+* l2
+* jackknife (see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_)
+* YS1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
+* YR1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
+
 
 .. image:: hierarchical_all.png
   :width: 450
@@ -578,12 +598,22 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:
 2. Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can mark data points as outliers, excluding them from the final clustering solution.
 3. HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is *minimum cluster size* (`min_cluster_size`), which determines the smallest "interesting" cluster size we expect to find in the data.
 
-HDBSCAN supports other tuning parameters, which you can read more about in the HDBSCAN documentation:
-https://hdbscan.readthedocs.io/en/latest/index.html
+HDBSCAN supports additional tuning parameters, which you can read more about in the `HDBSCAN documentation <https://hdbscan.readthedocs.io/en/latest/parameter_selection.html>`_:
 
 HDBSCAN in RNALysis supports the following distance metrics:
 
-* TODO
+* eucliidean
+* cosine
+* pearson
+* spearman
+* manhattan (cityblock)
+* l1
+* l2
+* jackknife (see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_)
+* YS1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
+* YR1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
+* hammming
+* all other pairwise distance metrics elaborated in the `HDBSCAN documentation <https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html?#what-about-different-metrics>`_.
 
 .. image:: hdbscan_all.png
   :width: 450
@@ -1136,8 +1166,6 @@ If you don't specify which statistical test you want to use, the Fisher's Exact 
 To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
 If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
 
-# TODO: update according to the chosen API
-
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 After performing enrichment analysis, RNAlysis will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
@@ -1374,15 +1402,44 @@ An example for running single-set enrichment analysis would look like so::
 
 Visualizing sets, intersections, and enrichment
 ================================================
-TODO
 
 Plotting results of enrichment analysis
 -----------------------------------------
-TODO
+If you want to plot existing enrichment results using RNAlysis, you can use the `enrichment.plot_enrichment_results()` function. It employs a similar API to the enrichment functions in the enrichment modules, but accepts pre-calculated DataFrames.
 
 Plotting Venn Diagrams and UpSet Plots
 ---------------------------------------
-TODO
+
+To visualize set intersection using a Venn Diagram or UpSet plot, you first need to define the sets you want to visualize.
+Those sets can be represented using a python dictionary, where each key represents the name of the set, and the corresponding value represents the set's content (the genomic features that are part of the set).
+
+There are three ways of specifying a set's content:
+
+1. A python set containing the names of the genomic features
+2. A `FeatureSet` or `RankedSet` object containing the names of the genomic features
+3. A column name from an Attribute Reference Table
+
+For example::
+
+    >>> from rnalysis import enrichment
+    >>> sets_to_visualize = {'First set':{'gene1', 'gene2', 'gene3'}, 'Second set':enrichment.FeatureSet({'gene2','gene3','gene4'}), 'Third set':'attribute1'}
+
+After defining the dictionary of sets, we can use it to plot set intersection via the `enrichment.venn_diagram()` or `enrichment.upset_plot()` functions.
+Venn diagrams in RNAlysis are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.
+
+       .. figure::  venn.png
+           :align:   center
+           :scale: 70 %
+
+           Example plot of venn_diagram()
+
+UpSet plots support the visualization of much larger groups of sets. You can read more about UpSet plots here: https://upset.app/
+
+        .. figure::  upsetplot.png
+           :align:   center
+           :scale: 70 %
+
+           Example plot of upset_plot()
 
 ****************************
 RNAlysis general module
