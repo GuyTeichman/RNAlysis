@@ -169,7 +169,8 @@ class CLICOM:
                     self.clique_set.add(frozenset(clique_mat[i, j]))
 
     def cliques_to_clusters(self, allowed_overlap: float = 0.2) -> List[Set[int]]:
-        sorted_cliques = [set(clique) for clique in sorted(self.clique_set, reverse=True, key=len)]
+        sorted_cliques = [set(clique) for clique in
+                          sorted(self.clique_set, reverse=True, key=lambda clique: (len(clique), sorted(clique)))]
         all_features = set(range(self.binary_mat.shape[0]))
         assigned = set()
         clusters = []
