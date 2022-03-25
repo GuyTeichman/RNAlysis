@@ -44,3 +44,15 @@ def test_color_generator():
         color = next(gen)
         assert color in preset_colors or (isinstance(color, np.ndarray) and len(color) == 3 and
                                           np.max(color) <= 1 and np.min(color) >= 0)
+
+
+@pytest.mark.parametrize("this_set,other_sets,majority_threshold,truth",
+                         [({1, 2, 3, 4}, [{1, 2, 3, 6}, {4, 5, 6}], 2 / 3, {1, 2, 3, 4, 6}),
+                          ({'a', 'ab', 'aab'}, [{'ba', 'b'}], 0.501, set()),
+                          ({'a', 'ab', 'aab'}, [{'ba', 'b'}], 0.5, {'a', 'ab', 'aab', 'ba', 'b'}),
+                          ({1, 2, 3}, [{2, 3, 4}, {3, 4, 5}], 0.5, {2, 3, 4}),
+                          ({1, 2, 3}, [{2, 3, 4}, {3, 4, 5}], 1, {3})])
+def test_majority_vote_intersection(this_set, other_sets, majority_threshold, truth):
+    result = SetWithMajorityVote.majority_vote_intersection(this_set, *other_sets,
+                                                            majority_threshold=majority_threshold)
+    assert result == truth

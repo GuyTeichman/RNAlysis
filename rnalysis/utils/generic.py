@@ -1,11 +1,13 @@
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import PowerTransformer, StandardScaler
-from typing import Union
-from scipy.special import comb
+import itertools
 from functools import lru_cache
-from tqdm.auto import tqdm
+from typing import Union
+
+import numpy as np
+import pandas as pd
 from joblib import Parallel
+from scipy.special import comb
+from sklearn.preprocessing import PowerTransformer, StandardScaler
+from tqdm.auto import tqdm
 
 
 class ProgressParallel(Parallel):
@@ -84,3 +86,14 @@ def color_generator():
 @lru_cache(maxsize=2 ** 16)
 def combination(a: int, b: int) -> int:
     return int(comb(a, b))
+
+
+class SetWithMajorityVote(set):
+    def majority_vote_intersection(self, *others, majority_threshold: float = 0.5):
+        counts = {}
+        n_sets = len(others) + 1
+        for set_obj in itertools.chain([self], others):
+            for obj in set_obj:
+                counts[obj] = counts.get(obj, 0) + (1 / n_sets)
+        result = {key for key, val in counts.items() if val >= majority_threshold}
+        return result
