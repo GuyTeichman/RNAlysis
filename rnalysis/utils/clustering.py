@@ -170,7 +170,8 @@ class CLICOM:
 
     def cliques_to_clusters(self, allowed_overlap: float = 0.2) -> List[Set[int]]:
         sorted_cliques = [set(clique) for clique in
-                          sorted(self.clique_set, reverse=True, key=lambda clique: (len(clique), sorted(clique)))]
+                          sorted(self.clique_set, reverse=True,
+                                 key=lambda clique: (len(clique), sorted(clique)))]
         all_features = set(range(self.binary_mat.shape[0]))
         assigned = set()
         clusters = []
@@ -184,7 +185,6 @@ class CLICOM:
             for feature in all_features - assigned:
                 best_match = None
                 best_score = 0
-                print(feature, clusters, '\n')
                 for i, cluster in enumerate(clusters):
                     this_score = self.feature_cluster_similarity(feature, cluster)
                     if this_score > best_score:
