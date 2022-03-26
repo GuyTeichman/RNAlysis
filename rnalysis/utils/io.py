@@ -443,7 +443,8 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
         if matched_taxon is None:
             matched_taxon = res[1].split('\t')
     else:
-        matched_taxon = res[1].split('\t')
+        best_candidate_line = np.argmin([int(line.split('\t')[0]) for line in res[1::]])
+        matched_taxon = res[best_candidate_line + 1].split('\t')
 
     taxon_id = int(matched_taxon[header.index('Taxon')])
     scientific_name = matched_taxon[header.index('Scientific name')]
