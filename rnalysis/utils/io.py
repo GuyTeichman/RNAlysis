@@ -433,7 +433,18 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
     header = res[0].split('\t')
 
-    matched_taxon = res[1].split('\t')
+    if isinstance(taxon_name, int):
+        matched_taxon = None
+        for line in res[1::]:
+            split_line = line.split('\t')
+            if int(split_line[0]) == taxon_name:
+                matched_taxon = split_line
+                break
+        if matched_taxon is None:
+            matched_taxon = res[1].split('\t')
+    else:
+        matched_taxon = res[1].split('\t')
+
     taxon_id = int(matched_taxon[header.index('Taxon')])
     scientific_name = matched_taxon[header.index('Scientific name')]
     if len(res) > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
