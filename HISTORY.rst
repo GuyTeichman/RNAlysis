@@ -13,7 +13,7 @@ Changed
 Fixed
 ******
 * Fixed bug that occured when mapping/inferring taxon IDs during GO enrichment analysis, where integer taxon IDs would be matched by name similarity before trying an exact ID match, leading to spurious matches.
-
+* Fixed bug that occursed when plotting clustering results with style='all' on Python 3.8.
 
 2.0.0 (2021-12-05)
 ------------------
