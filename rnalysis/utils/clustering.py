@@ -451,7 +451,7 @@ class ClusteringRunner:
             else:
                 axes[-1].errorbar(x, mean, marker='o', linewidth=2, color=color, yerr=stdev, markeredgecolor='black')
                 if self.plot_style.lower() == 'all':
-                    vals = data.loc[labels == i, :].T
+                    vals = data.loc[labels == i, :].T.values
                     axes[-1].plot(x, vals, color=color, alpha=0.05, linewidth=0.35)
 
             axes[-1].set_title(f"Cluster number {i + 1} ({np.count_nonzero(labels == i)} genes)")
