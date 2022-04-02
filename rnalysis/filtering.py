@@ -1085,7 +1085,7 @@ class Filter:
         else:
             raise ValueError(f"'return type' must be either 'set' or 'str', instead got '{return_type}'.")
 
-    def _set_ops(self, others, return_type, op: Any):
+    def _set_ops(self, others, return_type, op: Any, **kwargs):
         """
         Apply the supplied set operation (union/intersection/difference/symmetric difference) to the supplied objects.
 
@@ -1095,6 +1095,7 @@ class Filter:
         :type return_type: 'set' or 'str'
         :param op: the set operation
         :type op: function (set.union, set.intersection, set.difference or set.symmetric_difference)
+        :param kwargs: any additional keyworded arguments to be supplied to the set operation.
         :return: a set/string of indices resulting from the set operation
         :rtype: set or str
         """
@@ -1109,7 +1110,7 @@ class Filter:
                 raise TypeError(f"'others' must contain only Filter objects or sets, "
                                 f"instaed got object {other} of type {type(other)}.")
         try:
-            op_indices = op(set(self.df.index), *others)
+            op_indices = op(set(self.df.index), *others, **kwargs)
         except TypeError as e:
             if op == set.symmetric_difference:
                 raise TypeError(
@@ -1158,6 +1159,40 @@ class Filter:
         else:
             new_set = self._set_ops(others, return_type, set.intersection)
             return new_set
+
+    def majority_vote_intersection(self, *others: Union['Filter', set], majority_threshold: float = 0.5,
+                                   return_type: str = 'set'):
+
+        """
+        Returns a set/string of the features that appear in at least \
+        (majority_threhold * 100)% of the given Filter objects/sets. \
+
+        :type others: Filter or set objects.
+        :param others: Objects to calculate intersection with.
+        :type return_type: 'set' or 'str' (default='set')
+        :param return_type: If 'set', returns a set of the intersecting WBGene indices. If 'str', returns a string of \
+        the intersecting indices, delimited by a comma.
+        :type majority_threshold: float (default=0.5)
+        :param majority_threshold: The threshold that determines what counts as majority. Features will be returned \
+        only if they appear in at least (majority_threshold * 100)% of the given Filter objects/sets.
+        :rtype: set or str
+        :return: If inplace=False, returns a set/string of the features that \
+        uphold majority vote intersection between two given Filter objects/sets.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
+            >>> a_set = {'WBGene00000001','WBGene00000002','WBGene00000003'}
+            >>> b_set = {'WBGene00000002','WBGene00000004'}
+            >>> # calculate majority-vote intersection and return a set
+            >>> d.majority_vote_intersection(a_set, b_set, majority_threshold=2/3)
+            {'WBGene00000002', 'WBGene00000003', 'WBGene00000004'}
+
+        """
+        new_set = self._set_ops(others, return_type, generic.SetWithMajorityVote.majority_vote_intersection,
+                                majority_threshold=majority_threshold)
+        return new_set
 
     def union(self, *others: Union['Filter', set], return_type: str = 'set'):
 

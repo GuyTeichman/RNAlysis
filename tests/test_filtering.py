@@ -465,6 +465,40 @@ def test_intersection():
     assert set1.intersection(set2, inplace=False) == intersection_truth
 
 
+@pytest.mark.parametrize("this_set,other_sets,majority_threshold,truth",
+                         [(Filter("tests/test_files/test_deseq.csv"),
+                           [{'WBGene00000001', 'WBGene00000002', 'WBGene00000003'},
+                            {'WBGene00000002', 'WBGene00000004'}], 2 / 3,
+                           {'WBGene00000002', 'WBGene00000003', 'WBGene00000004'}),
+                          (DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv'),
+                           [DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv'),
+                            {'WBGene00008447', 'WBGene00021018'}], 2 / 3, {'WBGene00008447',
+                                                                           'WBGene00013816',
+                                                                           'WBGene00018199',
+                                                                           'WBGene00019174',
+                                                                           'WBGene00021018',
+                                                                           'WBGene00021019',
+                                                                           'WBGene00021375',
+                                                                           'WBGene00044258',
+                                                                           'WBGene00045366',
+                                                                           'WBGene00045410',
+                                                                           'WBGene00194708',
+                                                                           'WBGene00219304',
+                                                                           'WBGene00219307',
+                                                                           'WBGene00010100',
+                                                                           'WBGene00077437',
+                                                                           'WBGene00023036',
+                                                                           'WBGene00012648',
+                                                                           'WBGene00022486',
+                                                                           'WBGene00007674'}),
+                          (DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv'),
+                           [DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv'),
+                            {'WBGene00008447', 'WBGene00021018'}], 1, set())])
+def test_majority_vote_intersection(this_set, other_sets, majority_threshold, truth):
+    result = this_set.majority_vote_intersection(*other_sets, majority_threshold=majority_threshold)
+    assert result == truth
+
+
 def test_union():
     intersection_truth = {'WBGene00021375', 'WBGene00044258', 'WBGene00219304', 'WBGene00194708', 'WBGene00018199',
                           'WBGene00019174', 'WBGene00021019', 'WBGene00013816', 'WBGene00045366', 'WBGene00219307',
