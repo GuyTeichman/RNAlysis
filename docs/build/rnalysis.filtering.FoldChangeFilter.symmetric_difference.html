@@ -1,80 +1,36 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>rnalysis.filtering.FoldChangeFilter.symmetric_difference &mdash; RNAlysis 2.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
-  
-  
+  <title>rnalysis.filtering.FoldChangeFilter.symmetric_difference &mdash; RNAlysis 2.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/copybutton.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.FoldChangeFilter.tail" href="rnalysis.filtering.FoldChangeFilter.tail.html" />
     <link rel="prev" title="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction" href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html">
-          
-
-          
-            
             <img src="_static/logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -82,18 +38,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
@@ -133,6 +78,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.filter_top_n.html">rnalysis.filtering.FoldChangeFilter.filter_top_n</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.head.html">rnalysis.filtering.FoldChangeFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.intersection.html">rnalysis.filtering.FoldChangeFilter.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.majority_vote_intersection.html">rnalysis.filtering.FoldChangeFilter.majority_vote_intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.number_filters.html">rnalysis.filtering.FoldChangeFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.print_features.html">rnalysis.filtering.FoldChangeFilter.print_features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.randomization_test.html">rnalysis.filtering.FoldChangeFilter.randomization_test</a></li>
@@ -159,93 +105,50 @@
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
-        
           <li><a href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a> &raquo;</li>
-        
       <li>rnalysis.filtering.FoldChangeFilter.symmetric_difference</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/rnalysis.filtering.FoldChangeFilter.symmetric_difference.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <section id="rnalysis-filtering-foldchangefilter-symmetric-difference">
-<h1>rnalysis.filtering.FoldChangeFilter.symmetric_difference<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-symmetric-difference" title="Permalink to this headline">¶</a></h1>
+             
+  <div class="section" id="rnalysis-filtering-foldchangefilter-symmetric-difference">
+<h1>rnalysis.filtering.FoldChangeFilter.symmetric_difference<a class="headerlink" href="#rnalysis-filtering-foldchangefilter-symmetric-difference" title="Permalink to this headline"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.FoldChangeFilter.symmetric_difference">
-<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">symmetric_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.symmetric_difference" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">FoldChangeFilter.</span></span><span class="sig-name descname"><span class="pre">symmetric_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.FoldChangeFilter.symmetric_difference" title="Permalink to this definition"></a></dt>
 <dd><p>Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second,         but NOT in both (set symmetric difference).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set.</em>) – a second Filter object/set to calculate symmetric difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist in exactly one Filter object.         If ‘str’, returns a string of the WBGene indices that exist in exactly one Filter object, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist in exactly one Filter object.         If ‘str’, returns a string of the features that exist in exactly one Filter object, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).</p>
+<dd class="field-odd"><p>a set/string of the features that that exist t in exactly one Filter. (set symmetric difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -268,54 +171,37 @@
 </dl>
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="rnalysis.filtering.FoldChangeFilter.tail.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.tail" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction.html" class="btn btn-neutral float-left" title="rnalysis.filtering.FoldChangeFilter.split_fold_change_direction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.filtering.FoldChangeFilter.tail.html" class="btn btn-neutral float-right" title="rnalysis.filtering.FoldChangeFilter.tail" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Guy Teichman.
-
-    </p>
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

@@ -1,4 +1,4 @@
-rnalysis.filtering.DESeqFilter
+﻿rnalysis.filtering.DESeqFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -29,6 +29,7 @@ rnalysis.filtering.DESeqFilter
     DESeqFilter.filter_top_n
     DESeqFilter.head
     DESeqFilter.intersection
+    DESeqFilter.majority_vote_intersection
     DESeqFilter.number_filters
     DESeqFilter.print_features
     DESeqFilter.save_csv

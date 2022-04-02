@@ -1,4 +1,4 @@
-rnalysis.filtering.FoldChangeFilter
+﻿rnalysis.filtering.FoldChangeFilter
 ===================================
 
 .. currentmodule:: rnalysis.filtering
@@ -28,6 +28,7 @@ rnalysis.filtering.FoldChangeFilter
     FoldChangeFilter.filter_top_n
     FoldChangeFilter.head
     FoldChangeFilter.intersection
+    FoldChangeFilter.majority_vote_intersection
     FoldChangeFilter.number_filters
     FoldChangeFilter.print_features
     FoldChangeFilter.randomization_test

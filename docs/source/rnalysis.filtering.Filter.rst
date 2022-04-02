@@ -1,4 +1,4 @@
-rnalysis.filtering.Filter
+﻿rnalysis.filtering.Filter
 =========================
 
 .. currentmodule:: rnalysis.filtering
@@ -26,6 +26,7 @@ rnalysis.filtering.Filter
     Filter.filter_top_n
     Filter.head
     Filter.intersection
+    Filter.majority_vote_intersection
     Filter.number_filters
     Filter.print_features
     Filter.save_csv

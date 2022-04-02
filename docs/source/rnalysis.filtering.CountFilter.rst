@@ -1,4 +1,4 @@
-rnalysis.filtering.CountFilter
+﻿rnalysis.filtering.CountFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -33,6 +33,7 @@ rnalysis.filtering.CountFilter
     CountFilter.from_folder
     CountFilter.head
     CountFilter.intersection
+    CountFilter.majority_vote_intersection
     CountFilter.normalize_to_rpm
     CountFilter.normalize_with_scaling_factors
     CountFilter.number_filters

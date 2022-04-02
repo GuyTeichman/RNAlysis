@@ -1,79 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>API Reference &mdash; RNAlysis 2.0.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-
-  
-  
+  <title>API Reference &mdash; RNAlysis 2.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  
-
-  
-  
-
-  
-
-  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/copybutton.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Index" href="genindex.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html">
-          
-
-          
-            
             <img src="_static/logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -81,18 +37,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
@@ -131,79 +76,38 @@
 </li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">RNAlysis</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>API Reference</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/api_reference.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <section id="api-reference">
-<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+             
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline"></a></h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Private functions are not meant to be used out of context, and doing so may lead to unexpected results.</p>
 </div>
-<section id="rnalysis-filtering-module">
-<h2>rnalysis.filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="rnalysis-filtering-module">
+<h2>rnalysis.filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this headline"></a></h2>
 <p>This module can filter, normalize, intersect and visualize tabular data such as read counts and differential expression data.
 Any tabular data saved in a csv format can be imported. Use this module to perform various filtering operations on your data,  normalize your data, perform set operations (union, intersection, etc), run basic exploratory analyses and plots (such as PCA, clustergram, violin plots, scatter, etc), save the filtered data to your computer, and more.
 When you save filtered/modified data, its new file name will include by default  all of the operations performed on it, in the order they were performed, to allow easy traceback of your analyses.</p>
@@ -307,7 +211,7 @@ When you save filtered/modified data, its new file name will include by default 
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Apply the supplied set operation (union/intersection/difference/symmetric difference) to the supplied objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -315,6 +219,7 @@ When you save filtered/modified data, its new file name will include by default 
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – the other objects to apply the set operation to</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em>) – the return type of the output</p></li>
 <li><p><strong>op</strong> (<em>function</em><em> (</em><em>set.union</em><em>, </em><em>set.intersection</em><em>, </em><em>set.difference</em><em> or </em><em>set.symmetric_difference</em><em>)</em>) – the set operation</p></li>
+<li><p><strong>kwargs</strong> – any additional keyworded arguments to be supplied to the set operation.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -401,12 +306,10 @@ which also provides descriptive statistics of each column per biotype.
 <dd class="field-even"><p>a seaborn boxplot object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id9">
+<div class="figure align-center" id="id9">
 <a class="reference internal image-reference" href="???.png"><img alt="???.png" src="???.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of box_plot()</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of box_plot()</span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -425,12 +328,10 @@ which also provides descriptive statistics of each column per biotype.
 <dd class="field-even"><p>A seaborn clustermap object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id10">
+<div class="figure align-center" id="id10">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id10" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py property">
@@ -516,15 +417,15 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting features.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features         that exist only in the first Filter object/set (set difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -562,12 +463,10 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>a seaborn enhanced box-plot object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id11">
+<div class="figure align-center" id="id11">
 <a class="reference internal image-reference" href="???.png"><img alt="???.png" src="???.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enhanced_box_plot()</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of enhanced_box_plot()</span><a class="headerlink" href="#id11" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1001,20 +900,20 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
+<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done either inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the intersecting features. If ‘str’, returns a string of         the intersecting features, delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the function will be applied in-place to the current Filter object.         If False (default), the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features that         intersect between the given Filter objects/sets.</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -1028,6 +927,33 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <p># calculate intersection and filter in-place
 &gt;&gt;&gt; d.intersection(a_set, inplace=True)
 Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">majority_vote_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">majority_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets. 
+:type others: Filter or set objects.
+:param others: Objects to calculate intersection with.
+:type return_type: ‘set’ or ‘str’ (default=’set’)
+:param return_type: If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.
+:type majority_threshold: float (default=0.5)
+:param majority_threshold: The threshold that determines what counts as majority. Features will be returned         only if they appear in at least (majority_threshold * 100)% of the given Filter objects/sets.
+:rtype: set or str
+:return: If inplace=False, returns a set/string of the features that         uphold majority vote intersection between two given Filter objects/sets.</p>
+<dl class="field-list">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate majority-vote intersection and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">majority_vote_intersection</span><span class="p">(</span><span class="n">a_set</span><span class="p">,</span> <span class="n">b_set</span><span class="p">,</span> <span class="n">majority_threshold</span><span class="o">=</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000004&#39;}</span>
+</pre></div>
+</div>
 </dd>
 </dl>
 </dd></dl>
@@ -1138,12 +1064,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>An instance of seaborn.PairGrid.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id12">
+<div class="figure align-center" id="id12">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id12" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1161,12 +1085,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :type labels: bool (default=True)
 :param labels: if True, labels the points on the PCA plot.
 :return: A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
-<figure class="align-center" id="id13">
+<div class="figure align-center" id="id13">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id13" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1182,12 +1104,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </ul>
 </dd>
 </dl>
-<figure class="align-center" id="id14">
+<div class="figure align-center" id="id14">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 403.6px; height: 294.40000000000003px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id14" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id14" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1258,12 +1178,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>a matplotlib axis object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id15">
+<div class="figure align-center" id="id15">
 <a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 480.0px; height: 477.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id15" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id15" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1499,14 +1417,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set.</em>) – a second Filter object/set to calculate symmetric difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist in exactly one Filter object.         If ‘str’, returns a string of the WBGene indices that exist in exactly one Filter object, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist in exactly one Filter object.         If ‘str’, returns a string of the features that exist in exactly one Filter object, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).</p>
+<dd class="field-odd"><p>a set/string of the features that that exist t in exactly one Filter. (set symmetric difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -1613,12 +1531,12 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p>
+<dd><p>Returns a set/string of the union of features between multiple Filter objects/sets         (the features that exist in at least one of the Filter objects/sets).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate union with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the union features. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -1663,12 +1581,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>a seaborn violin object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id16">
+<div class="figure align-center" id="id16">
 <a class="reference internal image-reference" href="_images/violin.png"><img alt="_images/violin.png" src="_images/violin.png" style="width: 1152.0px; height: 556.1999999999999px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id16" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id16" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1732,7 +1648,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Apply the supplied set operation (union/intersection/difference/symmetric difference) to the supplied objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1740,6 +1656,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – the other objects to apply the set operation to</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em>) – the return type of the output</p></li>
 <li><p><strong>op</strong> (<em>function</em><em> (</em><em>set.union</em><em>, </em><em>set.intersection</em><em>, </em><em>set.difference</em><em> or </em><em>set.symmetric_difference</em><em>)</em>) – the set operation</p></li>
+<li><p><strong>kwargs</strong> – any additional keyworded arguments to be supplied to the set operation.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1891,15 +1808,15 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting features.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features         that exist only in the first Filter object/set (set difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -2324,20 +2241,20 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
+<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done either inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the intersecting features. If ‘str’, returns a string of         the intersecting features, delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the function will be applied in-place to the current Filter object.         If False (default), the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features that         intersect between the given Filter objects/sets.</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -2359,6 +2276,33 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">log2fc_col</span></span></dt>
 <dd><p>name of the log2 fold change column</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">majority_vote_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">majority_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets. 
+:type others: Filter or set objects.
+:param others: Objects to calculate intersection with.
+:type return_type: ‘set’ or ‘str’ (default=’set’)
+:param return_type: If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.
+:type majority_threshold: float (default=0.5)
+:param majority_threshold: The threshold that determines what counts as majority. Features will be returned         only if they appear in at least (majority_threshold * 100)% of the given Filter objects/sets.
+:rtype: set or str
+:return: If inplace=False, returns a set/string of the features that         uphold majority vote intersection between two given Filter objects/sets.</p>
+<dl class="field-list">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate majority-vote intersection and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">majority_vote_intersection</span><span class="p">(</span><span class="n">a_set</span><span class="p">,</span> <span class="n">b_set</span><span class="p">,</span> <span class="n">majority_threshold</span><span class="o">=</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000004&#39;}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -2592,14 +2536,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set.</em>) – a second Filter object/set to calculate symmetric difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist in exactly one Filter object.         If ‘str’, returns a string of the WBGene indices that exist in exactly one Filter object, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist in exactly one Filter object.         If ‘str’, returns a string of the features that exist in exactly one Filter object, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).</p>
+<dd class="field-odd"><p>a set/string of the features that that exist t in exactly one Filter. (set symmetric difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -2700,12 +2644,12 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p>
+<dd><p>Returns a set/string of the union of features between multiple Filter objects/sets         (the features that exist in at least one of the Filter objects/sets).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate union with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the union features. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -2744,12 +2688,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p><strong>alpha</strong> (<em>float between 0 and 1</em>) – the significance threshold to color data points as significantly up/down-regulated.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id17">
+<div class="figure align-center" id="id17">
 <a class="reference internal image-reference" href="_images/volcano.png"><img alt="_images/volcano.png" src="_images/volcano.png" style="width: 448.0px; height: 333.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id17" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id17" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -2813,7 +2755,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Apply the supplied set operation (union/intersection/difference/symmetric difference) to the supplied objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2821,6 +2763,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – the other objects to apply the set operation to</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em>) – the return type of the output</p></li>
 <li><p><strong>op</strong> (<em>function</em><em> (</em><em>set.union</em><em>, </em><em>set.intersection</em><em>, </em><em>set.difference</em><em> or </em><em>set.symmetric_difference</em><em>)</em>) – the set operation</p></li>
+<li><p><strong>kwargs</strong> – any additional keyworded arguments to be supplied to the set operation.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2973,15 +2916,15 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting features.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features         that exist only in the first Filter object/set (set difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -3312,20 +3255,20 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
+<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done either inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the intersecting features. If ‘str’, returns a string of         the intersecting features, delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the function will be applied in-place to the current Filter object.         If False (default), the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features that         intersect between the given Filter objects/sets.</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -3339,6 +3282,33 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <p># calculate intersection and filter in-place
 &gt;&gt;&gt; d.intersection(a_set, inplace=True)
 Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">majority_vote_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">majority_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets. 
+:type others: Filter or set objects.
+:param others: Objects to calculate intersection with.
+:type return_type: ‘set’ or ‘str’ (default=’set’)
+:param return_type: If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.
+:type majority_threshold: float (default=0.5)
+:param majority_threshold: The threshold that determines what counts as majority. Features will be returned         only if they appear in at least (majority_threshold * 100)% of the given Filter objects/sets.
+:rtype: set or str
+:return: If inplace=False, returns a set/string of the features that         uphold majority vote intersection between two given Filter objects/sets.</p>
+<dl class="field-list">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate majority-vote intersection and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">majority_vote_intersection</span><span class="p">(</span><span class="n">a_set</span><span class="p">,</span> <span class="n">b_set</span><span class="p">,</span> <span class="n">majority_threshold</span><span class="o">=</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000004&#39;}</span>
+</pre></div>
+</div>
 </dd>
 </dl>
 </dd></dl>
@@ -3546,14 +3516,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set.</em>) – a second Filter object/set to calculate symmetric difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist in exactly one Filter object.         If ‘str’, returns a string of the WBGene indices that exist in exactly one Filter object, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist in exactly one Filter object.         If ‘str’, returns a string of the features that exist in exactly one Filter object, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).</p>
+<dd class="field-odd"><p>a set/string of the features that that exist t in exactly one Filter. (set symmetric difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -3654,12 +3624,12 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p>
+<dd><p>Returns a set/string of the union of features between multiple Filter objects/sets         (the features that exist in at least one of the Filter objects/sets).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate union with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the union features. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -3757,7 +3727,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">_set_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">others</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Apply the supplied set operation (union/intersection/difference/symmetric difference) to the supplied objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -3765,6 +3735,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – the other objects to apply the set operation to</p></li>
 <li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em>) – the return type of the output</p></li>
 <li><p><strong>op</strong> (<em>function</em><em> (</em><em>set.union</em><em>, </em><em>set.intersection</em><em>, </em><em>set.difference</em><em> or </em><em>set.symmetric_difference</em><em>)</em>) – the set operation</p></li>
+<li><p><strong>kwargs</strong> – any additional keyworded arguments to be supplied to the set operation.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -3922,15 +3893,15 @@ which also provides descriptive statistics of each column per biotype.
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist only in the first Filter object.         If ‘str’, returns a string of the WBGene indices that exist only in the first Filter object,         delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting features.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices         that exist only in the first Filter object/set (set difference).</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features         that exist only in the first Filter object/set (set difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -4325,20 +4296,20 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done inplace on the first Filter object, or return a set/string of features.</p>
+<dd><p>Keep only the features that exist in ALL of the given Filter objects/sets.         Can be done either inplace on the first Filter object, or return a set/string of features.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>default False</em>) – If True, filtering will be applied to the current Filter object. If False (default),         the function will return a set/str that contains the intersecting indices.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the intersecting features. If ‘str’, returns a string of         the intersecting features, delimited by a comma.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If True, the function will be applied in-place to the current Filter object.         If False (default), the function will return a set/str that contains the intersecting indices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.</p>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features that         intersect between the given Filter objects/sets.</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -4352,6 +4323,33 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <p># calculate intersection and filter in-place
 &gt;&gt;&gt; d.intersection(a_set, inplace=True)
 Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">majority_vote_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">majority_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets. 
+:type others: Filter or set objects.
+:param others: Objects to calculate intersection with.
+:type return_type: ‘set’ or ‘str’ (default=’set’)
+:param return_type: If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.
+:type majority_threshold: float (default=0.5)
+:param majority_threshold: The threshold that determines what counts as majority. Features will be returned         only if they appear in at least (majority_threshold * 100)% of the given Filter objects/sets.
+:rtype: set or str
+:return: If inplace=False, returns a set/string of the features that         uphold majority vote intersection between two given Filter objects/sets.</p>
+<dl class="field-list">
+<dt class="field-odd">Examples</dt>
+<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculate majority-vote intersection and return a set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">majority_vote_intersection</span><span class="p">(</span><span class="n">a_set</span><span class="p">,</span> <span class="n">b_set</span><span class="p">,</span> <span class="n">majority_threshold</span><span class="o">=</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">{&#39;WBGene00000002&#39;, &#39;WBGene00000003&#39;, &#39;WBGene00000004&#39;}</span>
+</pre></div>
+</div>
 </dd>
 </dl>
 </dd></dl>
@@ -4625,14 +4623,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>other</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set.</em>) – a second Filter object/set to calculate symmetric difference with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the WBGene indices that exist in exactly one Filter object.         If ‘str’, returns a string of the WBGene indices that exist in exactly one Filter object, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the features that exist in exactly one Filter object.         If ‘str’, returns a string of the features that exist in exactly one Filter object, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>set or str</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).</p>
+<dd class="field-odd"><p>a set/string of the features that that exist t in exactly one Filter. (set symmetric difference).</p>
 </dd>
 <dt class="field-even">Examples</dt>
 <dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
@@ -4733,12 +4731,12 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns a set/string of the union of WBGene indices between multiple Filter objects         (the indices that exist in at least one of the Filter objects/sets).</p>
+<dd><p>Returns a set/string of the union of features between multiple Filter objects/sets         (the features that exist in at least one of the Filter objects/sets).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate union with.</p></li>
-<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str.</em>) – If ‘set’, returns a set of the union WBGene indices. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the union features. If ‘str’, returns a string of         the union WBGene indices, delimited by a comma.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -4772,7 +4770,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rnalysis.filtering.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_type:</span> <span class="pre">Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.Filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.CountFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.DESeqFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.FoldChangeFilter]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'rnalysis.filtering.Filter'&gt;</span></span></em><span class="sig-paren">)</span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rnalysis.filtering.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_type:</span> <span class="pre">typing.Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.Filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.CountFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.DESeqFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.FoldChangeFilter]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'rnalysis.filtering.Filter'&gt;</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A collection of functions to be applied sequentially to Filter objects.</p>
 <p><strong>Attributes</strong></p>
@@ -4994,9 +4992,9 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 </dd></dl>
 
-</section>
-<section id="rnalysis-enrichment-module">
-<h2>rnalysis.enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="rnalysis-enrichment-module">
+<h2>rnalysis.enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline"></a></h2>
 <p>This module can perform enrichment analyses on a given set of genomic features and visualize their intersections. These include gene ontology/tissue/phenotype enrichment, enrichment for user-defined attributes, set visualization ,etc. Results of enrichment analyses can be saved to .csv files.</p>
 <dl class="py class">
 <dt class="sig sig-object py">
@@ -5105,18 +5103,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id18">
+<div class="figure align-center" id="id18">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id18" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id19">
+<p class="caption"><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id18" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id19">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id19" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id19" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5151,18 +5145,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id20">
+<div class="figure align-center" id="id20">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id20" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id21">
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id20" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id21">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id21" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5195,18 +5185,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id22">
+<div class="figure align-center" id="id22">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id22" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id23">
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id22" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id23">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id23" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id23" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py attribute">
@@ -5264,18 +5250,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id24">
+<div class="figure align-center" id="id24">
 <a class="reference internal image-reference" href="plot_enrichment_results_go.png"><img alt="plot_enrichment_results_go.png" src="plot_enrichment_results_go.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id24" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id25">
+<p class="caption"><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id24" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id25">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_vertical.png"><img alt="plot_enrichment_results_go_vertical.png" src="plot_enrichment_results_go_vertical.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id25" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id25" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5492,18 +5474,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id26">
+<div class="figure align-center" id="id26">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id26" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id27">
+<p class="caption"><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id26" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id27">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id27" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id27" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5538,18 +5516,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id28">
+<div class="figure align-center" id="id28">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id28" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id29">
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id28" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id29">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id29" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id29" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5582,18 +5556,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test.         By default it is picked at random, but you can set it to a particular integer to get consistents results         over multiple runs.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id30">
+<div class="figure align-center" id="id30">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id30" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id31">
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel()</span><a class="headerlink" href="#id30" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id31">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id31" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of enrich_randomization_parallel(plot_horizontal = False)</span><a class="headerlink" href="#id31" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py attribute">
@@ -5650,18 +5620,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id32">
+<div class="figure align-center" id="id32">
 <a class="reference internal image-reference" href="plot_enrichment_results_go.png"><img alt="plot_enrichment_results_go.png" src="plot_enrichment_results_go.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id32" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id33">
+<p class="caption"><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id32" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id33">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_vertical.png"><img alt="plot_enrichment_results_go_vertical.png" src="plot_enrichment_results_go_vertical.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id33" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id33" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5739,18 +5705,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id34">
+<div class="figure align-center" id="id34">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set.png"><img alt="_images/plot_enrichment_results_single_set.png" src="_images/plot_enrichment_results_single_set.png" style="width: 336.0px; height: 391.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id34" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id35">
+<p class="caption"><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id34" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id35">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set_vertical.png"><img alt="_images/plot_enrichment_results_single_set_vertical.png" src="_images/plot_enrichment_results_single_set_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id35" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id35" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5794,18 +5756,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id36">
+<div class="figure align-center" id="id36">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_singlelist.png"><img alt="plot_enrichment_results_go_singlelist.png" src="plot_enrichment_results_go_singlelist.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id36" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id37">
+<p class="caption"><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id36" title="Permalink to this image"></a></p>
+</div>
+<div class="figure align-center" id="id37">
 <a class="reference internal image-reference" href="plot_enrichment_results_go_singlelist_vertical.png"><img alt="plot_enrichment_results_go_singlelist_vertical.png" src="plot_enrichment_results_go_singlelist_vertical.png" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id37" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id37" title="Permalink to this image"></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -5942,12 +5900,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a dictionary of matplotlib axes, where the keys are ‘matrix’, ‘intersections’, ‘totals’, ‘shading’.</p>
-<figure class="align-center" id="id38">
+<div class="figure align-center" id="id38">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id38" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id38" title="Permalink to this image"></a></p>
+</div>
 </p>
 </dd>
 </dl>
@@ -5975,25 +5931,23 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
-<figure class="align-center" id="id39">
+<div class="figure align-center" id="id39">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id39" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+<p class="caption"><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id39" title="Permalink to this image"></a></p>
+</div>
 </p>
 </dd>
 </dl>
 </dd></dl>
 
-</section>
-<section id="rnalysis-general-module">
-<h2>rnalysis.general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="rnalysis-general-module">
+<h2>rnalysis.general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline"></a></h2>
 <p>This module contains general-purpose functions. Those include saving Filter objects and result tables, reading and updating the settings file, parsing common types of genomic feature indices, etc.</p>
 <dl class="py function">
 <dt class="sig sig-object py">
 <span class="sig-prename descclassname"><span class="pre">rnalysis.general.</span></span><span class="sig-name descname"><span class="pre">parse_gene_name_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Receives a string that contains gene names (like ‘daf-2’ or ‘lin15B’).     Parses the string into a set of gene names.     The format of a gene name is a sequence consisting of the expression     ‘[a-z]{3,4}’, the character ‘-’, and the expression ‘[A-Z,0-9]{1,4}’.
+<dd><p>Receives a string that contains gene names (like ‘daf-2’ or ‘lin15B’).     Parses the string into a set of gene names.     The format of a gene name is a sequence consisting of the expression     ‘[a-z]{3,4}’, the character ‘-‘, and the expression ‘[A-Z,0-9]{1,4}’.
 :type string: str
 :param string: The string to be parsed. Can be any format of string.
 :return:
@@ -6122,58 +6076,41 @@ a set of the WBGene indices that appear in the given string.</p>
 </div>
 </dd></dl>
 
-</section>
-<section id="rnalysis-utils-module">
-<h2>rnalysis.utils module<a class="headerlink" href="#rnalysis-utils-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="rnalysis-utils-module">
+<h2>rnalysis.utils module<a class="headerlink" href="#rnalysis-utils-module" title="Permalink to this headline"></a></h2>
 <p>This module contains various utility functions. This module is used mainly by other modules, and is meant for internal use only.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="genindex.html" class="btn btn-neutral float-left" title="Index" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Guy Teichman.
-
-    </p>
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
