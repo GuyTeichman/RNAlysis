@@ -2,6 +2,19 @@
 History
 =======
 
+2.0.1 (2021-12-05)
+------------------
+* This version introduces small bug fixes
+
+Changed
+*******
+* When mapping/inferring taxon IDs during GO enrichment analysis, organisms will now be prioritized based on their taxon ID values (numerically lower IDs will be considered to be more relevant).
+
+Fixed
+******
+* Fixed bug that occured when mapping/inferring taxon IDs during GO enrichment analysis, where integer taxon IDs would be matched by name similarity before trying an exact ID match, leading to spurious matches.
+
+
 2.0.0 (2021-12-05)
 ------------------
 * This version introduces new method to cluster your read count matrices, including K-Means/Medoids clustering, Hierarchical clustering, and HDBSCAN.
