@@ -180,7 +180,7 @@ class EnrichmentRunner:
         bg_size = self.annotation_df.shape[0]
         de_size = len(self.gene_set)
         go_size = self.annotation_df[attribute].notna().sum()
-        go_de_size = self.annotation_df.loc[self.gene_set, attribute].notna().sum()
+        go_de_size = self.annotation_df.loc[list(self.gene_set), attribute].notna().sum()
         return bg_size, de_size, go_size, go_de_size
 
     def _get_xlmhg_parameters(self, index_vec):
@@ -244,7 +244,7 @@ class EnrichmentRunner:
 
     def _randomization_enrichment(self, attribute: str, reps: int) -> list:
         bg_array = self.annotation_df[attribute].notna().values
-        obs_array = self.annotation_df.loc[self.gene_set, attribute].notna().values
+        obs_array = self.annotation_df.loc[list(self.gene_set), attribute].notna().values
         n = len(self.gene_set)
         expected_fraction = np.sum(bg_array) / bg_array.shape[0]
         observed_fraction = np.sum(obs_array) / n
@@ -392,7 +392,7 @@ class EnrichmentRunner:
         if self.single_set:
             self.annotation_df = self.annotation_df.loc[:, self.attributes].sort_index()
         else:
-            self.annotation_df = self.annotation_df.loc[self.background_set, self.attributes].sort_index()
+            self.annotation_df = self.annotation_df.loc[list(self.background_set), self.attributes].sort_index()
 
     def calculate_enrichment(self) -> list:
         self.set_random_seed()
@@ -624,20 +624,20 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
 
     def _sign_test_enrichment(self, attribute: str) -> list:
         exp = self.annotation_df[attribute].median(skipna=True)
-        obs = self.annotation_df.loc[self.gene_set, attribute].median(skipna=False)
+        obs = self.annotation_df.loc[list(self.gene_set), attribute].median(skipna=False)
         if np.isnan(obs):
             pval = np.nan
         else:
-            _, pval = sign_test(self.annotation_df.loc[self.gene_set, attribute].values, exp)
+            _, pval = sign_test(self.annotation_df.loc[list(self.gene_set), attribute].values, exp)
         return [attribute, len(self.gene_set), obs, exp, pval]
 
     def _one_sample_t_test_enrichment(self, attribute: str) -> list:
         exp = self.annotation_df[attribute].mean(skipna=True)
-        obs = self.annotation_df.loc[self.gene_set, attribute].mean(skipna=False)
+        obs = self.annotation_df.loc[list(self.gene_set), attribute].mean(skipna=False)
         if np.isnan(obs):
             pval = np.nan
         else:
-            _, pval = ttest_1samp(self.annotation_df.loc[self.gene_set, attribute], popmean=exp)
+            _, pval = ttest_1samp(self.annotation_df.loc[list(self.gene_set), attribute], popmean=exp)
         return [attribute, len(self.gene_set), obs, exp, pval]
 
     def format_results(self, unformatted_results_list: list):
@@ -660,7 +660,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
     def enrichment_histogram(self, attribute):
         # generate observed and expected Series, either linear or in log10 scale
         exp = self.annotation_df[attribute]
-        obs = exp.loc[self.gene_set]
+        obs = exp.loc[list(self.gene_set)]
         if self.plot_log_scale:
             xlabel = r"$\log_{10}$" + f"({attribute})"
             exp = np.log10(exp)
@@ -1011,7 +1011,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                       total=len(self.attributes))
         for go_id in go_id_iter:
             if go_id in marked_nodes:  # if this node was marked, remove from it all marked genes
-                self.mod_annotation_dfs[mod_df_ind].loc[marked_nodes[go_id], go_id] = False
+                self.mod_annotation_dfs[mod_df_ind].loc[list(marked_nodes[go_id]), go_id] = False
             result_dict[go_id] = self.enrichment_func(go_id, mod_df_ind=mod_df_ind, **self.pvalue_kwargs)
             # if current GO ID is significantly ENRICHED, mark its ancestors
             if result_dict[go_id][-1] <= self.alpha and result_dict[go_id][-2] > 0:
@@ -1164,8 +1164,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         bg_size = self.annotation_df.shape[0]
         n = len(self.gene_set)
         expected_fraction = self.annotation_df[go_id].sum() / bg_size
-        observed_fraction = self.annotation_df.loc[self.gene_set, go_id].sum() / n
-        mod_observed_fraction = bg_df.loc[self.gene_set].sum() / n
+        observed_fraction = self.annotation_df.loc[list(self.gene_set), go_id].sum() / n
+        mod_observed_fraction = bg_df.loc[list(self.gene_set)].sum() / n
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
         pval = self._calc_randomization_pval(n, log2_fold_enrichment, bg_df.values, reps, mod_observed_fraction)
         return [go_name, n, int(n * observed_fraction), n * expected_fraction, log2_fold_enrichment, pval]
@@ -1194,7 +1194,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
         go_name = self.dag_tree[go_id].name
         expected_fraction = self.annotation_df[go_id].sum() / bg_size
-        observed_fraction = self.annotation_df.loc[self.gene_set, go_id].sum() / de_size
+        observed_fraction = self.annotation_df.loc[list(self.gene_set), go_id].sum() / de_size
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
         pval = self._calc_hypergeometric_pval(bg_size=bg_size, de_size=de_size, go_size=go_size, go_de_size=go_de_size)
         obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
@@ -1204,7 +1204,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         bg_size, de_size, go_size, go_de_size = self._get_hypergeometric_parameters(go_id, mod_df_ind)
 
         expected_fraction = self.annotation_df[go_id].sum() / bg_size
-        observed_fraction = self.annotation_df.loc[self.gene_set, go_id].sum() / de_size
+        observed_fraction = self.annotation_df.loc[list(self.gene_set), go_id].sum() / de_size
         log2_fold_enrichment = np.log2(observed_fraction / expected_fraction) if observed_fraction > 0 else -np.inf
         pval = self._calc_fisher_pval(bg_size=bg_size, de_size=de_size, go_size=go_size, go_de_size=go_de_size)
         obs, exp = int(de_size * observed_fraction), de_size * expected_fraction
@@ -1214,5 +1214,5 @@ class GOEnrichmentRunner(EnrichmentRunner):
         bg_size = self.mod_annotation_dfs[mod_df_ind].shape[0]
         de_size = len(self.gene_set)
         go_size = int(np.ceil(self.mod_annotation_dfs[mod_df_ind][go_id].sum()))
-        go_de_size = int(np.ceil(self.mod_annotation_dfs[mod_df_ind].loc[self.gene_set, go_id].sum()))
+        go_de_size = int(np.ceil(self.mod_annotation_dfs[mod_df_ind].loc[list(self.gene_set), go_id].sum()))
         return bg_size, de_size, go_size, go_de_size
