@@ -1123,18 +1123,19 @@ class Filter:
 
         """
         Keep only the features that exist in ALL of the given Filter objects/sets. \
-        Can be done inplace on the first Filter object, or return a set/string of features.
+        Can be done either inplace on the first Filter object, or return a set/string of features.
 
         :type others: Filter or set objects.
         :param others: Objects to calculate intersection with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the intersecting WBGene indices. If 'str', returns a string of \
-        the intersecting indices, delimited by a comma.
-        :type inplace: bool, default False
-        :param inplace: If True, filtering will be applied to the current Filter object. If False (default), \
-        the function will return a set/str that contains the intersecting indices.
+        :type return_type: 'set' or 'str' (default='set')
+        :param return_type: If 'set', returns a set of the intersecting features. If 'str', returns a string of \
+        the intersecting features, delimited by a comma.
+        :type inplace: bool (default=False)
+        :param inplace: If True, the function will be applied in-place to the current Filter object. \
+        If False (default), the function will return a set/str that contains the intersecting indices.
         :rtype: set or str
-        :return: If inplace=False, returns a set/string of the WBGene indices that intersect between two Filter objects.
+        :return: If inplace=False, returns a set/string of the features that \
+        intersect between the given Filter objects/sets.
 
 
         :Examples:
@@ -1197,13 +1198,13 @@ class Filter:
     def union(self, *others: Union['Filter', set], return_type: str = 'set'):
 
         """
-        Returns a set/string of the union of WBGene indices between multiple Filter objects \
-        (the indices that exist in at least one of the Filter objects/sets).
+        Returns a set/string of the union of features between multiple Filter objects/sets \
+        (the features that exist in at least one of the Filter objects/sets).
 
         :type others: Filter or set objects.
         :param others: Objects to calculate union with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the union WBGene indices. If 'str', returns a string of \
+        :type return_type: 'set' or 'str' (default='set')
+        :param return_type: If 'set', returns a set of the union features. If 'str', returns a string of \
         the union WBGene indices, delimited by a comma.
         :rtype: set or str
         :return:  a set/string of the WBGene indices that exist in at least one of the Filter objects.
@@ -1237,15 +1238,15 @@ class Filter:
 
         :type others: Filter or set objects.
         :param others: Objects to calculate difference with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the WBGene indices that exist only in the first Filter object. \
+        :type return_type: 'set' or 'str' (default='set')
+        :param return_type: If 'set', returns a set of the features that exist only in the first Filter object. \
         If 'str', returns a string of the WBGene indices that exist only in the first Filter object, \
         delimited by a comma.
         :type inplace: bool, default False
         :param inplace: If True, filtering will be applied to the current Filter object. If False (default), \
-        the function will return a set/str that contains the intersecting indices.
+        the function will return a set/str that contains the intersecting features.
         :rtype: set or str
-        :return: If inplace=False, returns a set/string of the WBGene indices\
+        :return: If inplace=False, returns a set/string of the features\
          that exist only in the first Filter object/set (set difference).
 
 
@@ -1284,11 +1285,11 @@ class Filter:
 
         :type other: Filter or set.
         :param other: a second Filter object/set to calculate symmetric difference with.
-        :type return_type: 'set' or 'str.
-        :param return_type: If 'set', returns a set of the WBGene indices that exist in exactly one Filter object. \
-        If 'str', returns a string of the WBGene indices that exist in exactly one Filter object, delimited by a comma.
+        :type return_type: 'set' or 'str' (default='set')
+        :param return_type: If 'set', returns a set of the features that exist in exactly one Filter object. \
+        If 'str', returns a string of the features that exist in exactly one Filter object, delimited by a comma.
         :rtype: set or str
-        :return: a set/string of the WBGene indices that that exist t in exactly one Filter. (set symmetric difference).
+        :return: a set/string of the features that that exist t in exactly one Filter. (set symmetric difference).
 
 
         :Examples:
