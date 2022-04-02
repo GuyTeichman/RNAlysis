@@ -4,7 +4,11 @@ History
 
 2.0.1 (2021-12-05)
 ------------------
-* This version introduces small bug fixes
+* This version introduces small bug fixes, as well as a new function in the Filtering module.
+
+Added
+******
+* Added Filter.majority_vote_intersection(), which returns a set/string of the features that appear in at least (majority_threhold * 100)% of the given Filter objects/sets.
 
 Changed
 *******
