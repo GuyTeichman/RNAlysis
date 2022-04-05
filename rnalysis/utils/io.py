@@ -36,10 +36,12 @@ def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List
     assert isinstance(filename,
                       (str, Path)), f"Filename must be of type str or pathlib.Path, is instead {type(filename)}."
     encoding = 'ISO-8859-1'
-    kwargs = dict(sep=None, engine='python', encoding=encoding, squeeze=squeeze, comment=comment, skipinitialspace=True)
+    kwargs = dict(sep=None, engine='python', encoding=encoding, comment=comment, skipinitialspace=True)
     if index_col is not None:
         kwargs['index_col'] = index_col
     df = pd.read_csv(filename, **kwargs)
+    if squeeze:
+        df = df.squeeze("columns")
     df.index = [ind.strip() if isinstance(ind, str) else ind for ind in df.index]
     if isinstance(df, pd.DataFrame):
         df.columns = [col.strip() if isinstance(col, str) else col for col in df.columns]
