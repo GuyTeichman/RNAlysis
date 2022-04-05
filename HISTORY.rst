@@ -2,7 +2,7 @@
 History
 =======
 
-2.0.1 (2021-12-05)
+2.0.1 (2022-04-02)
 ------------------
 * This version introduces small bug fixes, as well as a new function in the Filtering module.
 
