@@ -162,3 +162,21 @@ def partition_list(lst: Union[list, tuple], chunk_size: int) -> Union[List[tuple
     if len(lst) == 0:
         return [type(lst)()]
     return [lst[i: i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+
+def flatten(lst: list) -> list:
+    """
+    Flatten a list of arbitrary depth.
+
+    :param lst: the list to be flattened
+    :type lst: list
+    :return: a flattened list
+    :rtype: list
+    """
+    output = []
+    for item in lst:
+        if isinstance(item, list):
+            output.extend(flatten(item))
+        else:
+            output.append(item)
+    return output

@@ -137,3 +137,12 @@ def test_partition_list(lst, chunk_size, truth):
 def test_partition_list_invalid_input(lst, chunk_size):
     with pytest.raises(AssertionError):
         _ = partition_list(lst, chunk_size)
+
+
+@pytest.mark.parametrize("lst,truth", [([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
+                                       ([], []),
+                                       ([1, 2, [3, 4], [5]], [1, 2, 3, 4, 5]),
+                                       ([1, 2, [3, [], 4], 5, [], 6], [1, 2, 3, 4, 5, 6]),
+                                       ([[1, 2], [3, 4, [5, 6], 7, [], [8, [9]]]], [1, 2, 3, 4, 5, 6, 7, 8, 9])])
+def test_flatten(lst, truth):
+    assert flatten(lst) == truth
