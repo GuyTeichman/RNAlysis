@@ -2466,11 +2466,19 @@ class CountFilter(Filter):
             sem = [self.df.loc[feature].iloc[ind].sem() if np.all([isinstance(i, int) for i in ind]) else
                    self.df.loc[feature][ind].sem() for
                    ind in sample_grouping.values()]
-            axes[-1].bar(np.arange(len(sample_grouping)), mean, yerr=sem)
+            points_y = parsing.flatten([self.df.loc[feature].iloc[ind] if np.all([isinstance(i, int) for i in ind]) else
+                                        [self.df.loc[feature][ind]] for ind in sample_grouping.values()])
+            points_x = []
+            for i, grouping in enumerate(sample_grouping.values()):
+                for _ in grouping:
+                    points_x.append(i)
+            axes[-1].bar(np.arange(len(sample_grouping)), mean, yerr=sem, edgecolor='k', width=0.5,
+                         facecolor='slateblue', capsize=6.5, error_kw=dict(capthick=2, lw=2))
+            axes[-1].scatter(points_x, points_y, edgecolor='k', facecolor=[0.90, 0.6, 0.25], linewidths=0.9)
             axes[-1].set_xticks(np.arange(len(sample_grouping)))
-            axes[-1].set_xticklabels(list(sample_grouping.keys()))
-            axes[-1].set_title(feature)
-            plt.ylabel(count_unit)
+            axes[-1].set_xticklabels(list(sample_grouping.keys()), fontsize=12)
+            axes[-1].set_title(feature, fontsize=16)
+            plt.ylabel(count_unit, fontsize=14)
             sns.despine()
             ylims.append(axes[-1].get_ylim()[1])
         for ax in axes:
