@@ -3,6 +3,7 @@ from collections import namedtuple
 import copy
 import joblib
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -268,8 +269,8 @@ def test_weight_pvals(monkeypatch):
 
     monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
 
-    e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any',
-                           None, False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
+    e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
+                           False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
     e.annotation_df = goa_df
     e.mod_annotation_dfs = goa_df.copy(deep=True),
     e.attributes = list(goa_df.columns)
@@ -1105,8 +1106,8 @@ def test_go_enrichment_runner_correct_multiple_comparisons():
 
 @pytest.mark.parametrize('single_list', [True, False])
 @pytest.mark.parametrize('results,n_bars_truth', [([1, 2, 3], 3), (list(range(15)), 10)])
-@pytest.mark.parametrize('plot_go_network', [False, True])
-def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_bars_truth, plot_go_network):
+@pytest.mark.parametrize('plot_ontology_graph', [False, True])
+def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_bars_truth, plot_ontology_graph):
     def validate_params(self, title, n_bars, ylabel=''):
         assert isinstance(title, str)
         assert self.set_name in title
@@ -1115,19 +1116,18 @@ def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_
         assert n_bars == n_bars_truth
         return plt.Figure()
 
+    def go_dag_plot(dpi,**kwargs):
+        assert plot_ontology_graph
+
     monkeypatch.setattr(GOEnrichmentRunner, 'enrichment_bar_plot', validate_params)
-    monkeypatch.setattr(GOEnrichmentRunner, 'go_dag_plot', lambda self: plt.Figure())
+    monkeypatch.setattr(GOEnrichmentRunner, 'go_dag_plot', go_dag_plot)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.single_set = single_list
     runner.set_name = 'name of the set'
     runner.results = results
-    runner.plot_go_network = plot_go_network
+    runner.plot_ontology_graph = plot_ontology_graph
     res = runner.plot_results()
-    if plot_go_network:
-        assert isinstance(res[0], plt.Figure)
-        assert isinstance(res[1], plt.Figure)
-    else:
-        assert isinstance(res, plt.Figure)
+    assert isinstance(res, plt.Figure)
 
 
 def test_go_enrichment_runner_format_results(monkeypatch):

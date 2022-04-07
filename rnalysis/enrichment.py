@@ -229,6 +229,7 @@ class FeatureSet:
                       qualifiers: Union[str, Iterable[str]] = 'any',
                       excluded_qualifiers: Union[str, Iterable[str]] = 'not', return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                      plot_ontology_graph: bool = True, ontology_graph_format: str = 'pdf',
                       randomization_reps: int = 10000, random_seed: int = None,
                       parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
@@ -320,6 +321,11 @@ class FeatureSet:
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_ontology_graph: bool (default=True)
+        :param plot_ontology_graph: if True, will generate an ontology graph depicting the \
+        significant GO terms and their parent nodes.
+        :type ontology_graph_format: str (default='pdf')
+        :param ontology_graph_format: the file format the ontology graph will be generated in.
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
@@ -345,6 +351,12 @@ class FeatureSet:
 
            Example plot of go_enrichment()
 
+        .. figure::  ontology_graph.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of go_enrichment(plot_ontology_graph=True)
+
 
         .. figure::  plot_enrichment_results_go_vertical.png
            :align:   center
@@ -355,7 +367,6 @@ class FeatureSet:
         propagate_annotations = propagate_annotations.lower()
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
-        plot_dag = False
         if statistical_test.lower() == 'randomization':
             kwargs = dict(reps=randomization_reps, random_seed=random_seed)
         else:
@@ -364,9 +375,10 @@ class FeatureSet:
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
-                                                      fname, return_fig, plot_horizontal, plot_dag, self.set_name,
-                                                      parallel, statistical_test, biotype, background_genes,
-                                                      biotype_ref_path, **kwargs)
+                                                      fname, return_fig, plot_horizontal, plot_ontology_graph,
+                                                      self.set_name, parallel, statistical_test, biotype,
+                                                      background_genes, biotype_ref_path,
+                                                      ontology_graph_format=ontology_graph_format, **kwargs)
 
         return runner.run()
 
@@ -733,7 +745,9 @@ class RankedSet(FeatureSet):
                                  excluded_qualifiers: Union[str, Iterable[str]] = 'not',
                                  return_nonsignificant: bool = False,
                                  save_csv: bool = False, fname=None,
-                                 return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True
+                                 return_fig: bool = False, plot_horizontal: bool = True,
+                                 plot_ontology_graph: bool = True, ontology_graph_format: str = 'pdf',
+                                 parallel: bool = True
                                  ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
@@ -813,6 +827,11 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :type plot_ontology_graph: bool (default=True)
+        :param plot_ontology_graph: if True, will generate an ontology graph depicting the \
+        significant GO terms and their parent nodes.
+        :type ontology_graph_format: str (default='pdf')
+        :param ontology_graph_format: the file format the ontology graph will be generated in.
         :type parallel: bool (default=True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
@@ -827,6 +846,12 @@ class RankedSet(FeatureSet):
 
            Example plot of single_set_go_enrichment()
 
+        .. figure::  ontology_graph_singlelist.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of single_set_go_enrichment(plot_ontology_graph=True)
+
 
         .. figure::  plot_enrichment_results_go_singlelist_vertical.png
            :align:   center
@@ -834,13 +859,14 @@ class RankedSet(FeatureSet):
 
            Example plot of single_set_go_enrichment(plot_horizontal = False)
         """
-        plot_dag = False  # to be implemented in version 2.1.0
         runner = enrichment_runner.GOEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                       propagate_annotations, aspects, evidence_types,
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
-                                                      fname, return_fig, plot_horizontal, plot_dag, self.set_name,
-                                                      parallel=parallel, enrichment_func_name='xlmhg', single_set=True)
+                                                      fname, return_fig, plot_horizontal, plot_ontology_graph,
+                                                      self.set_name,
+                                                      parallel=parallel, enrichment_func_name='xlmhg', single_set=True,
+                                                      ontology_graph_format=ontology_graph_format)
 
         return runner.run()
 

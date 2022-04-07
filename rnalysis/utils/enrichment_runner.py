@@ -6,11 +6,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
 
+import io as builtin_io
+import matplotlib.image as mpimg
+import appdirs
 import joblib
 import matplotlib.pyplot as plt
 import numba
 import numpy as np
 import pandas as pd
+import graphviz
+import queue
 import statsmodels.stats.multitest as multitest
 from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
@@ -517,7 +522,7 @@ class EnrichmentRunner:
         bar = bar_func(ax, range(len(enrichment_names)), enrichment_scores, color=colors, edgecolor='black',
                        linewidth=1, zorder=2)
         bar.tick_labels = enrichment_names
-        # determine bound, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
+        # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
         bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
         # add black line at y=0 and grey lines at every round positive/negative integer in range
         for ind in range(int(bounds[0]) + 1, int(bounds[1]) + 1):
@@ -735,7 +740,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
                  'return_nonsignificant': 'indicates whether to return results which were not found to be '
                                           'statistically significant after enrichment analysis',
-                 'plot_go_network': 'indicates whether to plot GO network of the statistically significant GO Terms',
+                 'plot_ontology_graph': 'indicates whether to plot ontology graph of the statistically significant GO Terms',
+                 'ontology_graph_format': 'file format for the generated ontology graph',
                  'attributes_set': 'set of the attributes/GO Terms for which enrichment should be calculated'}
     printout_params = "have any GO Annotations asocciated with them"
     GOA_DF_QUERIES = {}
@@ -746,9 +752,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  databases: Union[str, Iterable[str]], excluded_databases: Union[str, Iterable[str]],
                  qualifiers: Union[str, Iterable[str]], excluded_qualifiers: Union[str, Iterable[str]],
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
-                 plot_go_network: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
+                 plot_ontology_graph: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, **pvalue_kwargs):
+                 random_seed: int = None, ontology_graph_format='pdf', **pvalue_kwargs):
         self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
         self.organism = organism
@@ -763,7 +769,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.qualifiers = qualifiers
         self.excluded_qualifiers = excluded_qualifiers
         self.return_nonsignificant = return_nonsignificant
-        self.plot_go_network = plot_go_network
+        self.plot_ontology_graph = plot_ontology_graph
+        self.ontology_graph_format = ontology_graph_format
         self.attributes_set: set = set()
         super().__init__(genes, [], alpha, '', save_csv, fname, return_fig, plot_horizontal, set_name, parallel,
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
@@ -888,19 +895,105 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def plot_results(self) -> Union[plt.Figure, Tuple[plt.Figure, plt.Figure]]:
         n_bars = min(10, len(self.results))
+        kwargs = dict()
         if self.single_set:
-            title = f"Single-list GO enrichment for {self.set_name}" + f"\ntop {n_bars} most specific GO terms"
-            bar_plot = self.enrichment_bar_plot(n_bars=n_bars, title=title, ylabel=r"$\log_2$(XL-mHG enrichment score)")
+            kwargs['ylabel'] = r"$\log_2$(XL-mHG enrichment score)"
+            kwargs['title'] = f"Single-list GO enrichment for {self.set_name}\ntop {n_bars} most specific GO terms"
         else:
-            title = f"GO enrichment for {self.set_name}" + f"\ntop {n_bars} most specific GO terms"
-            bar_plot = self.enrichment_bar_plot(n_bars=n_bars, title=title)
-        if self.plot_go_network:
-            return bar_plot, self.go_dag_plot()
+            kwargs['title'] = f"GO enrichment for {self.set_name}\ntop {n_bars} most specific GO terms"
+
+        bar_plot = self.enrichment_bar_plot(n_bars=n_bars, **kwargs)
+        if self.plot_ontology_graph:
+            ontology_kwargs = kwargs.copy()
+            ontology_kwargs['title'] = f"Single-list GO enrichment for {self.set_name}" if self.single_set \
+                else f"GO enrichment for {self.set_name}"
+            self.go_dag_plot(**ontology_kwargs)
         return bar_plot
 
-    def go_dag_plot(self):
-        # TODO: implement me with pydot/graphviz!
-        raise NotImplementedError
+    def go_dag_plot(self, title, dpi: int = 300, ylabel: str = r"$\log_2$(Fold Enrichment)"):
+        aspects = ('biological_process', 'cellular_component',
+                   'molecular_function') if self.aspects == 'any' else parsing.data_to_tuple(self.aspects)
+        for go_aspect in aspects:
+            self._dag_plot_for_namespace(go_aspect, title, ylabel, dpi=dpi)
+
+    def _dag_plot_for_namespace(self, namespace: str, title: str, ylabel: str, dpi: int = 300):
+        # colormap
+        scores_no_inf = [i for i in self.results[self.en_score_col] if i != np.inf and i != -np.inf and i < 0]
+        if len(scores_no_inf) == 0:
+            scores_no_inf.append(-1)
+        max_score = max(np.max(scores_no_inf), 2)
+        my_cmap = plt.cm.get_cmap('coolwarm')
+
+        # generate graph
+        graph = graphviz.Digraph()
+        graph.attr(dpi=str(dpi))
+        node_queue = queue.SimpleQueue()
+        processed = set()
+        significant = set(self.results[self.results['significant']].index)
+        for sig_node in significant:
+            node_queue.put(sig_node)
+
+        while not node_queue.empty():
+            this_node = node_queue.get()
+            kwargs = dict(shape='box', style='rounded')
+
+            if this_node in processed:
+                continue
+            if self.dag_tree[this_node].namespace != namespace:
+                continue
+            # color significant nodes according to their enrichment score
+            if this_node in significant:
+                this_score = self.results[self.en_score_col].loc[this_node]
+                color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
+                color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
+                    color_norm) * max(np.abs(scores_no_inf))
+                color = tuple([int(i * 255) for i in my_cmap(color_norm_8bit)[:-1]])
+                kwargs['fillcolor'] = '#%02x%02x%02x' % color
+                kwargs['style'] = 'rounded, filled'
+                if int(np.mean(color)) < 128:
+                    kwargs['fontcolor'] = '#ffffff'
+
+            graph.node(this_node[3::], label=self.dag_tree[this_node].name, **kwargs)
+            processed.add(this_node)
+            #  add relationships to all parent nodes, and add parent nodes to queue
+            for relationship_type in ('is_a', 'part_of'):
+                relationship_label = relationship_type.replace('_', ' ') + ':'
+                for parent in self.dag_tree[this_node].get_parents(relationship_type):
+                    if self.dag_tree[parent].namespace == namespace:
+                        node_queue.put(parent)
+                        graph.edge(parent[3::], this_node[3::], label=relationship_label)
+
+        # save and display graph
+        savepath = Path(appdirs.user_cache_dir('RNAlysis')).joinpath(
+            f'dag_tree_{namespace}.{self.ontology_graph_format}')
+        i = 0
+        while savepath.exists():
+            i += 1
+            savepath = Path(appdirs.user_cache_dir('RNAlysis')).joinpath(
+                f'dag_tree_{namespace}_{i}.{self.ontology_graph_format}')
+        graph.render(savepath, view=True, format=self.ontology_graph_format)
+
+        # show graph in a matplotlib window
+        png_str = graph.pipe(format='png')
+        sio = builtin_io.BytesIO()
+        sio.write(png_str)
+        sio.seek(0)
+        img = mpimg.imread(sio)
+        fig, ax = plt.subplots(figsize=(14, 9))
+        ax.imshow(img, aspect='equal')
+        ax.set_title(title + f'\n{namespace}'.replace('_', ' ').title(), fontsize=24)
+
+        # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
+        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
+        # add colorbar
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
+        sm.set_array(np.array([]))
+        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15)
+        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), location='bottom')
+        cbar.set_label(**cbar_label_kwargs)
+        cbar.ax.tick_params(labelsize=14, pad=6)
+
+        plt.show()
 
     def format_results(self, unformatted_results_dict: dict):
         if self.single_set:
