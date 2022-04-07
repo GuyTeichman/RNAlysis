@@ -1927,7 +1927,7 @@ class CountFilter(Filter):
 
         pass
 
-    def pairplot(self, sample_list: list = 'all', log2: bool = False) -> sns.PairGrid:
+    def pairplot(self, sample_list: list = 'all', log2: bool = True) -> sns.PairGrid:
 
         """
         Plot pairwise relationships in the dataset. \
@@ -1940,10 +1940,9 @@ class CountFilter(Filter):
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :type log2: bool
-        :param log2: if True, the pairplot will be calculated with log2 of the dataframe (pseudocount+1 added), \
-        and not with the raw data. \
-        If False (default), the pairplot will be calculated with the raw data.
+        :type log2: bool (default=True)
+        :param log2: if True, the pairplot will be calculated with log2 of the DataFrame (pseudocount+1 added), \
+        and not with the raw data. If False, the pairplot will be calculated with the raw data.
         :return: An instance of seaborn.PairGrid.
 
         .. figure::  pairplot.png
@@ -1957,10 +1956,22 @@ class CountFilter(Filter):
             sample_df = self.df
         else:
             sample_df = self._avg_subsamples(sample_list)
+
         if log2:
-            pairplt = sns.pairplot(np.log2(sample_df + 1))
-        else:
-            pairplt = sns.pairplot(sample_df)
+            sample_df = np.log2(sample_df + 1)
+
+        pairplt = sns.pairplot(sample_df, corner=True,
+                               plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15), facecolors=(0.1, 0.5, 0.15), s=3.5),
+                               diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
+
+        title = 'Pairplot' + log2 * ' (logarithmic scale)'
+        plt.suptitle(title, fontsize=26)
+
+        for i, row in enumerate(pairplt.axes):
+            for ax in row[0:i]:
+                ax.plot(range(int(ax.get_xlim()[1])), range(int(ax.get_xlim()[1])), linestyle='--', color='k',
+                        zorder=100, linewidth=0.8)
+
         plt.show()
         return pairplt
 
@@ -2198,6 +2209,8 @@ class CountFilter(Filter):
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
+
+        #TODO: add sample image
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                          max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style,
@@ -2247,6 +2260,8 @@ class CountFilter(Filter):
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
+
+        #TODO: add sample image
         """
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                                max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
@@ -2298,6 +2313,8 @@ class CountFilter(Filter):
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
+
+        #TODO: add sample image
         """
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                            max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
@@ -2353,6 +2370,8 @@ class CountFilter(Filter):
         :type return_probabilities: bool (default False)
         :return: if `return_probabilities` is False, returns a tuple of CountFilter objects. \
         Otherswise, returns a tuple of CountFilter objects, and a numpy array containing the probability values.
+
+        #TODO: add sample image
         """
         validation.validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, self.shape[0])
 
