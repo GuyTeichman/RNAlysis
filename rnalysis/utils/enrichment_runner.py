@@ -981,6 +981,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         img = mpimg.imread(sio)
         fig, ax = plt.subplots(figsize=(14, 9))
         ax.imshow(img, aspect='equal')
+        ax.axis('off')
         ax.set_title(title + f'\n{namespace}'.replace('_', ' ').title(), fontsize=24)
 
         # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
