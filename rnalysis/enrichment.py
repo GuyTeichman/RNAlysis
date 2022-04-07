@@ -345,18 +345,18 @@ class FeatureSet:
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  plot_enrichment_results_go.png
-           :align:   center
-           :scale: 60 %
-
-           Example plot of go_enrichment()
-
         .. figure::  ontology_graph.png
            :align:   center
            :scale: 60 %
 
            Example plot of go_enrichment(plot_ontology_graph=True)
 
+
+        .. figure::  plot_enrichment_results_go.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of go_enrichment()
 
         .. figure::  plot_enrichment_results_go_vertical.png
            :align:   center
@@ -840,18 +840,18 @@ class RankedSet(FeatureSet):
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  plot_enrichment_results_go_singlelist.png
-           :align:   center
-           :scale: 60 %
-
-           Example plot of single_set_go_enrichment()
-
         .. figure::  ontology_graph_singlelist.png
            :align:   center
            :scale: 60 %
 
            Example plot of single_set_go_enrichment(plot_ontology_graph=True)
 
+
+        .. figure::  plot_enrichment_results_go_singlelist.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of single_set_go_enrichment()
 
         .. figure::  plot_enrichment_results_go_singlelist_vertical.png
            :align:   center
