@@ -150,13 +150,13 @@
 <h1>rnalysis.filtering.CountFilter.pairplot<a class="headerlink" href="#rnalysis-filtering-countfilter-pairplot" title="Permalink to this headline"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.CountFilter.pairplot">
-<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">pairplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">seaborn.axisgrid.PairGrid</span></span></span><a class="headerlink" href="#rnalysis.filtering.CountFilter.pairplot" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">pairplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">seaborn.axisgrid.PairGrid</span></span></span><a class="headerlink" href="#rnalysis.filtering.CountFilter.pairplot" title="Permalink to this definition"></a></dt>
 <dd><p>Plot pairwise relationships in the dataset.         Can plot both single samples and average multiple replicates.         For more information see the documentation of seaborn.pairplot.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sample_list</strong> (<em>'all'</em><em>, </em><em>list</em><em>, or </em><em>nested list.</em>) – A list of the sample names and/or grouped sample names to be included in the pairplot.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
-<li><p><strong>log2</strong> (<em>bool</em>) – if True, the pairplot will be calculated with log2 of the dataframe (pseudocount+1 added),         and not with the raw data.         If False (default), the pairplot will be calculated with the raw data.</p></li>
+<li><p><strong>log2</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, the pairplot will be calculated with log2 of the DataFrame (pseudocount+1 added),         and not with the raw data. If False, the pairplot will be calculated with the raw data.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -164,7 +164,7 @@
 </dd>
 </dl>
 <div class="figure align-center" id="id1">
-<a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 768.0px; height: 370.8px;" /></a>
+<a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 540.0px; height: 387.6px;" /></a>
 <p class="caption"><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </div>
 </dd></dl>
