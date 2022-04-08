@@ -40,6 +40,7 @@
     FoldChangeFilter.symmetric_difference
     FoldChangeFilter.tail
     FoldChangeFilter.text_filters
+    FoldChangeFilter.transform
     FoldChangeFilter.union
     
     

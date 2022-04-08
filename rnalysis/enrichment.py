@@ -258,7 +258,7 @@ class FeatureSet:
         For a full list of legal 'gene_id_type' names, see the UniProt website: \
         https://www.uniprot.org/help/api_idmapping
         :type gene_id_type: str (default='UniProtKB')
-        :type alpha: float between 0 and 1
+        :type alpha: float between 0 and 1 (default=0.05)
         :param alpha: Indicates the FDR threshold for significance.
         :param statistical_test: determines the statistical test to be used for enrichment analysis. \
         Note that some propagation methods support only some of the available statistical tests.
@@ -357,6 +357,7 @@ class FeatureSet:
            :scale: 60 %
 
            Example plot of go_enrichment()
+
 
         .. figure::  plot_enrichment_results_go_vertical.png
            :align:   center
@@ -852,6 +853,7 @@ class RankedSet(FeatureSet):
            :scale: 60 %
 
            Example plot of single_set_go_enrichment()
+
 
         .. figure::  plot_enrichment_results_go_singlelist_vertical.png
            :align:   center

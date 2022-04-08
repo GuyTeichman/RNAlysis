@@ -54,6 +54,7 @@
     CountFilter.symmetric_difference
     CountFilter.tail
     CountFilter.text_filters
+    CountFilter.transform
     CountFilter.union
     CountFilter.violin_plot
     

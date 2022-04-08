@@ -40,6 +40,7 @@
     DESeqFilter.symmetric_difference
     DESeqFilter.tail
     DESeqFilter.text_filters
+    DESeqFilter.transform
     DESeqFilter.union
     DESeqFilter.volcano_plot
     

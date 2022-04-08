@@ -36,6 +36,7 @@
     Filter.symmetric_difference
     Filter.tail
     Filter.text_filters
+    Filter.transform
     Filter.union
     
     
