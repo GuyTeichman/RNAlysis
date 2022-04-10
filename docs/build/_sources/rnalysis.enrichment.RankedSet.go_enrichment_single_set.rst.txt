@@ -1,6 +1,0 @@
-rnalysis.enrichment.RankedSet.go\_enrichment\_single\_set
-=========================================================
-
-.. currentmodule:: rnalysis.enrichment
-
-.. automethod:: RankedSet.single_set_go_enrichment

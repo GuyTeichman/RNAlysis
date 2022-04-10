@@ -1,6 +1,0 @@
-rnalysis.enrichment.FeatureSet.enrich\_non\_categorical
-=======================================================
-
-.. currentmodule:: rnalysis.enrichment
-
-.. automethod:: FeatureSet.non_categorical_enrichment
