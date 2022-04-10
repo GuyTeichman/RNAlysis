@@ -10,11 +10,12 @@ When you save filtered/modified data, its new file name will include by default 
 
 """
 
+import re
 import os
 import types
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple, Union, Callable
 
 import matplotlib.pyplot as plt
 import numba
@@ -24,6 +25,7 @@ import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from rnalysis.utils import clustering, io, parsing, generic, ref_tables, validation
 
@@ -138,7 +140,7 @@ class Filter:
         """
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
-        assert printout_operation.lower() in ['filter', 'normalize', 'sort'], \
+        assert printout_operation.lower() in ['filter', 'normalize', 'sort', 'transform'], \
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
@@ -154,30 +156,37 @@ class Filter:
             printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
                         f"of the original {self.df.shape[0]} features. "
         elif printout_operation.lower() == 'normalize':
-            printout += f"Normalized the values of {new_df.shape[0]} features. "
+            printout += "Normalized the values of"
         elif printout_operation.lower() == 'sort':
-            printout += f"Sorted {new_df.shape[0]} features. "
+            printout += "Sorted"
+        elif printout_operation.lower() == 'transform':
+            printout += "Transformed"
+        printout += f" {new_df.shape[0]} features. "
         # if inplace, modify the df, fname and shape properties of self
         if inplace:
             if printout_operation.lower() == 'filter':
-                printout += 'Filtered inplace.'
+                printout += 'Filtered'
             elif printout_operation.lower() == 'normalize':
-                printout += 'Normalized inplace.'
+                printout += 'Normalized'
             elif printout_operation.lower() == 'sort':
-                printout += 'Sorted inplace.'
+                printout += 'Sorted'
+            elif printout_operation.lower() == 'transform':
+                printout += 'Transformed'
+            printout += ' inplace.'
             print(printout)
             self.df, self.fname = new_df, new_fname
             self.shape = self.df.shape
         # if not inplace, copy self, modify the df/fname/shape properties of the copy, and return it
         else:
             if printout_operation.lower() == 'filter':
-                printout += 'Filtering result saved to new object.'
+                printout += 'Filtering'
             elif printout_operation.lower() == 'normalize':
-                printout += 'Normalization result saved to a new object.'
+                printout += 'Normalization'
             elif printout_operation.lower() == 'sort':
-                printout += 'Sorting result saved to a new object.' \
-                            '' \
-                            ''
+                printout += 'Sorting'
+            elif printout_operation.lower() == 'transform':
+                printout += 'Transformation'
+            printout += ' result saved to new object.'
             print(printout)
             tmp_df, tmp_fname = self.df, self.fname
             self.df, self.fname = new_df, new_fname
@@ -952,6 +961,45 @@ class Filter:
             new_df = self.df.dropna(axis=0, inplace=False)
 
         return self._inplace(new_df, opposite, inplace, suffix)
+
+    def transform(self, function: Union[str, Callable], columns: Union[str, Iterable[str]] = 'all',
+                  inplace: bool = True, **function_kwargs):
+        predefined_funcs = {'ln': np.log1p, 'loge': np.log1p, 'standardize': StandardScaler.fit_transform,
+                            'box-cox': lambda x: PowerTransformer(method='box-cox').fit_transform(x + 1)}
+
+        suffix = "_customtransform" if callable(function) else f"_{str(function)}transform"
+
+        if columns == 'all':
+            columns = parsing.data_to_list(self.columns)
+        else:
+            columns = parsing.data_to_list(columns)
+
+        if isinstance(function, str):
+            function = function.lower()
+            log_match = re.findall(r"log[\d]+", function)
+            if len(log_match) == 1:
+                log_base = int(log_match[0][3:])
+
+                def function(x):
+                    return np.log1p(x) / np.log(log_base)
+
+            elif function in predefined_funcs:
+                function = predefined_funcs[function]
+            else:
+                raise TypeError(f"Invalid value for 'function': '{function}'. ")
+        elif not callable(function):
+            raise TypeError(f"Invalid value for 'function': {function} (type {type(function)}). "
+                            f"Please specify a function or a recognized function name. ")
+
+        new_df = self.df.copy(deep=True)
+        try:
+            new_df[columns] = function(new_df[columns], **function_kwargs)
+        except:
+            try:
+                new_df[columns] = self.df.apply(function, axis=1, result_type='broadcast', **function_kwargs)
+            except:
+                new_df[columns] = self.df.applymap(function, **function_kwargs)
+        return self._inplace(new_df, False, inplace, suffix, 'transform')
 
     def sort(self, by: Union[str, List[str]], ascending: Union[bool, List[bool]] = True, na_position: str = 'last',
              inplace: bool = True):
@@ -1961,7 +2009,8 @@ class CountFilter(Filter):
             sample_df = np.log2(sample_df + 1)
 
         pairplt = sns.pairplot(sample_df, corner=True,
-                               plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15), facecolors=(0.1, 0.5, 0.15), s=3.5),
+                               plot_kws=dict(alpha=0.25, edgecolors=(0.1, 0.5, 0.15), facecolors=(0.1, 0.5, 0.15),
+                                             s=3.5),
                                diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
 
         title = 'Pairplot' + log2 * ' (logarithmic scale)'

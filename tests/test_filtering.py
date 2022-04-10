@@ -1,5 +1,8 @@
 import pytest
+import pandas as pd
 from collections import namedtuple
+from sklearn.preprocessing import PowerTransformer, StandardScaler
+
 import matplotlib
 from rnalysis.filtering import *
 import os
@@ -1612,3 +1615,43 @@ def test_avg_subsamples(sample_list, truth_path):
 def test_triplicates(input_file, expected_triplicates):
     counted = CountFilter(input_file)
     assert counted.triplicates == expected_triplicates
+
+
+def _log2_plus1(df: pd.DataFrame):
+    return np.log2(df + 1)
+
+
+def _log10_plus1(df: pd.DataFrame):
+    return np.log10(df + 1)
+
+
+def _box_cox_plus1(df: pd.DataFrame):
+    return PowerTransformer(method='box-cox').fit_transform(df + 1)
+
+
+def _multiply_by_3_reduce_2(df: pd.DataFrame):
+    return (df * 3) - 2
+
+
+@pytest.mark.parametrize('filter_obj,columns',
+                         [(Filter('tests/test_files/counted_6cols.csv'), 'all'),
+                          (DESeqFilter('tests/test_files/test_deseq.csv'), 'baseMean'),
+                          (CountFilter('tests/test_files/counted.csv'), ['cond1', 'cond4'])])
+@pytest.mark.parametrize('function,kwargs,matching_function',
+                         [('log2', {}, _log2_plus1),
+                          ('log10', {}, _log10_plus1),
+                          (_log2_plus1, {}, _log2_plus1),
+                          ('box-cox', {}, _box_cox_plus1),
+                          (lambda x, mult, red: (x * mult) - red, {'mult': 3, 'red': 2}, _multiply_by_3_reduce_2)])
+def test_transform(filter_obj, columns, function, kwargs, matching_function):
+    truth = filter_obj.__copy__()
+    if columns == 'all':
+        truth.df = matching_function(truth.df)
+    else:
+        if len(truth.df[columns].shape) == 1:
+            truth.df[columns] = matching_function(truth.df[columns].to_frame())
+        else:
+            truth.df[columns] = matching_function(truth.df[columns])
+    filter_obj.transform(function, columns, **kwargs)
+
+    filter_obj.df.equals(truth.df)

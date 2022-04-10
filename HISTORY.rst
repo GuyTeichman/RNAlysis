@@ -9,6 +9,7 @@ History
 Added
 ******
 * GO enrichment can now generate Ontology Graphs for the statistically significant GO terms.
+* Added Filter.transform(), a method that can transform your data tables with either predefined or user-defined transformations.
 
 Changed
 *******
