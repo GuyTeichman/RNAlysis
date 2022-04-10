@@ -964,6 +964,29 @@ class Filter:
 
     def transform(self, function: Union[str, Callable], columns: Union[str, Iterable[str]] = 'all',
                   inplace: bool = True, **function_kwargs):
+        """
+        Transform the values in the Filter object with the specified function.
+
+        :param function: The function or function name to be applied.
+        :type function: Callable or str ('logx' for base-x log of the data + 1, \
+        'box-cox' for Box-Cox transform of the data + 1, 'standardize' for standardization)
+        :param columns: The columns to which the transform should be applied.
+        :type columns: str or list of str (default='all')
+        :type inplace: bool
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :param function_kwargs: Any additional keyworded arguments taken by the supplied function.
+        :return: If 'inplace' is False, returns a new instance of the Filter object.
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> filt = filtering.Filter('tests/test_files/counted.csv')
+            >>> filt_log10 = filt.transform('log10', inplace=False)
+            Transformed 22 features. Transformation result saved to new object.
+            >>> filt.transform(lambda x: x+1, columns=['cond1','cond4'])
+            Transformed 22 features. Transformed inplace.
+        """
+
         predefined_funcs = {'ln': np.log1p, 'loge': np.log1p, 'standardize': StandardScaler.fit_transform,
                             'box-cox': lambda x: PowerTransformer(method='box-cox').fit_transform(x + 1)}
 
