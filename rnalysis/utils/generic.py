@@ -64,6 +64,7 @@ def shift_to_baseline(data: Union[np.ndarray, pd.DataFrame], baseline: float = 0
     diff = baseline - min_val
     return data + diff
 
+
 def standardize(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.DataFrame]:
     """
 
