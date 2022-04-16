@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rnalysis.filtering.Filter &mdash; RNAlysis 2.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.filtering.Filter.biotypes" href="rnalysis.filtering.Filter.biotypes.html" />
+    <link rel="prev" title="rnalysis.filtering.DESeqFilter.volcano_plot" href="rnalysis.filtering.DESeqFilter.volcano_plot.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html">rnalysis.filtering.Filter.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html">rnalysis.filtering.Filter.filter_biotype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html">rnalysis.filtering.Filter.filter_missing_values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html">rnalysis.filtering.Filter.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html">rnalysis.filtering.Filter.majority_vote_intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html">rnalysis.filtering.Filter.number_filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html">rnalysis.filtering.Filter.print_features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html">rnalysis.filtering.Filter.save_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.sort.html">rnalysis.filtering.Filter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html">rnalysis.filtering.Filter.split_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_percentile.html">rnalysis.filtering.Filter.split_by_percentile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html">rnalysis.filtering.Filter.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.tail.html">rnalysis.filtering.Filter.tail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html">rnalysis.filtering.Filter.text_filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.transform.html">rnalysis.filtering.Filter.transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.union.html">rnalysis.filtering.Filter.union</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
+      <li>rnalysis.filtering.Filter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rnalysis.filtering.Filter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="rnalysis-filtering-filter">
+<h1>rnalysis.filtering.Filter<a class="headerlink" href="#rnalysis-filtering-filter" title="Permalink to this headline"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="rnalysis.filtering.Filter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rnalysis.filtering.</span></span><span class="sig-name descname"><span class="pre">Filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter" title="Permalink to this definition"></a></dt>
+<dd><p>An all-purpose Filter object.</p>
+<p><strong>Attributes</strong></p>
+<dl class="simple">
+<dt>df: pandas DataFrame</dt><dd><p>A DataFrame that contains the DESeq output file contents.         The DataFrame is modified upon usage of filter operations.</p>
+</dd>
+<dt>shape: tuple (rows, columns)</dt><dd><p>The dimensions of df.</p>
+</dd>
+<dt>columns: list</dt><dd><p>The columns of df.</p>
+</dd>
+<dt>fname: pathlib.Path</dt><dd><p>The path and filename for the purpose of saving df as a csv file.         Updates automatically when filter operations are applied.</p>
+</dd>
+<dt>index_set: set</dt><dd><p>All of the indices in the current DataFrame (which were not removed by previously used filter methods)         as a set.</p>
+</dd>
+<dt>index_string: string</dt><dd><p>A string of all feature indices in the current DataFrame separated by newline.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="rnalysis.filtering.Filter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – full path/filename of the .csv file to be loaded into the Filter object</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>False</em><em> (</em><em>default=False</em><em>)</em>) – if a string or list of strings are specified,         the columns of the same name/s will be dropped from the loaded DataFrame.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html#rnalysis.filtering.Filter.biotypes" title="rnalysis.filtering.Filter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.biotypes</span></code></a>([long_format, ref])</p></td>
+<td><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.describe.html#rnalysis.filtering.Filter.describe" title="rnalysis.filtering.Filter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.describe</span></code></a>([percentiles])</p></td>
+<td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.difference.html#rnalysis.filtering.Filter.difference" title="rnalysis.filtering.Filter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.difference</span></code></a>(*others[, return_type, ...])</p></td>
+<td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html#rnalysis.filtering.Filter.filter_biotype" title="rnalysis.filtering.Filter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype</span></code></a>([biotype, ref, ...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html#rnalysis.filtering.Filter.filter_by_attribute" title="rnalysis.filtering.Filter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_attribute</span></code></a>([attributes, ...])</p></td>
+<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html#rnalysis.filtering.Filter.filter_missing_values" title="rnalysis.filtering.Filter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_missing_values</span></code></a>([columns, ...])</p></td>
+<td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html#rnalysis.filtering.Filter.filter_percentile" title="rnalysis.filtering.Filter.filter_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_percentile</span></code></a>(percentile, column)</p></td>
+<td><p>Removes all entries above the specified percentile in the specified column.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html#rnalysis.filtering.Filter.filter_top_n" title="rnalysis.filtering.Filter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_top_n</span></code></a>(by[, n, ascending, ...])</p></td>
+<td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.head.html#rnalysis.filtering.Filter.head" title="rnalysis.filtering.Filter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.head</span></code></a>([n])</p></td>
+<td><p>Return the first n rows of the Filter object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html#rnalysis.filtering.Filter.intersection" title="rnalysis.filtering.Filter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.intersection</span></code></a>(*others[, return_type, ...])</p></td>
+<td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html#rnalysis.filtering.Filter.majority_vote_intersection" title="rnalysis.filtering.Filter.majority_vote_intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.majority_vote_intersection</span></code></a>(*others[, ...])</p></td>
+<td><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html#rnalysis.filtering.Filter.number_filters" title="rnalysis.filtering.Filter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.number_filters</span></code></a>(column, operator, value)</p></td>
+<td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html#rnalysis.filtering.Filter.print_features" title="rnalysis.filtering.Filter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.print_features</span></code></a>()</p></td>
+<td><p>Print the feature indices in the Filter object, sorted by their current order in the FIlter object,         and separated by newline.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html#rnalysis.filtering.Filter.save_csv" title="rnalysis.filtering.Filter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.save_csv</span></code></a>([alt_filename])</p></td>
+<td><p>Saves the current filtered data to a .csv file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.sort.html#rnalysis.filtering.Filter.sort" title="rnalysis.filtering.Filter.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.sort</span></code></a>(by[, ascending, na_position, ...])</p></td>
+<td><p>Sort the rows by the values of specified column or columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html#rnalysis.filtering.Filter.split_by_attribute" title="rnalysis.filtering.Filter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.split_by_attribute</span></code></a>(attributes[, ref])</p></td>
+<td><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.split_by_percentile.html#rnalysis.filtering.Filter.split_by_percentile" title="rnalysis.filtering.Filter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.split_by_percentile</span></code></a>(percentile, column)</p></td>
+<td><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html#rnalysis.filtering.Filter.symmetric_difference" title="rnalysis.filtering.Filter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.symmetric_difference</span></code></a>(other[, return_type])</p></td>
+<td><p>Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second,         but NOT in both (set symmetric difference).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.tail.html#rnalysis.filtering.Filter.tail" title="rnalysis.filtering.Filter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.tail</span></code></a>([n])</p></td>
+<td><p>Return the last n rows of the Filter object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html#rnalysis.filtering.Filter.text_filters" title="rnalysis.filtering.Filter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.text_filters</span></code></a>(column, operator, value)</p></td>
+<td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.transform.html#rnalysis.filtering.Filter.transform" title="rnalysis.filtering.Filter.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.transform</span></code></a>(function[, columns, inplace])</p></td>
+<td><p>Transform the values in the Filter object with the specified function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.union.html#rnalysis.filtering.Filter.union" title="rnalysis.filtering.Filter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.union</span></code></a>(*others[, return_type])</p></td>
+<td><p>Returns a set/string of the union of features between multiple Filter objects/sets         (the features that exist in at least one of the Filter objects/sets).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rnalysis.filtering.DESeqFilter.volcano_plot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.DESeqFilter.volcano_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.filtering.Filter.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.filtering.Filter.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
