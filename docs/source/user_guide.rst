@@ -595,7 +595,7 @@ HDBSCAN stands for Hierarchical Density-Based Spatial Clustering of Applications
 HDBSCAN offers multiple advantages over more traditional clustering methods:
 
 1. HSBSCAN makes relatively few assumptions about the data - it assumes that the data contains noise, as well as some real clusters which we hope to discover.
-2. Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can mark data points as outliers, excluding them from the final clustering solution.
+2. Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can classify data points as outliers, excluding them from the final clustering solution.
 3. HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is *minimum cluster size* (`min_cluster_size`), which determines the smallest "interesting" cluster size we expect to find in the data.
 
 HDBSCAN supports additional tuning parameters, which you can read more about in the `HDBSCAN documentation <https://hdbscan.readthedocs.io/en/latest/parameter_selection.html>`_:
@@ -618,6 +618,28 @@ HDBSCAN in RNALysis supports the following distance metrics:
 .. image:: hdbscan_all.png
   :width: 450
   :alt: HDBSCAN output figure
+
+|
+
+CLICOM clustering
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CLICOM is an ensemble-based clustering algorithm (see https://doi.org/10.1016/j.eswa.2011.08.059 ).
+The CLICOM algorithm incorporates the results of multiple clustering solutions, which can come from different clustering algorithms with differing clustering parameters, and uses these clustering solutions to create a combined clustering solution.
+CLICOM offers multiple advantages over more traditional clustering methods:
+
+1. The ensemble clustering approach
+2. Unlike most other clustering methods, CLICOM does not have to force every data point to belong to a cluster. Instead, it can classify data points as outliers, excluding them from the final clustering solution.
+3. CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the *evidence threshold* (`evidence_threshold`).
+
+*RNAlysis* offers a modified implementation of CLICOM. This implementation of CLICOM supports a few tuning parameters, in addition to the clustering solutions themselves:
+
+* `evidence_threshold`: a higher evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.
+* `cluster_unclustered_features`: if True, CLICOM will force every feature to belong to a discovered cluster. Otherwise, features can be classified as noise and remain unclustered.
+* `min_cluster_size`: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be filtered out and classified as noise.
+
+.. image:: clicom_all.png
+  :width: 450
+  :alt: CLICOM output figure
 
 |
 
