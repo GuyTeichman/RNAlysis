@@ -101,11 +101,12 @@ class BinaryFormatClusters:
 
 class CLICOM:
     def __init__(self, clustering_solutions: BinaryFormatClusters, threshold: float, cluster_wise_cliques: bool = True,
-                 cluster_unclustered_features: bool = True):
+                 cluster_unclustered_features: bool = True, min_cluster_size: int = 15):
         self.clustering_solutions: BinaryFormatClusters = clustering_solutions
         self.threshold: float = threshold
         self.cluster_wise_cliques: bool = cluster_wise_cliques
         self.cluster_unclustered_features = cluster_unclustered_features
+        self.min_cluster_size = min_cluster_size
 
         self.n_features: int = self.clustering_solutions.n_features
 
@@ -116,6 +117,7 @@ class CLICOM:
         self.binary_mat = self.adj_mat >= self.threshold
         self.clique_set: Set[frozenset] = set()
         self.labels_ = None
+        self.n_clusters_ = None
 
     def run(self):
         self.find_cliques()
@@ -126,6 +128,7 @@ class CLICOM:
         else:
             clusters = self.cliques_to_clusters()
             self.labels_ = self.clusters_to_labels(clusters)
+        self.n_clusters_ = self.labels_.max() + 1
 
     def clusters_to_labels(self, clusters: List[Set[int]]) -> np.ndarray:
         labels = np.zeros((self.clustering_solutions.n_features,)) - 1
@@ -192,7 +195,13 @@ class CLICOM:
                         best_match = i
                     if best_score >= self.threshold:
                         clusters[best_match].add(feature)
-        return clusters
+
+        filtered_clusters = []
+        for cluster in clusters:
+            if len(cluster) >= self.min_cluster_size:
+                filtered_clusters.append(cluster)
+
+        return filtered_clusters
 
     def feature_cluster_similarity(self, feature: int, cluster: Set[int]):
         assert not self.cluster_wise_cliques
@@ -236,8 +245,11 @@ class CLICOM:
         for cluster in np.unique(labels):
             if cluster == -1:
                 continue
-            labels[labels == cluster] = this_cluster
-            this_cluster += 1
+            if sum(labels == cluster) >= self.min_cluster_size:
+                labels[labels == cluster] = this_cluster
+                this_cluster += 1
+            else:
+                labels[labels == cluster] = -1
         return labels
 
     def get_evidence_accumulation_matrix(self) -> np.ndarray:
@@ -835,11 +847,13 @@ class CLICOMRunner(ClusteringRunner):
                         'hdbscan': HDBSCANRunner}
 
     def __init__(self, data, power_transform: Union[bool, List[bool]], evidence_threshold: float,
-                 cluster_unclustered_features: bool, *parameter_dicts: dict, plot_style: str = 'none',
+                 cluster_unclustered_features: bool, min_cluster_size: int, *parameter_dicts: dict,
+                 plot_style: str = 'none',
                  split_plots: bool = False, ):
         self.clustering_solutions: list = []
         self.evidence_threshold = evidence_threshold
         self.cluster_unclustered_features = cluster_unclustered_features
+        self.min_cluster_size = min_cluster_size
         self.parameter_dicts = parameter_dicts
         self.clusterers = []
         super(CLICOMRunner, self).__init__(data, power_transform, plot_style=plot_style, split_plots=split_plots)
@@ -857,11 +871,11 @@ class CLICOMRunner(ClusteringRunner):
                   "to reduce computation time.")
             clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
                                              cluster_unclustered_features=self.cluster_unclustered_features,
-                                             cluster_wise_cliques=False)
+                                             min_cluster_size=self.min_cluster_size, cluster_wise_cliques=False)
         else:
             clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
                                              cluster_unclustered_features=self.cluster_unclustered_features,
-                                             cluster_wise_cliques=True)
+                                             min_cluster_size=self.min_cluster_size, cluster_wise_cliques=True)
 
         print("Calculating Ensemble clustering...", end='\t')
         clusterer.run()
@@ -875,8 +889,8 @@ class CLICOMRunner(ClusteringRunner):
             data_for_plot = generic.standardize(self.data)
             centers = np.array([data_for_plot.loc[clusterer.labels_ == i, :].T.mean(axis=1) for i in range(n_clusters)])
             # plot results
-            title = f"Results of Emsemble Clustering for {n_setups} clustering solutions " \
-                    f"\nand evidence_threshold={self.evidence_threshold}"
+            title = f"Results of Emsemble Clustering for {n_setups} clustering solutions, " \
+                    f"\nevidence_threshold={self.evidence_threshold}, and min_cluster_size={self.min_cluster_size}"
             self.plot_clustering(n_clusters, data_for_plot, clusterer.labels_, centers, title=title)
 
         return self.clusterers
