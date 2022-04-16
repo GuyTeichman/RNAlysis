@@ -884,7 +884,7 @@ or by specifiying a distance threshold above which clusters will not be merged.<
 HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
 <ol class="arabic simple">
 <li><p>HSBSCAN makes relatively few assumptions about the data - it assumes that the data contains noise, as well as some real clusters which we hope to discover.</p></li>
-<li><p>Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can mark data points as outliers, excluding them from the final clustering solution.</p></li>
+<li><p>Unlike most other clustering methods, HDBSCAN does not force every data point to belong to a cluster. Instead, it can classify data points as outliers, excluding them from the final clustering solution.</p></li>
 <li><p>HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is <em>minimum cluster size</em> (<cite>min_cluster_size</cite>), which determines the smallest “interesting” cluster size we expect to find in the data.</p></li>
 </ol>
 <p>HDBSCAN supports additional tuning parameters, which you can read more about in the <a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html">HDBSCAN documentation</a>:</p>
@@ -904,6 +904,27 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
 <li><p>all other pairwise distance metrics elaborated in the <a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html?#what-about-different-metrics">HDBSCAN documentation</a>.</p></li>
 </ul>
 <a class="reference internal image-reference" href="_images/hdbscan_all.png"><img alt="HDBSCAN output figure" src="_images/hdbscan_all.png" style="width: 450px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</div>
+<div class="section" id="clicom-clustering">
+<h5>CLICOM clustering<a class="headerlink" href="#clicom-clustering" title="Permalink to this headline"></a></h5>
+<p>CLICOM is an ensemble-based clustering algorithm (see <a class="reference external" href="https://doi.org/10.1016/j.eswa.2011.08.059">https://doi.org/10.1016/j.eswa.2011.08.059</a> ).
+The CLICOM algorithm incorporates the results of multiple clustering solutions, which can come from different clustering algorithms with differing clustering parameters, and uses these clustering solutions to create a combined clustering solution.
+CLICOM offers multiple advantages over more traditional clustering methods:</p>
+<ol class="arabic simple">
+<li><p>The ensemble clustering approach</p></li>
+<li><p>Unlike most other clustering methods, CLICOM does not have to force every data point to belong to a cluster. Instead, it can classify data points as outliers, excluding them from the final clustering solution.</p></li>
+<li><p>CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the <em>evidence threshold</em> (<cite>evidence_threshold</cite>).</p></li>
+</ol>
+<p><em>RNAlysis</em> offers a modified implementation of CLICOM. This implementation of CLICOM supports a few tuning parameters, in addition to the clustering solutions themselves:</p>
+<ul class="simple">
+<li><p><cite>evidence_threshold</cite>: a higher evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.</p></li>
+<li><p><cite>cluster_unclustered_features</cite>: if True, CLICOM will force every feature to belong to a discovered cluster. Otherwise, features can be classified as noise and remain unclustered.</p></li>
+<li><p><cite>min_cluster_size</cite>: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be filtered out and classified as noise.</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/clicom_all.png"><img alt="CLICOM output figure" src="_images/clicom_all.png" style="width: 450px;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
