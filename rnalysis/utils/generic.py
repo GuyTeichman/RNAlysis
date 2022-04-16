@@ -48,6 +48,22 @@ def standard_box_cox(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray,
     return res_array
 
 
+def shift_to_baseline(data: Union[np.ndarray, pd.DataFrame], baseline: float = 0) -> Union[np.ndarray, pd.DataFrame]:
+    """
+
+    :param data:
+    :type data:
+    :param baseline:
+    :type baseline:
+    :return:
+    :rtype:
+    """
+    min_val = data.min()
+    while isinstance(min_val, (pd.DataFrame, np.ndarray, pd.Series)):
+        min_val = min_val.min()
+    diff = baseline - min_val
+    return data + diff
+
 def standardize(data: Union[np.ndarray, pd.DataFrame]) -> Union[np.ndarray, pd.DataFrame]:
     """
 
