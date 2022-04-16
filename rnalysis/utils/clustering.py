@@ -829,7 +829,9 @@ class HDBSCANRunner(ClusteringRunner):
 
 class CLICOMRunner(ClusteringRunner):
     clusterer_class = CLICOM
-    algorithm_mapper = {'kmeans': KMeansRunner, 'kmedoids': KMedoidsRunner, 'hierarchical': HierarchicalRunner,
+    algorithm_mapper = {'kmeans': KMeansRunner, 'k means': KMeansRunner, 'k-means': KMeansRunner,
+                        'kmedoids': KMedoidsRunner, 'k medoids': KMedoidsRunner, 'k-medoids': KMedoidsRunner,
+                        'hierarchical': HierarchicalRunner, 'agglomerative': HierarchicalRunner,
                         'hdbscan': HDBSCANRunner}
 
     def __init__(self, data, power_transform: Union[bool, List[bool]], evidence_threshold: float,
