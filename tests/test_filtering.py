@@ -1503,6 +1503,17 @@ def test_split_hdbscan_api():
         c.split_hdbscan(c.shape[0] + 1)
 
 
+def test_split_clicom_api():
+    c = CountFilter('tests/test_files/big_counted.csv')
+    c.filter_top_n(by='cond1rep1', n=1000)
+    res = c.split_clicom({'method': 'hdbscan', 'min_cluster_size': [20, 75, 40], 'metric': ['ys1', 'yr1', 'spearman']},
+                         {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['euclidean', 'jackknife', 'yr1'],
+                          'linkage': ['average', 'ward']},
+                         {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
+                         power_transform=[False, True], evidence_threshold=0.5, min_cluster_size=5)
+    _test_correct_clustering_split(c, res, True)
+
+
 def test_split_kmedoids_api():
     c = CountFilter('tests/test_files/big_counted.csv')
     c.filter_top_n(by='cond1rep1', n=2000)
