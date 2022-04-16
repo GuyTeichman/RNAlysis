@@ -2,9 +2,9 @@
 History
 =======
 
-2.1.0 (2022-04-10)
+2.1.0 (2022-04-16)
 ------------------
-* This version introduces
+* This version introduces multiple new features, as well as generally improved graphs and quality-of-life changes.
 
 Added
 ******
