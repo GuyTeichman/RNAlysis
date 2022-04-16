@@ -142,7 +142,7 @@ def test_clicomrunner_find_valid_clustering_setups():
              (HierarchicalRunner,
               dict(power_transform=False, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [True, False], 0.5, False,
+    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [True, False], 0.5, False, 1,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
@@ -167,7 +167,7 @@ def test_clicomrunner_find_valid_clustering_setups():
              (HierarchicalRunner,
               dict(power_transform=True, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), True, 0.5, False,
+    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), True, 0.5, False, 15,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
@@ -189,19 +189,25 @@ def test_clicom_cluster_wise_result(valid_clustering_solutions):
     bin_format = BinaryFormatClusters(valid_clustering_solutions)
 
     truth = {frozenset({0, 1, 2, 3}), frozenset({4, 5, 6, 7})}
-    clusterer = CLICOM(bin_format, 1 / 3)
+    clusterer = CLICOM(bin_format, 1 / 3, min_cluster_size=1)
+    clusterer.run()
+    results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
+    assert truth == results
+
+    truth = set()
+    clusterer = CLICOM(bin_format, 1 / 3, min_cluster_size=5)
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth == results
 
     truth_threshold_0 = {frozenset({0, 1, 2, 3, 4, 5, 6, 7})}
-    clusterer = CLICOM(bin_format, 0)
+    clusterer = CLICOM(bin_format, 0, min_cluster_size=1)
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth_threshold_0 == results
 
     truth_threshold_max = set()
-    clusterer = CLICOM(bin_format, 1.01)
+    clusterer = CLICOM(bin_format, 1.01, min_cluster_size=1)
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth_threshold_max == results
@@ -211,19 +217,25 @@ def test_clicom_feature_wise_result(valid_clustering_solutions):
     bin_format = BinaryFormatClusters(valid_clustering_solutions)
 
     truth = {frozenset({0, 1, 2, 3}), frozenset({4, 5, 6, 7})}
-    clusterer = CLICOM(bin_format, 0.33, cluster_wise_cliques=False)
+    clusterer = CLICOM(bin_format, 0.33, cluster_wise_cliques=False, min_cluster_size=1)
+    clusterer.run()
+    results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
+    assert truth == results
+
+    truth = set()
+    clusterer = CLICOM(bin_format, 0.33, cluster_wise_cliques=False, min_cluster_size=5)
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth == results
 
     truth_threshold_0 = {frozenset({0, 1, 2, 3, 4, 5, 6, 7})}
-    clusterer = CLICOM(bin_format, 0, cluster_wise_cliques=False)
+    clusterer = CLICOM(bin_format, 0, cluster_wise_cliques=False, min_cluster_size=1)
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth_threshold_0 == results
 
     truth_threshold_max = set()
-    clusterer = CLICOM(bin_format, 1.01, cluster_wise_cliques=False)
+    clusterer = CLICOM(bin_format, 1.01, cluster_wise_cliques=False, min_cluster_size=1)
     clusterer.run()
     results = {frozenset(np.where(clusterer.labels_ == i)[0]) for i in np.unique(clusterer.labels_) if i >= 0}
     assert truth_threshold_max == results
@@ -283,6 +295,7 @@ def test_clicom_majority_voter(valid_clustering_solutions):
     n_features = 8
     clusterer = CLICOM.__new__(CLICOM)
     clusterer.n_features = n_features
+    clusterer.min_cluster_size = 1
     clusterer.clustering_solutions = BinaryFormatClusters(valid_clustering_solutions)
     cluster_blocks = [frozenset({2, 4, 7, 8}), frozenset({0, 1, 3, 5, 6})]
 
@@ -295,6 +308,7 @@ def test_clicom_majority_voter_no_solutions():
     n_features = 5
     clusterer = CLICOM.__new__(CLICOM)
     clusterer.n_features = n_features
+    clusterer.min_cluster_size = 1
 
     assert np.all(clusterer.majority_voter([]) == truth)
 
@@ -372,13 +386,15 @@ def test_clicom_clusters_to_labels():
     assert np.all(clusterer.clusters_to_labels(clusters) == truth)
 
 
-@pytest.mark.parametrize("cluster_unclustered_features,allowed_overlap,expected_clusters", [
-    (True, 1 / 3, [{0, 1, 2, 3, 12}, {6, 7, 8, 9}, {10, 11}, {4, 5}]),
-    (False, 1 / 3, [{0, 1, 2, 3}, {6, 7, 8, 9}, {10, 11}, {4, 5}]),
-    (True, 0, [{0, 1, 2, 3, 12}, {6, 7, 8, 9, 5}, {10, 11}]),
-    (False, 0, [{0, 1, 2, 3}, {6, 7, 8, 9}, {10, 11}])
+@pytest.mark.parametrize("cluster_unclustered_features,allowed_overlap, min_cluster_size,expected_clusters", [
+    (True, 1 / 3, 1, [{0, 1, 2, 3, 12}, {6, 7, 8, 9}, {10, 11}, {4, 5}]),
+    (False, 1 / 3, 1, [{0, 1, 2, 3}, {6, 7, 8, 9}, {10, 11}, {4, 5}]),
+    (True, 0, 1, [{0, 1, 2, 3, 12}, {6, 7, 8, 9, 5}, {10, 11}]),
+    (False, 0, 1, [{0, 1, 2, 3}, {6, 7, 8, 9}, {10, 11}]),
+    (False, 0, 3, [{0, 1, 2, 3}, {6, 7, 8, 9}])
 ])
-def test_clicom_cliques_to_clusters(monkeypatch, cluster_unclustered_features, allowed_overlap, expected_clusters):
+def test_clicom_cliques_to_clusters(monkeypatch, cluster_unclustered_features, allowed_overlap, min_cluster_size,
+                                    expected_clusters):
     threshold = 0.8
 
     def mock_feature_cluster_similarity(self, feature, cluster):
@@ -394,7 +410,7 @@ def test_clicom_cliques_to_clusters(monkeypatch, cluster_unclustered_features, a
         if cluster == best_cluster:
             return threshold
         else:
-            return threshold-0.01
+            return threshold - 0.01
             # return a similarity score that's lower than the best
 
     monkeypatch.setattr(CLICOM, 'feature_cluster_similarity', mock_feature_cluster_similarity)
@@ -405,6 +421,7 @@ def test_clicom_cliques_to_clusters(monkeypatch, cluster_unclustered_features, a
     clusterer = CLICOM.__new__(CLICOM)
     clusterer.binary_mat = np.zeros((n_features, 1))
     clusterer.cluster_unclustered_features = cluster_unclustered_features
+    clusterer.min_cluster_size = min_cluster_size
     clusterer.clique_set = cliques_set
     if cluster_unclustered_features:
         clusterer.cluster_wise_cliques = False  # we are not in cluster-wise cliques mode

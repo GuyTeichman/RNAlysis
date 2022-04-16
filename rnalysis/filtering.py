@@ -155,13 +155,14 @@ class Filter:
         if printout_operation.lower() == 'filter':
             printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
                         f"of the original {self.df.shape[0]} features. "
-        elif printout_operation.lower() == 'normalize':
-            printout += "Normalized the values of"
-        elif printout_operation.lower() == 'sort':
-            printout += "Sorted"
-        elif printout_operation.lower() == 'transform':
-            printout += "Transformed"
-        printout += f" {new_df.shape[0]} features. "
+        else:
+            if printout_operation.lower() == 'normalize':
+                printout += "Normalized the values of"
+            elif printout_operation.lower() == 'sort':
+                printout += "Sorted"
+            elif printout_operation.lower() == 'transform':
+                printout += "Transformed"
+            printout += f" {new_df.shape[0]} features. "
         # if inplace, modify the df, fname and shape properties of self
         if inplace:
             if printout_operation.lower() == 'filter':
@@ -2279,10 +2280,36 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
-        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
+        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
+        each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
 
-        #TODO: add sample image
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
+            >>> dev_stages.filter_low_reads(100)
+            Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
+            >>> clusters = dev_stages.split_kmeans(14,power_transform=True)
+            Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
+            Filtered 1801 features, leaving 525 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2010 features, leaving 316 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2059 features, leaving 267 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2102 features, leaving 224 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2185 features, leaving 141 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2186 features, leaving 140 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2200 features, leaving 126 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2219 features, leaving 107 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2225 features, leaving 101 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2225 features, leaving 101 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2241 features, leaving 85 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2250 features, leaving 76 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2259 features, leaving 67 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2276 features, leaving 50 of the original 2326 features. Filtering result saved to new object.
+
+        .. figure::  kmeans_all.png
+           :align:   center
+
+           Example plot of split_kmeans(plot_style='all')
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                          max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style,
@@ -2293,7 +2320,7 @@ class CountFilter(Filter):
             # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                     suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters)]))
+                                     suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
@@ -2330,10 +2357,36 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
-        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
+        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
+        each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
 
-        #TODO: add sample image
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
+            >>> dev_stages.filter_low_reads(100)
+            Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
+            >>> clusters = dev_stages.split_hierarchical(n_clusters=13, metric='euclidean',linkage='ward'
+            ...                                         ,power_transform=True)
+            Filtered 1718 features, leaving 608 of the original 2326 features. Filtering result saved to new object.
+            Filtered 1979 features, leaving 347 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2094 features, leaving 232 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2110 features, leaving 216 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2156 features, leaving 170 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2191 features, leaving 135 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2195 features, leaving 131 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2223 features, leaving 103 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2224 features, leaving 102 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2238 features, leaving 88 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2246 features, leaving 80 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2252 features, leaving 74 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2286 features, leaving 40 of the original 2326 features. Filtering result saved to new object.
+
+        .. figure::  hierarchical_all.png
+           :align:   center
+
+           Example plot of split_hierarchical(plot_style='all')
         """
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                                max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
@@ -2383,10 +2436,36 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
-        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects. \
+        :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
+        each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
 
-        #TODO: add sample image
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
+            >>> dev_stages.filter_low_reads(100)
+            Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
+            >>> clusters = dev_stages.split_kmedoids(n_clusters=14, metric='spearman', power_transform=True)
+            Filtered 1967 features, leaving 359 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2020 features, leaving 306 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2071 features, leaving 255 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2131 features, leaving 195 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2145 features, leaving 181 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2157 features, leaving 169 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2159 features, leaving 167 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2182 features, leaving 144 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2190 features, leaving 136 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2192 features, leaving 134 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2229 features, leaving 97 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2252 features, leaving 74 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2268 features, leaving 58 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2275 features, leaving 51 of the original 2326 features. Filtering result saved to new object.
+
+
+        .. figure::  kmedoids_all.png
+           :align:   center
+
+           Example plot of split_kmedoids(plot_style='all')
         """
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                            max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
@@ -2397,9 +2476,116 @@ class CountFilter(Filter):
             # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                     suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters)]))
-        # if only a single K was calculated, don't return it as a list of length
+                                     suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
+        # if only a single K was calculated, don't return it as a list of length 1
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+
+    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, List[bool]] = False,
+                     evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
+                     min_cluster_size: int = 15, plot_style: str = 'all', split_plots: bool = False
+                     ) -> Tuple['CountFilter']:
+        """
+        Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
+        (Mimaroglu and Yagci 2012), \
+        and then splits those features into multiple non-overlapping CountFilter objects, \
+        based on the clustering result. \
+        The CLICOM algorithm incorporates the results of multiple clustering solutions, \
+        which can come from different clustering algorithms with differing clustering parameters, \
+        and uses these clustering solutions to create a combined clustering solution. \
+        Due to the nature of CLICOM, the number of clusters the data will be divided into is determined automatically. \
+        This modified version of the CLICOM algorithm can also classify features as noise, \
+        which does not belong in any discovered cluster.
+
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to clustering. If both True and False are supplied, \
+        RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
+        :type power_transform: True, False, or [True, False] (default=False)
+        :param evidence_threshold: Determines the Evidence Threshold that determines \
+        whether each pair of features can be reliably clustered together. \
+        For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if \
+        they were clustered together in at least 50% of the tested clustering solutions.
+        :type evidence_threshold: float between 0 and 1 (default=2/3)
+        :param cluster_unclustered_features: if True, RNAlysis will force every feature to be part of a cluster, \
+        even if they were not initially determined to reliably belong to any of the discovered clusters. \
+        Larger values will lead to fewer clusters, with more features classified as noise.
+        :type cluster_unclustered_features: bool (default=False)
+        :param min_cluster_size: the minimum size of clusters the algorithm will seek. \
+        Larger values will lead to fewer clusters, with more features classified as noise.
+        :type min_cluster_size: int (default=15)
+        :param parameter_dicts: multiple dictionaries, each corresponding to a clustering setup to be run. \
+        Each dictionary must contain a 'method' field with a clustering method supported by RNAlysis \
+        ('k-means', 'k-medoids', 'hierarchical', or 'hdbscan'). \
+        The other fields of the dictionary should contain your preferred values \
+        for each of the clustering algorithm's parameters. \
+        Yoy can specify a list of values for each of those parameters, \
+        and then RNAlysis will run the clustering algorithm with all legal combinations of parameters you specified. \
+        For example, {'method':'k-medoids', 'n_clusters':[3,5], 'metric':['euclidean', 'cosine']} \
+        will run the K-Medoids algorithm four times with the following parameter combinations: \
+        (n_clusters=3,metric='euclidean'), (n_clusters=5, metric='euclidean'), \
+        (n_clusters=3, metric='cosine'), (n_clusters=5, metric='cosine').
+        :param plot_style: determines the visual style of the cluster expression plot.
+        :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
+        :param split_plots: if True, each discovered cluster will be plotted on its own. \
+        Otherwise, all clusters will be plotted in the same Figure.
+        :type split_plots: bool (default=False)
+        :return: returns a tuple of CountFilter objects, each corresponding to a discovered cluster.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
+            >>> dev_stages.filter_low_reads(100)
+            Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
+            >>> clusters = dev_stages.split_clicom(
+            ... {'method': 'hdbscan', 'min_cluster_size': [50, 75, 140], 'metric': ['ys1', 'yr1', 'spearman']},
+            ... {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['euclidean', 'jackknife', 'yr1'],
+            ... 'linkage': ['average', 'ward']}, {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
+            ... power_transform=True, evidence_threshold=0.5, min_cluster_size=40)
+            Found 19 legal clustering setups.
+            Running clustering setups: 100%|██████████| 19/19 [00:12<00:00,  1.49 setup/s]
+            Generating cluster similarity matrix: 100%|██████████| [00:32<00:00, 651.06it/s]
+            Finding cliques: 100%|██████████| 42436/42436 [00:00<00:00, 61385.87it/s]
+            Done
+            Found 15 clusters of average size 153.60. Number of unclustered genes is 22, which are 0.95% of the genes.
+            Filtered 1864 features, leaving 462 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2115 features, leaving 211 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2122 features, leaving 204 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2123 features, leaving 203 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2128 features, leaving 198 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2167 features, leaving 159 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2179 features, leaving 147 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2200 features, leaving 126 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2204 features, leaving 122 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2229 features, leaving 97 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2234 features, leaving 92 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2238 features, leaving 88 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2241 features, leaving 85 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2263 features, leaving 63 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2279 features, leaving 47 of the original 2326 features. Filtering result saved to new object.
+
+        .. figure::  clicom_all.png
+           :align:   center
+
+           Example plot of split_clicom(plot_style='all')
+        """
+        runner = clustering.CLICOMRunner(self.df.loc[:, self._numeric_columns], power_transform, evidence_threshold,
+                                         cluster_unclustered_features, min_cluster_size,
+                                         *parameter_dicts, plot_style=plot_style, split_plots=split_plots)
+        [clusterer] = runner.run()
+        n_clusters = clusterer.labels_.max() + 1
+        if n_clusters == 0:
+            print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
+        else:
+            unclustered = np.count_nonzero(clusterer.labels_ == -1)
+            print(f"Found {n_clusters} clusters of average size "
+                  f"{(len(clusterer.labels_) - unclustered) / n_clusters  :.2f}. "
+                  f"Number of unclustered genes is {unclustered}, "
+                  f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
+
+        filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
+                                         suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)])
+
+        return filt_objs
 
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1, metric: str = 'euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
@@ -2440,11 +2626,37 @@ class CountFilter(Filter):
         the probability with which each sample is a member of its assigned cluster, \
         in addition to returning the clustering results. Points which were categorized as noise have probability 0.
         :type return_probabilities: bool (default False)
-        :return: if `return_probabilities` is False, returns a tuple of CountFilter objects. \
+        :return: if `return_probabilities` is False, returns a tuple of CountFilter objects, \
+        each corresponding to a discovered cluster. \
         Otherswise, returns a tuple of CountFilter objects, and a numpy array containing the probability values.
 
-        #TODO: add sample image
-        """
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
+            >>> dev_stages.filter_low_reads(100)
+            Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
+            >>> clusters = dev_stages.split_hdbscan(min_cluster_size=75,metric='yr1',power_transform=True)
+            Found 14 clusters of average size 141.57. Number of unclustered genes is 344, which are 14.79% of the genes.
+            Filtered 2019 features, leaving 307 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2122 features, leaving 204 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2146 features, leaving 180 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2168 features, leaving 158 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2173 features, leaving 153 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2176 features, leaving 150 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2183 features, leaving 143 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2192 features, leaving 134 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2200 features, leaving 126 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2234 features, leaving 92 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2238 features, leaving 88 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2241 features, leaving 85 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2244 features, leaving 82 of the original 2326 features. Filtering result saved to new object.
+            Filtered 2246 features, leaving 80 of the original 2326 features. Filtering result saved to new object.
+
+        .. figure::  hdbscan_all.png
+           :align:   center
+
+           Example plot of split_hdbscan(plot_style='all')
+           """
         validation.validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, self.shape[0])
 
         runner = clustering.HDBSCANRunner(self.df.loc[:, self._numeric_columns], power_transform, min_cluster_size,
