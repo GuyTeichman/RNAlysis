@@ -15,7 +15,7 @@ import os
 import types
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple, Union, Callable
+from typing import Any, Dict, Iterable, List, Tuple, Union, Callable, Literal
 
 import matplotlib.pyplot as plt
 import numba
@@ -2250,7 +2250,8 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def split_kmeans(self, n_clusters: Union[int, List[int], str], n_init: int = 3, max_iter: int = 300,
-                     random_seed: int = None, power_transform: bool = False, plot_style: str = 'all',
+                     random_seed: int = None, power_transform: bool = False,
+                     plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
                      ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
@@ -2326,7 +2327,8 @@ class CountFilter(Filter):
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
                            linkage: str = 'average', power_transform: bool = False, distance_threshold: float = None,
-                           plot_style: str = 'all', split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
+                           plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
+                           max_n_clusters_estimate: int = 'auto'
                            ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
@@ -2404,7 +2406,8 @@ class CountFilter(Filter):
 
     def split_kmedoids(self, n_clusters: Union[int, List[int], str], n_init: int = 3, max_iter: int = 300,
                        random_seed: int = None, metric: str = 'euclidean', power_transform: bool = False,
-                       plot_style: str = 'all', split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
+                       plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
+                       max_n_clusters_estimate: int = 'auto'
                        ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
@@ -2482,7 +2485,8 @@ class CountFilter(Filter):
 
     def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, List[bool]] = False,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
-                     min_cluster_size: int = 15, plot_style: str = 'all', split_plots: bool = False
+                     min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
+                     split_plots: bool = False
                      ) -> Tuple['CountFilter']:
         """
         Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
@@ -2589,7 +2593,8 @@ class CountFilter(Filter):
 
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1, metric: str = 'euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
-                      power_transform: bool = False, plot_style: str = 'all', split_plots: bool = False,
+                      power_transform: bool = False, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
+                      split_plots: bool = False,
                       return_probabilities: bool = False
                       ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]]]:
         """
