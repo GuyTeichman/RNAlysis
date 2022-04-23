@@ -8,7 +8,7 @@ import itertools
 import types
 import warnings
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple, Union
+from typing import Dict, Iterable, List, Set, Tuple, Union, Literal
 
 import matplotlib.pyplot as plt
 import matplotlib_venn as vn
@@ -219,8 +219,8 @@ class FeatureSet:
         return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
     def go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
-                      statistical_test: str = 'fisher', biotype: str = 'protein_coding',
-                      background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                      statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
+                      biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                       biotype_ref_path: str = 'predefined', propagate_annotations: str = 'elim',
                       aspects: Union[str, Iterable[str]] = 'any', evidence_types: Union[str, Iterable[str]] = 'any',
                       excluded_evidence_types: Union[str, Iterable[str]] = (),
@@ -654,7 +654,8 @@ class FeatureSet:
                                    alpha: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
                                    background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                    attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                                   plot_log_scale: bool = True, plot_style: str = 'overlap', n_bins: int = 50,
+                                   plot_log_scale: bool = True,
+                                   plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: int = 50,
                                    save_csv: bool = False, fname=None, return_fig: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
 
