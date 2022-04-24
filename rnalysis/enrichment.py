@@ -8,7 +8,11 @@ import itertools
 import types
 import warnings
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple, Union, Literal
+from typing import Dict, Iterable, List, Set, Tuple, Union
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 import matplotlib.pyplot as plt
 import matplotlib_venn as vn

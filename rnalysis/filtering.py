@@ -10,12 +10,17 @@ When you save filtered/modified data, its new file name will include by default 
 
 """
 
-import re
 import os
+import re
 import types
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple, Union, Callable, Literal
+from typing import Any, Dict, Iterable, List, Tuple, Union, Callable
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 import matplotlib.pyplot as plt
 import numba
