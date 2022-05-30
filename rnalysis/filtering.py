@@ -58,7 +58,7 @@ class Filter:
     index_string: string
         A string of all feature indices in the current DataFrame separated by newline.
     """
-    __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data', 'shape': '(rows, columns)'}
+    __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data'}
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False):
 
@@ -87,7 +87,6 @@ class Filter:
         # check for duplicate indices
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same name/index.")
-        self.shape = self.df.shape
 
     def __repr__(self):
         return f"{type(self).__name__}('{self.fname}')"
@@ -126,8 +125,19 @@ class Filter:
         """
         return list(self.df.columns)
 
+    @property
+    def shape(self) -> Tuple[int, int]:
+        return self.df.shape
+
+    def _update(self, **kwargs):
+        for key, val in kwargs.items():
+            try:
+                setattr(self, key, val)
+            except AttributeError:
+                raise AttributeError(f"Cannot update attribute {key} for {type(self)} object: attribute does not exist")
+
     def _inplace(self, new_df: pd.DataFrame, opposite: bool, inplace: bool, suffix: str,
-                 printout_operation: str = 'filter'):
+                 printout_operation: str = 'filter', **filter_update_kwargs):
 
         """
         Executes the user's choice whether to filter in-place or create a new instance of the Filter object.
@@ -180,9 +190,8 @@ class Filter:
                 printout += 'Transformed'
             printout += ' inplace.'
             print(printout)
-            self.df, self.fname = new_df, new_fname
-            self.shape = self.df.shape
-        # if not inplace, copy self, modify the df/fname/shape properties of the copy, and return it
+            self._update(df=new_df, fname=new_fname, **filter_update_kwargs)
+        # if not inplace, copy self, modify the df/fname properties of the copy, and return it
         else:
             if printout_operation.lower() == 'filter':
                 printout += 'Filtering'
@@ -194,10 +203,8 @@ class Filter:
                 printout += 'Transformation'
             printout += ' result saved to new object.'
             print(printout)
-            tmp_df, tmp_fname = self.df, self.fname
-            self.df, self.fname = new_df, new_fname
             new_obj = self.__copy__()
-            self.df, self.fname = tmp_df, tmp_fname
+            new_obj._update(df=new_df, fname=new_fname, **filter_update_kwargs)
             return new_obj
 
     def save_csv(self, alt_filename: Union[None, str, Path] = None):
@@ -1904,14 +1911,21 @@ class CountFilter(Filter):
                             'jackknife': pwdist.jackknife_distance}
     _transforms = {True: generic.standard_box_cox, False: generic.standardize}
     _numeric_dtypes = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+    __slots__ = {'_is_normalized': 'indicates whether the values in this CountFilter were normalized'}
 
-    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False):
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
+                 is_normalized: bool = False):
         super().__init__(fname, drop_columns)
+        self._is_normalized = is_normalized
 
         if len(self._numeric_columns) < len(self.columns):
             warnings.warn(f"The following columns in the CountFilter are not numeric, and will therefore be ignored "
                           f"when running some CountFilter-specific functions: "
                           f"{set(self.df.columns).difference(self._numeric_columns)}")
+
+    @property
+    def is_normalized(self) -> bool:
+        return self._is_normalized
 
     @property
     def _numeric_columns(self) -> list:
@@ -2082,6 +2096,10 @@ class CountFilter(Filter):
 
         return averaged_df
 
+    def _validate_is_normalized(self):
+        if not self.is_normalized:
+            warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
+
     def normalize_to_rpm(self, special_counter_fname: Union[str, Path], inplace: bool = True):
 
         """
@@ -2117,7 +2135,8 @@ class CountFilter(Filter):
                 norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
                     r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
                 new_df[column] /= norm_factor
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize')
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
 
     def normalize_with_scaling_factors(self, scaling_factor_fname: Union[str, Path], inplace: bool = True):
 
@@ -2153,7 +2172,8 @@ class CountFilter(Filter):
             if column in numeric_cols:
                 norm_factor = size_factors[column].values
                 new_df[column] /= norm_factor
-        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize')
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
 
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
@@ -2181,7 +2201,7 @@ class CountFilter(Filter):
 
         """
         validation.validate_threshold(threshold)
-        validation.validate_is_normalized(self.fname)
+        self._validate_is_normalized()
 
         new_df = self.df.loc[[True if max(vals) > threshold else False for gene, vals in
                               self.df.loc[:, self._numeric_columns].iterrows()]]
@@ -2214,7 +2234,7 @@ class CountFilter(Filter):
 
         """
         validation.validate_threshold(threshold)
-        validation.validate_is_normalized(self.fname)
+        self._validate_is_normalized()
 
         high_expr = self.df.loc[[True if max(vals) > threshold else False for gene, vals in
                                  self.df.loc[:, self._numeric_columns].iterrows()]]
@@ -2248,7 +2268,7 @@ class CountFilter(Filter):
 
         """
         validation.validate_threshold(threshold)
-        validation.validate_is_normalized(self.fname)
+        self._validate_is_normalized()
 
         new_df = self.df.loc[self.df.sum(axis=1) >= threshold]
         suffix = f"_filt{threshold}sum"
@@ -2934,7 +2954,7 @@ class CountFilter(Filter):
 
 
         """
-        validation.validate_is_normalized(self.fname)
+        self._validate_is_normalized()
         assert isinstance(sample1, (str, list, tuple, set)) and isinstance(sample2, (str, list, tuple, set))
 
         xvals = np.log10(self.df[sample1].values + 1) if isinstance(sample1, str) else np.log10(
@@ -3004,7 +3024,7 @@ class CountFilter(Filter):
 
 
         """
-        validation.validate_is_normalized(self.fname)
+        self._validate_is_normalized()
         if samples == 'all':
             samples_df = self.df
         else:
@@ -3048,7 +3068,7 @@ class CountFilter(Filter):
            Example plot of enhanced_box_plot()
 
         """
-        validation.validate_is_normalized(self.fname)
+        self._validate_is_normalized()
         if samples == 'all':
             samples_df = self.df
         else:
@@ -3091,7 +3111,7 @@ class CountFilter(Filter):
 
 
         """
-        validation.validate_is_normalized(self.fname)
+        self._validate_is_normalized()
         if samples == 'all':
             samples_df = self.df
         else:
