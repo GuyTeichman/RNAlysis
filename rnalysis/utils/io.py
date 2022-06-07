@@ -1,4 +1,5 @@
 import concurrent.futures
+import functools
 import json
 import os
 import warnings
@@ -6,12 +7,41 @@ from functools import lru_cache
 from itertools import chain
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any
+from datetime import date
+import appdirs
 
 import numpy as np
 import pandas as pd
+import queue
 import requests
+import time
 
 from rnalysis.utils import parsing, validation, ontology, __path__
+
+
+def get_todays_cache_dir():
+    today = date.today().strftime('%Y_%m_%d')
+    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    return cache_dir.joinpath(today)
+
+
+def load_cached_file(filename: str):
+    directory = get_todays_cache_dir()
+    file_path = directory.joinpath(filename)
+    if file_path.exists():
+        with open(file_path) as f:
+            return f.read()
+    else:
+        return None
+
+
+def cache_file(content: str, filename: str):
+    directory = get_todays_cache_dir()
+    if not directory.exists():
+        directory.mkdir()
+    file_path = directory.joinpath(filename)
+    with open(file_path, 'w') as f:
+        f.write(content)
 
 
 def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
@@ -209,7 +239,8 @@ class GOlrAnnotationIterator:
         """
         Check and return the number of annotations on the GOlr server matching the user's query.
         """
-        return json.loads(self._golr_request(self.default_params))['response']['numFound']
+        return json.loads(self._golr_request(self.default_params, self._generate_cached_filename(None)))['response'][
+            'numFound']
 
     def _validate_parameters(self):
         """
@@ -226,16 +257,23 @@ class GOlrAnnotationIterator:
                 assert item in legals, f"Illegal item {item}. Legal items are {legals}."
 
     @staticmethod
-    def _golr_request(params: dict) -> str:
+    def _golr_request(params: dict, cached_filename: Union[str, None] = None) -> str:
         """
         Run a get request to the GOlr server with the specified parameters, and return the server's text response.
         :param params: the get request's parameters.
         :type params: dict
         """
-        req = requests.get(GOlrAnnotationIterator.URL, params=params)
-        if not req.ok:
-            req.raise_for_status()
-        return req.text
+        if cached_filename is not None:
+            cached_file = load_cached_file(cached_filename)
+            if cached_file is not None:
+                return cached_file
+
+        response = requests.get(GOlrAnnotationIterator.URL, params=params)
+        if not response.ok:
+            response.raise_for_status()
+        if cached_filename is not None:
+            cache_file(response.text, cached_filename)
+        return response.text
 
     @staticmethod
     def _parse_evidence_types(evidence_types: Union[str, Iterable[str]]) -> Set[str]:
@@ -288,6 +326,25 @@ class GOlrAnnotationIterator:
         else:
             return aspects
 
+    def _generate_cached_filename(self, start: Union[int, None]) -> str:
+        fname = f'{self.taxon_id}' + ''.join(
+            [f'{aspect}' for aspect in parsing.data_to_tuple(self.aspects, True)]) + ''.join(
+            [f'{evidence_type}' for evidence_type in parsing.data_to_tuple(self.evidence_types, True)])
+        # add union of all requested databases to query
+        if not self.databases == {'any'}:
+            fname += ''.join(f'{db}' for db in parsing.data_to_tuple(self.databases, True))
+        # add union of all requested qualifiers to query
+        if len(self.qualifiers) > 0:
+            fname += ''.join([f'{qual}' for qual in parsing.data_to_tuple(self.qualifiers, True)])
+
+        # exclude all 'excluded' items from query
+        fname += 'exc' + ''.join(
+            [f'{evidence_type}' for evidence_type in parsing.data_to_tuple(self.excluded_evidence_types, True)])
+        fname += ''.join([f'{db}' for db in parsing.data_to_tuple(self.excluded_databases, True)])
+        fname += ''.join([f'{qual}' for qual in parsing.data_to_tuple(self.excluded_qualifiers, True)])
+
+        return fname + str(start) + '.json'
+
     def _generate_query(self) -> List[str]:
         """
         Generate a Solr filter query (fq=...) to filter annotations based on the user's input.
@@ -328,7 +385,8 @@ class GOlrAnnotationIterator:
         processes = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for param_dict in param_dicts_list:
-                processes.append(executor.submit(self._golr_request, param_dict))
+                processes.append(executor.submit(self._golr_request, param_dict,
+                                                 self._generate_cached_filename(param_dict['start'])))
         for task in concurrent.futures.as_completed(processes):
             for record in json.loads(task.result())['response']['docs']:
                 yield record
@@ -599,5 +657,16 @@ def fetch_go_basic() -> ontology.DAGTree:
     :rtype: utils.ontology.DAGTree
     """
     url = 'http://current.geneontology.org/ontology/go-basic.obo'
+    cached_filename = 'go-basic.obo'
+    cached_file = load_cached_file(cached_filename)
+    if cached_file is not None:
+        lines = cached_file.split('\n')
+        try:
+            return ontology.DAGTree(lines)
+        except (ValueError, IndexError):
+            pass
+
     with requests.get(url, stream=True) as obo_stream:
-        return ontology.DAGTree(obo_stream.iter_lines())
+        content = obo_stream.content.decode('utf8')
+        cache_file(content, cached_filename)
+        return ontology.DAGTree(content.split('\n'))

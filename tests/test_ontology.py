@@ -13,9 +13,9 @@ def test_parse_go_id():
 
 def test_dag_tree_parser_api():
     file = 'tests/test_files/go_mini.obo'
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree = DAGTree(f, ('is_a', 'part_of', 'regulates'))
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree._parse_file(f)
 
 
@@ -25,7 +25,7 @@ def test_dag_tree_parser_construction():
                     {'GO:0034315': 0, 'GO:0006040': 0, 'GO:0006793': 0, 'GO:0009225': 0, 'GO:0009226': 0},
                     {'GO:2001315': 0, 'GO:2001313': 0}]
     data_version_truth = 'releases/2020-07-16'
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
 
     assert dag_tree.data_version == data_version_truth
@@ -82,7 +82,7 @@ def test_go_term_set_get_level():
 
 def test_go_term_get_parents():
     file = 'tests/test_files/go_mini.obo'
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
     parents_truth = {'GO:0034308': [], 'GO:0051125': [], 'GO:0034315': ['GO:0051125'], 'GO:0006040': ['GO:0034308'],
                      'GO:0006793': ['GO:0034308'], 'GO:0009225': ['GO:0034308'], 'GO:0009226': ['GO:0034308'],
@@ -95,7 +95,7 @@ def test_go_term_get_parents():
 
 def test_go_term_get_children():
     file = 'tests/test_files/go_mini.obo'
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
     children_truth = {'GO:0034308': ['GO:0006040', 'GO:0006793', 'GO:0009225', 'GO:0009226'],
                       'GO:0051125': ['GO:0034315'], 'GO:0034315': [], 'GO:0006040': ['GO:2001313'],
@@ -116,7 +116,7 @@ def test_dag_tree_parser_level_iterator():
     levels_truth.reverse()
     levels_truth_bioprocess.reverse()
     file = 'tests/test_files/go_mini.obo'
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
 
     level_iter = dag_tree.level_iter()
@@ -140,7 +140,7 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
                      'GO:2001315': ['GO:0009226', 'GO:0006793', 'GO:0034308'],
                      'GO:2001313': ['GO:0009225', 'GO:0006793', 'GO:0006040', 'GO:0034308']}
     file = 'tests/test_files/go_mini.obo'
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a', 'part_of', 'regulates'])
 
     for node in parents_truth:
@@ -155,7 +155,7 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
         assert ui_tree == parents_truth[last_node]
 
     file = 'tests/test_files/obo_for_go_tests.obo'
-    with open(file, 'rb') as f:
+    with open(file, 'r') as f:
         dag_tree = DAGTree(f, ['is_a'])
     parents_truth_file_2 = {'GO:0008150': [], 'GO:0050896': ['GO:0008150'], 'GO:0007610': ['GO:0008150'],
                             'GO:0042221': ['GO:0008150', 'GO:0050896'], 'GO:0009605': ['GO:0050896', 'GO:0008150'],

@@ -154,15 +154,18 @@ def test_golr_annotation_iterator_parse_evidence_types(monkeypatch, test_input, 
 def test_golr_annotation_iterator_get_n_annotations(monkeypatch):
     num_found_truth = 126311
 
-    def fake_request(self, params):
+    def fake_request(self, params, cached_filename):
         assert isinstance(self, GOlrAnnotationIterator)
         assert isinstance(params, dict)
+        assert cached_filename == 'test.json'
         with open(f'tests/test_files/golr_header.txt') as f:
             return f.readline()
 
     monkeypatch.setattr(GOlrAnnotationIterator, '_golr_request', fake_request)
+    monkeypatch.setattr(GOlrAnnotationIterator, '_generate_cached_filename', lambda self, start: 'test.json')
     golr = GOlrAnnotationIterator.__new__(GOlrAnnotationIterator)
     golr.default_params = {}
+
     assert golr._get_n_annotations() == num_found_truth
 
 
@@ -195,7 +198,17 @@ def test_golr_annotation_iterator_golr_request_connectivity(monkeypatch):
     assert isinstance(GOlrAnnotationIterator._golr_request(fake_params), str)
 
 
+def remove_cached_test_file(cached_filename: str):
+    try:
+        os.remove(io.get_todays_cache_dir().joinpath(cached_filename))
+    except FileNotFoundError:
+        pass
+
+
 def test_golr_annotation_iterator_golr_request(monkeypatch):
+    cached_filename = 'test.json'
+    remove_cached_test_file(cached_filename)
+
     correct_url = GOlrAnnotationIterator.URL
     correct_params = {'param': 'value', 'other_param': 'other_value'}
 
@@ -205,7 +218,17 @@ def test_golr_annotation_iterator_golr_request(monkeypatch):
         return MockResponse(text='the correct text')
 
     monkeypatch.setattr(requests, 'get', mock_get)
-    assert GOlrAnnotationIterator._golr_request(correct_params) == 'the correct text'
+    monkeypatch.setattr(GOlrAnnotationIterator, '_generate_cached_filename', lambda self, start: 'test.json')
+    assert GOlrAnnotationIterator._golr_request(correct_params, cached_filename) == 'the correct text'
+
+    def mock_get_uncached(url, params: dict):
+        raise AssertionError("This function should not be called if a cached file was found!")
+
+    monkeypatch.setattr(requests, 'get', mock_get_uncached)
+    try:
+        assert GOlrAnnotationIterator._golr_request(correct_params, cached_filename) == 'the correct text'
+    finally:
+        remove_cached_test_file(cached_filename)
 
     def mock_get_failed(url, params: dict):
         assert url == correct_url
@@ -213,8 +236,11 @@ def test_golr_annotation_iterator_golr_request(monkeypatch):
         return MockResponse(text='the correct text', status_code=404)
 
     monkeypatch.setattr(requests, 'get', mock_get_failed)
-    with pytest.raises(ConnectionError):
-        _ = GOlrAnnotationIterator._golr_request(correct_params)
+    try:
+        with pytest.raises(ConnectionError):
+            _ = GOlrAnnotationIterator._golr_request(correct_params)
+    finally:
+        remove_cached_test_file(cached_filename)
 
 
 def test_golr_annotation_iterator_parsing(monkeypatch):
@@ -234,13 +260,15 @@ def test_golr_annotation_iterator_parsing(monkeypatch):
                      {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0005783"},
                      {"source": "WB", "bioentity_internal_id": "WBGene00011481", "annotation_class": "GO:0005789"}]
 
-    def fake_request(self, params):
+    def fake_request(self, params, cached_filename):
         assert isinstance(self, GOlrAnnotationIterator)
         assert params == truth_params
+        assert cached_filename == 'test.json'
         with open(f'tests/test_files/golr_response.txt') as f:
             return f.readline()
 
     monkeypatch.setattr(GOlrAnnotationIterator, '_golr_request', fake_request)
+    monkeypatch.setattr(GOlrAnnotationIterator, '_generate_cached_filename', lambda self, start: 'test.json')
 
     request_params = {
         "q": "*:*",

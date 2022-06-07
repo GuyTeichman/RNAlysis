@@ -243,7 +243,7 @@ def test_elim_pvals(monkeypatch):
     threshold = 0.2  # make sure there are both significant and non-significant examples with our small bg size (30)
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
     truth = pd.read_csv('tests/test_files/go_pvalues_elim_truth.csv', index_col=0).sort_index()
-    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
+    with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
         dag_tree = ontology.DAGTree(f, ['is_a'])
     monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
 
@@ -264,7 +264,7 @@ def test_weight_pvals(monkeypatch):
     goa_df = pd.read_csv('tests/test_files/goa_table.csv', index_col=0).astype('bool')
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
     truth = pd.read_csv('tests/test_files/go_pvalues_weight_truth.csv', index_col=0).sort_index()
-    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
+    with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
         dag_tree = ontology.DAGTree(f, ['is_a'])
 
     monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
@@ -286,7 +286,7 @@ def test_allm_pvals(monkeypatch):
     threshold = 0.2  # make sure there are both significant and non-significant examples with our small bg size (30)
     gene_set = {'gene1', 'gene2', 'gene5', 'gene12', 'gene13', 'gene17', 'gene19', 'gene25', 'gene27', 'gene28'}
     truth = pd.read_csv('tests/test_files/go_pvalues_allm_truth.csv', index_col=0).sort_index()
-    with open('tests/test_files/obo_for_go_tests.obo', 'rb') as f:
+    with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
         dag_tree = ontology.DAGTree(f, ['is_a'])
     monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
 
@@ -890,17 +890,20 @@ def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pva
 
 
 def test_go_enrichment_runner_run(monkeypatch):
-    def get_taxon(self):
-        self.taxon_id = 'taxon_id'
+    organism_truth = 'my_organism'
+    def get_taxon(self, organism):
+        return 'taxon_id', organism
 
     def run(self):
         self.results = 'results'
 
     monkeypatch.setattr(EnrichmentRunner, 'run', run)
-    monkeypatch.setattr(GOEnrichmentRunner, 'get_organism', get_taxon)
+    monkeypatch.setattr(GOEnrichmentRunner, 'get_taxon_id', get_taxon)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.taxon_id, runner.organism = runner.get_taxon_id(organism_truth)
     runner.run()
     assert runner.results == 'results'
+    assert runner.organism == organism_truth
     assert runner.taxon_id == 'taxon_id'
 
 
@@ -936,7 +939,7 @@ def test_go_enrichment_runner_get_enrichment_func_invalid_value(test_input, err)
 @pytest.mark.parametrize('organism,truth',
                          [('auto', ('inferred_id', 'inferred_organism')),
                           ('c elegans', ('c elegans_mapped_id', 'organism'))])
-def test_go_enrichment_runner_get_organism(monkeypatch, organism, truth):
+def test_go_enrichment_runner_get_taxon_id(monkeypatch, organism, truth):
     def alt_infer_taxon_id(gene_set):
         assert isinstance(gene_set, set)
         return 'inferred_id', 'inferred_organism'
@@ -947,14 +950,14 @@ def test_go_enrichment_runner_get_organism(monkeypatch, organism, truth):
     runner.gene_set = {'gene1', 'gene2', 'gene4'}
     runner.organism = organism
 
-    runner.get_organism()
+    res_id, res_organism = runner.get_taxon_id(organism)
 
-    assert runner.taxon_id, runner.organism == truth
+    assert res_id, res_organism == truth
 
 
 def test_go_enrichment_runner_fetch_annotations(monkeypatch):
     monkeypatch.setattr(GOEnrichmentRunner, '_get_query_key', lambda self: 'the_query_key')
-    monkeypatch.setattr(GOEnrichmentRunner, '_generate_goa_df', lambda self: 'goa_df')
+    monkeypatch.setattr(GOEnrichmentRunner, '_generate_annotation_df', lambda self: 'goa_df')
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.fetch_annotations()
     assert runner.annotation_df == 'goa_df'
@@ -1116,7 +1119,7 @@ def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_
         assert n_bars == n_bars_truth
         return plt.Figure()
 
-    def go_dag_plot(dpi,**kwargs):
+    def go_dag_plot(dpi, **kwargs):
         assert plot_ontology_graph
 
     monkeypatch.setattr(GOEnrichmentRunner, 'enrichment_bar_plot', validate_params)
@@ -1279,7 +1282,7 @@ def test_go_enrichment_runner_generate_goa_df(monkeypatch):
     monkeypatch.setattr(parsing, 'sparse_dict_to_bool_df', sparse_dict_to_bool_df)
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
 
-    res = runner._generate_goa_df()
+    res = runner._generate_annotation_df()
     assert res == 'bool_df'
 
 
