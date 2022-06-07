@@ -38,7 +38,7 @@ def load_cached_file(filename: str):
 def cache_file(content: str, filename: str):
     directory = get_todays_cache_dir()
     if not directory.exists():
-        directory.mkdir()
+        directory.mkdir(parents=True)
     file_path = directory.joinpath(filename)
     with open(file_path, 'w') as f:
         f.write(content)
