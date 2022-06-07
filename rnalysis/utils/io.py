@@ -639,7 +639,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     return GeneIDTranslator(output)
 
 
-def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 500):
+def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
     if isinstance(ids, str):
         yield ids
     elif isinstance(ids, int):
