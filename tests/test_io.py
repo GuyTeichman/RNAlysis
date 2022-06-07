@@ -1,4 +1,6 @@
 import pytest
+import datetime
+import appdirs
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
@@ -466,3 +468,45 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
     res = map_gene_ids(ids, map_from, map_to)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
+
+
+def test_get_todays_cache_dir():
+    today = datetime.date.today()
+    today_str = str(today.year) + '_' + str(today.month).zfill(2) + '_' + str(today.day).zfill(2)
+    cache_dir_truth = os.path.join(appdirs.user_cache_dir('RNAlysis'), today_str)
+    assert cache_dir_truth == str(io.get_todays_cache_dir())
+
+
+def test_load_cached_file():
+    cached_filename = 'test.txt'
+    remove_cached_test_file(cached_filename)
+
+    cache_content_truth = "testing\n123"
+    cache_dir = io.get_todays_cache_dir()
+    path = os.path.join(cache_dir, cached_filename)
+
+    assert load_cached_file(cached_filename) is None
+
+    with open(path, 'x') as f:
+        f.write(cache_content_truth)
+
+    try:
+        assert load_cached_file(cached_filename) == cache_content_truth
+    finally:
+        remove_cached_test_file(cached_filename)
+
+
+def test_cache_file():
+    cached_filename = 'test.txt'
+    remove_cached_test_file(cached_filename)
+
+    cache_content_truth = "testing\n123"
+    cache_dir = io.get_todays_cache_dir()
+    path = os.path.join(cache_dir, cached_filename)
+
+    cache_file(cache_content_truth, cached_filename)
+    try:
+        with open(path, 'r') as f:
+            assert f.read() == cache_content_truth
+    finally:
+        remove_cached_test_file(cached_filename)
