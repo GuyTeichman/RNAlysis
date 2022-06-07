@@ -9,6 +9,7 @@ import types
 import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
+
 try:
     from typing import Literal
 except ImportError:
@@ -387,101 +388,11 @@ class FeatureSet:
 
         return runner.run()
 
-    def enrich_randomization_parallel(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                                      fdr: float = 0.05, reps: int = 10000,
-                                      biotype: str = 'protein_coding',
-                                      background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                                      attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
-                                      save_csv: bool = False, fname=None, return_fig: bool = False,
-                                      plot_horizontal: bool = True, random_seed: int = None
-                                      ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
-
-        """
-        Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
-        using a randomization test running in parallel. \
-        This function is depracated, and is replaced by enrich_randomization(parallel_processing=True). \
-        It will be removed in future versions of RNAlysis. \
-        The attributes are drawn from an Attribute Reference Table. \
-        Parallel processing makes this function generally faster than FeatureSet.enrich_randomization. \
-        Results should otherwise be the same between the two functions. \
-        To use it you must first start a parallel session, using the function 'general.start_parallel_session()'. \
-        The background set is determined by either the input variable ‘background_genes’, \
-        or by the input variable ‘biotype’ and a Biotype Reference Table. P-values are calculated using a \
-        randomization test with the formula p = (successes + 1)/(repeats + 1). \
-        This formula results in a positively-biased estimator of the real p-value \
-        (a conservative estimate of p-value). When the number of reps approaches infinity, \
-        the formula results in an unbiased estimator of the real p-value. \
-        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
-        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
-        appears with the smallest value in the scale.
-
-        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
-        :param attributes: An iterable of attribute names or attribute numbers \
-        (according to their order in the Attribute Reference Table). \
-        If 'all', all of the attributes in the Attribute Reference Table will be used. \
-        If None, a manual input prompt will be raised.
-        :type fdr: float between 0 and 1
-        :param fdr: Indicates the FDR threshold for significance.
-        :type reps: int larger than 0
-        :param reps: How many repetitions to run the randomization for. \
-        10,000 is the default. Recommended 10,000 or higher.
-        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
-        Default 'protein_coding'.
-        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
-        'all' will include all genomic features in the reference table, \
-        'protein_coding' will include only protein-coding genes from the reference table, etc. \
-        Cannot be specified together with 'background_genes'.
-        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
-        :param background_genes: a set of specific feature indices to be used as background genes. \
-        :type attr_ref_path: str or pathlib.Path (default='predefined')
-        :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
-        :type biotype_ref_path: str or pathlib.Path (default='predefined')
-        :param biotype_ref_path: the path of the Biotype Reference Table. \
-        Will be used to generate background set if 'biotype' is specified.
-        Cannot be specified together with 'biotype'.
-        :type save_csv: bool, default False
-        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
-        :type fname: str or pathlib.Path
-        :param fname: The full path and name of the file to which to save the results. For example: \
-        'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
-        :type return_fig: bool (default=False)
-        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_horizontal: bool (default=True)
-        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
-        will be plotted with a vertical plot.
-        :type random_seed: non-negative integer (default=None)
-        :type random_seed: The random seed used to initialize the pseudorandom generator for the randomization test. \
-        By default it is picked at random, but you can set it to a particular integer to get consistents results \
-        over multiple runs.
-        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
-        and a matplotlib Figure, if 'return_figure' is set to True.
-
-        .. figure::  plot_enrichment_results.png
-           :align:   center
-           :scale: 60 %
-
-           Example plot of enrich_randomization_parallel()
-
-
-        .. figure::  plot_enrichment_results_vertical.png
-           :align:   center
-           :scale: 60 %
-
-           Example plot of enrich_randomization_parallel(plot_horizontal = False)
-
-       """
-        warnings.warn("FeatureSet.enrich_randomization_parallel() is deprecated and will be removed "
-                      "in a future release. Please use Featureset.enrich_randomization() "
-                      "with the parameter 'parallel_processing=True' instead.", DeprecationWarning)
-        return self.enrich_randomization(attributes, fdr, reps, biotype, background_genes, attr_ref_path,
-                                         biotype_ref_path, save_csv, fname, return_fig, plot_horizontal, random_seed,
-                                         parallel=True)
-
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                              alpha: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                             return_nonsignificant: bool = True,
                              save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                              random_seed: int = None, parallel: bool = False
                              ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -524,6 +435,9 @@ class FeatureSet:
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
         Cannot be specified together with 'biotype'.
+        :param return_nonsignificant: if True (default), the results DataFrame will include all tested GO terms - \
+        both significant and non-significant terms. If False, only significant GO terms will be returned.
+        :type return_nonsignificant: bool (default=True)
         :type save_csv: bool (default=False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path (default=None)
@@ -562,16 +476,18 @@ class FeatureSet:
         """
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
-        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path, save_csv, fname,
-                                                    return_fig, plot_horizontal, self.set_name, parallel,
-                                                    'randomization', biotype, background_genes, biotype_ref_path,
-                                                    single_set=False, random_seed=random_seed, reps=reps)
+        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
+                                                    return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                                                    self.set_name, parallel, 'randomization', biotype, background_genes,
+                                                    biotype_ref_path, single_set=False, random_seed=random_seed,
+                                                    reps=reps)
         return runner.run()
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                               alpha: float = 0.05, biotype: str = 'protein_coding',
                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                               attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                              return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
                               plot_horizontal: bool = True, parallel: bool = True
                               ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -614,6 +530,9 @@ class FeatureSet:
         (default=None)
         :param background_genes: a set of specific feature indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
+        :param return_nonsignificant: if True (default), the results DataFrame will include all tested GO terms - \
+        both significant and non-significant terms. If False, only significant GO terms will be returned.
+        :type return_nonsignificant: bool (default=True)
         :type save_csv: bool (default=False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path (default=None)
@@ -648,10 +567,10 @@ class FeatureSet:
         """
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
-        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path, save_csv, fname,
-                                                    return_fig, plot_horizontal, self.set_name, parallel,
-                                                    'hypergeometric', biotype, background_genes, biotype_ref_path,
-                                                    single_set=False)
+        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
+                                                    return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                                                    self.set_name, parallel, 'hypergeometric', biotype,
+                                                    background_genes, biotype_ref_path, single_set=False)
         return runner.run()
 
     def non_categorical_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
@@ -934,7 +853,7 @@ class RankedSet(FeatureSet):
            Example plot of single_set_enrichment(plot_horizontal = False)
 
         """
-        runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path, save_csv,
+        runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path, True, save_csv,
                                                     fname, return_fig, plot_horizontal, self.set_name,
                                                     parallel=parallel, enrichment_func_name='xlmhg', single_set=True)
         return runner.run()
@@ -972,7 +891,7 @@ def plot_enrichment_results(results_df: pd.DataFrame, alpha=0.05, en_score_col: 
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
-    runner = enrichment_runner.EnrichmentRunner(set(), results_df['name'], alpha, '', False, '', True,
+    runner = enrichment_runner.EnrichmentRunner(set(), results_df['name'], alpha, '', True, False, '', True,
                                                 plot_horizontal, '', False, 'hypergeometric', 'all')
     runner.en_score_col = en_score_col
     runner.results = results_df

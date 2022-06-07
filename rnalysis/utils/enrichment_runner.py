@@ -35,6 +35,8 @@ class EnrichmentRunner:
                  'attributes': 'the list of attributes/terms to calculate enrichment for',
                  'alpha': 'the statistical signifiacnce threshold',
                  'attr_ref_path': 'path of the Attribute Reference Table to load, if such table exists',
+                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
+                                          'statistically significant after enrichment analysis',
                  'save_csv': 'indicates whether the results should be saved to a csv file',
                  'fname': 'name of the file to save results to',
                  'return_fig': 'indicates whether to return a matplotlib Figure after plotting the results',
@@ -55,15 +57,17 @@ class EnrichmentRunner:
     printout_params = "appear in the Attribute Reference Table"
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int], alpha: float,
-                 attr_ref_path: str, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool, set_name: str,
-                 parallel: bool, enrichment_func_name: str, biotypes=None, background_set: set = None,
-                 biotype_ref_path: str = None, single_set: bool = False, random_seed: int = None, **pvalue_kwargs):
+                 attr_ref_path: str, return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool,
+                 plot_horizontal: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
+                 background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
+                 random_seed: int = None, **pvalue_kwargs):
         self.results: pd.DataFrame = pd.DataFrame()
         self.annotation_df: pd.DataFrame = pd.DataFrame()
         self.gene_set = parsing.data_to_set(genes)
         self.attributes = attributes
         self.alpha = alpha
         self.attr_ref_path = ref_tables.get_attr_ref_path(attr_ref_path)
+        self.return_nonsignificant = return_nonsignificant
         self.save_csv = save_csv
 
         if self.save_csv:
@@ -431,6 +435,10 @@ class EnrichmentRunner:
         self.results = pd.DataFrame(unformatted_results_list, columns=columns).set_index('name')
         self._correct_multiple_comparisons()
 
+        # filter non-significant results
+        if not self.return_nonsignificant:
+            self.results = self.results[self.results['significant']]
+
     def _correct_multiple_comparisons(self):
         significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
                                                     alpha=self.alpha)
@@ -613,7 +621,8 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         self.plot_log_scale = plot_log_scale
         self.plot_style = plot_style
         self.n_bins = n_bins
-        super().__init__(genes, attributes, alpha, attr_ref_path, save_csv, fname, return_fig, True, set_name, parallel,
+        super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
+                         parallel,
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set=False)
 
     def _get_enrichment_func(self, pval_func_name: str):
@@ -756,7 +765,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  random_seed: int = None, ontology_graph_format='pdf', **pvalue_kwargs):
 
         self.propagate_annotations = propagate_annotations.lower()
-        super().__init__(genes, [], alpha, '', save_csv, fname, return_fig, plot_horizontal, set_name, parallel,
+        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                         set_name, parallel,
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
                          **pvalue_kwargs)
         self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
@@ -770,7 +780,6 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.excluded_databases = excluded_databases
         self.qualifiers = qualifiers
         self.excluded_qualifiers = excluded_qualifiers
-        self.return_nonsignificant = return_nonsignificant
         self.plot_ontology_graph = plot_ontology_graph
         self.ontology_graph_format = ontology_graph_format
         self.attributes_set: set = set()
@@ -861,11 +870,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _translate_gene_ids(self, sparse_annotation_dict: dict, source_to_gene_id_dict: dict):
         translated_sparse_annotation_dict = {}
+        sparse_dict_cp = sparse_annotation_dict.copy()
         for source in source_to_gene_id_dict:
             translator = io.map_gene_ids(source_to_gene_id_dict[source], source, self.gene_id_type)
-            for gene_id in sparse_annotation_dict.copy():
+            for gene_id in sparse_dict_cp.copy():
                 if gene_id in translator:
-                    translated_sparse_annotation_dict[translator[gene_id]] = sparse_annotation_dict.pop(gene_id)
+                    translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
         return translated_sparse_annotation_dict
 
     def _get_query_key(self):
