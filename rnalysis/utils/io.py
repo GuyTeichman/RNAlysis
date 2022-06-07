@@ -410,9 +410,16 @@ def _ensmbl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any
     # split the gene IDs into chunks of 1000 (the maximum allowed POST request size)
     data_chunks = parsing.partition_list(gene_ids, 1000)
     output = {}
-    for chunk in data_chunks:
-        data = {"ids": parsing.data_to_list(chunk)}
-        req = requests.post(url, headers=headers, data=data.__repr__().replace("'", '"'))
+    processes = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for chunk in data_chunks:
+            data = {"ids": parsing.data_to_list(chunk)}
+            processes.append(
+                executor.submit(requests.post, url, headers=headers, data=data.__repr__().replace("'", '"')))
+
+    # req = requests.post(url, headers=headers, data=data.__repr__().replace("'", '"'))
+    for task in concurrent.futures.as_completed(processes):
+        req = task.result()
         if not req.ok:
             req.raise_for_status()
         output.update(req.json())
