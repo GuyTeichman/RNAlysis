@@ -84,7 +84,7 @@ class DAGTree:
                  'parent_relationship_types': 'the types of relationships that constitute parenthood in the DAG Tree',
                  '_upper_induced_graphs': 'memoized upper-induced graphs'}
 
-    def __init__(self, line_iterator: Iterable[bytes],
+    def __init__(self, line_iterator: Iterable[str],
                  parent_relationship_types: Union[str, Iterable[str]] = ('is_a', 'part_of')):
         self.data_version = None
         self.go_terms: Dict[str, GOTerm] = {}
@@ -113,11 +113,11 @@ class DAGTree:
         except KeyError:
             return False
 
-    def _parse_file(self, line_iterator: Iterable[bytes]):
+    def _parse_file(self, line_iterator: Iterable[str]):
         current_term = None
         in_frame = False
         for line in line_iterator:
-            line = line.decode('utf8').strip()
+            line = line.strip()
             if in_frame:
                 if line.startswith('id: '):
                     current_term.set_id(parse_go_id(line))

@@ -8,7 +8,6 @@ from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
 
 import io as builtin_io
 import matplotlib.image as mpimg
-import appdirs
 import joblib
 import matplotlib.pyplot as plt
 import numba
@@ -755,12 +754,15 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  plot_ontology_graph: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
                  random_seed: int = None, ontology_graph_format='pdf', **pvalue_kwargs):
+
+        self.propagate_annotations = propagate_annotations.lower()
+        super().__init__(genes, [], alpha, '', save_csv, fname, return_fig, plot_horizontal, set_name, parallel,
+                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
+                         **pvalue_kwargs)
         self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
-        self.organism = organism
-        self.taxon_id = None
+        self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.gene_id_type = gene_id_type
-        self.propagate_annotations = propagate_annotations.lower()
         self.aspects = aspects
         self.evidence_types = evidence_types
         self.excluded_evidence_types = excluded_evidence_types
@@ -772,13 +774,6 @@ class GOEnrichmentRunner(EnrichmentRunner):
         self.plot_ontology_graph = plot_ontology_graph
         self.ontology_graph_format = ontology_graph_format
         self.attributes_set: set = set()
-        super().__init__(genes, [], alpha, '', save_csv, fname, return_fig, plot_horizontal, set_name, parallel,
-                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
-                         **pvalue_kwargs)
-
-    def run(self):
-        self.get_organism()
-        return super().run()
 
     def _get_enrichment_func(self, pval_func_name: str):
         enrichment_func = super()._get_enrichment_func(pval_func_name)
@@ -790,11 +785,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
                           f"Fisher's Exact test, while the rest of the methods will use the '{pval_func_name}' method.")
         return enrichment_func
 
-    def get_organism(self):
-        if isinstance(self.organism, str) and self.organism.lower() == 'auto':
-            self.taxon_id, self.organism = io.infer_taxon_from_gene_ids(self.gene_set)
+    def get_taxon_id(self, organism: str):
+        if isinstance(organism, str) and organism.lower() == 'auto':
+            return io.infer_taxon_from_gene_ids(self.gene_set)
         else:
-            self.taxon_id, self.organism = io.map_taxon_id(self.organism)
+            return io.map_taxon_id(organism)
 
     def fetch_annotations(self):
         # check if annotations for the requested query were previously fetched and cached
@@ -803,11 +798,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
             self.annotation_df = self.GOA_DF_QUERIES[query_key]
             return
         else:
-            self.annotation_df = self._generate_goa_df()
+            self.annotation_df = self._generate_annotation_df()
             # save query results to GOA_DF_QUERIES
             self.GOA_DF_QUERIES[query_key] = self.annotation_df
 
-    def _generate_goa_df(self) -> pd.DataFrame:
+    def _generate_annotation_df(self) -> pd.DataFrame:
         # fetch and process GO annotations
         sparse_annotation_dict, source_to_gene_id_dict = self._process_annotations()
         print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
@@ -964,13 +959,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
                         graph.edge(parent[3::], this_node[3::], label=relationship_label)
 
         # save and display graph
-        savepath = Path(appdirs.user_cache_dir('RNAlysis')).joinpath(
-            f'dag_tree_{namespace}.{self.ontology_graph_format}')
+        savepath = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}.{self.ontology_graph_format}')
         i = 0
         while savepath.exists():
             i += 1
-            savepath = Path(appdirs.user_cache_dir('RNAlysis')).joinpath(
-                f'dag_tree_{namespace}_{i}.{self.ontology_graph_format}')
+            savepath = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}_{i}.{self.ontology_graph_format}')
         graph.render(savepath, view=True, format=self.ontology_graph_format)
 
         # show graph in a matplotlib window
