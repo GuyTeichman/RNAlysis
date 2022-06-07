@@ -731,6 +731,120 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         return fig
 
 
+class KEGGEnrichmentRunner(EnrichmentRunner):
+    __slots__ = {'organism': 'the organism name for which to fetch GO Annotations',
+                 'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
+                 'gene_id_type': 'the type of gene ID index that is used',
+                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
+                                          'statistically significant after enrichment analysis',
+                 'plot_pathway_graphs': 'indicates whether to plot pathway graphs of the'
+                                        ' statistically significant pathways',
+                 'pathway_graphs_format': 'file format for the generated ontology graph',
+                 'attributes_set': 'set of the attributes/KEGG Pathways for which enrichment should be calculated',
+                 'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values'}
+    KEGG_DF_QUERIES = {}
+    printout_params = "have any KEGG Annotations asocciated with them"
+
+    def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
+                 return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
+                 plot_pathway_graphs: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
+                 background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
+                 random_seed: int = None, pathway_graphs_format='pdf', **pvalue_kwargs):
+        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                         set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
+                         single_set, random_seed, **pvalue_kwargs)
+        self.taxon_id, self.organism = self.get_taxon_id(organism)
+        self.gene_id_type = gene_id_type
+        self.plot_pathway_graphs = plot_pathway_graphs
+        self.pathway_graphs_format = pathway_graphs_format
+        self.pathway_names_dict: dict = {}
+
+    def get_taxon_id(self, organism: str):
+        if isinstance(organism, str) and organism.lower() == 'auto':
+            return io.infer_taxon_from_gene_ids(self.gene_set)
+        else:
+            return io.map_taxon_id(organism)
+
+    def _get_annotation_iterator(self):
+        return io.KEGGAnnotationIterator(self.taxon_id)
+
+    def format_results(self, unformatted_results_list: list):
+        if self.single_set:
+            columns = ['KEGG ID', 'name', 'samples', self.en_score_col, 'pval']
+        else:
+            columns = ['KEGG ID', 'name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
+        named_results_list = [[entry[0], self.pathway_names_dict[entry[0]]] + entry[1:] for entry in
+                              unformatted_results_list]
+        self.results = pd.DataFrame(named_results_list, columns=columns).set_index('KEGG ID')
+        self._correct_multiple_comparisons()
+        # filter non-significant results
+        if not self.return_nonsignificant:
+            self.results = self.results[self.results['significant']]
+
+    def fetch_annotations(self):
+        # check if annotations for the requested query were previously fetched and cached
+        query_key = self._get_query_key()
+        if query_key in self.KEGG_DF_QUERIES:
+            self.annotation_df, self.pathway_names_dict = self.KEGG_DF_QUERIES[query_key]
+            return
+        else:
+            self.annotation_df, self.pathway_names_dict = self._generate_annotation_df()
+            # save query results to KEGG_DF_QUERIES
+            self.KEGG_DF_QUERIES[query_key] = self.annotation_df, self.pathway_names_dict
+
+    def _generate_annotation_df(self) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        # fetch and process KEGG annotations
+        sparse_annotation_dict, pathway_name_dict = self._process_annotations()
+        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
+
+        # translate gene IDs
+        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict)
+
+        # get boolean DataFrame for enrichment
+        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
+                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
+        annotation_df[~annotation_df] = np.nan
+        return annotation_df, pathway_name_dict
+
+    def _process_annotations(self) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
+        desc = f"Fetching KEGG annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
+
+        sparse_annotation_dict = {}
+        pathway_name_dict = {}
+        annotation_iter = self._get_annotation_iterator()
+        assert annotation_iter.n_annotations > 0, "No KEGG annotations were found for the given parameters. " \
+                                                  "Please try again with a different set of parameters. "
+        for pathway_id, pathway_name, annotations in tqdm(annotation_iter, desc=desc,
+                                                          total=annotation_iter.n_annotations, unit=' annotations'):
+
+            pathway_name_dict[pathway_id] = pathway_name
+            # add annotation to annotation dictionary
+            for gene_id in annotations:
+                if gene_id not in sparse_annotation_dict:
+                    sparse_annotation_dict[gene_id] = (set())
+                sparse_annotation_dict[gene_id].add(pathway_id)
+
+        return sparse_annotation_dict, pathway_name_dict
+
+    def _translate_gene_ids(self, sparse_annotation_dict: dict):
+        source = 'KEGG'
+        translated_sparse_annotation_dict = {}
+        sparse_dict_cp = sparse_annotation_dict.copy()
+
+        translator = io.map_gene_ids(parsing.data_to_list(sparse_annotation_dict.keys()), source, self.gene_id_type)
+        for gene_id in sparse_annotation_dict:
+            if gene_id in translator:
+                translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
+        return translated_sparse_annotation_dict
+
+    def _get_query_key(self):
+        return self.taxon_id, self.gene_id_type
+
+    def fetch_attributes(self):
+        self.attributes = parsing.data_to_list(self.annotation_df.columns)
+        self.attributes_set = parsing.data_to_set(self.attributes)
+
+
 class GOEnrichmentRunner(EnrichmentRunner):
     __slots__ = {'dag_tree': 'DAG tree containing the hierarchical structure of all GO Terms',
                  'mod_annotation_dfs': "Additional copies of 'annotation_df' which are "

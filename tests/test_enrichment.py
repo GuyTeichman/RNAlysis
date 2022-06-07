@@ -556,3 +556,11 @@ def test_fetch_sets(objs: dict, truth: dict):
 def test_fetch_sets_bad_type(objs: dict):
     with pytest.raises(TypeError):
         _ = _fetch_sets(objs, __attr_ref__)
+
+
+def test_kegg_enrichment_api():
+    assert False
+
+
+def test_single_list_kegg_enrichment_api():
+    assert False

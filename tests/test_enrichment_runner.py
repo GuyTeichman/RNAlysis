@@ -1714,3 +1714,39 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
 
     assert pval == pval_truth
     assert log2escore == log2escore_truth
+
+
+def test_kegg_enrichment_runner_api():
+    assert False
+
+
+def test_kegg_enrichment_runner_get_taxon_id():
+    assert False
+
+
+def test_kegg_enrichment_runner_format_results():
+    assert False
+
+
+def test_kegg_enrichment_runner_fetch_annotations():
+    assert False
+
+
+def test_kegg_enrichment_runner_generate_annotation_df():
+    assert False
+
+
+def test_kegg_enrichment_runner_process_annotations():
+    assert False
+
+
+def test_kegg_enrichment_runner_translate_gene_ids():
+    assert False
+
+
+def test_kegg_enrichment_runner_get_query_key():
+    assert False
+
+
+def test_kegg_enrichment_runner_fetch_attributes():
+    assert False

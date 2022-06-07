@@ -510,3 +510,31 @@ def test_cache_file():
             assert f.read() == cache_content_truth
     finally:
         remove_cached_test_file(cached_filename)
+
+
+def test_kegg_annotation_iterator_api():
+    assert False
+
+
+def test_kegg_annotation_iterator_kegg_request():
+    assert False
+
+
+def test_kegg_annotation_iterator_kegg_request_connectivity():
+    assert False
+
+
+def test_kegg_annotation_iterator_get_pathways():
+    assert False
+
+
+def test_kegg_annotation_iterator_get_pathway_annotations():
+    assert False
+
+
+def test_kegg_annotation_iterator_get_kegg_organism_code():
+    assert False
+
+
+def test_kegg_annotation_iterator_get_taxon_tree():
+    assert False

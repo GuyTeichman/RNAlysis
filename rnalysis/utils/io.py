@@ -119,6 +119,127 @@ def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = 
     df.to_csv(new_fname, header=True, index=index)
 
 
+class KEGGAnnotationIterator:
+    URL = 'https://rest.kegg.jp/'
+    TAXON_MAPPING_URL = 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
+    REQUEST_DELAY_MILLIS = 250
+    REQ_MAX_ENTRIES = 10
+
+    def __init__(self, taxon_id: int):
+        self.pathway_names = {}
+        self.taxon_id = taxon_id
+        self.organism_code = self.get_kegg_organism_code(taxon_id)
+        self.pathway_names, self.n_annotations = self.get_pathways()
+        self.pathway_annotations = None
+
+    def _kegg_request(self, operation: str, arguments: Union[str, List[str]], cached_filename: Union[str, None] = None
+                      ) -> Tuple[str, bool]:
+        if cached_filename is not None:
+            cached_file = load_cached_file(cached_filename)
+            if cached_file is not None:
+                is_cached = True
+                return cached_file, is_cached
+
+        is_cached = False
+        address = self.URL + operation + '/' + '/'.join(parsing.data_to_list(arguments))
+        response = requests.get(address)
+        if not response.ok:
+            response.raise_for_status()
+        if cached_filename is not None:
+            cache_file(response.text, cached_filename)
+        return response.text, is_cached
+
+    def _generate_cached_filename(self, pathways: Tuple[str, ...]) -> str:
+        fname = f'{self.taxon_id}' + ''.join(pathways).replace('path:', '') + '.json'
+        return fname
+
+    @staticmethod
+    def _get_taxon_tree():
+        cached_filename = 'kegg_taxon_tree.json'
+        cached_file = load_cached_file(cached_filename)
+        if cached_file is not None:
+            try:
+                taxon_tree = json.loads(cached_file)
+                return taxon_tree
+            except json.decoder.JSONDecodeError:
+                pass
+        with requests.get(KEGGAnnotationIterator.TAXON_MAPPING_URL, params=dict(format='json')) as req:
+            content = req.content.decode('utf8')
+            cache_file(content, cached_filename)
+            taxon_tree = json.loads(content)
+        return taxon_tree
+
+    @staticmethod
+    @functools.lru_cache(1024)
+    def get_kegg_organism_code(taxon_id: int) -> str:
+        taxon_tree = KEGGAnnotationIterator._get_taxon_tree()
+        q = queue.Queue()
+        q.put(taxon_tree)
+        while not q.empty():
+            this_item = q.get()
+            if f"[TAX:{taxon_id}]" in this_item['name']:
+                child = this_item['children'][0]
+                organism_code = child['name'].split(" ")[0]
+                return organism_code
+            else:
+                children = this_item.get('children', tuple())
+                for child in children:
+                    q.put(child)
+        raise ValueError(f"Could not find organism code for taxon ID {taxon_id}. ")
+
+    def get_pathways(self) -> Tuple[Dict[str, str], int]:
+        pathway_names = {}
+        data, _ = self._kegg_request('list', ['pathway', self.organism_code])
+        data = data.split('\n')
+        for line in data:
+            split = line.split('\t')
+            if len(split) == 2:
+                pathway_code, pathway_name = split
+                pathway_names[pathway_code] = pathway_name
+
+        n_annotations = len(pathway_names)
+        return pathway_names, n_annotations
+
+    def get_pathway_annotations(self):
+        if self.pathway_annotations is not None:
+            for pathway, annotations in self.pathway_annotations.items():
+                yield pathway, annotations
+        else:
+            pathway_annotations = {}
+            partitioned_pathways = parsing.partition_list(list(self.pathway_names.keys()), self.REQ_MAX_ENTRIES)
+            for chunk in partitioned_pathways:
+                prev_time = time.time()
+                data, was_cached = self._kegg_request('get', '+'.join(chunk), self._generate_cached_filename(chunk))
+                entries = data.split('ENTRY')
+                for pathway, entry in zip(chunk, entries):
+                    pathway_name = self.pathway_names[pathway]
+                    pathway_annotations[pathway] = set()
+                    entry_split = entry.split('\n')
+                    genes_startline = 0
+                    genes_endline = 0
+                    for i, line in enumerate(entry_split):
+                        if line.startswith('GENE'):
+                            genes_startline = i
+                        elif line.startswith('COMPOUND'):
+                            genes_endline = i
+                            break
+                    for line_num in range(genes_startline, genes_endline):
+                        line = entry_split[line_num]
+                        if line.startswith('GENE'):
+                            line = line.replace('GENE', '', 1)
+                        gene_id = f"{self.organism_code}:{line.strip().split(' ')[0]}"
+                        pathway_annotations[pathway].add(gene_id)
+                        yield pathway, pathway_name, pathway_annotations[pathway]
+                if not was_cached:
+                    delay = max((self.REQUEST_DELAY_MILLIS / 1000) - (time.time() - prev_time), 0)
+                    time.sleep(delay)
+
+            self.pathway_annotations = pathway_annotations
+
+    def __iter__(self):
+        return self.get_pathway_annotations()
+
+
 class GOlrAnnotationIterator:
     """
     A class that fetches GO annotations from the GOlr (Gene Ontology Solr) server. \

@@ -238,18 +238,11 @@ class FeatureSet:
                       randomization_reps: int = 10000, random_seed: int = None,
                       parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
-        Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set \
-        using the Hypergeometric Test. The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
+        Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set. \
+        The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
         using the search terms defined by the user. \
         The background set is determined by either the input variable ‘background_genes’, \
         or by the input variable ‘biotype’ and a Biotype Reference Table. \
-        P-values are calculated using a hypergeometric test: \
-        Given M genes in the background set, n genes in the test set, \
-        with N genes from the background set belonging to a specific attribute (or 'success') \
-        and X genes from the test set belonging to that attribute. \
-        If we were to randomly draw n genes from the background set (without replacement), \
-        what is the probability of drawing X or more (in case of enrichment)/X or less (in case of depletion) \
-        genes belonging to the given attribute? \
         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
         appears with the smallest value in the scale.
@@ -347,7 +340,7 @@ class FeatureSet:
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
-        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        :return: a pandas DataFrame with GO terms as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
         .. figure::  ontology_graph.png
@@ -385,6 +378,125 @@ class FeatureSet:
                                                       self.set_name, parallel, statistical_test, biotype,
                                                       background_genes, biotype_ref_path,
                                                       ontology_graph_format=ontology_graph_format, **kwargs)
+
+        return runner.run()
+
+    def kegg_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
+                        statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
+                        biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                        biotype_ref_path: str = 'predefined', propagate_annotations: str = 'elim',
+                        return_nonsignificant: bool = False,
+                        save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                        plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
+                        randomization_reps: int = 10000, random_seed: int = None,
+                        parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+        """
+        Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
+        curated pathways against a background set. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
+        appears with the smallest value in the scale.
+
+        :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str (default='UniProtKB')
+        :type alpha: float between 0 and 1 (default=0.05)
+        :param alpha: Indicates the FDR threshold for significance.
+        :param statistical_test: determines the statistical test to be used for enrichment analysis. \
+        Note that some propagation methods support only some of the available statistical tests.
+        :type statistical_test: 'fisher', 'hypergeometric' or 'randomization' (default='fisher')
+        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all'. \
+        Default 'protein_coding'.
+        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
+        'all' will include all genomic features in the reference table, \
+        'protein_coding' will include only protein-coding genes from the reference table, etc. \
+        Cannot be specified together with 'background_genes'.
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object
+        :param background_genes: a set of specific feature indices to be used as background genes. \
+        Cannot be specified together with 'biotype'.
+        :type biotype_ref_path: str or pathlib.Path (default='predefined')
+        :param biotype_ref_path: the path of the Biotype Reference Table. \
+        Will be used to generate background set if 'biotype' is specified.
+        :param propagate_annotations: determines the propagation method of GO annotations. \
+        'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
+        'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
+        combination of all proopagation methods. To read more about the propagation methods, \
+        see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
+        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
+        :param return_nonsignificant: if True, the results DataFrame will include all tested pathways - \
+        both significant and non-significant ones. If False (default), only significant pathways will be returned.
+        :type return_nonsignificant: bool (default=False)
+        :type save_csv: bool, default False
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :type return_fig: bool (default=False)
+        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_pathway_graphs: bool (default=True)
+        :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
+        :type pathway_graphs_format: str (default='pdf')
+        :param pathway_graphs_format: the file format the pathway graphs will be generated in.
+        :type plot_horizontal: bool (default=True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
+        Otherwise, results will be plotted with a vertical plot.
+        :type random_seed: non-negative integer (default=None)
+        :type random_seed: if using a randomization test, determine the random seed used to initialize \
+        the pseudorandom generator for the randomization test. \
+        By default it is picked at random, but you can set it to a particular integer to get consistents results \
+        over multiple runs. If not using a randomization test, this parameter will not affect the analysis.
+        :param randomization_reps: if using a randomization test, determine how many randomization repititions to run. \
+        Otherwise, this parameter will not affect the analysis.
+        :type randomization_reps: int larger than 0 (default=10000)
+        :type parallel: bool (default=False)
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :return: a pandas DataFrame with the indicated pathway names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
+
+        .. figure::  kegg_pathway_graph.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of go_enrichment(plot_pathway_graphs=True)
+
+
+        .. figure::  plot_enrichment_results_kegg.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of kegg_enrichment()
+
+
+        .. figure::  plot_enrichment_results_kegg_vertical.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of kegg_enrichment(plot_horizontal = False)
+        """
+        if validation.isinstanceinh(background_genes, FeatureSet):
+            background_genes = background_genes.gene_set
+        if statistical_test.lower() == 'randomization':
+            kwargs = dict(reps=randomization_reps, random_seed=random_seed)
+        else:
+            kwargs = {}
+        runner = enrichment_runner.KEGGEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
+                                                        return_nonsignificant, save_csv,
+                                                        fname, return_fig, plot_horizontal, plot_pathway_graphs,
+                                                        self.set_name, parallel, statistical_test, biotype,
+                                                        background_genes, biotype_ref_path,
+                                                        pathway_graphs_format=pathway_graphs_format, **kwargs)
 
         return runner.run()
 
@@ -435,8 +547,8 @@ class FeatureSet:
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
         Cannot be specified together with 'biotype'.
-        :param return_nonsignificant: if True (default), the results DataFrame will include all tested GO terms - \
-        both significant and non-significant terms. If False, only significant GO terms will be returned.
+        :param return_nonsignificant: if True (default), the results DataFrame will include all tested attributes - \
+        both significant and non-significant ones. If False, only significant attributes will be returned.
         :type return_nonsignificant: bool (default=True)
         :type save_csv: bool (default=False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
@@ -530,8 +642,8 @@ class FeatureSet:
         (default=None)
         :param background_genes: a set of specific feature indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
-        :param return_nonsignificant: if True (default), the results DataFrame will include all tested GO terms - \
-        both significant and non-significant terms. If False, only significant GO terms will be returned.
+        :param return_nonsignificant: if True (default), the results DataFrame will include all tested attributes - \
+        both significant and non-significant ones. If False, only significant attributes will be returned.
         :type return_nonsignificant: bool (default=True)
         :type save_csv: bool (default=False)
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
@@ -682,7 +794,7 @@ class RankedSet(FeatureSet):
         `Florian Wagner <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/>`_). \
         The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
         using the search terms defined by the user. \
-        P-values are calculated using using the generalized Minimum Hypergeometric Test. \
+        P-values are calculated using the generalized Minimum Hypergeometric Test. \
         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
         appears with the smallest value in the scale.
@@ -793,6 +905,85 @@ class RankedSet(FeatureSet):
                                                       self.set_name,
                                                       parallel=parallel, enrichment_func_name='xlmhg', single_set=True,
                                                       ontology_graph_format=ontology_graph_format)
+
+        return runner.run()
+
+    def single_set_kegg_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
+                                   alpha: float = 0.05, return_nonsignificant: bool = False, save_csv: bool = False,
+                                   fname=None, return_fig: bool = False, plot_horizontal: bool = True,
+                                   plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
+                                   parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+        """
+        Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
+        curated pathways WITHOUT a background set, using the generalized Minimum Hypergeometric Test \
+        (XL-mHG, developed by `Prof. Zohar Yakhini and colleagues <https://dx.doi.org/10.1371/journal.pcbi.0030039/>`_ \
+        and generalized by \
+        `Florian Wagner <https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/>`_). \
+        P-values are calculated using the generalized Minimum Hypergeometric Test. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0) \
+        appears with the smallest value in the scale.
+
+        :param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, \
+        RNAlysis will attempt to map  the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str (default='UniProtKB')
+        :type alpha: float between 0 and 1
+        :param alpha: Indicates the FDR threshold for significance.
+        :type return_nonsignificant: bool (default=False)
+        :type save_csv: bool, default False
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), \
+        fname will be requested in a manual prompt.
+        :type return_fig: bool (default=False)
+        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default=True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
+        Otherwise, results will be plotted with a vertical plot.
+       :type plot_pathway_graphs: bool (default=True)
+        :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
+        :type pathway_graphs_format: str (default='pdf')
+        :param pathway_graphs_format: the file format the pathway graphs will be generated in.
+        :type parallel: bool (default=True)
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
+
+        .. figure::  pathway_graph_singlelist.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of single_set_kegg_enrichment(plot_pathway_graphs=True)
+
+
+        .. figure::  plot_enrichment_results_kegg_singlelist.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of single_set_kegg_enrichment()
+
+
+        .. figure::  plot_enrichment_results_kegg_singlelist_vertical.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of single_set_kegg_enrichment(plot_horizontal = False)
+        """
+        runner = enrichment_runner.KEGGEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
+                                                        return_nonsignificant, save_csv, fname, return_fig,
+                                                        plot_horizontal, plot_pathway_graphs, self.set_name,
+                                                        parallel=parallel, enrichment_func_name='xlmhg',
+                                                        single_set=True, pathway_graphs_format=pathway_graphs_format)
 
         return runner.run()
 
