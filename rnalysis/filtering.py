@@ -428,11 +428,10 @@ class Filter:
             Filtered 0 features, leaving 22 of the original 22 features. Filtered inplace.
 
         """
-        suffix = f"_{'_'.join(biotype)}"
+        biotype = parsing.data_to_list(biotype, sort=True)
         # make sure 'biotype' is a list of strings
-        assert isinstance(biotype, (str, list)), "biotype must be a string or a list!"
-        if isinstance(biotype, str):
-            biotype = [biotype]
+        assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
+        suffix = f"_{'_'.join(biotype)}"
         # load the biotype reference table
         ref = ref_tables.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
