@@ -793,7 +793,9 @@ class Filter:
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table')
-            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'}))
+            ref_df = pd.concat(
+                [ref_df, pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})],
+                axis=0, join='outer')
         if long_format:
             # additionally return descriptive statistics for each biotype
             self_df = self.df.__deepcopy__()
