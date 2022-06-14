@@ -450,7 +450,8 @@ class Filter:
         new_df = self.df.loc[gene_names]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_by_attribute(self, attributes: Union[str, List[str]] = None, mode='union', ref: str = 'predefined',
+    def filter_by_attribute(self, attributes: Union[str, List[str]] = None,
+                            mode: Literal['union', 'intersection'] = 'union', ref: str = 'predefined',
                             opposite: bool = False, inplace: bool = True):
 
         """
@@ -549,7 +550,7 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_attribute(self, attributes: Union[List[str], Tuple[str]], ref: str = 'predefined') -> tuple:
+    def split_by_attribute(self, attributes: List[str], ref: str = 'predefined') -> tuple:
 
         """
         Splits the features in the Filter object into multiple Filter objects, \
@@ -580,14 +581,14 @@ class Filter:
                                           f"Attribute '{attr}' is of type {type(attr)}"
         return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
-    def describe(self, percentiles: Union[list, Tuple, np.ndarray] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
+    def describe(self, percentiles: Iterable[float] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
 
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
         of the dataset’s distribution, excluding NaN values. \
         For more information see the documentation of pandas.DataFrame.describe.
 
-        :type percentiles: list-like of numbers, optional
+        :type percentiles: list-like of floats (default=(0.01, 0.25, 0.5, 0.75, 0.99))
         :param percentiles: The percentiles to include in the output. \
         All should fall between 0 and 1. \
         The default is [.25, .5, .75], which returns the 25th, 50th, and 75th percentiles.
@@ -803,7 +804,8 @@ class Filter:
             # return just the number of genes/indices belonging to each biotype
             return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
 
-    def number_filters(self, column: str, operator: str, value, opposite: bool = False, inplace: bool = True):
+    def number_filters(self, column: str, operator: Literal['greater than', 'equals', 'lesser than'], value: float,
+                       opposite: bool = False, inplace: bool = True):
 
         """
         Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.
@@ -812,7 +814,7 @@ class Filter:
         :param column: name of the column to filter by
         :type operator: str: 'gt' / 'greater than' / '>', 'eq' / 'equals' / '=', 'lt' / 'lesser than' / '<'
         :param operator: the operator to filter the column by (greater than, equal or lesser than)
-        :type value: number (int or float)
+        :type value: float
         :param value: the value to filter by
         :type opposite: bool
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
@@ -865,7 +867,8 @@ class Filter:
         # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def text_filters(self, column: str, operator: str, value: str, opposite: bool = False, inplace: bool = True):
+    def text_filters(self, column: str, operator: Literal['equals', 'contains', 'starts with', 'ends with'], value: str,
+                     opposite: bool = False, inplace: bool = True):
 
         """
         Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.
@@ -1159,7 +1162,7 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @staticmethod
-    def _return_type(index_set: set, return_type: str):
+    def _return_type(index_set: set, return_type: Literal['set', 'str']):
         assert isinstance(return_type, str), "'return_type' must be a string!!"
         if return_type == 'set':
             return index_set
@@ -1168,7 +1171,7 @@ class Filter:
         else:
             raise ValueError(f"'return type' must be either 'set' or 'str', instead got '{return_type}'.")
 
-    def _set_ops(self, others, return_type, op: Any, **kwargs):
+    def _set_ops(self, others, return_type: Literal['set', 'str'], op: Any, **kwargs):
         """
         Apply the supplied set operation (union/intersection/difference/symmetric difference) to the supplied objects.
 
@@ -1202,7 +1205,8 @@ class Filter:
                 raise e
         return Filter._return_type(op_indices, return_type)
 
-    def intersection(self, *others: Union['Filter', set], return_type: str = 'set', inplace: bool = False):
+    def intersection(self, *others: Union['Filter', set], return_type: Literal['set', 'str'] = 'set',
+                     inplace: bool = False):
 
         """
         Keep only the features that exist in ALL of the given Filter objects/sets. \
@@ -1245,7 +1249,7 @@ class Filter:
             return new_set
 
     def majority_vote_intersection(self, *others: Union['Filter', set], majority_threshold: float = 0.5,
-                                   return_type: str = 'set'):
+                                   return_type: Literal['set', 'str'] = 'set'):
 
         """
         Returns a set/string of the features that appear in at least \
@@ -1278,7 +1282,7 @@ class Filter:
                                 majority_threshold=majority_threshold)
         return new_set
 
-    def union(self, *others: Union['Filter', set], return_type: str = 'set'):
+    def union(self, *others: Union['Filter', set], return_type: Literal['set', 'str'] = 'set'):
 
         """
         Returns a set/string of the union of features between multiple Filter objects/sets \
@@ -1313,7 +1317,8 @@ class Filter:
         # union always returns a set/string (What is the meaning of in-place union between two different tables?)
         return self._set_ops(others, return_type, set.union)
 
-    def difference(self, *others: Union['Filter', set], return_type: str = 'set', inplace: bool = False):
+    def difference(self, *others: Union['Filter', set], return_type: Literal['set', 'str'] = 'set',
+                   inplace: bool = False):
 
         """
         Keep only the features that exist in the first Filter object/set but NOT in the others. \
@@ -1360,7 +1365,7 @@ class Filter:
             new_set = self._set_ops(others, return_type, set.difference)
             return new_set
 
-    def symmetric_difference(self, other: Union['Filter', set], return_type: str = 'set'):
+    def symmetric_difference(self, other: Union['Filter', set], return_type: Literal['set', 'str'] = 'set'):
 
         """
         Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second, \
@@ -1461,8 +1466,8 @@ class FoldChangeFilter(Filter):
         """
         return [self.df.name]
 
-    def randomization_test(self, ref, alpha: float = 0.05, reps=10000, save_csv: bool = False, fname=None,
-                           random_seed: int = None) -> pd.DataFrame:
+    def randomization_test(self, ref, alpha: float = 0.05, reps: int = 10000, save_csv: bool = False,
+                           fname: Union[str, None] = None, random_seed: int = None) -> pd.DataFrame:
 
         """
         Perform a randomization test to examine whether the fold change of a group of specific genomic features \
@@ -1578,7 +1583,8 @@ class FoldChangeFilter(Filter):
         new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc].dropna()
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_fold_change_direction(self, direction: str = 'pos', opposite: bool = False, inplace: bool = True):
+    def filter_fold_change_direction(self, direction: Literal['pos', 'neg'] = 'pos', opposite: bool = False,
+                                     inplace: bool = True):
 
         """
         Filters out features according to the direction in which they changed between the two conditions.
@@ -1773,7 +1779,8 @@ class DESeqFilter(Filter):
         new_df = self.df[np.abs(self.df[self.log2fc_col]) >= abslog2fc]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_fold_change_direction(self, direction: str = 'pos', opposite: bool = False, inplace: bool = True):
+    def filter_fold_change_direction(self, direction: Literal['pos', 'neg'] = 'pos', opposite: bool = False,
+                                     inplace: bool = True):
 
         """
         Filters out features according to the direction in which they changed between the two conditions.
@@ -2273,7 +2280,8 @@ class CountFilter(Filter):
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_kmeans(self, n_clusters: Union[int, List[int], str], n_init: int = 3, max_iter: int = 300,
+    def split_kmeans(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
+                     max_iter: int = 300,
                      random_seed: int = None, power_transform: bool = False,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
@@ -2349,7 +2357,8 @@ class CountFilter(Filter):
         # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_hierarchical(self, n_clusters: Union[int, List[int], str, None], metric: str = 'euclidean',
+    def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette'], None],
+                           metric: str = 'euclidean',
                            linkage: str = 'average', power_transform: bool = False, distance_threshold: float = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: int = 'auto'
@@ -2428,7 +2437,8 @@ class CountFilter(Filter):
         # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_kmedoids(self, n_clusters: Union[int, List[int], str], n_init: int = 3, max_iter: int = 300,
+    def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
+                       max_iter: int = 300,
                        random_seed: int = None, metric: str = 'euclidean', power_transform: bool = False,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: int = 'auto'
@@ -2616,7 +2626,7 @@ class CountFilter(Filter):
         return filt_objs
 
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1, metric: str = 'euclidean',
-                      cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
+                      cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
                       power_transform: bool = False, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False,
                       return_probabilities: bool = False
@@ -2711,7 +2721,8 @@ class CountFilter(Filter):
         # noinspection PyUnboundLocalVariable
         return [filt_objs, probabilities] if return_probabilities else filt_objs
 
-    def clustergram(self, sample_names: list = 'all', metric: str = 'euclidean', linkage: str = 'average'):
+    def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'euclidean',
+                    linkage: str = 'average'):
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
@@ -2819,8 +2830,9 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def pca(self, sample_names: list = 'all', n_components: int = 3, power_transform: bool = False,
-            sample_grouping: list = None, labels: bool = True) -> Tuple[PCA, List[plt.Figure]]:
+    def pca(self, sample_names: Union[List[str], Literal['all']] = 'all', n_components: int = 3,
+            power_transform: bool = False, sample_grouping: list = None,
+            labels: bool = True) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
          variance between the different samples. The function will automatically plot Principal Component #1 \
@@ -2994,7 +3006,8 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def box_plot(self, samples='all', notch: bool = True, scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
+    def box_plot(self, samples: Union[List[str], Literal['all']] = 'all', notch: bool = True, scatter: bool = False,
+                 ylabel: str = 'log10(RPM + 1)'):
         """
         Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -3041,7 +3054,8 @@ class CountFilter(Filter):
         plt.show()
         return box
 
-    def enhanced_box_plot(self, samples='all', scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
+    def enhanced_box_plot(self, samples: Union[List[str], Literal['all']] = 'all', scatter: bool = False,
+                          ylabel: str = 'log10(RPM + 1)'):
         """
         Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -3085,7 +3099,8 @@ class CountFilter(Filter):
         plt.show()
         return boxen
 
-    def violin_plot(self, samples: Union[str, List[str]] = 'all', ylabel: str = '$\log_10$(normalized reads + 1)'):
+    def violin_plot(self, samples: Union[Literal['all'], List[str]] = 'all',
+                    ylabel: str = '$\log_10$(normalized reads + 1)'):
         """
         Generates a violin plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
