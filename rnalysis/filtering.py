@@ -707,7 +707,7 @@ class Filter:
             WBGene00044951
 
         """
-        return "\n".join(list(self.df.index))
+        return "\n".join((str(ind) for ind in self.df.index))
 
     def print_features(self):
 
