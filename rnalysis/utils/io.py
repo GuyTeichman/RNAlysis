@@ -7,7 +7,7 @@ from functools import lru_cache
 from itertools import chain
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any
-from datetime import date
+from datetime import date, datetime
 import appdirs
 
 import numpy as np
@@ -798,3 +798,9 @@ def fetch_go_basic() -> ontology.DAGTree:
         content = obo_stream.content.decode('utf8')
         cache_file(content, cached_filename)
         return ontology.DAGTree(content.split('\n'))
+
+
+def get_datetime():
+    now = datetime.now()
+    now_str = now.strftime('%H:%M:%S %Y/%m/%d')
+    return now_str
