@@ -875,7 +875,7 @@ class Filter:
 
         :type column: str
         :param column: name of the column to filter by
-        :type operator: str: 'eq' / 'equals' / '=', 'ct' / 'contains' / 'in', 'bw' / 'begins with', 'ew' / 'ends with'
+        :type operator: str: 'eq' / 'equals' / '=', 'ct' / 'contains' / 'in', 'sw' / 'starts with', 'ew' / 'ends with'
         :param operator: the operator to filter the column by (equals, contains, starts with, ends with)
         :type value: number (int or float)
         :param value: the value to filter by
@@ -2628,8 +2628,7 @@ class CountFilter(Filter):
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1, metric: str = 'euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
                       power_transform: bool = False, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                      split_plots: bool = False,
-                      return_probabilities: bool = False
+                      split_plots: bool = False, return_probabilities: bool = False
                       ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]]]:
         """
         Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
