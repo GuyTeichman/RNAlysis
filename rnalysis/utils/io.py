@@ -599,44 +599,30 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
 def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     """
     Maps a given query (taxon name or NCBI Taxon ID) to the best-matching taxon from the NCBI taxonomy database. \
-    Mapping is done through UniProt Taxonomy: https://www.uniprot.org/taxonomy/?
+    Mapping is done through UniProt Taxonomy: https://rest.uniprot.org/taxonomy/search?
 
     :param taxon_name: a partial/full taxon name (str) or NCBI Taxon ID (int) to map
     :type taxon_name: int or str
     :return: a tuple of the best-matching taxon's NCBI Taxon ID and full scientific name.
     :rtype: Tuple[int ,str]
     """
-    url = 'https://www.uniprot.org/taxonomy/?'
+    url = 'https://rest.uniprot.org/taxonomy/search?'
 
     params = {
-        'format': 'tab',
+        'format': 'tsv',
         'query': taxon_name,
-        'sort': 'score'
     }
     req = requests.get(url, params=params)
     if not req.ok:
         req.raise_for_status()
-    res = req.text.splitlines()
-    if len(res) == 0:
+    res = pd.read_csv(StringIO(req.text), sep='\t').sort_values(by='Taxon Id', ascending=True)
+    if res.shape[0] == 0:
         raise ValueError(f"No taxons match the search query '{taxon_name}'.")
-    header = res[0].split('\t')
 
-    if isinstance(taxon_name, int):
-        matched_taxon = None
-        for line in res[1::]:
-            split_line = line.split('\t')
-            if int(split_line[0]) == taxon_name:
-                matched_taxon = split_line
-                break
-        if matched_taxon is None:
-            matched_taxon = res[1].split('\t')
-    else:
-        best_candidate_line = np.argmin([int(line.split('\t')[0]) for line in res[1::]])
-        matched_taxon = res[best_candidate_line + 1].split('\t')
+    taxon_id = int(res['Taxon Id'].iloc[0])
+    scientific_name = res['Scientific name'].iloc[0]
 
-    taxon_id = int(matched_taxon[header.index('Taxon')])
-    scientific_name = matched_taxon[header.index('Scientific name')]
-    if len(res) > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
+    if res.shape[0] > 1 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
             f"Found {len(res) - 1} taxons matching the search query '{taxon_name}'. "
             f"Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).")
