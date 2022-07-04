@@ -1,6 +1,7 @@
-import pytest
 import datetime
-import appdirs
+
+import pytest
+
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
@@ -301,9 +302,9 @@ def test_map_taxon_id(monkeypatch):
     taxon_name = 'c elegans'
 
     def mock_requests_get(url, params):
-        assert url == 'https://www.uniprot.org/taxonomy/?'
-        assert params == {'format': 'tab', 'query': taxon_name, 'sort': 'score'}
-        return MockResponse(text='Taxon\tMnemonic\tScientific name\tCommon name\tSynonym\tOther Names\tReviewed\t'
+        assert url == 'https://rest.uniprot.org/taxonomy/search?'
+        assert params == {'format': 'tsv', 'query': taxon_name}
+        return MockResponse(text='Taxon Id\tMnemonic\tScientific name\tCommon name\tSynonym\tOther Names\tReviewed\t'
                                  'Rank\tLineage\tParent\tVirus hosts\n6239\tCAEEL\tCaenorhabditis elegans\t\t\t'
                                  'Caenorhabditis elegans (Maupas, 1900); Rhabditis elegans; Rhabditis elegans Maupas, '
                                  '1900; roundworm\treviewed\tSpecies\tEukaryota; Metazoa; Ecdysozoa; Nematoda; '
@@ -326,7 +327,7 @@ def test_map_taxon_id_no_results(monkeypatch):
 def test_map_taxon_id_multiple_results(monkeypatch):
     def mock_requests_get(url, params):
         return MockResponse(
-            text='Taxon\tScientific name\n9615\tCanis lupus familiaris\n2509620\t'
+            text='Taxon Id\tScientific name\n9615\tCanis lupus familiaris\n2509620\t'
                  'Wlobachia endosymbiont of Canis lupus familiaris\n990119\tCanis lupus x Canis lupus familiaris')
 
     monkeypatch.setattr(requests, 'get', mock_requests_get)
