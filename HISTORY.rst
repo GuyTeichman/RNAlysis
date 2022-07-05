@@ -4,8 +4,7 @@ History
 
 2.1.1 (2022-07-05)
 ------------------
-* This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API.
-Moreover, this version slightly improves the performance of some functions.
+* This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API. Moreover, this version slightly improves the performance of some functions.
 
 Changed
 *******
