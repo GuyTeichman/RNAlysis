@@ -387,6 +387,7 @@ class FeatureSet:
                                       biotype: str = 'protein_coding',
                                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                       attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                                      return_nonsignificant: bool = True,
                                       save_csv: bool = False, fname=None, return_fig: bool = False,
                                       plot_horizontal: bool = True, random_seed: int = None
                                       ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -473,8 +474,8 @@ class FeatureSet:
                       "in a future release. Please use Featureset.enrich_randomization() "
                       "with the parameter 'parallel_processing=True' instead.", DeprecationWarning)
         return self.enrich_randomization(attributes, fdr, reps, biotype, background_genes, attr_ref_path,
-                                         biotype_ref_path, save_csv, fname, return_fig, plot_horizontal, random_seed,
-                                         parallel=True)
+                                         biotype_ref_path, return_nonsignificant, save_csv, fname, return_fig,
+                                         plot_horizontal, random_seed, parallel=True)
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                              alpha: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding',
