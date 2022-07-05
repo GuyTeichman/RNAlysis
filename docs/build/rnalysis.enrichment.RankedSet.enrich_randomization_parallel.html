@@ -140,6 +140,8 @@
 </dd>
 </dl>
 <p>Cannot be specified together with ‘biotype’.
+:param return_nonsignificant: if True, the results DataFrame will include all tested pathways -         both significant and non-significant ones. If False (default), only significant pathways will be returned.
+:type return_nonsignificant: bool (default=False)
 :type save_csv: bool, default False
 :param save_csv: If True, will save the results to a .csv file, under the name specified in ‘fname’.
 :type fname: str or pathlib.Path
