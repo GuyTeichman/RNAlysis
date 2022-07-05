@@ -226,7 +226,8 @@ class FeatureSet:
     def go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                       statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                       biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                      biotype_ref_path: str = 'predefined', propagate_annotations: str = 'elim',
+                      biotype_ref_path: str = 'predefined',
+                      propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
                       aspects: Union[str, Iterable[str]] = 'any', evidence_types: Union[str, Iterable[str]] = 'any',
                       excluded_evidence_types: Union[str, Iterable[str]] = (),
                       databases: Union[str, Iterable[str]] = 'any',
@@ -235,7 +236,7 @@ class FeatureSet:
                       excluded_qualifiers: Union[str, Iterable[str]] = 'not', return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                       plot_ontology_graph: bool = True, ontology_graph_format: str = 'pdf',
-                      randomization_reps: int = 10000, random_seed: int = None,
+                      randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                       parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set. \
@@ -384,11 +385,10 @@ class FeatureSet:
     def kegg_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                         statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                         biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                        biotype_ref_path: str = 'predefined', propagate_annotations: str = 'elim',
-                        return_nonsignificant: bool = False,
+                        biotype_ref_path: str = 'predefined', return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
-                        randomization_reps: int = 10000, random_seed: int = None,
+                        randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                         parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
@@ -425,13 +425,6 @@ class FeatureSet:
         :type biotype_ref_path: str or pathlib.Path (default='predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
-        :param propagate_annotations: determines the propagation method of GO annotations. \
-        'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
-        'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
-        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
-        combination of all proopagation methods. To read more about the propagation methods, \
-        see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
-        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
         :param return_nonsignificant: if True, the results DataFrame will include all tested pathways - \
         both significant and non-significant ones. If False (default), only significant pathways will be returned.
         :type return_nonsignificant: bool (default=False)
@@ -506,7 +499,7 @@ class FeatureSet:
                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
                              return_nonsignificant: bool = True,
                              save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                             random_seed: int = None, parallel: bool = False
+                             random_seed: Union[int, None] = None, parallel: bool = False
                              ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
@@ -693,6 +686,37 @@ class FeatureSet:
                                    plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: int = 50,
                                    save_csv: bool = False, fname=None, return_fig: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
+        """
+        #TODO
+        :param attributes:
+        :type attributes:
+        :param alpha:
+        :type alpha:
+        :param parametric_test:
+        :type parametric_test:
+        :param biotype:
+        :type biotype:
+        :param background_genes:
+        :type background_genes:
+        :param attr_ref_path:
+        :type attr_ref_path:
+        :param biotype_ref_path:
+        :type biotype_ref_path:
+        :param plot_log_scale:
+        :type plot_log_scale:
+        :param plot_style:
+        :type plot_style: 'overlap' or 'interleaved' (default='overlap')
+        :param n_bins:
+        :type n_bins:
+        :param save_csv:
+        :type save_csv:
+        :param fname:
+        :type fname:
+        :param return_fig:
+        :type return_fig:
+        :return:
+        :rtype:
+        """
 
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
@@ -772,7 +796,8 @@ class RankedSet(FeatureSet):
         return super()._set_ops(others, op)
 
     def single_set_go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
-                                 alpha: float = 0.05, propagate_annotations: str = 'elim',
+                                 alpha: float = 0.05,
+                                 propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
                                  aspects: Union[str, Iterable[str]] = 'any',
                                  evidence_types: Union[str, Iterable[str]] = 'any',
                                  excluded_evidence_types: Union[str, Iterable[str]] = (),
