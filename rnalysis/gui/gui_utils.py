@@ -12,6 +12,27 @@ from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
 
 
+class MandatoryComboBox(QtWidgets.QComboBox):
+    def __init__(self, default_choice: str, parent=None):
+        super().__init__(parent)
+        self.default_choice = default_choice
+        self.addItem(self.default_choice)
+        self.currentTextChanged.connect(self.set_bg_color)
+
+    def clear(self) -> None:
+        super().clear()
+        self.addItem(self.default_choice)
+
+    def set_bg_color(self):
+        if self.is_legal():
+            self.setStyleSheet("MandatoryComboBox{}")
+        else:
+            self.setStyleSheet("MandatoryComboBox{background : #DB4325;color : #FFFFFF;}")
+
+    def is_legal(self):
+        return self.currentText() != self.default_choice
+
+
 class MinMaxDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
