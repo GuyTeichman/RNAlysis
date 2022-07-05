@@ -79,7 +79,7 @@ Credits
 
 How do I cite *RNAlysis*?
 **************************
-Teichman, G. (2021) RNAlysis: RNA Sequencing analysis pipeline (Python package version 2.1.0).
+Teichman, G. (2021) RNAlysis: RNA Sequencing analysis pipeline (Python package version 2.1.1).
 
 Development Lead
 ******************
