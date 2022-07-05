@@ -691,35 +691,70 @@ class FeatureSet:
                                    save_csv: bool = False, fname=None, return_fig: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
         """
-        #TODO
-        :param attributes:
-        :type attributes:
-        :param alpha:
-        :type alpha:
-        :param parametric_test:
-        :type parametric_test:
-        :param biotype:
-        :type biotype:
-        :param background_genes:
-        :type background_genes:
-        :param attr_ref_path:
-        :type attr_ref_path:
-        :param biotype_ref_path:
-        :type biotype_ref_path:
-        :param plot_log_scale:
-        :type plot_log_scale:
-        :param plot_style:
+        Calculates enrichment and depletion of the FeatureSet for user-defined non-categorical attributes \
+        against a background set using either a one-sample T-test or Sign test. \
+        The attributes are drawn from an Attribute Reference Table. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method).
+
+        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
+        :param attributes: An iterable of attribute names or attribute numbers \
+        (according to their order in the Attribute Reference Table). \
+        If 'all', all of the attributes in the Attribute Reference Table will be used. \
+        If None, a manual input prompt will be raised.
+        :type alpha: float between 0 and 1 (default=0.05)
+        :param alpha: Indicates the FDR threshold for significance.
+        :param parametric_test: if True, performs a parametric statistical test (one-sample t-test). \
+        If False (default), performs a non-parametric statistical test (sign test).
+        :type parametric_test: bool (default=False)
+        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all' \
+        (default='protein_coding')
+        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
+        'all' will include all genomic features in the reference table, \
+        'protein_coding' will include only protein-coding genes from the reference table, etc. \
+        Cannot be specified together with 'background_genes'.
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
+        (default=None)
+        :param background_genes: a set of specific feature indices to be used as background genes. \
+        Cannot be specified together with 'biotype'.
+        :type attr_ref_path: str or pathlib.Path (default='predefined')
+        :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
+        :type biotype_ref_path: str or pathlib.Path (default='predefined')
+        :param biotype_ref_path: the path of the Biotype Reference Table. \
+        Will be used to generate background set if 'biotype' is specified.
+        :param plot_log_scale: if True (default), the Y-axis of the enrichment plot will be logarithmic. \
+        Otherwise, the Y-axis of the enrichment plot will be linear.
+        :type plot_log_scale: bool (default=True)
+        :param plot_style: 'interleaved' will plot an interleaved histogram. \
+        'overlap' will plot a semi-transparent histogram where the obsreved and expected are overlapping.
         :type plot_style: 'overlap' or 'interleaved' (default='overlap')
-        :param n_bins:
-        :type n_bins:
-        :param save_csv:
-        :type save_csv:
-        :param fname:
-        :type fname:
-        :param return_fig:
-        :type return_fig:
-        :return:
-        :rtype:
+        :param n_bins: the number of bins to display in the enrichment plot histograms
+        :type n_bins: int larger than 0 (default=50)
+        :type save_csv: bool (default=False)
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path (default=None)
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :type return_fig: bool (default=False)
+        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
+
+
+        .. figure::  hist_overlap.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of non_categorical_enrichment(plot_style`='overlap')
+
+        .. figure::  hist_interleaved.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of non_categorical_enrichment(plot_style='interleaved')
         """
 
         if validation.isinstanceinh(background_genes, FeatureSet):
