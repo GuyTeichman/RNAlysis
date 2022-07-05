@@ -1,6 +1,7 @@
 import itertools
+import inspect
 from functools import lru_cache
-from typing import Union
+from typing import Union, Callable
 
 import numpy as np
 import pandas as pd
@@ -114,3 +115,15 @@ class SetWithMajorityVote(set):
                 counts[obj] = counts.get(obj, 0) + (1 / n_sets)
         result = {key for key, val in counts.items() if val >= majority_threshold}
         return result
+
+
+def get_method_signature(method: Union[str, Callable], obj: object = None):
+    try:
+        if isinstance(method, str):
+            func = getattr(obj, method)
+        else:
+            func = method
+        signature = inspect.signature(func)
+        return signature.parameters
+    except AttributeError:
+        return {}
