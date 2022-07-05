@@ -2,6 +2,17 @@
 History
 =======
 
+2.1.1 (2022-07-05)
+------------------
+* This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API.
+Moreover, this version slightly improves the performance of some functions.
+
+Changed
+*******
+* Fixed issues with running GO enrichment that resulted from changes to UniProt's API.
+* Some functions that fetch annotations now cache their results, leading to improved runtimes.
+* Updated the documentation of some functions to better reflect their usage and input parameters.
+
 2.1.0 (2022-04-16)
 ------------------
 * This version introduces multiple new features, as well as generally improved graphs and quality-of-life changes.
