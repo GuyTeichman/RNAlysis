@@ -2805,12 +2805,12 @@ class CountFilter(Filter):
         for subplot, feature in zip(subplots, features):
             axes.append(fig.add_subplot(subplot))
             mean = [self.df.loc[feature].iloc[ind].mean() if np.all([isinstance(i, int) for i in ind]) else
-                    self.df.loc[feature][ind].mean()
-                    for ind in sample_grouping.values()]
-            sem = [self.df.loc[feature].iloc[ind].sem() if np.all([isinstance(i, int) for i in ind]) else
-                   self.df.loc[feature][ind].sem() for
-                   ind in sample_grouping.values()]
-            points_y = parsing.flatten([self.df.loc[feature].iloc[ind] if np.all([isinstance(i, int) for i in ind]) else
+                    self.df.loc[feature][ind].mean() for ind in sample_grouping.values()]
+
+            sem = [self.df.loc[feature].iloc[ind].sem() if validation.isinstanceiter(ind, int) else
+                   self.df.loc[feature][ind].sem() for ind in sample_grouping.values()]
+
+            points_y = parsing.flatten([self.df.loc[feature].iloc[ind] if validation.isinstanceiter(ind, int) else
                                         [self.df.loc[feature][ind]] for ind in sample_grouping.values()])
             points_x = []
             for i, grouping in enumerate(sample_grouping.values()):
