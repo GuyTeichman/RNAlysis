@@ -1,5 +1,3 @@
-import datetime
-
 import pytest
 
 from rnalysis.utils import io
@@ -8,11 +6,11 @@ from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
 
 
 class MockResponse(object):
-    def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = {'blaa': '1234'},
+    def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = 'default',
                  text: str = '', json_output: dict = dict()):
         self.status_code = status_code
         self.url = url
-        self.headers = headers
+        self.headers = {'default': 'default'} if headers == 'default' else headers
         self.text = text
         self.ok = self.status_code == 200
         self._json = json_output
@@ -417,8 +415,9 @@ def test_map_gene_ids_connectivity():
         assert mapped_ids[geneid] == wb_to_entrez_truth[geneid]
 
 
-def test_map_gene_ids_to_same_set():
-    mapper = map_gene_ids(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'], 'UniProtKB', 'UniProtKB')
+@pytest.mark.parametrize('id_type', ['UniProtKB', 'Entrez', 'WormBase'])
+def test_map_gene_ids_to_same_set(id_type):
+    mapper = map_gene_ids(['it', 'doesnt', 'matter', 'what', 'is', 'in', 'here'], id_type, id_type)
     assert mapper.mapping_dict is None
     for i in ['it', 'not', False, 42, 3.14]:
         assert i in mapper
@@ -449,30 +448,41 @@ def test_map_gene_ids_request(monkeypatch, ids, map_from, map_to, req_from, req_
 
 @pytest.mark.parametrize('ids,map_from,map_to,txt,rev_txt,truth',
                          [(['WBGene00000003', 'WBGene00000004'], 'WormBase', 'UniProtKB',
-                           'Entry\tAnnotation\tyourlist:M202105238471C63D39733769F8E060B506551E1220FD37S\nQ19151\t1 out of 5\tWBGene00000003\nA0A0K3AVL7\t1 out of 5\tWBGene00000004\nO17395\t2 out of 5\tWBGene00000004\n'
+                           'From\tEntry\tAnnotation\nWBGene00000003\tQ19151\t110\nWBGene00000004\tA0A0K3AVL7\t57\nWBGene00000004\tO17395\t137.2\n'
                            , '', {'WBGene00000003': 'Q19151', 'WBGene00000004': 'O17395'}),
                           (
                               ['id1', 'id2'], 'UniProtKB', 'WormBase',
                               'From\tTo\nid1\tWBID1\nid2\tWBID2.2\nid2\tWBID2.1\n',
-                              'Entry\tAnnotation\tyourlist:M202105238471C63D39733769F8E060B506551E1220FD37S\nWBID1\t1 out of 5\tid1\nWBID2.1\t1 out of 5\tid2\nWBID2.2\t2 out of 5\tid2\n'
+                              'From\tEntry\tAnnotation\nWBID1\tid1\t112.5\nWBID2.1\tid2\t112.5\nWBID2.2\tid2\t235\n'
                               , {'id1': 'WBID1', 'id2': 'WBID2.2'})
                           ])
 def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, rev_txt, truth):
-    def mock_get(url, params):
-        if params['to'] == 'ACC':
-            return_txt = txt if map_to == 'UniProtKB' else rev_txt
-        else:
-            return_txt = txt if map_from == 'UniProtKB' else rev_txt
-        return MockResponse(text=return_txt)
+    def mock_abbrev_dict():
+        d = {'WormBase': 'WormBase',
+             'UniProtKB_to': 'UniProtKB',
+             'UniProtKB_from': 'UniProtKB_AC-ID',
+             'UniProtKB': 'UniProtKB'}
+        return d
 
-    monkeypatch.setattr(requests, 'get', mock_get)
+    def mock_get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
+                                 session):
+        if to_db == mock_abbrev_dict()['UniProtKB_to']:
+            return_txt = txt if map_to == 'UniProtKB' else rev_txt
+        elif from_db == mock_abbrev_dict()['UniProtKB_from']:
+            return_txt = txt if map_from == 'UniProtKB' else rev_txt
+        else:
+            raise ValueError(to_db, from_db)
+        return return_txt.split('\n')
+
+    monkeypatch.setattr(io, '_get_id_abbreviation_dict', mock_abbrev_dict)
+    monkeypatch.setattr(io, 'get_mapping_results', mock_get_mapping_results)
     res = map_gene_ids(ids, map_from, map_to)
     for gene_id in truth:
         assert res[gene_id] == truth[gene_id]
 
 
 def test_get_todays_cache_dir():
-    today = datetime.date.today()
+    today = date.today()
     today_str = str(today.year) + '_' + str(today.month).zfill(2) + '_' + str(today.day).zfill(2)
     cache_dir_truth = os.path.join(appdirs.user_cache_dir('RNAlysis'), today_str)
     assert cache_dir_truth == str(io.get_todays_cache_dir())
