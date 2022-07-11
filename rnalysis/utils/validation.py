@@ -5,6 +5,10 @@ import pandas as pd
 import warnings
 
 
+def is_legal_file_path(file_path: str):
+    pth = Path(file_path)
+    return pth.exists() and pth.is_file()
+
 def check_is_df_like(inp):
     """
     checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object \

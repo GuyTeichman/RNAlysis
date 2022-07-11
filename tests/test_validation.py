@@ -226,3 +226,6 @@ def test_validate_threshold(threshold, expected_to_pass):
     else:
         with pytest.raises(AssertionError):
             validate_threshold(threshold)
+
+def test_is_legal_file_path():
+    assert False
