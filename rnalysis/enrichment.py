@@ -67,6 +67,9 @@ class FeatureSet:
     def __contains__(self, item):
         return True if item in self.gene_set else False
 
+    def __iter__(self):
+        return self.gene_set.__iter__()
+
     def change_set_name(self, new_name: str):
         """
         Change the 'set_name' of a FeatureSet to a new name.
