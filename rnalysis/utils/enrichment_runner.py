@@ -23,7 +23,7 @@ from tqdm.auto import tqdm
 import xlmhg
 from xlmhg import get_xlmhg_test_result as xlmhg_test
 
-from rnalysis.utils import ontology, io, parsing, ref_tables, validation, generic
+from rnalysis.utils import ontology, io, parsing, settings, validation, generic
 
 logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
 
@@ -66,7 +66,7 @@ class EnrichmentRunner:
         self.gene_set = parsing.data_to_set(genes)
         self.attributes = attributes
         self.alpha = alpha
-        self.attr_ref_path = ref_tables.get_attr_ref_path(attr_ref_path)
+        self.attr_ref_path = settings.get_attr_ref_path(attr_ref_path)
         self.return_nonsignificant = return_nonsignificant
         self.save_csv = save_csv
 
@@ -105,7 +105,7 @@ class EnrichmentRunner:
             self.random_seed = random_seed
             self.biotypes = biotypes
             self.background_set = background_set
-            self.biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path) if biotypes != 'all' else None
+            self.biotype_ref_path = settings.get_biotype_ref_path(biotype_ref_path) if biotypes != 'all' else None
             self.en_score_col = 'log2_fold_enrichment'
             self.ranked_genes = None
 

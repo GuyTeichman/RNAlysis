@@ -32,7 +32,7 @@ from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
-from rnalysis.utils import clustering, io, parsing, generic, ref_tables, validation
+from rnalysis.utils import clustering, io, parsing, generic, settings, validation
 
 
 class Filter:
@@ -433,7 +433,7 @@ class Filter:
         assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
         suffix = f"_{'_'.join(biotype)}"
         # load the biotype reference table
-        ref = ref_tables.get_biotype_ref_path(ref)
+        ref = settings.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
         validation.validate_biotype_table(ref_df)
         ref_df.set_index('gene', inplace=True)
@@ -528,7 +528,7 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal input {mode}: mode must be either 'union' or 'intersection'"
         # load the Attribute Reference Table
-        attr_ref_table = io.load_csv(ref_tables.get_attr_ref_path(ref))
+        attr_ref_table = io.load_csv(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
         # generate list of the indices that are positive for each attribute
@@ -785,7 +785,7 @@ class Filter:
 
         """
         # load the Biotype Reference Table
-        ref = ref_tables.get_biotype_ref_path(ref)
+        ref = settings.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
         validation.validate_biotype_table(ref_df)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table

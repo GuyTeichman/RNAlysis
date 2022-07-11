@@ -22,7 +22,7 @@ import pandas as pd
 import upsetplot
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, ref_tables, validation, enrichment_runner
+from rnalysis.utils import io, parsing, settings, validation, enrichment_runner
 
 
 class FeatureSet:
@@ -750,7 +750,7 @@ class FeatureSet:
 
         """
 
-        ref = ref_tables.get_biotype_ref_path(ref)
+        ref = settings.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
         validation.validate_biotype_table(ref_df)
         ref_df.columns = ref_df.columns.str.lower()
@@ -1131,7 +1131,7 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     fetched_sets = dict()
 
     if validation.isinstanceiter_any(objs.values(), str):
-        attr_ref_table = io.load_csv(ref_tables.get_attr_ref_path(ref))
+        attr_ref_table = io.load_csv(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
 
