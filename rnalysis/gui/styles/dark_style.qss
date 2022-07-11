@@ -1,0 +1,18 @@
+MainWindow{
+    background: #8B8887;
+}
+
+QDialog {
+background: #8B8887;
+}
+
+
+QGroupBox {
+background: #8B8887;
+}
+
+QPushButton,QComboBox {
+background: #181818;
+border: #6F6F6F;
+color: #FFFFFF;
+}
