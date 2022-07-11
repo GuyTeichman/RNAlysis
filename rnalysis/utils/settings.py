@@ -4,7 +4,10 @@ from typing import Union
 
 import yaml
 
-from rnalysis import __attr_file_key__, __biotype_file_key__, __path__
+from rnalysis import __attr_file_key__, __biotype_file_key__, __font_key__, __font_size_key__, __stylesheet_key__, \
+    __path__
+
+DEFAULT_VALUES = {__font_key__: 'Times New Roman', __font_size_key__: 10, __stylesheet_key__: 'light'}
 
 
 def get_settings_file_path():
@@ -15,6 +18,12 @@ def get_settings_file_path():
     """
     # return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
     return Path(os.path.join(__path__[0], 'settings.yaml'))
+
+
+def reset_settings():
+    pth = get_settings_file_path()
+    if pth.exists():
+        pth.unlink()
 
 
 def load_settings_file():
@@ -61,7 +70,11 @@ def read_value_from_settings(key):
     """
     settings = load_settings_file()
     if key not in settings:
-        update_settings_file(input(f'Please insert the full path of {key}:\n'), key)
+        if key in DEFAULT_VALUES:
+            val = str(DEFAULT_VALUES[key])
+        else:
+            val = input(f'Please insert the value of {key}:\n')
+        update_settings_file(val, key)
         settings = load_settings_file()
     return settings[key]
 
@@ -105,6 +118,19 @@ def get_attr_ref_path(ref):
     else:
         print(f'Attribute Reference Table used: {ref}')
         return ref
+
+
+def get_gui_settings():
+    font = read_value_from_settings(__font_key__)
+    font_size = int(read_value_from_settings(__font_size_key__))
+    stylesheet = read_value_from_settings(__stylesheet_key__)
+    return font, font_size, stylesheet
+
+
+def set_gui_settings(font: str, font_size: int, stylesheet: str):
+    update_settings_file(font, __font_key__)
+    update_settings_file(str(font_size), __font_size_key__)
+    update_settings_file(stylesheet, __stylesheet_key__)
 
 
 def make_temp_copy_of_settings_file():

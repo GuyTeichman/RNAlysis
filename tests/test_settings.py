@@ -1,6 +1,6 @@
 import pytest
 import pathlib
-from rnalysis.utils.ref_tables import *
+from rnalysis.utils.settings import *
 from rnalysis import __attr_file_key__, __biotype_file_key__
 
 
