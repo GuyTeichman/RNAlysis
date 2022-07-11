@@ -98,8 +98,9 @@ class FeatureSet:
             if not fname.suffix == '.txt':
                 fname = Path(f"{str(fname.parent)}{fname.name}.txt")
         with open(fname, 'w') as f:
-            for gene in self.gene_set:
-                f.write(gene + '\n')
+            for i, gene in enumerate(self.gene_set):
+                line = gene + '\n' if (i + 1) < len(self.gene_set) else gene
+                f.write(line)
 
     def _set_ops(self, others: Union[set, 'FeatureSet', Tuple[Union[set, 'FeatureSet']]],
                  op: types.FunctionType) -> set:
