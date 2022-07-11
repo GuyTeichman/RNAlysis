@@ -793,6 +793,9 @@ class RankedSet(FeatureSet):
         super().__init__(ranked_genes, set_name)
         assert len(self.ranked_genes) == len(self.gene_set), f"'ranked_genes' must have no repeating elements!"
 
+    def __iter__(self):
+        return self.ranked_genes.__iter__()
+
     def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
         warnings.warn("Warning: when performing set operations with RankedSet objects, "
                       "the return type will always be FeatureSet and not RankedSet.")
