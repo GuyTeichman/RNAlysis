@@ -720,8 +720,6 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.layout.addWidget(self.operations_group)
         self.operations_grid.addWidget(self.parameter_group, 1, 1, 3, 1)
 
-        # self.parameter_group.setVisible(False)
-
         self.init_sets_ui()
         self.init_operations_ui()
 
@@ -756,8 +754,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
             item.setSelected(False)
 
     def _toggle_choose_primary_set(self):
-        clicked = self.widgets['radio_button_box'].checkedButton()
-        if clicked is not None and clicked.text() in ['Difference', 'Intersection']:
+        if self.get_current_func_name() in ['difference', 'intersection']:
             self.widgets['choose_primary_set'].setVisible(True)
             self.widgets['choose_primary_set_label'].setVisible(True)
 
@@ -803,12 +800,11 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
 
     @QtCore.pyqtSlot(str)
     def _primary_set_changed(self, set_name: str):
-        button = self.widgets['radio_button_box'].checkedButton()
-        if button is not None:
-            if button.text() == 'Difference':
-                self.primarySetChangedDifference.emit(set_name)
-            elif button.text() == 'Intersection':
-                self.primarySetChangedIntersection.emit()
+        func_name = self.get_current_func_name()
+        if func_name == 'difference':
+            self.primarySetChangedDifference.emit(set_name)
+        elif func_name == 'intersection':
+            self.primarySetChangedIntersection.emit()
 
     def update_paremeter_ui(self):
         # delete previous widgets
@@ -843,7 +839,10 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
             self.operations_grid.addWidget(self.parameter_widgets['help_link'], 5, 0, 1, 2)
 
     def get_current_func_name(self):
-        return self.SET_OPERATIONS[self.widgets['radio_button_box'].checkedButton().text()]
+        button = self.widgets['radio_button_box'].checkedButton()
+        if button is None:
+            return None
+        return self.SET_OPERATIONS[button.text()]
 
     @staticmethod
     def clear_layout(layout):
@@ -854,8 +853,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
 
     def _check_legal_operations(self):
         n_items = len(self.widgets['set_list'].selectedItems())
-        checked_button = self.widgets['radio_button_box'].checkedButton()
-        if checked_button is not None and checked_button.text in ['Symmetric Difference'] and n_items > 2:
+        if self.get_current_func_name() == 'symmetric_difference' and n_items > 2:
             self.widgets['radio_button_box'].set_selection('Other')
         sym_diff_button = self.widgets['radio_button_box'].radio_buttons['Symmetric Difference']
         sym_diff_button.setEnabled(n_items <= 2)
@@ -1628,18 +1626,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def get_gene_set_by_name(self, name: str):
         ind = self.get_tab_names().index(name)
         return self.get_gene_set_by_ind(ind)
-
-    def apply_set_op(self, func_name: str, first: int, seconds: List[int], kwargs: dict):
-        first_obj = self.get_gene_set_by_ind(first)
-        if isinstance(first_obj, set):
-            first_obj = filtering.Filter(('placeholder', pd.DataFrame(index=first_obj)))
-        second_objs = []
-        for ind in seconds:
-            second_objs.append(self.get_gene_set_by_ind(ind))
-
-        result = getattr(first_obj, func_name)(*second_objs, **kwargs)
-        if isinstance(result, set):
-            self.new_tab_from_gene_set(result, f"{func_name}_result")
 
     def choose_set_op(self):
         available_objs = self.get_available_objects()
