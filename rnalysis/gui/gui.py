@@ -591,6 +591,16 @@ class VennCanvas(FigureCanvasQTAgg):
         self.select("01", draw=False)
         self.draw()
 
+    @QtCore.pyqtSlot(str)
+    def difference(self, primary_set: str):
+        self.clear_selection(draw=False)
+        if primary_set in self.gene_sets:
+            key = ""
+            for set_name in self.gene_sets:
+                key += "1" if set_name == primary_set else "0"
+            self.select(key, draw=False)
+        self.draw()
+
     @QtCore.pyqtSlot()
     def majority_vote_intersection(self, majority_threshold: float):
         if len(self.gene_sets) == 3:
@@ -623,7 +633,6 @@ class VennCanvas(FigureCanvasQTAgg):
                 excluded_sets = [s for s, ind in zip(self.gene_sets.values(), patch_id) if not ind]
                 patch_content = set.intersection(*included_sets).difference(*excluded_sets)
                 selection.add(patch_content)
-        print(len(selection))
         return selection
 
 
@@ -631,6 +640,10 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
     SET_OPERATIONS = {'Union': 'union', 'Majority-Vote Intersection': 'majority_vote_intersection',
                       'Intersection': 'intersection', 'Difference': 'difference',
                       'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
+
+    setOperationApplied = QtCore.pyqtSignal(set, str)
+    primarySetChangedDifference = QtCore.pyqtSignal(str)
+    primarySetChangedIntersection = QtCore.pyqtSignal()
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
@@ -648,7 +661,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.init_ui()
 
     def create_canvas(self):
-        set_names = [item.text() for item in self.widgets['list1'].selectedItems()]
+        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
         sets = [self.available_objects[name] for name in set_names]
         ind = 0
         while ind < len(set_names):
@@ -695,6 +708,8 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.widgets['radio_button_box'].radio_buttons['Intersection'].clicked.connect(canvas.intersection)
         self.widgets['radio_button_box'].radio_buttons['Symmetric Difference'].clicked.connect(
             canvas.symmetric_difference)
+        self.primarySetChangedDifference.connect(canvas.difference)
+        self.primarySetChangedIntersection.connect(canvas.intersection)
 
     def init_ui(self):
         self.list_group.setTitle('Gene sets')
@@ -711,13 +726,14 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.init_operations_ui()
 
     def init_sets_ui(self):
-        self.widgets['list1'] = QtWidgets.QListWidget(self)
-        self.widgets['list1'].insertItems(0, self.available_objects)
-        self.widgets['list1'].setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-        self.widgets['list1'].itemSelectionChanged.connect(self.create_canvas)
-        self.widgets['list1'].itemSelectionChanged.connect(self._check_legal_operations)
-        self.widgets['list1'].itemSelectionChanged.connect(self._validate_input)
-        self.list_grid.addWidget(self.widgets['list1'], 2, 1, 3, 1)
+        self.widgets['set_list'] = QtWidgets.QListWidget(self)
+        self.widgets['set_list'].insertItems(0, self.available_objects)
+        self.widgets['set_list'].setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
+        for func in [self.create_canvas, self._check_legal_operations, self._validate_input,
+                     self._toggle_choose_primary_set]:
+            self.widgets['set_list'].itemSelectionChanged.connect(func)
+        self.list_grid.addWidget(self.widgets['set_list'], 2, 1, 3, 1)
 
         self.widgets['select_all'] = QtWidgets.QPushButton('Select all', self)
         self.widgets['select_all'].clicked.connect(self.select_all)
@@ -730,22 +746,48 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose gene sets:</b>', self), 1, 1, 1, 1)
 
     def select_all(self):
-        for ind in range(self.widgets['list1'].count()):
-            item = self.widgets['list1'].item(ind)
+        for ind in range(self.widgets['set_list'].count()):
+            item = self.widgets['set_list'].item(ind)
             if not item.isSelected():
                 item.setSelected(True)
 
     def clear_all(self):
-        for item in self.widgets['list1'].selectedItems():
+        for item in self.widgets['set_list'].selectedItems():
             item.setSelected(False)
 
+    def _toggle_choose_primary_set(self):
+        clicked = self.widgets['radio_button_box'].checkedButton()
+        if clicked is not None and clicked.text() in ['Difference', 'Intersection']:
+            self.widgets['choose_primary_set'].setVisible(True)
+            self.widgets['choose_primary_set_label'].setVisible(True)
+
+            self.widgets['choose_primary_set'].clear()
+            self.widgets['choose_primary_set'].addItems(
+                [item.text() for item in self.widgets['set_list'].selectedItems()])
+            self.widgets['canvas'].clear_selection()
+        else:
+            self.widgets['choose_primary_set'].setVisible(False)
+            self.widgets['choose_primary_set_label'].setVisible(False)
+
     def init_operations_ui(self):
+        self.widgets['set_op_box'] = QtWidgets.QWidget(self)
+        self.widgets['set_op_box_layout'] = QtWidgets.QVBoxLayout(self.widgets['set_op_box'])
+        self.operations_grid.addWidget((self.widgets['set_op_box']), 1, 0, 3, 1)
         self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose set operation', self.SET_OPERATIONS.keys())
-        self.widgets['radio_button_box'].buttonClicked.connect(self.update_paremeter_ui)
-        self.widgets['radio_button_box'].selectionChanged.connect(self.update_paremeter_ui)
-        self.widgets['radio_button_box'].selectionChanged.connect(self._validate_input)
-        self.widgets['radio_button_box'].buttonClicked.connect(self._validate_input)
-        self.operations_grid.addWidget(self.widgets['radio_button_box'], 1, 0, 3, 1)
+
+        for func in [self.update_paremeter_ui, self._validate_input, self._toggle_choose_primary_set]:
+            self.widgets['radio_button_box'].buttonClicked.connect(func)
+            self.widgets['radio_button_box'].selectionChanged.connect(func)
+
+        self.widgets['set_op_box_layout'].addWidget(self.widgets['radio_button_box'], stretch=1)
+
+        self.widgets['choose_primary_set'] = gui_utils.MandatoryComboBox('Choose primary set...', self)
+        self.widgets['choose_primary_set'].currentTextChanged.connect(self._primary_set_changed)
+        self.widgets['choose_primary_set_label'] = QtWidgets.QLabel('Choose primary set for this operation:')
+        self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set_label'])
+        self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set'])
+
+        self._toggle_choose_primary_set()
 
         self.create_canvas()
 
@@ -758,6 +800,15 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         if not isinstance(self.widgets['canvas'], EmptyCanvas):
             threshold = gui_utils.get_val_from_widget(self.parameter_widgets['majority_threshold'])
             self.widgets['canvas'].majority_vote_intersection(threshold)
+
+    @QtCore.pyqtSlot(str)
+    def _primary_set_changed(self, set_name: str):
+        button = self.widgets['radio_button_box'].checkedButton()
+        if button is not None:
+            if button.text() == 'Difference':
+                self.primarySetChangedDifference.emit(set_name)
+            elif button.text() == 'Intersection':
+                self.primarySetChangedIntersection.emit()
 
     def update_paremeter_ui(self):
         # delete previous widgets
@@ -802,10 +853,12 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
                 child.widget().deleteLater()
 
     def _check_legal_operations(self):
-        n_items = len(self.widgets['list1'].selectedItems())
+        n_items = len(self.widgets['set_list'].selectedItems())
+        checked_button = self.widgets['radio_button_box'].checkedButton()
+        if checked_button is not None and checked_button.text in ['Symmetric Difference'] and n_items > 2:
+            self.widgets['radio_button_box'].set_selection('Other')
         sym_diff_button = self.widgets['radio_button_box'].radio_buttons['Symmetric Difference']
         sym_diff_button.setEnabled(n_items <= 2)
-        self.widgets['radio_button_box'].set_selection('Other')
 
     def _validate_input(self):
         is_legal = True
@@ -816,6 +869,9 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         if self.widgets['radio_button_box'].checkedButton() is None:
             is_legal = False
 
+        if self.widgets['choose_primary_set'].isVisible() and not self.widgets['choose_primary_set'].is_legal():
+            is_legal = False
+
         self.widgets['apply_button'].setEnabled(is_legal)
 
     def _set_op_other(self):
@@ -823,7 +879,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
 
     def _get_function_params(self):
         # TODO
-        first_name = self.widgets['list1'].currentItem().text()
+        first_name = self.widgets['set_list'].currentItem().text()
         first = self.available_objects.index(first_name)
         second_names = [item.text() for item in self.widgets['list2'].selectedItems()]
         second = [self.available_objects.index(name) for name in second_names]
