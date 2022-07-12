@@ -641,7 +641,8 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
                       'Intersection': 'intersection', 'Difference': 'difference',
                       'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
 
-    setOperationApplied = QtCore.pyqtSignal(set, str)
+    geneSetReturned = QtCore.pyqtSignal(set, str)
+    primarySetUsed = QtCore.pyqtSignal(str)
     primarySetChangedDifference = QtCore.pyqtSignal(str)
     primarySetChangedIntersection = QtCore.pyqtSignal()
 
@@ -876,11 +877,12 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.widgets['radio_button_box'].set_selection('Other')
 
     def _get_function_params(self):
-        # TODO
-        first_name = self.widgets['set_list'].currentItem().text()
-        first = self.available_objects.index(first_name)
-        second_names = [item.text() for item in self.widgets['list2'].selectedItems()]
-        second = [self.available_objects.index(name) for name in second_names]
+        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
+        if self.get_current_func_name() in ['intersection', 'difference']:
+            primary_set_name = self.widgets['choose_primary_set'].currentText()
+            self.primarySetUsed.emit(primary_set_name)
+        else:
+            primary_set_name = set_names[0]
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
@@ -888,15 +890,28 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
             val = gui_utils.get_val_from_widget(widget)
 
             kwargs[param_name] = val
-        return first, second, kwargs
+        return set_names, primary_set_name, kwargs
 
     @QtCore.pyqtSlot()
     def apply_set_op(self):
         func_name = self.get_current_func_name()
-        first, seconds, kwargs = self._get_function_params()
+        if func_name == 'other':
+            output_set = self.widgets['canvas'].get_custom_selection()
+            output_name = f"Other set operation output"
+        else:
+            set_names, primary_set_name, kwargs = self._get_function_params()
 
-        self.parent().apply_set_op(func_name, first, seconds, kwargs)
-
+            first_obj = self.available_objects[primary_set_name]
+            if isinstance(first_obj, set):
+                first_obj = filtering.Filter(('placeholder', pd.DataFrame(index=first_obj)))
+            other_objs = []
+            for name in set_names:
+                if name != primary_set_name:
+                    other_objs.append(self.available_objects[name])
+            output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
+            output_name = f"{func_name} output"
+        if isinstance(output_set, set):
+            self.geneSetReturned.emit(output_set, output_name)
         self.close()
 
 
@@ -1630,7 +1645,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def choose_set_op(self):
         available_objs = self.get_available_objects()
         self.set_op_window = SimpleSetOpWindow(available_objs, self)
+        self.set_op_window.primarySetUsed.connect(self.choose_tab_by_name)
+        self.set_op_window.geneSetReturned.connect(self.new_tab_from_gene_set)
         self.set_op_window.show()
+
+    @QtCore.pyqtSlot(str)
+    def choose_tab_by_name(self, set_name: str):
+        available_objs = self.get_available_objects()
+        for i, name in enumerate(available_objs):
+            if name == set_name:
+                self.tabs.setCurrentIndex(i)
+                return
 
     def run_enrichment_analysis(self, func: Callable, gene_set_ind: int, bg_set_ind: Union[int, None], kwargs: dict):
         is_single_set = bg_set_ind is None
