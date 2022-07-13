@@ -471,6 +471,27 @@ class BaseCanvas(FigureCanvasQTAgg):
     def on_hover(self, event):
         raise NotImplementedError
 
+    def union(self):
+        raise NotImplementedError
+
+    def intersection(self):
+        raise NotImplementedError
+
+    def difference(self, primary_set: str):
+        raise NotImplementedError
+
+    def majority_vote_intersection(self, majority_threshold: float):
+        raise NotImplementedError
+
+    def clear_selection(self):
+        raise NotImplementedError
+
+    def select(self, ind, draw: bool = True):
+        raise NotImplementedError
+
+    def deselect(self, ind, draw: bool = True):
+        raise NotImplementedError
+
 
 class VennCanvas(BaseCanvas):
     def __init__(self, gene_sets: dict, parent=None):
@@ -617,7 +638,7 @@ class VennCanvas(BaseCanvas):
             self.select(key, draw=False)
         self.draw()
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(float)
     def majority_vote_intersection(self, majority_threshold: float):
         if len(self.gene_sets) == 3:
             if majority_threshold <= (1 / 3):
@@ -657,7 +678,7 @@ class UpSetCanvas(BaseCanvas):
     def __init__(self, gene_sets: dict, parent=None):
         super().__init__(gene_sets, parent, tight_layout=False)
         self.upset_df = enrichment._generate_upset_srs(gene_sets)
-        self.upset = upsetplot.UpSet(self.upset_df)
+        self.upset = upsetplot.UpSet(self.upset_df, sort_by='degree', sort_categories_by=None)
         self.subset_states = {i: self.DESELECTED_STATE for i in range(len(self.upset.subset_styles))}
 
         self.axes = self.upset.plot(self.fig)
@@ -711,6 +732,16 @@ class UpSetCanvas(BaseCanvas):
 
         return graph_modified
 
+    def select(self, ind, draw: bool = True):
+        graph_modified = self.update_color(ind, self.SELECTED_STATE)
+        if graph_modified and draw:
+            self.draw()
+
+    def deselect(self, ind, draw: bool = True):
+        graph_modified = self.update_color(ind, self.DESELECTED_STATE)
+        if graph_modified and draw:
+            self.draw()
+
     def on_hover(self, event):
         graph_modified = False
 
@@ -730,6 +761,38 @@ class UpSetCanvas(BaseCanvas):
 
         if graph_modified:
             self.draw()
+
+    def clear_selection(self, draw: bool = True):
+        graph_modified = False
+        for subset in self.subset_states:
+            graph_modified |= self.update_color(subset, self.DESELECTED_STATE)
+        if graph_modified and draw:
+            self.draw()
+
+    @QtCore.pyqtSlot()
+    def union(self):
+        for subset in self.subset_states:
+            self.select(subset, draw=False)
+        self.draw()
+
+    @QtCore.pyqtSlot()
+    def intersection(self):
+        self.clear_selection(draw=False)
+        self.select(len(self.subset_states) - 1, draw=False)
+        self.draw()
+
+    @QtCore.pyqtSlot(float)
+    def majority_vote_intersection(self, majority_threshold: float):
+        thresholds = [-float("inf")] + [(i + 1) * (1 / len(self.gene_sets)) for i in range(len(self.gene_sets))]
+
+        self.clear_selection(draw=False)
+        for i in range(len(self.gene_sets)):
+            if thresholds[i] < majority_threshold <= thresholds[i + 1]:
+                start = sum([generic.combination(len(self.gene_sets), j + 1) for j in range(i)])
+                print(i, start)
+                for subset in range(start, len(self.subset_states)):
+                    self.select(subset, draw=False)
+        self.draw()
 
 
 class SimpleSetOpWindow(gui_utils.MinMaxDialog):
@@ -788,6 +851,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
 
             else:
                 canvas = UpSetCanvas(items, self)
+                self._connect_canvas(canvas)
         if 'venn' in self.widgets:
             self.widgets['canvas'].deleteLater()
             self.widgets['toolbar'].deleteLater()
@@ -799,17 +863,19 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.operations_grid.addWidget(self.widgets['canvas'], 1, 3, 3, 3)
         self.operations_grid.addWidget(self.widgets['toolbar'], 0, 3, 1, 3)
 
-    def _connect_canvas(self, canvas: VennCanvas):
+    def _connect_canvas(self, canvas: BaseCanvas):
         canvas.manualChoice.connect(self._set_op_other)
         self.widgets['radio_button_box'].radio_buttons['Union'].clicked.connect(canvas.union)
         self.widgets['radio_button_box'].radio_buttons['Intersection'].clicked.connect(canvas.intersection)
-        self.widgets['radio_button_box'].radio_buttons['Symmetric Difference'].clicked.connect(
-            canvas.symmetric_difference)
         self.primarySetChangedDifference.connect(canvas.difference)
         self.primarySetChangedIntersection.connect(canvas.intersection)
 
+        if isinstance(canvas, VennCanvas):
+            self.widgets['radio_button_box'].radio_buttons['Symmetric Difference'].clicked.connect(
+                canvas.symmetric_difference)
+
     def init_ui(self):
-        self.list_group.setTitle('Gene sets')
+        self.list_group.setTitle('Choose gene sets')
         self.setWindowTitle('Set Operations')
 
         self.setLayout(self.layout)
@@ -828,7 +894,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         for func in [self.create_canvas, self._check_legal_operations, self._validate_input,
                      self._toggle_choose_primary_set]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
-        self.list_grid.addWidget(self.widgets['set_list'], 2, 1, 3, 1)
+        self.list_grid.addWidget(self.widgets['set_list'], 1, 1, 4, 1)
 
         self.widgets['select_all'] = QtWidgets.QPushButton('Select all', self)
         self.widgets['select_all'].clicked.connect(self.select_all)
@@ -837,8 +903,6 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.widgets['clear_all'] = QtWidgets.QPushButton('Clear all', self)
         self.widgets['clear_all'].clicked.connect(self.clear_all)
         self.list_grid.addWidget(self.widgets['clear_all'], 6, 1)
-
-        self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose gene sets:</b>', self), 1, 1, 1, 1)
 
     def select_all(self):
         for ind in range(self.widgets['set_list'].count()):
