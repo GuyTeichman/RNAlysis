@@ -18,7 +18,7 @@ import upsetplot
 from rnalysis import filtering, enrichment, __version__
 from rnalysis.utils import io, validation, generic
 from rnalysis.gui import gui_style, gui_utils
-from typing import List, Union, Callable
+from typing import List, Union, Callable, Tuple
 
 
 class EnrichmentWindow(gui_utils.MinMaxDialog):
@@ -492,6 +492,12 @@ class BaseCanvas(FigureCanvasQTAgg):
     def deselect(self, ind, draw: bool = True):
         raise NotImplementedError
 
+    def get_custom_selection(self) -> set:
+        raise NotImplementedError
+
+    def get_tuple_patch_ids(self) -> List[Tuple[int, ...]]:
+        raise NotImplementedError
+
 
 class VennCanvas(BaseCanvas):
     def __init__(self, gene_sets: dict, parent=None):
@@ -603,7 +609,7 @@ class VennCanvas(BaseCanvas):
                     patch.set_fill(True)
         self.draw()
 
-    def get_tuple_patch_ids(self):
+    def get_tuple_patch_ids(self) -> List[Tuple[int, ...]]:
         return list(itertools.product([0, 1], repeat=len(self.gene_sets)))[1:]
 
     @QtCore.pyqtSlot()
@@ -658,7 +664,7 @@ class VennCanvas(BaseCanvas):
 
         self.draw()
 
-    def get_custom_selection(self):
+    def get_custom_selection(self) -> set:
         selection = set()
         for patch_id in self.get_tuple_patch_ids():
             str_patch_id = ''.join(str(i) for i in patch_id)
@@ -669,12 +675,11 @@ class VennCanvas(BaseCanvas):
                 included_sets = [s for s, ind in zip(self.gene_sets.values(), patch_id) if ind]
                 excluded_sets = [s for s, ind in zip(self.gene_sets.values(), patch_id) if not ind]
                 patch_content = set.intersection(*included_sets).difference(*excluded_sets)
-                selection.add(patch_content)
+                selection.update(patch_content)
         return selection
 
 
 class UpSetCanvas(BaseCanvas):
-
     def __init__(self, gene_sets: dict, parent=None):
         super().__init__(gene_sets, parent, tight_layout=False)
         self.upset_df = enrichment._generate_upset_srs(gene_sets)
@@ -731,6 +736,26 @@ class UpSetCanvas(BaseCanvas):
             graph_modified = False
 
         return graph_modified
+
+    @staticmethod
+    def _compare_ids(id1: Tuple[int, ...], id2: Tuple[int, ...]):
+        if sum(id1) > sum(id2):
+            return 1
+        elif sum(id1) < sum(id2):
+            return -1
+        else:
+            for i in range(len(id1), 0, -1):
+                ind = i - 1
+                if id1[ind] > id2[ind]:
+                    return 1
+                elif id1[ind] < id2[ind]:
+                    return -1
+            return 0
+
+    def get_tuple_patch_ids(self) -> List[Tuple[int, ...]]:
+        unsorted_ids = list(itertools.product([0, 1], repeat=len(self.gene_sets)))[1:]
+        sorted_ids = sorted(unsorted_ids, key=functools.cmp_to_key(self._compare_ids))
+        return sorted_ids
 
     def select(self, ind, draw: bool = True):
         graph_modified = self.update_color(ind, self.SELECTED_STATE)
@@ -793,6 +818,25 @@ class UpSetCanvas(BaseCanvas):
                 for subset in range(start, len(self.subset_states)):
                     self.select(subset, draw=False)
         self.draw()
+
+    @QtCore.pyqtSlot(str)
+    def difference(self, primary_set: str):
+        self.clear_selection(draw=False)
+        if primary_set in self.gene_sets:
+            subset_idx = list(self.gene_sets.keys()).index(primary_set)
+            self.select(subset_idx, draw=False)
+        self.draw()
+
+    def get_custom_selection(self) -> set:
+        selection = set()
+        patch_ids = self.get_tuple_patch_ids()
+        for subset, id in zip(self.subset_states, patch_ids):
+            if self.subset_states[subset] in [self.SELECTED_STATE, self.HOVER_SELECTED_STATE]:
+                included_sets = [s for s, ind in zip(self.gene_sets.values(), id) if ind]
+                excluded_sets = [s for s, ind in zip(self.gene_sets.values(), id) if not ind]
+                patch_content = set.intersection(*included_sets).difference(*excluded_sets)
+                selection.update(patch_content)
+        return selection
 
 
 class SimpleSetOpWindow(gui_utils.MinMaxDialog):
