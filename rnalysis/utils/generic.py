@@ -127,3 +127,7 @@ def get_method_signature(method: Union[str, Callable], obj: object = None):
         return signature.parameters
     except AttributeError:
         return {}
+
+def despine(ax):
+    for side in ['top','right']:
+        ax.spines[side].set_visible(False)
