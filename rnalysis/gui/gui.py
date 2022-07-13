@@ -439,6 +439,9 @@ class EmptyCanvas(FigureCanvasQTAgg):
         self.ax.set_xticks([])
         self.ax.set_yticks([])
 
+    def clear_selection(self):
+        pass
+
 
 class BaseCanvas(FigureCanvasQTAgg):
     DESELECTED_STATE = 0
@@ -904,8 +907,13 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
 
         self.widgets['canvas'] = canvas
         self.widgets['toolbar'] = NavigationToolbar2QT(self.widgets['canvas'], self)
-        self.operations_grid.addWidget(self.widgets['canvas'], 1, 3, 3, 3)
-        self.operations_grid.addWidget(self.widgets['toolbar'], 0, 3, 1, 3)
+        self.operations_grid.addWidget(self.widgets['canvas'], 1, 2, 3, 3)
+        self.operations_grid.addWidget(self.widgets['toolbar'], 0, 2, 1, 3)
+
+        for col in range(2, 5):
+            self.operations_grid.setColumnStretch(col, 1)
+        for row in range(1, 4):
+            self.operations_grid.setRowStretch(row, 1)
 
     def _connect_canvas(self, canvas: BaseCanvas):
         canvas.manualChoice.connect(self._set_op_other)
@@ -923,9 +931,9 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.setWindowTitle('Set Operations')
 
         self.setLayout(self.layout)
-        self.layout.addWidget(self.list_group)
-        self.layout.addWidget(self.operations_group)
-        self.operations_grid.addWidget(self.parameter_group, 1, 1, 3, 1)
+        self.layout.addWidget(self.list_group, stretch=1)
+        self.layout.addWidget(self.operations_group, stretch=3)
+        # self.operations_grid.addWidget(self.parameter_group, 1, 1, 3, 1)
 
         self.init_sets_ui()
         self.init_operations_ui()
@@ -988,6 +996,8 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         self.widgets['choose_primary_set_label'] = QtWidgets.QLabel('Choose primary set for this operation:')
         self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set_label'])
         self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set'])
+
+        self.widgets['set_op_box_layout'].addWidget(self.parameter_group)
 
         self._toggle_choose_primary_set()
 
@@ -1127,6 +1137,7 @@ class TabPage(QtWidgets.QWidget):
 
         self.stdout_group = QtWidgets.QGroupBox('Log')
         self.layout.addWidget(self.stdout_group)
+        self.layout.addWidget(QtWidgets.QWidget(self),stretch=1)
         self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
         self.stdout_widgets = {}
 
@@ -1273,7 +1284,6 @@ class FilterTabPage(TabPage):
         self.df_views = []
 
         self.basic_group = QtWidgets.QGroupBox('Load a data table')
-        self.layout.insertWidget(0, self.basic_group)
         self.basic_grid = QtWidgets.QGridLayout(self.basic_group)
         self.basic_widgets = {}
 
@@ -1355,6 +1365,7 @@ class FilterTabPage(TabPage):
         self.basic_widgets['start_button'].setEnabled(is_legal)
 
     def init_basic_ui(self):
+        self.layout.insertWidget(0, self.basic_group)
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
         self.basic_widgets['table_type_combo'].addItems(self.FILTER_OBJ_TYPES.keys())
 
