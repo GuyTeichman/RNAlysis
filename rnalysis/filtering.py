@@ -1256,6 +1256,8 @@ class Filter:
         """
         Returns a set/string of the features that appear in at least \
         (majority_threhold * 100)% of the given Filter objects/sets. \
+        Majority-vote intersection with majority_threshold=0 is equivalent to Union. \
+        Majority-vote intersection with majority_threshold=1 is equivalent to Intersection.
 
         :type others: Filter or set objects.
         :param others: Objects to calculate intersection with.
