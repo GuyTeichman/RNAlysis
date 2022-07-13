@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 import itertools
+import upsetplot
 
 from rnalysis import filtering, enrichment, __version__
 from rnalysis.utils import io, validation, generic
@@ -439,24 +440,42 @@ class EmptyCanvas(FigureCanvasQTAgg):
         self.ax.set_yticks([])
 
 
-class VennCanvas(FigureCanvasQTAgg):
+class BaseCanvas(FigureCanvasQTAgg):
     DESELECTED_STATE = 0
     SELECTED_STATE = 1
     HOVER_STATE = 2
     HOVER_SELECTED_STATE = 3
 
-    SELECTED_COLOR = (0.15, 0.01, 0.35)
+    DESELECTED_COLOR = (0, 0, 0)
+    SELECTED_COLOR = (0.2, 0.013, 0.46)
     HOVER_COLOR = (0.5, 0.5, 0.5)
-    HOVER_SELECTED_COLOR = (0.4, 0.1, 0.75)
+    HOVER_SELECTED_COLOR = (0.48, 0.12, 0.9)
+
+    COLORMAP = {DESELECTED_STATE: DESELECTED_COLOR, SELECTED_STATE: SELECTED_COLOR, HOVER_STATE: HOVER_COLOR,
+                HOVER_SELECTED_STATE: HOVER_SELECTED_COLOR}
 
     manualChoice = QtCore.pyqtSignal()
 
-    def __init__(self, gene_sets: dict, parent=None):
+    def __init__(self, gene_sets: dict, parent=None, tight_layout: bool = True):
         self.parent = parent
         self.gene_sets = gene_sets
-        self.fig = plt.Figure(tight_layout=True)
-        self.ax = self.fig.add_subplot()
+        self.fig = plt.Figure(tight_layout=tight_layout)
         super().__init__(self.fig)
+
+        self.fig.canvas.mpl_connect('button_press_event', self.on_click)
+        self.fig.canvas.mpl_connect('motion_notify_event', self.on_hover)
+
+    def on_click(self, event):
+        raise NotImplementedError
+
+    def on_hover(self, event):
+        raise NotImplementedError
+
+
+class VennCanvas(BaseCanvas):
+    def __init__(self, gene_sets: dict, parent=None):
+        super().__init__(gene_sets, parent)
+        self.ax = self.fig.add_subplot()
 
         if len(gene_sets) == 2:
             funcs = matplotlib_venn.venn2, matplotlib_venn.venn2_circles
@@ -471,9 +490,6 @@ class VennCanvas(FigureCanvasQTAgg):
         self.venn = funcs[0](gene_sets.values(), gene_sets.keys(), set_colors=colors, ax=self.ax)
         self.venn_circles = funcs[1](gene_sets.values(), linestyle='solid', linewidth=2.0, ax=self.ax)
         self.set_font_size(16, 12)
-        self.fig.canvas.mpl_connect('button_press_event', self.on_click)
-        self.fig.canvas.mpl_connect('motion_notify_event', self.on_hover)
-
         self.clear_selection()
 
     def set_font_size(self, set_label_size: float, subset_label_size: float):
@@ -636,6 +652,86 @@ class VennCanvas(FigureCanvasQTAgg):
         return selection
 
 
+class UpSetCanvas(BaseCanvas):
+
+    def __init__(self, gene_sets: dict, parent=None):
+        super().__init__(gene_sets, parent, tight_layout=False)
+        self.upset_df = enrichment._generate_upset_srs(gene_sets)
+        self.upset = upsetplot.UpSet(self.upset_df)
+        self.subset_states = {i: self.DESELECTED_STATE for i in range(len(self.upset.subset_styles))}
+
+        self.axes = self.upset.plot(self.fig)
+        for ax in self.axes.values():
+            generic.despine(ax)
+
+        self.bounding_boxes = []
+        axis_ymax = self.axes['intersections'].dataLim.bounds[3]
+        for patch in self.axes['intersections'].patches:
+            x, y = patch.get_xy()
+            width = patch.get_width()
+            bbox = matplotlib.patches.Rectangle((x, y), width, axis_ymax, visible=False)
+            self.bounding_boxes.append(bbox)
+
+        for bbox in self.bounding_boxes:
+            self.axes['intersections'].add_patch(bbox)
+
+    def draw(self):
+        # update matrix
+        matrix_ax = self.axes['matrix']
+        matrix_ax.clear()
+        self.upset.plot_matrix(matrix_ax)
+        super().draw()
+
+    def on_click(self, event):
+        graph_modified = False
+        for subset in self.subset_states:
+            bounding_box = self.bounding_boxes[subset]
+
+            if bounding_box.contains_point((event.x, event.y)):
+                graph_modified = True
+                self.manualChoice.emit()
+                if self.subset_states[subset] in [self.DESELECTED_STATE, self.HOVER_STATE]:
+                    _ = self.update_color(subset, self.HOVER_SELECTED_STATE)
+
+                else:
+                    _ = self.update_color(subset, self.HOVER_STATE)
+        if graph_modified:
+            self.draw()
+
+    def update_color(self, subset: int, state: int) -> bool:
+        color = self.COLORMAP[state]
+        self.upset.subset_styles[subset]['facecolor'] = color
+        self.axes['intersections'].patches[subset].set_facecolor(color)
+
+        if self.subset_states[subset] != state:
+            self.subset_states[subset] = state
+            graph_modified = True
+        else:
+            graph_modified = False
+
+        return graph_modified
+
+    def on_hover(self, event):
+        graph_modified = False
+
+        for subset in self.subset_states:
+            bounding_box = self.bounding_boxes[subset]
+            if bounding_box.contains_point((event.x, event.y)):
+                if self.subset_states[subset] in [self.HOVER_STATE, self.DESELECTED_STATE]:
+                    graph_modified |= self.update_color(subset, self.HOVER_STATE)
+                else:
+                    graph_modified |= self.update_color(subset, self.HOVER_SELECTED_STATE)
+
+            else:
+                if self.subset_states[subset] in [self.HOVER_STATE, self.DESELECTED_STATE]:
+                    graph_modified |= self.update_color(subset, self.DESELECTED_STATE)
+                else:
+                    graph_modified |= self.update_color(subset, self.SELECTED_STATE)
+
+        if graph_modified:
+            self.draw()
+
+
 class SimpleSetOpWindow(gui_utils.MinMaxDialog):
     SET_OPERATIONS = {'Union': 'union', 'Majority-Vote Intersection': 'majority_vote_intersection',
                       'Intersection': 'intersection', 'Difference': 'difference',
@@ -691,7 +787,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
                 self._connect_canvas(canvas)
 
             else:
-                canvas = EmptyCanvas('UpSet not implemented yet!', self)
+                canvas = UpSetCanvas(items, self)
         if 'venn' in self.widgets:
             self.widgets['canvas'].deleteLater()
             self.widgets['toolbar'].deleteLater()
