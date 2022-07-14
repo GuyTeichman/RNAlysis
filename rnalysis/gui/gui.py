@@ -206,18 +206,11 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         func = self.ANALYSIS_FUNCS[(name, single_set)]
         return func
 
-    @staticmethod
-    def clear_layout(layout):
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
     def update_plot_ui(self):
         self.plot_group.setVisible(True)
         # delete previous widgets
         self.plot_widgets = {}
-        self.clear_layout(self.plot_grid)
+        gui_utils.clear_layout(self.plot_grid)
         self.scroll_layout.insertWidget(3, self.plot_group)
 
         i = 0
@@ -231,7 +224,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.parameter_group.setVisible(True)
         # delete previous widgets
         self.parameter_widgets = {}
-        self.clear_layout(self.parameter_grid)
+        gui_utils.clear_layout(self.parameter_grid)
         self.scroll_layout.insertWidget(2, self.parameter_group)
 
         i = 0
@@ -249,7 +242,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
         # delete previous widgets
         self.stats_widgets = {}
-        self.clear_layout(self.stats_grid)
+        gui_utils.clear_layout(self.stats_grid)
         self.scroll_layout.insertWidget(1, self.stats_group)
 
         radio_options = self.STATISTICAL_TESTS.keys() if self.is_categorical() else \
@@ -1029,7 +1022,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         except KeyError:
             pass
         self.parameter_widgets = {}
-        self.clear_layout(self.parameter_grid)
+        gui_utils.clear_layout(self.parameter_grid)
 
         chosen_func_name = self.get_current_func_name()
         signature = generic.get_method_signature(chosen_func_name, filtering.Filter)
@@ -1058,13 +1051,6 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         if button is None:
             return None
         return self.SET_OPERATIONS[button.text()]
-
-    @staticmethod
-    def clear_layout(layout):
-        while layout.count():
-            child = layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
 
     def _check_legal_operations(self):
         n_items = len(self.widgets['set_list'].selectedItems())
@@ -1300,13 +1286,6 @@ class FilterTabPage(TabPage):
         # self.grid.addWidget(QtWidgets.QSpinBox(), 2, 0)
         # self.grid.addWidget(QtWidgets.QPushButton('Clear Text'), 2, 2)
 
-    @staticmethod
-    def clear_layout(layout, exceptions: set = frozenset()):
-        while layout.count() > len(exceptions):
-            child = layout.takeAt(0)
-            if child.widget() and child.widget() not in exceptions:
-                child.widget().deleteLater()
-
     def rename(self):
         new_name = self.overview_widgets['table_name'].text()
         super().rename()
@@ -1403,7 +1382,7 @@ class FilterTabPage(TabPage):
     def update_parameter_ui(self):
         # delete previous widgets
         self.parameter_grid.removeWidget(self.parameter_widgets['function_combo'])
-        self.clear_layout(self.parameter_grid)
+        gui_utils.clear_layout(self.parameter_grid)
         self.parameter_widgets = {'function_combo': self.parameter_widgets['function_combo']}
         self.parameter_grid.addWidget(self.parameter_widgets['function_combo'], 0, 0, 1, 2)
 
@@ -1538,7 +1517,7 @@ class FilterTabPage(TabPage):
         self.init_overview_ui()
         self.init_action_ui()
 
-        self.clear_layout(self.basic_grid)
+        gui_utils.clear_layout(self.basic_grid)
         self.layout.removeWidget(self.basic_group)
         self.basic_group.deleteLater()
 

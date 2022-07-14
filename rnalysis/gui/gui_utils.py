@@ -821,6 +821,8 @@ def save_gene_set(gene_set: set, path):
             [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
 
 
-def dark_stylesheet():
-    with open('utils/dark_style.qss') as f:
-        return f.read()
+def clear_layout(layout, exceptions: set = frozenset()):
+    while layout.count() > len(exceptions):
+        child = layout.takeAt(0)
+        if child.widget() and child.widget() not in exceptions:
+            child.widget().deleteLater()
