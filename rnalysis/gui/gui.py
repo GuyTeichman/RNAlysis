@@ -835,7 +835,7 @@ class UpSetCanvas(BaseCanvas):
         return selection
 
 
-class SimpleSetOpWindow(gui_utils.MinMaxDialog):
+class SetOperationWindow(gui_utils.MinMaxDialog):
     SET_OPERATIONS = {'Union': 'union', 'Majority-Vote Intersection': 'majority_vote_intersection',
                       'Intersection': 'intersection', 'Difference': 'difference',
                       'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
@@ -849,7 +849,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         super().__init__(parent)
         self.available_objects = available_objects
         self.widgets = {}
-        self.list_group = QtWidgets.QGroupBox('Set operation', self)
+        self.list_group = QtWidgets.QGroupBox('Choose gene sets', self)
         self.list_grid = QtWidgets.QGridLayout(self.list_group)
         self.parameter_group = QtWidgets.QGroupBox('Additional parameters', self)
         self.parameter_grid = QtWidgets.QGridLayout(self.parameter_group)
@@ -920,7 +920,6 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
                 canvas.symmetric_difference)
 
     def init_ui(self):
-        self.list_group.setTitle('Choose gene sets')
         self.setWindowTitle('Set Operations')
 
         self.setLayout(self.layout)
@@ -1065,7 +1064,7 @@ class SimpleSetOpWindow(gui_utils.MinMaxDialog):
         if isinstance(self.widgets['canvas'], EmptyCanvas):
             is_legal = False
 
-        if self.widgets['radio_button_box'].checkedButton() is None:
+        if self.get_current_func_name() is None:
             is_legal = False
 
         if self.widgets['choose_primary_set'].isVisible() and not self.widgets['choose_primary_set'].is_legal():
@@ -1123,7 +1122,7 @@ class TabPage(QtWidgets.QWidget):
 
         self.stdout_group = QtWidgets.QGroupBox('Log')
         self.layout.addWidget(self.stdout_group)
-        self.layout.addWidget(QtWidgets.QWidget(self),stretch=1)
+        self.layout.addWidget(QtWidgets.QWidget(self), stretch=1)
         self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
         self.stdout_widgets = {}
 
