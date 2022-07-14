@@ -40,6 +40,7 @@ class MinMaxDialog(QtWidgets.QDialog):
 
 
 class PathLineEdit(QtWidgets.QWidget):
+    IS_LINE_EDIT_LIKE = True
     textChanged = QtCore.pyqtSignal(bool)
 
     def __init__(self, contents: str = 'No file chosen', button_text: str = 'Load', parent=None):
@@ -783,6 +784,8 @@ def param_to_widget(param, name: str):
                               typing.Union[str, int, typing.List[str], typing.List[int]]):
         widget = QMultiStrIntLineEdit(name)
         widget.set_defaults(param.default if is_default else '')
+    elif param.annotation in (Path, typing.Union[str, Path], typing.Union[None, str, Path]):
+        widget = PathLineEdit()
     # elif param.annotation == typing.Dict[str, typing.List[str]]:
     #     pass
     # elif param.annotation == typing.Dict[str, typing.List[int]]:
@@ -797,7 +800,7 @@ def param_to_widget(param, name: str):
 def get_val_from_widget(widget):
     if isinstance(widget, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox, OptionalSpinBox)):
         val = widget.value()
-    elif isinstance(widget, QtWidgets.QLineEdit) or (hasattr(widget, 'IS_STR_INT_LINE_EDIT')):
+    elif isinstance(widget, QtWidgets.QLineEdit) or (hasattr(widget, 'IS_LINE_EDIT_LIKE')):
         val = widget.text()
     elif isinstance(widget, QtWidgets.QCheckBox):
         val = widget.isChecked()
