@@ -49,7 +49,7 @@ def is_method_of_class(mthd, cls):
 
 def isinstanceinh(obj, parent_class):
     """
-    Returns True if 'obj' is is an instance of class 'parent_class', or of a subclass of 'parent_class'.
+    Returns True if 'obj'  is an instance of class 'parent_class', or of a subclass of 'parent_class'.
 
     :param obj: object to be tested
     :type obj: Any
