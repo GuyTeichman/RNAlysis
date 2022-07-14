@@ -314,110 +314,6 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.close()
 
 
-# class SetOpWindow(gui_utils.MinMaxDialog):
-#     SET_OPERATIONS = {'Intersection': 'intersection',
-#                       'Majority-Vote Intersection': 'majority_vote_intersection',
-#                       'Union': 'union', 'Difference': 'difference',
-#                       'Symmetric Difference': 'symmetric_difference'}
-#
-#     def __init__(self, available_objects: dict, parent=None):
-#         super().__init__(parent)
-#         self.available_objects = available_objects
-#         self.widgets = {}
-#         self.list_group = QtWidgets.QGroupBox('Set operation', self)
-#         self.list_grid = QtWidgets.QGridLayout(self.list_group)
-#         self.parameter_group = QtWidgets.QGroupBox('Additional parameters', self)
-#         self.parameter_grid = QtWidgets.QGridLayout(self.parameter_group)
-#         self.parameter_widgets = {}
-#         self.layout = QtWidgets.QHBoxLayout(self)
-#
-#         self.init_ui()
-#
-#     def init_ui(self):
-#         self.setWindowTitle('Set Operations')
-#         self.setLayout(self.layout)
-#         self.layout.addWidget(self.list_group)
-#         self.layout.addWidget(self.parameter_group)
-#
-#         self.parameter_group.setVisible(False)
-#
-#         for lst in ['list1', 'list2']:
-#             self.widgets[lst] = QtWidgets.QListWidget(self)
-#             self.widgets[lst].insertItems(0, self.available_objects)
-#         self.widgets['list2'].setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-#         self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose set operation', self.SET_OPERATIONS.keys())
-#         self.widgets['radio_button_box'].buttonClicked.connect(self.update_paremeter_ui)
-#
-#         self.list_grid.addWidget(self.widgets['radio_button_box'], 2, 0, 3, 1)
-#         self.list_grid.addWidget(self.widgets['list1'], 2, 1, 3, 1)
-#         self.list_grid.addWidget(self.widgets['list2'], 2, 2, 3, 1)
-#         self.list_grid.addWidget(QtWidgets.QLabel('Choose first gene set:', self), 1, 1, 1, 1)
-#         self.list_grid.addWidget(QtWidgets.QLabel('Choose other gene set(s):', self), 1, 2, 1, 1)
-#
-#     def get_current_func_name(self):
-#         return self.SET_OPERATIONS[self.widgets['radio_button_box'].checkedButton().text()]
-#
-#     @staticmethod
-#     def clear_layout(layout):
-#         while layout.count():
-#             child = layout.takeAt(0)
-#             if child.widget():
-#                 child.widget().deleteLater()
-#
-#     def update_paremeter_ui(self):
-#         self.parameter_group.setVisible(True)
-#
-#         # delete previous widgets
-#         self.parameter_widgets = {}
-#         self.clear_layout(self.parameter_grid)
-#
-#         chosen_func_name = self.get_current_func_name()
-#         signature = generic.get_method_signature(chosen_func_name, filtering.Filter)
-#         i = 0
-#         for name, param in signature.items():
-#             if name in {'self', 'other', 'others', 'return_type'}:
-#                 continue
-#             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-#             self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
-#             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
-#             i += 1
-#
-#         self.parameter_widgets['apply_button'] = QtWidgets.QPushButton(text='Apply')
-#         self.parameter_widgets['apply_button'].clicked.connect(self.apply_set_op)
-#         self.parameter_grid.addWidget(self.parameter_widgets['apply_button'], i, 0, 1, 2)
-#
-#         help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
-#                        f"{filtering.Filter.__name__}.{chosen_func_name}.html"
-#         self.parameter_widgets['help_link'] = QtWidgets.QLabel(
-#             text=f'<a href="{help_address}">Open documentation for function '
-#                  f'<b>{filtering.Filter.__name__}.{chosen_func_name}</b></a>')
-#         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
-#         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
-#
-#     def _get_function_params(self):
-#         first_name = self.widgets['list1'].currentItem().text()
-#         first = self.available_objects.index(first_name)
-#         second_names = [item.text() for item in self.widgets['list2'].selectedItems()]
-#         second = [self.available_objects.index(name) for name in second_names]
-#         kwargs = {}
-#         for param_name, widget in self.parameter_widgets.items():
-#             if param_name in {'apply_button', 'help_link'}:
-#                 continue
-#             val = gui_utils.get_val_from_widget(widget)
-#
-#             kwargs[param_name] = val
-#         return first, second, kwargs
-#
-#     @QtCore.pyqtSlot()
-#     def apply_set_op(self):
-#         func_name = self.get_current_func_name()
-#         first, seconds, kwargs = self._get_function_params()
-#
-#         self.parent().apply_set_op(func_name, first, seconds, kwargs)
-#
-#         self.close()
-
-
 class EmptyCanvas(FigureCanvasQTAgg):
     def __init__(self, text: str, parent=None):
         self.fig = plt.Figure(constrained_layout=True)
@@ -1360,6 +1256,11 @@ class FilterTabPage(TabPage):
         self.basic_widgets['type_label'] = QtWidgets.QLabel('Choose table type:')
         self.basic_widgets['name_label'] = QtWidgets.QLabel('Name your table (optional):')
 
+        self.basic_widgets['apply_button'] = QtWidgets.QPushButton('Apply')
+        self.basic_widgets['apply_button'].clicked.connect(self.apply_function)
+        self.layout.insertWidget(1, self.basic_widgets['apply_button'])
+        self.basic_widgets['apply_button'].setVisible(False)
+
         self.basic_grid.addWidget(self.basic_widgets['file_label'], 0, 0, 1, 2)
         self.basic_grid.addWidget(self.basic_widgets['type_label'], 0, 2)
         self.basic_grid.addWidget(self.basic_widgets['name_label'], 0, 3)
@@ -1403,6 +1304,7 @@ class FilterTabPage(TabPage):
                  f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>')
         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
+        self.basic_widgets['apply_button'].setVisible(True)
 
     def view_full_dataframe(self):
         df_window = gui_utils.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
@@ -1416,7 +1318,7 @@ class FilterTabPage(TabPage):
     def _get_function_params(self):
         func_params = {}
         for param_name, widget in self.parameter_widgets.items():
-            if param_name in {'apply_button', 'help_link'}:
+            if param_name in {'function_combo', 'help_link'}:
                 continue
             val = gui_utils.get_val_from_widget(widget)
 
@@ -1837,7 +1739,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def choose_set_op(self):
         available_objs = self.get_available_objects()
-        self.set_op_window = SimpleSetOpWindow(available_objs, self)
+        self.set_op_window = SetOperationWindow(available_objs, self)
         self.set_op_window.primarySetUsed.connect(self.choose_tab_by_name)
         self.set_op_window.geneSetReturned.connect(self.new_tab_from_gene_set)
         self.set_op_window.show()
