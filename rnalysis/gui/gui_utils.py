@@ -89,7 +89,7 @@ class PathLineEdit(QtWidgets.QWidget):
 
 
 class StrIntLineEdit(QtWidgets.QLineEdit):
-    IS_STR_INT_LINE_EDIT = True
+    IS_LINE_EDIT_LIKE = True
 
     def text(self) -> typing.Union[str, int]:
         val = super().text()
