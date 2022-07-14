@@ -591,6 +591,151 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.close()
 
 
+class SetVisualizationWindow(gui_utils.MinMaxDialog):
+    VISUALIZATION_FUNCS = {'Venn Diagram': 'venn_diagram', 'UpSet Plot': 'upset_plot'}
+
+    def __init__(self, available_objects: dict, parent=None):
+        super().__init__(parent)
+        self.available_objects = available_objects
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.widgets = {}
+
+        self.list_group = QtWidgets.QGroupBox('Choose gene sets', self)
+        self.list_grid = QtWidgets.QGridLayout(self.list_group)
+
+        self.visualization_group = QtWidgets.QGroupBox('Gene set visualization')
+        self.visualization_grid = QtWidgets.QGridLayout(self.visualization_group)
+
+        self.parameter_widgets = {}
+        self.parameter_group = QtWidgets.QGroupBox('Additional parameters')
+        self.parameter_grid = QtWidgets.QGridLayout(self.parameter_group)
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Gene Set Visualization')
+        self.setLayout(self.layout)
+        self.layout.addWidget(self.list_group, stretch=1)
+        self.layout.addWidget(self.visualization_group, stretch=3)
+
+        self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose visualization type:',
+                                                                    self.VISUALIZATION_FUNCS, parent=self)
+        for func in [self.update_parameter_ui, self._validate_input]:
+            self.widgets['radio_button_box'].buttonClicked.connect(func)
+            self.widgets['radio_button_box'].selectionChanged.connect(func)
+
+        self.visualization_grid.addWidget(self.widgets['radio_button_box'], 0, 0, 2, 1)
+        self.visualization_grid.addWidget(self.parameter_group, 2, 0, 2, 1)
+
+        self.widgets['generate_button'] = QtWidgets.QPushButton(text='Generate graph')
+        self.widgets['generate_button'].clicked.connect(self.generate_graph)
+        self.widgets['generate_button'].setEnabled(False)
+        self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 4)
+
+        self.init_list_ui()
+
+    def init_list_ui(self):
+        self.widgets['set_list'] = QtWidgets.QListWidget(self)
+        self.widgets['set_list'].insertItems(0, self.available_objects)
+        self.widgets['set_list'].setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
+        for func in [self._check_legal_operations, self._validate_input]:  # TODO: self.create_canvas,
+            self.widgets['set_list'].itemSelectionChanged.connect(func)
+
+        self.list_grid.addWidget(self.widgets['set_list'], 1, 1, 4, 1)
+        self.widgets['select_all'] = QtWidgets.QPushButton('Select all', self)
+        self.widgets['select_all'].clicked.connect(self.select_all)
+        self.list_grid.addWidget(self.widgets['select_all'], 5, 1)
+
+        self.widgets['clear_all'] = QtWidgets.QPushButton('Clear all', self)
+        self.widgets['clear_all'].clicked.connect(self.clear_all)
+        self.list_grid.addWidget(self.widgets['clear_all'], 6, 1)
+
+        for row in range(2, 4):
+            self.list_grid.setRowStretch(row, 2)
+
+    def select_all(self):
+        for ind in range(self.widgets['set_list'].count()):
+            item = self.widgets['set_list'].item(ind)
+            if not item.isSelected():
+                item.setSelected(True)
+
+    def clear_all(self):
+        for item in self.widgets['set_list'].selectedItems():
+            item.setSelected(False)
+
+    def _validate_input(self):
+        is_legal = True
+
+        if self.get_current_func_name() is None:
+            is_legal = False
+
+        if len(self.widgets['set_list'].selectedItems()) < 2:
+            is_legal = False
+
+        self.widgets['generate_button'].setEnabled(is_legal)
+
+    def _check_legal_operations(self):
+        n_items = len(self.widgets['set_list'].selectedItems())
+        if self.get_current_func_name() == 'venn_diagram' and n_items > 2:
+            self.widgets['radio_button_box'].set_selection('UpSet Plot')
+        venn_button = self.widgets['radio_button_box'].radio_buttons['Venn Diagram']
+        venn_button.setEnabled(n_items <= 2)
+
+    def update_parameter_ui(self):
+        # delete previous widgets
+        try:
+            self.parameter_widgets['help_link'].deleteLater()
+            self.visualization_grid.removeWidget(self.parameter_widgets['help_link'])
+        except KeyError:
+            pass
+        self.parameter_widgets = {}
+        gui_utils.clear_layout(self.parameter_grid)
+
+        chosen_func_name = self.get_current_func_name()
+        signature = generic.get_method_signature(chosen_func_name, enrichment)
+        i = 0
+        for name, param in signature.items():
+            if name in {'objs'}:
+                continue
+            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
+            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
+            self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
+            i += 1
+
+        help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{chosen_func_name}.html"
+        self.parameter_widgets['help_link'] = QtWidgets.QLabel(
+            f'<a href="{help_address}">Open documentation for function '
+            f'<b>enrichment.{chosen_func_name}</b></a>', self)
+        self.parameter_widgets['help_link'].setOpenExternalLinks(True)
+        self.visualization_grid.addWidget(self.parameter_widgets['help_link'], 5, 0, 1, 4)
+
+    def get_current_func_name(self):
+        button = self.widgets['radio_button_box'].checkedButton()
+        if button is None:
+            return None
+        return self.VISUALIZATION_FUNCS[button.text()]
+
+    def _get_function_params(self):
+        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
+        kwargs = {}
+        for param_name, widget in self.parameter_widgets.items():
+            if param_name in {'apply_button', 'help_link'}:
+                continue
+            val = gui_utils.get_val_from_widget(widget)
+
+            kwargs[param_name] = val
+        return set_names, kwargs
+
+    @QtCore.pyqtSlot()
+    def generate_graph(self):
+        func_name = self.get_current_func_name()
+        set_names, kwargs = self._get_function_params()
+        objs_to_plot = {key: val for key, val in self.available_objects.items() if key in set_names}
+        _ = getattr(enrichment, func_name)(objs_to_plot, **kwargs)
+        # self.close()
+
+
 class TabPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1141,6 +1286,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.about_window = gui_utils.AboutWindow(self)
         self.settings_window = gui_utils.SettingsWindow(self)
         self.set_op_window = None
+        self.set_visualization_window = None
         self.enrichment_window = None
         self.enrichment_results = []
 
@@ -1270,11 +1416,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.copy_action = QtWidgets.QAction("&Copy Gene Set", self)
         self.copy_action.triggered.connect(self.copy_gene_set)
-        self.set_op_action = QtWidgets.QAction("Set &Operations...")
+        self.set_op_action = QtWidgets.QAction("Set &Operations...", self)
         self.set_op_action.triggered.connect(self.choose_set_op)
-        self.enrichment_action = QtWidgets.QAction("E&nrichment Analysis...")
+        self.enrichment_action = QtWidgets.QAction("E&nrichment Analysis...", self)
         self.enrichment_action.triggered.connect(self.open_enrichment_analysis)
-        self.set_viz_action = QtWidgets.QAction("Gene Set &Visualization...")
+        self.set_vis_action = QtWidgets.QAction("Gene Set &Visualization...", self)
+        self.set_vis_action.triggered.connect(self.visualize_gene_sets)
         self.import_set_action = QtWidgets.QAction("&Import Gene Set...", self)
         self.import_set_action.triggered.connect(self.import_gene_set)
         self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
@@ -1329,6 +1476,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_op_window.geneSetReturned.connect(self.new_tab_from_gene_set)
         self.set_op_window.show()
 
+    def visualize_gene_sets(self):
+        available_objs = self.get_available_objects()
+        self.set_visualization_window = SetVisualizationWindow(available_objs, self)
+        self.set_visualization_window.show()
+
     @QtCore.pyqtSlot(str)
     def choose_tab_by_name(self, set_name: str):
         available_objs = self.get_available_objects()
@@ -1381,7 +1533,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
-            [self.copy_action, self.set_op_action, self.enrichment_action, self.set_viz_action, self.import_set_action,
+            [self.copy_action, self.set_op_action, self.enrichment_action, self.set_vis_action, self.import_set_action,
              self.export_set_action])
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
