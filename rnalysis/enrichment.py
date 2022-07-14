@@ -1226,7 +1226,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
 def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default', ref: str = 'predefined',
                  set_colors: Tuple[str, str, str] = ('r', 'g', 'b'),
                  alpha: float = 0.4, weighted: bool = True, lines: bool = True, linecolor: str = 'black',
-                 linestyle='solid', linewidth=2.0,
+                 linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0,
                  normalize_to: float = 1.0):
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
