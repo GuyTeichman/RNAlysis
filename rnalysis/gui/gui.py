@@ -886,7 +886,9 @@ class FilterTabPage(TabPage):
                  f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>')
         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
+
         self.basic_widgets['apply_button'].setVisible(True)
+
 
     def view_full_dataframe(self):
         df_window = gui_utils.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
@@ -1020,6 +1022,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.pipeline = None
 
     def init_basic_ui(self):
+        self.layout.insertWidget(0, self.basic_group)
         self.basic_group.setTitle("Choose data table type for Pipeline")
 
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
@@ -1030,8 +1033,13 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
 
         self.basic_widgets['name_label'] = QtWidgets.QLabel('Name your Pipeline:')
 
-        self.basic_widgets['start_button'] = QtWidgets.QPushButton('start_button')
+        self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
         self.basic_widgets['start_button'].clicked.connect(self.start)
+
+        self.basic_widgets['apply_button'] = QtWidgets.QPushButton('Add to Pipeline')
+        self.basic_widgets['apply_button'].clicked.connect(self.apply_function)
+        self.layout.insertWidget(1, self.basic_widgets['apply_button'])
+        self.basic_widgets['apply_button'].setVisible(False)
 
         self.basic_widgets['type_label'] = QtWidgets.QLabel('Choose table type:')
 
@@ -1045,12 +1053,8 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         super().init_action_ui()
         self.parameter_group.setTitle("Add functions to Pipeline")
 
-    def update_parameter_ui(self):
-        super().update_parameter_ui()
-        self.parameter_widgets['apply_button'].setText('Add to Pipeline')
-
     def apply_function(self):
-        func_name = self.action_widgets['function_combo'].currentText()
+        func_name = self.parameter_widgets['function_combo'].currentText()
         func_params = self._get_function_params()
         self.pipeline.add_function(func_name, **func_params)
         self.update_pipeline_preview()
