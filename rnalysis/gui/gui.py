@@ -14,9 +14,8 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-from gui.gui_graphics import BaseInteractiveCanvas, VennInteractiveCanvas, UpSetInteractiveCanvas, EmptyCanvas
 from rnalysis import filtering, enrichment, __version__
-from rnalysis.gui import gui_style, gui_utils
+from rnalysis.gui import gui_style, gui_utils, gui_graphics
 from rnalysis.utils import io, validation, generic
 
 
@@ -350,7 +349,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
                 ind += 1
 
         if len(set_names) < 2:
-            canvas = EmptyCanvas('Please select 2 or more gene sets to continue', self)
+            canvas = gui_graphics.EmptyCanvas('Please select 2 or more gene sets to continue', self)
         else:
             items = {}
             for s, s_name in zip(sets, set_names):
@@ -364,11 +363,11 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
                     raise TypeError(type(s))
                 items[s_name] = s_set
             if 2 <= len(set_names) <= 3:
-                canvas = VennInteractiveCanvas(items, self)
+                canvas = gui_graphics.VennInteractiveCanvas(items, self)
                 self._connect_canvas(canvas)
 
             else:
-                canvas = UpSetInteractiveCanvas(items, self)
+                canvas = gui_graphics.UpSetInteractiveCanvas(items, self)
                 self._connect_canvas(canvas)
         if 'venn' in self.widgets:
             self.widgets['canvas'].deleteLater()
@@ -386,14 +385,14 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         for row in range(1, 4):
             self.operations_grid.setRowStretch(row, 1)
 
-    def _connect_canvas(self, canvas: BaseInteractiveCanvas):
+    def _connect_canvas(self, canvas: gui_graphics.BaseInteractiveCanvas):
         canvas.manualChoice.connect(self._set_op_other)
         self.widgets['radio_button_box'].radio_buttons['Union'].clicked.connect(canvas.union)
         self.widgets['radio_button_box'].radio_buttons['Intersection'].clicked.connect(canvas.intersection)
         self.primarySetChangedDifference.connect(canvas.difference)
         self.primarySetChangedIntersection.connect(canvas.intersection)
 
-        if isinstance(canvas, VennInteractiveCanvas):
+        if isinstance(canvas, gui_graphics.VennInteractiveCanvas):
             self.widgets['radio_button_box'].radio_buttons['Symmetric Difference'].clicked.connect(
                 canvas.symmetric_difference)
 
@@ -479,7 +478,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.operations_grid.addWidget(self.widgets['apply_button'], 4, 0, 1, 6)
 
     def _majority_vote_intersection(self):
-        if not isinstance(self.widgets['canvas'], EmptyCanvas):
+        if not isinstance(self.widgets['canvas'], gui_graphics.EmptyCanvas):
             threshold = gui_utils.get_val_from_widget(self.parameter_widgets['majority_threshold'])
             self.widgets['canvas'].majority_vote_intersection(threshold)
 
@@ -539,7 +538,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
     def _validate_input(self):
         is_legal = True
 
-        if isinstance(self.widgets['canvas'], EmptyCanvas):
+        if isinstance(self.widgets['canvas'], gui_graphics.EmptyCanvas):
             is_legal = False
 
         if self.get_current_func_name() is None:
