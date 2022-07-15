@@ -1223,9 +1223,10 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
     return upset
 
 
-def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default', ref: str = 'predefined',
+def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default',
+                 attr_ref_table_path: str = 'predefined',
                  set_colors: Tuple[str, str, str] = ('r', 'g', 'b'),
-                 alpha: float = 0.4, weighted: bool = True, lines: bool = True, linecolor: str = 'black',
+                 transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
                  linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0,
                  normalize_to: float = 1.0):
     """
@@ -1238,18 +1239,18 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
     :type title: str
     :param set_colors: determines the colors of the circles in the diagram.
-    :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
+    :param attr_ref_table_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
-    :type ref: str or pathlib.Path (default='predefined')
+    :type attr_ref_table_path: str or pathlib.Path (default='predefined')
     :param title: determines the title of the plot.
     :type set_colors: tuple of matplotlib-format colors, the same size as 'objs'
-    :param alpha: determines the opacity of the circles. \
+    :param transparency: determines the opacity of the circles. \
     Opacity of 0 is completely transparent, while opacity of 1 is completely opaque.
-    :type alpha: a float between 0 and 1
+    :type transparency: a float between 0 and 1
     :param weighted: if True, the plot will be area-weighted.
     :type weighted: bool (default=True)
-    :param lines: if True, adds an outline to the circles.
-    :type lines: bool (default=True)
+    :param add_outline: if True, adds an outline to the circles.
+    :type add_outline: bool (default=True)
     :param linecolor: Determines the color of the circles' outline.
     :type linecolor: matplotlib-format color (default='black')
     :param linestyle: the style of the circles' outline.
@@ -1270,7 +1271,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     if len(objs) > 3 or len(objs) < 2:
         raise ValueError(f'Venn can only accept between 2 and 3 sets. Instead got {len(objs)}')
     assert isinstance(title, str), f'Title must be a string. Instead got {type(title)}'
-    objs = _fetch_sets(objs=objs, ref=ref)
+    objs = _fetch_sets(objs=objs, ref=attr_ref_table_path)
     if len(objs) == 2:
         func = vn.venn2 if weighted else vn.venn2_unweighted
         func_circles = vn.venn2_circles
@@ -1279,12 +1280,12 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
         func = vn.venn3 if weighted else vn.venn3_unweighted
         func_circles = vn.venn3_circles
     _ = plt.figure()
-    plot_obj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=alpha,
+    plot_obj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=transparency,
                     normalize_to=normalize_to)
-    if lines and weighted:
+    if add_outline and weighted:
         circle_obj = func_circles(tuple(objs.values()), color=linecolor, linestyle=linestyle, linewidth=linewidth,
                                   normalize_to=normalize_to)
-    elif lines and not weighted:
+    elif add_outline and not weighted:
         warnings.warn('Cannot draw lines on an unweighted venn diagram. ')
         circle_obj = None
     else:

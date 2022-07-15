@@ -500,10 +500,10 @@ def test_upset_plot_api():
 def test_venn_diagram_api():
     venn_diagram({'obj': {'0', '1', '2'}, 'obj2': {'1', '3'}, 'obj3': {'5', '6', '7', '0'}})
     venn_diagram({'obj': {'0', '1', '2'}, 'obj2': FeatureSet({'1', '2', '3'}), 'obj3': RankedSet(['5', '3', '0'])},
-                 alpha=0.2, set_colors=('black', 'purple', 'yellow'), linestyle='dashed', linewidth=1, linecolor='grey',
+                 transparency=0.2, set_colors=('black', 'purple', 'yellow'), linestyle='dashed', linewidth=1, linecolor='grey',
                  title='title')
     venn_diagram({'obj': 'attribute1', 'obj2': 'attribute2', 'obj3': {'WBGene00000001', 'WBGene00001234'}},
-                 ref=__attr_ref__, lines=False)
+                 attr_ref_table_path=__attr_ref__, add_outline=False)
     venn_diagram({'obj': {'0', '1', '2'}, 'otherobj': {'2', '3', '5'}})
     venn_diagram({'obj': {'0', '1', '2'}, 'otherobj': {'2', '3', '5'}}, weighted=False)
     plt.close('all')
