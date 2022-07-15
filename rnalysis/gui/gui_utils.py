@@ -516,7 +516,7 @@ class AboutWindow(QtWidgets.QMessageBox):
         text = f"""<p><b><i>RNAlysis</i> version {__version__}</b>
                 </p>
                 <br>
-                <img src="../docs/source/logo.png" width="500"/>
+                <img src="../../docs/source/logo.png" width="500"/>
                 <p>
                 Development lead: Guy Teichman (<a href="mailto:guyteichman@gmail.com">guyteichman@gmail.com</a>)
                 </p>
