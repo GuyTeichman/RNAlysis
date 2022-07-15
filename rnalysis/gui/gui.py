@@ -402,6 +402,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.layout.addWidget(self.list_group, stretch=1)
         self.layout.addWidget(self.operations_group, stretch=3)
         # self.operations_grid.addWidget(self.parameter_group, 1, 1, 3, 1)
+        self.parameter_group.setVisible(False)
 
         self.init_sets_ui()
         self.init_operations_ui()
@@ -461,7 +462,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
         self.widgets['choose_primary_set'] = gui_utils.MandatoryComboBox('Choose primary set...', self)
         self.widgets['choose_primary_set'].currentTextChanged.connect(self._primary_set_changed)
-        self.widgets['choose_primary_set_label'] = QtWidgets.QLabel('Choose primary set for this operation:')
+        self.widgets['choose_primary_set_label'] = QtWidgets.QLabel('Primary set for operation:')
         self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set_label'])
         self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set'])
 
@@ -511,6 +512,9 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
             if chosen_func_name == 'majority_vote_intersection':
                 self.parameter_widgets[name].valueChanged.connect(self._majority_vote_intersection)
                 self._majority_vote_intersection()
+            i += 1
+
+        self.parameter_group.setVisible(i > 0)
 
         if chosen_func_name != 'other':
             help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
@@ -519,7 +523,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
                 f'<a href="{help_address}">Open documentation for function '
                 f'<b>{filtering.Filter.__name__}.{chosen_func_name}</b></a>', self)
             self.parameter_widgets['help_link'].setOpenExternalLinks(True)
-            self.operations_grid.addWidget(self.parameter_widgets['help_link'], 5, 0, 1, 2)
+            self.operations_grid.addWidget(self.parameter_widgets['help_link'], 5, 0, 1, 6)
 
     def get_current_func_name(self):
         button = self.widgets['radio_button_box'].checkedButton()
