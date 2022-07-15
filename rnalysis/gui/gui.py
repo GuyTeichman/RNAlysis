@@ -397,11 +397,13 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
     def init_ui(self):
         self.setWindowTitle('Set Operations')
-
+        self.setGeometry(200, 200, 1250, 500)
         self.setLayout(self.layout)
-        self.layout.addWidget(self.list_group, stretch=1)
-        self.layout.addWidget(self.operations_group, stretch=3)
-        # self.operations_grid.addWidget(self.parameter_group, 1, 1, 3, 1)
+        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.layout.addWidget(self.widgets['splitter'])
+        self.widgets['splitter'].addWidget(self.list_group)
+        self.widgets['splitter'].addWidget(self.operations_group)
+        self.widgets['splitter'].setSizes([self.width() * 0.2, self.width() * 0.8])
         self.parameter_group.setVisible(False)
 
         self.init_sets_ui()
@@ -467,6 +469,8 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set'])
 
         self.widgets['set_op_box_layout'].addWidget(self.parameter_group)
+
+        self.widgets['set_op_box_layout'].addStretch(1)
 
         self._toggle_choose_primary_set()
 
@@ -618,9 +622,13 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
     def init_ui(self):
         self.setWindowTitle('Gene Set Visualization')
+        self.setGeometry(200, 200, 1250, 500)
         self.setLayout(self.layout)
-        self.layout.addWidget(self.list_group, stretch=1)
-        self.layout.addWidget(self.visualization_group, stretch=3)
+        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.layout.addWidget(self.widgets['splitter'])
+        self.widgets['splitter'].addWidget(self.list_group)
+        self.widgets['splitter'].addWidget(self.visualization_group)
+        self.widgets['splitter'].setSizes([self.width() * 0.2, self.width() * 0.8])
 
         self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose visualization type:',
                                                                     self.VISUALIZATION_FUNCS, parent=self)
@@ -630,11 +638,14 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
         self.visualization_grid.addWidget(self.widgets['radio_button_box'], 0, 0, 2, 1)
         self.visualization_grid.addWidget(self.parameter_group, 2, 0, 2, 1)
+        self.visualization_grid.setRowStretch(self.visualization_grid.count(), 1)
 
         self.widgets['generate_button'] = QtWidgets.QPushButton(text='Generate graph')
         self.widgets['generate_button'].clicked.connect(self.generate_graph)
         self.widgets['generate_button'].setEnabled(False)
         self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 4)
+
+        self.parameter_group.setVisible(False)
 
         self.init_list_ui()
 
@@ -713,6 +724,8 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
             f'<b>enrichment.{chosen_func_name}</b></a>', self)
         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
         self.visualization_grid.addWidget(self.parameter_widgets['help_link'], 5, 0, 1, 4)
+
+        self.parameter_group.setVisible(i > 0)
 
     def get_current_func_name(self):
         button = self.widgets['radio_button_box'].checkedButton()
