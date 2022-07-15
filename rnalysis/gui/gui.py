@@ -96,7 +96,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
     def init_basic_ui(self):
         self.setWindowTitle('Enrichment Analysis')
-        self.setGeometry(200, 200, 1100, 600)
+        # self.setGeometry(200, 200, 1100, 600)
         self.setLayout(self.main_layout)
         self.main_layout.addWidget(self.scroll)
 
@@ -112,30 +112,29 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
         self.scroll_layout.addWidget(self.list_group)
         self.scroll_layout.addWidget(self.parameter_group)
-        for lst in ['list1', 'list2']:
-            self.widgets[lst] = QtWidgets.QListWidget(self)
+        self.scroll_layout.addStretch(1)
+        for lst in ['enrichment_list', 'bg_list']:
+            self.widgets[lst] = QtWidgets.QComboBox(self)
             self.widgets[lst].insertItems(0, self.available_objects)
 
-        self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose analysis type', self.ANALYSIS_TYPES.keys())
+        self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose enrichment dataset',
+                                                                    self.ANALYSIS_TYPES.keys())
         self.widgets['radio_button_box'].buttonClicked.connect(self.update_uis)
 
         self.widgets['run_button'] = QtWidgets.QPushButton('Run')
         self.widgets['run_button'].clicked.connect(self.run_analysis)
 
         self.list_grid.addWidget(self.widgets['radio_button_box'], 2, 0, 3, 1)
-        self.list_grid.addWidget(self.widgets['list1'], 2, 1, 3, 1)
-        self.list_grid.addWidget(self.widgets['list2'], 2, 2, 3, 1)
-        self.list_grid.addWidget(QtWidgets.QLabel('Choose the enrichment set:', self), 1, 1, 1, 1)
-        self.list_grid.addWidget(QtWidgets.QLabel('Choose background gene set:', self), 1, 2, 1, 1)
+        self.list_grid.addWidget(self.widgets['enrichment_list'], 2, 1)
+        self.list_grid.addWidget(self.widgets['bg_list'], 4, 1)
+        self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose enrichment set:</b>', self), 1, 1)
+        self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose background set:</b>', self), 3, 1)
 
     def _set_background_select_mode(self, selectable: bool = True):
         if selectable:
-            self.widgets['list2'].setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-            self.widgets['list2'].setDisabled(False)
+            self.widgets['bg_list'].setDisabled(False)
         else:
-            self.widgets['list2'].setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-            self.widgets['list2'].setDisabled(True)
-            self.widgets['list2'].clearSelection()
+            self.widgets['bg_list'].setDisabled(True)
 
     def _get_statistical_test_name(self):
         try:
@@ -284,7 +283,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                 kwargs['statistical_test'] = stat_test
             else:
                 kwargs['parametric_test'] = stat_test
-        gene_set_name = self.widgets['list1'].currentItem().text()
+        gene_set_name = self.widgets['enrichment_list'].currentItem().text()
         gene_set = self.available_objects.index(gene_set_name)
 
         for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
@@ -295,7 +294,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             kwargs[param_name] = val
 
         if not self.is_single_set():
-            bg_set_name = self.widgets['list2'].currentItem().text()
+            bg_set_name = self.widgets['bg_list'].currentItem().text()
             bg_set = self.available_objects.index(bg_set_name)
         else:
             bg_set = None
