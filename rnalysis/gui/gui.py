@@ -19,8 +19,8 @@ from rnalysis.utils import io, validation, generic
 
 
 class EnrichmentWindow(gui_utils.MinMaxDialog):
-    IGNORED_ARGS = {'self', 'save_csv', 'fname', 'return_fig', 'parallel', 'biotype', 'background_genes',
-                    'statistical_test', 'parametric_test'}
+    EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'parallel', 'biotype', 'background_genes',
+                       'statistical_test', 'parametric_test'}
 
     ANALYSIS_TYPES = {'User-defined attributes': 'user_defined', 'Gene Ontology (GO)': 'go',
                       'Kyoto Encyclopedia of Genes and Genomes (KEGG) Pathways': 'kegg',
@@ -177,7 +177,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         chosen_func = self.get_current_func()
         signature = generic.get_method_signature(chosen_func)
         for name, param in signature.items():
-            if name in self.IGNORED_ARGS:
+            if name in self.EXCLUDED_PARAMS:
                 continue
             elif name in self.PLOT_ARGS[analysis_type]:
                 self.plot_signature[name] = param
@@ -315,6 +315,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
     SET_OPERATIONS = {'Union': 'union', 'Majority-Vote Intersection': 'majority_vote_intersection',
                       'Intersection': 'intersection', 'Difference': 'difference',
                       'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
+    EXCLUDED_PARAMS = {'self', 'other', 'others', 'return_type'}
 
     geneSetReturned = QtCore.pyqtSignal(set, str)
     primarySetUsed = QtCore.pyqtSignal(str)
@@ -503,7 +504,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         signature = generic.get_method_signature(chosen_func_name, filtering.Filter)
         i = 0
         for name, param in signature.items():
-            if name in {'self', 'other', 'others', 'return_type'}:
+            if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
             self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
@@ -592,6 +593,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
 class SetVisualizationWindow(gui_utils.MinMaxDialog):
     VISUALIZATION_FUNCS = {'Venn Diagram': 'venn_diagram', 'UpSet Plot': 'upset_plot'}
+    EXCLUDED_PARAMS = {'objs', 'ref'}
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
@@ -695,7 +697,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         signature = generic.get_method_signature(chosen_func_name, enrichment)
         i = 0
         for name, param in signature.items():
-            if name in {'objs'}:
+            if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
             self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
