@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter.majority_vote_intersection &mdash; RNAlysis 2.0.1 documentation</title>
+  <title>rnalysis.filtering.Filter.majority_vote_intersection &mdash; RNAlysis 2.1.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -132,19 +132,24 @@
 <h1>rnalysis.filtering.Filter.majority_vote_intersection<a class="headerlink" href="#rnalysis-filtering-filter-majority-vote-intersection" title="Permalink to this headline"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.Filter.majority_vote_intersection">
-<span class="sig-prename descclassname"><span class="pre">Filter.</span></span><span class="sig-name descname"><span class="pre">majority_vote_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">majority_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.majority_vote_intersection" title="Permalink to this definition"></a></dt>
-<dd><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets. 
-:type others: Filter or set objects.
-:param others: Objects to calculate intersection with.
-:type return_type: ‘set’ or ‘str’ (default=’set’)
-:param return_type: If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.
-:type majority_threshold: float (default=0.5)
-:param majority_threshold: The threshold that determines what counts as majority. Features will be returned         only if they appear in at least (majority_threshold * 100)% of the given Filter objects/sets.
-:rtype: set or str
-:return: If inplace=False, returns a set/string of the features that         uphold majority vote intersection between two given Filter objects/sets.</p>
+<span class="sig-prename descclassname"><span class="pre">Filter.</span></span><span class="sig-name descname"><span class="pre">majority_vote_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">others</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">majority_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'set'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'str'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'set'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.majority_vote_intersection" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets.         Majority-vote intersection with majority_threshold=0 is equivalent to Union.         Majority-vote intersection with majority_threshold=1 is equivalent to Intersection.</p>
 <dl class="field-list">
-<dt class="field-odd">Examples</dt>
-<dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>others</strong> (<a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><em>Filter</em></a><em> or </em><em>set objects.</em>) – Objects to calculate intersection with.</p></li>
+<li><p><strong>return_type</strong> (<em>'set'</em><em> or </em><em>'str'</em><em> (</em><em>default='set'</em><em>)</em>) – If ‘set’, returns a set of the intersecting WBGene indices. If ‘str’, returns a string of         the intersecting indices, delimited by a comma.</p></li>
+<li><p><strong>majority_threshold</strong> (<em>float</em><em> (</em><em>default=0.5</em><em>)</em>) – The threshold that determines what counts as majority. Features will be returned         only if they appear in at least (majority_threshold * 100)% of the given Filter objects/sets.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set or str</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>If inplace=False, returns a set/string of the features that         uphold majority vote intersection between two given Filter objects/sets.</p>
+</dd>
+<dt class="field-even">Examples</dt>
+<dd class="field-even"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000001&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000003&#39;</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;WBGene00000002&#39;</span><span class="p">,</span><span class="s1">&#39;WBGene00000004&#39;</span><span class="p">}</span>
