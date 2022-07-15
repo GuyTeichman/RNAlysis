@@ -12,7 +12,6 @@ import matplotlib
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from rnalysis import filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_utils, gui_graphics
@@ -376,7 +375,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
             self.operations_grid.removeWidget(self.widgets['toolbar'])
 
         self.widgets['canvas'] = canvas
-        self.widgets['toolbar'] = NavigationToolbar2QT(self.widgets['canvas'], self)
+        self.widgets['toolbar'] = gui_graphics.CleanPlotToolBar(self.widgets['canvas'], self)
         self.operations_grid.addWidget(self.widgets['canvas'], 1, 2, 3, 3)
         self.operations_grid.addWidget(self.widgets['toolbar'], 0, 2, 1, 3)
 

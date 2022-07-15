@@ -13,6 +13,19 @@ import enrichment
 from utils import generic
 
 
+class CleanPlotToolBar(NavigationToolbar2QT):
+    toolitems = [t for t in NavigationToolbar2QT.toolitems if
+                 t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
+
+    def set_message(self, msg):
+        pass
+
+
+class BasePreviewCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, tight_layout: bool = True):
+        super().__init__()
+
+
 class BaseInteractiveCanvas(FigureCanvasQTAgg):
     DESELECTED_STATE = 0
     SELECTED_STATE = 1
