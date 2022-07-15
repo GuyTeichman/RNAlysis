@@ -888,6 +888,7 @@ class FilterTabPage(TabPage):
     FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                         'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference'}
+    EXCLUDED_PARAMS = {'self'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1020,7 +1021,7 @@ class FilterTabPage(TabPage):
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         i = 1
         for name, param in signature.items():
-            if name in {'self'}:
+            if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
             self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0, )
