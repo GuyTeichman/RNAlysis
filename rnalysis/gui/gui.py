@@ -748,7 +748,7 @@ class TabPage(QtWidgets.QWidget):
 
         self.stdout_group = QtWidgets.QGroupBox('Log')
         self.layout.addWidget(self.stdout_group)
-        self.layout.addWidget(QtWidgets.QWidget(self), stretch=1)
+        self.layout.addStretch(1)
         self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
         self.stdout_widgets = {}
 
@@ -1036,7 +1036,6 @@ class FilterTabPage(TabPage):
         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
 
         self.basic_widgets['apply_button'].setVisible(True)
-
 
     def view_full_dataframe(self):
         df_window = gui_utils.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
