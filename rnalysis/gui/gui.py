@@ -681,10 +681,10 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
     def _check_legal_operations(self):
         n_items = len(self.widgets['set_list'].selectedItems())
-        if self.get_current_func_name() == 'venn_diagram' and n_items > 2:
+        if self.get_current_func_name() == 'venn_diagram' and n_items > 3:
             self.widgets['radio_button_box'].set_selection('UpSet Plot')
         venn_button = self.widgets['radio_button_box'].radio_buttons['Venn Diagram']
-        venn_button.setEnabled(n_items <= 2)
+        venn_button.setEnabled(n_items <= 3)
 
     def update_parameter_ui(self):
         # delete previous widgets
