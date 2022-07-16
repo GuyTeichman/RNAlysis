@@ -103,7 +103,7 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
         else:
             raise ValueError("Cannot proccess more than 3 sets!")
 
-        self.venn = funcs[0](gene_sets.values(), gene_sets.keys(), set_colors=colors, ax=self.ax)
+        self.venn = funcs[0](gene_sets.values(), gene_sets.keys(), set_colors=colors, ax=self.ax, alpha=1)
         self.venn_circles = funcs[1](gene_sets.values(), linestyle='solid', linewidth=2.0, ax=self.ax)
         self.set_font_size(16, 12)
         self.clear_selection()
