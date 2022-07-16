@@ -368,7 +368,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
             else:
                 canvas = gui_graphics.UpSetInteractiveCanvas(items, self)
                 self._connect_canvas(canvas)
-        if 'venn' in self.widgets:
+        if 'canvas' in self.widgets:
             self.widgets['canvas'].deleteLater()
             self.widgets['toolbar'].deleteLater()
             self.operations_grid.removeWidget(self.widgets['canvas'])
