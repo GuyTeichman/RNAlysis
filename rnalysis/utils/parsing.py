@@ -96,6 +96,9 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = [data]
     elif data is None:
         lst = [None]
+
+    elif callable(data):
+        lst = [data]
     else:
         try:
             lst = list(data)
@@ -116,6 +119,8 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         tpl = data,
     elif data is None:
         tpl = None,
+    elif callable(data):
+        tpl = data,
     else:
         try:
             tpl = tuple(data)
@@ -135,6 +140,8 @@ def data_to_set(data: Any) -> set:
         return {data}
     elif data is None:
         return {None}
+    elif callable(data):
+        return {data}
     else:
         try:
             return set(data)
