@@ -179,10 +179,13 @@ class OptionalSpinBox(QtWidgets.QWidget):
         self.spinbox = SpinBoxWithDisable()
         self.checkbox = QtWidgets.QCheckBox('Disable input?')
         self.checkbox.toggled.connect(self.spinbox.setDisabled)
+        self.checkbox.toggled.connect(self.spinbox.valueChanged)
 
         self.layout.addWidget(self.checkbox, 0, 0)
         self.layout.addWidget(self.spinbox, 0, 1)
         self.setLayout(self.layout)
+
+        self.valueChanged = self.spinbox.valueChanged
 
     def setValue(self, val):
         if val is None:
@@ -205,6 +208,7 @@ class OptionalSpinBox(QtWidgets.QWidget):
 class QMultiInput(QtWidgets.QPushButton):
     IS_MULTI_INPUT = True
     CHILD_QWIDGET = None
+    valueChanged = QtCore.pyqtSignal()
 
     def __init__(self, label: str, text='Set input', parent=None):
         super().__init__(text, parent)
@@ -240,8 +244,12 @@ class QMultiInput(QtWidgets.QPushButton):
         self.dialog_layout.addWidget(self.dialog_widgets['remove_widget'], 1, 0, 1, 2)
 
         self.dialog_widgets['done'] = QtWidgets.QPushButton('Done')
-        self.dialog_widgets['done'].clicked.connect(self.dialog_widgets['box'].close)
+        self.dialog_widgets['done'].clicked.connect(self.dialog_widgets['box'].closeEvent)
         self.dialog_layout.addWidget(self.dialog_widgets['done'], 2, 0, 1, 2)
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.valueChanged.emit()
+        super().closeEvent(a0)
 
     @QtCore.pyqtSlot()
     def add_widget(self):
@@ -769,21 +777,29 @@ class SettingsWindow(MinMaxDialog):
             event.ignore()
 
 
-def param_to_widget(param, name: str):
+def param_to_widget(param, name: str,
+                    actions_to_connect: typing.Union[typing.Iterable[typing.Callable], typing.Callable] = tuple()):
+    actions_to_connect = parsing.data_to_tuple(actions_to_connect)
+
     if param.default == inspect._empty:
         is_default = False
     else:
         is_default = True
+
     if param.annotation == bool:
         widget = QtWidgets.QCheckBox(text=name)
         default = param.default if is_default else False
         widget.setChecked(default)
+        for action in actions_to_connect:
+            widget.stateChanged.connect(action)
     elif param.annotation == int:
         widget = QtWidgets.QSpinBox()
         widget.setMinimum(-2147483648)
         widget.setMaximum(2147483647)
         default = param.default if is_default else 0
         widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation == float:
         widget = QtWidgets.QDoubleSpinBox()
         widget.setMinimum(float("-inf"))
@@ -791,38 +807,60 @@ def param_to_widget(param, name: str):
         widget.setSingleStep(0.05)
         default = param.default if is_default else 0.0
         widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation == str:
         widget = QtWidgets.QLineEdit(param.default if is_default else '')
+        for action in actions_to_connect:
+            widget.textChanged.connect(action)
     elif typing.get_origin(param.annotation) == typing.Literal:
         widget = QtWidgets.QComboBox()
         widget.addItems(typing.get_args(param.annotation))
+        for action in actions_to_connect:
+            widget.currentIndexChanged.connect(action)
     elif param.annotation == typing.Union[int, None]:
         widget = OptionalSpinBox()
         widget.setMinimum(-2147483648)
         widget.setMaximum(2147483647)
         default = param.default if is_default else 0
         widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation in (typing.Union[str, typing.List[str]], typing.Union[str, typing.Iterable[str]]):
         widget = QMultiLineEdit(name)
         widget.set_defaults(param.default if is_default else tuple())
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation in (typing.Union[float, typing.List[float]],
                               typing.Union[float, typing.Iterable[float]]):
         widget = QMultiDoubleSpinBox(name)
         widget.set_defaults(param.default if is_default else tuple())
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation in (typing.Union[int, typing.List[int]], typing.Union[int, typing.Iterable[int]]):
         widget = QMultiSpinBox(name)
         widget.set_defaults(param.default if is_default else tuple())
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation in (typing.Union[bool, typing.List[bool]], typing.Union[bool, typing.Iterable[bool]]):
         widget = QMultiBoolComboBox(name)
         widget.set_defaults(param.default if is_default else tuple())
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation == typing.Union[str, int]:
         widget = StrIntLineEdit(param.default if is_default else '')
+        for action in actions_to_connect:
+            widget.textChanged.connect(action)
     elif param.annotation in (typing.Union[str, int, typing.Iterable[str], typing.Iterable[int]],
                               typing.Union[str, int, typing.List[str], typing.List[int]]):
         widget = QMultiStrIntLineEdit(name)
         widget.set_defaults(param.default if is_default else '')
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     elif param.annotation in (Path, typing.Union[str, Path], typing.Union[None, str, Path]):
         widget = PathLineEdit()
+        for action in actions_to_connect:
+            widget.textChanged.connect(action)
     # elif param.annotation == typing.Dict[str, typing.List[str]]:
     #     pass
     # elif param.annotation == typing.Dict[str, typing.List[int]]:
@@ -831,6 +869,8 @@ def param_to_widget(param, name: str):
         widget = QtWidgets.QTextEdit()
         default = param.default if is_default else ''
         widget.setText(str(default))
+        for action in actions_to_connect:
+            widget.textChanged.connect(action)
     return widget
 
 
