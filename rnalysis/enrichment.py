@@ -1192,7 +1192,8 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     return fetched_sets
 
 
-def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '', ref: str = 'predefined'):
+def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '', ref: str = 'predefined',
+               fig: plt.Figure = None):
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1218,8 +1219,8 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
     """
 
     upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
-    upset = upsetplot.plot(upset_df)
-    plt.title(title)
+    upset = upsetplot.plot(upset_df, fig=fig)
+    fig.suptitle(title)
     return upset
 
 
@@ -1228,7 +1229,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
                  set_colors: Tuple[str, str, str] = ('r', 'g', 'b'),
                  transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
                  linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0,
-                 normalize_to: float = 1.0):
+                 normalize_to: float = 1.0, fig: plt.Figure = None):
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1279,20 +1280,26 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     else:
         func = vn.venn3 if weighted else vn.venn3_unweighted
         func_circles = vn.venn3_circles
-    _ = plt.figure()
+    if fig is None:
+        fig = plt.figure()
+    ax = fig.add_subplot()
     plot_obj = func(tuple(objs.values()), tuple(objs.keys()), set_colors=set_colors, alpha=transparency,
-                    normalize_to=normalize_to)
+                    normalize_to=normalize_to, ax=ax)
     if add_outline and weighted:
         circle_obj = func_circles(tuple(objs.values()), color=linecolor, linestyle=linestyle, linewidth=linewidth,
-                                  normalize_to=normalize_to)
+                                  normalize_to=normalize_to, ax=ax)
     elif add_outline and not weighted:
-        warnings.warn('Cannot draw lines on an unweighted venn diagram. ')
-        circle_obj = None
+        circle_obj = func(tuple(objs.values()), tuple(objs.keys()), alpha=1, normalize_to=normalize_to, ax=ax)
+        for patch in circle_obj.patches:
+            patch.set_edgecolor(linecolor)
+            patch.set_linewidth(linewidth)
+            patch.set_linestyle(linestyle)
+            patch.set_fill(False)
     else:
         circle_obj = None
     if title == 'default':
         title = 'Venn diagram of ' + ''.join([name + ' ' for name in objs.keys()])
-    plt.title(title)
+    ax.set_title(title)
     return plot_obj, circle_obj
 
 
