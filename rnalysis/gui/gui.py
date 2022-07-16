@@ -580,7 +580,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
 class SetVisualizationWindow(gui_utils.MinMaxDialog):
     VISUALIZATION_FUNCS = {'Venn Diagram': 'venn_diagram', 'UpSet Plot': 'upset_plot'}
-    EXCLUDED_PARAMS = {'objs', 'ref'}
+    EXCLUDED_PARAMS = {'objs', 'ref', 'fig'}
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
@@ -626,7 +626,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
     def init_visualization_ui(self):
         self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose visualization type:',
                                                                     self.VISUALIZATION_FUNCS, parent=self)
-        for func in [self.update_parameter_ui, self._validate_input]:
+        for func in [self.update_parameter_ui, self._validate_input, self.create_canvas]:
             self.widgets['radio_button_box'].buttonClicked.connect(func)
             self.widgets['radio_button_box'].selectionChanged.connect(func)
 
@@ -637,10 +637,45 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.widgets['generate_button'] = QtWidgets.QPushButton(text='Generate graph')
         self.widgets['generate_button'].clicked.connect(self.generate_graph)
         self.widgets['generate_button'].setEnabled(False)
-        self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 4)
+        self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 5)
+
+        self.create_canvas()
 
     def create_canvas(self):
-        pass
+        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
+        sets = [self.available_objects[name] for name in set_names]
+        ind = 0
+        while ind < len(set_names):
+            if sets[ind] is None:
+                set_names.pop(ind)
+                sets.pop(ind)
+            else:
+                ind += 1
+
+        func_name = self.get_current_func_name()
+
+        if len(set_names) < 2:
+            canvas = gui_graphics.EmptyCanvas('Please select 2 or more gene sets to continue', self)
+        elif func_name is None:
+            canvas = gui_graphics.EmptyCanvas("Please choose a visualization function to continue")
+        else:
+            objs_to_plot, kwargs = self._get_function_params()
+            try:
+                canvas = gui_graphics.BasePreviewCanvas(getattr(enrichment, func_name), self, objs=objs_to_plot,
+                                                        **kwargs)
+            except Exception:
+                canvas = gui_graphics.EmptyCanvas("Invalid input; please change one or more of your parameters")
+        if 'canvas' in self.widgets:
+            self.widgets['canvas'].deleteLater()
+            self.visualization_grid.removeWidget(self.widgets['canvas'])
+
+        self.widgets['canvas'] = canvas
+        self.visualization_grid.addWidget(self.widgets['canvas'], 0, 2, 4, 3)
+
+        for col in range(2, self.visualization_grid.columnCount()):
+            self.visualization_grid.setColumnStretch(col, 2)
+        for row in range(0, 4):
+            self.visualization_grid.setRowStretch(row, 1)
 
     def select_all(self):
         for ind in range(self.widgets['set_list'].count()):
@@ -686,7 +721,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
-            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
+            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name, actions_to_connect=self.create_canvas)
             self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             i += 1
@@ -708,6 +743,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
     def _get_function_params(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
+        objs_to_plot = {key: val for key, val in self.available_objects.items() if key in set_names}
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
@@ -715,15 +751,13 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
             val = gui_utils.get_val_from_widget(widget)
 
             kwargs[param_name] = val
-        return set_names, kwargs
+        return objs_to_plot, kwargs
 
     @QtCore.pyqtSlot()
     def generate_graph(self):
         func_name = self.get_current_func_name()
-        set_names, kwargs = self._get_function_params()
-        objs_to_plot = {key: val for key, val in self.available_objects.items() if key in set_names}
+        objs_to_plot, kwargs = self._get_function_params()
         _ = getattr(enrichment, func_name)(objs_to_plot, **kwargs)
-        # self.close()
 
 
 class TabPage(QtWidgets.QWidget):
