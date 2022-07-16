@@ -12,6 +12,43 @@ from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
 
 
+class MultipleChoiceList(QtWidgets.QWidget):
+    def __init__(self, items: typing.Iterable, parent=None):
+        super().__init__(parent)
+        self.layout = QtWidgets.QGridLayout(self)
+        self.setLayout(self.layout)
+
+        self.items = items
+        self.list = QtWidgets.QListWidget(self)
+        self.list.insertItems(0, self.items)
+        self.list.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.layout.addWidget(self.list, 1, 1, 4, 1)
+
+        self.select_all_button = QtWidgets.QPushButton('Select all', self)
+        self.select_all_button.clicked.connect(self.select_all)
+        self.layout.addWidget(self.select_all_button, 5, 1)
+
+        self.clear_all_button = QtWidgets.QPushButton('Clear all', self)
+        self.clear_all_button.clicked.connect(self.clear_all)
+        self.layout.addWidget(self.clear_all_button, 6, 1)
+
+        for row in range(2, 4):
+            self.layout.setRowStretch(row, 2)
+
+        self.itemSelectionChanged = self.list.itemSelectionChanged
+        self.selectedItems = self.list.selectedItems
+
+    def select_all(self):
+        for ind in range(self.list.count()):
+            item = self.list.item(ind)
+            if not item.isSelected():
+                item.setSelected(True)
+
+    def clear_all(self):
+        for item in self.list.selectedItems():
+            item.setSelected(False)
+
+
 class MandatoryComboBox(QtWidgets.QComboBox):
     def __init__(self, default_choice: str, parent=None):
         super().__init__(parent)

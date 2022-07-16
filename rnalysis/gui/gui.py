@@ -410,32 +410,12 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.init_operations_ui()
 
     def init_sets_ui(self):
-        self.widgets['set_list'] = QtWidgets.QListWidget(self)
-        self.widgets['set_list'].insertItems(0, self.available_objects)
-        self.widgets['set_list'].setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects, self)
 
         for func in [self.create_canvas, self._check_legal_operations, self._validate_input,
                      self._toggle_choose_primary_set]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
-        self.list_grid.addWidget(self.widgets['set_list'], 1, 1, 4, 1)
-
-        self.widgets['select_all'] = QtWidgets.QPushButton('Select all', self)
-        self.widgets['select_all'].clicked.connect(self.select_all)
-        self.list_grid.addWidget(self.widgets['select_all'], 5, 1)
-
-        self.widgets['clear_all'] = QtWidgets.QPushButton('Clear all', self)
-        self.widgets['clear_all'].clicked.connect(self.clear_all)
-        self.list_grid.addWidget(self.widgets['clear_all'], 6, 1)
-
-    def select_all(self):
-        for ind in range(self.widgets['set_list'].count()):
-            item = self.widgets['set_list'].item(ind)
-            if not item.isSelected():
-                item.setSelected(True)
-
-    def clear_all(self):
-        for item in self.widgets['set_list'].selectedItems():
-            item.setSelected(False)
+        self.list_grid.addWidget(self.widgets['set_list'], 0, 0)
 
     def _toggle_choose_primary_set(self):
         if self.get_current_func_name() in ['difference', 'intersection']:
@@ -630,6 +610,20 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.widgets['splitter'].addWidget(self.visualization_group)
         self.widgets['splitter'].setSizes([self.width() * 0.2, self.width() * 0.8])
 
+        self.parameter_group.setVisible(False)
+
+        self.init_list_ui()
+        self.init_visualization_ui()
+
+    def init_list_ui(self):
+        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects, self)
+
+        for func in [self._check_legal_operations, self._validate_input, self.create_canvas]:
+            self.widgets['set_list'].itemSelectionChanged.connect(func)
+
+        self.list_grid.addWidget(self.widgets['set_list'], 0, 0)
+
+    def init_visualization_ui(self):
         self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose visualization type:',
                                                                     self.VISUALIZATION_FUNCS, parent=self)
         for func in [self.update_parameter_ui, self._validate_input]:
@@ -645,29 +639,8 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.widgets['generate_button'].setEnabled(False)
         self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 4)
 
-        self.parameter_group.setVisible(False)
-
-        self.init_list_ui()
-
-    def init_list_ui(self):
-        self.widgets['set_list'] = QtWidgets.QListWidget(self)
-        self.widgets['set_list'].insertItems(0, self.available_objects)
-        self.widgets['set_list'].setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
-
-        for func in [self._check_legal_operations, self._validate_input]:  # TODO: self.create_canvas,
-            self.widgets['set_list'].itemSelectionChanged.connect(func)
-
-        self.list_grid.addWidget(self.widgets['set_list'], 1, 1, 4, 1)
-        self.widgets['select_all'] = QtWidgets.QPushButton('Select all', self)
-        self.widgets['select_all'].clicked.connect(self.select_all)
-        self.list_grid.addWidget(self.widgets['select_all'], 5, 1)
-
-        self.widgets['clear_all'] = QtWidgets.QPushButton('Clear all', self)
-        self.widgets['clear_all'].clicked.connect(self.clear_all)
-        self.list_grid.addWidget(self.widgets['clear_all'], 6, 1)
-
-        for row in range(2, 4):
-            self.list_grid.setRowStretch(row, 2)
+    def create_canvas(self):
+        pass
 
     def select_all(self):
         for ind in range(self.widgets['set_list'].count()):
