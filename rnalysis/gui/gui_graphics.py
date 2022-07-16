@@ -1,13 +1,13 @@
 import functools
 import itertools
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 
 import matplotlib
 import matplotlib_venn
 import upsetplot
 from PyQt5 import QtCore
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 
 import enrichment
 from utils import generic
@@ -22,8 +22,11 @@ class CleanPlotToolBar(NavigationToolbar2QT):
 
 
 class BasePreviewCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, tight_layout: bool = True):
-        super().__init__()
+    def __init__(self, plotting_func:Callable, parent=None, tight_layout: bool = True, **plotting_kwargs):
+        self.fig = plt.Figure(tight_layout=tight_layout)
+        self.parent = parent
+        self.generated_plot = plotting_func(**plotting_kwargs,fig=self.fig)
+        super().__init__(figure=self.fig)
 
 
 class BaseInteractiveCanvas(FigureCanvasQTAgg):
@@ -314,7 +317,6 @@ class UpSetInteractiveCanvas(BaseInteractiveCanvas):
         color = self.COLORMAP[state]
         self.upset.subset_styles[subset]['facecolor'] = color
         self.axes['intersections'].patches[subset].set_facecolor(color)
-
         if self.subset_states[subset] != state:
             self.subset_states[subset] = state
             graph_modified = True
