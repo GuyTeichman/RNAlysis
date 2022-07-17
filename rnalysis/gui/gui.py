@@ -22,9 +22,13 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'parallel', 'biotype', 'background_genes',
                        'statistical_test', 'parametric_test'}
 
-    ANALYSIS_TYPES = {'User-defined attributes': 'user_defined', 'Gene Ontology (GO)': 'go',
-                      'Kyoto Encyclopedia of Genes and Genomes (KEGG) Pathways': 'kegg',
-                      'Non-categorical variables': 'non_categorical'}
+    ANALYSIS_TYPES = {'Gene Ontology (GO)': 'go',
+                      'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
+                      'Categorical attributes': 'user_defined', 'Non-categorical attributes': 'non_categorical'}
+
+    ANALYSIS_TYPES_BUTTONS = (('External datasets:', ('Gene Ontology (GO)',
+                                                      'Kyoto Encyclopedia of Genes and Genomes (KEGG)')),
+                              ('Custom dataset:', ('Categorical attributes', 'Non-categorical attributes')))
 
     ANALYSIS_FUNCS = {('go', False): enrichment.FeatureSet.go_enrichment,
                       ('go', True): enrichment.RankedSet.single_set_go_enrichment,
@@ -96,7 +100,6 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
     def init_basic_ui(self):
         self.setWindowTitle('Enrichment Analysis')
-        # self.setGeometry(200, 200, 1100, 600)
         self.setLayout(self.main_layout)
         self.main_layout.addWidget(self.scroll)
 
@@ -105,30 +108,39 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.stats_group.setVisible(False)
 
         # self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        # self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
         self.scroll_widget.setLayout(self.scroll_layout)
+        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
 
         self.scroll_layout.addWidget(self.list_group)
+        self.scroll_layout.addWidget(self.stats_group)
         self.scroll_layout.addWidget(self.parameter_group)
-        self.scroll_layout.addStretch(1)
-        for lst in ['enrichment_list', 'bg_list']:
-            self.widgets[lst] = QtWidgets.QComboBox(self)
-            self.widgets[lst].insertItems(0, self.available_objects)
-
-        self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose enrichment dataset',
-                                                                    self.ANALYSIS_TYPES.keys())
-        self.widgets['radio_button_box'].buttonClicked.connect(self.update_uis)
+        self.scroll_layout.addWidget(self.plot_group)
 
         self.widgets['run_button'] = QtWidgets.QPushButton('Run')
         self.widgets['run_button'].clicked.connect(self.run_analysis)
+        self.widgets['run_button'].setVisible(False)
+        self.scroll_layout.addWidget(self.widgets['run_button'])
 
-        self.list_grid.addWidget(self.widgets['radio_button_box'], 2, 0, 3, 1)
-        self.list_grid.addWidget(self.widgets['enrichment_list'], 2, 1)
-        self.list_grid.addWidget(self.widgets['bg_list'], 4, 1)
-        self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose enrichment set:</b>', self), 1, 1)
-        self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose background set:</b>', self), 3, 1)
+        self.scroll_layout.addStretch(1)
+
+        for lst in ['enrichment_list', 'bg_list']:
+            self.widgets[lst] = gui_utils.MandatoryComboBox('Choose gene set...', self)
+            self.widgets[lst].insertItems(0, self.available_objects)
+
+        self.widgets['dataset_radiobox'] = gui_utils.RadioButtonBox('Choose enrichment dataset',
+                                                                    self.ANALYSIS_TYPES_BUTTONS)
+        self.widgets['dataset_radiobox'].buttonClicked.connect(self.update_uis)
+
+        self.list_grid.addWidget(self.widgets['dataset_radiobox'], 0, 0, 6, 1)
+        self.list_grid.addWidget(self.widgets['enrichment_list'], 1, 1)
+        self.list_grid.addWidget(self.widgets['bg_list'], 3, 1)
+        self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose enrichment set:</b>', self), 0, 1)
+        self.list_grid.addWidget(QtWidgets.QLabel('<b>Choose background set:</b>', self), 2, 1)
+
+        self.scroll.setMinimumWidth(self.scroll_widget.sizeHint().width() + 150)
 
     def _set_background_select_mode(self, selectable: bool = True):
         if selectable:
@@ -138,7 +150,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
     def _get_statistical_test_name(self):
         try:
-            button = self.stats_widgets['radio_button_box'].checkedButton()
+            button = self.stats_widgets['stats_radiobox'].checkedButton()
         except KeyError:
             button = None
 
@@ -159,7 +171,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             return None
 
     def _get_analysis_type(self):
-        return self.ANALYSIS_TYPES[self.widgets['radio_button_box'].checkedButton().text()]
+        return self.ANALYSIS_TYPES[self.widgets['dataset_radiobox'].checkedButton().text()]
 
     def _update_single_set(self):
         if self.is_single_set():
@@ -188,13 +200,28 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.update_parameters_ui()
         self.update_stats_ui()
         self.update_plot_ui()
-        self.scroll_layout.insertWidget(4, self.widgets['run_button'])
+        self.widgets['run_button'].setVisible(True)
+
+        if 'help_link' in self.widgets:
+            self.scroll_layout.removeWidget(self.widgets['help_link'])
+            self.widgets['help_link'].deleteLater()
+        chosen_func_name = self.get_current_func().__name__
+        obj_type = enrichment.RankedSet if self.is_single_set() else enrichment.FeatureSet
+        help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment." \
+                       f"{obj_type.__name__}.{chosen_func_name}.html"
+        self.widgets['help_link'] = QtWidgets.QLabel(f'<a href="{help_address}">Open documentation for function '
+                                                     f'<b>{obj_type.__name__}.{chosen_func_name}</b></a>')
+        self.widgets['help_link'].setOpenExternalLinks(True)
+        self.scroll_layout.insertWidget(4, self.widgets['help_link'])
+
+        _, _, width, height = self.scroll.geometry().getRect()
+        self.resize(width, 750)
 
     def get_current_analysis_type(self):
-        button = self.widgets['radio_button_box'].checkedButton()
+        button = self.widgets['dataset_radiobox'].checkedButton()
         if button is None:
             return None
-        return self.ANALYSIS_TYPES[self.widgets['radio_button_box'].checkedButton().text()]
+        return self.ANALYSIS_TYPES[self.widgets['dataset_radiobox'].checkedButton().text()]
 
     def get_current_func(self):
         single_set = self.is_single_set()
@@ -207,7 +234,6 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         # delete previous widgets
         self.plot_widgets = {}
         gui_utils.clear_layout(self.plot_grid)
-        self.scroll_layout.insertWidget(3, self.plot_group)
 
         i = 0
         for name, param in self.plot_signature.items():
@@ -221,7 +247,6 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         # delete previous widgets
         self.parameter_widgets = {}
         gui_utils.clear_layout(self.parameter_grid)
-        self.scroll_layout.insertWidget(2, self.parameter_group)
 
         i = 0
         for name, param in self.parameters_signature.items():
@@ -239,16 +264,15 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         # delete previous widgets
         self.stats_widgets = {}
         gui_utils.clear_layout(self.stats_grid)
-        self.scroll_layout.insertWidget(1, self.stats_group)
 
         radio_options = self.STATISTICAL_TESTS.keys() if self.is_categorical() else \
             self.ORDINAL_STATISTICAL_TESTS.keys()
-        self.stats_widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose statistical test:', radio_options)
+        self.stats_widgets['stats_radiobox'] = gui_utils.RadioButtonBox('Choose statistical test:', radio_options)
         if prev_test_name is not None:
-            self.stats_widgets['radio_button_box'].set_selection(prev_test_name)
-        self.stats_widgets['radio_button_box'].buttonClicked.connect(self.update_stats_ui)
+            self.stats_widgets['stats_radiobox'].set_selection(prev_test_name)
+        self.stats_widgets['stats_radiobox'].buttonClicked.connect(self.update_stats_ui)
 
-        self.stats_grid.addWidget(self.stats_widgets['radio_button_box'], 0, 0, 3, 2)
+        self.stats_grid.addWidget(self.stats_widgets['stats_radiobox'], 0, 0, 3, 2)
 
         i = 0
         for name, param in self.stats_signature.items():
@@ -257,14 +281,6 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                 self.stats_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.stats_widgets[name]), i, 2)
                 self.stats_grid.addWidget(self.stats_widgets[name], i, 3)
                 i += 1
-
-        # help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
-        #                f"{filtering.Filter.__name__}.{chosen_func_name}.html"  # TODO: fix me!
-        # self.stats_widgets['help_link'] = QtWidgets.QLabel(
-        #     text=f'<a href="{help_address}">Open documentation for function '
-        #          f'<b>{filtering.Filter.__name__}.{chosen_func_name}</b></a>')
-        # self.stats_widgets['help_link'].setOpenExternalLinks(True)
-        # self.parameter_grid.addWidget(self.stats_widgets['help_link'], i + 1, 0, 1, 2)
 
     def is_single_set(self):
         stat_test = self._get_statistical_test()
@@ -288,7 +304,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
         for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
                                                   self.stats_widgets.items()):
-            if param_name in {'help_link', 'radio_button_box'}:
+            if param_name in {'help_link', 'dataset_radiobox'}:
                 continue
             val = gui_utils.get_val_from_widget(widget)
             kwargs[param_name] = val
@@ -608,7 +624,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.layout.addWidget(self.widgets['splitter'])
         self.widgets['splitter'].addWidget(self.list_group)
         self.widgets['splitter'].addWidget(self.visualization_group)
-        self.widgets['splitter'].setSizes([self.width() * 0.2, self.width() * 0.8])
+        self.widgets['splitter'].setSizes([int(self.width() * 0.2), int(self.width() * 0.8)])
 
         self.parameter_group.setVisible(False)
 
