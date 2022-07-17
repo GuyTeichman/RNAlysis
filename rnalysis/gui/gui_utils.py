@@ -148,22 +148,35 @@ class StrIntLineEdit(QtWidgets.QLineEdit):
 class RadioButtonBox(QtWidgets.QGroupBox):
     selectionChanged = QtCore.pyqtSignal()
 
-    def __init__(self, title: str, actions: typing.Iterable, is_flat=False, parent=None):
+    def __init__(self, title: str, actions, is_flat=False, parent=None):
         super().__init__(title, parent)
         self.setFlat(is_flat)
-        self.radio_button_box = QtWidgets.QButtonGroup()
-        self.buttonClicked = self.radio_button_box.buttonClicked
-        self.checkedButton = self.radio_button_box.checkedButton
-        self.radio_layout = QtWidgets.QVBoxLayout()
+        self.button_box = QtWidgets.QButtonGroup()
+        self.buttonClicked = self.button_box.buttonClicked
+        self.checkedButton = self.button_box.checkedButton
+        self.radio_layout = QtWidgets.QGridLayout()
         self.radio_buttons = {}
         self.setLayout(self.radio_layout)
         self.add_items(actions)
 
     def add_items(self, actions: typing.Iterable):
         for action in actions:
-            self.radio_buttons[action] = QtWidgets.QRadioButton(action)
-            self.radio_button_box.addButton(self.radio_buttons[action])
-            self.radio_layout.addWidget(self.radio_buttons[action])
+            if isinstance(action, str):
+                self.add_item(action)
+            elif isinstance(action, tuple):
+                title = action[0]
+                sub_actions = action[1]
+                self.radio_layout.addWidget(QtWidgets.QLabel(title), self.radio_layout.count(), 0, 1, 10)
+                for subaction in sub_actions:
+                    self.add_item(subaction, indent=True)
+
+    def add_item(self, action: str, indent: bool = False):
+        self.radio_buttons[action] = QtWidgets.QRadioButton(action)
+        self.button_box.addButton(self.radio_buttons[action])
+        if indent:
+            self.radio_layout.addWidget(self.radio_buttons[action], self.radio_layout.count(), 1, 1, 10)
+        else:
+            self.radio_layout.addWidget(self.radio_buttons[action], self.radio_layout.count(), 0, 1, 9)
 
     def set_selection(self, selection: typing.Union[str, int]):
         if isinstance(selection, str):
@@ -189,7 +202,6 @@ class OptionalSpinBox(QtWidgets.QWidget):
         self.spinbox = SpinBoxWithDisable()
         self.checkbox = QtWidgets.QCheckBox('Disable input?')
         self.checkbox.toggled.connect(self.spinbox.setDisabled)
-        self.checkbox.toggled.connect(self.spinbox.valueChanged)
 
         self.layout.addWidget(self.checkbox, 0, 0)
         self.layout.addWidget(self.spinbox, 0, 1)
