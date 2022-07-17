@@ -134,6 +134,9 @@ class PathLineEdit(QtWidgets.QWidget):
     def text(self):
         return self.file_path.text()
 
+    def setText(self, text: str):
+        return self.file_path.setText(text)
+
 
 class StrIntLineEdit(QtWidgets.QLineEdit):
     IS_LINE_EDIT_LIKE = True
