@@ -702,6 +702,9 @@ class SettingsWindow(MinMaxDialog):
         self.init_appearance_ui()
         self.init_tables_ui()
         self.init_buttons()
+        self.set_choices()
+
+        self.settings_changed = False
 
     def _trigger_settings_changed(self):
         self.settings_changed = True
@@ -713,6 +716,14 @@ class SettingsWindow(MinMaxDialog):
         self.appearance_widgets['app_theme'].setCurrentText(current_theme)
         self.appearance_widgets['app_font'].setCurrentText(current_font)
         self.appearance_widgets['app_font_size'].setCurrentText(str(current_font_size))
+
+        attr_ref_path = settings.get_attr_ref_path('predefined') if settings.is_setting_in_file(
+            settings.__attr_file_key__) else 'No file chosen'
+        biotype_ref_path = settings.get_biotype_ref_path('predefined') if settings.is_setting_in_file(
+            settings.__biotype_file_key__) else 'No file chosen'
+
+        self.tables_widgets['attr_ref_path'].setText(attr_ref_path)
+        self.tables_widgets['biotype_ref_path'].setText(biotype_ref_path)
 
     def init_appearance_ui(self):
         self.appearance_widgets['app_theme'] = QtWidgets.QComboBox(self.appearance_group)
@@ -729,14 +740,6 @@ class SettingsWindow(MinMaxDialog):
 
         for widget_name in ['app_theme', 'app_font', 'app_font_size']:
             self.appearance_widgets[widget_name].currentIndexChanged.connect(self._trigger_settings_changed)
-        # self.appearance_widgets['stdout_font'] = QtWidgets.QComboBox(self.appearance_group)
-        # self.appearance_widgets['stdout_font'].addItems(list(QtGui.QFontDatabase().families()))
-        # self.appearance_widgets['stdout_font'].setEditable(True)
-        # self.appearance_widgets['stdout_font'].completer().setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
-        # self.appearance_widgets['stdout_font'].setInsertPolicy(QtWidgets.QComboBox.NoInsert)
-        #
-        # self.appearance_widgets['stdout_font_size'] = QtWidgets.QComboBox(self.appearance_group)
-        # # self.appearance_widgets['font_size'].addItems(list(QtGui.QFontDatabase().smoothSizes()))
 
         self.appearance_grid.addWidget(QtWidgets.QLabel('Theme'), 0, 0)
         self.appearance_grid.addWidget(self.appearance_widgets['app_theme'], 0, 1)
@@ -744,12 +747,6 @@ class SettingsWindow(MinMaxDialog):
         self.appearance_grid.addWidget(self.appearance_widgets['app_font'], 1, 1)
         self.appearance_grid.addWidget(QtWidgets.QLabel('Application Font Size'), 2, 0)
         self.appearance_grid.addWidget(self.appearance_widgets['app_font_size'], 2, 1)
-        # self.appearance_grid.addWidget(QtWidgets.QLabel('Output Font'), 3, 0)
-        # self.appearance_grid.addWidget(self.appearance_widgets['stdout_font'], 3, 1)
-        # self.appearance_grid.addWidget(QtWidgets.QLabel('Output Font Size'), 4, 0)
-        # self.appearance_grid.addWidget(self.appearance_widgets['stdout_font_size'], 4, 1)
-
-        self.set_choices()
 
     def save_settings(self):
         if self.settings_changed:
@@ -758,6 +755,14 @@ class SettingsWindow(MinMaxDialog):
             font_size = int(self.appearance_widgets['app_font_size'].currentText())
             theme = self.THEMES[self.appearance_widgets['app_theme'].currentText()]
             settings.set_gui_settings(font, font_size, theme)
+
+            attr_ref_path = self.tables_widgets['attr_ref_path'].text() if self.tables_widgets[
+                'attr_ref_path'].is_legal else ''
+            biotype_ref_path = self.tables_widgets['biotype_ref_path'].text() if self.tables_widgets[
+                'biotype_ref_path'].is_legal else ''
+
+            settings.set_table_settings(attr_ref_path, biotype_ref_path)
+
             self.parent().update_style_sheet()
             print('Settings saved successfully')
 
@@ -773,7 +778,16 @@ class SettingsWindow(MinMaxDialog):
         self.close()
 
     def init_tables_ui(self):
-        pass
+        self.tables_widgets['attr_ref_path'] = PathLineEdit()
+        self.tables_widgets['biotype_ref_path'] = PathLineEdit()
+
+        for widget in self.tables_widgets.values():
+            widget.textChanged.connect(self._trigger_settings_changed)
+
+        self.tables_grid.addWidget(self.tables_widgets['attr_ref_path'], 0, 1)
+        self.tables_grid.addWidget(self.tables_widgets['biotype_ref_path'], 1, 1)
+        self.tables_grid.addWidget(QtWidgets.QLabel('Attribute Reference Table path:'), 0, 0)
+        self.tables_grid.addWidget(QtWidgets.QLabel('Biotype Reference Table path:'), 1, 0)
 
     def init_buttons(self):
         self.button_box.accepted.connect(self.save_and_exit)
