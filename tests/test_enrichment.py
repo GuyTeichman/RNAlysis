@@ -162,19 +162,22 @@ def test_enrichment_randomization_reliability():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     random_seed = 0
 
-    for i in range(5):
-        res1 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                       attr_ref_path=__attr_ref__,
-                                       biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed)
-        res2 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                       attr_ref_path=__attr_ref__,
-                                       biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed + 1)
-        res3 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                       attr_ref_path=__attr_ref__,
-                                       biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed + 2)
+    for i in range(3):
+        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+                                          biotype='all',
+                                          attr_ref_path=__attr_ref__,
+                                          biotype_ref_path=__biotype_ref__,
+                                          random_seed=random_seed, parallel=False)
+        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+                                          biotype='all',
+                                          attr_ref_path=__attr_ref__,
+                                          biotype_ref_path=__biotype_ref__,
+                                          random_seed=random_seed + 1, parallel=False)
+        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+                                          biotype='all',
+                                          attr_ref_path=__attr_ref__,
+                                          biotype_ref_path=__biotype_ref__,
+                                          random_seed=random_seed + 2, parallel=False)
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -211,9 +214,9 @@ def test_enrichment_randomization_validity():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.enrich_randomization(attrs, reps=100000, biotype='all',
-                                  attr_ref_path=__attr_ref__,
-                                  biotype_ref_path=__biotype_ref__, random_seed=0)
+    res = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=100000, biotype='all',
+                                     attr_ref_path=__attr_ref__,
+                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel=False)
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -225,19 +228,22 @@ def test_enrichment_randomization_parallel_reliability():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     random_seed = 0
 
-    for i in range(5):
-        res1 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                       attr_ref_path=__attr_ref__,
-                                       biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed, parallel=True)
-        res2 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                       attr_ref_path=__attr_ref__,
-                                       biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed + 1, parallel=True)
-        res3 = en.enrich_randomization(attrs, reps=10000, biotype='all',
-                                       attr_ref_path=__attr_ref__,
-                                       biotype_ref_path=__biotype_ref__,
-                                       random_seed=random_seed + 2, parallel=True)
+    for i in range(3):
+        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+                                          biotype='all',
+                                          attr_ref_path=__attr_ref__,
+                                          biotype_ref_path=__biotype_ref__,
+                                          random_seed=random_seed, parallel=True)
+        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+                                          biotype='all',
+                                          attr_ref_path=__attr_ref__,
+                                          biotype_ref_path=__biotype_ref__,
+                                          random_seed=random_seed + 1, parallel=True)
+        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+                                          biotype='all',
+                                          attr_ref_path=__attr_ref__,
+                                          biotype_ref_path=__biotype_ref__,
+                                          random_seed=random_seed + 2, parallel=True)
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -256,8 +262,9 @@ def test_enrichment_parallel_validity():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.enrich_randomization(attrs, reps=100000, biotype='all', attr_ref_path=__attr_ref__,
-                                  biotype_ref_path=__biotype_ref__, random_seed=0, parallel=True)
+    res = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=100000, biotype='all',
+                                     attr_ref_path=__attr_ref__,
+                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel=True)
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -276,7 +283,8 @@ def test_enrich_hypergeometric_pvalues():
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208', 'WBGene00001133'}
     attrs = ['attribute1', 'attribute2']
     en = FeatureSet(gene_set=genes, set_name='test_set')
-    res = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__, )
+    res = en.user_defined_enrichment(attrs, statistical_test='hypergeometric', biotype='all',
+                                     attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__, )
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -468,7 +476,7 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations):
                     'WBGene00004920', 'WBGene00011910', 'WBGene00014208']
 
     en = RankedSet(genes_ranked, set_name='test_set')
-    _ = en.single_set_go_enrichment(organism, 'WBGene', excluded_evidence_types='electronic',
+    _ = en.single_set_go_enrichment(organism, 'WBGene', evidence_types='experimental',
                                     aspects='biological_process', propagate_annotations=propagate_annotations)
     plt.close('all')
 
@@ -500,7 +508,8 @@ def test_upset_plot_api():
 def test_venn_diagram_api():
     venn_diagram({'obj': {'0', '1', '2'}, 'obj2': {'1', '3'}, 'obj3': {'5', '6', '7', '0'}})
     venn_diagram({'obj': {'0', '1', '2'}, 'obj2': FeatureSet({'1', '2', '3'}), 'obj3': RankedSet(['5', '3', '0'])},
-                 transparency=0.2, set_colors=('black', 'purple', 'yellow'), linestyle='dashed', linewidth=1, linecolor='grey',
+                 transparency=0.2, set_colors=('black', 'purple', 'yellow'), linestyle='dashed', linewidth=1,
+                 linecolor='grey',
                  title='title')
     venn_diagram({'obj': 'attribute1', 'obj2': 'attribute2', 'obj3': {'WBGene00000001', 'WBGene00001234'}},
                  attr_ref_table_path=__attr_ref__, add_outline=False)

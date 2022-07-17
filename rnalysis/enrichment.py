@@ -507,6 +507,7 @@ class FeatureSet:
                              ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
+        This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead. \
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
         using a randomization test. The attributes are drawn from an Attribute Reference Table. \
         The background set is determined by either the input variable ‘background_genes’, \
@@ -583,6 +584,8 @@ class FeatureSet:
            Example plot of enrich_randomization(plot_horizontal = False)
 
         """
+        warnings.warn("This function is depracated, and will be removed in the next major release. "
+                      "Use the function 'FeatureSet.user_defined_enrichment()' instead.")
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
@@ -590,6 +593,106 @@ class FeatureSet:
                                                     self.set_name, parallel, 'randomization', biotype, background_genes,
                                                     biotype_ref_path, single_set=False, random_seed=random_seed,
                                                     reps=reps)
+        return runner.run()
+
+    def user_defined_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+                                statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
+                                alpha: float = 0.05, biotype: str = 'protein_coding',
+                                background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                                attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                                return_nonsignificant: bool = True,
+                                save_csv: bool = False, fname=None, return_fig: bool = False,
+                                plot_horizontal: bool = True, randomization_reps: int = 10000,
+                                random_seed: Union[int, None] = None, parallel: bool = True
+                                ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+        """
+        Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.\
+        The attributes are drawn from an Attribute Reference Table. \
+        The background set is determined by either the input variable ‘background_genes’, \
+        or by the input variable ‘biotype’ and a Biotype Reference Table. \
+        P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure \
+        (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment score = 0) \
+        appears with the smallest value in the scale.
+
+        :type attributes: str, int, iterable (list, tuple, set, etc) of str/int, or 'all'.
+        :param attributes: An iterable of attribute names or attribute numbers \
+        (according to their order in the Attribute Reference Table). \
+        If 'all', all of the attributes in the Attribute Reference Table will be used. \
+        If None, a manual input prompt will be raised.
+        :param statistical_test: determines the statistical test to be used for enrichment analysis. \
+        Note that some propagation methods support only some of the available statistical tests.
+        :type statistical_test: 'fisher', 'hypergeometric' or 'randomization' (default='fisher')
+        :type alpha: float between 0 and 1 (default=0.05)
+        :param alpha: Indicates the FDR threshold for significance.
+        :type attr_ref_path: str or pathlib.Path (default='predefined')
+        :param attr_ref_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn.
+        :type biotype_ref_path: str or pathlib.Path (default='predefined')
+        :param biotype_ref_path: the path of the Biotype Reference Table. \
+        Will be used to generate background set if 'biotype' is specified.
+        :type biotype: str specifying a specific biotype, list/set of strings each specifying a biotype, or 'all' \
+        (default='protein_coding')
+        :param biotype: determines the background genes by their biotype. Requires specifying a Biotype Reference Table. \
+        'all' will include all genomic features in the reference table, \
+        'protein_coding' will include only protein-coding genes from the reference table, etc. \
+        Cannot be specified together with 'background_genes'.
+        :type background_genes: set of feature indices, filtering.Filter object, or enrichment.FeatureSet object \
+        (default=None)
+        :param background_genes: a set of specific feature indices to be used as background genes. \
+        Cannot be specified together with 'biotype'.
+        :param return_nonsignificant: if True (default), the results DataFrame will include all tested attributes - \
+        both significant and non-significant ones. If False, only significant attributes will be returned.
+        :type return_nonsignificant: bool (default=True)
+        :type save_csv: bool (default=False)
+        :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
+        :type fname: str or pathlib.Path (default=None)
+        :param fname: The full path and name of the file to which to save the results. For example: \
+        'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
+        :type return_fig: bool (default=False)
+        :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
+        :type plot_horizontal: bool (default=True)
+        :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
+        will be plotted with a vertical plot.
+        :type random_seed: non-negative integer (default=None)
+        :type random_seed: if using a randomization test, determine the random seed used to initialize \
+        the pseudorandom generator for the randomization test. \
+        By default it is picked at random, but you can set it to a particular integer to get consistents results \
+        over multiple runs. If not using a randomization test, this parameter will not affect the analysis.
+        :param randomization_reps: if using a randomization test, determine how many randomization repititions to run. \
+        Otherwise, this parameter will not affect the analysis.
+        :type randomization_reps: int larger than 0 (default=10000)
+        :type parallel: bool (default=True)
+        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
+        :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
+        :return: a pandas DataFrame with the indicated attribute names as rows/index; \
+        and a matplotlib Figure, if 'return_figure' is set to True.
+
+        .. figure::  plot_enrichment_results.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of user_defined_enrichment()
+
+
+        .. figure::  plot_enrichment_results_vertical.png
+           :align:   center
+           :scale: 60 %
+
+           Example plot of user_defined_enrichment(plot_horizontal = False)
+
+        """
+        if validation.isinstanceinh(background_genes, FeatureSet):
+            background_genes = background_genes.gene_set
+        if statistical_test == 'randomization':
+            kwargs = dict(reps=randomization_reps)
+        else:
+            kwargs = dict()
+        runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
+                                                    return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                                                    self.set_name, parallel, statistical_test, biotype,
+                                                    background_genes, biotype_ref_path, single_set=False,
+                                                    random_seed=random_seed, **kwargs)
         return runner.run()
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
@@ -602,6 +705,7 @@ class FeatureSet:
                               ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
 
         """
+        This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead. \
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set \
         using the Hypergeometric Test. The attributes are drawn from an Attribute Reference Table. \
         The background set is determined by either the input variable ‘background_genes’, \
@@ -674,6 +778,8 @@ class FeatureSet:
            Example plot of enrich_hypergeometric(plot_horizontal = False)
 
         """
+        warnings.warn("This function is depracated, and will be removed in the next major release. "
+                      "Use the function 'FeatureSet.user_defined_enrichment()' instead.")
         if validation.isinstanceinh(background_genes, FeatureSet):
             background_genes = background_genes.gene_set
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
@@ -1220,6 +1326,8 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
 
     upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
     upset = upsetplot.plot(upset_df, fig=fig)
+    if fig is None:
+        fig = plt.gcf()
     fig.suptitle(title)
     return upset
 

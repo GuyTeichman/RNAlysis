@@ -34,7 +34,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                       ('go', True): enrichment.RankedSet.single_set_go_enrichment,
                       ('kegg', False): enrichment.FeatureSet.kegg_enrichment,
                       ('kegg', True): enrichment.RankedSet.single_set_kegg_enrichment,
-                      ('user_defined', False): enrichment.FeatureSet.enrich_hypergeometric,  # TODO: update me!
+                      ('user_defined', False): enrichment.FeatureSet.user_defined_enrichment,
                       ('user_defined', True): enrichment.RankedSet.single_set_enrichment,
                       ('non_categorical', False): enrichment.FeatureSet.non_categorical_enrichment}
 
