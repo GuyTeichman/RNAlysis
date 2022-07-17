@@ -57,6 +57,17 @@ def update_settings_file(value: str, key: str):
         yaml.safe_dump(out, f)
 
 
+def is_setting_in_file(key) -> bool:
+    """
+    Returns True if a settings value is defined for given key, and False otherwise.
+    :type key: str
+    :param key: the key in the settings file whose value to read.
+    :rtype: bool
+    """
+    settings = load_settings_file()
+    return key in settings
+
+
 def read_value_from_settings(key):
     """
     Attempt to read the value corresponding to a given key from the settings.yaml file. \
@@ -131,6 +142,13 @@ def set_gui_settings(font: str, font_size: int, stylesheet: str):
     update_settings_file(font, __font_key__)
     update_settings_file(str(font_size), __font_size_key__)
     update_settings_file(stylesheet, __stylesheet_key__)
+
+
+def set_table_settings(attr_ref_path: str, biotype_ref_path: str):
+    if attr_ref_path:
+        update_settings_file(attr_ref_path, __attr_file_key__)
+    if biotype_ref_path:
+        update_settings_file(biotype_ref_path, __biotype_file_key__)
 
 
 def make_temp_copy_of_settings_file():
