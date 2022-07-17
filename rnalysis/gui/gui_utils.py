@@ -66,8 +66,18 @@ class MandatoryComboBox(QtWidgets.QComboBox):
         else:
             self.setStyleSheet("MandatoryComboBox{background : #DB4325;color : #FFFFFF;}")
 
+    def disable_bg_color(self):
+        self.setStyleSheet("MandatoryComboBox{}")
+
     def is_legal(self):
         return self.currentText() != self.default_choice
+
+    def setDisabled(self, to_disable: bool):
+        if to_disable:
+            self.disable_bg_color()
+        else:
+            self.set_bg_color()
+        super().setDisabled(to_disable)
 
 
 class MinMaxDialog(QtWidgets.QDialog):
