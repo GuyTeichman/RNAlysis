@@ -22,10 +22,10 @@ class CleanPlotToolBar(NavigationToolbar2QT):
 
 
 class BasePreviewCanvas(FigureCanvasQTAgg):
-    def __init__(self, plotting_func:Callable, parent=None, tight_layout: bool = True, **plotting_kwargs):
+    def __init__(self, plotting_func: Callable, parent=None, tight_layout: bool = True, **plotting_kwargs):
         self.fig = plt.Figure(tight_layout=tight_layout)
         self.parent = parent
-        self.generated_plot = plotting_func(**plotting_kwargs,fig=self.fig)
+        self.generated_plot = plotting_func(**plotting_kwargs, fig=self.fig)
         super().__init__(figure=self.fig)
 
 
@@ -105,7 +105,9 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
 
         self.venn = funcs[0](gene_sets.values(), gene_sets.keys(), set_colors=colors, ax=self.ax, alpha=1)
         self.venn_circles = funcs[1](gene_sets.values(), linestyle='solid', linewidth=2.0, ax=self.ax)
-        self.set_font_size(16, 12)
+        self.default_subset_fontsize = 14
+        self.states = [self.DESELECTED_STATE for _ in range(len(self.venn.patches))]
+        self.set_font_size(16, self.default_subset_fontsize)
         self.clear_selection()
 
     def set_font_size(self, set_label_size: float, subset_label_size: float):
@@ -117,85 +119,77 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
                 label.set_fontsize(subset_label_size)
 
     def clear_selection(self, draw: bool = True):
-        for patch in self.venn.patches:
+        for subset in range(len(self.states)):
+            patch = self.venn.patches[subset]
             if patch is None:
                 continue
-            patch.set_fill(False)
-            patch.state = self.DESELECTED_STATE
+            self.update_color(subset, self.DESELECTED_STATE)
         if draw:
             self.draw()
 
     def select(self, ind, draw: bool = True):
         patch = self.venn.get_patch_by_id(ind)
+        subset = self.venn.patches.index(patch)
         if patch is None:
             return
-        patch.state = self.SELECTED_STATE
-        patch.set_facecolor(self.SELECTED_COLOR)
-        patch.set_fill(True)
+        self.update_color(subset, self.SELECTED_STATE)
         if draw:
             self.draw()
 
     def deselect(self, ind, draw: bool = True):
         patch = self.venn.get_patch_by_id(ind)
+        subset = self.venn.patches.index(patch)
         if patch is None:
             return
-        patch.state = self.DESELECTED_STATE
-        patch.set_fill(False)
+        self.update_color(subset, self.DESELECTED_STATE)
         if draw:
             self.draw()
 
-    def flip(self, ind, draw: bool = True):
-        patch = self.venn.get_patch_by_id(ind)
-        if patch is None:
-            return
-        if patch.state in [self.SELECTED_STATE, self.HOVER_SELECTED_STATE]:
-            patch.state = self.DESELECTED_STATE
-            patch.set_fill(False)
-        else:
-            patch.state = self.SELECTED_STATE
-            patch.set_facecolor(self.SELECTED_COLOR)
-            patch.set_fill(True)
+    def update_color(self, subset: int, state: int):
+        color = self.COLORMAP[state]
+        font_color = 'orange' if state != self.DESELECTED_STATE else 'black'
+        fontweight = 'bold' if state != self.DESELECTED_STATE else 'regular'
+        fontsize = 16 if state != self.DESELECTED_STATE else self.default_subset_fontsize
 
-        if draw:
-            self.draw()
+        self.venn.patches[subset].set_facecolor(color)
+        self.venn.patches[subset].set_fill(state != self.DESELECTED_STATE)
+
+        self.venn.subset_labels[subset].set_fontsize(fontsize)
+        self.venn.subset_labels[subset].set_color(font_color)
+        self.venn.subset_labels[subset].set_fontweight(fontweight)
+
+        self.states[subset] = state
 
     def on_click(self, event):
-        for patch in self.venn.patches:
+        for subset in range(len(self.states)):
+            patch = self.venn.patches[subset]
             if patch is None:
                 continue
 
             if patch.contains_point((event.x, event.y)):
                 self.manualChoice.emit()
-                patch.set_facecolor(self.HOVER_SELECTED_COLOR)
-                if patch.state in [self.DESELECTED_STATE, self.HOVER_STATE]:
-                    patch.state = self.SELECTED_STATE
-                    patch.set_fill(True)
+                if self.states[subset] in [self.DESELECTED_STATE, self.HOVER_STATE]:
+                    self.update_color(subset, self.HOVER_SELECTED_STATE)
                 else:
-                    patch.state = self.DESELECTED_STATE
-                    patch.set_facecolor(self.HOVER_COLOR)
+                    self.update_color(subset, self.HOVER_STATE)
         self.draw()
 
     def on_hover(self, event):
-        for patch in self.venn.patches:
+        for subset in range(len(self.states)):
+            patch = self.venn.patches[subset]
             if patch is None:
                 continue
 
             if patch.contains_point((event.x, event.y)):
-                if patch.state in [self.HOVER_STATE, self.DESELECTED_STATE]:
-                    patch.set_facecolor(self.HOVER_COLOR)
-                    patch.state = self.HOVER_STATE
+                if self.states[subset] in [self.HOVER_STATE, self.DESELECTED_STATE]:
+                    self.update_color(subset, self.HOVER_STATE)
                 else:
-                    patch.set_facecolor(self.HOVER_SELECTED_COLOR)
-                    patch.state = self.HOVER_SELECTED_STATE
-                patch.set_fill(True)
+                    self.update_color(subset, self.HOVER_SELECTED_STATE)
             else:
-                if patch.state in [self.HOVER_STATE, self.DESELECTED_STATE]:
-                    patch.set_fill(False)
-                    patch.state = self.DESELECTED_STATE
+                if self.states[subset] in [self.HOVER_STATE, self.DESELECTED_STATE]:
+                    self.update_color(subset, self.DESELECTED_STATE)
                 else:
-                    patch.set_facecolor(self.SELECTED_COLOR)
-                    patch.state = self.SELECTED_STATE
-                    patch.set_fill(True)
+                    self.update_color(subset, self.SELECTED_STATE)
         self.draw()
 
     def get_tuple_patch_ids(self) -> List[Tuple[int, ...]]:
@@ -258,9 +252,10 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
         for patch_id in self.get_tuple_patch_ids():
             str_patch_id = ''.join(str(i) for i in patch_id)
             patch = self.venn.get_patch_by_id(str_patch_id)
+            subset = self.venn.patches.index(patch)
             if patch is None:
                 continue
-            if patch.state in [self.SELECTED_STATE, self.HOVER_SELECTED_STATE]:
+            if self.states[subset] in [self.SELECTED_STATE, self.HOVER_SELECTED_STATE]:
                 included_sets = [s for s, ind in zip(self.gene_sets.values(), patch_id) if ind]
                 excluded_sets = [s for s, ind in zip(self.gene_sets.values(), patch_id) if not ind]
                 patch_content = set.intersection(*included_sets).difference(*excluded_sets)
