@@ -1381,6 +1381,10 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
         raise ValueError(f'Venn can only accept between 2 and 3 sets. Instead got {len(objs)}')
     assert isinstance(title, str), f'Title must be a string. Instead got {type(title)}'
     objs = _fetch_sets(objs=objs, ref=attr_ref_table_path)
+    set_colors = parsing.data_to_tuple(set_colors)
+    if len(set_colors) == 1:
+        set_colors *= 3
+
     if len(objs) == 2:
         func = vn.venn2 if weighted else vn.venn2_unweighted
         func_circles = vn.venn2_circles
