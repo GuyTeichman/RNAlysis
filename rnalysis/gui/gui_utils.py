@@ -6,7 +6,7 @@ from pathlib import Path
 from queue import Queue
 import matplotlib
 import pandas as pd
-from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
@@ -67,7 +67,7 @@ class MultipleChoiceList(QtWidgets.QWidget):
         self.items = items
         self.list = QtWidgets.QListWidget(self)
         self.list.insertItems(0, self.items)
-        self.list.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.MultiSelection)
+        self.list.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.layout.addWidget(self.list, 1, 1, 4, 1)
 
         self.select_all_button = QtWidgets.QPushButton('Select all', self)
@@ -129,7 +129,7 @@ class MandatoryComboBox(QtWidgets.QComboBox):
 class MinMaxDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowFlag(QtCore.Qt.WindowType.WindowMinMaxButtonsHint)
+        self.setWindowFlag(QtCore.Qt.WindowMinMaxButtonsHint)
 
 
 class PathLineEdit(QtWidgets.QWidget):
@@ -239,7 +239,7 @@ class RadioButtonBox(QtWidgets.QGroupBox):
 
 class SpinBoxWithDisable(QtWidgets.QSpinBox):
     def changeEvent(self, e):
-        if e.type() == QtCore.QEvent.Type.EnabledChange:
+        if e.type() == QtCore.QEvent.EnabledChange:
             self.lineEdit().setVisible(self.isEnabled())
         return super().changeEvent(e)
 
@@ -474,8 +474,8 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     Basde upon:
     https://stackoverflow.com/a/44605011
     """
-    DtypeRole = QtCore.Qt.ItemDataRole.UserRole + 1000
-    ValueRole = QtCore.Qt.ItemDataRole.UserRole + 1001
+    DtypeRole = QtCore.Qt.UserRole + 1000
+    ValueRole = QtCore.Qt.UserRole + 1001
 
     def __init__(self, df=pd.DataFrame(), parent=None):
         super(DataFrameModel, self).__init__(parent)
@@ -492,10 +492,9 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     dataFrame = QtCore.pyqtProperty(pd.DataFrame, fget=dataFrame, fset=setDataFrame)
 
     @QtCore.pyqtSlot(int, QtCore.Qt.Orientation, result=str)
-    def headerData(self, section: int, orientation: QtCore.Qt.Orientation,
-                   role: int = QtCore.Qt.ItemDataRole.DisplayRole):
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
-            if orientation == QtCore.Qt.Orientation.Horizontal:
+    def headerData(self, section: int, orientation: QtCore.Qt.Orientation, role: int = QtCore.Qt.DisplayRole):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
                 return self._dataframe.columns[section]
             else:
                 return str(self._dataframe.index[section])
@@ -511,7 +510,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             return 0
         return self._dataframe.columns.size
 
-    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
+    def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid() or not (0 <= index.row() < self.rowCount()
                                        and 0 <= index.column() < self.columnCount()):
             return QtCore.QVariant()
@@ -523,7 +522,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             val = self._dataframe.loc[row, col]
         except IndexError:
             print(row, col, self._dataframe.shape)
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+        if role == QtCore.Qt.DisplayRole:
             return str(val)
         elif role == DataFrameModel.ValueRole:
             return val
@@ -533,7 +532,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 
     def roleNames(self):
         roles = {
-            QtCore.Qt.ItemDataRole.DisplayRole: b'display',
+            QtCore.Qt.DisplayRole: b'display',
             DataFrameModel.DtypeRole: b'dtype',
             DataFrameModel.ValueRole: b'value'
         }
@@ -565,7 +564,7 @@ class DataView(QtWidgets.QWidget):
         self.layout.addWidget(self.save_button)
         self.layout.addWidget(self.data_view)
         self.save_button.clicked.connect(self.save)
-        # self.table.setFlags(self.table.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+        # self.table.setFlags(self.table.flags() & ~QtCore.Qt.ItemIsEditable)
         self.setLayout(self.layout)
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
@@ -615,7 +614,7 @@ class DataFrameView(DataView):
         self.data_view.setModel(DataFrameModel(self.data))
 
     def save(self):
-        default_name = str(self.name) + '.csv' if not str(self.name).endswith('.csv') else str(self.name)
+        default_name = str(self.name) + '.csv'
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save table",
                                                             str(Path.home().joinpath(default_name)),
                                                             "Comma-Separated Values (*.csv);;"
@@ -638,7 +637,7 @@ class ErrorMessage(QtWidgets.QDialog):
         self.setWindowTitle("Error")
         self.widgets['error_label'] = QtWidgets.QLabel('<i>RNAlysis</i> has encountered the following error:')
         self.layout.addWidget(self.widgets['error_label'])
-        self.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxCritical))
+        self.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical))
 
         tb = "\n".join(traceback.format_exception(*self.exception))
         self.widgets['error_text'] = QtWidgets.QPlainTextEdit(tb)
@@ -666,7 +665,7 @@ class ErrorMessage(QtWidgets.QDialog):
 class AboutWindow(QtWidgets.QMessageBox):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        self.setIcon(QtWidgets.QMessageBox.Information)
         text = f"""<p><b><i>RNAlysis</i> version {__version__}</b>
                 </p>
                 <br>
@@ -679,7 +678,7 @@ class AboutWindow(QtWidgets.QMessageBox):
                 </p>"""
         self.setText(text)
         self.setWindowTitle("About RNAlysis")
-        self.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        self.setStandardButtons(QtWidgets.QMessageBox.Ok)
         self.buttonClicked.connect(self.close)
 
 
@@ -709,7 +708,7 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
 
     # @QtCore.pyqtSlot(str)
     def append_text(self, text: str):
-        self.moveCursor(QtGui.QTextCursor.MoveOperation.End)
+        self.moveCursor(QtGui.QTextCursor.End)
         self.insertPlainText(text)
 
 
@@ -776,8 +775,8 @@ class SettingsWindow(MinMaxDialog):
         self.tables_widgets = {}
 
         self.button_box = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel |
-            QtWidgets.QDialogButtonBox.StandardButton.Apply | QtWidgets.QDialogButtonBox.StandardButton.RestoreDefaults)
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel |
+            QtWidgets.QDialogButtonBox.Apply | QtWidgets.QDialogButtonBox.RestoreDefaults)
 
         self.layout.addWidget(self.appearance_group)
         self.layout.addWidget(self.tables_group)
@@ -814,11 +813,10 @@ class SettingsWindow(MinMaxDialog):
         self.appearance_widgets['app_theme'].addItems(self.THEMES.keys())
 
         self.appearance_widgets['app_font'] = QtWidgets.QComboBox(self.appearance_group)
-        self.appearance_widgets['app_font'].addItems(list(QtGui.QFontDatabase.families()))
+        self.appearance_widgets['app_font'].addItems(list(QtGui.QFontDatabase().families()))
         self.appearance_widgets['app_font'].setEditable(True)
-        self.appearance_widgets['app_font'].completer().setCompletionMode(
-            QtWidgets.QCompleter.CompletionMode.PopupCompletion)
-        self.appearance_widgets['app_font'].setInsertPolicy(QtWidgets.QComboBox.InsertPolicy.NoInsert)
+        self.appearance_widgets['app_font'].completer().setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
+        self.appearance_widgets['app_font'].setInsertPolicy(QtWidgets.QComboBox.NoInsert)
 
         self.appearance_widgets['app_font_size'] = QtWidgets.QComboBox(self.appearance_group)
         self.appearance_widgets['app_font_size'].addItems(self.FONT_SIZES)
@@ -881,9 +879,9 @@ class SettingsWindow(MinMaxDialog):
 
     def handle_button_click(self, button):
         role = self.button_box.buttonRole(button)
-        if role == QtWidgets.QDialogButtonBox.ButtonRole.ApplyRole:
+        if role == QtWidgets.QDialogButtonBox.ApplyRole:
             self.save_settings()
-        elif role == QtWidgets.QDialogButtonBox.ButtonRole.ResetRole:
+        elif role == QtWidgets.QDialogButtonBox.ResetRole:
             self.reset_settings()
 
     def closeEvent(self, event):
@@ -892,9 +890,8 @@ class SettingsWindow(MinMaxDialog):
             quit_msg = "Are you sure you want to close settings without saving?"
 
             reply = QtWidgets.QMessageBox.question(self, 'Close settings without saving?',
-                                                   quit_msg, QtWidgets.QMessageBox.StandardButton.No,
-                                                   QtWidgets.QMessageBox.StandardButton.Yes)
-            to_exit = reply == QtWidgets.QMessageBox.StandardButton.Yes
+                                                   quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+            to_exit = reply == QtWidgets.QMessageBox.Yes
 
         if to_exit:
             event.accept()

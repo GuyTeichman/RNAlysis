@@ -12,7 +12,7 @@ from typing import List, Union, Callable
 import matplotlib
 import numpy as np
 import pandas as pd
-from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_utils, gui_graphics
@@ -108,12 +108,12 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.plot_group.setVisible(False)
         self.stats_group.setVisible(False)
 
-        # self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
         self.scroll_widget.setLayout(self.scroll_layout)
-        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinAndMaxSize)
+        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
 
         self.scroll_layout.addWidget(self.list_group)
         self.scroll_layout.addWidget(self.stats_group)
@@ -416,7 +416,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.setWindowTitle('Set Operations')
         self.setGeometry(200, 200, 1250, 500)
         self.setLayout(self.layout)
-        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.layout.addWidget(self.widgets['splitter'])
         self.widgets['splitter'].addWidget(self.list_group)
         self.widgets['splitter'].addWidget(self.operations_group)
@@ -621,7 +621,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.setWindowTitle('Gene Set Visualization')
         self.setGeometry(200, 200, 1250, 500)
         self.setLayout(self.layout)
-        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.layout.addWidget(self.widgets['splitter'])
         self.widgets['splitter'].addWidget(self.list_group)
         self.widgets['splitter'].addWidget(self.visualization_group)
@@ -966,9 +966,9 @@ class FilterTabPage(TabPage):
         self.overview_widgets['preview'] = QtWidgets.QTableView()
         # self.overview_widgets['preview'].setFixedWidth(550)
         # self.overview_widgets['preview'].setFixedHeight(175)
-        self.overview_widgets['preview'].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.overview_widgets['preview'].setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # self.overview_widgets['preview'].setFlags(self.overview_widgets['preview'].flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+        self.overview_widgets['preview'].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.overview_widgets['preview'].setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        # self.overview_widgets['preview'].setFlags(self.overview_widgets['preview'].flags() & ~QtCore.Qt.ItemIsEditable)
         self.update_table_preview()
         self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 1)
         this_row += 1
@@ -1127,10 +1127,9 @@ class FilterTabPage(TabPage):
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
         reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
-                                               apply_msg, QtWidgets.QMessageBox.StandardButton.Yes,
-                                               QtWidgets.QMessageBox.StandardButton.No)
+                                               apply_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
-        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             inplace = True
         else:
             inplace = False
@@ -1317,7 +1316,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_tab_button.setText("+")
         self.error_window = None
 
-        self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.Corner.TopRightCorner)
+        self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
         self.setCentralWidget(self.tabs)
 
         self.menu_bar = QtWidgets.QMenuBar(self)
@@ -1490,43 +1489,43 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_window.exec()
 
     def init_actions(self):
-        self.new_table_action = QtGui.QAction("&New table", self)
+        self.new_table_action = QtWidgets.QAction("&New table", self)
         self.new_table_action.triggered.connect(functools.partial(self.add_new_tab, name=None))
-        self.new_table_from_folder_action = QtGui.QAction("New table from &folder")
+        self.new_table_from_folder_action = QtWidgets.QAction("New table from &folder")
 
-        self.new_multiple_action = QtGui.QAction("&Multiple new tables")
+        self.new_multiple_action = QtWidgets.QAction("&Multiple new tables")
         self.new_multiple_action.triggered.connect(self.load_multiple_files)
 
-        self.save_action = QtGui.QAction("&Save...", self)
+        self.save_action = QtWidgets.QAction("&Save...", self)
         self.save_action.triggered.connect(self.tabs.currentWidget().save_file)
-        self.settings_action = QtGui.QAction("&Settings...", self)
+        self.settings_action = QtWidgets.QAction("&Settings...", self)
         self.settings_action.triggered.connect(self.settings)
-        self.exit_action = QtGui.QAction("&Exit", self)
+        self.exit_action = QtWidgets.QAction("&Exit", self)
         self.exit_action.triggered.connect(self.closeEvent)
 
-        self.copy_action = QtGui.QAction("&Copy Gene Set", self)
+        self.copy_action = QtWidgets.QAction("&Copy Gene Set", self)
         self.copy_action.triggered.connect(self.copy_gene_set)
-        self.set_op_action = QtGui.QAction("Set &Operations...", self)
+        self.set_op_action = QtWidgets.QAction("Set &Operations...", self)
         self.set_op_action.triggered.connect(self.choose_set_op)
-        self.enrichment_action = QtGui.QAction("E&nrichment Analysis...", self)
+        self.enrichment_action = QtWidgets.QAction("E&nrichment Analysis...", self)
         self.enrichment_action.triggered.connect(self.open_enrichment_analysis)
-        self.set_vis_action = QtGui.QAction("Gene Set &Visualization...", self)
+        self.set_vis_action = QtWidgets.QAction("Gene Set &Visualization...", self)
         self.set_vis_action.triggered.connect(self.visualize_gene_sets)
-        self.import_set_action = QtGui.QAction("&Import Gene Set...", self)
+        self.import_set_action = QtWidgets.QAction("&Import Gene Set...", self)
         self.import_set_action.triggered.connect(self.import_gene_set)
-        self.export_set_action = QtGui.QAction("&Export Gene Set...", self)
+        self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
 
-        self.user_guide_action = QtGui.QAction("&User Guide", self)
+        self.user_guide_action = QtWidgets.QAction("&User Guide", self)
         self.user_guide_action.triggered.connect(self.open_user_guide)
-        self.help_action = QtGui.QAction("&Help", self)
-        self.about_action = QtGui.QAction("&About", self)
+        self.help_action = QtWidgets.QAction("&Help", self)
+        self.about_action = QtWidgets.QAction("&About", self)
         self.about_action.triggered.connect(self.about)
 
-        self.new_pipeline_action = QtGui.QAction("&New Pipeline...", self)
+        self.new_pipeline_action = QtWidgets.QAction("&New Pipeline...", self)
         self.new_pipeline_action.triggered.connect(self.add_pipeline)
-        self.import_pipeline_action = QtGui.QAction("&Import Pipeline...", self)
+        self.import_pipeline_action = QtWidgets.QAction("&Import Pipeline...", self)
         self.import_pipeline_action.triggered.connect(self.import_pipeline)
-        self.export_pipeline_action = QtGui.QAction("&Export Pipeline...", self)
+        self.export_pipeline_action = QtWidgets.QAction("&Export Pipeline...", self)
         self.export_pipeline_action.triggered.connect(self.export_pipeline)
 
     def open_user_guide(self):
@@ -1644,7 +1643,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Dynamically create the actions
         actions = []
         for name, pipeline in self.pipelines.items():
-            action = QtGui.QAction(name, self)
+            action = QtWidgets.QAction(name, self)
             action.triggered.connect(
                 functools.partial(self.tabs.currentWidget().apply_pipeline, pipeline, name))
             actions.append(action)
@@ -1660,11 +1659,10 @@ class MainWindow(QtWidgets.QMainWindow):
                    "All unsaved progress will be lost"
 
         reply = QtWidgets.QMessageBox.question(self, 'Close program',
-                                               quit_msg, QtWidgets.QMessageBox.StandardButton.No,
-                                               QtWidgets.QMessageBox.StandardButton.Yes)
-        # reply.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_MessageBoxQuestion))
+                                               quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+        # reply.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
 
-        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             event.accept()
         else:
             event.ignore()
