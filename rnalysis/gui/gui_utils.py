@@ -4,12 +4,58 @@ import traceback
 import typing
 from pathlib import Path
 from queue import Queue
-
+import matplotlib
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
+
+
+class ColorPicker(QtWidgets.QWidget):
+    IS_LINE_EDIT_LIKE = True
+
+    def __init__(self, default: typing.Union[str, None] = None, parent=None):
+        super().__init__(parent)
+        self.picker_window = QtWidgets.QColorDialog(self)
+        self.layout = QtWidgets.QGridLayout(self)
+        self.pick_button = QtWidgets.QPushButton("Pick color", self)
+        self.color_line = QtWidgets.QLineEdit(self)
+        self.init_ui()
+
+        self.textChanged = self.color_line.textChanged
+        self.textChanged.connect(self.update_color)
+
+        if default is not None:
+            self.color_line.setText(default)
+
+    def init_ui(self):
+        self.pick_button.clicked.connect(self.get_color)
+
+        self.layout.addWidget(self.pick_button, 0, 0)
+        self.layout.addWidget(self.color_line, 0, 2)
+
+    def get_color(self):
+        color = QtWidgets.QColorDialog.getColor()
+        if color.isValid():
+            self.color_line.setText(color.name())
+            self.update_color()
+
+    def update_color(self):
+        try:
+            color = matplotlib.colors.to_hex(self.text())
+            text_color = matplotlib.colors.to_hex(
+                [abs(i - j) for i, j in zip(matplotlib.colors.to_rgb('white'), matplotlib.colors.to_rgb(color))])
+            self.color_line.setStyleSheet("QLineEdit {background : " + color + "; \ncolor : " + text_color + ";}")
+        except ValueError:
+            pass
+
+    def setText(self, text: str):
+        self.color_line.setText(text)
+        self.update_color()
+
+    def text(self):
+        return self.color_line.text()
 
 
 class MultipleChoiceList(QtWidgets.QWidget):
@@ -198,6 +244,33 @@ class SpinBoxWithDisable(QtWidgets.QSpinBox):
         return super().changeEvent(e)
 
 
+class OptionalLineEdit(QtWidgets.QWidget):
+    IS_LINE_EDIT_LIKE = True
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.layout = QtWidgets.QGridLayout(self)
+        self.line = QtWidgets.QLineEdit()
+        self.checkbox = QtWidgets.QCheckBox('Disable input?')
+        self.checkbox.toggled.connect(self.line.setDisabled)
+
+        self.layout.addWidget(self.checkbox, 0, 0)
+        self.layout.addWidget(self.line, 0, 1)
+
+        self.textChanged = self.line.textChanged
+
+    def setText(self, val):
+        if val is None:
+            self.checkbox.setChecked(True)
+        else:
+            self.line.setText(val)
+
+    def text(self):
+        if self.checkbox.isChecked():
+            return None
+        return self.line.text()
+
+
 class OptionalSpinBox(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -269,12 +342,12 @@ class QMultiInput(QtWidgets.QPushButton):
         self.dialog_layout.addWidget(self.dialog_widgets['remove_widget'], 1, 0, 1, 2)
 
         self.dialog_widgets['done'] = QtWidgets.QPushButton('Done')
-        self.dialog_widgets['done'].clicked.connect(self.dialog_widgets['box'].closeEvent)
+        self.dialog_widgets['done'].clicked.connect(self.dialog_widgets['box'].close)
+        self.dialog_widgets['done'].clicked.connect(self.value_changed)
         self.dialog_layout.addWidget(self.dialog_widgets['done'], 2, 0, 1, 2)
 
-    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+    def value_changed(self):
         self.valueChanged.emit()
-        super().closeEvent(a0)
 
     @QtCore.pyqtSlot()
     def add_widget(self):
@@ -324,6 +397,16 @@ class QMultiInputNamedDict(QMultiInput):
         self.dialog_widgets['input_labels'].append(
             QtWidgets.QLabel(f'{self.label}:', self.dialog_widgets['inputs'][-1]))
         self.dialog_layout.addWidget(self.dialog_widgets['input_labels'][-1], len(self.dialog_widgets['inputs']) + 2, 0)
+
+
+class MultiColorPicker(QMultiInput):
+    CHILD_QWIDGET = ColorPicker
+
+    def get_widget_value(self, widget: type(CHILD_QWIDGET)):
+        return widget.text()
+
+    def set_widget_value(self, ind: int, val):
+        self.dialog_widgets['inputs'][ind].setText(val)
 
 
 class QMultiSpinBox(QMultiInput):
@@ -825,7 +908,19 @@ def param_to_widget(param, name: str,
     else:
         is_default = True
 
-    if param.annotation == bool:
+    if 'color' in name:
+        if param.annotation == str:
+            widget = ColorPicker(param.default if is_default else '')
+            for action in actions_to_connect:
+                widget.textChanged.connect(action)
+
+        elif param.annotation in (typing.Tuple[str], typing.Iterable[str], typing.List[str]):
+            widget = MultiColorPicker(name)
+            widget.set_defaults(param.default if is_default else '')
+            for action in actions_to_connect:
+                widget.valueChanged.connect(action)
+
+    elif param.annotation == bool:
         widget = QtWidgets.QCheckBox(text=name)
         default = param.default if is_default else False
         widget.setChecked(default)
@@ -898,6 +993,10 @@ def param_to_widget(param, name: str,
             widget.valueChanged.connect(action)
     elif param.annotation in (Path, typing.Union[str, Path], typing.Union[None, str, Path]):
         widget = PathLineEdit()
+        for action in actions_to_connect:
+            widget.textChanged.connect(action)
+    elif param.annotation == typing.Union[str, None]:
+        widget = OptionalLineEdit()
         for action in actions_to_connect:
             widget.textChanged.connect(action)
     # elif param.annotation == typing.Dict[str, typing.List[str]]:
