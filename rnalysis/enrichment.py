@@ -1334,7 +1334,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
 
 def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default',
                  attr_ref_table_path: str = 'predefined',
-                 set_colors: Tuple[str, str, str] = ('r', 'g', 'b'),
+                 set_colors: Iterable[str] = ('r', 'g', 'b'),
                  transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
                  linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0,
                  normalize_to: float = 1.0, fig: plt.Figure = None):
