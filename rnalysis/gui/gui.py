@@ -1387,6 +1387,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_new_tab(gene_set_name, is_set=True)
         self.tabs.currentWidget().update_gene_set(gene_set)
 
+    def export_pipeline(self):
+        pipeline_name, status = QtWidgets.QInputDialog.getItem(
+            self, 'Export Pipeline', 'Choose Pipeline to export:', self.pipelines.keys())
+        if status:
+            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Pipeline", str(Path.home()),
+                                                                "YAML file (*.yaml)")
+            if filename:
+                pipeline = self.pipelines[pipeline_name]
+                pipeline.export_pipeline(filename)
+
+    def import_pipeline(self):
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a Pipeline file", str(Path.home()),
+                                                            "YAML file (*.yaml)")
+        if filename:
+            pipeline = filtering.Pipeline.import_pipeline(filename)
+            self.pipelines[str(Path(filename).stem)] = pipeline
+
     def import_gene_set(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
                                                             "Text Document (*.txt);;"
@@ -1475,7 +1492,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_pipeline_action = QtWidgets.QAction("&New Pipeline...", self)
         self.new_pipeline_action.triggered.connect(self.add_pipeline)
         self.import_pipeline_action = QtWidgets.QAction("&Import Pipeline...", self)
+        self.import_pipeline_action.triggered.connect(self.import_pipeline)
         self.export_pipeline_action = QtWidgets.QAction("&Export Pipeline...", self)
+        self.export_pipeline_action.triggered.connect(self.export_pipeline)
 
     def open_user_guide(self):
         url = QtCore.QUrl(self.USER_GUIDE_URL)
