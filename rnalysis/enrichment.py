@@ -1392,6 +1392,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     else:
         func = vn.venn3 if weighted else vn.venn3_unweighted
         func_circles = vn.venn3_circles
+        set_colors = set_colors[0:3]
     if fig is None:
         fig = plt.figure()
     ax = fig.add_subplot()
