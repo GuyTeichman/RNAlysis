@@ -20,4 +20,4 @@ joblib>=1.1.0
 tqdm>=4.62.3
 appdirs>=1.4.0
 typing_extensions>=4.1.1
-PyQt5>=5.15.7
+PyQt6>=6.3.1
