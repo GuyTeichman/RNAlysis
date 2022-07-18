@@ -2,6 +2,34 @@
 History
 =======
 
+
+
+3.0.0 (2022-08-??)
+------------------
+* This version introduces a graphical user interface for RNAlysis, as well as new functions for KEGG Pathways enrichment analysis.
+
+
+Added
+******
+* Pipelines can now be imported and exported
+
+Changed
+*******
+* Added function FeatureSet.user_defined_enrichment(), which will replace FeatureSet.enrich_hypergeometric() and FeatureSet.enrich_randomization()
+* Updated signature of enrichment.venn_diagram
+* enrichment.venn_diagram and enrichment.upset_plot can now be generated on a user-supplied FIgure
+
+
+Fixed
+******
+* enrichment.venn_diagram can now be plotted with outlines when the circles are unweighted
+
+
+Removed
+********
+*
+
+
 2.1.1 (2022-07-05)
 ------------------
 * This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API.
