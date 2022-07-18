@@ -1380,6 +1380,26 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.addTab(FilterTabPage(parent=self.tabs), name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
 
+    def load_multiple_files(self):
+        pass
+        # filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files", str(Path.home()),
+        #                                                       "All Files (*);;"
+        #                                                       "Comma-Separated Values (*.csv);;"
+        #                                                       "Tab-Separated Values (*.tsv);;"
+        #                                                       "Text Document (*.txt)")
+        # if filenames:
+        #     for filename in filenames:
+        #         if filename.endswith('.csv'):
+        #             gene_set = set(pd.read_csv(filename, index_col=0).index)
+        #         elif filename.endswith('.tsv'):
+        #             gene_set = set(pd.read_csv(filename, index_col=0, sep='\t').index)
+        #             # TODO: fix me!
+        #         else:
+        #             with open(filename) as f:
+        #                 gene_set = {line.strip() for line in f.readlines()}
+        #
+        #         self.new_tab_from_filter_obj(gene_set, filename)
+
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter):
         self.add_new_tab(filter_obj.fname.name)
 
@@ -1470,9 +1490,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_window.exec()
 
     def init_actions(self):
-        self.new_action = QtWidgets.QAction("&New...", self)
-        self.new_action.triggered.connect(functools.partial(self.add_new_tab, name=None))
-        self.save_action = QtWidgets.QAction("&Save...", self)
+        self.new_table_action = QtGui.QAction("&New table", self)
+        self.new_table_action.triggered.connect(functools.partial(self.add_new_tab, name=None))
+        self.new_table_from_folder_action = QtGui.QAction("New table from &folder")
+
+        self.new_multiple_action = QtGui.QAction("&Multiple new tables")
+        self.new_multiple_action.triggered.connect(self.load_multiple_files)
+
+        self.save_action = QtGui.QAction("&Save...", self)
         self.save_action.triggered.connect(self.tabs.currentWidget().save_file)
         self.settings_action = QtGui.QAction("&Settings...", self)
         self.settings_action.triggered.connect(self.settings)
@@ -1595,8 +1620,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_menu_ui(self):
         self.setMenuBar(self.menu_bar)
         file_menu = self.menu_bar.addMenu("&File")
+        self.new_menu = file_menu.addMenu("&New...")
+        self.new_menu.addActions([self.new_table_action, self.new_table_from_folder_action, self.new_multiple_action])
         file_menu.addActions(
-            [self.new_action, self.save_action, self.settings_action, self.exit_action])
+            [self.save_action, self.settings_action, self.exit_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
