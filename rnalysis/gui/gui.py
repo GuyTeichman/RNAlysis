@@ -3,6 +3,7 @@ import itertools
 import os
 import sys
 import typing
+import warnings
 from collections import OrderedDict
 from pathlib import Path
 from queue import Queue
@@ -1388,10 +1389,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().update_gene_set(gene_set)
 
     def export_pipeline(self):
+        if len(self.pipelines) == 0:
+            warnings.warn('No Pipelines to export')
+            return
+
         pipeline_name, status = QtWidgets.QInputDialog.getItem(
             self, 'Export Pipeline', 'Choose Pipeline to export:', self.pipelines.keys())
         if status:
-            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Pipeline", str(Path.home()),
+            default_name = pipeline_name + '.yaml'
+            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Pipeline",
+                                                                str(Path.home().joinpath(default_name)),
                                                                 "YAML file (*.yaml)")
             if filename:
                 pipeline = self.pipelines[pipeline_name]
