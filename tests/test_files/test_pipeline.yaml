@@ -1,0 +1,9 @@
+filter_type: countfilter
+functions:
+- biotypes
+- number_filters
+params:
+- - []
+  - {}
+- - - 5
+  - by: col_name

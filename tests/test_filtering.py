@@ -1666,3 +1666,32 @@ def test_transform(filter_obj, columns, function, kwargs, matching_function):
     filter_obj.transform(function, columns, **kwargs)
 
     filter_obj.df.equals(truth.df)
+
+
+def test_import_pipeline():
+    truth = Pipeline('countfilter')
+    truth.add_function(CountFilter.biotypes)
+    truth.add_function('number_filters', 5, by='col_name')
+
+    imported = Pipeline.import_pipeline('tests/test_files/test_pipeline.yaml')
+
+    assert truth == imported
+
+
+def test_export_pipeline():
+    with open('tests/test_files/test_pipeline.yaml') as f:
+        truth = f.read()
+
+    p = Pipeline('countfilter')
+    p.add_function(CountFilter.biotypes)
+    p.add_function('number_filters', 5, by='col_name')
+    outname = 'tests/test_files/temp_exported_pipeline.yaml'
+    p.export_pipeline(outname)
+
+    try:
+        with open(outname) as f:
+            exported = f.read()
+        assert exported == truth
+    finally:
+        os.remove(outname)
+

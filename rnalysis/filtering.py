@@ -15,6 +15,7 @@ import re
 import types
 import warnings
 from pathlib import Path
+import yaml
 from typing import Any, Dict, Iterable, List, Tuple, Union, Callable
 
 try:
@@ -3236,6 +3237,9 @@ class Pipeline:
     """
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters',
                  'filter_type': 'type of filter objects to which the Pipeline can be applied'}
+    FILTER_TYPES = {'filter': Filter, 'deseqfilter': DESeqFilter, 'foldchangefilter': FoldChangeFilter,
+                    'countfilter': CountFilter}
+    FILTER_TYPES_REV = {val: key for key, val in FILTER_TYPES.items()}
 
     def __init__(self, filter_type: Union[str, 'Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'] = Filter):
         """
@@ -3251,15 +3255,13 @@ class Pipeline:
         self.functions = []
         self.params = []
 
-        filter_types = {'filter': Filter, 'deseqfilter': DESeqFilter, 'foldchangefilter': FoldChangeFilter,
-                        'countfilter': CountFilter}
         assert isinstance(filter_type,
                           (type, str)), f"'filter_type' must be type of a Filter object, is instead {type(filter_type)}"
         if isinstance(filter_type, str):
-            assert filter_type.lower() in filter_types, f"Invalid filter_type {filter_type}. "
-            filter_type = filter_types[filter_type.lower()]
+            assert filter_type.lower() in self.FILTER_TYPES, f"Invalid filter_type {filter_type}. "
+            filter_type = self.FILTER_TYPES[filter_type.lower()]
         else:
-            assert filter_type in filter_types.values(), f"Invalid filter_type {filter_type}"
+            assert filter_type in self.FILTER_TYPES.values(), f"Invalid filter_type {filter_type}"
         self.filter_type = filter_type
 
     def __str__(self):
@@ -3278,6 +3280,29 @@ class Pipeline:
 
     def __len__(self):
         return len(self.functions)
+
+    def __eq__(self, other):
+        if self.filter_type == other.filter_type and self.functions == other.functions and self.params == other.params:
+            return True
+        return False
+
+    def export_pipeline(self, filename: Union[str, Path]):
+        pipeline_dict = dict(filter_type=self.FILTER_TYPES_REV[self.filter_type], functions=[], params=[])
+        for func, params in zip(self.functions, self.params):
+            pipeline_dict['functions'].append(func.__name__)
+            pipeline_dict['params'].append(params)
+        with open(filename, 'w') as f:
+            yaml.safe_dump(pipeline_dict, f)
+
+    @classmethod
+    def import_pipeline(cls, filename: Union[str, Path]) -> 'Pipeline':
+        with open(filename) as f:
+            pipeline_dict = yaml.safe_load(f)
+        pipeline = cls.__new__(cls)
+        pipeline.filter_type = cls.FILTER_TYPES[pipeline_dict['filter_type']]
+        pipeline.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
+        pipeline.functions = [getattr(pipeline.filter_type, func) for func in pipeline_dict['functions']]
+        return pipeline
 
     @staticmethod
     def _param_string(args: tuple, kwargs: dict):
