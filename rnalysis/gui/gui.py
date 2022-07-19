@@ -1379,6 +1379,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.addTab(FilterTabPage(parent=self.tabs), name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
 
+    def new_table_from_folder(self):
+        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory", str(Path.home()))
+        if folder_name:
+            normalize_answer = QtWidgets.QMessageBox.question(self, 'Normalize values?',
+                                                              "Do you want to normalize your count table to "
+                                                              "reads-per-million (RPM)?",
+                                                              QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            to_normalize = normalize_answer == QtWidgets.QMessageBox.Yes
+
+            filter_obj = filtering.CountFilter.from_folder(folder_name, norm_to_rpm=to_normalize)
+            self.new_tab_from_filter_obj(filter_obj)
+
     def load_multiple_files(self):
         pass
         # filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files", str(Path.home()),
@@ -1492,6 +1504,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_table_action = QtWidgets.QAction("&New table", self)
         self.new_table_action.triggered.connect(functools.partial(self.add_new_tab, name=None))
         self.new_table_from_folder_action = QtWidgets.QAction("New table from &folder")
+        self.new_table_from_folder_action.triggered.connect(self.new_table_from_folder)
 
         self.new_multiple_action = QtWidgets.QAction("&Multiple new tables")
         self.new_multiple_action.triggered.connect(self.load_multiple_files)
