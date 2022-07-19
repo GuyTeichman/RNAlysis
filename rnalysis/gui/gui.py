@@ -1023,12 +1023,16 @@ class FilterTabPage(TabPage):
             os.path.join(str(self.filter_obj.fname.parent), f"{new_name}{self.filter_obj.fname.suffix}"))
         print(self.filter_obj.fname)
 
+    def update_table_name_label(self):
+        self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{self.get_tab_name()}</b>'")
+
     def init_overview_ui(self):
         this_row = 0
         self.layout.insertWidget(1, self.overview_group)
         self.overview_widgets['table_type_label'] = QtWidgets.QLabel(
             f"Table type: {self.basic_widgets['table_type_combo'].currentText()}")
-        self.overview_widgets['table_name_label'] = QtWidgets.QLabel(f"Table name: '<b>{self.get_tab_name()}</b>'")
+        self.overview_widgets['table_name_label'] = QtWidgets.QLabel()
+        self.update_table_name_label()
 
         self.overview_widgets['preview'] = QtWidgets.QTableView()
         # self.overview_widgets['preview'].setFixedWidth(550)
@@ -1152,9 +1156,9 @@ class FilterTabPage(TabPage):
         result = getattr(self.filter_obj, func_name)(**func_params)
         self.update_filter_obj_shape()
         self.update_table_preview()
-        # TODO: update table name!
         if prev_name != self.filter_obj.fname.name:
-            self.set_tab_name(self.filter_obj.fname.name, is_unsaved=True)
+            self.set_tab_name(self.filter_obj.fname.stem, is_unsaved=True)
+            self.update_table_name_label()
 
         self._proccess_outputs(result, func_name)
 
