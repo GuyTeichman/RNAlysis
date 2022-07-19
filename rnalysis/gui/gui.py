@@ -921,11 +921,78 @@ class SetTabPage(TabPage):
         self.update_set_preview()
 
 
+class FuncTypeStack(QtWidgets.QWidget):
+    EXCLUDED_PARAMS = {'self'}
+    funcSelected = QtCore.pyqtSignal()
+
+    def __init__(self, funcs: list, filter_obj: filtering.Filter, parent=None):
+        super().__init__(parent)
+        self.parameter_widgets = {}
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.parameter_grid = QtWidgets.QGridLayout()
+        self.func_combo = QtWidgets.QComboBox(self)
+        self.funcs = funcs
+        self.filter_obj = filter_obj
+        self.init_ui()
+
+    def init_ui(self):
+        self.layout.addWidget(self.func_combo)
+        self.layout.addLayout(self.parameter_grid)
+        self.layout.addStretch(1)
+        self.func_combo.addItem('Choose a function...')
+        self.func_combo.addItems(self.funcs)
+        self.func_combo.currentTextChanged.connect(self.update_parameter_ui)
+
+    def update_parameter_ui(self):
+        # delete previous widgets
+        gui_utils.clear_layout(self.parameter_grid)
+        self.parameter_widgets = {}
+
+        chosen_func_name = self.get_function_name()
+        signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
+        i = 1
+        for name, param in signature.items():
+            if name in self.EXCLUDED_PARAMS:
+                continue
+            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
+            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0, )
+            self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
+            i += 1
+
+        help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
+                       f"{type(self.filter_obj).__name__}.{chosen_func_name}.html"
+        self.parameter_widgets['help_link'] = QtWidgets.QLabel(
+            text=f'<a href="{help_address}">Open documentation for function '
+                 f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>')
+        self.parameter_widgets['help_link'].setOpenExternalLinks(True)
+        self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
+        self.funcSelected.emit()
+
+    def get_function_params(self):
+        func_params = {}
+        for param_name, widget in self.parameter_widgets.items():
+            if param_name in {'function_combo', 'help_link'}:
+                continue
+            val = gui_utils.get_val_from_widget(widget)
+
+            func_params[param_name] = val
+        print(func_params)
+        return func_params
+
+    def get_function_name(self):
+        return self.func_combo.currentText()
+
+
 class FilterTabPage(TabPage):
     FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                         'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
-    EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference'}
-    EXCLUDED_PARAMS = {'self'}
+    EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
+                      'from_folder', 'save_txt', 'save_csv'}
+    CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
+                        'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
+                        'split_clicom': 'CLICOM (Ensemble)'}
+    SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
+    GENERAL_FUNCS = {'sort', 'transform', 'fold_change'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -940,9 +1007,9 @@ class FilterTabPage(TabPage):
         self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
         self.overview_widgets = {}
 
-        self.parameter_group = QtWidgets.QGroupBox('Apply functions')
-        self.parameter_grid = QtWidgets.QGridLayout(self.parameter_group)
-        self.parameter_widgets = {}
+        self.function_group = QtWidgets.QGroupBox('Apply functions')
+        self.function_grid = QtWidgets.QGridLayout(self.function_group)
+        self.function_widgets = {}
 
         self.init_basic_ui()
 
@@ -1038,42 +1105,32 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(self.basic_widgets['table_name'], 1, 3)
         self.basic_grid.addWidget(self.basic_widgets['start_button'], 2, 0, 1, 4)
 
-    def init_action_ui(self):
-        self.layout.insertWidget(2, self.parameter_group)
-        self.parameter_widgets['function_combo'] = QtWidgets.QComboBox()
-        self.parameter_widgets['function_combo'].addItem('Choose a function...')
-        self.parameter_widgets['function_combo'].addItems(self.get_all_actions())
-        self.parameter_widgets['function_combo'].currentTextChanged.connect(self.update_parameter_ui)
+    def init_function_ui(self):
+        self.layout.insertWidget(2, self.function_group)
+        sorted_actions = self.get_all_actions()
 
-        self.parameter_grid.addWidget(self.parameter_widgets['function_combo'], 0, 0, 1, 2)
+        self.stack = QtWidgets.QStackedWidget(self)
+        self.button_box = QtWidgets.QButtonGroup(self)
+        self.stack_buttons = []
+        self.stack_widgets = {}
+        self.stack.addWidget(QtWidgets.QWidget(self))  # start the stack empty
+        for i, action_type in enumerate(sorted_actions):
+            bttn = QtWidgets.QPushButton(action_type)
+            bttn.setCheckable(True)
+            bttn.setStyleSheet('''QPushButton::checked {background-color : purple;
+                                                        color: white;
+                                                        border: 1px solid #ba32ba;
+                                                        border-radius: 4px;}''')
+            self.stack_widgets[action_type] = FuncTypeStack(sorted_actions[action_type], self.filter_obj)
+            self.stack_widgets[action_type].funcSelected.connect(
+                functools.partial(self.basic_widgets['apply_button'].setVisible, True))
+            self.stack.addWidget(self.stack_widgets[action_type])
+            bttn.clicked.connect(functools.partial(self.stack.setCurrentIndex, i + 1))
+            self.button_box.addButton(bttn)
+            self.stack_buttons.append(bttn)
+            self.function_grid.addWidget(bttn, 0, i)
 
-    def update_parameter_ui(self):
-        # delete previous widgets
-        self.parameter_grid.removeWidget(self.parameter_widgets['function_combo'])
-        gui_utils.clear_layout(self.parameter_grid)
-        self.parameter_widgets = {'function_combo': self.parameter_widgets['function_combo']}
-        self.parameter_grid.addWidget(self.parameter_widgets['function_combo'], 0, 0, 1, 2)
-
-        chosen_func_name = self.parameter_widgets['function_combo'].currentText()
-        signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
-        i = 1
-        for name, param in signature.items():
-            if name in self.EXCLUDED_PARAMS:
-                continue
-            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0, )
-            self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
-            i += 1
-
-        help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
-                       f"{type(self.filter_obj).__name__}.{chosen_func_name}.html"
-        self.parameter_widgets['help_link'] = QtWidgets.QLabel(
-            text=f'<a href="{help_address}">Open documentation for function '
-                 f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>')
-        self.parameter_widgets['help_link'].setOpenExternalLinks(True)
-        self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
-
-        self.basic_widgets['apply_button'].setVisible(True)
+        self.function_grid.addWidget(self.stack, 1, 0, 1, i + 1)
 
     def view_full_dataframe(self):
         df_window = gui_utils.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
@@ -1084,19 +1141,10 @@ class FilterTabPage(TabPage):
         model = gui_utils.DataFramePreviewModel(self.filter_obj.df)
         self.overview_widgets['preview'].setModel(model)
 
-    def _get_function_params(self):
-        func_params = {}
-        for param_name, widget in self.parameter_widgets.items():
-            if param_name in {'function_combo', 'help_link'}:
-                continue
-            val = gui_utils.get_val_from_widget(widget)
-
-            func_params[param_name] = val
-        return func_params
-
     def apply_function(self):
-        func_name = self.parameter_widgets['function_combo'].currentText()
-        func_params = self._get_function_params()
+        this_stack: FuncTypeStack = self.stack.currentWidget()
+        func_name = this_stack.get_function_name()
+        func_params = this_stack.get_function_params()
         prev_name = self.get_tab_name()
         result = getattr(self.filter_obj, func_name)(**func_params)
         self.update_filter_obj_shape()
@@ -1151,15 +1199,23 @@ class FilterTabPage(TabPage):
         public_methods = [mthd for mthd in all_methods if
                           (not mthd.startswith('_')) and (callable(getattr(type(self.filter_obj), mthd))) and (
                               mthd not in self.EXCLUDED_FUNCS)]
-        return public_methods
+        sorted_methods = {'Filter': [], 'Normalize': [], 'Summarize': [], 'Visualize': [], 'Cluster': [], 'General': []}
 
-    # def choose_file(self):
-    #     filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
-    #                                                         "Comma-Separated Values (*.csv);;"
-    #                                                         "Tab-Separated Values (*.tsv);;"
-    #                                                         "All Files (*)")
-    #     if filename:
-    #         self.basic_widgets['file_path'].setText(filename)
+        for method in public_methods:
+            if method in self.SUMMARY_FUNCS:
+                sorted_methods['Summarize'].append(method)
+            elif method in self.CLUSTERING_FUNCS:
+                sorted_methods['Cluster'].append(method)
+            elif method in self.GENERAL_FUNCS:
+                sorted_methods['General'].append(method)
+            elif 'normalize' in method:
+                sorted_methods['Normalize'].append(method)
+            elif 'filter' in method or 'split' in method:
+                sorted_methods['Filter'].append(method)
+            else:
+                sorted_methods['Visualize'].append(method)
+
+        return sorted_methods
 
     def save_file(self):
         default_name = str(self.filter_obj.fname).rstrip("*")
@@ -1181,11 +1237,11 @@ class FilterTabPage(TabPage):
         if table_name_user_input != '':
             new_name = table_name_user_input
         else:
-            new_name = self.filter_obj.fname.name
+            new_name = self.filter_obj.fname.stem
         self.set_tab_name(new_name, is_unsaved=False)
 
         self.init_overview_ui()
-        self.init_action_ui()
+        self.init_function_ui()
 
         gui_utils.clear_layout(self.basic_grid)
         self.layout.removeWidget(self.basic_group)
@@ -1195,7 +1251,7 @@ class FilterTabPage(TabPage):
         self.filter_obj = filter_obj
         print(self.filter_obj)
         self.init_overview_ui()
-        self.init_action_ui()
+        self.init_function_ui()
 
 
 class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
@@ -1234,13 +1290,15 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.basic_grid.addWidget(self.basic_widgets['table_type_combo'], 1, 2)
         self.basic_grid.addWidget(self.basic_widgets['start_button'], 1, 3)
 
-    def init_action_ui(self):
-        super().init_action_ui()
-        self.parameter_group.setTitle("Add functions to Pipeline")
+    def init_function_ui(self):
+        super().init_function_ui()
+        self.function_group.setTitle("Add functions to Pipeline")
 
     def apply_function(self):
-        func_name = self.parameter_widgets['function_combo'].currentText()
-        func_params = self._get_function_params()
+        this_stack: FuncTypeStack = self.stack.currentWidget()
+        func_name = this_stack.get_function_name()
+        func_params = this_stack.get_function_params()
+
         self.pipeline.add_function(func_name, **func_params)
         self.update_pipeline_preview()
 
@@ -1261,10 +1319,10 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.filter_obj = filt_obj_type.__new__(filt_obj_type)
         self.pipeline = filtering.Pipeline(filt_obj_type)
         self.init_overview_ui()
-        self.init_action_ui()
+        self.init_function_ui()
 
     def init_overview_ui(self):
-        self.parameter_group.setTitle("Pipeline preview")
+        self.function_group.setTitle("Pipeline preview")
         self.layout.insertWidget(1, self.overview_group)
         self.overview_widgets['preview'] = QtWidgets.QPlainTextEdit()
         self.overview_widgets['preview'].setReadOnly(True)
@@ -1522,7 +1580,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_op_action.triggered.connect(self.choose_set_op)
         self.enrichment_action = QtWidgets.QAction("E&nrichment Analysis...", self)
         self.enrichment_action.triggered.connect(self.open_enrichment_analysis)
-        self.set_vis_action = QtWidgets.QAction("Gene Set &Visualization...", self)
+        self.set_vis_action = QtWidgets.QAction("&Visualize Gene Sets...", self)
         self.set_vis_action.triggered.connect(self.visualize_gene_sets)
         self.import_set_action = QtWidgets.QAction("&Import Gene Set...", self)
         self.import_set_action.triggered.connect(self.import_gene_set)
