@@ -188,15 +188,17 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         analysis_type = self._get_analysis_type()
         chosen_func = self.get_current_func()
         signature = generic.get_method_signature(chosen_func)
+        func_desc, param_desc = generic.get_method_docstring(chosen_func)
         for name, param in signature.items():
+            this_desc = param_desc.get(name, '')
             if name in self.EXCLUDED_PARAMS:
                 continue
             elif name in self.PLOT_ARGS[analysis_type]:
-                self.plot_signature[name] = param
+                self.plot_signature[name] = (param, this_desc)
             elif name in set.union(*self.STATISTICAL_TEST_ARGS.values()):
-                self.stats_signature[name] = param
+                self.stats_signature[name] = (param, this_desc)
             else:
-                self.parameters_signature[name] = param
+                self.parameters_signature[name] = (param, this_desc)
 
         self.update_parameters_ui()
         self.update_stats_ui()
@@ -237,10 +239,18 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         gui_utils.clear_layout(self.plot_grid)
 
         i = 0
-        for name, param in self.plot_signature.items():
+        for name, (param, desc) in self.plot_signature.items():
             self.plot_widgets[name] = gui_utils.param_to_widget(param, name)
-            self.plot_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.plot_widgets[name]), i, 0)
+            label = QtWidgets.QLabel(f'{name}:', self.plot_widgets[name])
+            label.setToolTip(desc)
+            help_button = gui_utils.HelpButton()
+            self.plot_grid.addWidget(label, i, 0)
             self.plot_grid.addWidget(self.plot_widgets[name], i, 1)
+            self.plot_grid.addWidget(help_button, i, 2)
+            help_button.clicked.connect(
+                functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
+                                  f"<b>{name}:</b> <br>{desc}"))
+
             i += 1
 
     def update_parameters_ui(self):
@@ -250,10 +260,17 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         gui_utils.clear_layout(self.parameter_grid)
 
         i = 0
-        for name, param in self.parameters_signature.items():
+        for name, (param, desc) in self.parameters_signature.items():
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
+            label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
+            label.setToolTip(desc)
+            help_button = gui_utils.HelpButton()
+            self.parameter_grid.addWidget(help_button, i, 2)
+            self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
+            help_button.clicked.connect(
+                functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
+                                  f"<b>{name}:</b> <br>{desc}"))
             i += 1
 
     def update_stats_ui(self):
@@ -276,11 +293,18 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.stats_grid.addWidget(self.stats_widgets['stats_radiobox'], 0, 0, 3, 2)
 
         i = 0
-        for name, param in self.stats_signature.items():
+        for name, (param, desc) in self.stats_signature.items():
             if name in self.STATISTICAL_TEST_ARGS[prev_test]:
                 self.stats_widgets[name] = gui_utils.param_to_widget(param, name)
-                self.stats_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.stats_widgets[name]), i, 2)
+                label = QtWidgets.QLabel(f'{name}:', self.stats_widgets[name])
+                label.setToolTip(desc)
+                help_button = gui_utils.HelpButton()
+                self.stats_grid.addWidget(help_button, i, 4)
+                self.stats_grid.addWidget(label, i, 2)
                 self.stats_grid.addWidget(self.stats_widgets[name], i, 3)
+                help_button.clicked.connect(
+                    functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
+                                      f"<b>{name}:</b> <br>{desc}"))
                 i += 1
 
     def is_single_set(self):
