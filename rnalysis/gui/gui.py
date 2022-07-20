@@ -247,9 +247,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             self.plot_grid.addWidget(label, i, 0)
             self.plot_grid.addWidget(self.plot_widgets[name], i, 1)
             self.plot_grid.addWidget(help_button, i, 2)
-            help_button.clicked.connect(
-                functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
-                                  f"<b>{name}:</b> <br>{desc}"))
+            help_button.connect_help(name, desc)
 
             i += 1
 
@@ -268,9 +266,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             self.parameter_grid.addWidget(help_button, i, 2)
             self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
-            help_button.clicked.connect(
-                functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
-                                  f"<b>{name}:</b> <br>{desc}"))
+            help_button.connect_help(name, desc)
             i += 1
 
     def update_stats_ui(self):
@@ -302,9 +298,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                 self.stats_grid.addWidget(help_button, i, 4)
                 self.stats_grid.addWidget(label, i, 2)
                 self.stats_grid.addWidget(self.stats_widgets[name], i, 3)
-                help_button.clicked.connect(
-                    functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
-                                      f"<b>{name}:</b> <br>{desc}"))
+                help_button.connect_help(name, desc)
                 i += 1
 
     def is_single_set(self):
@@ -1000,9 +994,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                 label.setToolTip(param_desc[name])
                 help_button = gui_utils.HelpButton()
                 self.parameter_grid.addWidget(help_button, i, 2)
-                help_button.clicked.connect(
-                    functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
-                                      f"<b>{name}:</b> <br>{param_desc[name]}"))
+                help_button.connect_help(name,param_desc[name])
 
             self.parameter_grid.addWidget(label, i, 0, )
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)

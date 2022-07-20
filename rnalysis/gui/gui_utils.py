@@ -1,9 +1,11 @@
 import ast
+import functools
 import inspect
 import traceback
 import typing
 from pathlib import Path
 from queue import Queue
+
 import matplotlib
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -16,6 +18,11 @@ class HelpButton(QtWidgets.QToolButton):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
+
+    def connect_help(self, param_name: str, desc: str):
+        self.clicked.connect(
+            functools.partial(QtWidgets.QToolTip.showText, self.mapToGlobal(self.pos()),
+                              f"<b>{param_name}:</b> <br>{desc}"))
 
 
 class ColorPicker(QtWidgets.QWidget):
