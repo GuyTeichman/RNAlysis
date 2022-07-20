@@ -931,12 +931,22 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.parameter_grid = QtWidgets.QGridLayout()
         self.func_combo = QtWidgets.QComboBox(self)
+        self.func_help_button = QtWidgets.QToolButton(self)
+        self.func_combo_layout = QtWidgets.QHBoxLayout()
         self.funcs = funcs
         self.filter_obj = filter_obj
         self.init_ui()
 
     def init_ui(self):
-        self.layout.addWidget(self.func_combo)
+        self.layout.addLayout(self.func_combo_layout)
+        self.func_combo_layout.addWidget(self.func_combo)
+        self.func_combo_layout.addWidget(self.func_help_button)
+        self.func_help_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
+        self.func_help_button.clicked.connect(
+            functools.partial(QtWidgets.QToolTip.showText,
+                              self.func_help_button.mapToGlobal(self.func_help_button.pos()),
+                              f"Choose a function from this list to read its description. "))
+
         self.layout.addLayout(self.parameter_grid)
         self.layout.addStretch(1)
         self.func_combo.addItem('Choose a function...')
@@ -950,13 +960,30 @@ class FuncTypeStack(QtWidgets.QWidget):
 
         chosen_func_name = self.get_function_name()
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
+        desc, param_desc = generic.get_method_docstring(chosen_func_name, self.filter_obj)
+        self.func_combo.setToolTip(desc)
+        self.func_help_button.clicked.connect(
+            functools.partial(QtWidgets.QToolTip.showText,
+                              self.func_help_button.mapToGlobal(self.func_help_button.pos()),
+                              f"<b>{chosen_func_name}:</b> <br>{desc}"))
         i = 1
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-            self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0, )
+            label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
+            if name in param_desc:
+                label.setToolTip(param_desc[name])
+                help_button = QtWidgets.QToolButton()
+                self.parameter_grid.addWidget(help_button, i, 2)
+                help_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
+                help_button.clicked.connect(
+                    functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
+                                      f"<b>{name}:</b> <br>{param_desc[name]}"))
+
+            self.parameter_grid.addWidget(label, i, 0, )
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
+
             i += 1
 
         help_address = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering." \
