@@ -12,6 +12,12 @@ from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
 
 
+class HelpButton(QtWidgets.QToolButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
+
+
 class ColorPicker(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
 
