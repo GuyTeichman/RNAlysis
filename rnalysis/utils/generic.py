@@ -1,7 +1,7 @@
 import itertools
 import inspect
 from functools import lru_cache
-from typing import Union, Callable
+from typing import Union, Callable, Tuple
 
 import numpy as np
 import pandas as pd
@@ -130,7 +130,7 @@ def get_method_signature(method: Union[str, Callable], obj: object = None):
         return {}
 
 
-def get_method_docstring(method: Union[str, Callable], obj: object = None):
+def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tuple[str, dict]:
     try:
         if isinstance(method, str):
             func = getattr(obj, method)
