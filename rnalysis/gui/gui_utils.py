@@ -3,6 +3,7 @@ import functools
 import inspect
 import traceback
 import typing
+import typing_extensions
 from pathlib import Path
 from queue import Queue
 
@@ -12,6 +13,40 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
+
+
+class ComboBoxOrOtherWidget(QtWidgets.QWidget):
+    IS_COMBO_BOX_LIKE = True
+    OTHER_TEXT = 'Other...'
+
+    def __init__(self, items: typing.List[str], other: QtWidgets.QWidget, default: str = None, parent=None):
+        super().__init__(parent)
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.combo = QtWidgets.QComboBox(self)
+        self.items = items
+        self.other = other
+        self.default = None
+
+        self.currentIndexChanged = self.combo.currentIndexChanged
+        self.init_ui()
+
+    def init_ui(self):
+        self.layout.addWidget(self.combo)
+        self.layout.addWidget(self.other)
+        self.combo.addItems(self.items)
+        self.combo.addItem(self.OTHER_TEXT)
+        self.currentIndexChanged.connect(self.check_other)
+        if self.default is not None:
+            self.combo.setCurrentText(self.default)
+        self.check_other()
+
+    def check_other(self):
+        self.other.setEnabled(self.combo.currentText() == self.OTHER_TEXT)
+
+    def currentText(self):
+        if self.combo.currentText() == self.OTHER_TEXT:
+            return get_val_from_widget(self.other)
+        return self.combo.currentText()
 
 
 class HelpButton(QtWidgets.QToolButton):
@@ -257,6 +292,13 @@ class SpinBoxWithDisable(QtWidgets.QSpinBox):
         return super().changeEvent(e)
 
 
+class DoubleSpinBoxWithDisable(QtWidgets.QDoubleSpinBox):
+    def changeEvent(self, e):
+        if e.type() == QtCore.QEvent.EnabledChange:
+            self.lineEdit().setVisible(self.isEnabled())
+        return super().changeEvent(e)
+
+
 class OptionalLineEdit(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
 
@@ -288,7 +330,7 @@ class OptionalSpinBox(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QGridLayout()
-        self.spinbox = SpinBoxWithDisable()
+        self.spinbox = SpinBoxWithDisable(self)
         self.checkbox = QtWidgets.QCheckBox('Disable input?')
         self.checkbox.toggled.connect(self.spinbox.setDisabled)
 
@@ -314,6 +356,20 @@ class OptionalSpinBox(QtWidgets.QWidget):
 
     def setMaximum(self, max_val: int):
         self.spinbox.setMaximum(max_val)
+
+
+class OptionalDoubleSpinBox(OptionalSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.checkbox.disconnect()
+        self.layout.removeWidget(self.spinbox)
+        self.spinbox = DoubleSpinBoxWithDisable(self)
+        self.checkbox.toggled.connect(self.spinbox.setDisabled)
+        self.valueChanged = self.spinbox.valueChanged
+        self.layout.addWidget(self.spinbox, 0, 1)
+
+    def setSingleStep(self, step: float):
+        self.spinbox.setSingleStep(step)
 
 
 class QMultiInput(QtWidgets.QPushButton):
@@ -912,6 +968,12 @@ class SettingsWindow(MinMaxDialog):
             event.ignore()
 
 
+class NewParam:
+    def __init__(self, annotation, default=inspect._empty):
+        self.annotation = annotation
+        self.default = default
+
+
 def param_to_widget(param, name: str,
                     actions_to_connect: typing.Union[typing.Iterable[typing.Callable], typing.Callable] = tuple()):
     actions_to_connect = parsing.data_to_tuple(actions_to_connect)
@@ -960,9 +1022,27 @@ def param_to_widget(param, name: str,
         widget = QtWidgets.QLineEdit(param.default if is_default else '')
         for action in actions_to_connect:
             widget.textChanged.connect(action)
-    elif typing.get_origin(param.annotation) == typing.Literal:
+    elif typing_extensions.get_origin(param.annotation) == typing.Union and typing_extensions.Literal in [
+        typing_extensions.get_origin(ann) for ann in typing_extensions.get_args(param.annotation)]:
+        args = typing_extensions.get_args(param.annotation)
+        literal_ind = [typing_extensions.get_origin(ann) for ann in args].index(
+            typing_extensions.Literal)
+        literal = args[literal_ind]
+        without_literal = tuple(args[0:literal_ind] + args[literal_ind + 1:])
+        if param.default in typing_extensions.get_args(literal):
+            this_default = param.default
+            other_default = inspect._empty
+        else:
+            this_default = None
+            other_default = param.default
+        widget = ComboBoxOrOtherWidget(typing_extensions.get_args(literal),
+                                       param_to_widget(NewParam(typing.Union[without_literal], other_default), name,
+                                              actions_to_connect), this_default)
+        for action in actions_to_connect:
+            widget.currentIndexChanged.connect(action)
+    elif typing_extensions.get_origin(param.annotation) == typing.Literal:
         widget = QtWidgets.QComboBox()
-        widget.addItems(typing.get_args(param.annotation))
+        widget.addItems(typing_extensions.get_args(param.annotation))
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
     elif param.annotation == typing.Union[int, None]:
@@ -970,6 +1050,15 @@ def param_to_widget(param, name: str,
         widget.setMinimum(-2147483648)
         widget.setMaximum(2147483647)
         default = param.default if is_default else 0
+        widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+    elif param.annotation == typing.Union[float, None]:
+        widget = OptionalDoubleSpinBox()
+        widget.setMinimum(float("-inf"))
+        widget.setMaximum(float("inf"))
+        widget.setSingleStep(0.05)
+        default = param.default if is_default else 0.0
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
@@ -1034,7 +1123,7 @@ def get_val_from_widget(widget):
         val = widget.isChecked()
     elif isinstance(widget, QtWidgets.QTextEdit):
         val = ast.literal_eval(widget.toPlainText())
-    elif isinstance(widget, QtWidgets.QComboBox):
+    elif isinstance(widget, QtWidgets.QComboBox) or hasattr(widget, 'IS_COMBO_BOX_LIKE'):
         val = widget.currentText()
     elif hasattr(widget, 'IS_MULTI_INPUT'):
         val = widget.get_values()
