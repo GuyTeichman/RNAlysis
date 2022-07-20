@@ -974,9 +974,8 @@ class FuncTypeStack(QtWidgets.QWidget):
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
-                help_button = QtWidgets.QToolButton()
+                help_button = gui_utils.HelpButton()
                 self.parameter_grid.addWidget(help_button, i, 2)
-                help_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
                 help_button.clicked.connect(
                     functools.partial(QtWidgets.QToolTip.showText, help_button.mapToGlobal(help_button.pos()),
                                       f"<b>{name}:</b> <br>{param_desc[name]}"))
