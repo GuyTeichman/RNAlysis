@@ -1472,7 +1472,7 @@ class FoldChangeFilter(Filter):
         return [self.df.name]
 
     def randomization_test(self, ref, alpha: float = 0.05, reps: int = 10000, save_csv: bool = False,
-                           fname: Union[str, None] = None, random_seed: int = None) -> pd.DataFrame:
+                           fname: Union[str, None] = None, random_seed: Union[int, None] = None) -> pd.DataFrame:
 
         """
         Perform a randomization test to examine whether the fold change of a group of specific genomic features \
@@ -2287,9 +2287,9 @@ class CountFilter(Filter):
 
     def split_kmeans(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                      max_iter: int = 300,
-                     random_seed: int = None, power_transform: bool = False,
+                     random_seed: Union[int, None] = None, power_transform: bool = False,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                     split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
+                     split_plots: bool = False, max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
                      ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-means clustering algorithm, \
@@ -2300,7 +2300,7 @@ class CountFilter(Filter):
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
-        :type random_seed: int or None (default=None)
+        :type random_seed: Union[int, None] or None (default=None)
         :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
         The final results will be the best output of n_init consecutive runs in terms of inertia.
         :type n_init: int (default=3)
@@ -2362,19 +2362,21 @@ class CountFilter(Filter):
         # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette'], None],
+    def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
                            metric: str = 'euclidean',
-                           linkage: str = 'average', power_transform: bool = False, distance_threshold: float = None,
+                           linkage: str = 'average', power_transform: bool = False,
+                           distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                           max_n_clusters_estimate: int = 'auto'
+                           max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
                            ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
         based on the clustering result.
 
-        :param n_clusters: The number of clusters the algorithm will seek.
-        :type n_clusters: int, list of ints, 'gap', or 'slihouette'
+        :param n_clusters: The number of clusters the algorithm will seek. If set to 'distance', \
+        the algorithm will derive the number of clusters from the distance threshold (see 'distance_threshold').
+        :type n_clusters: int, list of ints, 'gap', 'slihouette', or 'distance'
         :param metric: the distance metric used to determine similarity between data points. \
         If linkage is 'ward', only the 'euclidean' metric is accepted. \
         For a full list of supported distance metrics see the user guide.
@@ -2444,9 +2446,9 @@ class CountFilter(Filter):
 
     def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                        max_iter: int = 300,
-                       random_seed: int = None, metric: str = 'euclidean', power_transform: bool = False,
+                       random_seed: Union[int, None] = None, metric: str = 'euclidean', power_transform: bool = False,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                       max_n_clusters_estimate: int = 'auto'
+                       max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
                        ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
@@ -2457,7 +2459,7 @@ class CountFilter(Filter):
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
-        :type random_seed: int or None (default=None)
+        :type random_seed: Union[int, None] or None (default=None)
         :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
         The final results will be the best output of n_init consecutive runs in terms of inertia.
         :type n_init: int (default=3)

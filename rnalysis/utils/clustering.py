@@ -770,9 +770,9 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
 
         self.linkage = linkage.lower()
         self.distance_threshold = distance_threshold
-        if n_clusters is None:
+        if n_clusters is None or n_clusters == 'distance':
             if distance_threshold is None:
-                raise ValueError('Neither n_clusters or distance_threshold were provided.')
+                raise ValueError("Neither 'n_clusters' or 'distance_threshold' were provided. ")
             self.clusterer_kwargs = dict(n_clusters=None, linkage=self.linkage,
                                          distance_threshold=self.distance_threshold)
             super(ClusteringRunnerWithNClusters, self).__init__(data, power_transform, ('affinity', metric), plot_style,
@@ -892,7 +892,7 @@ class CLICOMRunner(ClusteringRunner):
         self.clusterers = []
         super(CLICOMRunner, self).__init__(data, power_transform, plot_style=plot_style, split_plots=split_plots)
 
-    def run(self)->List[ArbitraryClusterer]:
+    def run(self) -> List[ArbitraryClusterer]:
         valid_setups = self.find_valid_clustering_setups()
         n_setups = len(valid_setups)
         print(f"Found {n_setups} legal clustering setups.")
