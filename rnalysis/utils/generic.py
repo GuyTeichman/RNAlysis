@@ -9,6 +9,7 @@ from joblib import Parallel
 from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
+from rnalysis.utils import parsing
 
 
 class ProgressParallel(Parallel):
@@ -128,6 +129,19 @@ def get_method_signature(method: Union[str, Callable], obj: object = None):
     except AttributeError:
         return {}
 
+
+def get_method_docstring(method: Union[str, Callable], obj: object = None):
+    try:
+        if isinstance(method, str):
+            func = getattr(obj, method)
+        else:
+            func = method
+        raw_docstring = inspect.cleandoc(inspect.getdoc(func))
+        return parsing.parse_docstring(raw_docstring)
+    except AttributeError:
+        return '', {}
+
+
 def despine(ax):
-    for side in ['top','right']:
+    for side in ['top', 'right']:
         ax.spines[side].set_visible(False)
