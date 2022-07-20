@@ -18,6 +18,9 @@ from rnalysis import filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_utils, gui_graphics
 from rnalysis.utils import io, validation, generic
 
+FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
+                    'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
+
 
 class EnrichmentWindow(gui_utils.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'parallel', 'biotype', 'background_genes',
@@ -823,8 +826,9 @@ class TabPage(QtWidgets.QWidget):
     def get_pbar(self):
         return self.stdout_widgets['progress_bar']
 
-    def rename(self):
-        new_name = self.overview_widgets['table_name'].text()
+    def rename(self, new_name: str = None):
+        if new_name is None:
+            new_name = self.overview_widgets['table_name'].text()
         self.set_tab_name(new_name, is_unsaved=True)
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{new_name}</b>'")
         self.overview_widgets['table_name'].setText('')
@@ -919,9 +923,10 @@ class SetTabPage(TabPage):
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
             self.set_tab_name(self.get_tab_name().strip("*"), is_unsaved=False)
 
-    def rename(self):
-        new_name = self.overview_widgets['table_name'].text()
-        super().rename()
+    def rename(self, new_name: str = None):
+        if new_name is None:
+            new_name = self.overview_widgets['table_name'].text()
+        super().rename(new_name)
         self.gene_set.change_set_name(new_name)
 
     def update_set_shape(self):
@@ -994,7 +999,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                 label.setToolTip(param_desc[name])
                 help_button = gui_utils.HelpButton()
                 self.parameter_grid.addWidget(help_button, i, 2)
-                help_button.connect_help(name,param_desc[name])
+                help_button.connect_help(name, param_desc[name])
 
             self.parameter_grid.addWidget(label, i, 0, )
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
@@ -1026,8 +1031,6 @@ class FuncTypeStack(QtWidgets.QWidget):
 
 
 class FilterTabPage(TabPage):
-    FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
-                        'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
                       'from_folder', 'save_txt', 'save_csv'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
@@ -1058,9 +1061,10 @@ class FilterTabPage(TabPage):
         # self.grid.addWidget(QtWidgets.QSpinBox(), 2, 0)
         # self.grid.addWidget(QtWidgets.QPushButton('Clear Text'), 2, 2)
 
-    def rename(self):
-        new_name = self.overview_widgets['table_name'].text()
-        super().rename()
+    def rename(self, new_name: str = None):
+        if new_name is None:
+            new_name = self.overview_widgets['table_name'].text()
+        super().rename(new_name)
         self.filter_obj.fname = Path(
             os.path.join(str(self.filter_obj.fname.parent), f"{new_name}{self.filter_obj.fname.suffix}"))
         print(self.filter_obj.fname)
@@ -1124,7 +1128,7 @@ class FilterTabPage(TabPage):
     def init_basic_ui(self):
         self.layout.insertWidget(0, self.basic_group)
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
-        self.basic_widgets['table_type_combo'].addItems(self.FILTER_OBJ_TYPES.keys())
+        self.basic_widgets['table_type_combo'].addItems(FILTER_OBJ_TYPES.keys())
 
         self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
         self.basic_widgets['start_button'].clicked.connect(self.start)
@@ -1279,7 +1283,7 @@ class FilterTabPage(TabPage):
             self.set_tab_name(self.filter_obj.fname.name, is_unsaved=False)
 
     def start(self):
-        self.filter_obj = self.FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()](
+        self.filter_obj = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()](
             self.basic_widgets['file_path'].text())
         print(self.filter_obj)
         table_name_user_input = self.basic_widgets['table_name'].text()
@@ -1296,11 +1300,14 @@ class FilterTabPage(TabPage):
         self.layout.removeWidget(self.basic_group)
         self.basic_group.deleteLater()
 
-    def start_from_filter_obj(self, filter_obj: filtering.Filter):
+    def start_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
         self.filter_obj = filter_obj
-        print(self.filter_obj)
+        self.basic_group.setVisible(False)
         self.init_overview_ui()
         self.init_function_ui()
+        if name is not None:
+            self.rename(name)
+        print(self.filter_obj)
 
 
 class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
@@ -1316,7 +1323,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.basic_group.setTitle("Choose data table type for Pipeline")
 
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
-        self.basic_widgets['table_type_combo'].addItems(self.FILTER_OBJ_TYPES.keys())
+        self.basic_widgets['table_type_combo'].addItems(FILTER_OBJ_TYPES.keys())
 
         self.basic_widgets['pipeline_name'] = QtWidgets.QLineEdit()
         self.basic_widgets['pipeline_name'].setText('New Pipeline')
@@ -1364,7 +1371,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         raise NotImplementedError
 
     def start(self):
-        filt_obj_type = self.FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
+        filt_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
         self.filter_obj = filt_obj_type.__new__(filt_obj_type)
         self.pipeline = filtering.Pipeline(filt_obj_type)
         self.init_overview_ui()
@@ -1397,6 +1404,47 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
     def save_file(self):
         self._get_parent_window().pipelines[self.basic_widgets['pipeline_name'].text()] = self.pipeline
         print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
+
+
+class MultiOpenWindow(QtWidgets.QDialog):
+    def __init__(self, files: List[str], parent=None):
+        super().__init__(parent)
+        self.files = files
+        self.layout = QtWidgets.QGridLayout(self)
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.paths = dict()
+        self.table_types = dict()
+        self.names = dict()
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.setWindowTitle('Choose table types and names')
+        self.layout.addWidget(
+            QtWidgets.QLabel(
+                'Please choose a table type (mandatory) and table name (optional) for each loaded table\n\n'),
+            0, 0, 1, 3)
+        self.layout.addWidget(QtWidgets.QLabel('Table paths:'), 1, 0)
+        self.layout.addWidget(QtWidgets.QLabel('Table types:'), 1, 1)
+        self.layout.addWidget(QtWidgets.QLabel('Table names (optional):'), 1, 2)
+        for i, file in enumerate(self.files):
+            self.paths[file] = gui_utils.PathLineEdit(file, parent=self)
+            self.table_types[file] = QtWidgets.QComboBox(self)
+            self.table_types[file].addItems(list(FILTER_OBJ_TYPES.keys()))
+            self.names[file] = QtWidgets.QLineEdit(self)
+
+            self.layout.addWidget(self.paths[file], i + +2, 0)
+            self.layout.addWidget(self.table_types[file], i + +2, 1)
+            self.layout.addWidget(self.names[file], i + +2, 2)
+        self.layout.addWidget(self.button_box, i + 3, 0, 1, 3)
+
+    def result(self):
+        paths = {file: gui_utils.get_val_from_widget(widget) for file, widget in self.paths.items()}
+        types = {file: gui_utils.get_val_from_widget(widget) for file, widget in self.table_types.items()}
+        names = {file: gui_utils.get_val_from_widget(widget) for file, widget in self.names.items()}
+        return paths, types, names
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -1499,29 +1547,29 @@ class MainWindow(QtWidgets.QMainWindow):
             self.new_tab_from_filter_obj(filter_obj)
 
     def load_multiple_files(self):
-        pass
-        # filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files", str(Path.home()),
-        #                                                       "All Files (*);;"
-        #                                                       "Comma-Separated Values (*.csv);;"
-        #                                                       "Tab-Separated Values (*.tsv);;"
-        #                                                       "Text Document (*.txt)")
-        # if filenames:
-        #     for filename in filenames:
-        #         if filename.endswith('.csv'):
-        #             gene_set = set(pd.read_csv(filename, index_col=0).index)
-        #         elif filename.endswith('.tsv'):
-        #             gene_set = set(pd.read_csv(filename, index_col=0, sep='\t').index)
-        #             # TODO: fix me!
-        #         else:
-        #             with open(filename) as f:
-        #                 gene_set = {line.strip() for line in f.readlines()}
-        #
-        #         self.new_tab_from_filter_obj(gene_set, filename)
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files", str(Path.home()),
+                                                              "All Files (*);;"
+                                                              "Comma-Separated Values (*.csv);;"
+                                                              "Tab-Separated Values (*.tsv);;"
+                                                              "Text Document (*.txt)")
+        if filenames:
+            window = MultiOpenWindow(filenames, self)
+            accepted = window.exec()
+            if accepted:
+                paths, types, names = window.result()
+                for filename in filenames:
+                    path = paths[filename]
+                    table_type = FILTER_OBJ_TYPES[types[filename]]
+                    name = names[filename]
+                    filter_obj = table_type(path)
+                    if name == '':
+                        self.new_tab_from_filter_obj(filter_obj)
+                    else:
+                        self.new_tab_from_filter_obj(filter_obj, name)
 
-    def new_tab_from_filter_obj(self, filter_obj: filtering.Filter):
+    def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
         self.add_new_tab(filter_obj.fname.name)
-
-        self.tabs.currentWidget().start_from_filter_obj(filter_obj)
+        self.tabs.currentWidget().start_from_filter_obj(filter_obj, name)
 
     def new_tab_from_gene_set(self, gene_set: set, gene_set_name: str):
         self.add_new_tab(gene_set_name, is_set=True)
