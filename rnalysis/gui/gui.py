@@ -1836,10 +1836,16 @@ class MainWindow(QtWidgets.QMainWindow):
             event.ignore()
 
 
+def customwarn(message, category, filename, lineno, file=None, line=None):
+    sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
+
+
 def run():
     matplotlib.use('Qt5Agg')
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
+    warnings.showwarning = customwarn
+
     sys.excepthook = window.excepthook
     window.show()
     sys.exit(app.exec())
