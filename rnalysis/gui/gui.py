@@ -321,18 +321,18 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                 kwargs['statistical_test'] = stat_test
             else:
                 kwargs['parametric_test'] = stat_test
-        gene_set_name = self.widgets['enrichment_list'].currentItem().text()
+        gene_set_name = self.widgets['enrichment_list'].currentText()
         gene_set = self.available_objects.index(gene_set_name)
 
         for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
                                                   self.stats_widgets.items()):
-            if param_name in {'help_link', 'dataset_radiobox'}:
+            if param_name in {'help_link', 'dataset_radiobox', 'stats_radiobox'}:
                 continue
             val = gui_utils.get_val_from_widget(widget)
             kwargs[param_name] = val
 
         if not self.is_single_set():
-            bg_set_name = self.widgets['bg_list'].currentItem().text()
+            bg_set_name = self.widgets['bg_list'].currentText()
             bg_set = self.available_objects.index(bg_set_name)
         else:
             bg_set = None
