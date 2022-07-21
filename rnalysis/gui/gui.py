@@ -798,12 +798,22 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 class TabPage(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.layout = QtWidgets.QVBoxLayout(self)
+        self.sup_layout = QtWidgets.QVBoxLayout(self)
+        self.container = QtWidgets.QWidget(self)
+        self.layout = QtWidgets.QVBoxLayout(self.container)
         self.name = None
 
         self.stdout_group = QtWidgets.QGroupBox('Log')
-        self.layout.addWidget(self.stdout_group)
-        self.layout.addStretch(1)
+
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        self.sup_layout.addWidget(self.splitter)
+        self.splitter.addWidget(self.container)
+        self.splitter.addWidget(self.stdout_group)
+        # self.splitter.setSizes([int(self.width() * 0.2), int(self.width() * 0.8)
+
+
+                                # self.layout.addWidget(self.stdout_group)
+        self.sup_layout.addStretch(1)
         self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
         self.stdout_widgets = {}
 
