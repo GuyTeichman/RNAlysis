@@ -482,6 +482,8 @@ class QMultiInput(QtWidgets.QPushButton):
         self.dialog_widgets['done'].clicked.connect(self.value_changed)
         self.dialog_layout.addWidget(self.dialog_widgets['done'], 2, 0, 1, 2)
 
+        self.add_widget()
+
     def value_changed(self):
         self.valueChanged.emit()
 
