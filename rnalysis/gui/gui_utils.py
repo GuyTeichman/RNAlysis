@@ -1088,7 +1088,7 @@ def param_to_widget(param, name: str,
             other_default = param.default
         widget = ComboBoxOrOtherWidget(typing_extensions.get_args(literal),
                                        param_to_widget(NewParam(typing.Union[without_literal], other_default), name,
-                                              actions_to_connect), this_default)
+                                                       actions_to_connect), this_default)
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
     elif typing_extensions.get_origin(param.annotation) == typing.Literal:
@@ -1152,6 +1152,14 @@ def param_to_widget(param, name: str,
         widget = OptionalLineEdit()
         for action in actions_to_connect:
             widget.textChanged.connect(action)
+    elif typing_extensions.get_origin(param.annotation) in (
+        collections.abc.Iterable, typing.List, typing.Tuple, typing.Set) and typing_extensions.get_origin(
+        typing_extensions.get_args(param.annotation)[0]) == typing_extensions.Literal:
+        widget = QMultiComboBox(name, items=typing_extensions.get_args(typing_extensions.get_args(param.annotation)[0]))
+        if is_default:
+            widget.set_defaults(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
     # elif param.annotation == typing.Dict[str, typing.List[str]]:
     #     pass
     # elif param.annotation == typing.Dict[str, typing.List[int]]:
