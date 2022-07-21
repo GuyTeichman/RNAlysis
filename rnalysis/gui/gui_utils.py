@@ -25,7 +25,7 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
         self.combo = QtWidgets.QComboBox(self)
         self.items = items
         self.other = other
-        self.default = None
+        self.default = default
 
         self.currentIndexChanged = self.combo.currentIndexChanged
         self.init_ui()
