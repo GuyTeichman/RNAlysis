@@ -515,7 +515,7 @@ class QMultiInput(QtWidgets.QPushButton):
 
     def set_defaults(self, defaults: typing.Iterable):
         defaults = parsing.data_to_list(defaults)
-        if len(defaults) == 0:
+        while len(self.dialog_widgets['inputs']) > 0:
             self.remove_widget()
         for item in defaults:
             self.add_widget()
