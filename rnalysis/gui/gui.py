@@ -815,10 +815,7 @@ class TabPage(QtWidgets.QWidget):
     def init_stdout_ui(self):
         self.stdout_widgets['text_edit_stdout'] = gui_utils.StdOutTextEdit(self)
         self.stdout_widgets['text_edit_stdout'].setStyleSheet("""QTextEdit {background: #dddddd;}""")
-        # self.stdout_widgets['progress_bar'] = gui_utils.TQDMLineEdit(self)
-
         self.stdout_grid.addWidget(self.stdout_widgets['text_edit_stdout'], 0, 0, 3, 4)
-        # self.stdout_grid.addWidget(self.stdout_widgets['progress_bar'], 3, 0, 1, 4)
 
     def get_console(self):
         return self.stdout_widgets['text_edit_stdout']
@@ -1023,7 +1020,6 @@ class FuncTypeStack(QtWidgets.QWidget):
             val = gui_utils.get_val_from_widget(widget)
 
             func_params[param_name] = val
-        print(func_params)
         return func_params
 
     def get_function_name(self):
@@ -1503,19 +1499,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # attach to start / stop methods
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
-
-        # self.queue_tqdm = Queue()
-        # self.thread_tqdm_queue_listener = QtCore.QThread()
-        # self.tqdm_receiver = gui_utils.ThreadTQDMStreamTextQueueReceiver(self.queue_tqdm)
-        # sys.stderr = gui_utils.WriteStream(self.queue_tqdm)
-        #
-        # # connect receiver object to widget for text update
-        # self.tqdm_receiver.queue_tqdm_element_received_signal.connect(self.append_text_to_current_pbar)
-        # # attach console text receiver to console text thread
-        # self.tqdm_receiver.moveToThread(self.thread_tqdm_queue_listener)
-        # # attach to start / stop methods
-        # self.thread_tqdm_queue_listener.started.connect(self.tqdm_receiver.run)
-        # self.thread_tqdm_queue_listener.start()
 
     def update_style_sheet(self):
         self.setStyleSheet(gui_style.get_stylesheet())
