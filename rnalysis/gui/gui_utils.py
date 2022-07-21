@@ -858,39 +858,11 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
         self.setMinimumWidth(500)
         self.setFont(QtGui.QFont('Consolas', 11))
 
-    # @QtCore.pyqtSlot(str)
+    @QtCore.pyqtSlot(str)
     def append_text(self, text: str):
         self.moveCursor(QtGui.QTextCursor.End)
         self.insertPlainText(text)
-
-
-class ThreadTQDMStreamTextQueueReceiver(QtCore.QObject):
-    queue_tqdm_element_received_signal = QtCore.pyqtSignal(str)
-
-    def __init__(self, q: Queue, *args, **kwargs):
-        QtCore.QObject.__init__(self, *args, **kwargs)
-        self.queue = q
-
-    @QtCore.pyqtSlot()
-    def run(self):
-        self.queue_tqdm_element_received_signal.emit('Progress bar')
-        while True:
-            text = self.queue.get()
-            self.queue_tqdm_element_received_signal.emit(text)
-
-
-class TQDMLineEdit(QtWidgets.QLineEdit):
-    def __init__(self, parent):
-        super(TQDMLineEdit, self).__init__()
-        self.setParent(parent)
-        self.setReadOnly(True)
-        # self.setLineWidth(50)
-        # self.setMinimumWidth(500)
-        self.setFont(QtGui.QFont('Consolas', 11))
-
-    # @QtCore.pyqtSlot(str)
-    def set_text(self, text: str):
-        self.setText(text)
+        QtWidgets.QApplication.processEvents()
 
 
 class WriteStream(QtCore.QObject):
