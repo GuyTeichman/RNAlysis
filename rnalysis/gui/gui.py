@@ -16,7 +16,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_utils, gui_graphics
-from rnalysis.utils import io, validation, generic
+from rnalysis.utils import io, validation, generic, parsing
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
@@ -282,8 +282,8 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.stats_widgets = {}
         gui_utils.clear_layout(self.stats_grid)
 
-        radio_options = self.STATISTICAL_TESTS.keys() if self.is_categorical() else \
-            self.ORDINAL_STATISTICAL_TESTS.keys()
+        radio_options = parsing.data_to_list(self.STATISTICAL_TESTS.keys() if self.is_categorical() else \
+                                                 self.ORDINAL_STATISTICAL_TESTS.keys())
         self.stats_widgets['stats_radiobox'] = gui_utils.RadioButtonBox('Choose statistical test:', radio_options)
         if prev_test_name is not None:
             self.stats_widgets['stats_radiobox'].set_selection(prev_test_name)
