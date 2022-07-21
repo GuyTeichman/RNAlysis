@@ -39,9 +39,12 @@ class ProgressSerialGui:
     def __iter__(self):
         start_time = time.time()
         for i, item in enumerate(self.iter_obj):
-            elapsed_time = time.time()-start_time
-            self.dialog.setValue(i + 1)
-            self.dialog.setLabelText(self.desc + '\n' + f"Elapsed time: {elapsed_time:.2f} seconds")
+            elapsed_time = time.time() - start_time
+            completed_items = i + 1
+            remaining_time = (elapsed_time / completed_items) * (self.total - completed_items)
+            self.dialog.setValue(completed_items)
+            self.dialog.setLabelText(self.desc + '\n' + f"Elapsed time: {elapsed_time:.2f} seconds"
+                                     + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
             QtWidgets.QApplication.processEvents()
             yield item
         self.dialog.close()
