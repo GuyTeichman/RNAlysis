@@ -342,10 +342,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
     def run_analysis(self):
         func = self.get_current_func()
         gene_set, bg_set, kwargs = self.get_analysis_params()
-
         self.parent().run_enrichment_analysis(func, gene_set, bg_set, kwargs)
-
-        self.close()
 
 
 class SetOperationWindow(gui_utils.MinMaxDialog):
@@ -1732,36 +1729,41 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
 
     def run_enrichment_analysis(self, func: Callable, gene_set_ind: int, bg_set_ind: Union[int, None], kwargs: dict):
-        is_single_set = bg_set_ind is None
+        self.enrichment_window.close()
+        print("Enrichment analysis started")
+        try:
+            is_single_set = bg_set_ind is None
+            if is_single_set:
+                bg_set_obj = None
+            else:
+                self.tabs.setCurrentIndex(bg_set_ind)
+                bg_set_obj = enrichment.FeatureSet(self.tabs.currentWidget().filter_obj) if \
+                    isinstance(self.tabs.currentWidget(), FilterTabPage) else self.tabs.currentWidget().gene_set
 
-        if is_single_set:
-            bg_set_obj = None
-        else:
-            self.tabs.setCurrentIndex(bg_set_ind)
-            bg_set_obj = enrichment.FeatureSet(self.tabs.currentWidget().filter_obj) if \
-                isinstance(self.tabs.currentWidget(), FilterTabPage) else self.tabs.currentWidget().gene_set
+            self.tabs.setCurrentIndex(gene_set_ind)
+            set_name = self.tabs.currentWidget().get_tab_name()
+            gene_set = self.tabs.currentWidget().filter_obj if \
+                isinstance(self.tabs.currentWidget(),
+                           FilterTabPage) else self.tabs.currentWidget().gene_set.gene_set
 
-        self.tabs.setCurrentIndex(gene_set_ind)
-        set_name = self.tabs.currentWidget().get_tab_name()
-        gene_set = self.tabs.currentWidget().filter_obj if \
-            isinstance(self.tabs.currentWidget(),
-                       FilterTabPage) else self.tabs.currentWidget().gene_set.gene_set
+            feature_set_obj = enrichment.RankedSet(gene_set, set_name) if is_single_set \
+                else enrichment.FeatureSet(gene_set, set_name)
 
-        feature_set_obj = enrichment.RankedSet(gene_set, set_name) if is_single_set \
-            else enrichment.FeatureSet(gene_set, set_name)
+            if is_single_set:
+                result = func(feature_set_obj, **kwargs)
+            else:
+                result = func(feature_set_obj, background_genes=bg_set_obj, **kwargs)
 
-        if is_single_set:
-            result = func(feature_set_obj, **kwargs)
-        else:
-            result = func(feature_set_obj, background_genes=bg_set_obj, **kwargs)
-
-        df_window = gui_utils.DataFrameView(result, "Enrichment results for set " + feature_set_obj.set_name)
-        self.enrichment_results.append(df_window)
-        df_window.show()
+            df_window = gui_utils.DataFrameView(result, "Enrichment results for set " + feature_set_obj.set_name)
+            self.enrichment_results.append(df_window)
+            df_window.show()
+        finally:
+            self.enrichment_window.show()
 
     def open_enrichment_analysis(self):
         tab_names = self.get_tab_names()
-        self.enrichment_window = EnrichmentWindow(tab_names, self)
+        if self.enrichment_window is None:
+            self.enrichment_window = EnrichmentWindow(tab_names, self)
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
