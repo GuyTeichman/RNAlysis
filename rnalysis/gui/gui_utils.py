@@ -514,7 +514,10 @@ class QMultiInput(QtWidgets.QPushButton):
         raise NotImplementedError
 
     def set_defaults(self, defaults: typing.Iterable):
-        for item in parsing.data_to_list(defaults):
+        defaults = parsing.data_to_list(defaults)
+        if len(defaults) == 0:
+            self.remove_widget()
+        for item in defaults:
             self.add_widget()
             self.set_widget_value(-1, item)
 
