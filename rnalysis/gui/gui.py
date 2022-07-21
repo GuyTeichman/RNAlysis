@@ -1830,6 +1830,14 @@ def run():
     warnings.showwarning = customwarn
 
     sys.excepthook = window.excepthook
+    # enrichment.enrichment_runner.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui,
+    #                                                                           parent=window)
+    enrichment.enrichment_runner.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
+    # generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui, parent=window)
+    enrichment.enrichment_runner.parsing.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
+    filtering.clustering.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
+    # filtering.clustering.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui, parent=window)
+
     window.show()
     sys.exit(app.exec())
 
