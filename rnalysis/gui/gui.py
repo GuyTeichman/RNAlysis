@@ -23,8 +23,8 @@ FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential express
 
 
 class EnrichmentWindow(gui_utils.MinMaxDialog):
-    EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'parallel', 'biotype', 'background_genes',
-                       'statistical_test', 'parametric_test'}
+    EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
+                       'statistical_test', 'parametric_test', 'biotype_ref_path'}
 
     ANALYSIS_TYPES = {'Gene Ontology (GO)': 'go',
                       'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
