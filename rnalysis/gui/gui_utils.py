@@ -13,6 +13,72 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
+from joblib import Parallel
+
+
+class ProgressSerialGui:
+    def __init__(self, iter_obj: typing.Iterable, desc: str = '', unit: str = '', bar_format: str = '',
+                 total: int = None, parent=None):
+        self.iter_obj = iter_obj
+        self.desc = desc
+        self.parent = parent
+        if total is not None:
+            self.total = total
+        else:
+            try:
+                self.total = len(iter_obj)
+            except TypeError:
+                self.total = 2
+        self.dialog = QtWidgets.QProgressDialog(self.desc, "Cancel", 0, self.total, parent)
+        self.dialog.setMinimumDuration(0)
+        self.dialog.setWindowTitle(self.desc)
+        self.dialog.setValue(0)
+        self.dialog.setWindowModality(QtCore.Qt.WindowModal)
+
+    def __iter__(self):
+        for i, item in enumerate(self.iter_obj):
+            self.dialog.setValue(i + 1)
+            QtWidgets.QApplication.processEvents()
+            yield item
+        self.dialog.close()
+
+
+class ProgressParallelGui(Parallel):
+    def __init__(self, total=None, desc: str = '', unit: str = 'it', bar_format: str = '', parent=None, *args,
+                 **kwargs):
+        self.total = total
+        self.desc = desc
+        self.dialog = QtWidgets.QProgressDialog(desc, "Cancel", 0, 2 if total is None else total, parent)
+        self.dialog.setMinimumDuration(0)
+        self.dialog.setWindowTitle(self.desc)
+        self.dialog.setValue(0)
+        self.dialog.setWindowModality(QtCore.Qt.WindowModal)
+        super().__init__(verbose=100, *args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        QtWidgets.QApplication.processEvents()
+        return Parallel.__call__(self, *args, **kwargs)
+
+    def print_progress(self):
+        index = self.n_completed_tasks
+        # We are finished dispatching
+        total_tasks = self.n_dispatched_tasks
+        # We always display the first loop
+        if not index == 0:
+            # Display depending on the number of remaining items
+            # A message as soon as we finish dispatching, cursor is 0
+            cursor = (total_tasks - index + 1 -
+                      self._pre_dispatch_amount)
+            frequency = (total_tasks // self.verbose) + 1
+            is_last_item = (index + 1 == total_tasks)
+            if (is_last_item or cursor % frequency):
+                self.dialog.close()
+            elif self.total is None:
+                self.dialog.setMaximum(total_tasks)
+            self.dialog.setValue(index)
+
+        QtWidgets.QApplication.processEvents()
+        super().print_progress()
 
 
 class ComboBoxOrOtherWidget(QtWidgets.QWidget):
