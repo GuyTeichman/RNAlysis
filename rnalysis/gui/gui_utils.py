@@ -858,9 +858,11 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
     def append_text(self, text: str):
         self.moveCursor(QtGui.QTextCursor.End)
         if text.startswith('Warning: '):
-            self.insertHtml(f'<p style="color:red;">{text}</p><br>')
+            self.insertHtml(f'<div style="color:red;">{text}</div><br>')
         else:
-            self.insertPlainText(text)
+            self.insertHtml(f'<div style="color:black;">{text}</div><br>')
+        self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+
         QtWidgets.QApplication.processEvents()
 
 
