@@ -4,6 +4,7 @@ import inspect
 import traceback
 import typing
 import typing_extensions
+import collections
 from pathlib import Path
 from queue import Queue
 
@@ -585,6 +586,14 @@ class QMultiStrIntLineEdit(QMultiLineEdit):
 class QMultiComboBox(QMultiInput):
     CHILD_QWIDGET = QtWidgets.QComboBox
 
+    def __init__(self, label: str, text: str = 'Set Input', parent=None, items=()):
+        self.items = items
+        super().__init__(label, text, parent)
+
+    def add_widget(self):
+        super().add_widget()
+        self.dialog_widgets['inputs'][-1].addItems(self.items)
+
     def get_widget_value(self, widget: type(CHILD_QWIDGET)):
         return widget.currentText()
 
@@ -593,6 +602,9 @@ class QMultiComboBox(QMultiInput):
 
 
 class QMultiBoolComboBox(QMultiComboBox):
+    def __init__(self, label: str, text: str = 'Set Input', parent=None):
+        super().__init__(label, text, parent, items=['True', 'False'])
+
     def get_widget_value(self, widget: QtWidgets.QComboBox):
         return ast.literal_eval(widget.currentText())
 
