@@ -391,8 +391,6 @@ class QMultiInput(QtWidgets.QPushButton):
 
     @QtCore.pyqtSlot()
     def start_dialog(self):
-        if len(self.dialog_widgets['inputs']) == 0:
-            self.add_widget()
         self.dialog_widgets['box'].exec()
 
     def init_ui(self):
