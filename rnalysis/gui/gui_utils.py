@@ -38,6 +38,8 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
         self.currentIndexChanged.connect(self.check_other)
         if self.default is not None:
             self.combo.setCurrentText(self.default)
+        else:
+            self.combo.setCurrentText(self.OTHER_TEXT)
         self.check_other()
 
     def check_other(self):
