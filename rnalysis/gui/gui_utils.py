@@ -616,10 +616,6 @@ class QMultiBoolComboBox(QMultiComboBox):
     def set_widget_value(self, ind: int, val):
         self.dialog_widgets['inputs'][ind].setCurrentText(str(val))
 
-    def add_widget(self):
-        super().add_widget()
-        self.dialog_widgets['inputs'][-1].addItems(['True', 'False'])
-
 
 class DataFrameModel(QtCore.QAbstractTableModel):
     """
