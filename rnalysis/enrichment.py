@@ -24,6 +24,10 @@ import upsetplot
 from rnalysis.filtering import Filter
 from rnalysis.utils import io, parsing, settings, validation, enrichment_runner
 
+_ASPECTS = ('biological_process', 'molecular function', 'cellular component')
+_EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
+_QUALIFIERS = ('not', 'contributes_to', 'colocalizes_with')
+
 
 class FeatureSet:
     """ Receives a filtered gene set and the set's name (optional) and preforms various enrichment analyses on them. """
@@ -232,14 +236,17 @@ class FeatureSet:
                       biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                       biotype_ref_path: str = 'predefined',
                       propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
-                      aspects: Union[str, Iterable[str]] = 'any', evidence_types: Union[str, Iterable[str]] = 'any',
-                      excluded_evidence_types: Union[str, Iterable[str]] = (),
+                      aspects: Union[Literal[('any',) + _ASPECTS], Iterable[Literal[_ASPECTS]]] = 'any',
+                      evidence_types: Union[
+                          Literal[('any',) + _EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = 'any',
+                      excluded_evidence_types: Union[Literal[_EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = (),
                       databases: Union[str, Iterable[str]] = 'any',
                       excluded_databases: Union[str, Iterable[str]] = (),
-                      qualifiers: Union[str, Iterable[str]] = 'any',
-                      excluded_qualifiers: Union[str, Iterable[str]] = 'not', return_nonsignificant: bool = False,
+                      qualifiers: Union[Literal[('any',) + _QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'any',
+                      excluded_qualifiers: Union[Literal[_QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'not',
+                      return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                      plot_ontology_graph: bool = True, ontology_graph_format: str = 'pdf',
+                      plot_ontology_graph: bool = True, ontology_graph_format: Literal['pdf', 'svg', 'png'] = 'pdf',
                       randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                       parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
@@ -946,13 +953,17 @@ class RankedSet(FeatureSet):
     def single_set_go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB',
                                  alpha: float = 0.05,
                                  propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
-                                 aspects: Union[str, Iterable[str]] = 'any',
-                                 evidence_types: Union[str, Iterable[str]] = 'any',
-                                 excluded_evidence_types: Union[str, Iterable[str]] = (),
+                                 aspects: Union[Literal[('any',) + _ASPECTS], Iterable[Literal[_ASPECTS]]] = 'any',
+                                 evidence_types: Union[
+                                     Literal[('any',) + _EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = 'any',
+                                 excluded_evidence_types: Union[
+                                     Literal[_EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = (),
                                  databases: Union[str, Iterable[str]] = 'any',
                                  excluded_databases: Union[str, Iterable[str]] = (),
-                                 qualifiers: Union[str, Iterable[str]] = 'any',
-                                 excluded_qualifiers: Union[str, Iterable[str]] = 'not',
+                                 qualifiers: Union[
+                                     Literal[('any',) + _QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'any',
+                                 excluded_qualifiers: Union[
+                                     Literal[_QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'not',
                                  return_nonsignificant: bool = False,
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
