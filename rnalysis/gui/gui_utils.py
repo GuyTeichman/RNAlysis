@@ -7,7 +7,7 @@ import typing_extensions
 import collections
 from pathlib import Path
 from queue import Queue
-
+import time
 import matplotlib
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -37,8 +37,11 @@ class ProgressSerialGui:
         self.dialog.setWindowModality(QtCore.Qt.WindowModal)
 
     def __iter__(self):
+        start_time = time.time()
         for i, item in enumerate(self.iter_obj):
+            elapsed_time = time.time()-start_time
             self.dialog.setValue(i + 1)
+            self.dialog.setLabelText(self.desc + '\n' + f"Elapsed time: {elapsed_time:.2f} seconds")
             QtWidgets.QApplication.processEvents()
             yield item
         self.dialog.close()
