@@ -1492,6 +1492,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.add_new_tab()
         self.init_actions()
         self.init_menu_ui()
+        self.init_shortcuts()
 
         self.queue_stdout = Queue()
         # create console text read thread + receiver object
@@ -1685,6 +1686,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_pipeline_action.triggered.connect(self.import_pipeline)
         self.export_pipeline_action = QtWidgets.QAction("&Export Pipeline...", self)
         self.export_pipeline_action.triggered.connect(self.export_pipeline)
+
+    def init_shortcuts(self):
+        self.copy_action.setShortcut(QtGui.QKeySequence("Ctrl+C"))
+        self.save_action.setShortcut(QtGui.QKeySequence("Ctrl+S"))
+        self.new_multiple_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+N"))
+        self.new_table_action.setShortcut(QtGui.QKeySequence("Ctrl+N"))
+
+        self.import_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+I"))
+        self.export_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+E"))
+        self.set_vis_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+V"))
+        self.enrichment_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+A"))
+        self.set_op_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+O"))
+
+        self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
+        self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
+        self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
 
     def open_user_guide(self):
         url = QtCore.QUrl(self.USER_GUIDE_URL)
