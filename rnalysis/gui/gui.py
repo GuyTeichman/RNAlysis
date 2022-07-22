@@ -818,6 +818,9 @@ class TabPage(QtWidgets.QWidget):
 
         self.init_stdout_ui()
 
+    def is_empty(self):
+        return True
+
     def init_stdout_ui(self):
         self.stdout_widgets['text_edit_stdout'] = gui_utils.StdOutTextEdit(self)
         self.stdout_widgets['text_edit_stdout'].setStyleSheet("""QTextEdit {background: #dddddd;}""")
@@ -1070,6 +1073,9 @@ class FilterTabPage(TabPage):
         self.filter_obj.fname = Path(
             os.path.join(str(self.filter_obj.fname.parent), f"{new_name}{self.filter_obj.fname.suffix}"))
         print(self.filter_obj.fname)
+
+    def is_empty(self):
+        return self.filter_obj is None
 
     def update_table_name_label(self):
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{self.get_tab_name()}</b>'")
@@ -1550,6 +1556,8 @@ class MainWindow(QtWidgets.QMainWindow):
             accepted = window.exec()
             if accepted:
                 paths, types, names = window.result()
+                if self.tabs.currentWidget().is_empty():
+                    self.tabs.removeTab(self.tabs.currentIndex())
                 for filename in filenames:
                     path = paths[filename]
                     table_type = FILTER_OBJ_TYPES[types[filename]]
