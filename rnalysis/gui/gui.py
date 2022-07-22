@@ -1679,7 +1679,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.copy_action.triggered.connect(self.copy_gene_set)
         self.set_op_action = QtWidgets.QAction("Set &Operations...", self)
         self.set_op_action.triggered.connect(self.choose_set_op)
-        self.enrichment_action = QtWidgets.QAction("E&nrichment Analysis...", self)
+        self.enrichment_action = QtWidgets.QAction("Enrichment &Analysis...", self)
         self.enrichment_action.triggered.connect(self.open_enrichment_analysis)
         self.set_vis_action = QtWidgets.QAction("&Visualize Gene Sets...", self)
         self.set_vis_action.triggered.connect(self.visualize_gene_sets)
@@ -1771,6 +1771,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def run_enrichment_analysis(self, func: Callable, gene_set_ind: int, bg_set_ind: Union[int, None], kwargs: dict):
         self.enrichment_window.close()
         print("Enrichment analysis started")
+
         try:
             is_single_set = bg_set_ind is None
             if is_single_set:
@@ -1813,7 +1814,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(self.menu_bar)
         file_menu = self.menu_bar.addMenu("&File")
         self.new_menu = file_menu.addMenu("&New...")
-        self.new_menu.addActions([self.new_table_action, self.new_table_from_folder_action, self.new_multiple_action])
+        self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
         file_menu.addActions(
             [self.save_action, self.settings_action, self.exit_action])
 
