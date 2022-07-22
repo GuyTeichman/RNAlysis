@@ -602,7 +602,7 @@ class FeatureSet:
                                                     reps=reps)
         return runner.run()
 
-    def user_defined_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+    def user_defined_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int],
                                 statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                                 alpha: float = 0.05, biotype: str = 'protein_coding',
                                 background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
