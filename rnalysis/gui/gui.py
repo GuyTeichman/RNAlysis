@@ -935,6 +935,9 @@ class SetTabPage(TabPage):
         super().rename(new_name)
         self.gene_set.change_set_name(new_name)
 
+    def is_empty(self):
+        return self.gene_set is None
+
     def update_set_shape(self):
         if self.gene_set is not None:
             shape = len(self.gene_set)
