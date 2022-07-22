@@ -811,8 +811,7 @@ class TabPage(QtWidgets.QWidget):
         self.splitter.addWidget(self.stdout_group)
         # self.splitter.setSizes([int(self.width() * 0.2), int(self.width() * 0.8)
 
-
-                                # self.layout.addWidget(self.stdout_group)
+        # self.layout.addWidget(self.stdout_group)
         self.sup_layout.addStretch(1)
         self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
         self.stdout_widgets = {}
@@ -1274,6 +1273,9 @@ class FilterTabPage(TabPage):
         return sorted_methods
 
     def save_file(self):
+        if self.filter_obj is None:
+            warnings.warn("Cannot save an empty tab!")
+            return
         default_name = str(self.filter_obj.fname).rstrip("*")
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save filtering result",
                                                             str(Path.home().joinpath(default_name)),
