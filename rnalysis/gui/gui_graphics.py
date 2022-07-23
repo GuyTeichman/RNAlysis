@@ -5,12 +5,20 @@ from typing import List, Tuple, Callable
 import matplotlib
 import matplotlib_venn
 import upsetplot
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 
 import enrichment
 from utils import generic
+
+COLOR_ICONS = {'black': 'black_icon.png', 'green': 'green__icon.png', 'red': 'red_icon.png', 'white': 'white_icon.png',
+               'blue': 'blue_icon.png', 'grey': 'grey_icon.png', 'pink': 'pink_icon.png', 'orange': 'orange_icon.png',
+               'yellow': 'yellow_icon.png'}
+AVAILABLE_ICONS = {'CountFilter': 'countfilter_icon.png', 'DESeqFilter': 'deseqfilter_icon.png',
+                   'set': 'featureset_icon.png', 'Filter': 'filter_icon.png',
+                   'FoldChangeFilter': 'foldchangefilter_icon.png', }
+AVAILABLE_ICONS.update(COLOR_ICONS)
 
 
 class CleanPlotToolBar(NavigationToolbar2QT):
@@ -438,3 +446,11 @@ class EmptyCanvas(FigureCanvasQTAgg):
 
     def clear_selection(self):
         pass
+
+
+def get_icon(name: str):
+    if name in AVAILABLE_ICONS:
+        pth = 'icons/' + AVAILABLE_ICONS[name]
+        icon = QtGui.QIcon(pth)
+        return icon
+    return None
