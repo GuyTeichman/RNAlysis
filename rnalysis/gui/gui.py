@@ -1331,6 +1331,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.setWindowTitle(f'Create new Pipeline')
         self.setGeometry(500, 200, 500, 300)
         self.pipeline = None
+        self.is_unsaved = False
 
     def init_basic_ui(self):
         self.layout.insertWidget(0, self.basic_group)
@@ -1371,6 +1372,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
 
         self.pipeline.add_function(func_name, **func_params)
         self.update_pipeline_preview()
+        self.is_unsaved = True
 
     def update_pipeline_preview(self):
         self.overview_widgets['preview'].setPlainText(str(self.pipeline))
@@ -1390,6 +1392,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.pipeline = filtering.Pipeline(filt_obj_type)
         self.init_overview_ui()
         self.init_function_ui()
+        self.is_unsaved = True
 
     def init_overview_ui(self):
         self.function_group.setTitle("Pipeline preview")
@@ -1418,6 +1421,22 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
     def save_file(self):
         self._get_parent_window().pipelines[self.basic_widgets['pipeline_name'].text()] = self.pipeline
         print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
+        self.is_unsaved = False
+
+    def closeEvent(self, event):
+        if self.is_unsaved:
+            quit_msg = "Are you sure you want to close this window without saving your Pipeline?\n" \
+                       "All unsaved progress will be lost"
+
+            reply = QtWidgets.QMessageBox.question(self, 'Close program',
+                                                   quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+
+            if reply == QtWidgets.QMessageBox.Yes:
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.accept()
 
 
 class MultiOpenWindow(QtWidgets.QDialog):
@@ -1491,7 +1510,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_bar = QtWidgets.QMenuBar(self)
 
         self.pipelines = OrderedDict()
-        self.pipeline_window = CreatePipelineWindow(self)
+        self.pipeline_window = None
 
         self.about_window = gui_utils.AboutWindow(self)
         self.settings_window = gui_utils.SettingsWindow(self)
@@ -1654,7 +1673,9 @@ class MainWindow(QtWidgets.QMainWindow):
         current_pbar.set_text(text)
 
     def add_pipeline(self):
+        self.pipeline_window = CreatePipelineWindow(self)
         self.pipeline_window.exec()
+        self.pipeline_window = None
 
     def settings(self):
         self.settings_window.exec()
