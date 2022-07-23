@@ -4,6 +4,7 @@ These include gene ontology/tissue/phenotype enrichment, enrichment for user-def
 set visualization ,etc. \
 Results of enrichment analyses can be saved to .csv files.
 """
+import functools
 import itertools
 import types
 import warnings
@@ -16,13 +17,14 @@ except ImportError:
     from typing_extensions import Literal
 
 import matplotlib.pyplot as plt
+import matplotlib
 import matplotlib_venn as vn
 import numpy as np
 import pandas as pd
 import upsetplot
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, settings, validation, enrichment_runner
+from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic
 
 _ASPECTS = ('biological_process', 'molecular function', 'cellular component')
 _EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
@@ -1309,22 +1311,33 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
     return fetched_sets
 
 
-def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '', ref: str = 'predefined',
-               fig: plt.Figure = None):
+def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: Iterable[str] = ('black',),
+               title: str = 'UpSet Plot', title_fontsize: int = 20, show_percentages: bool = True,
+               ref: str = 'predefined', fig: plt.Figure = None):
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
-
 
     :param objs: the FeatureSets, python sets or user-defined attributes to plot.
     :type objs: a dictionary with 2 or more entries, where the keys are the names of the sets, and the values are either \
     a FeatureSet, a python set of feature indices, or a name of a column in the Attribute Reference Table. \
     For example: \
     {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
+    :param set_colors: I\if one color is supplied, this will determine the color of all sets on the plot. \
+    If multiple colors are supplied, this will determine the color of each set on the plot, and the subset colors \
+    will be determined by mixing.
+    :type set_colors: Iterable of colors (default=('black',)
     :param title: determines the title of the plot.
     :type title: str
+    :param title_fontsize: font size for the plot's title
+    :type title_fontsize: int (default=20)
+    :param show_percentages: if True, shows the percentage that each set or subset takes out of the entire dataset.
+    :type show_percentages: bool (default=True)
     :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
     :type ref: str or pathlib.Path (default='predefined')
+    :param fig: optionally, supply your own Figure to generate the plot onto.
+    :type fig: matplotlib.Figure
+
     :returns: a dictionary of matplotlib axes, where the keys are 'matrix', 'intersections', 'totals', 'shading'.
 
 
@@ -1336,19 +1349,63 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = '
     """
 
     upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
-    upset = upsetplot.plot(upset_df, fig=fig)
+    upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None, show_percentages=show_percentages)
+    axes = upset_obj.plot(fig=fig)
     if fig is None:
         fig = plt.gcf()
-    fig.suptitle(title)
-    return upset
+
+    set_colors = [matplotlib.colors.to_rgb(color) for color in parsing.data_to_list(set_colors)]
+    if len(set_colors) == 1:
+        set_colors = [set_colors[0]] * len(objs)
+    elif len(set_colors) > len(objs):
+        set_colors = set_colors[0:len(objs)]
+    elif len(set_colors) < len(objs):
+        set_colors = set_colors + [(0, 0, 0)] * (len(objs) - len(set_colors))
+
+    for main_set in range(len(objs)):
+        color = set_colors[main_set]
+        axes['totals'].patches[main_set].set_facecolor(color)
+
+    patcn_ids = _get_tuple_patch_ids(len(objs))
+    for subset in range(len(upset_obj.subset_styles)):
+        id = patcn_ids[subset]
+        colors_to_mix = [set_colors[ind] for ind, is_present in enumerate(id) if is_present]
+        color = generic.mix_colors(*colors_to_mix)
+        upset_obj.subset_styles[subset]['facecolor'] = color
+        axes['intersections'].patches[subset].set_facecolor(color)
+    matrix_ax = axes['matrix']
+    matrix_ax.clear()
+    upset_obj.plot_matrix(matrix_ax)
+    fig.suptitle(title, fontsize=title_fontsize)
+    return upset_obj
+
+
+def _compare_ids(id1: Tuple[int, ...], id2: Tuple[int, ...]):
+    if sum(id1) > sum(id2):
+        return 1
+    elif sum(id1) < sum(id2):
+        return -1
+    else:
+        for i in range(len(id1), 0, -1):
+            ind = i - 1
+            if id1[ind] > id2[ind]:
+                return 1
+            elif id1[ind] < id2[ind]:
+                return -1
+        return 0
+
+
+def _get_tuple_patch_ids(n_sets: int) -> List[Tuple[int, ...]]:
+    unsorted_ids = list(itertools.product([0, 1], repeat=n_sets))[1:]
+    sorted_ids = sorted(unsorted_ids, key=functools.cmp_to_key(_compare_ids))
+    return sorted_ids
 
 
 def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default',
-                 attr_ref_table_path: str = 'predefined',
-                 set_colors: Iterable[str] = ('r', 'g', 'b'),
+                 attr_ref_table_path: str = 'predefined', set_colors: Iterable[str] = ('r', 'g', 'b'),
                  transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
-                 linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0,
-                 normalize_to: float = 1.0, fig: plt.Figure = None):
+                 linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0, title_fontsize: int = 14,
+                 set_fontsize: int = 12, subset_fontsize: int = 10, normalize_to: float = 1.0, fig: plt.Figure = None):
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1377,7 +1434,17 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     :type linestyle: 'solid' or 'dashed' (default='solid')
     :param linewidth: the widdth of the circles' outlines.
     :type linewidth: float (default=2.0)
-    :param normalize_to:
+    :param title_fontsize: font size for the plot's title.
+    :type title_fontsize: int (default=14)
+    :param set_fontsize: font size for the set labels.
+    :type set_fontsize: int (default=12)
+    :param subset_fontsize: font size for the subset labels.
+    :type subset_fontsize: int (default=10)
+    :param fig: optionally, supply your own Figure to generate the plot onto.
+    :type fig: matplotlib.Figure
+
+    :param normalize_to: the total (on-axes) area of the circles to be drawn. Sometimes tuning it (together
+    with the overall fiture size) may be useful to fit the text labels better.
     :type normalize_to: float (default=1.0)
     :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.
 
@@ -1421,9 +1488,16 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
             patch.set_fill(False)
     else:
         circle_obj = None
+
+    for label in plot_obj.set_labels:
+        label.set_fontsize(set_fontsize)
+    for sublabel in plot_obj.subset_labels:
+        if sublabel is not None:
+            sublabel.set_fontsize(subset_fontsize)
+
     if title == 'default':
         title = 'Venn diagram of ' + ''.join([name + ' ' for name in objs.keys()])
-    ax.set_title(title)
+    ax.set_title(title, fontsize=title_fontsize)
     return plot_obj, circle_obj
 
 
