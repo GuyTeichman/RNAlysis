@@ -145,3 +145,16 @@ def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tu
 def despine(ax):
     for side in ['top', 'right']:
         ax.spines[side].set_visible(False)
+
+
+def mix_colors(*colors: Tuple[float, float, float]):
+    n_colors = len(colors)
+    if n_colors == 1:
+        return colors[0]
+
+    colors = np.array(colors)
+    multiplier = (1 / n_colors) + (1.6 / (2 ** n_colors)) / n_colors
+
+    mix_color = multiplier * np.sum(colors, axis=0)
+    mix_color = np.min([mix_color, [1.0, 1.0, 1.0]], 0)
+    return mix_color
