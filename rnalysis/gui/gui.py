@@ -1501,6 +1501,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_style_sheet()
 
         self.tabs = QtWidgets.QTabWidget()
+        self.tabs.tabBarDoubleClicked.connect(self.init_tab_contextmenu)
         self.next_tab_n = 0
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.delete)
@@ -1547,6 +1548,22 @@ class MainWindow(QtWidgets.QMainWindow):
         # attach to start / stop methods
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
+
+    @QtCore.pyqtSlot(int)
+    def init_tab_contextmenu(self, ind: int):
+        tab_contextmenu = QtWidgets.QMenu(self)
+        color_menu = tab_contextmenu.addMenu("Change tab &color")
+        actions = []
+        for color in gui_graphics.COLOR_ICONS:
+            this_action = QtWidgets.QAction(color.capitalize())
+            this_action.setIcon(gui_graphics.get_icon(color))
+            this_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=color))
+            actions.append(this_action)
+            color_menu.addAction(this_action)
+        reset_action = QtWidgets.QAction("Reset color")
+        reset_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=None))
+        color_menu.addAction(reset_action)
+        tab_contextmenu.exec(QtGui.QCursor.pos())
 
     def update_style_sheet(self):
         self.setStyleSheet(gui_style.get_stylesheet())
@@ -1608,16 +1625,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(str)
     def set_current_tab_icon(self, icon_name: str = None):
-        print('test', icon_name)
+        self.set_tab_icon(self.tabs.currentIndex(), icon_name)
+
+    def set_tab_icon(self, ind: int, icon_name: str = None):
         if icon_name is None:
             if isinstance(self.tabs.currentWidget(), SetTabPage):
-                obj_type = 'set'
+                obj_type_str = 'set'
             else:
-                obj_type = type(self.tabs.currentWidget().filter_obj).__name__
-            icon = gui_graphics.get_icon(obj_type)
+                obj_type = type(self.tabs.currentWidget().filter_obj)
+                obj_type_str = 'blank' if obj_type == type(None) else obj_type.__name__
+            icon = gui_graphics.get_icon(obj_type_str)
         else:
             icon = gui_graphics.get_icon(icon_name)
-        self.tabs.setTabIcon(self.tabs.currentIndex(), icon)
+        self.tabs.setTabIcon(ind, icon)
 
     def new_tab_from_gene_set(self, gene_set: set, gene_set_name: str):
         self.add_new_tab(gene_set_name, is_set=True)

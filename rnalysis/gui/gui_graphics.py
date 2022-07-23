@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolb
 import enrichment
 from utils import generic
 
-COLOR_ICONS = {'black': 'black_icon.png', 'green': 'green__icon.png', 'red': 'red_icon.png', 'white': 'white_icon.png',
+COLOR_ICONS = {'black': 'black_icon.png', 'green': 'green_icon.png', 'red': 'red_icon.png', 'white': 'white_icon.png',
                'blue': 'blue_icon.png', 'grey': 'grey_icon.png', 'pink': 'pink_icon.png', 'orange': 'orange_icon.png',
                'yellow': 'yellow_icon.png'}
 AVAILABLE_ICONS = {'CountFilter': 'countfilter_icon.png', 'DESeqFilter': 'deseqfilter_icon.png',
@@ -453,4 +453,8 @@ def get_icon(name: str):
         pth = 'icons/' + AVAILABLE_ICONS[name]
         icon = QtGui.QIcon(pth)
         return icon
+    elif name == 'blank':
+        pixmap = QtGui.QPixmap(32,32)
+        pixmap.fill(QtCore.Qt.transparent)
+        return QtGui.QIcon(pixmap)
     return None
