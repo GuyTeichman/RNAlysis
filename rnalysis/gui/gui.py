@@ -1501,6 +1501,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_style_sheet()
 
         self.tabs = QtWidgets.QTabWidget()
+        self.tabs.tabBar().setDocumentMode(True)
+        self.tabs.tabBar().setMovable(True)
         self.tabs.tabBarDoubleClicked.connect(self.init_tab_contextmenu)
         self.next_tab_n = 0
         self.tabs.setTabsClosable(True)
