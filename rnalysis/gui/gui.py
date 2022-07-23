@@ -20,6 +20,7 @@ from rnalysis.utils import io, validation, generic, parsing
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
+FILTER_OBJ_TYPES_INV = {val: key for key, val in FILTER_OBJ_TYPES.items()}
 
 
 class EnrichmentWindow(gui_utils.MinMaxDialog):
@@ -796,6 +797,8 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
 
 class TabPage(QtWidgets.QWidget):
+    changeIcon = QtCore.pyqtSignal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.sup_layout = QtWidgets.QVBoxLayout(self)
@@ -951,6 +954,7 @@ class SetTabPage(TabPage):
         self.gene_set.gene_set = gene_set
         self.update_set_shape()
         self.update_set_preview()
+        self.changeIcon.emit('set')
 
 
 class FuncTypeStack(QtWidgets.QWidget):
@@ -1080,6 +1084,9 @@ class FilterTabPage(TabPage):
     def is_empty(self):
         return self.filter_obj is None
 
+    def get_table_type(self):
+        return FILTER_OBJ_TYPES_INV[type(self.filter_obj)]
+
     def update_table_name_label(self):
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{self.get_tab_name()}</b>'")
 
@@ -1087,7 +1094,7 @@ class FilterTabPage(TabPage):
         this_row = 0
         self.layout.insertWidget(1, self.overview_group)
         self.overview_widgets['table_type_label'] = QtWidgets.QLabel(
-            f"Table type: {self.basic_widgets['table_type_combo'].currentText()}")
+            f"Table type: {self.get_table_type()}")
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel()
         self.update_table_name_label()
 
@@ -1314,6 +1321,8 @@ class FilterTabPage(TabPage):
         self.layout.removeWidget(self.basic_group)
         self.basic_group.deleteLater()
 
+        self.changeIcon.emit(type(self.filter_obj).__name__)
+
     def start_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
         self.filter_obj = filter_obj
         self.basic_group.setVisible(False)
@@ -1322,6 +1331,7 @@ class FilterTabPage(TabPage):
         if name is not None:
             self.rename(name)
         print(self.filter_obj)
+        self.changeIcon.emit(type(self.filter_obj).__name__)
 
 
 class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
@@ -1550,9 +1560,11 @@ class MainWindow(QtWidgets.QMainWindow):
             print(name)
 
         if is_set:
-            self.tabs.addTab(SetTabPage(name, parent=self.tabs), name)
+            tab = SetTabPage(name, parent=self.tabs)
         else:
-            self.tabs.addTab(FilterTabPage(parent=self.tabs), name)
+            tab = FilterTabPage(self.tabs)
+        tab.changeIcon.connect(self.set_current_tab_icon)
+        self.tabs.addTab(tab, name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
 
     def new_table_from_folder(self):
@@ -1593,6 +1605,19 @@ class MainWindow(QtWidgets.QMainWindow):
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
         self.add_new_tab(filter_obj.fname.name)
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, name)
+
+    @QtCore.pyqtSlot(str)
+    def set_current_tab_icon(self, icon_name: str = None):
+        print('test', icon_name)
+        if icon_name is None:
+            if isinstance(self.tabs.currentWidget(), SetTabPage):
+                obj_type = 'set'
+            else:
+                obj_type = type(self.tabs.currentWidget().filter_obj).__name__
+            icon = gui_graphics.get_icon(obj_type)
+        else:
+            icon = gui_graphics.get_icon(icon_name)
+        self.tabs.setTabIcon(self.tabs.currentIndex(), icon)
 
     def new_tab_from_gene_set(self, gene_set: set, gene_set_name: str):
         self.add_new_tab(gene_set_name, is_set=True)
