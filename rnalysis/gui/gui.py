@@ -1492,6 +1492,28 @@ class MultiOpenWindow(QtWidgets.QDialog):
         return paths, types, names
 
 
+class ReactiveTabWidget(QtWidgets.QTabWidget):
+    tabRightClicked = QtCore.pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tabBar().setDocumentMode(True)
+        self.tabBar().setMovable(True)
+        self.setTabsClosable(True)
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        if event.button() == QtCore.Qt.LeftButton:
+            super().mousePressEvent(event)
+        elif event.button() == QtCore.Qt.RightButton:
+            point = event.pos()
+            if point.isNull():
+                return
+            ind = self.tabBar().tabAt(point)
+            if ind == -1:
+                return
+            self.tabRightClicked.emit(ind)
+
+
 class MainWindow(QtWidgets.QMainWindow):
     USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide.html'
 
@@ -1502,12 +1524,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setGeometry(600, 50, 750, 350)
         self.update_style_sheet()
 
-        self.tabs = QtWidgets.QTabWidget()
-        self.tabs.tabBar().setDocumentMode(True)
-        self.tabs.tabBar().setMovable(True)
-        self.tabs.tabBarDoubleClicked.connect(self.init_tab_contextmenu)
+        self.tabs = ReactiveTabWidget(self)
+        self.tabs.tabRightClicked.connect(self.init_tab_contextmenu)
         self.next_tab_n = 0
-        self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.delete)
 
         self.layout = QtWidgets.QVBoxLayout(self)
