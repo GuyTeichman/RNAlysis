@@ -17,6 +17,28 @@ from rnalysis.utils import io, parsing, settings, validation
 from joblib import Parallel
 
 
+class PathInputDialog(QtWidgets.QDialog):
+    def __init__(self, message: str = "No prompt available", parent=None):
+        super().__init__(parent)
+        self.message = message
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
+        self.path = PathLineEdit(parent=self)
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.setWindowTitle('User input required')
+        self.layout.addWidget(QtWidgets.QLabel(self.message))
+        self.layout.addWidget(self.path)
+        self.layout.addWidget(self.button_box)
+
+    def result(self):
+        return self.path.text()
+
+
 class ProgressSerialGui:
     def __init__(self, iter_obj: typing.Iterable, desc: str = '', unit: str = '', bar_format: str = '',
                  total: int = None, parent=None):
