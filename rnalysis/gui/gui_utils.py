@@ -340,7 +340,7 @@ class StrIntLineEdit(QtWidgets.QLineEdit):
 
     def text(self) -> typing.Union[str, int]:
         val = super().text()
-        if val.isnumeric():
+        if val.lstrip('-').isnumeric():
             return int(val)
         return val
 
