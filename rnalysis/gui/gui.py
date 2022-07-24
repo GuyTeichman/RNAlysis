@@ -1575,33 +1575,73 @@ class MainWindow(QtWidgets.QMainWindow):
         sort_by_time.triggered.connect(self.sort_tabs_by_creation_time)
         sort_by_type = QtWidgets.QAction("Sort by tab type")
         sort_by_type.triggered.connect(self.sort_tabs_by_type)
-        sort_menu.addActions([sort_by_name, sort_by_time, sort_by_type])
+        sort_by_size = QtWidgets.QAction("Sort by number of features")
+        sort_by_size.triggered.connect(self.sort_tabs_by_n_features)
+        reverse = QtWidgets.QAction("Reverse order")
+        reverse.triggered.connect(self.sort_reverse)
+        sort_menu.addActions([sort_by_name, sort_by_time, sort_by_type, sort_by_size, reverse])
 
         tab_contextmenu.exec(QtGui.QCursor.pos())
 
     def update_style_sheet(self):
         self.setStyleSheet(gui_style.get_stylesheet())
 
+    def sort_reverse(self):
+        prev_order = {i: self.tabs.widget(i) for i in range(self.tabs.count())}
+        self._sort_by_map(prev_order, reversed(prev_order.keys()))
+
     def sort_tabs_by_name(self):
-        tab_names = {self.tabs.tabText(i): self.tabs.widget(i) for i in range(self.tabs.count())}
+        tab_names = {}
+        for i in range(self.tabs.count()):
+            key = [self.tabs.tabText(i), 0]
+            while tuple(key) in tab_names:
+                key[1] += 1
+            tab_names[tuple(key)] = self.tabs.widget(i)
         sorted_names = sorted(tab_names.keys())
         self._sort_by_map(tab_names, sorted_names)
 
     def sort_tabs_by_creation_time(self):
-        tab_times = {self.tabs.widget(i).creation_time: self.tabs.widget(i) for i in range(self.tabs.count())}
+        widgets = [self.tabs.widget(i) for i in range(self.tabs.count())]
+        tab_times = {}
+        for widget in widgets:
+            key = [widget.creation_time, 0]
+            while tuple(key) in tab_times:
+                key[1] += 1
+            tab_times[tuple(key)] = widget
+
         sorted_times = sorted(tab_times.keys())
         self._sort_by_map(tab_times, sorted_times)
+
+    def sort_tabs_by_n_features(self):
+        widgets = [self.tabs.widget(i) for i in range(self.tabs.count())]
+        tab_count = {}
+        for widget in widgets:
+            if isinstance(widget, FilterTabPage):
+                if widget.filter_obj is None:
+                    key = [0, 0]
+                else:
+                    key = [widget.filter_obj.shape[0], 0]
+            elif isinstance(widget, SetTabPage):
+                key = [len(widget.gene_set), 0]
+
+            while tuple(key) in tab_count:
+                key[1] += 1
+            tab_count[tuple(key)] = widget
+        self._sort_by_map(tab_count, sorted(tab_count.keys(), reverse=True))
 
     def sort_tabs_by_type(self):
         widgets = [self.tabs.widget(i) for i in range(self.tabs.count())]
         type_to_order = {filtering.CountFilter: 1, filtering.DESeqFilter: 2, filtering.FoldChangeFilter: 3,
-                         filtering.Filter: 4, set: 5, None: 6}
+                         filtering.Filter: 4, set: 5, type(None): 6}
         tab_types = {}
         for widget in widgets:
             if isinstance(widget, FilterTabPage):
-                tab_types[type_to_order[type(widget.filter_obj)]] = widget
+                key = [type_to_order[type(widget.filter_obj)], 0]
             elif isinstance(widget, SetTabPage):
-                tab_types[type_to_order[type(widget.gene_set)]] = widget
+                key = [type_to_order[type(widget.gene_set)], 0]
+            while tuple(key) in tab_types:
+                key[1] += 1
+            tab_types[tuple(key)] = widget
         self._sort_by_map(tab_types, sorted(tab_types.keys()))
 
     def _sort_by_map(self, key_map: dict, sorted_keys: list):
