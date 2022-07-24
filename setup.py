@@ -42,7 +42,7 @@ setup_requirements = ['pytest-runner', ]
 
 test_requirements = ['pytest', ]
 
-extras_require = get_extra_requires('extra-requirements.txt')
+extras_require = get_extra_requires('requirements_extra.txt')
 
 setup(
     author="Guy Teichman",
