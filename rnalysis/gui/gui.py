@@ -63,19 +63,10 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                  'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
-    def __init__(self, available_objects: list, parent=None):
+    def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
 
-        checked = {}
-        available_objects_unique = []
-        for obj in available_objects:
-            if obj in checked:
-                available_objects_unique.append(f"{obj}_{checked[obj]}")
-            else:
-                checked[obj] = 1
-                available_objects_unique.append(obj)
-            checked[obj] += 1
-        self.available_objects = available_objects_unique
+        self.available_objects = available_objects
 
         self.parameters_signature = {}
         self.stats_signature = {}
@@ -134,7 +125,8 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
         for lst in ['enrichment_list', 'bg_list']:
             self.widgets[lst] = gui_utils.MandatoryComboBox('Choose gene set...', self)
-            self.widgets[lst].insertItems(0, self.available_objects)
+            for obj_name in self.available_objects:
+                self.widgets[lst].addItem(self.available_objects[obj_name][1], obj_name)
 
         self.widgets['dataset_radiobox'] = gui_utils.RadioButtonBox('Choose enrichment dataset',
                                                                     self.ANALYSIS_TYPES_BUTTONS)
@@ -324,7 +316,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             else:
                 kwargs['parametric_test'] = stat_test
         gene_set_name = self.widgets['enrichment_list'].currentText()
-        gene_set = self.available_objects.index(gene_set_name)
+        gene_set = self.available_objects[gene_set_name][0]
 
         for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
                                                   self.stats_widgets.items()):
@@ -335,7 +327,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
         if not self.is_single_set():
             bg_set_name = self.widgets['bg_list'].currentText()
-            bg_set = self.available_objects.index(bg_set_name)
+            bg_set = self.available_objects[bg_set_name][0]
         else:
             bg_set = None
         return gene_set, bg_set, kwargs
@@ -375,7 +367,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
     def create_canvas(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        sets = [self.available_objects[name] for name in set_names]
+        sets = [self.available_objects[name][0] for name in set_names]
         ind = 0
         while ind < len(set_names):
             if sets[ind] is None:
@@ -447,7 +439,9 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.init_operations_ui()
 
     def init_sets_ui(self):
-        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects, self)
+        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects,
+                                                                [val[1] for val in self.available_objects.values()],
+                                                                self)
 
         for func in [self.create_canvas, self._check_legal_operations, self._validate_input,
                      self._toggle_choose_primary_set]:
@@ -601,13 +595,13 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         else:
             set_names, primary_set_name, kwargs = self._get_function_params()
 
-            first_obj = self.available_objects[primary_set_name]
+            first_obj = self.available_objects[primary_set_name][0]
             if isinstance(first_obj, set):
                 first_obj = filtering.Filter(('placeholder', pd.DataFrame(index=first_obj)))
             other_objs = []
             for name in set_names:
                 if name != primary_set_name:
-                    other_objs.append(self.available_objects[name])
+                    other_objs.append(self.available_objects[name][0])
             output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
             output_name = f"{func_name} output"
         if isinstance(output_set, set):
@@ -653,7 +647,9 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.init_visualization_ui()
 
     def init_list_ui(self):
-        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects, self)
+        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects,
+                                                                [val[1] for val in self.available_objects.values()],
+                                                                self)
 
         for func in [self._check_legal_operations, self._validate_input, self.create_canvas]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
@@ -680,7 +676,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
     def create_canvas(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        sets = [self.available_objects[name] for name in set_names]
+        sets = [self.available_objects[name][0] for name in set_names]
         ind = 0
         while ind < len(set_names):
             if sets[ind] is None:
@@ -780,7 +776,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
     def _get_function_params(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        objs_to_plot = {key: val for key, val in self.available_objects.items() if key in set_names}
+        objs_to_plot = {key: val[0] for key, val in self.available_objects.items() if key in set_names}
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
@@ -1905,10 +1901,12 @@ class MainWindow(QtWidgets.QMainWindow):
         available_objects_unique = {}
         for i, name in enumerate(tab_names):
             if name in checked:
-                available_objects_unique[f"{name}_{checked[name]}"] = self.get_gene_set_by_ind(i)
+                key = f"{name}_{checked[name]}"
+
             else:
                 checked[name] = 1
-                available_objects_unique[name] = self.get_gene_set_by_ind(i)
+                key = name
+            available_objects_unique[key] = (self.get_gene_set_by_ind(i), self.tabs.tabIcon(i))
             checked[name] += 1
         return available_objects_unique
 
@@ -1931,7 +1929,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(str)
     def choose_tab_by_name(self, set_name: str):
         available_objs = self.get_available_objects()
-        for i, name in enumerate(available_objs):
+        for i, (name, icon) in enumerate(available_objs):
             if name == set_name:
                 self.tabs.setCurrentIndex(i)
                 return
@@ -1972,7 +1970,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_enrichment_analysis(self):
         tab_names = self.get_tab_names()
         if self.enrichment_window is None:
-            self.enrichment_window = EnrichmentWindow(tab_names, self)
+            self.enrichment_window = EnrichmentWindow(self.get_available_objects(), self)
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
