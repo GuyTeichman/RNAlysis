@@ -2,7 +2,6 @@ import pandas
 import pytest
 
 from rnalysis.utils.parsing import *
-from utils.parsing import generate_upset_series
 
 
 class DummyClass:
