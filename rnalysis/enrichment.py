@@ -11,6 +11,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
+
 try:
     from typing import Literal
 except ImportError:
@@ -1348,7 +1349,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: It
            Example plot of upset_plot()
     """
 
-    upset_df = _generate_upset_srs(_fetch_sets(objs=objs, ref=ref))
+    upset_df = parsing.generate_upset_series(_fetch_sets(objs=objs, ref=ref))
     upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None, show_percentages=show_percentages)
     axes = upset_obj.plot(fig=fig)
     if fig is None:
@@ -1501,23 +1502,3 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     return plot_obj, circle_obj
 
 
-def _generate_upset_srs(objs: dict):
-    """
-    Receives a dictionary of sets from enrichment._fetch_sets(), \
-    and reformats it as a pandas Series to be used by the python package 'upsetplot'.
-
-    :param objs: the output of the enrichment._fetch_sets() function.
-    :type objs: dict of sets
-    :return: a pandas Series in the format requested by the 'upsetplot' package.
-
-    """
-    names = list(objs.keys())
-    multi_ind = pd.MultiIndex.from_product([[True, False] for _ in range(len(names))], names=names)[:-1]
-    srs = pd.Series(index=multi_ind, dtype='uint32')
-    for ind in multi_ind:
-        intersection_sets = list(itertools.compress(names, ind))
-        difference_sets = list(itertools.compress(names, (not i for i in ind)))
-        group = set.intersection(*[objs[s] for s in intersection_sets]).difference(*[objs[s] for s in difference_sets])
-        group_size = len(group)
-        srs.loc[ind] = group_size
-    return srs

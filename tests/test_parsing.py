@@ -1,6 +1,8 @@
+import pandas
 import pytest
 
 from rnalysis.utils.parsing import *
+from utils.parsing import generate_upset_series
 
 
 class DummyClass:
@@ -146,3 +148,22 @@ def test_partition_list_invalid_input(lst, chunk_size):
                                        ([[1, 2], [3, 4, [5, 6], 7, [], [8, [9]]]], [1, 2, 3, 4, 5, 6, 7, 8, 9])])
 def test_flatten(lst, truth):
     assert flatten(lst) == truth
+
+
+def test_generate_upset_series():
+    names = ('a', 'b', 'c')
+    tuples = [(True, True, True), (True, False, True), (True, True, False), (True, False, False),
+              (False, True, True), (False, True, False), (False, False, True)]
+    multi_index_truth = pd.MultiIndex.from_tuples(tuples, names=names).sort_values()
+    srs_truth = pd.Series(index=multi_index_truth, dtype='uint32').sort_index()
+    srs_truth.loc[True, True, True] = 1
+    srs_truth.loc[True, True, False] = 2
+    srs_truth.loc[True, False, True] = 1
+    srs_truth.loc[True, False, False] = 0
+    srs_truth.loc[False, True, True] = 1
+    srs_truth.loc[False, True, False] = 1
+    srs_truth.loc[False, False, True] = 0
+    srs = generate_upset_series(
+        {'a': {'1', '2', '3', '6'}, 'b': {'2', '3', '4', '5', '6'}, 'c': {'1', '5', '6'}}).sort_index()
+    assert srs.index.sort_values().equals(multi_index_truth)
+    assert srs.sort_index().equals(srs_truth.sort_index())

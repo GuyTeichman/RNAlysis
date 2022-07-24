@@ -1,3 +1,4 @@
+import itertools
 import re
 from tqdm.auto import tqdm
 import warnings
@@ -206,3 +207,25 @@ def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
     params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
 
     return desc, params
+
+
+def generate_upset_series(objs: dict):
+    """
+    Receives a dictionary of sets from enrichment._fetch_sets(), \
+    and reformats it as a pandas Series to be used by the python package 'upsetplot'.
+
+    :param objs: the output of the enrichment._fetch_sets() function.
+    :type objs: dict of sets
+    :return: a pandas Series in the format requested by the 'upsetplot' package.
+
+    """
+    names = list(objs.keys())
+    multi_ind = pd.MultiIndex.from_product([[True, False] for _ in range(len(names))], names=names)[:-1]
+    srs = pd.Series(index=multi_ind, dtype='uint32')
+    for ind in multi_ind:
+        intersection_sets = list(itertools.compress(names, ind))
+        difference_sets = list(itertools.compress(names, (not i for i in ind)))
+        group = set.intersection(*[objs[s] for s in intersection_sets]).difference(*[objs[s] for s in difference_sets])
+        group_size = len(group)
+        srs.loc[ind] = group_size
+    return srs

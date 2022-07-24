@@ -1,14 +1,9 @@
 import pytest
-import matplotlib
 import os
 import statsmodels.stats.multitest as multitest
-import copy
 
-from collections import namedtuple
-from rnalysis import filtering
 from rnalysis.enrichment import *
-from rnalysis.enrichment import _generate_upset_srs, _fetch_sets
-from rnalysis.utils import enrichment_runner
+from rnalysis.enrichment import _fetch_sets
 from tests import __attr_ref__, __biotype_ref__
 
 matplotlib.use('Agg')
@@ -524,25 +519,6 @@ def test_venn_diagram_invalid_number_of_sets():
         venn_diagram({'obj1': FeatureSet({'1', '2'})})
     with pytest.raises(ValueError):
         venn_diagram({'obj1': FeatureSet({'1', '2'}), 'obj2': {}, 'obj3': 'attr3', 'obj4': 'attr4', 'obj5': 'attr2'})
-
-
-def test_generate_upset_srs():
-    names = ('a', 'b', 'c')
-    tuples = [(True, True, True), (True, False, True), (True, True, False), (True, False, False),
-              (False, True, True), (False, True, False), (False, False, True)]
-    multi_index_truth = pd.MultiIndex.from_tuples(tuples, names=names).sort_values()
-    srs_truth = pd.Series(index=multi_index_truth, dtype='uint32').sort_index()
-    srs_truth.loc[True, True, True] = 1
-    srs_truth.loc[True, True, False] = 2
-    srs_truth.loc[True, False, True] = 1
-    srs_truth.loc[True, False, False] = 0
-    srs_truth.loc[False, True, True] = 1
-    srs_truth.loc[False, True, False] = 1
-    srs_truth.loc[False, False, True] = 0
-    srs = _generate_upset_srs(
-        {'a': {'1', '2', '3', '6'}, 'b': {'2', '3', '4', '5', '6'}, 'c': {'1', '5', '6'}}).sort_index()
-    assert srs.index.sort_values().equals(multi_index_truth)
-    assert srs.sort_index().equals(srs_truth.sort_index())
 
 
 @pytest.mark.parametrize('objs,truth', [
