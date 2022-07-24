@@ -1968,9 +1968,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.enrichment_window.show()
 
     def open_enrichment_analysis(self):
-        tab_names = self.get_tab_names()
-        if self.enrichment_window is None:
-            self.enrichment_window = EnrichmentWindow(self.get_available_objects(), self)
+        self.enrichment_window = EnrichmentWindow(self.get_available_objects(), self)
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
