@@ -1,3 +1,4 @@
+import builtins
 import functools
 import itertools
 import time
@@ -2011,6 +2012,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def about(self):
         self.about_window.exec()
 
+    def input(self, message: str):
+        dialog = gui_utils.PathInputDialog(message, parent=self)
+        accepted = dialog.exec()
+        if accepted:
+            return dialog.result()
+        return None
+
     def closeEvent(self, event):
 
         quit_msg = "Are you sure you want to close <i>RNAlysis</i>?\n" \
@@ -2035,8 +2043,9 @@ def run():
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     warnings.showwarning = customwarn
-
     sys.excepthook = window.excepthook
+    builtins.input = window.input
+
     # enrichment.enrichment_runner.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui,
     #                                                                           parent=window)
     enrichment.enrichment_runner.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
