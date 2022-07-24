@@ -9,10 +9,7 @@ pyyaml>=6.0
 UpSetPlot>=0.6.1
 matplotlib-venn>=0.11.7
 scipy==1.7.2
-hdbscan==0.8.28
 scikit-learn-extra>=0.2.0
-xlmhg>=2.5.4
-numba>=0.55.1
 pairwisedist>=1.2.0
 requests>=2.24.0
 graphviz>=0.19.1
