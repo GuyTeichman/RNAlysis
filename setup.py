@@ -51,4 +51,8 @@ setup(
     url='https://github.com/GuyTeichman/RNAlysis',
     version='2.1.1',
     zip_safe=False,
+    entry_points={
+        'gui_scripts': [
+            'rnalysis-gui = gui:run_gui',
+        ]}
 )
