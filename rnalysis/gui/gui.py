@@ -1239,7 +1239,7 @@ class FilterTabPage(TabPage):
             for output in outputs:
                 self._proccess_outputs(output, source_name)
         elif isinstance(outputs, dict):
-            for output, this_src_name in outputs.values():
+            for output, this_src_name in outputs.items():
                 self._proccess_outputs(output, this_src_name)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
