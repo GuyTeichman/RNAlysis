@@ -9,8 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 
-import enrichment
-from utils import generic
+from rnalysis.utils import parsing, generic
 
 COLOR_ICONS = {'black': 'black_icon.png', 'green': 'green_icon.png', 'red': 'red_icon.png', 'white': 'white_icon.png',
                'blue': 'blue_icon.png', 'grey': 'grey_icon.png', 'pink': 'pink_icon.png', 'orange': 'orange_icon.png',
@@ -274,7 +273,7 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
 class UpSetInteractiveCanvas(BaseInteractiveCanvas):
     def __init__(self, gene_sets: dict, parent=None):
         super().__init__(gene_sets, parent, tight_layout=False)
-        self.upset_df = enrichment._generate_upset_srs(gene_sets)
+        self.upset_df = parsing.generate_upset_series(gene_sets)
         self.upset = upsetplot.UpSet(self.upset_df, sort_by='degree', sort_categories_by=None)
         self.subset_states = {i: self.DESELECTED_STATE for i in range(len(self.upset.subset_styles))}
 
@@ -454,7 +453,7 @@ def get_icon(name: str):
         icon = QtGui.QIcon(pth)
         return icon
     elif name == 'blank':
-        pixmap = QtGui.QPixmap(32,32)
+        pixmap = QtGui.QPixmap(32, 32)
         pixmap.fill(QtCore.Qt.transparent)
         return QtGui.QIcon(pixmap)
     return None

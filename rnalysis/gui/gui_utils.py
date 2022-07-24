@@ -77,37 +77,19 @@ class ProgressParallelGui(Parallel):
                  **kwargs):
         self.total = total
         self.desc = desc
-        self.dialog = QtWidgets.QProgressDialog(desc, "Cancel", 0, 2 if total is None else total, parent)
-        self.dialog.setMinimumDuration(0)
-        self.dialog.setWindowTitle(self.desc)
-        self.dialog.setValue(0)
-        self.dialog.setWindowModality(QtCore.Qt.WindowModal)
+        # self.dialog = QtWidgets.QProgressDialog(desc, "Cancel", 0, 2 if total is None else total, parent)
+        # self.dialog.setMinimumDuration(0)
+        # self.dialog.setWindowTitle(self.desc)
+        # self.dialog.setValue(0)
+        # self.dialog.setWindowModality(QtCore.Qt.WindowModal)
         super().__init__(verbose=100, *args, **kwargs)
 
     def __call__(self, *args, **kwargs):
-        QtWidgets.QApplication.processEvents()
         return Parallel.__call__(self, *args, **kwargs)
 
     def print_progress(self):
-        index = self.n_completed_tasks
-        # We are finished dispatching
-        total_tasks = self.n_dispatched_tasks
-        # We always display the first loop
-        if not index == 0:
-            # Display depending on the number of remaining items
-            # A message as soon as we finish dispatching, cursor is 0
-            cursor = (total_tasks - index + 1 -
-                      self._pre_dispatch_amount)
-            frequency = (total_tasks // self.verbose) + 1
-            is_last_item = (index + 1 == total_tasks)
-            if (is_last_item or cursor % frequency):
-                self.dialog.close()
-            elif self.total is None:
-                self.dialog.setMaximum(total_tasks)
-            self.dialog.setValue(index)
-
-        QtWidgets.QApplication.processEvents()
         super().print_progress()
+        QtWidgets.QApplication.processEvents()
 
 
 class ComboBoxOrOtherWidget(QtWidgets.QWidget):
@@ -204,7 +186,7 @@ class ColorPicker(QtWidgets.QWidget):
 
 
 class MultipleChoiceList(QtWidgets.QWidget):
-    def __init__(self, items: typing.Iterable, parent=None):
+    def __init__(self, items: typing.Sequence, icons: typing.Sequence = None, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QGridLayout(self)
         self.setLayout(self.layout)
