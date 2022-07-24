@@ -210,8 +210,14 @@ class MultipleChoiceList(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
         self.items = items
+        self.list_items = []
         self.list = QtWidgets.QListWidget(self)
-        self.list.insertItems(0, self.items)
+        for i, item in enumerate(self.items):
+            list_item = QtWidgets.QListWidgetItem(item)
+            if icons is not None:
+                list_item.setIcon(icons[i])
+            self.list_items.append(list_item)
+            self.list.addItem(list_item)
         self.list.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.layout.addWidget(self.list, 1, 1, 4, 1)
 
