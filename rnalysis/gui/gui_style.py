@@ -1,5 +1,6 @@
 import re
 from rnalysis.utils import settings
+from pathlib import Path
 
 FONTPLACEHOLDER = "FONTPLACEHOLDER"
 FONTSIZEPLACEHOLDER = "FONTSIZEPLACEHOLDER"
@@ -9,8 +10,8 @@ STYLESHEETS = {'light': 'styles/light_style.qss', 'dark': 'styles/dark_style.qss
 def get_parametric_stylesheet(font_base_size: int, font_name: str):
     assert isinstance(font_base_size, int) and font_base_size >= 1
     assert isinstance(font_name, str)
-
-    with open('styles/parametric_style.qss') as f:
+    pth = 'styles/parametric_style.qss'
+    with open(Path.joinpath(Path(__file__).parent, pth)) as f:
         style_text = f.read()
 
     style_text = style_text.replace(FONTPLACEHOLDER, font_name)
@@ -27,7 +28,7 @@ def get_parametric_stylesheet(font_base_size: int, font_name: str):
 def get_stylesheet():
     font_name, font_base_size, stylesheet_name = settings.get_gui_settings()
     pth = STYLESHEETS[stylesheet_name]
-    with open(pth) as f:
+    with open(Path.joinpath(Path(__file__).parent, pth)) as f:
         param_stylesheet = get_parametric_stylesheet(font_base_size, font_name)
         other_stylesheet = f.read()
     return param_stylesheet + '\n' + other_stylesheet
