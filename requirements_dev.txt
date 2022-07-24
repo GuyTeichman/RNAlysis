@@ -10,3 +10,4 @@ pytest
 pytest-runner
 sphinx_rtd_theme
 pytest-qt
+pytest-xvfb
