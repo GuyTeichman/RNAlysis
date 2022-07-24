@@ -1,5 +1,6 @@
 import functools
 import itertools
+import time
 import os
 import sys
 import typing
@@ -805,6 +806,7 @@ class TabPage(QtWidgets.QWidget):
         self.container = QtWidgets.QWidget(self)
         self.layout = QtWidgets.QVBoxLayout(self.container)
         self.name = None
+        self.creation_time = time.time()
 
         self.stdout_group = QtWidgets.QGroupBox('Log')
 
@@ -1565,10 +1567,49 @@ class MainWindow(QtWidgets.QMainWindow):
         reset_action = QtWidgets.QAction("Reset color")
         reset_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=None))
         color_menu.addAction(reset_action)
+
+        sort_menu = tab_contextmenu.addMenu("Sort tabs")
+        sort_by_name = QtWidgets.QAction("Sort by tab &name")
+        sort_by_name.triggered.connect(self.sort_tabs_by_name)
+        sort_by_time = QtWidgets.QAction("Sort by creation &time")
+        sort_by_time.triggered.connect(self.sort_tabs_by_creation_time)
+        sort_by_type = QtWidgets.QAction("Sort by tab type")
+        sort_by_type.triggered.connect(self.sort_tabs_by_type)
+        sort_menu.addActions([sort_by_name, sort_by_time, sort_by_type])
+
         tab_contextmenu.exec(QtGui.QCursor.pos())
 
     def update_style_sheet(self):
         self.setStyleSheet(gui_style.get_stylesheet())
+
+    def sort_tabs_by_name(self):
+        tab_names = {self.tabs.tabText(i): self.tabs.widget(i) for i in range(self.tabs.count())}
+        sorted_names = sorted(tab_names.keys())
+        self._sort_by_map(tab_names, sorted_names)
+
+    def sort_tabs_by_creation_time(self):
+        tab_times = {self.tabs.widget(i).creation_time: self.tabs.widget(i) for i in range(self.tabs.count())}
+        sorted_times = sorted(tab_times.keys())
+        self._sort_by_map(tab_times, sorted_times)
+
+    def sort_tabs_by_type(self):
+        widgets = [self.tabs.widget(i) for i in range(self.tabs.count())]
+        type_to_order = {filtering.CountFilter: 1, filtering.DESeqFilter: 2, filtering.FoldChangeFilter: 3,
+                         filtering.Filter: 4, set: 5, None: 6}
+        tab_types = {}
+        for widget in widgets:
+            if isinstance(widget, FilterTabPage):
+                tab_types[type_to_order[type(widget.filter_obj)]] = widget
+            elif isinstance(widget, SetTabPage):
+                tab_types[type_to_order[type(widget.gene_set)]] = widget
+        self._sort_by_map(tab_types, sorted(tab_types.keys()))
+
+    def _sort_by_map(self, key_map: dict, sorted_keys: list):
+        for to_ind, name in enumerate(sorted_keys):
+            widget = key_map[name]
+            from_ind = self.tabs.indexOf(widget)
+
+            self.tabs.tabBar().moveTab(from_ind, to_ind)
 
     def add_new_tab(self, name: str = None, is_set: bool = False):
         if name is None:
