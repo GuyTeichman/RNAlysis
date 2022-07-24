@@ -1,6 +1,6 @@
 name: Build CI
 
-on: [ push ]
+on: [push, pull_request]
 
 jobs:
     build:
@@ -12,8 +12,13 @@ jobs:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
                 python-version: [3.7, 3.8]
 
+        env:
+            DISPLAY: ':99.0'
         steps:
-            -   uses: actions/checkout@v2
+            -   name: Get repository
+                uses: actions/checkout@v2
+            -   name: Setup Qt requirements for Linux
+                uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
                 uses: ts-graphviz/setup-graphviz@v1
             -   name: Install LLVM and Clang
@@ -29,7 +34,7 @@ jobs:
             -   name: Install dependencies
                 run: |
                     python -m pip install --upgrade pip
-                    python -m pip install coverage coveralls pytest
+                    python -m pip install coverage coveralls pytest pytest-qt
                     pip install .[all]
             -   name: Test with pytest
                 run: |
