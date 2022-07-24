@@ -9,6 +9,7 @@ def is_legal_file_path(file_path: str):
     pth = Path(file_path)
     return pth.exists() and pth.is_file()
 
+
 def check_is_df_like(inp):
     """
     checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object \
@@ -75,6 +76,23 @@ def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...
     """
     assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
     return all([isinstance(i, object_class) for i in iterable])
+
+
+def isinstanceiter_inh(iterable: Iterable, parent_class: Union[type, Tuple[type, ...]]):
+    """
+    Returns True if all members of an Iterable object are instances of a parent_class or of a subclass of parent_class.\
+    This function consumes iterators/generators. Always returns True when 'iterable' is empty.
+
+    :param iterable: the Iterable object whose members' types should be checked.
+    :type iterable: Iterable (list, tuple, str, dict, set, etc')
+    :param parent_class: class to be checked against
+    :type parent_class: type (e.g. list, tuple, int, bool) or Iterable of types
+    :return: True if all members of 'iterable' are of type 'parent_class' or one of its subclasses, \
+    and False otherwise.
+    :rtype: bool
+    """
+    assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
+    return all([isinstanceinh(i, parent_class) for i in iterable])
 
 
 def isinstanceiter_any(iterable: Iterable, object_class: Union[type, Tuple[type, ...]]):
