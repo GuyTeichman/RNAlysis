@@ -2,7 +2,7 @@ import pytest
 from pytestqt import qtbot
 from PyQt5 import QtCore, QtWidgets
 import sys
-from gui.gui_utils import *
+from rnalysis.gui.gui_utils import *
 
 
 @pytest.mark.parametrize("item,expected", [
