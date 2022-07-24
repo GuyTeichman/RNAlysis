@@ -40,7 +40,7 @@ with open('requirements.txt') as requirements_file:
 
 setup_requirements = ['pytest-runner', ]
 
-test_requirements = ['pytest', ]
+test_requirements = ['pytest', 'pytest-qt']
 
 extras_require = get_extra_requires('requirements_extra.txt')
 
