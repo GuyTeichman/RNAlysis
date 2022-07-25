@@ -182,7 +182,7 @@ class ColorPicker(QtWidgets.QWidget):
         self.update_color()
 
     def text(self):
-        return self.color_line.text()
+        return matplotlib.colors.to_hex(self.color_line.text())
 
 
 class MultipleChoiceList(QtWidgets.QWidget):
