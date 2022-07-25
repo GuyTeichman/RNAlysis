@@ -422,3 +422,56 @@ def test_HelpButton(qtbot, monkeypatch):
     qtbot.mouseClick(widget, LEFT_CLICK)
 
     assert help_shown == [1]
+
+
+def test_PathLineEdit_is_legal(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    assert not widget.is_legal
+
+    widget.clear()
+    assert not widget.is_legal
+
+    qtbot.keyClicks(widget.file_path, 'path/that/doesnt/exist.png')
+    assert not widget.is_legal
+
+    widget.clear()
+    qtbot.keyClicks(widget.file_path, 'tests/test_files/test_deseq.csv')
+    assert widget.is_legal
+
+
+def test_PathLineEdit_text(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    widget.setText('test123')
+    assert widget.text() == 'test123'
+
+    widget.clear()
+    qtbot.keyClicks(widget.file_path, 'test456')
+    assert widget.text() == 'test456'
+
+
+def test_PathLineEdit_choose_file(qtbot, monkeypatch):
+    pth = 'path/to/a/file'
+
+    def mock_choose_file(*args, **kwargs):
+        return pth, None
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', mock_choose_file)
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    qtbot.mouseClick(widget.open_button, LEFT_CLICK)
+
+    assert widget.text() == pth
+
+
+def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
+    pth = 'path/to/a/file'
+
+    def mock_choose_file(*args, **kwargs):
+        return False, None
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', mock_choose_file)
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    widget.setText(pth)
+    qtbot.mouseClick(widget.open_button, LEFT_CLICK)
+
+    assert widget.text() == pth
