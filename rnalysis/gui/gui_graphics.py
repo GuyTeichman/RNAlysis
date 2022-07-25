@@ -2,6 +2,7 @@ import functools
 import itertools
 from typing import List, Tuple, Callable
 
+from pathlib import Path
 import matplotlib
 import matplotlib_venn
 import upsetplot
@@ -449,7 +450,7 @@ class EmptyCanvas(FigureCanvasQTAgg):
 
 def get_icon(name: str):
     if name in AVAILABLE_ICONS:
-        pth = 'icons/' + AVAILABLE_ICONS[name]
+        pth = str(Path(__file__).parent.joinpath('icons', AVAILABLE_ICONS[name]))
         icon = QtGui.QIcon(pth)
         return icon
     elif name == 'blank':
