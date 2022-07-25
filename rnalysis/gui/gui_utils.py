@@ -138,11 +138,16 @@ class HelpButton(QtWidgets.QToolButton):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
+        self.param_name = ''
+        self.desc = ''
 
     def connect_help(self, param_name: str, desc: str):
-        self.clicked.connect(
-            functools.partial(QtWidgets.QToolTip.showText, self.mapToGlobal(self.pos()),
-                              f"<b>{param_name}:</b> <br>{desc}"))
+        self.clicked.connect(self.show_help)
+        self.param_name = param_name
+        self.desc = desc
+
+    def show_help(self):
+        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f"<b>{self.param_name}:</b> <br>{self.desc}")
 
 
 class ColorPicker(QtWidgets.QWidget):
