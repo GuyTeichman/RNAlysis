@@ -428,6 +428,8 @@ class OptionalLineEdit(QtWidgets.QWidget):
 
 
 class OptionalSpinBox(QtWidgets.QWidget):
+    IS_SPIN_BOX_LIKE = True
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QGridLayout()
@@ -464,6 +466,8 @@ class OptionalSpinBox(QtWidgets.QWidget):
 
 
 class OptionalDoubleSpinBox(OptionalSpinBox):
+    IS_SPIN_BOX_LIKE = True
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.checkbox.disconnect()
@@ -1221,7 +1225,7 @@ def param_to_widget(param, name: str,
 
 
 def get_val_from_widget(widget):
-    if isinstance(widget, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox, OptionalSpinBox)):
+    if isinstance(widget, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox)) or (hasattr(widget, 'IS_SPIN_BOX_LIKE')):
         val = widget.value()
     elif isinstance(widget, QtWidgets.QLineEdit) or (hasattr(widget, 'IS_LINE_EDIT_LIKE')):
         val = widget.text()
