@@ -614,7 +614,7 @@ class QMultiDoubleSpinBox(QMultiSpinBox):
     CHILD_QWIDGET = QtWidgets.QDoubleSpinBox
 
     def add_widget(self):
-        super(QMultiInput).add_widget()
+        super().add_widget()
         self.dialog_widgets['inputs'][-1].setMinimum(float("-inf"))
         self.dialog_widgets['inputs'][-1].setMaximum(float("inf"))
 
