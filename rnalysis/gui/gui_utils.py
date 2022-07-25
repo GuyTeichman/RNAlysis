@@ -873,6 +873,8 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
     @QtCore.pyqtSlot(str)
     def append_text(self, text: str):
         self.moveCursor(QtGui.QTextCursor.End)
+        if text == '\n':
+            return
         if text.startswith('Warning: '):
             self.insertHtml(f'<div style="color:red;">{text}</div><br>')
         else:
