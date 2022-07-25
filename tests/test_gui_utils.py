@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from pytestqt import qtbot
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -249,4 +251,108 @@ def test_MandatoryComboBox_clear(qtbot):
     assert widget.itemText(0) == default
 
 
+def test_clear_layout(qtbot):
+    qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
+    layout = QtWidgets.QGridLayout(widget)
+    layout.addWidget(QtWidgets.QSpinBox(), 0, 0)
+    layout.addWidget(QtWidgets.QLineEdit(), 1, 2)
+    layout.addWidget(QtWidgets.QLabel("test"), 3, 3)
 
+    clear_layout(layout)
+
+    assert layout.count() == 0
+
+
+@pytest.mark.parametrize("gene_set,expected_split", [
+    ({1, 2, 3}, ['1', '2', '3']),
+    ({'geneA', 'geneB', 'geneC', 'geneD'}, ["geneA", "geneB", "geneC", "geneD"])
+])
+def test_save_gene_set(gene_set, expected_split):
+    pth = 'tests/test_files/tmp_saved_gene_set.txt'
+    try:
+        save_gene_set(gene_set, pth)
+        with open(pth) as f:
+            split = f.read().split('\n')
+        assert sorted(split) == sorted(expected_split)
+    finally:
+        try:
+            os.unlink(pth)
+        except FileNotFoundError:
+            pass
+
+
+class FilledComboBox(QtWidgets.QComboBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.addItems(['test1', 'test2', '12'])
+
+    def clear(self):
+        pass
+
+
+@pytest.mark.parametrize("widget_class,keyboard_interact,expected_val", [
+    (QtWidgets.QCheckBox, False, True),
+    (QtWidgets.QLineEdit, True, "12"),
+    (QtWidgets.QSpinBox, True, 12),
+    (QtWidgets.QTextEdit, True, 12),
+    (FilledComboBox, True, '12')
+
+])
+def test_get_val_from_widget_native_types(qtbot, widget_class, keyboard_interact, expected_val):
+    qtbot, widget = widget_setup(qtbot, widget_class)
+    if keyboard_interact:
+        widget.clear()
+        qtbot.keyClicks(widget, "12")
+    else:
+        qtbot.mouseClick(widget, LEFT_CLICK)
+    assert get_val_from_widget(widget) == expected_val
+
+
+@pytest.mark.parametrize("widget_class,keyboard_interact,attr,expected_val,kwargs", [
+    (OptionalSpinBox, True, 'spinbox', 12, {}),
+    (OptionalDoubleSpinBox, True, 'spinbox', 12, {}),
+    (PathLineEdit, True, 'file_path', '12', {}),
+    (StrIntLineEdit, True, None, 12, {}),
+    (OptionalLineEdit, True, 'line', '12', {}),
+    (ComboBoxOrOtherWidget, True, 'combo', '12',
+     {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
+    (ComboBoxOrOtherWidget, True, 'other', '12',
+     {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
+])
+def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_interact, attr, expected_val, kwargs):
+    if widget_class == ComboBoxOrOtherWidget:
+        kwargs['other'] = QtWidgets.QLineEdit()
+        kwargs['other'].setText('12')
+    qtbot, widget = widget_setup(qtbot, widget_class, **kwargs)
+    interact_with = widget if attr is None else getattr(widget, attr)
+    if keyboard_interact:
+        widget.clear()
+        qtbot.keyClicks(interact_with, "12")
+    else:
+        qtbot.mouseClick(interact_with, LEFT_CLICK)
+    assert get_val_from_widget(widget) == expected_val
+
+
+@pytest.mark.parametrize("widget_class,default,excepted_val_empty,expected_val,kwargs", [
+    (QMultiSpinBox, [0, 2, 3], 0, [0, 2, 3], {}),
+    (QMultiDoubleSpinBox, [0.1, 3.2, 5], 0.0, [0.1, 3.2, 5], {}),
+    (QMultiLineEdit, ['', 'text', 'other text'], '', ['', 'text', 'other text'], {}),
+    (QMultiStrIntLineEdit, ['3', '-7', 'text', 'othertext', 'param5'], '', [3, -7, 'text', 'othertext', 'param5'], {}),
+    (QMultiBoolComboBox, [True, True, False, True], True, [True, True, False, True], {}),
+    (MultiColorPicker, ['r', 'black', '#0000ff'], None, ['#ff0000', '#000000', '#0000ff'], {}),
+    (QMultiComboBox, ['option3', 'option2', 'option2'], 'option1', ['option3', 'option2', 'option2'],
+     {'items': ['option1', 'option2', 'option3']})
+])
+def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, excepted_val_empty, expected_val, kwargs):
+    qtbot, widget = widget_setup(qtbot, widget_class, label='label', **kwargs)
+    assert get_val_from_widget(widget) == excepted_val_empty
+
+    widget.set_defaults(default)
+    assert get_val_from_widget(widget) == expected_val
+
+
+@pytest.mark.parametrize("widget_class", (QtWidgets.QWidget, QtWidgets.QDial))
+def test_get_val_from_widget_bad_widget(qtbot, widget_class):
+    qtbot, widget = widget_setup(qtbot, widget_class)
+    with pytest.raises(TypeError):
+        get_val_from_widget(widget)
