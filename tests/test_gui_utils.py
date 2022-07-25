@@ -356,3 +356,69 @@ def test_get_val_from_widget_bad_widget(qtbot, widget_class):
     qtbot, widget = widget_setup(qtbot, widget_class)
     with pytest.raises(TypeError):
         get_val_from_widget(widget)
+
+
+def test_ErrorMessage_message(qtbot):
+    err_text = 'my error text'
+    try:
+        raise ValueError(err_text)
+    except ValueError as e:
+        err_tb = e.__traceback__
+        err_value = e
+    qtbot, dialog = widget_setup(qtbot, ErrorMessage, ValueError, err_value, err_tb)
+    assert 'ValueError' in dialog.widgets['error_text'].toPlainText()
+    assert err_text in dialog.widgets['error_text'].toPlainText()
+
+
+def test_ErrorMessage_close(qtbot, monkeypatch):
+    closed = []
+
+    def mock_close(*args, **kwargs):
+        closed.append(1)
+
+    monkeypatch.setattr(ErrorMessage, 'close', mock_close)
+    err_text = 'my error text'
+    try:
+        raise ValueError(err_text)
+    except ValueError as e:
+        err_tb = e.__traceback__
+        err_value = e
+    qtbot, dialog = widget_setup(qtbot, ErrorMessage, ValueError, err_value, err_tb)
+    qtbot.mouseClick(dialog.widgets['ok_button'], LEFT_CLICK)
+
+    assert closed == [1]
+
+
+def test_ErrorMessage_copy_to_clipboard(qtbot, monkeypatch):
+    err_text = 'my error text'
+    try:
+        raise ValueError(err_text)
+    except ValueError as e:
+        err_tb = e.__traceback__
+        err_value = e
+    qtbot, dialog = widget_setup(qtbot, ErrorMessage, ValueError, err_value, err_tb)
+    qtbot.mouseClick(dialog.widgets['copy_button'], LEFT_CLICK)
+
+    assert 'ValueError' in QtWidgets.QApplication.clipboard().text()
+    assert err_text in QtWidgets.QApplication.clipboard().text()
+
+
+def test_HelpButton(qtbot, monkeypatch):
+    param_name = 'myparam'
+    desc = 'mydesc'
+    help_shown = []
+
+    def mock_show_text(pos, text):
+        assert param_name in text
+        assert desc in text
+        assert pos == QtGui.QCursor.pos()
+        help_shown.append(1)
+
+    monkeypatch.setattr(QtWidgets.QToolTip, 'showText', mock_show_text)
+
+    qtbot, widget = widget_setup(qtbot, HelpButton)
+    widget.connect_help(param_name, desc)
+
+    qtbot.mouseClick(widget, LEFT_CLICK)
+
+    assert help_shown == [1]
