@@ -107,6 +107,12 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
         self.currentIndexChanged = self.combo.currentIndexChanged
         self.init_ui()
 
+    def clear(self):
+        try:
+            self.other.clear()
+        except AttributeError:
+            pass
+
     def init_ui(self):
         self.layout.addWidget(self.combo)
         self.layout.addWidget(self.other)
@@ -285,6 +291,9 @@ class PathLineEdit(QtWidgets.QWidget):
 
         self.file_path.setText(contents)
 
+    def clear(self):
+        self.file_path.clear()
+
     @property
     def is_legal(self):
         return self._is_legal
@@ -399,6 +408,10 @@ class OptionalLineEdit(QtWidgets.QWidget):
 
         self.textChanged = self.line.textChanged
 
+    def clear(self):
+        self.checkbox.setChecked(False)
+        self.line.clear()
+
     def setText(self, val):
         if val is None:
             self.checkbox.setChecked(True)
@@ -424,6 +437,10 @@ class OptionalSpinBox(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
         self.valueChanged = self.spinbox.valueChanged
+
+    def clear(self):
+        self.checkbox.setChecked(False)
+        self.spinbox.clear()
 
     def setValue(self, val):
         if val is None:
