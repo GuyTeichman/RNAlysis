@@ -176,7 +176,7 @@ class ColorPicker(QtWidgets.QWidget):
 
     def update_color(self):
         try:
-            color = matplotlib.colors.to_hex(self.text())
+            color = self.text()
             text_color = matplotlib.colors.to_hex(
                 [abs(i - j) for i, j in zip(matplotlib.colors.to_rgb('white'), matplotlib.colors.to_rgb(color))])
             self.color_line.setStyleSheet("QLineEdit {background : " + color + "; \ncolor : " + text_color + ";}")
@@ -188,7 +188,10 @@ class ColorPicker(QtWidgets.QWidget):
         self.update_color()
 
     def text(self):
-        return matplotlib.colors.to_hex(self.color_line.text())
+        try:
+            return matplotlib.colors.to_hex(self.color_line.text())
+        except ValueError:
+            return None
 
 
 class MultipleChoiceList(QtWidgets.QWidget):
