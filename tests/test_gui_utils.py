@@ -1,11 +1,18 @@
 import pytest
 from pytestqt import qtbot
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 import sys
 from rnalysis.gui.gui_utils import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
+
+
+def widget_setup(qtbot, widget_class, *args, **kwargs):
+    widget = widget_class(*args, **kwargs)
+    widget.show()
+    qtbot.add_widget(widget)
+    return qtbot, widget
 
 
 def test_AboutWindow(qtbot, monkeypatch):
@@ -16,9 +23,7 @@ def test_AboutWindow(qtbot, monkeypatch):
 
     monkeypatch.setattr(AboutWindow, 'close', mock_close)
 
-    window = AboutWindow()
-    window.show()
-    qtbot.add_widget(window)
+    qtbot, window = widget_setup(qtbot, AboutWindow)
     qtbot.mouseClick(window.buttons()[0], LEFT_CLICK)
     assert exit_calls == [1]
 
@@ -31,9 +36,8 @@ def test_AboutWindow(qtbot, monkeypatch):
     ('-37', -37)
 ])
 def test_StrIntLineEdit(qtbot, item, expected):
-    widget = StrIntLineEdit()
-    widget.show()
-    qtbot.add_widget(widget)
+    qtbot, widget = widget_setup(qtbot, StrIntLineEdit)
+
     qtbot.keyClicks(widget, item)
     assert widget.text() == expected
 
@@ -44,9 +48,7 @@ def test_StrIntLineEdit(qtbot, item, expected):
     ('', '')
 ])
 def test_OptionalLineEdit(qtbot, item, expected):
-    widget = OptionalLineEdit()
-    widget.show()
-    qtbot.add_widget(widget)
+    qtbot, widget = widget_setup(qtbot, OptionalLineEdit)
     qtbot.keyClicks(widget.line, item)
 
     assert widget.line.isEnabled()
@@ -70,10 +72,7 @@ def test_OptionalLineEdit(qtbot, item, expected):
     ('', '')
 ])
 def test_OptionalLineEdit_setText(qtbot, item, expected):
-    widget = OptionalLineEdit()
-    widget.show()
-    qtbot.add_widget(widget)
-
+    qtbot, widget = widget_setup(qtbot, OptionalLineEdit)
     widget.setText(item)
     assert widget.text() == expected
 
@@ -89,11 +88,9 @@ def test_OptionalLineEdit_setText(qtbot, item, expected):
     ('0', 0),
 ])
 def test_OptionalSpinBox(qtbot, item, expected):
-    widget = OptionalSpinBox()
+    qtbot, widget = widget_setup(qtbot, OptionalSpinBox)
     widget.setMinimum(-100)
     widget.setMaximum(100)
-    widget.show()
-    qtbot.add_widget(widget)
     widget.spinbox.clear()
     qtbot.keyClicks(widget.spinbox, item)
 
@@ -119,11 +116,9 @@ def test_OptionalSpinBox(qtbot, item, expected):
     (None, None)
 ])
 def test_OptionalSpinBox_setValue(qtbot, item, expected):
-    widget = OptionalSpinBox()
+    qtbot, widget = widget_setup(qtbot, OptionalSpinBox)
     widget.setMinimum(-100)
     widget.setMaximum(100)
-    widget.show()
-    qtbot.add_widget(widget)
 
     widget.setValue(item)
     assert widget.value() == expected
@@ -142,12 +137,10 @@ def test_OptionalSpinBox_setValue(qtbot, item, expected):
     ('-0.75', -0.75)
 ])
 def test_OptionalDoubleSpinBox(qtbot, item, expected):
-    widget = OptionalDoubleSpinBox()
+    qtbot, widget = widget_setup(qtbot, OptionalDoubleSpinBox)
     widget.setMinimum(-100)
     widget.setMaximum(100)
     widget.setSingleStep(0.01)
-    widget.show()
-    qtbot.add_widget(widget)
     widget.spinbox.clear()
     qtbot.keyClicks(widget.spinbox, item)
 
@@ -175,11 +168,9 @@ def test_OptionalDoubleSpinBox(qtbot, item, expected):
     (None, None)
 ])
 def test_OptionalDoubleSpinBox_setValue(qtbot, item, expected):
-    widget = OptionalDoubleSpinBox()
+    qtbot, widget = widget_setup(qtbot, OptionalDoubleSpinBox)
     widget.setMinimum(-100)
     widget.setMaximum(100)
-    widget.show()
-    qtbot.add_widget(widget)
 
     widget.setValue(item)
     assert widget.value() == expected
@@ -188,3 +179,74 @@ def test_OptionalDoubleSpinBox_setValue(qtbot, item, expected):
         assert not widget.spinbox.isEnabled()
     else:
         assert widget.spinbox.isEnabled()
+
+
+@pytest.mark.parametrize("item,expected", [
+    ('black', '#000000'),
+    ('#123456', '#123456'),
+    ('r', '#FF0000')
+])
+def test_ColorPicker_written_colors(qtbot, item, expected):
+    qtbot, widget = widget_setup(qtbot, ColorPicker)
+    widget.color_line.clear()
+    qtbot.keyClicks(widget.color_line, item)
+    assert widget.text().lower() == expected.lower()
+
+
+def test_ColorPicker_validColor(qtbot, monkeypatch):
+    color = "#ccab56"
+
+    def mock_get_color():
+        return QtGui.QColor(color)
+
+    monkeypatch.setattr(QtWidgets.QColorDialog, 'getColor', mock_get_color)
+    qtbot, widget = widget_setup(qtbot, ColorPicker)
+    widget.color_line.clear()
+    qtbot.keyClicks(widget.color_line, 'black')
+
+    qtbot.mouseClick(widget.pick_button, LEFT_CLICK)
+
+    assert widget.text().lower() == color.lower()
+
+
+def test_ColorPicker_set_default(qtbot, monkeypatch):
+    prev_color = '#12345f'
+
+    class MockColor(QtGui.QColor):
+        def isValid(self):
+            return False
+
+    def mock_get_color():
+        return MockColor('#fffffff')
+
+    monkeypatch.setattr(QtWidgets.QColorDialog, 'getColor', mock_get_color)
+    qtbot, widget = widget_setup(qtbot, ColorPicker)
+    widget.color_line.clear()
+    qtbot.keyClicks(widget.color_line, prev_color)
+
+    qtbot.mouseClick(widget.pick_button, LEFT_CLICK)
+
+    assert widget.text().lower() == prev_color.lower()
+
+
+def test_MandatoryComboBox_is_legal(qtbot):
+    qtbot, widget = widget_setup(qtbot, MandatoryComboBox, 'default_choice')
+    assert not widget.is_legal()
+
+    widget.addItems(['item1', 'item2'])
+    qtbot.keyClicks(widget, 'item1')
+
+    assert widget.currentText() == 'item1'
+    assert widget.is_legal()
+
+
+def test_MandatoryComboBox_clear(qtbot):
+    default = 'default_chocie'
+    qtbot, widget = widget_setup(qtbot, MandatoryComboBox, default)
+    widget.addItems(['a', 'b', 'c'])
+    widget.clear()
+    assert widget.count() == 1
+    assert widget.itemText(0) == default
+
+
+
