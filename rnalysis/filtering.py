@@ -2524,7 +2524,7 @@ class CountFilter(Filter):
         # if only a single K was calculated, don't return it as a list of length 1
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, List[bool]] = False,
+    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = False,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False
@@ -2544,7 +2544,7 @@ class CountFilter(Filter):
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering. If both True and False are supplied, \
         RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
-        :type power_transform: True, False, or [True, False] (default=False)
+        :type power_transform: True, False, or (True, False) (default=False)
         :param evidence_threshold: Determines the Evidence Threshold that determines \
         whether each pair of features can be reliably clustered together. \
         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if \
