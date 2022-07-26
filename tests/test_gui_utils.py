@@ -417,7 +417,7 @@ def test_HelpButton(qtbot, monkeypatch):
     monkeypatch.setattr(QtWidgets.QToolTip, 'showText', mock_show_text)
 
     qtbot, widget = widget_setup(qtbot, HelpButton)
-    widget.connect_help(param_name, desc)
+    widget.connect_param_help(param_name, desc)
 
     qtbot.mouseClick(widget, LEFT_CLICK)
 
