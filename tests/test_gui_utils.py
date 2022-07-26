@@ -475,3 +475,73 @@ def test_PathLineEdit_choose_file_not_chosen(qtbot, monkeypatch):
     qtbot.mouseClick(widget.open_button, LEFT_CLICK)
 
     assert widget.text() == pth
+
+
+def test_MultipleChoiceList_select_all(qtbot):
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)
+    qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.selectedItems()]
+    assert selected_items == items
+
+
+def test_MultipleChoiceList_clear_selection(qtbot):
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)
+    for item in widget.list_items:
+        item.setSelected(True)
+
+    assert len(widget.selectedItems()) == len(items)
+
+    qtbot.mouseClick(widget.clear_all_button, LEFT_CLICK)
+
+    selected_items = widget.selectedItems()
+    assert len(selected_items) == 0
+
+
+def test_MultipleChoiceList_emit(qtbot):
+    selection_changed = []
+
+    def selection_changed_slot(*args, **kwargs):
+        selection_changed.append(1)
+
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)
+    widget.itemSelectionChanged.connect(selection_changed_slot)
+
+    assert len(selection_changed) == 0
+
+    qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
+    assert selection_changed == [1] * len(items)
+    qtbot.mouseClick(widget.clear_all_button, LEFT_CLICK)
+    assert selection_changed == [1] * len(items) * 2
+    widget.list_items[0].setSelected(True)
+    assert selection_changed == [1] * len(items) * 2 + [1]
+
+
+def test_MultipleChoiceList_icons(qtbot):
+    pixmap = QtGui.QPixmap(32, 32)
+    pixmap.fill(QtCore.Qt.transparent)
+    icon = QtGui.QIcon(pixmap)
+
+    pixmap2 = QtGui.QPixmap(34, 34)
+    pixmap2.fill(QtCore.Qt.white)
+    icon2 = QtGui.QIcon(pixmap2)
+    items = ['item1', 'item2', 'item3']
+    icons = [icon, icon2, icon2]
+    qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items, icons)
+
+    actual_icons = [item.icon() for item in widget.list_items]
+
+    assert [icon.pixmap(32, 32).toImage() for icon in icons] == [icon.pixmap(32, 32).toImage() for icon in actual_icons]
+
+
+def test_RadioButtonBox_set_selection(qtbot):
+    actions = ['action1', 'action2', 'action3']
+    qtbot, widget = widget_setup(qtbot, RadioButtonBox, 'title', actions)
+    widget.set_selection('action2')
+    assert widget.checkedButton().text() == 'action2'
+
+
+
