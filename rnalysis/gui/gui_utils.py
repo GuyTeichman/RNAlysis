@@ -220,15 +220,9 @@ class MultipleChoiceList(QtWidgets.QWidget):
         self.layout = QtWidgets.QGridLayout(self)
         self.setLayout(self.layout)
 
-        self.items = items
+        self.items = []
         self.list_items = []
         self.list = QtWidgets.QListWidget(self)
-        for i, item in enumerate(self.items):
-            list_item = QtWidgets.QListWidgetItem(item)
-            if icons is not None:
-                list_item.setIcon(icons[i])
-            self.list_items.append(list_item)
-            self.list.addItem(list_item)
         self.list.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.layout.addWidget(self.list, 1, 1, 4, 1)
 
@@ -236,7 +230,7 @@ class MultipleChoiceList(QtWidgets.QWidget):
         self.select_all_button.clicked.connect(self.select_all)
         self.layout.addWidget(self.select_all_button, 5, 1)
 
-        self.clear_all_button = QtWidgets.QPushButton('Clear all', self)
+        self.clear_all_button = QtWidgets.QPushButton('Clear selection', self)
         self.clear_all_button.clicked.connect(self.clear_all)
         self.layout.addWidget(self.clear_all_button, 6, 1)
 
@@ -245,6 +239,20 @@ class MultipleChoiceList(QtWidgets.QWidget):
 
         self.itemSelectionChanged = self.list.itemSelectionChanged
         self.selectedItems = self.list.selectedItems
+
+        self.add_items(items, icons)
+
+    def add_item(self, item, icon=None):
+        self.items.append(item)
+        list_item = QtWidgets.QListWidgetItem(item)
+        if icon is not None:
+            list_item.setIcon(icon)
+        self.list_items.append(list_item)
+        self.list.addItem(list_item)
+
+    def add_items(self, items, icons=None):
+        for i, item in enumerate(items):
+            self.add_item(item, None if icons is None else icons[i])
 
     def select_all(self):
         for ind in range(self.list.count()):
