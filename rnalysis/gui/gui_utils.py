@@ -92,6 +92,65 @@ class ProgressParallelGui(Parallel):
         QtWidgets.QApplication.processEvents()
 
 
+class ToggleSwitchCore(QtWidgets.QPushButton):
+    """
+    Based upon a StackOverflow response by the user Heike:
+    https://stackoverflow.com/questions/56806987/switch-button-in-pyqt
+    """
+    stateChanged = QtCore.pyqtSignal()
+    RADIUS = 10
+    WIDTH = 40
+    BORDER = 2
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setCheckable(True)
+        self.setMinimumWidth((self.WIDTH + self.BORDER) * 2)
+        self.setMinimumHeight((self.RADIUS + self.BORDER) * 2)
+        self.clicked.connect(self.stateChanged.emit)
+
+    def paintEvent(self, event):
+        label = "True" if self.isChecked() else "False"
+        bg_color = QtGui.QColor('#57C4AD') if self.isChecked() else QtGui.QColor('#DB4325')
+
+        radius = self.RADIUS
+        width = self.WIDTH
+        center = self.rect().center()
+
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        painter.translate(center)
+        painter.setBrush(QtGui.QColor("#cccccc"))
+
+        pen = QtGui.QPen(QtGui.QColor("#222228"))
+        pen.setWidth(self.BORDER)
+        painter.setPen(pen)
+
+        painter.drawRoundedRect(QtCore.QRect(-width, -radius, 2 * width, 2 * radius), radius, radius)
+        painter.setBrush(QtGui.QBrush(bg_color))
+        sw_rect = QtCore.QRect(-radius, -radius, width + radius, 2 * radius)
+        if not self.isChecked():
+            sw_rect.moveLeft(-width)
+        painter.drawRoundedRect(sw_rect, radius, radius)
+        painter.drawText(sw_rect, QtCore.Qt.AlignCenter, label)
+
+
+class ToggleSwitch(QtWidgets.QWidget):
+    IS_CHECK_BOX_LIKE = True
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.switch = ToggleSwitchCore(self)
+        self.layout = QtWidgets.QHBoxLayout(self)
+
+        self.layout.addWidget(self.switch)
+        self.layout.addStretch(1)
+
+        self.setChecked = self.switch.setChecked
+        self.stateChanged = self.switch.stateChanged
+        self.isChecked = self.switch.isChecked
+
+
 class ComboBoxOrOtherWidget(QtWidgets.QWidget):
     IS_COMBO_BOX_LIKE = True
     OTHER_TEXT = 'Other...'
@@ -1187,7 +1246,7 @@ def param_to_widget(param, name: str,
                 widget.valueChanged.connect(action)
 
     elif param.annotation == bool:
-        widget = QtWidgets.QCheckBox(text=name)
+        widget = ToggleSwitch()
         default = param.default if is_default else False
         widget.setChecked(default)
         for action in actions_to_connect:
@@ -1326,7 +1385,7 @@ def get_val_from_widget(widget):
         val = widget.value()
     elif isinstance(widget, QtWidgets.QLineEdit) or (hasattr(widget, 'IS_LINE_EDIT_LIKE')):
         val = widget.text()
-    elif isinstance(widget, QtWidgets.QCheckBox):
+    elif isinstance(widget, QtWidgets.QCheckBox) or (hasattr(widget, 'IS_CHECK_BOX_LIKE')):
         val = widget.isChecked()
     elif isinstance(widget, QtWidgets.QTextEdit):
         val = ast.literal_eval(widget.toPlainText())
