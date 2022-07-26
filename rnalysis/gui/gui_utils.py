@@ -141,13 +141,28 @@ class HelpButton(QtWidgets.QToolButton):
         self.param_name = ''
         self.desc = ''
 
-    def connect_help(self, param_name: str, desc: str):
-        self.clicked.connect(self.show_help)
+    def _disconnect_help(self):
+        try:
+            self.clicked.disconnect()
+        except TypeError:
+            pass
+
+    def connect_desc_help(self, desc: str):
+        self._disconnect_help()
+        self.clicked.connect(self._show_help_desc)
+        self.desc = desc
+
+    def connect_param_help(self, param_name: str, desc: str):
+        self._disconnect_help()
+        self.clicked.connect(self._show_help_param)
         self.param_name = param_name
         self.desc = desc
 
-    def show_help(self):
+    def _show_help_param(self):
         QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), f"<b>{self.param_name}:</b> <br>{self.desc}")
+
+    def _show_help_desc(self):
+        QtWidgets.QToolTip.showText(QtGui.QCursor.pos(), self.desc)
 
 
 class ColorPicker(QtWidgets.QWidget):
