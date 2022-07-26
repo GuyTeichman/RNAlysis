@@ -343,9 +343,13 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
             self.list_items.pop(row)
 
     def delete_all(self):
-        self.items = []
-        self.list_items = []
-        self.list.clear()
+        accepted = QtWidgets.QMessageBox.question(self, "Delete all items?",
+                                                  "Are you sure you want to delete all items?",
+                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if accepted == QtWidgets.QMessageBox.Yes:
+            self.items = []
+            self.list_items = []
+            self.list.clear()
 
 
 class MandatoryComboBox(QtWidgets.QComboBox):
