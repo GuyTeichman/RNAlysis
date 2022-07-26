@@ -245,7 +245,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             self.plot_grid.addWidget(label, i, 0)
             self.plot_grid.addWidget(self.plot_widgets[name], i, 1)
             self.plot_grid.addWidget(help_button, i, 2)
-            help_button.connect_help(name, desc)
+            help_button.connect_param_help(name, desc)
 
             i += 1
 
@@ -264,7 +264,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             self.parameter_grid.addWidget(help_button, i, 2)
             self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
-            help_button.connect_help(name, desc)
+            help_button.connect_param_help(name, desc)
             i += 1
 
     def update_stats_ui(self):
@@ -296,7 +296,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                 self.stats_grid.addWidget(help_button, i, 4)
                 self.stats_grid.addWidget(label, i, 2)
                 self.stats_grid.addWidget(self.stats_widgets[name], i, 3)
-                help_button.connect_help(name, desc)
+                help_button.connect_param_help(name, desc)
                 i += 1
 
     def is_single_set(self):
@@ -958,7 +958,8 @@ class SetTabPage(TabPage):
 
 class FuncTypeStack(QtWidgets.QWidget):
     EXCLUDED_PARAMS = {'self'}
-    funcSelected = QtCore.pyqtSignal()
+    NO_FUNC_CHOSEN_TEXT = "Choose a function..."
+    funcSelected = QtCore.pyqtSignal(bool)
 
     def __init__(self, funcs: list, filter_obj: filtering.Filter, parent=None):
         super().__init__(parent)
@@ -966,7 +967,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.parameter_grid = QtWidgets.QGridLayout()
         self.func_combo = QtWidgets.QComboBox(self)
-        self.func_help_button = QtWidgets.QToolButton(self)
+        self.func_help_button = gui_utils.HelpButton(self)
         self.func_combo_layout = QtWidgets.QHBoxLayout()
         self.funcs = funcs
         self.filter_obj = filter_obj
@@ -976,17 +977,17 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.layout.addLayout(self.func_combo_layout)
         self.func_combo_layout.addWidget(self.func_combo)
         self.func_combo_layout.addWidget(self.func_help_button)
-        self.func_help_button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
-        self.func_help_button.clicked.connect(
-            functools.partial(QtWidgets.QToolTip.showText,
-                              self.func_help_button.mapToGlobal(self.func_help_button.pos()),
-                              f"Choose a function from this list to read its description. "))
-
+        self._set_empty_tooltip()
         self.layout.addLayout(self.parameter_grid)
         self.layout.addStretch(1)
-        self.func_combo.addItem('Choose a function...')
+        self.func_combo.addItem(self.NO_FUNC_CHOSEN_TEXT)
         self.func_combo.addItems(self.funcs)
         self.func_combo.currentTextChanged.connect(self.update_parameter_ui)
+
+    def _set_empty_tooltip(self):
+        txt = f"Choose a function from this list to read its description. "
+        self.func_combo.setToolTip(txt)
+        self.func_help_button.connect_desc_help(txt)
 
     def update_parameter_ui(self):
         # delete previous widgets
@@ -994,13 +995,15 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.parameter_widgets = {}
 
         chosen_func_name = self.get_function_name()
+        if chosen_func_name == self.NO_FUNC_CHOSEN_TEXT:
+            self._set_empty_tooltip()
+            self.funcSelected.emit(False)
+            return
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = generic.get_method_docstring(chosen_func_name, self.filter_obj)
         self.func_combo.setToolTip(desc)
-        self.func_help_button.clicked.connect(
-            functools.partial(QtWidgets.QToolTip.showText,
-                              self.func_help_button.mapToGlobal(self.func_help_button.pos()),
-                              f"<b>{chosen_func_name}:</b> <br>{desc}"))
+        self.func_help_button.connect_param_help(chosen_func_name,desc)
+
         i = 1
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
@@ -1011,7 +1014,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                 label.setToolTip(param_desc[name])
                 help_button = gui_utils.HelpButton()
                 self.parameter_grid.addWidget(help_button, i, 2)
-                help_button.connect_help(name, param_desc[name])
+                help_button.connect_param_help(name, param_desc[name])
 
             self.parameter_grid.addWidget(label, i, 0, )
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
@@ -1025,7 +1028,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                  f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>')
         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
-        self.funcSelected.emit()
+        self.funcSelected.emit(True)
 
     def get_function_params(self):
         func_params = {}
@@ -1191,8 +1194,7 @@ class FilterTabPage(TabPage):
                                                         border: 1px solid #ba32ba;
                                                         border-radius: 4px;}''')
             self.stack_widgets[action_type] = FuncTypeStack(sorted_actions[action_type], self.filter_obj)
-            self.stack_widgets[action_type].funcSelected.connect(
-                functools.partial(self.basic_widgets['apply_button'].setVisible, True))
+            self.stack_widgets[action_type].funcSelected.connect(self.basic_widgets['apply_button'].setVisible)
             self.stack.addWidget(self.stack_widgets[action_type])
             bttn.clicked.connect(functools.partial(self.stack.setCurrentIndex, i + 1))
             self.button_box.addButton(bttn)
