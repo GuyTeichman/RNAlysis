@@ -265,6 +265,30 @@ class MultipleChoiceList(QtWidgets.QWidget):
             item.setSelected(False)
 
 
+class MultiChoiceListWithDelete(MultipleChoiceList):
+    def __init__(self, items: typing.Sequence, icons: typing.Sequence = None, parent=None):
+        super().__init__(items, icons, parent)
+        self.delete_button = QtWidgets.QPushButton('Delete selected')
+        self.delete_button.clicked.connect(self.delete_selected)
+        self.delete_all_button = QtWidgets.QPushButton('Delete all')
+        self.delete_all_button.clicked.connect(self.delete_all)
+
+        self.layout.addWidget(self.delete_button, 7, 1)
+        self.layout.addWidget(self.delete_all_button, 8, 1)
+
+    def delete_selected(self):
+        for item in self.list.selectedItems():
+            row = self.list.row(item)
+            self.list.takeItem(row)
+            self.items.pop(row)
+            self.list_items.pop(row)
+
+    def delete_all(self):
+        self.items = []
+        self.list_items = []
+        self.list.clear()
+
+
 class MandatoryComboBox(QtWidgets.QComboBox):
     def __init__(self, default_choice: str, parent=None):
         super().__init__(parent)
