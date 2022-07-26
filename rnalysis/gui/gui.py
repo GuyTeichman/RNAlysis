@@ -989,11 +989,13 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.func_combo.setToolTip(txt)
         self.func_help_button.connect_desc_help(txt)
 
+    def deselect(self):
+        self.func_combo.setCurrentIndex(0)
+
     def update_parameter_ui(self):
         # delete previous widgets
         gui_utils.clear_layout(self.parameter_grid)
         self.parameter_widgets = {}
-
         chosen_func_name = self.get_function_name()
         if chosen_func_name == self.NO_FUNC_CHOSEN_TEXT:
             self._set_empty_tooltip()
@@ -1002,13 +1004,14 @@ class FuncTypeStack(QtWidgets.QWidget):
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = generic.get_method_docstring(chosen_func_name, self.filter_obj)
         self.func_combo.setToolTip(desc)
-        self.func_help_button.connect_param_help(chosen_func_name,desc)
+        self.func_help_button.connect_param_help(chosen_func_name, desc)
 
         i = 1
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
+            # self.parameter_widgets[name].setMinimumWidth(150)
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
@@ -1016,7 +1019,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                 self.parameter_grid.addWidget(help_button, i, 2)
                 help_button.connect_param_help(name, param_desc[name])
 
-            self.parameter_grid.addWidget(label, i, 0, )
+            self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
 
             i += 1
@@ -1028,6 +1031,7 @@ class FuncTypeStack(QtWidgets.QWidget):
                  f'<b>{type(self.filter_obj).__name__}.{chosen_func_name}</b></a>')
         self.parameter_widgets['help_link'].setOpenExternalLinks(True)
         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
+        self.parameter_grid.setColumnStretch(1, 1)
         self.funcSelected.emit(True)
 
     def get_function_params(self):
