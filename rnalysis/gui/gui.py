@@ -971,6 +971,9 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.func_combo_layout = QtWidgets.QHBoxLayout()
         self.funcs = funcs
         self.filter_obj = filter_obj
+        self.excluded_params = self.EXCLUDED_PARAMS
+        if additional_excluded_params is not None:
+            self.excluded_params.update(additional_excluded_params)
         self.init_ui()
 
     def init_ui(self):
@@ -1008,10 +1011,9 @@ class FuncTypeStack(QtWidgets.QWidget):
 
         i = 1
         for name, param in signature.items():
-            if name in self.EXCLUDED_PARAMS:
+            if name in self.excluded_params:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-            # self.parameter_widgets[name].setMinimumWidth(150)
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
@@ -1045,7 +1047,8 @@ class FuncTypeStack(QtWidgets.QWidget):
         return func_params
 
     def get_function_name(self):
-        return self.func_combo.currentText()
+        name = self.func_combo.currentText()
+        return name
 
 
 class FilterTabPage(TabPage):
