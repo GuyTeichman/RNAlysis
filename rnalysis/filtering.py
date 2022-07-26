@@ -2545,8 +2545,7 @@ class CountFilter(Filter):
         to the data prior to clustering. If both True and False are supplied, \
         RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
         :type power_transform: True, False, or (True, False) (default=False)
-        :param evidence_threshold: Determines the Evidence Threshold that determines \
-        whether each pair of features can be reliably clustered together. \
+        :param evidence_threshold: determines whether each pair of features can be reliably clustered together. \
         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if \
         they were clustered together in at least 50% of the tested clustering solutions.
         :type evidence_threshold: float between 0 and 1 (default=2/3)
