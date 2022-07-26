@@ -326,6 +326,47 @@ class MinMaxDialog(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowMinMaxButtonsHint)
 
 
+class TrueFalseBoth(QtWidgets.QWidget):
+    IS_MULTI_INPUT = True
+    STYLESHEET = '''QPushButton::checked {background-color : green;
+            color: white;
+            border: 1px solid #32ba32;
+            border-radius: 4px;}'''
+    selectionChanged = QtCore.pyqtSignal()
+
+    def __init__(self, default=None, parent=None):
+        super().__init__(parent)
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.true_button = QtWidgets.QPushButton("True")
+        self.true_button.setCheckable(True)
+
+        self.true_button.setStyleSheet(self.STYLESHEET)
+        self.false_button = QtWidgets.QPushButton("False")
+        self.false_button.setCheckable(True)
+        self.false_button.setStyleSheet(self.STYLESHEET)
+
+        self.true_button.toggled.connect(self.selectionChanged.emit)
+        self.false_button.toggled.connect(self.selectionChanged.emit)
+
+        self.layout.addWidget(self.true_button)
+        self.layout.addWidget(self.false_button)
+
+        if default is not None:
+            default = parsing.data_to_list(default)
+            if True in default:
+                self.true_button.setChecked(True)
+            if False in default:
+                self.false_button.setChecked(False)
+
+    def get_values(self):
+        checked = []
+        if self.true_button.isChecked():
+            checked.append(True)
+        if self.false_button.isChecked():
+            checked.append(False)
+        return checked
+
+
 class PathLineEdit(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
     textChanged = QtCore.pyqtSignal(bool)
@@ -1263,6 +1304,10 @@ def param_to_widget(param, name: str,
             widget.set_defaults(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+    elif param.annotation == typing.Union[bool, typing.Tuple[bool, bool]]:
+        widget = TrueFalseBoth(param.default if is_default else None)
+        for action in actions_to_connect:
+            widget.selectionChanged.connect(action)
     # elif param.annotation == typing.Dict[str, typing.List[str]]:
     #     pass
     # elif param.annotation == typing.Dict[str, typing.List[int]]:
