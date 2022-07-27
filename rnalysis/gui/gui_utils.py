@@ -345,6 +345,8 @@ class MultipleChoiceList(QtWidgets.QWidget):
 
 
 class MultiChoiceListWithDelete(MultipleChoiceList):
+    itemDeleted = QtCore.pyqtSignal(int)
+
     def __init__(self, items: typing.Sequence, icons: typing.Sequence = None, parent=None):
         super().__init__(items, icons, parent)
         self.delete_button = QtWidgets.QPushButton('Delete selected')
@@ -361,12 +363,15 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
             self.list.takeItem(row)
             self.items.pop(row)
             self.list_items.pop(row)
+            self.itemDeleted.emit(row)
 
     def delete_all(self):
         accepted = QtWidgets.QMessageBox.question(self, "Delete all items?",
                                                   "Are you sure you want to delete all items?",
                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if accepted == QtWidgets.QMessageBox.Yes:
+            for n_item in reversed(range(len(self.items))):
+                self.itemDeleted.emit(n_item)
             self.items = []
             self.list_items = []
             self.list.clear()
