@@ -1208,6 +1208,7 @@ class FilterTabPage(TabPage):
 
         self.init_basic_ui()
 
+    @QtCore.pyqtSlot()
     def rename(self, new_name: str = None):
         if new_name is None:
             new_name = self.overview_widgets['table_name'].text()
