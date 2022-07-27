@@ -921,6 +921,8 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
 
 class TabPage(QtWidgets.QWidget):
+    tabNameChange = QtCore.pyqtSignal(str, bool)
+    tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -963,7 +965,7 @@ class TabPage(QtWidgets.QWidget):
     def rename(self, new_name: str = None):
         if new_name is None:
             new_name = self.overview_widgets['table_name'].text()
-        self.set_tab_name(new_name, is_unsaved=True)
+        self.tabNameChange.emit(new_name, True)
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{new_name}</b>'")
         self.overview_widgets['table_name'].setText('')
 
@@ -982,12 +984,6 @@ class TabPage(QtWidgets.QWidget):
     def get_tab_name(self):
         parent = self._get_parent_tabwidget()
         return str(parent.tabText(parent.currentIndex())).rstrip("*")
-
-    def set_tab_name(self, new_name: str, is_unsaved: bool):
-        if is_unsaved:
-            new_name += '*'
-        parent = self._get_parent_tabwidget()
-        parent.setTabText(parent.currentIndex(), new_name)
 
     # custom method to write anything printed out to console/terminal to my QTextEdit widget via append function.
     def output_terminal_written(self, text):
@@ -1055,7 +1051,7 @@ class SetTabPage(TabPage):
         if filename:
             self.gene_set.save_txt(filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
-            self.set_tab_name(self.get_tab_name().strip("*"), is_unsaved=False)
+            self.tabSaved.emit()
 
     def rename(self, new_name: str = None):
         if new_name is None:
@@ -1375,7 +1371,7 @@ class FilterTabPage(TabPage):
         self.update_filter_obj_shape()
         self.update_table_preview()
         if prev_name != self.filter_obj.fname.name:
-            self.set_tab_name(self.filter_obj.fname.stem, is_unsaved=True)
+            self.tabNameChange.emit(self.filter_obj.fname.stem, True)
             self.update_table_name_label()
 
         self._proccess_outputs(result, func_name)
@@ -1421,7 +1417,7 @@ class FilterTabPage(TabPage):
         self.update_filter_obj_shape()
         self.update_table_preview()
         if prev_name != self.filter_obj.fname.name:
-            self.set_tab_name(self.filter_obj.fname.name + '*')
+            self.tabNameChange.emit(self.filter_obj.fname.stem, True)
 
         self._proccess_outputs(result, 'pipeline')
 
@@ -1465,7 +1461,7 @@ class FilterTabPage(TabPage):
         if filename:
             self.filter_obj.save_csv(filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
-            self.set_tab_name(self.filter_obj.fname.name, is_unsaved=False)
+            self.tabSaved.emit()
 
     def start(self):
         self.filter_obj = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()](
@@ -1476,7 +1472,7 @@ class FilterTabPage(TabPage):
             new_name = table_name_user_input
         else:
             new_name = self.filter_obj.fname.stem
-        self.set_tab_name(new_name, is_unsaved=False)
+        self.tabNameChange.emit(new_name, False)
 
         self.init_overview_ui()
         self.init_function_ui()
@@ -1584,9 +1580,6 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.overview_widgets['export_button'] = QtWidgets.QPushButton('Export Pipeline')
         self.overview_widgets['export_button'].clicked.connect(self.export_pipeline)
         self.overview_grid.addWidget(self.overview_widgets['export_button'], 3, 2, 1, 1)
-
-    def set_tab_name(self, new_name: str, is_unsaved: bool):
-        raise NotImplementedError
 
     def _get_pipeline_name(self):
         return self.basic_widgets['pipeline_name'].text()
@@ -1905,8 +1898,22 @@ class MainWindow(QtWidgets.QMainWindow):
             tab = FilterTabPage(self.tabs)
             tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
         tab.changeIcon.connect(self.set_current_tab_icon)
+        tab.tabNameChange.connect(self.rename_tab)
         self.tabs.addTab(tab, name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
+
+    @QtCore.pyqtSlot(str, bool)
+    def rename_tab(self, new_name: str, is_unsaved: bool):
+        if is_unsaved:
+            new_name += '*'
+        else:
+            new_name = new_name.rstrip('*')
+        self.tabs.setTabText(self.tabs.currentIndex(), new_name)
+
+    @QtCore.pyqtSlot()
+    def remove_tab_asterisk(self):
+        current_name = self.tabs.tabText(self.tabs.currentIndex())
+        self.tabs.setTabText(self.tab.currentIndex(), current_name.rstrip('*'))
 
     def new_table_from_folder(self):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose directory", str(Path.home()))
