@@ -235,7 +235,7 @@ class FeatureSet:
 
     def go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                       statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                      biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
+                      biotype: Union[str, List[str], Literal['all']] = 'all',
                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                       biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                       propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
@@ -398,7 +398,7 @@ class FeatureSet:
 
     def kegg_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                         statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                        biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
+                        biotype: Union[str, List[str], Literal['all']] = 'all',
                         background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                         biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                         return_nonsignificant: bool = False,
@@ -611,7 +611,7 @@ class FeatureSet:
 
     def user_defined_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                                 statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                                alpha: float = 0.05, biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
+                                alpha: float = 0.05, biotype: Union[str, List[str], Literal['all']] = 'all',
                                 background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                 attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
@@ -806,7 +806,7 @@ class FeatureSet:
 
     def non_categorical_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']] = None,
                                    alpha: float = 0.05, parametric_test: bool = False,
-                                   biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
+                                   biotype: Union[str, List[str], Literal['all']] = 'all',
                                    background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                    attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                    biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',

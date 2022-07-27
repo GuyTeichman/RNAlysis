@@ -19,6 +19,7 @@ Changed
 * Updated signature of enrichment.venn_diagram
 * enrichment.venn_diagram and enrichment.upset_plot can now be generated on a user-supplied FIgure
 * Clustering functions now apply a power transform to count data prior to clustering by default
+* Non-deprecated enrichment functions no longer filter the background set by biotype by default
 
 Fixed
 ******
