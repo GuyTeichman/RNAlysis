@@ -444,6 +444,40 @@ class ClusteringRunner:
                 sorted_arr[new_ind] = orig_arr[orig_ind]
         return ArbitraryClusterer(updated_labels, n_clusters, **sorted_arrays)
 
+    def _pca_plot(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, title: str):
+        data_standardized = generic.standardize(data)
+        n_components = 2
+        pca_obj = PCA(n_components=n_components)
+        pcomps = pca_obj.fit_transform(data_standardized)
+
+        columns = [f'Principal component {i + 1}' for i in range(n_components)]
+        principal_df = pd.DataFrame(data=pcomps, columns=columns)
+        final_df = principal_df
+        final_df['labels'] = pd.Series(labels)
+
+        pc_var = pca_obj.explained_variance_ratio_
+
+        pc1_var = pc_var[0]
+        pc2_var = pc_var[1]
+        final_df = final_df[final_df['labels'] != -1]
+        final_df = final_df[['Principal component 1', f'Principal component 2', 'labels']]
+        fig = plt.figure(figsize=(8, 8),constrained_layout=True)
+        ax = fig.add_subplot(1, 1, 1)
+        ax.grid(True)
+        ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=15)
+        ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=15)
+        ax.set_title(title, fontsize=20)
+
+        color_generator = generic.color_generator()
+        color_opts = [next(color_generator) for _ in range(n_clusters)]
+        for cluster in range(n_clusters):
+            ax.scatter(final_df[final_df['labels'] == cluster].iloc[:, 0],
+                       final_df[final_df['labels'] == cluster].iloc[:, 1],
+                       label=f'Cluster {cluster+1}', c=color_opts[cluster], s=20, alpha=0.4)
+        ax.legend(title="Clusters")
+        ax.grid(True)
+        plt.show()
+
     def plot_clustering(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, centers: np.ndarray, title: str
                         ) -> Union[Tuple[plt.Figure, List[plt.Axes]], None]:
         if self.plot_style == 'none':
@@ -499,6 +533,7 @@ class ClusteringRunner:
         if not self.split_plots:
             fig.tight_layout(rect=[0, 0.03, 1, 0.92])
         plt.show()
+        self._pca_plot(n_clusters, data, labels, title)
         return fig, axes
 
     def clustering_labels_to_binary_format(self) -> np.ndarray:
