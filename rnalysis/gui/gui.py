@@ -1393,17 +1393,19 @@ class FilterTabPage(TabPage):
         elif isinstance(outputs, (tuple, list)):
             if validation.isinstanceiter_inh(outputs, filtering.Filter):
                 dialog = MultiKeepWindow(outputs, self)
-                accepted = dialog.exec()
-                if accepted:
-                    kept_outputs = dialog.result()
-                    for output in kept_outputs:
-                        self._proccess_outputs(output, source_name)
+                dialog.accepted.connect(functools.partial(self._multi_keep_window_accepted, dialog, source_name))
+                dialog.show()
             else:
                 for output in outputs:
                     self._proccess_outputs(output, source_name)
         elif isinstance(outputs, dict):
             for output, this_src_name in outputs.items():
                 self._proccess_outputs(output, this_src_name)
+
+    def _multi_keep_window_accepted(self, dialog: QtWidgets.QDialog, source_name: str):
+        kept_outputs = dialog.result()
+        for output in kept_outputs:
+            self._proccess_outputs(output, source_name)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
@@ -1616,7 +1618,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
             event.accept()
 
 
-class MultiKeepWindow(QtWidgets.QDialog):
+class MultiKeepWindow(gui_utils.MinMaxDialog):
     def __init__(self, objs: List[filtering.Filter], parent=None):
         super().__init__(parent)
         self.objs = {str(obj.fname.stem): obj for obj in objs}
