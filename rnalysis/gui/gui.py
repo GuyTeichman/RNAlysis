@@ -1185,6 +1185,7 @@ class FilterTabPage(TabPage):
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
     GENERAL_FUNCS = {'sort', 'transform', 'fold_change'}
+    filterObjectCreated = QtCore.pyqtSignal(filtering.Filter)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1380,7 +1381,7 @@ class FilterTabPage(TabPage):
 
     def _proccess_outputs(self, outputs, source_name: str = ''):
         if validation.isinstanceinh(outputs, filtering.Filter):
-            self._get_parent_window().new_tab_from_filter_obj(outputs)
+            self.filterObjectCreated.emit(outputs)
         elif isinstance(outputs, pd.DataFrame):
             self.df_views.append(gui_utils.DataFrameView(outputs, source_name))
             self.df_views[-1].show()
@@ -1573,9 +1574,6 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save Pipeline')
         self.overview_widgets['save_button'].clicked.connect(self.save_file)
         self.overview_grid.addWidget(self.overview_widgets['save_button'], 3, 3)
-
-        # self.overview_widgets['shape'] = QtWidgets.QLabel()
-        # self.overview_grid.addWidget(self.overview_widgets['shape'], 3, 0, 1, 2)
 
         self.overview_widgets['export_button'] = QtWidgets.QPushButton('Export Pipeline')
         # self.overview_widgets['export_button'].clicked.connect(self.export_pipeline)
@@ -1890,6 +1888,7 @@ class MainWindow(QtWidgets.QMainWindow):
             tab = SetTabPage(name, parent=self.tabs)
         else:
             tab = FilterTabPage(self.tabs)
+            tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
         tab.changeIcon.connect(self.set_current_tab_icon)
         self.tabs.addTab(tab, name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
