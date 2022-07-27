@@ -2287,7 +2287,7 @@ class CountFilter(Filter):
 
     def split_kmeans(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                      max_iter: int = 300,
-                     random_seed: Union[int, None] = None, power_transform: bool = False,
+                     random_seed: Union[int, None] = None, power_transform: bool = True,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
                      ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
@@ -2308,7 +2308,7 @@ class CountFilter(Filter):
         :type max_iter: int (default=300)
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -2363,13 +2363,15 @@ class CountFilter(Filter):
             # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                     suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
+                                     suffix=f'_kmeanscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
-                           metric: str = 'euclidean',
-                           linkage: str = 'average', power_transform: bool = False,
+                           metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
+                                           'L1', 'L2', 'Jackknife', 'YS1', 'YR1'] = 'Euclidean',
+                           linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
+                           power_transform: bool = True,
                            distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
@@ -2383,15 +2385,15 @@ class CountFilter(Filter):
         the algorithm will derive the number of clusters from the distance threshold (see 'distance_threshold').
         :type n_clusters: int, list of ints, 'gap', 'slihouette', or 'distance'
         :param metric: the distance metric used to determine similarity between data points. \
-        If linkage is 'ward', only the 'euclidean' metric is accepted. \
+        If linkage is 'ward', only the 'Euclidean' metric is accepted. \
         For a full list of supported distance metrics see the user guide.
-        :type metric: 'euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default='euclidean')
+        :type metric: 'Euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default='Euclidean')
         :param linkage: Which linkage criterion to use. The linkage criterion determines which distance to use between \
         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.
-        :type linkage: 'single', 'average', 'complete', or 'ward' (default='average')
+        :type linkage: 'single', 'Average', 'complete', or 'ward' (default='Average')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param distance_threshold: a distance threshold above which clusters will not be merged. \
         If a number is specified, `n_clusters` must be None.
         :type distance_threshold: float or None (default=None)
@@ -2414,7 +2416,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_hierarchical(n_clusters=13, metric='euclidean',linkage='ward'
+            >>> clusters = dev_stages.split_hierarchical(n_clusters=13, metric='Euclidean',linkage='ward'
             ...                                         ,power_transform=True)
             Filtered 1718 features, leaving 608 of the original 2326 features. Filtering result saved to new object.
             Filtered 1979 features, leaving 347 of the original 2326 features. Filtering result saved to new object.
@@ -2456,7 +2458,10 @@ class CountFilter(Filter):
 
     def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                        max_iter: int = 300,
-                       random_seed: Union[int, None] = None, metric: str = 'euclidean', power_transform: bool = False,
+                       random_seed: Union[int, None] = None,
+                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
+                                                  'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
+                       power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
                        ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
@@ -2477,10 +2482,10 @@ class CountFilter(Filter):
         :type max_iter: int (default=300)
         :param metric: the distance metric used to determine similarity between data points. \
         For a full list of supported distance metrics see the user guide.
-        :type metric: str (default='euclidean')
+        :type metric: str (default='Euclidean')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -2539,7 +2544,7 @@ class CountFilter(Filter):
         # if only a single K was calculated, don't return it as a list of length 1
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
 
-    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = False,
+    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False
@@ -2559,7 +2564,7 @@ class CountFilter(Filter):
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering. If both True and False are supplied, \
         RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
-        :type power_transform: True, False, or (True, False) (default=False)
+        :type power_transform: True, False, or (True, False) (default=True)
         :param evidence_threshold: determines whether each pair of features can be reliably clustered together. \
         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if \
         they were clustered together in at least 50% of the tested clustering solutions.
@@ -2578,9 +2583,9 @@ class CountFilter(Filter):
         for each of the clustering algorithm's parameters. \
         Yoy can specify a list of values for each of those parameters, \
         and then RNAlysis will run the clustering algorithm with all legal combinations of parameters you specified. \
-        For example, {'method':'k-medoids', 'n_clusters':[3,5], 'metric':['euclidean', 'cosine']} \
+        For example, {'method':'k-medoids', 'n_clusters':[3,5], 'metric':['Euclidean', 'cosine']} \
         will run the K-Medoids algorithm four times with the following parameter combinations: \
-        (n_clusters=3,metric='euclidean'), (n_clusters=5, metric='euclidean'), \
+        (n_clusters=3,metric='Euclidean'), (n_clusters=5, metric='Euclidean'), \
         (n_clusters=3, metric='cosine'), (n_clusters=5, metric='cosine').
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
@@ -2597,7 +2602,7 @@ class CountFilter(Filter):
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
             >>> clusters = dev_stages.split_clicom(
             ... {'method': 'hdbscan', 'min_cluster_size': [50, 75, 140], 'metric': ['ys1', 'yr1', 'spearman']},
-            ... {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['euclidean', 'jackknife', 'yr1'],
+            ... {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['Euclidean', 'jackknife', 'yr1'],
             ... 'linkage': ['average', 'ward']}, {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
             ... power_transform=True, evidence_threshold=0.5, min_cluster_size=40)
             Found 19 legal clustering setups.
@@ -2651,9 +2656,11 @@ class CountFilter(Filter):
 
         return filt_objs
 
-    def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1, metric: str = 'euclidean',
+    def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
+                      metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
+                                                 'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
-                      power_transform: bool = False, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
+                      power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False
                       ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]]]:
         """
@@ -2671,7 +2678,7 @@ class CountFilter(Filter):
         :type min_samples: int or None (default=1)
         :param metric: the distance metric used to determine similarity between data points. \
         For a full list of supported distance metrics see the user guide.
-        :type metric: str (default='euclidean')
+        :type metric: str (default='Euclidean')
         :param cluster_selection_epsilon: a distance threshold below which clusters will be merged.
         :type cluster_selection_epsilon: float (default=0.0)
         :param cluster_selection_method: The method used to select clusters from the condensed tree. \
@@ -2680,7 +2687,7 @@ class CountFilter(Filter):
         :type cluster_selection_method: 'eom' or 'leaf' (default='eom')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -2751,8 +2758,9 @@ class CountFilter(Filter):
         # noinspection PyUnboundLocalVariable
         return [filt_objs, probabilities] if return_probabilities else filt_objs
 
-    def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'euclidean',
-                    linkage: str = 'average'):
+    def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'Euclidean',
+                    linkage: Literal[
+                        'Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'] = 'Average'):
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
@@ -2760,7 +2768,7 @@ class CountFilter(Filter):
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["condition1_rep1", "condition1_rep2", "condition1_rep3", \
         "condition2_rep1", "condition3_rep1", "condition3_rep2"]
-        :type metric: 'euclidean', 'hamming', 'correlation', or any other \
+        :type metric: 'Euclidean', 'hamming', 'correlation', or any other \
         distance metric available in scipy.spatial.distance.pdist
         :param metric: the distance metric to use in the clustergram. \
         For all possible inputs and their meaning see scipy.spatial.distance.pdist documentation online.
@@ -2778,10 +2786,12 @@ class CountFilter(Filter):
            Example plot of clustergram()
 
         """
+        metric = metric.lower()
+        linkage = linkage.lower()
         assert isinstance(metric, str) and isinstance(linkage, str), "Linkage and Metric must be strings!"
         metrics = ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', 'euclidean',
                    'hamming', 'jaccard', 'jensenshannon', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
-                   'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
+                   'rogerstanimoto', 'russellrao', 'sEuclidean', 'sokalmichener', 'sokalsneath', 'sqEuclidean', 'yule']
         linkages = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
         assert metric in metrics and linkage in linkages
 
@@ -2861,14 +2871,14 @@ class CountFilter(Filter):
         return fig
 
     def pca(self, sample_names: Union[List[str], Literal['all']] = 'all', n_components: int = 3,
-            power_transform: bool = False, sample_grouping: list = None,
+            power_transform: bool = True, sample_grouping: list = None,
             labels: bool = True) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
          variance between the different samples. The function will automatically plot Principal Component #1 \
          with every other Principal Components calculated.
         :param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :type sample_names: 'all' or list.
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"]
