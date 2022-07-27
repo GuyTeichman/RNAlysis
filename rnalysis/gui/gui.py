@@ -1369,7 +1369,7 @@ class FilterTabPage(TabPage):
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
         prev_name = self.get_tab_name()
-        result = getattr(self.filter_obj, func_name)(**func_params)
+        result = getattr(self.filter_obj, func_name)(*args, **kwargs)
         self.update_filter_obj_shape()
         self.update_table_preview()
         if prev_name != self.filter_obj.fname.name:
