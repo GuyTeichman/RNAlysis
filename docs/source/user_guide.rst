@@ -452,6 +452,12 @@ Expression plots of the resulting clusters can be generated in one of multiple s
 
            Example expression plot of clustering results with plot_style='std_bar'
 
+ .. figure::  clustering_PCA.png
+           :align:   center
+           :scale: 40 %
+
+           Example PCA plot of clustering results
+
 The expression plots can also by split into separate graphs, one for each discovered cluster.
 
 All clustering methods in RNAlysis which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
