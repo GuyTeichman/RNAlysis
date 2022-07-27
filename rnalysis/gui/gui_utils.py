@@ -40,7 +40,7 @@ class PathInputDialog(QtWidgets.QDialog):
 
 
 class ProgressSerialGui:
-    def __init__(self, iter_obj: typing.Iterable, desc: str = '', unit: str = '', bar_format: str = '',
+    def __init__(self, iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
                  total: int = None, parent=None):
         self.iter_obj = iter_obj
         self.desc = desc
@@ -53,21 +53,41 @@ class ProgressSerialGui:
             except TypeError:
                 self.total = 2
         self.dialog = QtWidgets.QProgressDialog(self.desc, "Cancel", 0, self.total, parent)
+
+        self.start_time = None
+        self.elapsed_time = None
+        self.start_bar()
+
+    def start_bar(self):
+        self.start_time = time.time()
         self.dialog.setMinimumDuration(0)
         self.dialog.setWindowTitle(self.desc)
         self.dialog.setValue(0)
         self.dialog.setWindowModality(QtCore.Qt.WindowModal)
+        self.completed_items = 0
+
+    def update(self, n: int = 1):
+        self.completed_items += n
+        self.elapsed_time = time.time() - self.start_time
+        remaining_time = (self.elapsed_time / self.completed_items) * (self.total - self.completed_items)
+        self.dialog.setValue(self.completed_items)
+        self.dialog.setLabelText(self.desc + '\n' + f"Elapsed time: {self.elapsed_time:.2f} seconds"
+                                 + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
+
+        if self.completed_items == self.total:
+            self.dialog.close()
+        QtWidgets.QApplication.processEvents()
+
+    def __enter__(self):
+        self.completed_items = 0
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.dialog.close()
 
     def __iter__(self):
-        start_time = time.time()
         for i, item in enumerate(self.iter_obj):
-            elapsed_time = time.time() - start_time
-            completed_items = i + 1
-            remaining_time = (elapsed_time / completed_items) * (self.total - completed_items)
-            self.dialog.setValue(completed_items)
-            self.dialog.setLabelText(self.desc + '\n' + f"Elapsed time: {elapsed_time:.2f} seconds"
-                                     + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
-            QtWidgets.QApplication.processEvents()
+            self.update(1)
             yield item
         self.dialog.close()
 
