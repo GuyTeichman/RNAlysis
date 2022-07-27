@@ -131,7 +131,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
 
     def paintEvent(self, event):
         label = " True" if self.isChecked() else "False"
-        bg_color = QtGui.QColor('#57C4AD') if self.isChecked() else QtGui.QColor('#DB4325')
+        bg_color = QtGui.QColor('#72e5bf') if self.isChecked() else QtGui.QColor('#e96e3a')
 
         radius = self.RADIUS
         width = self.WIDTH
