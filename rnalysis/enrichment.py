@@ -11,7 +11,6 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
-
 try:
     from typing import Literal
 except ImportError:
@@ -236,8 +235,9 @@ class FeatureSet:
 
     def go_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                       statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                      biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                      biotype_ref_path: str = 'predefined',
+                      biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
+                      background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                      biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                       propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
                       aspects: Union[Literal[('any',) + _ASPECTS], Iterable[Literal[_ASPECTS]]] = 'any',
                       evidence_types: Union[
@@ -398,8 +398,10 @@ class FeatureSet:
 
     def kegg_enrichment(self, organism: Union[str, int] = 'auto', gene_id_type: str = 'UniProtKB', alpha: float = 0.05,
                         statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                        biotype: str = 'protein_coding', background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                        biotype_ref_path: str = 'predefined', return_nonsignificant: bool = False,
+                        biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
+                        background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
+                        biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                        return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
                         randomization_reps: int = 10000, random_seed: Union[int, None] = None,
@@ -508,9 +510,11 @@ class FeatureSet:
         return runner.run()
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                             alpha: float = 0.05, reps: int = 10000, biotype: str = 'protein_coding',
+                             alpha: float = 0.05, reps: int = 10000,
+                             biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                             attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                             attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                             biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                              return_nonsignificant: bool = True,
                              save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                              random_seed: Union[int, None] = None, parallel: bool = False
@@ -605,11 +609,12 @@ class FeatureSet:
                                                     reps=reps)
         return runner.run()
 
-    def user_defined_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int],
+    def user_defined_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                                 statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                                alpha: float = 0.05, biotype: str = 'protein_coding',
+                                alpha: float = 0.05, biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
                                 background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                                attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                                attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                                biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
                                 plot_horizontal: bool = True, randomization_reps: int = 10000,
@@ -706,9 +711,10 @@ class FeatureSet:
         return runner.run()
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                              alpha: float = 0.05, biotype: str = 'protein_coding',
+                              alpha: float = 0.05, biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                              attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                              attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                              biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
                               plot_horizontal: bool = True, parallel: bool = True
@@ -798,10 +804,12 @@ class FeatureSet:
                                                     background_genes, biotype_ref_path, single_set=False)
         return runner.run()
 
-    def non_categorical_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                                   alpha: float = 0.05, parametric_test: bool = False, biotype: str = 'protein_coding',
+    def non_categorical_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']] = None,
+                                   alpha: float = 0.05, parametric_test: bool = False,
+                                   biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
                                    background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
-                                   attr_ref_path: str = 'predefined', biotype_ref_path: str = 'predefined',
+                                   attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                                   biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                    plot_log_scale: bool = True,
                                    plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: int = 50,
                                    save_csv: bool = False, fname=None, return_fig: bool = False
@@ -883,7 +891,7 @@ class FeatureSet:
                                                                   parametric_test=parametric_test)
         return runner.run()
 
-    def biotypes(self, ref: str = 'predefined'):
+    def biotypes(self, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
 
         """
         Returns a DataFrame of the biotypes in the gene set and their count.
@@ -1176,7 +1184,8 @@ class RankedSet(FeatureSet):
 
     def single_set_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
                               alpha: float = 0.05,
-                              attr_ref_path: str = 'predefined', save_csv: bool = False, fname=None,
+                              attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                              save_csv: bool = False, fname=None,
                               return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
@@ -1276,7 +1285,7 @@ def plot_enrichment_results(results_df: pd.DataFrame, alpha=0.05, en_score_col: 
     return runner.enrichment_bar_plot(name_col=name_col, center_bars=center_bars, ylabel=ylabel, title=title)
 
 
-def _fetch_sets(objs: dict, ref: str = 'predefined'):
+def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
     """
     Receives the 'objs' input from enrichment.upset_plot() and enrichment.venn_diagram(), and turns the values in it \
     into python sets.
@@ -1314,7 +1323,7 @@ def _fetch_sets(objs: dict, ref: str = 'predefined'):
 
 def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: Iterable[str] = ('black',),
                title: str = 'UpSet Plot', title_fontsize: int = 20, show_percentages: bool = True,
-               ref: str = 'predefined', fig: plt.Figure = None):
+               ref: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None):
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1403,7 +1412,8 @@ def _get_tuple_patch_ids(n_sets: int) -> List[Tuple[int, ...]]:
 
 
 def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default',
-                 attr_ref_table_path: str = 'predefined', set_colors: Iterable[str] = ('r', 'g', 'b'),
+                 attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                 set_colors: Iterable[str] = ('r', 'g', 'b'),
                  transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
                  linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0, title_fontsize: int = 14,
                  set_fontsize: int = 12, subset_fontsize: int = 10, normalize_to: float = 1.0, fig: plt.Figure = None):
@@ -1500,5 +1510,3 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
         title = 'Venn diagram of ' + ''.join([name + ' ' for name in objs.keys()])
     ax.set_title(title, fontsize=title_fontsize)
     return plot_obj, circle_obj
-
-

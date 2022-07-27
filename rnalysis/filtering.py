@@ -396,7 +396,8 @@ class Filter:
                                                                              opposite=True, inplace=False)
 
     def filter_biotype(self, biotype: Union[str, List[str]] = 'protein_coding',
-                       ref: str = 'predefined', opposite: bool = False, inplace: bool = True):
+                       ref: Union[str, Path, Literal['predefined']] = 'predefined', opposite: bool = False,
+                       inplace: bool = True):
 
         """
         Filters out all features that do not match the indicated biotype/biotypes. \
@@ -452,7 +453,8 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def filter_by_attribute(self, attributes: Union[str, List[str]] = None,
-                            mode: Literal['union', 'intersection'] = 'union', ref: str = 'predefined',
+                            mode: Literal['union', 'intersection'] = 'union',
+                            ref: Union[str, Path, Literal['predefined']] = 'predefined',
                             opposite: bool = False, inplace: bool = True):
 
         """
@@ -551,7 +553,8 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_attribute(self, attributes: List[str], ref: str = 'predefined') -> tuple:
+    def split_by_attribute(self, attributes: Union[str, List[str]],
+                           ref: Union[str, Path, Literal['predefined']] = 'predefined') -> tuple:
 
         """
         Splits the features in the Filter object into multiple Filter objects, \
@@ -582,7 +585,7 @@ class Filter:
                                           f"Attribute '{attr}' is of type {type(attr)}"
         return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
-    def describe(self, percentiles: Iterable[float] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
+    def describe(self, percentiles: Union[float, List[float]] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
 
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
@@ -633,7 +636,7 @@ class Filter:
             max    15056.000000  12746.000000  22027.000000  15639.000000
 
         """
-        return self.df.describe(percentiles=percentiles)
+        return self.df.describe(percentiles=parsing.data_to_tuple(percentiles))
 
     @property
     def index_set(self) -> set:
@@ -748,7 +751,8 @@ class Filter:
         """
         print(self.index_string)
 
-    def biotypes(self, long_format: bool = False, ref: str = 'predefined') -> pd.DataFrame:
+    def biotypes(self, long_format: bool = False,
+                 ref: Union[str, Path, Literal['predefined']] = 'predefined') -> pd.DataFrame:
 
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
@@ -925,7 +929,7 @@ class Filter:
         # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_missing_values(self, columns: Union[str, List[str]] = 'all', opposite: bool = False,
+    def filter_missing_values(self, columns: Union[str, List[str], Literal['all']] = 'all', opposite: bool = False,
                               inplace: bool = True):
         """
         Remove all rows whose values in the specified columns are missing (NaN).
@@ -980,7 +984,7 @@ class Filter:
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def transform(self, function: Union[str, Callable], columns: Union[str, Iterable[str]] = 'all',
+    def transform(self, function: Union[str, Callable], columns: Union[str, List[str], Literal['all']] = 'all',
                   inplace: bool = True, **function_kwargs):
         """
         Transform the values in the Filter object with the specified function.
@@ -2029,7 +2033,7 @@ class CountFilter(Filter):
 
         pass
 
-    def pairplot(self, sample_list: list = 'all', log2: bool = True) -> sns.PairGrid:
+    def pairplot(self, sample_list: Union[List[str], Literal['all']] = 'all', log2: bool = True) -> sns.PairGrid:
 
         """
         Plot pairwise relationships in the dataset. \
