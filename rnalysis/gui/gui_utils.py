@@ -427,10 +427,12 @@ class TrueFalseBoth(QtWidgets.QWidget):
         self.layout = QtWidgets.QHBoxLayout(self)
         self.true_button = QtWidgets.QPushButton("True")
         self.true_button.setCheckable(True)
-
+        self.true_button.setMinimumSize(90, 30)
         self.true_button.setStyleSheet(self.STYLESHEET)
+
         self.false_button = QtWidgets.QPushButton("False")
         self.false_button.setCheckable(True)
+        self.false_button.setMinimumSize(90, 30)
         self.false_button.setStyleSheet(self.STYLESHEET)
 
         self.true_button.toggled.connect(self.selectionChanged.emit)
@@ -438,6 +440,7 @@ class TrueFalseBoth(QtWidgets.QWidget):
 
         self.layout.addWidget(self.true_button)
         self.layout.addWidget(self.false_button)
+        self.layout.addStretch(1)
 
         if default is not None:
             default = parsing.data_to_list(default)
