@@ -25,6 +25,113 @@ FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential express
 FILTER_OBJ_TYPES_INV = {val: key for key, val in FILTER_OBJ_TYPES.items()}
 
 
+class ClicomWindow(gui_utils.MinMaxDialog):
+    CLICOM_FUNC = filtering.CountFilter.split_clicom
+    CLICOM_SIGNATURE = generic.get_method_signature(CLICOM_FUNC)
+    CLICOM_DESC, CLICOM_PARAM_DESC = generic.get_method_docstring(CLICOM_FUNC)
+    EXCLUDED_PARAMS = {'self', 'parameter_dicts'}
+    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots'}
+    paramsAccepted = QtCore.pyqtSignal(list, dict)
+
+    def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
+        super().__init__(parent)
+        self.parameter_dicts: List[dict] = []
+        self.funcs = funcs
+        self.setups_counter = {key: 0 for key in self.funcs.keys()}
+        self.filter_obj = filter_obj
+        self.stack = FuncTypeStack(self.funcs, self.filter_obj, self,
+                                   additional_excluded_params=self.ADDITIONAL_EXCLUDED_PARAMS)
+        self.widgets = {}
+        self.layout = QtWidgets.QGridLayout(self)
+
+        self.param_group = QtWidgets.QGroupBox('Choose CLICOM parameters')
+        self.param_grid = QtWidgets.QGridLayout(self.param_group)
+        self.param_widgets = {}
+
+        self.setups_group = QtWidgets.QGroupBox("Choose clustering setups for CLICOM")
+        self.setups_grid = QtWidgets.QGridLayout(self.setups_group)
+        self.setups_widgets = {}
+
+        self.start_button = QtWidgets.QPushButton('Accept CLICOM parameters')
+        self.close_button = QtWidgets.QPushButton('Close')
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('CLICOM clustering setup')
+        self.layout.addWidget(self.param_group, 0, 0)
+        self.layout.addWidget(self.setups_group, 0, 1)
+        self.layout.addWidget(self.start_button, 1, 0, 1, 2)
+        self.layout.addWidget(self.close_button, 2, 0, 1, 2)
+
+        self.start_button.clicked.connect(self.start_clustering)
+        self.close_button.clicked.connect(self.close)
+
+        self.init_param_ui()
+        self.init_setups_ui()
+
+    def init_param_ui(self):
+        i = 0
+
+        for name, param in self.CLICOM_SIGNATURE.items():
+            if name in self.EXCLUDED_PARAMS:
+                continue
+            this_desc = self.CLICOM_PARAM_DESC.get(name, '')
+            self.param_widgets[name] = gui_utils.param_to_widget(param, name)
+            label = QtWidgets.QLabel(f'{name}:', self.param_widgets[name])
+            label.setToolTip(this_desc)
+            help_button = gui_utils.HelpButton()
+            self.param_grid.addWidget(help_button, i, 2)
+            self.param_grid.addWidget(label, i, 0)
+            self.param_grid.addWidget(self.param_widgets[name], i, 1)
+            help_button.connect_param_help(name, this_desc)
+            i += 1
+        self.param_grid.setRowStretch(i, 1)
+
+    def init_setups_ui(self):
+        self.setups_grid.addWidget(self.stack, 1, 0)
+        self.setups_widgets['list'] = gui_utils.MultiChoiceListWithDelete(list(), parent=self.setups_group)
+        self.setups_widgets['list'].itemDeleted.connect(self.remove_clustering_setup)
+        self.setups_grid.addWidget(QtWidgets.QLabel('<b>Added setups</b>'), 0, 1, QtCore.Qt.AlignCenter)
+        self.setups_grid.addWidget(self.setups_widgets['list'], 1, 1, 2, 1)
+
+        self.setups_widgets['add_button'] = QtWidgets.QPushButton('Add setup')
+        self.setups_widgets['add_button'].clicked.connect(self.add_clustering_setup)
+        self.stack.funcSelected.connect(self.setups_widgets['add_button'].setEnabled)
+        self.setups_grid.addWidget(self.setups_widgets['add_button'], 2, 0)
+        self.setups_widgets['add_button'].setDisabled(True)
+        self.setups_grid.setRowStretch(1, 1)
+
+    @QtCore.pyqtSlot(int)
+    def remove_clustering_setup(self, ind: int):
+        self.parameter_dicts.pop(ind)
+
+    def add_clustering_setup(self):
+        func_name = self.stack.get_function_name()
+        func_params = self.stack.get_function_params()
+        func_params['method'] = func_name.lstrip('split_').lower()
+        self.parameter_dicts.append(func_params)
+        self.setups_counter[func_name] += 1
+        self.setups_widgets['list'].add_item(f"{func_params['method']}_{self.setups_counter[func_name]}")
+
+    def get_analysis_params(self):
+        kwargs = {}
+        for param_name, widget in self.param_widgets.items():
+            if param_name in {'help_link'}:
+                continue
+            val = gui_utils.get_val_from_widget(widget)
+            kwargs[param_name] = val
+        return kwargs
+
+    def start_clustering(self):
+        kwargs = self.get_analysis_params()
+        self.close()
+        try:
+            self.paramsAccepted.emit(self.parameter_dicts, kwargs)
+        finally:
+            self.show()
+
+
 class EnrichmentWindow(gui_utils.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
                        'statistical_test', 'parametric_test', 'biotype_ref_path'}
@@ -961,7 +1068,7 @@ class FuncTypeStack(QtWidgets.QWidget):
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
 
-    def __init__(self, funcs: list, filter_obj: filtering.Filter, parent=None):
+    def __init__(self, funcs: list, filter_obj: filtering.Filter, parent=None, additional_excluded_params: set = None):
         super().__init__(parent)
         self.parameter_widgets = {}
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -1076,6 +1183,8 @@ class FilterTabPage(TabPage):
         self.function_group = QtWidgets.QGroupBox('Apply functions')
         self.function_grid = QtWidgets.QGridLayout(self.function_group)
         self.function_widgets = {}
+
+        self.clicom_window = None
 
         self.init_basic_ui()
 
@@ -1202,6 +1311,7 @@ class FilterTabPage(TabPage):
                                                         border-radius: 4px;}''')
             self.stack_widgets[action_type] = FuncTypeStack(sorted_actions[action_type], self.filter_obj)
             self.stack_widgets[action_type].funcSelected.connect(self.basic_widgets['apply_button'].setVisible)
+            self.stack_widgets[action_type].funcSelected.connect(self._check_for_special_functions)
             self.stack.addWidget(self.stack_widgets[action_type])
             bttn.clicked.connect(functools.partial(self.stack.setCurrentIndex, i + 1))
             self.button_box.addButton(bttn)
@@ -1209,6 +1319,21 @@ class FilterTabPage(TabPage):
             self.function_grid.addWidget(bttn, 0, i)
 
         self.function_grid.addWidget(self.stack, 1, 0, 1, i + 1)
+
+    def _check_for_special_functions(self, is_selected: bool):
+        if not is_selected:
+            return
+        this_stack: FuncTypeStack = self.stack.currentWidget()
+        func_name = this_stack.get_function_name()
+
+        if func_name == 'split_clicom':
+            other_clustering_funcs = self.CLUSTERING_FUNCS.copy()
+            other_clustering_funcs.pop('split_clicom')
+            this_stack.deselect()
+            self.clicom_window = ClicomWindow(other_clustering_funcs, self.filter_obj, self)
+            self.clicom_window.paramsAccepted.connect(
+                functools.partial(self._apply_function_from_params, func_name))
+            self.clicom_window.show()
 
     def view_full_dataframe(self):
         df_window = gui_utils.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
@@ -1224,6 +1349,9 @@ class FilterTabPage(TabPage):
         this_stack: FuncTypeStack = self.stack.currentWidget()
         func_name = this_stack.get_function_name()
         func_params = this_stack.get_function_params()
+        self._apply_function_from_params(func_name, args=[], kwargs=func_params)
+
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
         prev_name = self.get_tab_name()
         result = getattr(self.filter_obj, func_name)(**func_params)
         self.update_filter_obj_shape()
@@ -1391,12 +1519,8 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         super().init_function_ui()
         self.function_group.setTitle("Add functions to Pipeline")
 
-    def apply_function(self):
-        this_stack: FuncTypeStack = self.stack.currentWidget()
-        func_name = this_stack.get_function_name()
-        func_params = this_stack.get_function_params()
-
-        self.pipeline.add_function(func_name, **func_params)
+    def _apply_function_from_params(self, func_name, *args, **kwargs):
+        self.pipeline.add_function(func_name, *args, **kwargs)
         self.update_pipeline_preview()
         self.is_unsaved = True
 
