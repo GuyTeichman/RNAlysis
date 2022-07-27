@@ -2348,6 +2348,11 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_kmeans(plot_style='all')
+
+         .. figure::  clustering_PCA_kmeans.png
+           :align:   center
+
+           Example plot of split_kmeans()
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                          max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style,
@@ -2429,6 +2434,11 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_hierarchical(plot_style='all')
+
+                   .. figure::  clustering_PCA_hierarchical.png
+           :align:   center
+
+           Example plot of split_hierarchical()
         """
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                                max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
@@ -2510,6 +2520,11 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_kmedoids(plot_style='all')
+
+        .. figure::  clustering_PCA_kmedoids.png
+           :align:   center
+
+           Example plot of split_kmedoids()
         """
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                            max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
@@ -2611,6 +2626,11 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_clicom(plot_style='all')
+
+         .. figure::  clustering_PCA_clicom.png
+           :align:   center
+
+           Example plot of split_clicom()
         """
         runner = clustering.CLICOMRunner(self.df.loc[:, self._numeric_columns], power_transform, evidence_threshold,
                                          cluster_unclustered_features, min_cluster_size,
@@ -2700,6 +2720,11 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_hdbscan(plot_style='all')
+
+        .. figure::  clustering_PCA_hdbscan.png
+           :align:   center
+
+           Example plot of split_hdbscan()
            """
         validation.validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, self.shape[0])
 

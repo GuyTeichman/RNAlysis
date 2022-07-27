@@ -452,7 +452,7 @@ Expression plots of the resulting clusters can be generated in one of multiple s
 
            Example expression plot of clustering results with plot_style='std_bar'
 
- .. figure::  clustering_PCA.png
+ .. figure::  clustering_PCA_clicom.png
            :align:   center
            :scale: 40 %
 
@@ -577,7 +577,7 @@ or by specifiying a distance threshold above which clusters will not be merged.
 
 Hierarchical clustering in RNAlysis supports the following distance metrics:
 
-* eucliidean
+* euclidean
 * cosine
 * pearson
 * spearman
