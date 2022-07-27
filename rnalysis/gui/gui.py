@@ -171,6 +171,8 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                  'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
+    enrichmentFinished = QtCore.pyqtSignal(pd.DataFrame, str)
+
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
 
@@ -444,7 +446,24 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
     def run_analysis(self):
         func = self.get_current_func()
         gene_set, bg_set, kwargs = self.get_analysis_params()
-        self.parent().run_enrichment_analysis(func, gene_set, bg_set, kwargs)
+        print("Enrichment analysis started")
+        self.close()
+        try:
+            is_single_set = self.is_single_set()
+            if is_single_set:
+                bg_set_obj = None
+            else:
+                bg_set_obj = enrichment.FeatureSet(bg_set, 'background_set')
+            set_name = gene_set.fname.stem
+            feature_set_obj = enrichment.RankedSet(gene_set, set_name) if is_single_set \
+                else enrichment.FeatureSet(gene_set, set_name)
+            if is_single_set:
+                result = func(feature_set_obj, **kwargs)
+            else:
+                result = func(feature_set_obj, background_genes=bg_set_obj, **kwargs)
+        finally:
+            self.show()
+            self.enrichmentFinished.emit(result, set_name)
 
 
 class SetOperationWindow(gui_utils.MinMaxDialog):
@@ -1187,9 +1206,6 @@ class FilterTabPage(TabPage):
         self.clicom_window = None
 
         self.init_basic_ui()
-
-        # self.grid.addWidget(QtWidgets.QSpinBox(), 2, 0)
-        # self.grid.addWidget(QtWidgets.QPushButton('Clear Text'), 2, 2)
 
     def rename(self, new_name: str = None):
         if new_name is None:
@@ -2130,41 +2146,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.tabs.setCurrentIndex(i)
                 return
 
-    def run_enrichment_analysis(self, func: Callable, gene_set_ind: int, bg_set_ind: Union[int, None], kwargs: dict):
-        self.enrichment_window.close()
-        print("Enrichment analysis started")
-
-        try:
-            is_single_set = bg_set_ind is None
-            if is_single_set:
-                bg_set_obj = None
-            else:
-                self.tabs.setCurrentIndex(bg_set_ind)
-                bg_set_obj = enrichment.FeatureSet(self.tabs.currentWidget().filter_obj) if \
-                    isinstance(self.tabs.currentWidget(), FilterTabPage) else self.tabs.currentWidget().gene_set
-
-            self.tabs.setCurrentIndex(gene_set_ind)
-            set_name = self.tabs.currentWidget().get_tab_name()
-            gene_set = self.tabs.currentWidget().filter_obj if \
-                isinstance(self.tabs.currentWidget(),
-                           FilterTabPage) else self.tabs.currentWidget().gene_set.gene_set
-
-            feature_set_obj = enrichment.RankedSet(gene_set, set_name) if is_single_set \
-                else enrichment.FeatureSet(gene_set, set_name)
-
-            if is_single_set:
-                result = func(feature_set_obj, **kwargs)
-            else:
-                result = func(feature_set_obj, background_genes=bg_set_obj, **kwargs)
-
-            df_window = gui_utils.DataFrameView(result, "Enrichment results for set " + feature_set_obj.set_name)
-            self.enrichment_results.append(df_window)
-            df_window.show()
-        finally:
-            self.enrichment_window.show()
+    def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str):
+        df_window = gui_utils.DataFrameView(result, "Enrichment results for set " + gene_set_name)
+        self.enrichment_results.append(df_window)
+        df_window.show()
 
     def open_enrichment_analysis(self):
         self.enrichment_window = EnrichmentWindow(self.get_available_objects(), self)
+        self.enrichment_window.enrichmentFinished.connect(self.display_enrichment_results)
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
