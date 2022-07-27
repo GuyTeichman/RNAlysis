@@ -30,7 +30,7 @@ class ClicomWindow(gui_utils.MinMaxDialog):
     CLICOM_SIGNATURE = generic.get_method_signature(CLICOM_FUNC)
     CLICOM_DESC, CLICOM_PARAM_DESC = generic.get_method_docstring(CLICOM_FUNC)
     EXCLUDED_PARAMS = {'self', 'parameter_dicts'}
-    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots'}
+    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities'}
     paramsAccepted = QtCore.pyqtSignal(list, dict)
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
