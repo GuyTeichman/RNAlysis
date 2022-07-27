@@ -899,19 +899,20 @@ class CLICOMRunner(ClusteringRunner):
         for setup in tqdm(valid_setups, desc='Running clustering setups', unit=' setup'):
             self.clustering_solutions.extend(self.run_clustering_setup(setup))
         solutions_binary_format = self.clusterers_to_binary_format()
-        if solutions_binary_format.n_clusters >= solutions_binary_format.n_features:
-            print("Number of clusters found in all clustering solutions exceeds number of features. \n"
-                  "Ensemble clustering will be calculated based on a feature graph instead of a cluster graph "
+        if solutions_binary_format.n_clusters >= 4 * np.sqrt(solutions_binary_format.n_features):
+            print("Number of clusters found in all clustering solutions is large relatively to the number of features. "
+                  "\nCLICOM clustering will be calculated based on a feature graph instead of a cluster graph "
                   "to reduce computation time.")
-            clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
-                                             cluster_unclustered_features=self.cluster_unclustered_features,
-                                             min_cluster_size=self.min_cluster_size, cluster_wise_cliques=False)
+            cluster_wise_cliques = False
         else:
-            clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
-                                             cluster_unclustered_features=self.cluster_unclustered_features,
-                                             min_cluster_size=self.min_cluster_size, cluster_wise_cliques=True)
+            cluster_wise_cliques = True
 
-        print("Calculating Ensemble clustering...", end='\t')
+        clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
+                                         cluster_unclustered_features=self.cluster_unclustered_features,
+                                         min_cluster_size=self.min_cluster_size,
+                                         cluster_wise_cliques=cluster_wise_cliques)
+
+        print("Calculating CLICOM clustering...", end='\t')
         clusterer.run()
         clusterer = self.sort_clusters(clusterer, clusterer.n_clusters_)
         self.clusterers.append(clusterer)
