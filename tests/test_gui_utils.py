@@ -544,4 +544,17 @@ def test_RadioButtonBox_set_selection(qtbot):
     assert widget.checkedButton().text() == 'action2'
 
 
+def test_RadioButtonBox_add_buttons(qtbot):
+    assert False
 
+
+def test_RadioButtonBox_add_buttons_indented(qtbot):
+    assert False
+
+
+def test_RadioButtonBox_emit(qtbot):
+    assert False
+
+
+def test_QMultiInput_dialog(qtbot):
+    assert False

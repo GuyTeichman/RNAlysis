@@ -442,12 +442,11 @@ class TrueFalseBoth(QtWidgets.QWidget):
         self.layout.addWidget(self.false_button)
         self.layout.addStretch(1)
 
-        if default is not None:
-            default = parsing.data_to_list(default)
-            if True in default:
-                self.true_button.setChecked(True)
-            if False in default:
-                self.false_button.setChecked(False)
+        default = parsing.data_to_list(default)
+        if True in default:
+            self.true_button.click()
+        if False in default:
+            self.false_button.click()
 
     def get_values(self):
         checked = []
@@ -1396,7 +1395,7 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation == typing.Union[bool, typing.Tuple[bool, bool]]:
-        widget = TrueFalseBoth(param.default if is_default else None)
+        widget = TrueFalseBoth(param.default)
         for action in actions_to_connect:
             widget.selectionChanged.connect(action)
     # elif param.annotation == typing.Dict[str, typing.List[str]]:
