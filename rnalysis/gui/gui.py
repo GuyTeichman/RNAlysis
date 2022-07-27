@@ -1496,6 +1496,9 @@ class FilterTabPage(TabPage):
 
 
 class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
+    pipelineSaved = QtCore.pyqtSignal(str, filtering.Pipeline)
+    pipelineExported = QtCore.pyqtSignal(str, filtering.Pipeline)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setLayout(self.layout)
@@ -1576,16 +1579,25 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.overview_grid.addWidget(self.overview_widgets['save_button'], 3, 3)
 
         self.overview_widgets['export_button'] = QtWidgets.QPushButton('Export Pipeline')
-        # self.overview_widgets['export_button'].clicked.connect(self.export_pipeline)
+        self.overview_widgets['export_button'].clicked.connect(self.export_pipeline)
         self.overview_grid.addWidget(self.overview_widgets['export_button'], 3, 2, 1, 1)
 
     def set_tab_name(self, new_name: str, is_unsaved: bool):
         raise NotImplementedError
 
+    def _get_pipeline_name(self):
+        return self.basic_widgets['pipeline_name'].text()
+
+    def export_pipeline(self):
+        self.pipelineExported.emit(self._get_pipeline_name(), self.pipeline)
+
     def save_file(self):
-        self._get_parent_window().pipelines[self.basic_widgets['pipeline_name'].text()] = self.pipeline
-        print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
-        self.is_unsaved = False
+        try:
+            self.pipelineSaved.emit(self._get_pipeline_name(), self.pipeline)
+            print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
+            self.is_unsaved = False
+        except Exception:
+            print("Failed to save Pipeline")
 
     def closeEvent(self, event):
         if self.is_unsaved:
@@ -1960,13 +1972,16 @@ class MainWindow(QtWidgets.QMainWindow):
         pipeline_name, status = QtWidgets.QInputDialog.getItem(
             self, 'Export Pipeline', 'Choose Pipeline to export:', self.pipelines.keys())
         if status:
-            default_name = pipeline_name + '.yaml'
-            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Pipeline",
-                                                                str(Path.home().joinpath(default_name)),
-                                                                "YAML file (*.yaml)")
-            if filename:
-                pipeline = self.pipelines[pipeline_name]
-                pipeline.export_pipeline(filename)
+            pipeline = self.pipelines[pipeline_name]
+            self._export_pipeline_from_obj(pipeline_name, pipeline)
+
+    def _export_pipeline_from_obj(self, pipeline_name: str, pipeline: filtering.Pipeline):
+        default_name = pipeline_name + '.yaml'
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Pipeline",
+                                                            str(Path.home().joinpath(default_name)),
+                                                            "YAML file (*.yaml)")
+        if filename:
+            pipeline.export_pipeline(filename)
 
     def import_pipeline(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a Pipeline file", str(Path.home()),
@@ -2028,8 +2043,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def add_pipeline(self):
         self.pipeline_window = CreatePipelineWindow(self)
+        self.pipeline_window.pipelineSaved.connect(self.save_pipeline)
+        self.pipeline_window.pipelineExported.connect(self._export_pipeline_from_obj)
         self.pipeline_window.exec()
         self.pipeline_window = None
+
+    @QtCore.pyqtSlot(str, filtering.Pipeline)
+    def save_pipeline(self, pipeline_name: str, pipeline: filtering.Pipeline):
+        self.pipelines[pipeline_name] = pipeline
 
     def settings(self):
         self.settings_window.exec()
