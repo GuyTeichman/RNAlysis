@@ -461,12 +461,12 @@ class ClusteringRunner:
         pc2_var = pc_var[1]
         final_df = final_df[final_df['labels'] != -1]
         final_df = final_df[['Principal component 1', f'Principal component 2', 'labels']]
-        fig = plt.figure(figsize=(8, 8),constrained_layout=True)
+        fig = plt.figure(figsize=(9, 9))
         ax = fig.add_subplot(1, 1, 1)
         ax.grid(True)
         ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=15)
         ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=15)
-        ax.set_title(title, fontsize=20)
+        ax.set_title(title, fontsize=16)
 
         color_generator = generic.color_generator()
         color_opts = [next(color_generator) for _ in range(n_clusters)]
@@ -476,6 +476,7 @@ class ClusteringRunner:
                        label=f'Cluster {cluster+1}', c=color_opts[cluster], s=20, alpha=0.4)
         ax.legend(title="Clusters")
         ax.grid(True)
+        plt.tight_layout()
         plt.show()
 
     def plot_clustering(self, n_clusters: int, data: pd.DataFrame, labels: np.ndarray, centers: np.ndarray, title: str
