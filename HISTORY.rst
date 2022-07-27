@@ -18,7 +18,7 @@ Changed
 * Added function FeatureSet.user_defined_enrichment(), which will replace FeatureSet.enrich_hypergeometric() and FeatureSet.enrich_randomization()
 * Updated signature of enrichment.venn_diagram
 * enrichment.venn_diagram and enrichment.upset_plot can now be generated on a user-supplied FIgure
-
+* Clustering functions now apply a power transform to count data prior to clustering by default
 
 Fixed
 ******
