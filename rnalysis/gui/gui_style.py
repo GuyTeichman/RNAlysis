@@ -1,17 +1,22 @@
 import re
+import qdarkstyle
 from rnalysis.utils import settings
 from pathlib import Path
 
 FONTPLACEHOLDER = "FONTPLACEHOLDER"
 FONTSIZEPLACEHOLDER = "FONTSIZEPLACEHOLDER"
-STYLESHEETS = {'light': 'styles/light_style.qss', 'dark': 'styles/dark_style.qss'}
+STYLESHEETS = {'base': None, 'light': qdarkstyle.LightPalette, 'dark': qdarkstyle.DarkPalette}
+PARAMETRIC_STYLESHEET_PATH = 'styles/parametric_style.qss'
+
+
+def get_stylesheet_names():
+    return {sheet.capitalize(): sheet for sheet in STYLESHEETS.keys()}
 
 
 def get_parametric_stylesheet(font_base_size: int, font_name: str):
     assert isinstance(font_base_size, int) and font_base_size >= 1
     assert isinstance(font_name, str)
-    pth = 'styles/parametric_style.qss'
-    with open(Path.joinpath(Path(__file__).parent, pth)) as f:
+    with open(Path.joinpath(Path(__file__).parent, PARAMETRIC_STYLESHEET_PATH)) as f:
         style_text = f.read()
 
     style_text = style_text.replace(FONTPLACEHOLDER, font_name)
@@ -27,8 +32,10 @@ def get_parametric_stylesheet(font_base_size: int, font_name: str):
 
 def get_stylesheet():
     font_name, font_base_size, stylesheet_name = settings.get_gui_settings()
-    pth = STYLESHEETS[stylesheet_name]
-    with open(Path.joinpath(Path(__file__).parent, pth)) as f:
-        param_stylesheet = get_parametric_stylesheet(font_base_size, font_name)
-        other_stylesheet = f.read()
+    palette = STYLESHEETS[stylesheet_name]
+    param_stylesheet = get_parametric_stylesheet(font_base_size, font_name)
+    if palette is None:
+        other_stylesheet = ''
+    else:
+        other_stylesheet = qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=palette)
     return param_stylesheet + '\n' + other_stylesheet

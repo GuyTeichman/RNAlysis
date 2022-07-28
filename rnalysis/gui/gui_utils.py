@@ -14,6 +14,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.utils import io, parsing, settings, validation
+from rnalysis.gui import gui_style
 from joblib import Parallel
 
 
@@ -1107,7 +1108,7 @@ class WriteStream(QtCore.QObject):
 
 
 class SettingsWindow(MinMaxDialog):
-    THEMES = {'Light': 'light', 'Dark': 'dark'}
+    THEMES = gui_style.get_stylesheet_names()
     FONT_SIZES = [str(i) for i in [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72]]
 
     def __init__(self, parent=None):
