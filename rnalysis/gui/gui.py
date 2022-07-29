@@ -2106,7 +2106,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.user_guide_action = QtWidgets.QAction("&User Guide", self)
         self.user_guide_action.triggered.connect(self.open_user_guide)
-        self.help_action = QtWidgets.QAction("&Help", self)
         self.about_action = QtWidgets.QAction("&About", self)
         self.about_action.triggered.connect(self.about)
 
@@ -2238,7 +2237,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.apply_pipeline_menu.aboutToShow.connect(self._populate_pipelines)
 
         help_menu = self.menu_bar.addMenu("&Help")
-        help_menu.addActions([self.help_action, self.user_guide_action, self.about_action])
+        help_menu.addActions([self.user_guide_action, self.about_action])
 
     def _populate_pipelines(self):
         # Remove the old options from the menu
