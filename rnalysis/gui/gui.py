@@ -2092,6 +2092,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_set_action = QtWidgets.QAction("&Import Gene Set...", self)
         self.import_set_action.triggered.connect(self.import_gene_set)
         self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
+        self.export_set_action.triggered.connect(self.export_gene_set)
 
         self.user_guide_action = QtWidgets.QAction("&User Guide", self)
         self.user_guide_action.triggered.connect(self.open_user_guide)
@@ -2121,6 +2122,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
         self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
         self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
+
+    def export_gene_set(self):
+        this_tab = self.tabs.currentWidget()
+        if isinstance(this_tab, FilterTabPage):
+            filter_obj = this_tab.filter_obj
+            gene_set = filter_obj.index_set if filter_obj is not None else None
+        else:
+            gene_set = this_tab.gene_set
+        if gene_set is None:
+            warnings.warn('Cannot export an empty gene set')
+            return
+        default_name = self.tabs.tabText(self.tabs.currentIndex()).rstrip("*") + '.txt'
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save gene set",
+                                                            str(Path.home().joinpath(default_name)),
+                                                            "Text document (*.txt);;"
+                                                            "All Files (*)")
+        if filename:
+            gui_utils.save_gene_set(gene_set, filename)
+            print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
     def open_user_guide(self):
         url = QtCore.QUrl(self.USER_GUIDE_URL)
