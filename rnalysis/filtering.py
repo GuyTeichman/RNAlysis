@@ -2033,7 +2033,7 @@ class CountFilter(Filter):
 
         pass
 
-    def pairplot(self, sample_list: Union[List[str], Literal['all']] = 'all', log2: bool = True) -> sns.PairGrid:
+    def pairplot(self, samples: Union[List[str], Literal['all']] = 'all', log2: bool = True) -> sns.PairGrid:
 
         """
         Plot pairwise relationships in the dataset. \
@@ -2058,10 +2058,10 @@ class CountFilter(Filter):
            Example plot of pairplot()
 
         """
-        if sample_list == 'all':
+        if samples == 'all':
             sample_df = self.df
         else:
-            sample_df = self._avg_subsamples(sample_list)
+            sample_df = self._avg_subsamples(samples)
 
         if log2:
             sample_df = np.log2(sample_df + 1)
