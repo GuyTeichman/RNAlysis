@@ -391,6 +391,7 @@ class MandatoryComboBox(QtWidgets.QComboBox):
         self.default_choice = default_choice
         self.addItem(self.default_choice)
         self.currentTextChanged.connect(self.set_bg_color)
+        self.set_bg_color()
 
     def clear(self) -> None:
         super().clear()
