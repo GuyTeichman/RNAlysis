@@ -2040,8 +2040,8 @@ class CountFilter(Filter):
         Can plot both single samples and average multiple replicates. \
         For more information see the documentation of seaborn.pairplot.
 
-        :type sample_list: 'all', list, or nested list.
-        :param sample_list: A list of the sample names and/or grouped sample names to be included in the pairplot. \
+        :type samples: 'all', list, or nested list.
+        :param samples: A list of the sample names and/or grouped sample names to be included in the pairplot. \
         All specified samples must be present in the CountFilter object. \
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
