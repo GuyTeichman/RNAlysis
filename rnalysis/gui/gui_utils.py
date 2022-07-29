@@ -118,7 +118,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     Based upon a StackOverflow response by the user Heike:
     https://stackoverflow.com/questions/56806987/switch-button-in-pyqt
     """
-    stateChanged = QtCore.pyqtSignal()
+    stateChanged = QtCore.pyqtSignal(bool)
     RADIUS = 11
     WIDTH = 42
     BORDER = 2
@@ -128,7 +128,14 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
         self.setCheckable(True)
         self.setMinimumWidth((self.WIDTH + self.BORDER) * 2)
         self.setMinimumHeight((self.RADIUS + self.BORDER) * 2)
-        self.clicked.connect(self.stateChanged.emit)
+        self.clicked.connect(self.state_changed)
+
+    def state_changed(self):
+        self.stateChanged.emit(self.isChecked())
+
+    def setChecked(self, is_checked):
+        super(ToggleSwitchCore, self).setChecked(is_checked)
+        self.state_changed()
 
     def paintEvent(self, event):
         label = " True" if self.isChecked() else "False"
