@@ -775,7 +775,8 @@ def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], 
         return results
 
 
-def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'UniProtKB AC') -> GeneIDTranslator:
+def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'UniProtKB AC',
+                 verbose: bool = True) -> GeneIDTranslator:
     """
     Map gene IDs from one identifier type to another using the UniProt ID Mapping service. \
     If some IDs cannot be mapped uniquely, duplicate mappings will be resolved by their UniProtKB Annotation Score. \
@@ -788,6 +789,8 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     :param map_to: identifier type to map to (for example 'UniProtKB AC' or 'WormBase'). \
     can be identical to 'map_from'
     :type map_to: str
+    :param verbose: if False, verbose reports of mapping success/failure will be suppressed.
+    :type verbose: bool (default=True)
     :return:a GeneIDTranslator object that uniquely maps each given gene ID in 'map_from' identifier type \
     to its matching gene ID in 'map_to' identifier type.
     :rtype: GeneIDTranslator
@@ -811,7 +814,8 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     # since the Uniprot service can only translate to or from 'UniProtKB' identifier type,
     # if we need to map gene IDs between two other identifier types,
     # then we will map from 'map_from' to 'UniProtKB' and then from 'UniProtKB' to 'map_to'.
-    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
+    if verbose:
+        print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
 
     if id_dict[map_to] != id_dict[UNIPROTKB_TO] and id_dict[map_from] != id_dict[UNIPROTKB_FROM]:
         to_uniprot = map_gene_ids(ids, map_from, UNIPROTKB_TO).mapping_dict
@@ -833,7 +837,8 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                                       polling_interval=POLLING_INTERVAL, session=session)
 
         if len(results) <= 1:
-            warnings.warn(f"No entries were mapped successfully.")
+            if verbose:
+                warnings.warn(f"No entries were mapped successfully.")
             return GeneIDTranslator({})
 
         df = pd.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
@@ -881,11 +886,11 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                     if match_to_rev not in output_dict:
                         output_dict[match_to_rev] = match_from_rev
                         duplicates_chosen[match_to_rev] = match_from_rev
+            if verbose:
+                warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
+                              f"was chosen for them based on their annotation score: {duplicates_chosen}")
 
-            warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
-                          f"was chosen for them based on their annotation score: {duplicates_chosen}")
-
-    if len(output_dict) < n_queries:
+    if len(output_dict) < n_queries and verbose:
         warnings.warn(f"Failed to map {n_queries - len(output_dict)} entries from '{map_from}' to '{map_to}'. "
                       f"Returning {len(output_dict)} successfully-mapped entries.")
 
