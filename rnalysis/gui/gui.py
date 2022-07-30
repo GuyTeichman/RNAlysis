@@ -1938,12 +1938,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.new_tab_from_filter_obj(filter_obj)
 
     def load_multiple_files(self):
-        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Choose files", str(Path.home()),
-                                                              "All Files (*);;"
-                                                              "Comma-Separated Values (*.csv);;"
-                                                              "Tab-Separated Values (*.tsv);;"
-                                                              "Text Document (*.txt)")
-        if filenames:
+        dialog = gui_utils.MultiFileSelectionDialog()
+        accepted = dialog.exec()
+        if accepted == QtWidgets.QDialog.Accepted:
+            filenames = dialog.result()
             window = MultiOpenWindow(filenames, self)
             accepted = window.exec()
             if accepted:

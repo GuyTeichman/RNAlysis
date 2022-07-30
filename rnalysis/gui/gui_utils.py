@@ -1,5 +1,6 @@
 import ast
 import functools
+import itertools
 import inspect
 import traceback
 import typing
@@ -529,6 +530,197 @@ class MinMaxDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowFlag(QtCore.Qt.WindowMinMaxButtonsHint)
+
+
+class CheckableFileSystemModel(QtWidgets.QFileSystemModel):
+    checkStateChanged = QtCore.pyqtSignal(str, bool)
+
+    def __init__(self):
+        super().__init__()
+        self.checkStates = {}
+        self.rowsInserted.connect(self.checkAdded)
+        self.rowsRemoved.connect(self.checkParent)
+        self.rowsAboutToBeRemoved.connect(self.checkRemoved)
+
+    def checkState(self, index):
+        return self.checkStates.get(self.filePath(index), QtCore.Qt.Unchecked)
+
+    def setCheckState(self, index, state, emitStateChange=True):
+        path = self.filePath(index)
+        if self.checkStates.get(path) == state:
+            return
+        self.checkStates[path] = state
+        if emitStateChange:
+            self.checkStateChanged.emit(path, bool(state))
+
+    def checkAdded(self, parent, first, last):
+        # if a file/directory is added, ensure it follows the parent state as long
+        # as the parent is already tracked; note that this happens also when
+        # expanding a directory that has not been previously loaded
+        if not parent.isValid():
+            return
+        if self.filePath(parent) in self.checkStates:
+            state = self.checkState(parent)
+            for row in range(first, last + 1):
+                index = self.index(row, 0, parent)
+                path = self.filePath(index)
+                if path not in self.checkStates:
+                    self.checkStates[path] = state
+        self.checkParent(parent)
+
+    def checkRemoved(self, parent, first, last):
+        # remove items from the internal dictionary when a file is deleted;
+        # note that this *has* to happen *before* the model actually updates,
+        # that's the reason this function is connected to rowsAboutToBeRemoved
+        for row in range(first, last + 1):
+            path = self.filePath(self.index(row, 0, parent))
+            if path in self.checkStates:
+                self.checkStates.pop(path)
+
+    def checkParent(self, parent):
+        # verify the state of the parent according to the children states
+        if not parent.isValid():
+            return
+        childStates = [self.checkState(self.index(r, 0, parent)) for r in range(self.rowCount(parent))]
+        newState = QtCore.Qt.Checked if all(childStates) else QtCore.Qt.Unchecked
+        oldState = self.checkState(parent)
+        if newState != oldState:
+            self.setCheckState(parent, newState)
+            self.dataChanged.emit(parent, parent)
+        self.checkParent(parent.parent())
+
+    def flags(self, index):
+        return super().flags(index) | QtCore.Qt.ItemIsUserCheckable
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if role == QtCore.Qt.CheckStateRole and index.column() == 0:
+            return self.checkState(index)
+        return super().data(index, role)
+
+    def setData(self, index, value, role, checkParent=True, emitStateChange=True):
+        if role == QtCore.Qt.CheckStateRole and index.column() == 0:
+            self.setCheckState(index, value, emitStateChange)
+            for row in range(self.rowCount(index)):
+                # set the data for the children, but do not emit the state change,
+                # and don't check the parent state (to avoid recursion)
+                self.setData(index.child(row, 0), value, QtCore.Qt.CheckStateRole,
+                             checkParent=False, emitStateChange=False)
+            self.dataChanged.emit(index, index)
+            if checkParent:
+                self.checkParent(index.parent())
+            return True
+
+        return super().setData(index, value, role)
+
+
+class FilterProxy(QtCore.QSortFilterProxyModel):
+    '''
+    Based on StackOverflow answer by user ekhumoro:
+    https://stackoverflow.com/questions/72587813/how-to-filter-by-no-extension-in-qfilesystemmodel
+    '''
+
+    def __init__(self, disables=False, parent=None):
+        super().__init__(parent)
+        self._disables = bool(disables)
+
+    def filterAcceptsRow(self, row, parent):
+        index = self.sourceModel().index(row, 0, parent)
+        if not self._disables:
+            return self.matchIndex(index)
+        return index.isValid()
+
+    def matchIndex(self, index):
+        return (super().filterAcceptsRow(index.row(), index.parent()))
+
+    def flags(self, index):
+        flags = super().flags(index)
+        if (self._disables and
+            not self.matchIndex(self.mapToSource(index))):
+            flags &= ~QtCore.Qt.ItemIsEnabled
+        return flags
+
+
+class MultiFileSelectionDialog(MinMaxDialog):
+    '''
+    Based on a Stack Overflow answer by user 'musicamante':
+    https://stackoverflow.com/questions/63309406/qfilesystemmodel-with-checkboxes
+    '''
+
+    def __init__(self):
+        super().__init__()
+        self.layout = QtWidgets.QGridLayout(self)
+        self.tree_mycomputer = QtWidgets.QTreeView()
+        self.tree_home = QtWidgets.QTreeView()
+        self.open_button = QtWidgets.QPushButton('Open')
+        self.cancel_button = QtWidgets.QPushButton('Cancel')
+        # self.logger = QtWidgets.QPlainTextEdit()
+        self.init_models()
+        self.init_ui()
+
+    def init_models(self):
+        model_mycomputer = CheckableFileSystemModel()
+        model_mycomputer.setRootPath('')
+        model_home = CheckableFileSystemModel()
+        model_home.setRootPath('.')
+        proxy = FilterProxy(False, self)
+        proxy.setFilterRegularExpression(r'^(?![.])(?!.*[-_.]$).+')
+        proxy.setSourceModel(model_home)
+        self.tree_mycomputer.setModel(model_mycomputer)
+        self.tree_mycomputer.setRootIndex(model_mycomputer.index(model_mycomputer.myComputer()))
+        self.tree_home.setModel(proxy)
+        self.tree_home.setRootIndex(proxy.mapFromSource(
+            model_home.index(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)[0])))
+        # model_mycomputer.checkStateChanged.connect(self.updateLog)
+        # model_home.checkStateChanged.connect(self.updateLog)
+
+    def init_ui(self):
+        self.setWindowTitle('Choose files:')
+        self.resize(1000, 750)
+
+        self.tree_mycomputer.setSortingEnabled(True)
+        self.tree_home.setSortingEnabled(True)
+        self.tree_mycomputer.header().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.tree_home.header().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+
+        self.layout.addWidget(self.tree_mycomputer, 0, 0, 4, 8)
+        self.layout.addWidget(self.tree_home, 4, 0, 4, 8)
+        self.layout.setRowStretch(3, 2)
+        self.layout.setRowStretch(7, 2)
+
+        self.layout.addWidget(self.open_button, 8, 7)
+        self.layout.addWidget(self.cancel_button, 9, 7)
+
+        # self.layout.addWidget(self.logger, 8, 0, 2, 7)
+        # self.logger.setReadOnly(True)
+
+        self.open_button.clicked.connect(self.accept)
+        self.cancel_button.clicked.connect(self.reject)
+
+    # def updateLog(self, path, checked):
+    #     if checked:
+    #         text = 'Path "{}" has been checked'
+    #     else:
+    #         text = 'Path "{}" has been unchecked'
+    #     self.logger.appendPlainText(text.format(path))
+    #     self.logger.verticalScrollBar().setValue(
+    #         self.logger.verticalScrollBar().maximum())
+
+    def result(self):
+        files_to_open = []
+        queue = Queue()
+        for pth, state in itertools.chain(self.tree_mycomputer.model().checkStates.items(),
+                                          self.tree_home.model().sourceModel().checkStates.items()):
+            if state:
+                queue.put(pth)
+
+        while not queue.empty():
+            this_path = Path(queue.get())
+            if this_path.is_file():
+                files_to_open.append(str(this_path))
+            else:
+                for item in this_path.iterdir():
+                    queue.put(item)
+        return files_to_open
 
 
 class TrueFalseBoth(QtWidgets.QWidget):
