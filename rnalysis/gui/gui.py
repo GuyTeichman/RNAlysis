@@ -1942,21 +1942,22 @@ class MainWindow(QtWidgets.QMainWindow):
         accepted = dialog.exec()
         if accepted == QtWidgets.QDialog.Accepted:
             filenames = dialog.result()
-            window = MultiOpenWindow(filenames, self)
-            accepted = window.exec()
-            if accepted:
-                paths, types, names = window.result()
-                if self.tabs.currentWidget().is_empty():
-                    self.tabs.removeTab(self.tabs.currentIndex())
-                for filename in filenames:
-                    path = paths[filename]
-                    table_type = FILTER_OBJ_TYPES[types[filename]]
-                    name = names[filename]
-                    filter_obj = table_type(path)
-                    if name == '':
-                        self.new_tab_from_filter_obj(filter_obj)
-                    else:
-                        self.new_tab_from_filter_obj(filter_obj, name)
+            if len(filenames) > 0:
+                window = MultiOpenWindow(filenames, self)
+                accepted = window.exec()
+                if accepted:
+                    paths, types, names = window.result()
+                    if self.tabs.currentWidget().is_empty():
+                        self.tabs.removeTab(self.tabs.currentIndex())
+                    for filename in filenames:
+                        path = paths[filename]
+                        table_type = FILTER_OBJ_TYPES[types[filename]]
+                        name = names[filename]
+                        filter_obj = table_type(path)
+                        if name == '':
+                            self.new_tab_from_filter_obj(filter_obj)
+                        else:
+                            self.new_tab_from_filter_obj(filter_obj, name)
 
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
         self.add_new_tab(filter_obj.fname.name)
