@@ -690,14 +690,15 @@ def get_next_link(headers):
             return match.group(1)
 
 
-def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: float):
+def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: float, verbose: bool = True):
     while True:
         r = session.get(f"{url}/idmapping/status/{job_id}")
         r.raise_for_status()
         j = r.json()
         if "jobStatus" in j:
             if j["jobStatus"] == "RUNNING":
-                print(f"Retrying in {polling_interval}s")
+                if verbose:
+                    print(f"Retrying in {polling_interval}s")
                 time.sleep(polling_interval)
             else:
                 raise Exception(r["jobStatus"])
@@ -741,7 +742,7 @@ def decode_results(response, file_format):
     return response.text
 
 
-def get_id_mapping_results_search(session, url):
+def get_id_mapping_results_search(session, url, verbose: bool = True):
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
     query["fields"] = 'accession,annotation_score'
@@ -759,11 +760,16 @@ def get_id_mapping_results_search(session, url):
     r = session.get(url)
     r.raise_for_status()
     results = decode_results(r, file_format)
-    total = int(r.headers["x-total-results"])
-    print_progress_batches(0, size, total)
+    try:
+        total = int(r.headers["x-total-results"])
+    except KeyError:
+        return ''
+    if verbose:
+        print_progress_batches(0, size, total)
     for i, batch in enumerate(get_batch(session, r, file_format)):
         results = combine_batches(results, batch, file_format)
-        print_progress_batches(i + 1, size, total)
+        if verbose:
+            print_progress_batches(i + 1, size, total)
     return results
 
 
@@ -772,11 +778,12 @@ def print_progress_batches(batch_index, size, total):
     print(f"Fetched: {n} / {total}")
 
 
-def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float, session):
+def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float, session,
+                        verbose: bool = True):
     job_id = submit_id_mapping(api_url, from_db=from_db, to_db=to_db, ids=ids)
-    if check_id_mapping_results_ready(session, api_url, job_id, polling_interval):
+    if check_id_mapping_results_ready(session, api_url, job_id, polling_interval, verbose=verbose):
         link = get_id_mapping_results_link(session, api_url, job_id)
-        results = get_id_mapping_results_search(session, link)
+        results = get_id_mapping_results_search(session, link, verbose)
         return results
 
 
@@ -822,9 +829,13 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     if verbose:
         print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
 
-    if id_dict[map_to] != id_dict[UNIPROTKB_TO] and id_dict[map_from] != id_dict[UNIPROTKB_FROM]:
-        to_uniprot = map_gene_ids(ids, map_from, UNIPROTKB_TO).mapping_dict
-        from_uniprot = map_gene_ids(to_uniprot.values(), UNIPROTKB_FROM, map_to).mapping_dict
+    if id_dict_to[map_to] != id_dict_to[UNIPROTKB_TO] and id_dict_from[map_from] != id_dict_from[UNIPROTKB_FROM]:
+        to_uniprot = map_gene_ids(ids, map_from, UNIPROTKB_TO, verbose=verbose).mapping_dict
+        if to_uniprot is None:
+            to_uniprot = {}
+        from_uniprot = map_gene_ids(to_uniprot.values(), UNIPROTKB_FROM, map_to, verbose=verbose).mapping_dict
+        if from_uniprot is None:
+            from_uniprot = {}
         output_dict = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
                        val in from_uniprot}
 
@@ -838,8 +849,9 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=retries))
 
-        results = get_mapping_results(api_url=API_URL, from_db=id_dict[map_from], to_db=id_dict[map_to], ids=ids,
-                                      polling_interval=POLLING_INTERVAL, session=session)
+        results = get_mapping_results(api_url=API_URL, from_db=id_dict_from[map_from], to_db=id_dict_to[map_to],
+                                      ids=ids,
+                                      polling_interval=POLLING_INTERVAL, session=session, verbose=verbose)
 
         if len(results) <= 1:
             if verbose:
@@ -876,9 +888,9 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
             else:
                 ids_to_rev_map = parsing.flatten(parsing.data_to_list(duplicates.values()))
 
-                rev_results = get_mapping_results(api_url=API_URL, from_db=id_dict[map_to],
-                                                  to_db=id_dict[UNIPROTKB_TO], ids=ids_to_rev_map,
-                                                  polling_interval=POLLING_INTERVAL, session=session)
+                rev_results = get_mapping_results(api_url=API_URL, from_db=id_dict_to[map_to],
+                                                  to_db=id_dict_from[UNIPROTKB_TO], ids=ids_to_rev_map,
+                                                  polling_interval=POLLING_INTERVAL, session=session, verbose=verbose)
                 # TODO: if job fails?
                 rev_df = pd.DataFrame([line.split('\t') for line in rev_results[1:]],
                                       columns=rev_results[0].split('\t'))
