@@ -658,6 +658,11 @@ class GeneIDTranslator:
         """
         self.mapping_dict = mapping_dict
 
+    def __len__(self):
+        if self.mapping_dict is None:
+            return 0
+        return len(self.mapping_dict)
+
     def __getitem__(self, key):
         if self.mapping_dict is None:
             return key
