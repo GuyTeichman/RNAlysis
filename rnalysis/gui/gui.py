@@ -1141,11 +1141,11 @@ class FuncTypeStack(QtWidgets.QWidget):
             if name in self.excluded_params:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-            if isinstance(self.param_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
-                self.param_widgets[name].add_columns(self.filter_obj.columns)
-            elif isinstance(self.param_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
-                self.param_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
-                self.param_widgets[name].other.add_columns(self.filter_obj.columns)
+            if isinstance(self.parameter_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                self.parameter_widgets[name].add_columns(self.filter_obj.columns)
+            elif isinstance(self.parameter_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
+                self.parameter_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                self.parameter_widgets[name].other.add_columns(self.filter_obj.columns)
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
