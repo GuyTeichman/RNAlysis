@@ -78,11 +78,11 @@ class ClicomWindow(gui_utils.MinMaxDialog):
                 continue
             this_desc = self.CLICOM_PARAM_DESC.get(name, '')
             self.param_widgets[name] = gui_utils.param_to_widget(param, name)
-            if isinstance(self.param_widgets[name], gui_utils.TableColumnPicker):
-                try:
-                    self.param_widgets[name].add_columns(self.filter_obj.columns)
-                except AttributeError:
-                    self.param_widgets[name].other.add_columns(self.filter_obj.columns)
+            if isinstance(self.param_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                self.param_widgets[name].add_columns(self.filter_obj.columns)
+            elif isinstance(self.param_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
+                self.param_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                self.param_widgets[name].other.add_columns(self.filter_obj.columns)
             label = QtWidgets.QLabel(f'{name}:', self.param_widgets[name])
             label.setToolTip(this_desc)
             help_button = gui_utils.HelpButton()
@@ -1141,11 +1141,11 @@ class FuncTypeStack(QtWidgets.QWidget):
             if name in self.excluded_params:
                 continue
             self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-            if isinstance(self.parameter_widgets[name], gui_utils.TableColumnPicker):
-                try:
-                    self.parameter_widgets[name].add_columns(self.filter_obj.columns)
-                except AttributeError:
-                    self.parameter_widgets[name].other.add_columns(self.filter_obj.columns)
+            if isinstance(self.param_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                self.param_widgets[name].add_columns(self.filter_obj.columns)
+            elif isinstance(self.param_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
+                self.param_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                self.param_widgets[name].other.add_columns(self.filter_obj.columns)
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
