@@ -2084,7 +2084,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_multiple_action.triggered.connect(self.load_multiple_files)
 
         self.save_action = QtWidgets.QAction("&Save...", self)
-        self.save_action.triggered.connect(self.tabs.currentWidget().save_file)
+        self.save_action.triggered.connect(self.save_file)
         self.settings_action = QtWidgets.QAction("&Settings...", self)
         self.settings_action.triggered.connect(self.settings)
         self.exit_action = QtWidgets.QAction("&Exit", self)
@@ -2130,6 +2130,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
         self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
         self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
+
+    def save_file(self):
+        self.tabs.currentWidget().save_file()
 
     def export_gene_set(self):
         this_tab = self.tabs.currentWidget()
