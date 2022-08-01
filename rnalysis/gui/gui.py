@@ -445,12 +445,12 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             bg_set = self.available_objects[bg_set_name][0]
         else:
             bg_set = None
-        return gene_set, bg_set, kwargs
+        return gene_set, bg_set, gene_set_name.rstrip('*'), kwargs
 
     @QtCore.pyqtSlot()
     def run_analysis(self):
         func = self.get_current_func()
-        gene_set, bg_set, kwargs = self.get_analysis_params()
+        gene_set, bg_set, set_name, kwargs = self.get_analysis_params()
         print("Enrichment analysis started")
         self.close()
         try:
@@ -459,7 +459,6 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                 bg_set_obj = None
             else:
                 bg_set_obj = enrichment.FeatureSet(bg_set, 'background_set')
-            set_name = gene_set.fname.stem
             feature_set_obj = enrichment.RankedSet(gene_set, set_name) if is_single_set \
                 else enrichment.FeatureSet(gene_set, set_name)
             if is_single_set:
