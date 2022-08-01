@@ -2022,7 +2022,8 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 with open(filename) as f:
                     gene_set = {line.strip() for line in f.readlines()}
-
+            if self.tabs.currentWidget().is_empty():
+                self.tabs.removeTab(self.tabs.currentIndex())
             self.new_tab_from_gene_set(gene_set, filename)
 
     def delete(self, index):
