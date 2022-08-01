@@ -254,7 +254,7 @@ class ProgressSerialGui:
     def update(self, n: int = 1):
         self.completed_items += n
         self.elapsed_time = time.time() - self.start_time
-        remaining_time = (self.elapsed_time / self.completed_items) * (self.total - self.completed_items)
+        remaining_time = (self.elapsed_time / self.completed_items) * abs(self.total - self.completed_items)
         self.dialog.setValue(self.completed_items)
         self.dialog.setLabelText(self.desc + '\n' + f"Elapsed time: {self.elapsed_time:.2f} seconds"
                                  + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
