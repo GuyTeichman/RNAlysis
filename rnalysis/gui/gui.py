@@ -1057,6 +1057,7 @@ class SetTabPage(TabPage):
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
             self.tabSaved.emit()
 
+    @QtCore.pyqtSlot()
     def rename(self, new_name: str = None):
         if new_name is None:
             new_name = self.overview_widgets['table_name'].text()
