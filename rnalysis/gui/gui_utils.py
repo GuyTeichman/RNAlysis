@@ -609,6 +609,7 @@ class MinMaxDialog(QtWidgets.QDialog):
 
 class CheckableFileSystemModel(QtWidgets.QFileSystemModel):
     checkStateChanged = QtCore.pyqtSignal(str, bool)
+    finishedDataChange = QtCore.pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -655,6 +656,7 @@ class CheckableFileSystemModel(QtWidgets.QFileSystemModel):
     def checkParent(self, parent):
         # verify the state of the parent according to the children states
         if not parent.isValid():
+            self.finishedDataChange.emit()
             return
         childStates = [self.checkState(self.index(r, 0, parent)) for r in range(self.rowCount(parent))]
         newState = QtCore.Qt.Checked if all(childStates) else QtCore.Qt.Unchecked
@@ -728,7 +730,7 @@ class MultiFileSelectionDialog(MinMaxDialog):
         self.tree_home = QtWidgets.QTreeView()
         self.open_button = QtWidgets.QPushButton('Open')
         self.cancel_button = QtWidgets.QPushButton('Cancel')
-        # self.logger = QtWidgets.QPlainTextEdit()
+        self.logger = QtWidgets.QPlainTextEdit()
         self.init_models()
         self.init_ui()
 
@@ -745,8 +747,8 @@ class MultiFileSelectionDialog(MinMaxDialog):
         self.tree_home.setModel(proxy)
         self.tree_home.setRootIndex(proxy.mapFromSource(
             model_home.index(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)[0])))
-        # model_mycomputer.checkStateChanged.connect(self.updateLog)
-        # model_home.checkStateChanged.connect(self.updateLog)
+        model_mycomputer.finishedDataChange.connect(self.updateLog)
+        model_home.finishedDataChange.connect(self.updateLog)
 
     def init_ui(self):
         self.setWindowTitle('Choose files:')
@@ -765,20 +767,18 @@ class MultiFileSelectionDialog(MinMaxDialog):
         self.layout.addWidget(self.open_button, 8, 7)
         self.layout.addWidget(self.cancel_button, 9, 7)
 
-        # self.layout.addWidget(self.logger, 8, 0, 2, 7)
-        # self.logger.setReadOnly(True)
+        self.layout.addWidget(self.logger, 8, 0, 2, 7)
+        self.logger.setReadOnly(True)
 
         self.open_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
 
-    # def updateLog(self, path, checked):
-    #     if checked:
-    #         text = 'Path "{}" has been checked'
-    #     else:
-    #         text = 'Path "{}" has been unchecked'
-    #     self.logger.appendPlainText(text.format(path))
-    #     self.logger.verticalScrollBar().setValue(
-    #         self.logger.verticalScrollBar().maximum())
+        self.updateLog()
+
+    def updateLog(self):
+        self.logger.setPlainText("\n".join(self.result()))
+        self.logger.verticalScrollBar().setValue(
+            self.logger.verticalScrollBar().maximum())
 
     def result(self):
         files_to_open = []
