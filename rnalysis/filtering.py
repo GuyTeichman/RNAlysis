@@ -2809,21 +2809,18 @@ class CountFilter(Filter):
         return clustergram
 
     def plot_expression(self, features: Union[List[str], str],
-                        sample_grouping: Union[Dict[str, List[int]], Dict[str, List[str]]],
+                        samples: Union[List[str], Literal['all']] = 'all',
                         count_unit: str = 'Reads per million') -> plt.Figure:
         """
         Plot the average expression and standard error of the specified features under the specified conditions.
 
         :type features: str or list of strings
         :param features: the feature/features to plot expression for.
-        :type sample_grouping: dict, with condition names as keys \
-        and list of the sample numbers or names for each condition as a list
-        :param sample_grouping: a dictionary of the conditions to plot expression for. \
-        Each key should be a name of a conditions, and the value for each key is \
-        a list of the numbers of columns to be used as samples of that condition. \
-        For example, if the first 3 columns are replicates of the condition 'condition 1' and \
-        the last 3 column are replicates of the condition 'condition 2', then sample_grouping should be: \
-        {'condition 1':[0, 1, 2], 'condition 2':[3, 4, 5]}
+        :param samples: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the CountFilter object. \
+        To average multiple replicates of the same condition, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :type count_unit: str, default 'Reads per million'
         :param count_unit: The unit of the count data. Will be displayed in the y axis.
 
@@ -2835,9 +2832,14 @@ class CountFilter(Filter):
 
         """
         plt.style.use('seaborn-white')
-        if isinstance(features, str):
-            features = [features]
-        assert isinstance(features, list), "'features' must be a string or list of strings!"
+        features = parsing.data_to_list(features)
+        assert validation.isinstanceiter(features, str), "'features' must be a string or list of strings!"
+        for feature in features:
+            assert feature in self.df.index, f"Supplied feature '{feature}' does not appear in this table. "
+
+        if isinstance(samples, str) and samples.lower() == 'all':
+            samples = [[item] for item in self.columns]
+        sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]
 
         g = strategies.SquareStrategy()
         subplots = g.get_grid(len(features))
@@ -2847,23 +2849,24 @@ class CountFilter(Filter):
         ylims = []
         for subplot, feature in zip(subplots, features):
             axes.append(fig.add_subplot(subplot))
-            mean = [self.df.loc[feature].iloc[ind].mean() if np.all([isinstance(i, int) for i in ind]) else
-                    self.df.loc[feature][ind].mean() for ind in sample_grouping.values()]
+            mean = [self.df.loc[feature].iloc[ind].mean() if validation.isinstanceiter(ind, int) else
+                    self.df.loc[feature, ind].mean() for ind in samples]
 
             sem = [self.df.loc[feature].iloc[ind].sem() if validation.isinstanceiter(ind, int) else
-                   self.df.loc[feature][ind].sem() for ind in sample_grouping.values()]
+                   self.df.loc[feature, ind].sem() for ind in samples]
 
-            points_y = parsing.flatten([self.df.loc[feature].iloc[ind] if validation.isinstanceiter(ind, int) else
-                                        [self.df.loc[feature][ind]] for ind in sample_grouping.values()])
+            points_y = parsing.flatten(
+                [[self.df.loc[feature].iloc[i] for i in ind] if validation.isinstanceiter(ind, int) else
+                 [self.df.loc[feature, i] for i in ind] for ind in samples])
             points_x = []
-            for i, grouping in enumerate(sample_grouping.values()):
+            for i, grouping in enumerate(samples):
                 for _ in grouping:
                     points_x.append(i)
-            axes[-1].bar(np.arange(len(sample_grouping)), mean, yerr=sem, edgecolor='k', width=0.5,
+            axes[-1].bar(np.arange(len(samples)), mean, yerr=sem, edgecolor='k', width=0.5,
                          facecolor='slateblue', capsize=6.5, error_kw=dict(capthick=2, lw=2))
             axes[-1].scatter(points_x, points_y, edgecolor='k', facecolor=[0.90, 0.6, 0.25], linewidths=0.9)
-            axes[-1].set_xticks(np.arange(len(sample_grouping)))
-            axes[-1].set_xticklabels(list(sample_grouping.keys()), fontsize=12)
+            axes[-1].set_xticks(np.arange(len(samples)))
+            axes[-1].set_xticklabels(list(sample_names), fontsize=12)
             axes[-1].set_title(feature, fontsize=16)
             plt.ylabel(count_unit, fontsize=14)
             sns.despine()
@@ -2874,30 +2877,23 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def pca(self, sample_names: Union[List[str], Literal['all']] = 'all', n_components: int = 3,
-            power_transform: bool = True, sample_grouping: list = None,
-            labels: bool = True) -> Tuple[PCA, List[plt.Figure]]:
+    def pca(self, samples: Union[List[str], Literal['all']] = 'all', n_components: int = 3,
+            power_transform: bool = True, labels: bool = True, label_fontsize: int = 16) -> Tuple[
+        PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
-         variance between the different samples. The function will automatically plot Principal Component #1 \
-         with every other Principal Components calculated.
+        variance between the different samples. The function will automatically plot Principal Component #1 \
+        with every other Principal Components calculated.
+        :type samples: 'all' or list.
+        :param samples: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the CountFilter object. \
+        To draw multiple replicates of the same condition in the same color, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
         :type power_transform: bool (default=True)
-        :type sample_names: 'all' or list.
-        :param sample_names: the names of the relevant samples in a list. \
-        Example input: ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"]
         :type n_components: positive int (default=3)
         :param n_components: number of PCA components to return.
-        :type sample_grouping: list of positive integers, 'triplicates' or None (default)
-        :param sample_grouping: Optional. Indicates which samples are grouped together as replicates, \
-        so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample \
-         grouping. \
-         For example, if sample_names is: \
-        ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"], \
-        then the sample_grouping will be: \
-        [1, 1, 1, 2, 2, 2, 2, 3]. \
-        If 'triplicate', then sample_groupins will automatically group samples into triplicates. For example: \
-        [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].
         :type labels: bool (default=True)
         :param labels: if True, labels the points on the PCA plot.
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
@@ -2912,9 +2908,9 @@ class CountFilter(Filter):
         """
         assert isinstance(n_components, int) and n_components >= 2, \
             f"'n_components' must be an integer >=2. Instead got {n_components}."
-        if sample_names == 'all':
-            sample_names = list(self._numeric_columns)
-        data = self.df[sample_names].transpose()
+        if samples == 'all':
+            samples = [[col] for col in self._numeric_columns]
+        data = self.df[parsing.flatten(samples)].transpose()
         data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
 
         pca_obj = PCA(n_components=n_components)
@@ -2922,7 +2918,7 @@ class CountFilter(Filter):
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
         principal_df = pd.DataFrame(data=pcomps, columns=columns)
         final_df = principal_df
-        final_df['lib'] = pd.Series(sample_names)
+        final_df['lib'] = pd.Series(parsing.flatten(samples))
 
         pc_var = pca_obj.explained_variance_ratio_
         graphs = 2 if n_components > 2 else 1
@@ -2930,32 +2926,32 @@ class CountFilter(Filter):
         for graph in range(graphs):
             figs.append(CountFilter._plot_pca(
                 final_df=final_df[['Principal component 1', f'Principal component {2 + graph}', 'lib']],
-                pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=sample_grouping, labels=labels))
+                pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=samples, labels=labels,
+                label_fontsize=label_fontsize))
 
         return pca_obj, figs
 
     @staticmethod
-    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool):
+    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool,
+                  label_fontsize: int):
         """
         Internal method, used to plot the results from CountFilter.pca().
 
         :param final_df: The DataFrame output from pca
         :param pc1_var: Variance explained by the first PC.
         :param pc2_var: Variance explained by the second PC.
-        :param sample_grouping: a list of indices from 0 and up, that indicates what samples are grouped together as \
-        biological replicates. For example, if sample_names is: \
-        ["1A_N2_25", "1B_N2_25", "1C_N2_25", "2A_rde4_25", "2B_rde4_25", "2C_rde4_25"], \
-        then the sample_grouping will be: \
-        [0,0,0,1,1,1]
+        :param sample_grouping: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the DataFrame object. \
+        To draw multiple replicates of the same condition in the same color, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :return: an axis object containing the PCA plot.
 
         """
         plt.style.use('seaborn-whitegrid')
 
-        if sample_grouping is None:
-            sample_grouping = [i + 1 for i in range(final_df.shape[0])]
-        elif sample_grouping == 'triplicate' or sample_grouping == 'triplicates':
-            sample_grouping = [1 + i // 3 for i in range(final_df.shape[0])]
+        # elif sample_grouping == 'triplicate' or sample_grouping == 'triplicates':
+        #     sample_grouping = [1 + i // 3 for i in range(final_df.shape[0])]
 
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
@@ -2965,20 +2961,24 @@ class CountFilter(Filter):
         ax.set_title('PCA', fontsize=20)
 
         color_generator = generic.color_generator()
-        color_opts = [next(color_generator) for _ in range(max(sample_grouping))]
-        colors = [color_opts[i - 1] for i in sample_grouping]
+        color_opts = [next(color_generator) for _ in range(len(sample_grouping))]
+        colors = parsing.flatten([[color_opts[i]] * len(grp) for i, grp in enumerate(sample_grouping)])
 
         ax.scatter(final_df.iloc[:, 0], final_df.iloc[:, 1], c=colors, s=50)
         if labels:
-            for _, row in final_df.iterrows():
-                row[0] += 1
-                row[1] += 1
-                ax.text(*row)
+            for i, (_, row) in enumerate(final_df.iterrows()):
+                # row[0] += 1
+                # row[1] += 1
+                ax.annotate(row[2], (row[0], row[1]), textcoords='offset pixels',
+                            xytext=(label_fontsize, label_fontsize),
+                            fontsize=label_fontsize, color=colors[i])
         ax.grid(True)
         return fig
 
     def scatter_sample_vs_sample(self, sample1: Union[str, List[str]], sample2: Union[str, List[str]],
-                                 xlabel: str = None, ylabel: str = None, title: str = None,
+                                 xlabel: Union[str, Literal['auto']] = 'auto',
+                                 ylabel: Union[str, Literal['auto']] = 'auto',
+                                 title: Union[str, Literal['auto']] = 'auto',
                                  highlight: Union['Filter', Iterable[str]] = None) -> plt.Figure:
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
@@ -2991,11 +2991,11 @@ class CountFilter(Filter):
         If sample2 is a list, they will be averaged as replicates.
         :type sample2: string or list of strings
         :param xlabel: optional. If not specified, sample1 will be used as xlabel.
-        :type xlabel: str
+        :type xlabel: str or 'auto'
         :param ylabel: optional. If not specified, sample2 will be used as ylabel.
-        :type ylabel: str
+        :type ylabel: str or 'auto'
         :param title: optional. If not specified, a title will be generated automatically.
-        :type title: str
+        :type title: str or 'auto'
         :param highlight: If specified, the points in the scatter corresponding to the names/features in 'highlight' \
         will be highlighted in red.
         :type highlight: Filter object or iterable of strings
@@ -3010,7 +3010,7 @@ class CountFilter(Filter):
 
         """
         self._validate_is_normalized()
-        assert isinstance(sample1, (str, list, tuple, set)) and isinstance(sample2, (str, list, tuple, set))
+        sample1, sample2 = parsing.data_to_list(sample1), parsing.data_to_list(sample2)
 
         xvals = np.log10(self.df[sample1].values + 1) if isinstance(sample1, str) else np.log10(
             self.df[sample1].mean(axis=1).values + 1)
@@ -3018,11 +3018,11 @@ class CountFilter(Filter):
             self.df[sample2].mean(axis=1).values + 1)
 
         plt.style.use('seaborn-whitegrid')
-        if xlabel is None:
-            xlabel = f'log10(reads per million + 1) from library {sample1}'
-        if ylabel is None:
-            ylabel = f'log10(reads per million + 1) from sample {sample2}'
-        if title is None:
+        if xlabel.lower() == 'auto':
+            xlabel = f'log10(reads per million + 1) from {sample1}'
+        if ylabel.lower() == 'auto':
+            ylabel = f'log10(reads per million + 1) from {sample2}'
+        if title.lower() == 'auto':
             title = f'{sample1} vs {sample2}'
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
@@ -3050,8 +3050,8 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def box_plot(self, samples: Union[List[str], Literal['all']] = 'all', notch: bool = True, scatter: bool = False,
-                 ylabel: str = 'log10(RPM + 1)'):
+    def box_plot(self, samples: Union[List[List[str]], Literal['all']] = 'all', notch: bool = True,
+                 scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
         Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -3089,9 +3089,11 @@ class CountFilter(Filter):
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
 
-        box = sns.boxplot(data=np.log10(samples_df + 1), notch=notch)
+        color_gen = generic.color_generator()
+        palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
+        box = sns.boxplot(data=np.log10(samples_df + 1), notch=notch, palette=palette)
         if scatter:
-            _ = sns.stripplot(data=np.log10(samples_df + 1), color='gray', size=2)
+            _ = sns.stripplot(data=np.log10(samples_df + 1), color=(0.25, 0.25, 0.25), size=3)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
@@ -3134,9 +3136,12 @@ class CountFilter(Filter):
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
 
-        boxen = sns.boxenplot(data=samples_df)
+        color_gen = generic.color_generator()
+        palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
+
+        boxen = sns.boxenplot(data=samples_df, palette=palette)
         if scatter:
-            _ = sns.stripplot(data=samples_df, color='gray', size=2)
+            _ = sns.stripplot(data=samples_df, color=(0.25, 0.25, 0.25), size=3)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
@@ -3177,8 +3182,10 @@ class CountFilter(Filter):
 
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
+        color_gen = generic.color_generator()
+        palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
 
-        violin = sns.violinplot(data=samples_df)
+        violin = sns.violinplot(data=samples_df, palette=palette)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
