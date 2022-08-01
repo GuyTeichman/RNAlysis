@@ -2202,7 +2202,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(str)
     def choose_tab_by_name(self, set_name: str):
         available_objs = self.get_available_objects()
-        for i, (name, icon) in enumerate(available_objs):
+        for i, name in enumerate(available_objs.keys()):
             if name == set_name:
                 self.tabs.setCurrentIndex(i)
                 return
