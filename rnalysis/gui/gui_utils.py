@@ -378,10 +378,6 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
         self.currentIndexChanged = self.combo.currentIndexChanged
         self.init_ui()
 
-    @property
-    def __class__(self):
-        return type(self.other)
-
     def clear(self):
         try:
             self.other.clear()
