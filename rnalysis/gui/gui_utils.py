@@ -14,7 +14,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
-from rnalysis.utils import io, parsing, settings, validation
+from rnalysis.utils import io, parsing, settings, validation, generic
 from rnalysis.gui import gui_style
 from joblib import Parallel
 
@@ -26,29 +26,17 @@ class TableColumnPicker(QtWidgets.QPushButton):
     def __init__(self, text: str = 'Choose columns', parent=None):
         super().__init__(text, parent)
         self.columns: list = []
+
         self.dialog = QtWidgets.QDialog(self)
         self.dialog_table = QtWidgets.QTableWidget()
         self.dialog_layout = QtWidgets.QGridLayout(self.dialog)
         self.done_button = QtWidgets.QPushButton('Done')
         self.select_all_button = QtWidgets.QPushButton('Select all')
         self.clear_button = QtWidgets.QPushButton('Clear selection')
-
         self.column_labels: typing.List[QtWidgets.QLabel] = []
-        self.column_checks: typing.List[QtWidgets.QCheckBox] = []
-        self.column_combos: typing.List[QtWidgets.QComboBox] = []
+        self.column_checks: typing.List[ToggleSwitch] = []
 
         self.init_ui()
-
-    def select_all(self):
-        for checkbox in self.column_checks:
-            checkbox.setChecked(True)
-
-    def clear_selection(self):
-        for checkbox in self.column_checks:
-            checkbox.setChecked(False)
-
-    def add_columns(self, columns: list):
-        self.columns.extend(columns)
 
     def init_ui(self):
         self.clicked.connect(self.open_dialog)
@@ -65,10 +53,113 @@ class TableColumnPicker(QtWidgets.QPushButton):
         self.done_button.clicked.connect(self.valueChanged.emit)
         self.dialog_layout.addWidget(self.done_button, 7, 0, 1, 2)
 
-        self.dialog_table.setColumnCount(3)
+        self.dialog_table.setColumnCount(2)
         self.dialog_table.setSortingEnabled(False)
-        self.dialog_table.setHorizontalHeaderLabels(['Column names', 'Include column?', 'Column group'])
+        self.dialog_table.setHorizontalHeaderLabels(['Column names', 'Include column?'])
         self.dialog_layout.addWidget(self.dialog_table, 0, 0, 5, 2)
+
+    def select_all(self):
+        for checkbox in self.column_checks:
+            checkbox.setChecked(True)
+
+    def clear_selection(self):
+        for checkbox in self.column_checks:
+            checkbox.setChecked(False)
+
+    def add_columns(self, columns: list):
+        self.columns.extend([str(col) for col in columns])
+        self.update_table()
+
+    def open_dialog(self):
+        self.dialog.exec()
+
+    def get_values(self):
+        picked_cols = []
+        for checkbox, col_name in zip(self.column_checks, self.columns):
+            if checkbox.isChecked():
+                picked_cols.append(col_name)
+        return picked_cols
+
+    def _update_window_size(self):
+        self.dialog_table.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        # self.dialog_table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.dialog_table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.dialog_table.resizeRowsToContents()
+        self.dialog_table.resizeColumnsToContents()
+        self.dialog_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        self.dialog_table.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+        self.dialog_table.resize(self.dialog_table.horizontalHeader().length() +
+                                 self.dialog_table.verticalHeader().width(),
+                                 self.dialog_table.verticalHeader().length() +
+                                 self.dialog_table.horizontalHeader().height())
+        self.dialog.resize(self.dialog_table.size())
+
+    def update_table(self):
+        if self.dialog_table.rowCount() < len(self.columns):
+            start_ind = self.dialog_table.rowCount()
+            self.dialog_table.setRowCount(len(self.columns))
+            for i in range(start_ind, len(self.columns)):
+                col_name = self.columns[i]
+                col_label = QtWidgets.QLabel(col_name)
+                col_checkbox = ToggleSwitch()
+
+                col_checkbox.setChecked(True)
+
+                self.column_labels.append(col_label)
+                self.column_checks.append(col_checkbox)
+
+                self.dialog_table.setCellWidget(i, 0, col_label)
+                self.dialog_table.setCellWidget(i, 1, col_checkbox)
+
+            self._update_window_size()
+
+
+class TableColumnGroupPicker(TableColumnPicker):
+
+    def __init__(self, text: str = 'Choose columns', parent=None):
+        self.column_combos: typing.List[QtWidgets.QComboBox] = []
+
+        self._color_gen = generic.color_generator()
+        self.colors = []
+        self.reset_button = QtWidgets.QPushButton('Reset')
+        super().__init__(text, parent)
+
+    def add_columns(self, columns: list):
+        for i in range(len(columns)):
+            self.colors.append(matplotlib.colors.to_hex(next(self._color_gen)))
+        super().add_columns(columns)
+
+    def set_row_color(self):
+        groups = self._get_groups_in_use()
+        for row in range(self.dialog_table.rowCount()):
+            color = self.colors[groups.index(self.column_combos[row].currentText())] if self.column_checks[
+                row].isChecked() else "#FFFFFF"
+            for col in range(self.dialog_table.columnCount()):
+                self.dialog_table.item(row, col).setBackground(QtGui.QColor(color))
+                # self.column_combos[row].setStyleSheet("QComboBox {background-color: " + str(color) + "}")
+
+    def init_ui(self):
+        super().init_ui()
+        self.dialog_table.setColumnCount(3)
+        self.dialog_table.setHorizontalHeaderLabels(['Column names', 'Include column?', 'Column group'])
+        self.reset_button.clicked.connect(self.reset)
+        self.dialog_layout.addWidget(self.reset_button, 7, 0, 1, 2)
+        self.dialog_layout.addWidget(self.done_button, 8, 0, 1, 2)
+
+    def reset(self):
+        self.select_all()
+        for ind in range(len(self.columns)):
+            combo = self.column_combos[ind]
+            combo.setCurrentText(str(ind + 1))
+
+    def _get_groups_in_use(self):
+        existing_groups = set()
+        for combo, col_name in zip(self.column_combos, self.columns):
+            if combo.isEnabled():
+                grp = combo.currentText()
+                existing_groups.add(grp)
+        return sorted(existing_groups)
 
     def get_values(self):
         existing_groups = {}
@@ -81,46 +172,34 @@ class TableColumnPicker(QtWidgets.QPushButton):
         output = [existing_groups[grp] for grp in sorted(existing_groups.keys())]
         return output
 
-    def open_dialog(self):
-        self.update_table()
-        self.dialog.exec()
-
     def update_table(self):
         if self.dialog_table.rowCount() < len(self.columns):
             start_ind = self.dialog_table.rowCount()
-            self.dialog_table.setRowCount(len(self.columns))
+
+            super().update_table()
+
             for i in range(start_ind, len(self.columns)):
-                col_name = self.columns[i]
-                col_label = QtWidgets.QLabel(col_name)
-                col_checkbox = ToggleSwitch()
+                col_checkbox = self.column_checks[i]
                 col_combo = QtWidgets.QComboBox()
 
                 col_checkbox.stateChanged.connect(col_combo.setEnabled)
                 col_checkbox.setChecked(True)
+                col_checkbox.stateChanged.connect(self.set_row_color)
 
-                self.column_labels.append(col_label)
-                self.column_checks.append(col_checkbox)
+                col_combo.currentIndexChanged.connect(self.set_row_color)
+
                 self.column_combos.append(col_combo)
-
-                self.dialog_table.setCellWidget(i, 0, col_label)
-                self.dialog_table.setCellWidget(i, 1, col_checkbox)
                 self.dialog_table.setCellWidget(i, 2, col_combo)
+
+                for j in range(self.dialog_table.columnCount()):
+                    self.dialog_table.setItem(i, j, QtWidgets.QTableWidgetItem())
             for ind in range(len(self.columns)):
                 combo = self.dialog_table.cellWidget(ind, 2)
                 combo.clear()
                 combo.addItems([str(i + 1) for i in range(len(self.columns))])
                 combo.setCurrentText(str(ind + 1))
-            self.dialog_table.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-            self.dialog_table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-            self.dialog_table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-            self.dialog_table.resizeRowsToContents()
-            self.dialog_table.resizeColumnsToContents()
 
-            self.dialog_table.setFixedSize(self.dialog_table.horizontalHeader().length() +
-                                           self.dialog_table.verticalHeader().width() + 21,
-                                           self.dialog_table.verticalHeader().length() +
-                                           self.dialog_table.horizontalHeader().height() + 2)
-            self.dialog.resize(self.dialog_table.size())
+            self._update_window_size()
 
 
 class PathInputDialog(QtWidgets.QDialog):
@@ -1582,6 +1661,16 @@ def param_to_widget(param, name: str,
             for action in actions_to_connect:
                 widget.valueChanged.connect(action)
 
+    elif name in {'samples', 'sample_grouping'}:
+        widget = TableColumnGroupPicker()
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif name in {'sample_names', 'sample1', 'sample2'}:
+        widget = TableColumnPicker()
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
     elif param.annotation == bool:
         widget = ToggleSwitch()
         default = param.default if is_default else False
@@ -1704,10 +1793,6 @@ def param_to_widget(param, name: str,
         widget = TrueFalseBoth(param.default)
         for action in actions_to_connect:
             widget.selectionChanged.connect(action)
-    elif name in ['samples', 'sample_grouping']:
-        widget = TableColumnPicker()
-        for action in actions_to_connect:
-            widget.valueChanged.connect(action)
     # elif param.annotation == typing.Dict[str, typing.List[str]]:
     #     pass
     # elif param.annotation == typing.Dict[str, typing.List[int]]:
