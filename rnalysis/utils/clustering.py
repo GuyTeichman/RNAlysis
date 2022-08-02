@@ -136,7 +136,7 @@ class CLICOM:
         else:
             clusters = self.cliques_to_clusters()
             self.labels_ = self.clusters_to_labels(clusters)
-        self.n_clusters_ = self.labels_.max() + 1
+        self.n_clusters_ = int(self.labels_.max()) + 1
 
     def clusters_to_labels(self, clusters: List[Set[int]]) -> np.ndarray:
         labels = np.zeros((self.clustering_solutions.n_features,)) - 1
@@ -473,7 +473,7 @@ class ClusteringRunner:
         for cluster in range(n_clusters):
             ax.scatter(final_df[final_df['labels'] == cluster].iloc[:, 0],
                        final_df[final_df['labels'] == cluster].iloc[:, 1],
-                       label=f'Cluster {cluster+1}', c=color_opts[cluster], s=20, alpha=0.4)
+                       label=f'Cluster {cluster + 1}', c=color_opts[cluster], s=20, alpha=0.4)
         ax.legend(title="Clusters")
         ax.grid(True)
         plt.tight_layout()

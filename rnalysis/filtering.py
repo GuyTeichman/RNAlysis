@@ -2645,7 +2645,7 @@ class CountFilter(Filter):
                                          cluster_unclustered_features, min_cluster_size,
                                          *parameter_dicts, plot_style=plot_style, split_plots=split_plots)
         [clusterer] = runner.run()
-        n_clusters = clusterer.labels_.max() + 1
+        n_clusters = clusterer.n_clusters_
         if n_clusters == 0:
             print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
         else:
