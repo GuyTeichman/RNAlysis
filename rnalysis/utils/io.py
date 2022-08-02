@@ -916,7 +916,8 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
             if verbose:
                 warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
                               f"was chosen for them based on their annotation score: {duplicates_chosen}")
-
+    else:
+        output_dict = {}
     if len(output_dict) < n_queries and verbose:
         warnings.warn(f"Failed to map {n_queries - len(output_dict)} entries from '{map_from}' to '{map_to}'. "
                       f"Returning {len(output_dict)} successfully-mapped entries.")
