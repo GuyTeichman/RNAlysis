@@ -2972,7 +2972,8 @@ class CountFilter(Filter):
 
         color_generator = generic.color_generator()
         color_opts = [next(color_generator) for _ in range(len(sample_grouping))]
-        colors = parsing.flatten([[color_opts[i]] * len(grp) for i, grp in enumerate(sample_grouping)])
+        colors = parsing.flatten(
+            [[color_opts[i]] * len(parsing.data_to_list(grp)) for i, grp in enumerate(sample_grouping)])
 
         ax.scatter(final_df.iloc[:, 0], final_df.iloc[:, 1], c=colors, s=50)
         if labels:
