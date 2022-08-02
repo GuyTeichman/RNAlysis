@@ -820,9 +820,10 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
         return GeneIDTranslator({})
 
     # if map_from and map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
-    id_dict = _get_id_abbreviation_dict()
-    validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
-    if id_dict[map_to] == id_dict[map_from]:
+    id_dicts = _get_id_abbreviation_dict()
+    validation.validate_uniprot_dataset_name(id_dicts, map_to, map_from)
+    id_dict_to, id_dict_from = id_dicts
+    if id_dict_to[map_to] == id_dict_from[map_from]:
         return GeneIDTranslator()
 
     if map_to == "UniProtKB":
@@ -850,8 +851,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                        val in from_uniprot}
 
     # make sure that 'map_from' and 'map_to' are recognized identifier types
-    elif id_dict[map_to] != 'Null' and id_dict[map_from] != 'Null':
-
+    elif id_dict_to[map_to] != 'Null' and id_dict_from[map_from] != 'Null':
         POLLING_INTERVAL = 3
         API_URL = "https://rest.uniprot.org"
 
@@ -1024,24 +1024,21 @@ def get_legal_gene_id_types():
 
 @functools.lru_cache(maxsize=2)
 def _get_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
-    URL = 'https://rest.uniprot.org/database/search?format=json&query=%2A&size=500'
-
     with open(dict_path) as f:
-        abbrev_dict = json.load(f)
+        abbrev_dict_to = json.load(f)
+        abbrev_dict_from = abbrev_dict_to.copy()
 
-    req = requests.get(URL)
-    req.raise_for_status()
-    entries = json.loads(req.text)
+    legal_from, legal_to = get_legal_gene_id_types()
 
-    for entry in entries['results']:
-        name = entry['name']
-        abbrev = entry['abbrev']
-        abbrev_dict[name] = abbrev
+    abbrev_dict_from.update(legal_from)
+    abbrev_dict_to.update(legal_to)
 
-    for val in parsing.data_to_list(abbrev_dict.values()):
-        abbrev_dict[val] = val
+    for val in parsing.data_to_list(abbrev_dict_to.values()):
+        abbrev_dict_to[val] = val
+    for val in parsing.data_to_list(abbrev_dict_from.values()):
+        abbrev_dict_from[val] = val
 
-    return abbrev_dict
+    return abbrev_dict_to, abbrev_dict_from
 
 
 @lru_cache(maxsize=2)
