@@ -1000,6 +1000,8 @@ class CLICOMRunner(ClusteringRunner):
         for labels in self.clustering_solutions:
             mat = np.zeros((np.max(labels) + 1, len(labels)), dtype=bool)
             for i in np.unique(labels):
+                if i == -1:
+                    continue
                 for j in np.where(labels == i):
                     mat[i, j] = True
             lst.append(mat)
