@@ -572,7 +572,7 @@ def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
     return sources
 
 
-def infer_taxon_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
+def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None) -> Tuple[int, str]:
     """
     Infer the NCBI Taxon ID and name of a collection of gene IDs. \
     In cases where not all gene IDs map to the same taxon, the best-fitting taxon will be picked by a majority vote.
@@ -582,7 +582,11 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
     :return: a tuple of the best-matching taxon's NCBI Taxon ID and full scientific name.
     :rtype: Tuple[int ,str]
     """
-    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(gene_ids))
+    if gene_id_type is not None:
+        gene_id_type = parsing.data_to_tuple(gene_id_type)
+    translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=gene_id_type,
+                                              map_to_options=('Ensembl', 'Ensembl Genomes'))
+    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     species = dict()
     for gene_id in output:
         if output[gene_id] is not None:
