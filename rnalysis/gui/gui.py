@@ -2118,6 +2118,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action = QtWidgets.QAction("&Exit", self)
         self.exit_action.triggered.connect(self.closeEvent)
 
+        self.undo_action = self.undo_stack.createUndoAction(self)
+        self.redo_action = self.undo_stack.createRedoAction(self)
+
         self.show_history_action = QtWidgets.QAction("Command &History")
         self.show_history_action.setCheckable(True)
         self.show_history_action.setChecked(True)
@@ -2155,6 +2158,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_action.setShortcut(QtGui.QKeySequence("Ctrl+S"))
         self.new_multiple_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+N"))
         self.new_table_action.setShortcut(QtGui.QKeySequence("Ctrl+N"))
+
+        self.undo_action.setShortcut(QtGui.QKeySequence("Ctrl+Z"))
+        self.redo_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+Z"))
 
         self.import_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+I"))
         self.import_multiple_sets_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+M"))
@@ -2270,6 +2276,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
         file_menu.addActions(
             [self.save_action, self.settings_action, self.exit_action])
+
+        edit_menu = self.menu_bar.addMenu("&Edit")
+        edit_menu.addActions([self.undo_action, self.redo_action])
 
         view_menu = self.menu_bar.addMenu("&View")
         view_menu.addActions([self.show_history_action])
