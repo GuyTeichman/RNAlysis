@@ -2012,6 +2012,17 @@ class MainWindow(QtWidgets.QMainWindow):
             pipeline = filtering.Pipeline.import_pipeline(filename)
             self.pipelines[str(Path(filename).stem)] = pipeline
 
+    def import_multiple_gene_sets(self):
+        dialog = gui_utils.MultiFileSelectionDialog()
+        accepted = dialog.exec()
+        if accepted == QtWidgets.QDialog.Accepted:
+            filenames = dialog.result()
+            if len(filenames) > 0 and self.tabs.currentWidget().is_empty():
+                self.tabs.removeTab(self.tabs.currentIndex())
+            for filename in filenames:
+                gene_set = self._filename_to_gene_set(filename)
+                self.new_tab_from_gene_set(gene_set, filename)
+
     def import_gene_set(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
                                                             "Text Document (*.txt);;"
@@ -2019,13 +2030,6 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             "Tab-Separated Values (*.tsv);;"
                                                             "All Files (*)")
         if filename:
-            if filename.endswith('.csv'):
-                gene_set = set(pd.read_csv(filename, index_col=0).index)
-            elif filename.endswith('.tsv'):
-                gene_set = set(pd.read_csv(filename, index_col=0, sep='\t').index)
-            else:
-                with open(filename) as f:
-                    gene_set = {line.strip() for line in f.readlines()}
             if self.tabs.currentWidget().is_empty():
                 self.tabs.removeTab(self.tabs.currentIndex())
             gene_set = self._filename_to_gene_set(filename)
@@ -2116,6 +2120,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_vis_action.triggered.connect(self.visualize_gene_sets)
         self.import_set_action = QtWidgets.QAction("&Import Gene Set...", self)
         self.import_set_action.triggered.connect(self.import_gene_set)
+        self.import_multiple_sets_action = QtWidgets.QAction("Import &Multiple Gene Sets...", self)
+        self.import_multiple_sets_action.triggered.connect(self.import_multiple_gene_sets)
         self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
         self.export_set_action.triggered.connect(self.export_gene_set)
 
@@ -2138,6 +2144,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_table_action.setShortcut(QtGui.QKeySequence("Ctrl+N"))
 
         self.import_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+I"))
+        self.import_multiple_sets_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+M"))
         self.export_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+E"))
         self.set_vis_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+V"))
         self.enrichment_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+A"))
@@ -2247,7 +2254,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
             [self.copy_action, self.set_op_action, self.enrichment_action, self.set_vis_action, self.import_set_action,
-             self.export_set_action])
+             self.import_multiple_sets_action, self.export_set_action])
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
         pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action])
