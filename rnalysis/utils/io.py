@@ -13,7 +13,7 @@ from itertools import chain
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any
 from urllib.parse import urlparse, parse_qs, urlencode
-
+from tqdm.auto import tqdm
 import appdirs
 import numpy as np
 import pandas as pd
@@ -933,6 +933,93 @@ def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
         for i in range(0, len(ids), chunk_size):
             j = min(chunk_size, len(ids) - i)
             yield " ".join((str(item) for item in ids[i:i + j]))
+
+
+@functools.lru_cache(maxsize=2048)
+def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[str, ...], None],
+                           map_to_options: Union[Tuple[str, ...], None]):
+    all_map_to_options, all_map_from_options = _get_id_abbreviation_dict()
+    if map_to_options is None:
+        map_to_options = all_map_to_options
+    if map_from_options is None:
+        map_from_options = all_map_from_options
+
+    def _key_func(items: Tuple[int, str, str]):
+        key = [items[0]]
+        key.append(list(map_from_options).index(items[1]))
+        key.append(list(map_to_options).index(items[2]))
+        return key
+
+    def map_gene_ids_ignore_httpexception(ids: Tuple[str], map_from: str, map_to: str):
+        try:
+            return map_gene_ids(ids, map_from, map_to, verbose=False), map_from, map_to
+        except requests.exceptions.HTTPError:
+            return GeneIDTranslator({}), map_from, map_to
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        processes = []
+        mapping_combs_from = []
+        mapping_combs_to = []
+        for map_from in map_from_options:
+            for map_to in parsing.data_to_tuple(map_to_options):
+                if map_to == map_from:
+                    continue
+                mapping_combs_from.append(map_from)
+                mapping_combs_to.append(map_to)
+                # processes.append(executor.submit(map_gene_ids_ignore_httpexception, ids, map_from, map_to))
+
+        results = list(tqdm(executor.map(functools.partial(map_gene_ids_ignore_httpexception, ids), mapping_combs_from,
+                                         mapping_combs_to),
+                            total=len(mapping_combs_from), desc='Submitting jobs...', unit='jobs'))
+    # best_result = None
+    # best_result_len = -1
+    parsed_results = {}
+    with tqdm(desc='Finding the best-matching gene ID type...', total=len(processes) + 1) as pbar:
+        pbar.update()
+        for result in results:
+            mapping_dict, map_from, map_to = result
+            result_len = len(mapping_dict)
+            parsed_results[(result_len, map_from, map_to)] = result
+            pbar.update()
+
+    sorted_keys = sorted(parsed_results.keys(), key=_key_func, reverse=True)
+    return parsed_results[sorted_keys[0]]
+
+
+@functools.lru_cache(maxsize=2)
+def get_legal_gene_id_types():
+    URL = 'https://rest.uniprot.org/configure/idmapping/fields'
+    GROUP_PRIORITIZATION = ['UniProt',
+                            'Genome annotation databases',
+                            'Organism-specific databases',
+                            'Phylogenomic databases',
+                            'Sequence databases',
+                            'Miscellaneous',
+                            'Gene expression databases',
+                            'Enzyme and pathway databases',
+                            'Proteomic databases']
+    abbrev_dict_to = {}
+    abbrev_dict_from = {}
+
+    req = requests.get(URL)
+    req.raise_for_status()
+    entries = json.loads(req.text)['groups']
+    entries_filtered = []
+    for entry in entries:
+        if entry['groupName'] in GROUP_PRIORITIZATION:
+            entries_filtered.append(entry)
+    entries_sorted = sorted(entries_filtered, key=lambda grp: GROUP_PRIORITIZATION.index(grp['groupName']))
+    for grp in entries_sorted:
+        for entry in grp['items']:
+            name = entry['displayName']
+            abbrev = entry['name']
+            is_from = entry['from']
+            is_to = entry['to']
+            if is_to:
+                abbrev_dict_to[name] = abbrev
+            if is_from:
+                abbrev_dict_from[name] = abbrev
+    return abbrev_dict_from, abbrev_dict_to
 
 
 @functools.lru_cache(maxsize=2)
