@@ -1791,7 +1791,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
         self.setWindowIcon(QtGui.QIcon('../../docs/source/favicon.ico'))
-        self.setGeometry(600, 50, 850, 350)
+        self.setGeometry(600, 50, 1000, 500)
         self.update_style_sheet()
 
         self.tabs.tabRightClicked.connect(self.init_tab_contextmenu)
