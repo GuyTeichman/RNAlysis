@@ -813,6 +813,12 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     """
     UNIPROTKB_FROM = "UniProtKB_from"
     UNIPROTKB_TO = "UniProtKB_to"
+
+    if len(ids) == 0:
+        if verbose:
+            warnings.warn('No IDs were given')
+        return GeneIDTranslator({})
+
     # if map_from and map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
     id_dict = _get_id_abbreviation_dict()
     validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
