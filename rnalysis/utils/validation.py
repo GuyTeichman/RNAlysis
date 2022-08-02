@@ -3,6 +3,7 @@ from typing import Union, Iterable, Tuple
 import types
 import pandas as pd
 import warnings
+from rnalysis.utils import parsing
 
 
 def is_legal_file_path(file_path: str):
@@ -157,10 +158,15 @@ def validate_attr_table(attr_df: pd.DataFrame):
     attr_df.rename(columns={attr_df.columns[0]: 'gene'}, inplace=True)
 
 
-def validate_uniprot_dataset_name(dataset_dict: dict, *names: str):
-    for name in names:
-        assert name in dataset_dict, f"Dataset '{name}' is not a valid Uniprot Dataset for mapping gene names/IDs. " \
-                                     f"Valid Uniprot Datasets are: {', '.join(dataset_dict.keys())}."
+def validate_uniprot_dataset_name(dataset_dicts: Tuple[dict, dict], map_to_names: Union[str, Iterable[str]],
+                                  map_from_names: Union[str, Iterable[str]]):
+    dataset_to, dataset_from = dataset_dicts
+    for name in parsing.data_to_tuple(map_to_names):
+        assert name in dataset_to, f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs to. " \
+                                   f"Valid Uniprot Datasets are: {', '.join(dataset_to.keys())}."
+    for name in parsing.data_to_tuple(map_from_names):
+        assert name in dataset_from, f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs from. " \
+                                     f"Valid Uniprot Datasets are: {', '.join(dataset_from.keys())}."
 
 
 def validate_threshold(threshold: float = 1):
