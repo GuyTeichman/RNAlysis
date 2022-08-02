@@ -632,7 +632,7 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     taxon_id = int(res['Taxon Id'].iloc[0])
     scientific_name = res['Scientific name'].iloc[0]
 
-    if res.shape[0] > 1 and not (taxon_name == taxon_id or taxon_name == scientific_name):
+    if res.shape[0] > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
             f"Found {len(res) - 1} taxons matching the search query '{taxon_name}'. "
             f"Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).")
