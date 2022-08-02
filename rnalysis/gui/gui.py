@@ -1743,27 +1743,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f'RNAlysis {__version__}')
-        self.setWindowIcon(QtGui.QIcon('../../docs/source/favicon.ico'))
-        self.setGeometry(600, 50, 750, 350)
-        self.update_style_sheet()
-
         self.tabs = ReactiveTabWidget(self)
-        self.tabs.tabRightClicked.connect(self.init_tab_contextmenu)
         self.next_tab_n = 0
-        self.tabs.tabCloseRequested.connect(self.delete)
 
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.tabs)
+        self.undo_stack = QtWidgets.QUndoStack(self)
+        self.undo_view = QtWidgets.QUndoView(self.undo_stack)
+        self.undo_stack_widget = QtWidgets.QDockWidget('Command history', self)
 
         self.add_tab_button = QtWidgets.QToolButton()
         self.add_tab_button.setToolTip('Add New Tab')
         self.add_tab_button.clicked.connect(functools.partial(self.add_new_tab, name=None))
         self.add_tab_button.setText("+")
         self.error_window = None
-
-        self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
-        self.setCentralWidget(self.tabs)
 
         self.menu_bar = QtWidgets.QMenuBar(self)
 
@@ -1777,6 +1768,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.enrichment_window = None
         self.enrichment_results = []
 
+        self.init_ui()
         self.add_new_tab()
         self.init_actions()
         self.init_menu_ui()
@@ -1795,6 +1787,22 @@ class MainWindow(QtWidgets.QMainWindow):
         # attach to start / stop methods
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
+
+    def init_ui(self):
+        self.setWindowTitle(f'RNAlysis {__version__}')
+        self.setWindowIcon(QtGui.QIcon('../../docs/source/favicon.ico'))
+        self.setGeometry(600, 50, 850, 350)
+        self.update_style_sheet()
+
+        self.tabs.tabRightClicked.connect(self.init_tab_contextmenu)
+        self.tabs.tabCloseRequested.connect(self.delete)
+
+        self.undo_stack_widget.setWidget(self.undo_view)
+        self.undo_stack_widget.setFloating(False)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.undo_stack_widget)
+
+        self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
+        self.setCentralWidget(self.tabs)
 
     @QtCore.pyqtSlot(int)
     def init_tab_contextmenu(self, ind: int):
