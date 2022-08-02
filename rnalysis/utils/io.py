@@ -602,7 +602,7 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
             if species[s] > chosen_species_n:
                 chosen_species = s
                 chosen_species_n = species[s]
-    return map_taxon_id(chosen_species.replace('_', ' '))
+    return map_taxon_id(chosen_species.replace('_', ' ')), map_from
 
 
 @lru_cache(maxsize=32, typed=False)
