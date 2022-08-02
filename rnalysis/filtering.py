@@ -2840,6 +2840,15 @@ class CountFilter(Filter):
 
         if isinstance(samples, str) and samples.lower() == 'all':
             samples = [[item] for item in self.columns]
+        else:
+            samples = samples.copy()
+
+        for i in range(len(samples)):
+            if not isinstance(samples[i], list):
+                samples[i] = parsing.data_to_list(samples[i])
+            if not validation.isinstanceiter(samples[i], str):
+                for j in range(len(samples[i])):
+                    samples[i][j] = self.columns[samples[i][j]]
         sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]
 
         g = strategies.SquareStrategy()
