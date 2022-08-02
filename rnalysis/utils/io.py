@@ -922,6 +922,10 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
         warnings.warn(f"Failed to map {n_queries - len(output_dict)} entries from '{map_from}' to '{map_to}'. "
                       f"Returning {len(output_dict)} successfully-mapped entries.")
 
+    if map_to == 'Ensembl':
+        for key, val in output_dict.items():
+            output_dict[key] = re.sub('(\.\d+)$', '', val)
+
     return GeneIDTranslator(output_dict)
 
 
