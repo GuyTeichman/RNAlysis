@@ -366,7 +366,7 @@ def test_ensmbl_lookup_post_request(monkeypatch):
 ])
 def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
-    assert infer_sources_from_gene_ids([]) == truth
+    assert infer_sources_from_gene_ids([])[0] == truth
 
 
 @pytest.mark.parametrize("gene_id_info,truth", [
@@ -376,7 +376,7 @@ def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
 def test_infer_taxon_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
     monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
-    assert infer_taxon_from_gene_ids([]) == truth
+    assert infer_taxon_from_gene_ids([])[0] == truth
 
 
 def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
@@ -462,13 +462,14 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
              'UniProtKB_to': 'UniProtKB',
              'UniProtKB_from': 'UniProtKB_AC-ID',
              'UniProtKB': 'UniProtKB'}
-        return d
+        return d,d
 
     def mock_get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
-                                 session):
-        if to_db == mock_abbrev_dict()['UniProtKB_to']:
+                                 session, verbose):
+        mock_abbrev_dict_to, mock_abbrev_dict_from = mock_abbrev_dict()
+        if to_db == mock_abbrev_dict_to['UniProtKB_to']:
             return_txt = txt if map_to == 'UniProtKB' else rev_txt
-        elif from_db == mock_abbrev_dict()['UniProtKB_from']:
+        elif from_db == mock_abbrev_dict_from['UniProtKB_from']:
             return_txt = txt if map_from == 'UniProtKB' else rev_txt
         else:
             raise ValueError(to_db, from_db)

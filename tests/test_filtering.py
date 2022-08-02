@@ -172,16 +172,18 @@ def test_countfilter_pairplot_api():
 
 def test_countfilter_clustergram_api():
     c = CountFilter("tests/test_files/counted.csv")
-    c.clustergram()
-    c.clustergram(c.columns[0:2], metric='euclidean', linkage='ward')
-    c.clustergram(c.columns[0:2], metric='euclidean', linkage='single')
-    with pytest.raises(AssertionError):
-        c.clustergram(linkage='invalid')
-    with pytest.raises(AssertionError):
-        c.clustergram(metric='invalid')
-    with pytest.raises(AssertionError):
-        c.clustergram(linkage=5)
-    plt.close('all')
+    try:
+        c.clustergram()
+        c.clustergram(c.columns[0:2], metric='euclidean', linkage='Ward')
+        c.clustergram(c.columns[0:2], metric='euclidean', linkage='single')
+        with pytest.raises(AssertionError):
+            c.clustergram(linkage='invalid')
+        with pytest.raises(AssertionError):
+            c.clustergram(metric='invalid')
+        with pytest.raises(AssertionError):
+            c.clustergram(linkage=5)
+    finally:
+        plt.close('all')
 
 
 def test_countfilter_box_plot_api():
@@ -193,9 +195,10 @@ def test_countfilter_box_plot_api():
 
 def test_countfilter_plot_expression_api():
     c = CountFilter("tests/test_files/counted.csv")
-    c.plot_expression('WBGene00007063', {'cond 1 and 2': [0, 1], 'cond3 and 4': ['cond3', 'cond4']})
-    c.plot_expression(['WBGene00007064', 'WBGene00044951', 'WBGene00043988', 'WBGene00007066'], {'cond1': ['cond1']})
-    c.plot_expression(['WBGene00007064', 'WBGene00044951'], {'cond1': ['cond1'], 'cond2': [1]})
+    c.plot_expression(['WBGene00007063'],'all')
+    c.plot_expression('WBGene00007063', [[0, 1], ['cond3', 'cond4']])
+    c.plot_expression(['WBGene00007064', 'WBGene00044951', 'WBGene00043988', 'WBGene00007066'], ['cond1'])
+    c.plot_expression(['WBGene00007064', 'WBGene00044951'], [['cond1'], [1]])
     plt.close('all')
 
 
@@ -212,14 +215,16 @@ def test_countfilter_scatter_sample_vs_sample_api():
 def test_countfilter_pca_api():
     c = CountFilter("tests/test_files/counted.csv")
     c.filter_low_reads(1)
-    _ = c.pca()
-    _ = c.pca(sample_names=['cond1', 'cond2', 'cond3'], sample_grouping=[1, 1, 2], n_components=2, labels=False,
-              power_transform=True)
-    with pytest.raises(AssertionError):
-        _ = c.pca(n_components=2.0)
-    with pytest.raises(AssertionError):
-        _ = c.pca(n_components=1)
-    plt.close('all')
+    try:
+        _ = c.pca()
+        _ = c.pca(samples=['cond1', ['cond2', 'cond3']], n_components=2, labels=False,
+                  power_transform=True)
+        with pytest.raises(AssertionError):
+            _ = c.pca(n_components=2.0)
+        with pytest.raises(AssertionError):
+            _ = c.pca(n_components=1)
+    finally:
+        plt.close('all')
 
 
 def test_countfilter_enhanced_box_plot_api():
@@ -1505,12 +1510,12 @@ def test_split_hdbscan_api():
 
 def test_split_clicom_api():
     c = CountFilter('tests/test_files/big_counted.csv')
-    c.filter_top_n(by='cond1rep1', n=1000)
+    c.filter_top_n(by='cond1rep1', n=300)
     res = c.split_clicom({'method': 'hdbscan', 'min_cluster_size': [20, 75, 40], 'metric': ['ys1', 'yr1', 'spearman']},
                          {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['euclidean', 'jackknife', 'yr1'],
                           'linkage': ['average', 'ward']},
                          {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
-                         power_transform=[False, True], evidence_threshold=0.5, min_cluster_size=5)
+                         power_transform=(False, True), evidence_threshold=0.5, min_cluster_size=5)
     _test_correct_clustering_split(c, res, True)
 
 
@@ -1694,4 +1699,3 @@ def test_export_pipeline():
         assert exported == truth
     finally:
         os.remove(outname)
-
