@@ -2118,6 +2118,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action = QtWidgets.QAction("&Exit", self)
         self.exit_action.triggered.connect(self.closeEvent)
 
+        self.show_history_action = QtWidgets.QAction("Command &History")
+        self.show_history_action.setCheckable(True)
+        self.show_history_action.setChecked(True)
+        self.show_history_action.triggered.connect(self.toggle_history_window)
+
         self.copy_action = QtWidgets.QAction("&Copy Gene Set", self)
         self.copy_action.triggered.connect(self.copy_gene_set)
         self.set_op_action = QtWidgets.QAction("Set &Operations...", self)
@@ -2161,6 +2166,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
         self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
         self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
+
+    @QtCore.pyqtSlot(bool)
+    def toggle_history_window(self,state:bool):
+        if state:
+            self.undo_stack_widget.show()
+        else:
+            self.undo_stack_widget.close()
 
     def save_file(self):
         self.tabs.currentWidget().save_file()
@@ -2258,6 +2270,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
         file_menu.addActions(
             [self.save_action, self.settings_action, self.exit_action])
+
+        view_menu = self.menu_bar.addMenu("&View")
+        view_menu.addActions([self.show_history_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
