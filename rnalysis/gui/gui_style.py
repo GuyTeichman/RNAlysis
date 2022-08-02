@@ -35,7 +35,11 @@ def get_stylesheet():
     palette = STYLESHEETS[stylesheet_name]
     param_stylesheet = get_parametric_stylesheet(font_base_size, font_name)
     if palette is None:
-        other_stylesheet = ''
+        other_stylesheet = """
+QWidget::item:selected { background-color: #7FABFF; } QWidget::item:hover:!selected { background-color: #53A7EF; }
+QSplitter::handle { background-color: #C9CDD0; border: 0px solid #FAFAFA; spacing: 0px; padding: 1px; margin: 0px; }
+QSplitter::handle:hover { background-color: #788D9C; }
+"""
     else:
         other_stylesheet = qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=palette)
     return param_stylesheet + '\n' + other_stylesheet

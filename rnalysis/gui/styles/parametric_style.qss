@@ -10,9 +10,6 @@ font: FONTPLACEHOLDER;
 font-size: FONTSIZEPLACEHOLDER*2;
 }
 
-EnrichmentWindow {
-
-}
 
 SetOpWindow {
 font: FONTPLACEHOLDER;
@@ -24,75 +21,24 @@ font: FONTPLACEHOLDER;
 font-size: FONTSIZEPLACEHOLDER*2;
 }
 
-SetTabPage {
-
-}
-
-FilterTabPage {
-
-}
-
-
-CreatePipelineWindow {
-
-}
-
-QDialog {
-
-}
 
 DataView > QLabel {
 font: FONTPLACEHOLDER;
 font-size: FONTSIZEPLACEHOLDER*2;
 }
 
-GeneSetView {
-
-}
-
-DataFrameView {
-}
-
-ErrorMessage {}
-
-AboutWindow {}
-
-SettingsWindow {}
 
 QGroupBox {
 font: bold;
 font-size: FONTSIZEPLACEHOLDER;
 }
 
-QMenu {}
-
-QTabWidget {}
-
-QTableView {}
-
-QScrollBar {}
-/* style for general widgets types: */
-
-StrIntLineEdit {}
-
-RadioButtonBox {}
-
-OptionalSpinBox {}
-
-QMultiInput {}
-
-QCheckBox {}
-
-QComboBox {}
 
 QLabel {
 font: FONTPLACEHOLDER;
 font-size: FONTSIZEPLACEHOLDER*1;
 }
 
-QLineEdit {}
-
-QListWidget {}
 
 QPushButton {
 font: bold;
@@ -104,8 +50,3 @@ font: bold;
 font-size: FONTSIZEPLACEHOLDER*1.5;
 }
 
-QRadioButton {}
-
-QTextEdit {}
-
-QSpinBox {}
