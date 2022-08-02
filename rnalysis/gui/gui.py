@@ -928,6 +928,7 @@ class TabPage(QtWidgets.QWidget):
     tabNameChange = QtCore.pyqtSignal(str, bool)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
+    commandIssued = QtCore.pyqtSignal(QtWidgets.QUndoCommand)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1920,6 +1921,7 @@ class MainWindow(QtWidgets.QMainWindow):
             tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
         tab.changeIcon.connect(self.set_current_tab_icon)
         tab.tabNameChange.connect(self.rename_tab)
+        tab.commandIssued.connect(self.undo_stack.push)
         self.tabs.addTab(tab, name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
 
