@@ -2028,7 +2028,19 @@ class MainWindow(QtWidgets.QMainWindow):
                     gene_set = {line.strip() for line in f.readlines()}
             if self.tabs.currentWidget().is_empty():
                 self.tabs.removeTab(self.tabs.currentIndex())
+            gene_set = self._filename_to_gene_set(filename)
             self.new_tab_from_gene_set(gene_set, filename)
+
+    @staticmethod
+    def _filename_to_gene_set(filename: str):
+        if filename.endswith('.csv'):
+            gene_set = set(pd.read_csv(filename, index_col=0).index)
+        elif filename.endswith('.tsv'):
+            gene_set = set(pd.read_csv(filename, index_col=0, sep='\t').index)
+        else:
+            with open(filename) as f:
+                gene_set = {line.strip() for line in f.readlines()}
+        return gene_set
 
     def delete(self, index):
         self.tabs.removeTab(index)
