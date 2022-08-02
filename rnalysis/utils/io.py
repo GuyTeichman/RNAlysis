@@ -857,7 +857,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                                       ids=ids,
                                       polling_interval=POLLING_INTERVAL, session=session, verbose=verbose)
 
-        if len(results) <= 1:
+        if results is None or len(results) <= 1:
             if verbose:
                 warnings.warn(f"No entries were mapped successfully.")
             return GeneIDTranslator({})
