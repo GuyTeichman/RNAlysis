@@ -474,7 +474,7 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
             raise ValueError(to_db, from_db)
         return return_txt.split('\n')
 
-    monkeypatch.setattr(io, '_get_id_abbreviation_dict', mock_abbrev_dict)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', mock_abbrev_dict)
     monkeypatch.setattr(io, 'get_mapping_results', mock_get_mapping_results)
     res = map_gene_ids(ids, map_from, map_to)
     for gene_id in truth:

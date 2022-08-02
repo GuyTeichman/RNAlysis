@@ -820,7 +820,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
         return GeneIDTranslator({})
 
     # if map_from and map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
-    id_dicts = _get_id_abbreviation_dict()
+    id_dicts = _get_id_abbreviation_dicts()
     validation.validate_uniprot_dataset_name(id_dicts, map_to, map_from)
     id_dict_to, id_dict_from = id_dicts
     if id_dict_to[map_to] == id_dict_from[map_from]:
@@ -938,7 +938,7 @@ def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
 @functools.lru_cache(maxsize=2048)
 def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[str, ...], None],
                            map_to_options: Union[Tuple[str, ...], None]):
-    all_map_to_options, all_map_from_options = _get_id_abbreviation_dict()
+    all_map_to_options, all_map_from_options = _get_id_abbreviation_dicts()
     if map_to_options is None:
         map_to_options = all_map_to_options
     if map_from_options is None:
@@ -1023,7 +1023,7 @@ def get_legal_gene_id_types():
 
 
 @functools.lru_cache(maxsize=2)
-def _get_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
+def _get_id_abbreviation_dicts(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
     with open(dict_path) as f:
         abbrev_dict_to = json.load(f)
         abbrev_dict_from = abbrev_dict_to.copy()
