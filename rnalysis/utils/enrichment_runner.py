@@ -739,7 +739,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                                           'statistically significant after enrichment analysis',
                  'plot_pathway_graphs': 'indicates whether to plot pathway graphs of the'
                                         ' statistically significant pathways',
-                 'pathway_graphs_format': 'file format for the generated ontology graph',
+                 'pathway_graphs_format': 'file format for the generated pathway graph',
                  'attributes_set': 'set of the attributes/KEGG Pathways for which enrichment should be calculated',
                  'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values'}
     KEGG_DF_QUERIES = {}
