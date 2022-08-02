@@ -288,7 +288,7 @@ class FeatureSet:
         the annotations' gene IDs to your identifier type. \
         For a full list of legal 'gene_id_type' names, see the UniProt website: \
         https://www.uniprot.org/help/api_idmapping
-        :type gene_id_type: str (default='UniProtKB')
+        :type gene_id_type: str or 'auto' (default='auto')
         :type alpha: float between 0 and 1 (default=0.05)
         :param alpha: Indicates the FDR threshold for significance.
         :param statistical_test: determines the statistical test to be used for enrichment analysis. \
@@ -443,7 +443,7 @@ class FeatureSet:
         the annotations' gene IDs to your identifier type. \
         For a full list of legal 'gene_id_type' names, see the UniProt website: \
         https://www.uniprot.org/help/api_idmapping
-        :type gene_id_type: str (default='UniProtKB')
+        :type gene_id_type: str or 'auto' (default='auto')
         :type alpha: float between 0 and 1 (default=0.05)
         :param alpha: Indicates the FDR threshold for significance.
         :param statistical_test: determines the statistical test to be used for enrichment analysis. \
@@ -1023,7 +1023,7 @@ class RankedSet(FeatureSet):
         RNAlysis will attempt to map  the annotations' gene IDs to your identifier type. \
         For a full list of legal 'gene_id_type' names, see the UniProt website: \
         https://www.uniprot.org/help/api_idmapping
-        :type gene_id_type: str (default='UniProtKB')
+        :type gene_id_type: str or 'auto' (default='auto')
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
         :param propagate_annotations: determines the propagation method of GO annotations. \
@@ -1150,7 +1150,7 @@ class RankedSet(FeatureSet):
         RNAlysis will attempt to map  the annotations' gene IDs to your identifier type. \
         For a full list of legal 'gene_id_type' names, see the UniProt website: \
         https://www.uniprot.org/help/api_idmapping
-        :type gene_id_type: str (default='UniProtKB')
+        :type gene_id_type: str or 'auto' (default='auto')
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
         :type return_nonsignificant: bool (default=False)
