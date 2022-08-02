@@ -705,9 +705,9 @@ def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: 
                     print(f"Retrying in {polling_interval}s")
                 time.sleep(polling_interval)
             else:
-                raise Exception(r["jobStatus"])
+                raise Exception(j["jobStatus"])
         else:
-            return bool(j["results"] or j["failedIds"])
+            return bool(j.get("results", False) or j.get("failedIds", False))
 
 
 def get_batch(session, batch_response, file_format):
