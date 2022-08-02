@@ -753,8 +753,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
                          single_set, random_seed, **pvalue_kwargs)
-        self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.gene_id_type = gene_id_type
+        self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.plot_pathway_graphs = plot_pathway_graphs
         self.pathway_graphs_format = pathway_graphs_format
         self.pathway_names_dict: dict = {}
@@ -885,8 +885,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                          **pvalue_kwargs)
         self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
-        self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.gene_id_type = gene_id_type
+        self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.aspects = aspects
         self.evidence_types = evidence_types
         self.excluded_evidence_types = excluded_evidence_types
