@@ -761,7 +761,11 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
 
     def get_taxon_id(self, organism: str):
         if isinstance(organism, str) and organism.lower() == 'auto':
-            return io.infer_taxon_from_gene_ids(self.gene_set)
+            id_type = None if self.gene_id_type.lower() == 'auto' else self.gene_id_type
+            res, map_from = io.infer_taxon_from_gene_ids(self.gene_set, id_type)
+            if self.gene_id_type.lower() == 'auto':
+                self.gene_id_type = map_from
+            return res
         else:
             return io.map_taxon_id(organism)
 
@@ -830,8 +834,11 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         source = 'KEGG'
         translated_sparse_annotation_dict = {}
         sparse_dict_cp = sparse_annotation_dict.copy()
-
-        translator = io.map_gene_ids(parsing.data_to_list(sparse_annotation_dict.keys()), source, self.gene_id_type)
+        if self.gene_id_type.lower() == 'auto':
+            translator, _, self.gene_id_type = io.find_best_gene_mapping(
+                parsing.data_to_tuple(sparse_annotation_dict.keys()), (source,), None)
+        else:
+            translator = io.map_gene_ids(parsing.data_to_list(sparse_annotation_dict.keys()), source, self.gene_id_type)
         for gene_id in sparse_annotation_dict:
             if gene_id in translator:
                 translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
@@ -910,7 +917,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def get_taxon_id(self, organism: str):
         if isinstance(organism, str) and organism.lower() == 'auto':
-            return io.infer_taxon_from_gene_ids(self.gene_set)
+            id_type = None if self.gene_id_type.lower() == 'auto' else self.gene_id_type
+            res, map_from = io.infer_taxon_from_gene_ids(self.gene_set, id_type)
+            if self.gene_id_type.lower() == 'auto':
+                self.gene_id_type = map_from
+            return res
         else:
             return io.map_taxon_id(organism)
 
@@ -985,6 +996,9 @@ class GOEnrichmentRunner(EnrichmentRunner):
     def _translate_gene_ids(self, sparse_annotation_dict: dict, source_to_gene_id_dict: dict):
         translated_sparse_annotation_dict = {}
         sparse_dict_cp = sparse_annotation_dict.copy()
+        if self.gene_id_type.lower() == 'auto':
+            _, self.gene_id_type, _ = io.find_best_gene_mapping(parsing.data_to_tuple(self.gene_set), None,
+                                                                ('UniProtKB',))
         for source in source_to_gene_id_dict:
             translator = io.map_gene_ids(source_to_gene_id_dict[source], source, self.gene_id_type)
             for gene_id in sparse_dict_cp.copy():
