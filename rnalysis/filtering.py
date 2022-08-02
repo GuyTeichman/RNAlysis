@@ -2790,14 +2790,15 @@ class CountFilter(Filter):
            Example plot of clustergram()
 
         """
+        assert isinstance(metric, str) and isinstance(linkage, str), "Linkage and Metric must be strings!"
         metric = metric.lower()
         linkage = linkage.lower()
-        assert isinstance(metric, str) and isinstance(linkage, str), "Linkage and Metric must be strings!"
         metrics = ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', 'euclidean',
                    'hamming', 'jaccard', 'jensenshannon', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
                    'rogerstanimoto', 'russellrao', 'sEuclidean', 'sokalmichener', 'sokalsneath', 'sqEuclidean', 'yule']
         linkages = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
-        assert metric in metrics and linkage in linkages
+        assert metric in metrics, f"Invalid metric {metric}."
+        assert linkage in linkages, f"Invalid linkage {linkage}."
 
         if sample_names == 'all':
             sample_names = list(self.df.columns)
