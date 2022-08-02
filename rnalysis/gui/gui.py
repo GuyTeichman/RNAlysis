@@ -1866,7 +1866,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     key = [widget.filter_obj.shape[0], 0]
             elif isinstance(widget, SetTabPage):
                 key = [len(widget.gene_set), 0]
-
+            else:
+                raise TypeError(type(widget))
             while tuple(key) in tab_count:
                 key[1] += 1
             tab_count[tuple(key)] = widget
@@ -1882,6 +1883,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 key = [type_to_order[type(widget.filter_obj)], 0]
             elif isinstance(widget, SetTabPage):
                 key = [type_to_order[type(widget.gene_set)], 0]
+            else:
+                raise TypeError(type(widget))
             while tuple(key) in tab_types:
                 key[1] += 1
             tab_types[tuple(key)] = widget
