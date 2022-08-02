@@ -2328,6 +2328,7 @@ def run():
     # generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui, parent=window)
     enrichment.enrichment_runner.parsing.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
     filtering.clustering.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
+    enrichment.enrichment_runner.io.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
     # filtering.clustering.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui, parent=window)
 
     window.show()
