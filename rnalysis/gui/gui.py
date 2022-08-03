@@ -11,6 +11,7 @@ from pathlib import Path
 from queue import Queue
 from typing import List, Union, Callable
 import hashlib
+import copy
 
 import matplotlib
 import numpy as np
@@ -432,7 +433,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
             else:
                 kwargs['parametric_test'] = stat_test
         gene_set_name = self.widgets['enrichment_list'].currentText()
-        gene_set = self.available_objects[gene_set_name][0]
+        gene_set = self.available_objects[gene_set_name][0].obj()
 
         for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
                                                   self.stats_widgets.items()):
@@ -443,7 +444,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
         if not self.is_single_set():
             bg_set_name = self.widgets['bg_list'].currentText()
-            bg_set = self.available_objects[bg_set_name][0]
+            bg_set = self.available_objects[bg_set_name][0].obj()
         else:
             bg_set = None
         return gene_set, bg_set, gene_set_name.rstrip('*'), kwargs
@@ -499,7 +500,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
     def create_canvas(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        sets = [self.available_objects[name][0] for name in set_names]
+        sets = [self.available_objects[name][0].obj() for name in set_names]
         ind = 0
         while ind < len(set_names):
             if sets[ind] is None:
@@ -727,15 +728,21 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         else:
             set_names, primary_set_name, kwargs = self._get_function_params()
 
-            first_obj = self.available_objects[primary_set_name][0]
-            if isinstance(first_obj, set):
-                first_obj = filtering.Filter(('placeholder', pd.DataFrame(index=first_obj)))
+            first_obj = self.available_objects[primary_set_name][0].obj()
             other_objs = []
             for name in set_names:
                 if name != primary_set_name:
-                    other_objs.append(self.available_objects[name][0])
-            output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
+                    other_objs.append(self.available_objects[name][0].obj())
             output_name = f"{func_name} output"
+
+            if kwargs.get('inplace', False):
+                command = SetOpInplacCommand(self.available_objects[primary_set_name][0], func_name, other_objs, kwargs,
+                                             f'Apply "{func_name}"')
+                self.available_objects[primary_set_name][0].undo_stack.push(command)
+                output_set = None
+            else:
+                output_set = getattr(first_obj, func_name)(*other_objs, **kwargs)
+
         if isinstance(output_set, set):
             self.geneSetReturned.emit(output_set, output_name)
         self.close()
@@ -808,7 +815,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
     def create_canvas(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        sets = [self.available_objects[name][0] for name in set_names]
+        sets = [self.available_objects[name][0].obj() for name in set_names]
         ind = 0
         while ind < len(set_names):
             if sets[ind] is None:
@@ -908,7 +915,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
 
     def _get_function_params(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        objs_to_plot = {key: val[0] for key, val in self.available_objects.items() if key in set_names}
+        objs_to_plot = {key: val[0].obj() for key, val in self.available_objects.items() if key in set_names}
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
@@ -953,6 +960,15 @@ class TabPage(QtWidgets.QWidget):
         self.stdout_widgets = {}
 
         self.init_stdout_ui()
+
+    def obj(self):
+        raise NotImplementedError
+
+    def update_obj(self, obj):
+        raise NotImplementedError
+
+    def update_tab(self, is_unsaved: bool = True):
+        raise NotImplementedError
 
     def obj_type(self):
         raise NotImplementedError
@@ -1025,6 +1041,12 @@ class SetTabPage(TabPage):
         self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
         self.overview_widgets = {}
         self.init_overview_ui(set_name)
+
+    def obj(self):
+        return self.gene_set.gene_set
+
+    def update_obj(self, obj: set):
+        self.update_gene_set(obj)
 
     def obj_type(self):
         return type(self.gene_set)
@@ -1104,6 +1126,9 @@ class SetTabPage(TabPage):
 
     def update_gene_set(self, gene_set: set):
         self.gene_set.gene_set = gene_set
+        self.update_tab()
+
+    def update_tab(self, is_unsaved: bool = True):
         self.update_set_shape()
         self.update_set_preview()
         self.changeIcon.emit('set')
@@ -1239,6 +1264,13 @@ class FilterTabPage(TabPage):
         self.clicom_window = None
 
         self.init_basic_ui()
+
+    def obj(self):
+        return self.filter_obj
+
+    def update_obj(self, obj: filtering.Filter):
+        self.filter_obj = obj
+        self.update_tab()
 
     def obj_type(self):
         return type(self.filter_obj)
@@ -1852,15 +1884,28 @@ class InplaceCommand(QtWidgets.QUndoCommand):
         self.func_name = func_name
         self.args = args
         self.kwargs = kwargs
-        self.obj_copy = self.tab_page.filter_obj.__copy__()
+        self.obj_copy = copy.copy(self.tab_page.obj())
 
     def undo(self):
-        del self.tab_page.filter_obj
-        self.tab_page.filter_obj = self.obj_copy.__copy__()
+        obj = self.tab_page.obj()
+        del obj
+        self.tab_page.update_obj(copy.copy(self.obj_copy))
         self.tab_page.update_tab(is_unsaved=True)
 
     def redo(self):
         self.tab_page._apply_function_from_params(self.func_name, self.args, self.kwargs)
+
+
+class SetOpInplacCommand(InplaceCommand):
+    def redo(self):
+        is_filter_obj = validation.isinstanceinh(self.tab_page.obj(), filtering.Filter)
+        first_obj = self.tab_page.obj()
+        if not is_filter_obj:
+            first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
+        getattr(first_obj, self.func_name)(*self.args, **self.kwargs)
+        if not is_filter_obj:
+            self.tab_page.update_obj(first_obj.index_set)
+        self.tab_page.update_tab()
 
 
 class PipelineInplaceCommand(QtWidgets.QUndoCommand):
@@ -1868,11 +1913,11 @@ class PipelineInplaceCommand(QtWidgets.QUndoCommand):
         super().__init__(description)
         self.tab_page = tab_page
         self.pipeline = pipeline
-        self.obj_copy = self.tab_page.filter_obj.__copy__()
+        self.obj_copy = copy.copy(self.tab_page.filter_obj)
 
     def undo(self):
         del self.tab_page.filter_obj
-        self.tab_page.filter_obj = self.obj_copy.__copy__()
+        self.tab_page.filter_obj = copy.copy(self.obj_copy)
         self.tab_page.update_tab(is_unsaved=True)
 
     def redo(self):
@@ -2378,13 +2423,8 @@ class MainWindow(QtWidgets.QMainWindow):
             QtGui.QMessageBox.warning(self, 'User Guide', 'Could not open User Guide')
 
     def get_gene_set_by_ind(self, ind: int):
-        prev_ind = self.tabs.currentIndex()
-        try:
-            self.tabs.setCurrentIndex(ind)
-            gene_set = self.tabs.currentWidget().filter_obj if \
-                isinstance(self.tabs.currentWidget(), FilterTabPage) else self.tabs.currentWidget().gene_set.gene_set
-        finally:
-            self.tabs.setCurrentIndex(prev_ind)
+        gene_set = self.tabs.widget(ind).filter_obj if \
+            isinstance(self.tabs.currentWidget(), FilterTabPage) else self.tabs.widget(ind).gene_set.gene_set
         return gene_set
 
     def get_available_objects(self):
@@ -2398,7 +2438,7 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 checked[name] = 1
                 key = name
-            available_objects_unique[key] = (self.get_gene_set_by_ind(i), self.tabs.tabIcon(i))
+            available_objects_unique[key] = (self.tabs.widget(i), self.tabs.tabIcon(i))
             checked[name] += 1
         return available_objects_unique
 
