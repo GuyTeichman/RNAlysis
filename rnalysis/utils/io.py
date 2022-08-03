@@ -23,6 +23,11 @@ from requests.adapters import HTTPAdapter, Retry
 from rnalysis.utils import parsing, validation, ontology, __path__
 
 
+def get_gui_cache_dir():
+    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    return cache_dir.joinpath('rnalysis_gui')
+
+
 def get_todays_cache_dir():
     today = date.today().strftime('%Y_%m_%d')
     cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
@@ -46,6 +51,36 @@ def cache_file(content: str, filename: str):
     file_path = directory.joinpath(filename)
     with open(file_path, 'w') as f:
         f.write(content)
+
+
+def load_cached_gui_file(filename: str):
+    directory = get_gui_cache_dir()
+    file_path = directory.joinpath(filename)
+    if file_path.exists():
+        if file_path.suffix in {'.csv', '.tsv'}:
+            return load_csv(file_path, index_col=0)
+        elif file_path.suffix in {'.txt'}:
+            with open(file_path) as f:
+                return {item.strip() for item in f.readlines()}
+
+        else:
+            with open(file_path) as f:
+                return f.read()
+    else:
+        return None
+
+
+def cache_gui_file(item: Union[pd.DataFrame, set], filename: str):
+    directory = get_gui_cache_dir()
+    if not directory.exists():
+        directory.mkdir(parents=True)
+    file_path = directory.joinpath(filename)
+    if isinstance(item, (pd.DataFrame, pd.Series)):
+        save_csv(item, file_path, index=True)
+    elif isinstance(item, set):
+        save_gene_set(item, file_path)
+    else:
+        raise TypeError(type(item))
 
 
 def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
