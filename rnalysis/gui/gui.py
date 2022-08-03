@@ -1281,7 +1281,6 @@ class FilterTabPage(TabPage):
         self.overview_widgets['table_type_label'] = QtWidgets.QLabel(
             f"Table type: {self.get_table_type()}")
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel()
-        self.update_table_name_label()
 
         self.overview_widgets['preview'] = QtWidgets.QTableView()
         # self.overview_widgets['preview'].setFixedWidth(550)
@@ -1291,7 +1290,6 @@ class FilterTabPage(TabPage):
         # self.overview_widgets['preview'].setFlags(self.overview_widgets['preview'].flags() & ~QtCore.Qt.ItemIsEditable)
         self.overview_widgets['preview'].horizontalHeader().setStretchLastSection(True)
         self.overview_widgets['preview'].verticalHeader().setStretchLastSection(True)
-        self.update_table_preview()
         self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 1)
         this_row += 1
         self.overview_widgets['table_name'] = QtWidgets.QLineEdit()
@@ -1312,7 +1310,6 @@ class FilterTabPage(TabPage):
 
         self.overview_widgets['shape'] = QtWidgets.QLabel()
         self.overview_grid.addWidget(self.overview_widgets['shape'], this_row, 0, 1, 2)
-        self.update_filter_obj_shape()
 
         self.overview_widgets['view_button'] = QtWidgets.QPushButton('View full table')
         self.overview_widgets['view_button'].clicked.connect(self.view_full_dataframe)
@@ -1320,6 +1317,8 @@ class FilterTabPage(TabPage):
 
         this_row += 1
         self.overview_grid.addWidget(self.overview_widgets['table_type_label'], this_row, 0, 1, 1)
+
+        self.update_tab(False)
 
     def update_filter_obj_shape(self):
         shape = self.filter_obj.shape
@@ -1416,17 +1415,22 @@ class FilterTabPage(TabPage):
         this_stack: FuncTypeStack = self.stack.currentWidget()
         func_name = this_stack.get_function_name()
         func_params = this_stack.get_function_params()
-        self._apply_function_from_params(func_name, args=[], kwargs=func_params)
+        if func_params.get('inplace', False):
+            command = InplaceCommand(self, func_name, args=[], kwargs=func_params, description=func_name + '...')
+            self.undo_stack.push(command)
+        else:
+            self._apply_function_from_params(func_name, args=[], kwargs=func_params)
+
+    def update_tab(self, is_unsaved: bool = True):
+        self.update_filter_obj_shape()
+        self.update_table_preview()
+        self.tabNameChange.emit(self.filter_obj.fname.stem, is_unsaved)
+        self.update_table_name_label()
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
         prev_name = self.get_tab_name()
         result = getattr(self.filter_obj, func_name)(*args, **kwargs)
-        self.update_filter_obj_shape()
-        self.update_table_preview()
-        if prev_name != self.filter_obj.fname.name:
-            self.tabNameChange.emit(self.filter_obj.fname.stem, True)
-            self.update_table_name_label()
-
+        self.update_tab(prev_name != self.filter_obj.fname.name)
         self._proccess_outputs(result, func_name)
 
     def _proccess_outputs(self, outputs, source_name: str = ''):
@@ -1467,11 +1471,7 @@ class FilterTabPage(TabPage):
             inplace = False
         prev_name = self.filter_obj.fname.name
         result = pipeline.apply_to(self.filter_obj, inplace)
-        self.update_filter_obj_shape()
-        self.update_table_preview()
-        if prev_name != self.filter_obj.fname.name:
-            self.tabNameChange.emit(self.filter_obj.fname.stem, True)
-
+        self.update_tab(prev_name != self.filter_obj.fname.name)
         self._proccess_outputs(result, 'pipeline')
 
     def get_index_string(self):
@@ -1799,6 +1799,7 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
             self.cornerWidget().setMinimumHeight(h)
             self.setMinimumHeight(h)
 
+
 class RenameCommand(QtWidgets.QUndoCommand):
     def __init__(self, prev_name: str, new_name: str, tab: TabPage, description: str):
         super().__init__(description)
@@ -1814,25 +1815,42 @@ class RenameCommand(QtWidgets.QUndoCommand):
 
 
 class CloseTabCommand(QtWidgets.QUndoCommand):
-    def __init__(self, tab_widget: ReactiveTabWidget, tab_index: int, description: str):
+    def __init__(self, tab_container: ReactiveTabWidget, tab_index: int, description: str):
         super().__init__(description)
-        self.tab_widget = tab_widget
+        self.tab_container = tab_container
         self.tab_index = tab_index
-        self.tab_name = tab_widget.tabText(self.tab_index).rstrip('*')
-        self.obj_type = self.tab_widget.widget(self.tab_index).obj_type()
-        self.filename = self.tab_widget.widget(self.tab_index).cache()
+        self.tab_name = tab_container.tabText(self.tab_index).rstrip('*')
+        self.obj_type = self.tab_container.widget(self.tab_index).obj_type()
+        self.filename = self.tab_container.widget(self.tab_index).cache()
 
-        self.kwargs = self.tab_widget.widget(self.tab_index).obj_properties()
+        self.kwargs = self.tab_container.widget(self.tab_index).obj_properties()
 
     def undo(self):
         item = io.load_cached_gui_file(self.filename)
         if isinstance(item, pd.DataFrame):
             item = self.obj_type.from_dataframe(item, self.tab_name, **self.kwargs)
 
-        self.tab_widget.new_tab_from_item(item, self.tab_name)
+        self.tab_container.new_tab_from_item(item, self.tab_name)
 
     def redo(self):
-        self.tab_widget.removeTab(self.tab_index)
+        self.tab_container.removeTab(self.tab_index)
+
+
+class InplaceCommand(QtWidgets.QUndoCommand):
+    def __init__(self, tab_page: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
+        super().__init__(description)
+        self.tab_page = tab_page
+        self.func_name = func_name
+        self.args = args
+        self.kwargs = kwargs
+        self.obj_copy = self.tab_page.filter_obj.__copy__()
+
+    def undo(self):
+        self.tab_page.filter_obj = self.obj_copy.__copy__()
+        self.tab_page.update_tab(is_unsaved=True)
+
+    def redo(self):
+        self.tab_page._apply_function_from_params(self.func_name, self.args, self.kwargs)
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -2174,6 +2192,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.tabs.widget(index).is_empty():
             self.tabs.removeTab(index)
         else:
+            self.undo_group.removeStack(self.tabs.widget(index).undo_stack)
             command = CloseTabCommand(self.tabs, index, self.tabs.tabText(index).rstrip('*'))
             self.closed_tabs_stack.push(command)
 
