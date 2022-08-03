@@ -2270,7 +2270,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.removeTab(index)
         else:
             self.undo_group.removeStack(self.tabs.widget(index).undo_stack)
-            command = CloseTabCommand(self.tabs, index, self.tabs.tabText(index).rstrip('*'))
+            command = CloseTabCommand(self.tabs, index, '"' + self.tabs.tabText(index).rstrip('*') + '"')
             self.closed_tabs_stack.push(command)
 
     def copy_gene_set(self):
