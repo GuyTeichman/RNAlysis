@@ -61,7 +61,7 @@ class Filter:
     """
     __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data'}
 
-    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False):
+    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = False):
 
         """
         :param fname: full path/filename of the .csv file to be loaded into the Filter object
@@ -75,19 +75,25 @@ class Filter:
             >>> d = filtering.Filter("tests/test_files/counted.csv")
 
         """
-        # init from a tuple (fname, DataFrame/Series). Used in self.__copy__(), self._inplace
-        if isinstance(fname, tuple):
-            assert isinstance(fname[1], (pd.DataFrame, pd.Series)) and isinstance(fname[0], (str, Path))
-            self.fname = fname[0]
-            self.df = fname[1]
         # init from a file (load the csv into a DataFrame/Series)
-        else:
-            assert isinstance(fname, (str, Path))
-            self.fname = Path(fname)
-            self.df = io.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
+        assert isinstance(fname, (str, Path))
+        self.fname = Path(fname)
+        self.df = io.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
         # check for duplicate indices
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same name/index.")
+
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path]) -> 'Filter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        if obj.df.index.has_duplicates:
+            warnings.warn("This Filter object contains multiple rows with the same name/index.")
+        return obj
+
+    def _init_warnings(self):
+        pass
 
     def __repr__(self):
         return f"{type(self).__name__}('{self.fname}')"
@@ -114,7 +120,7 @@ class Filter:
         yield from self.df.index
 
     def __copy__(self):
-        return type(self)((self.fname, self.df.copy(deep=True)))
+        return type(self).from_dataframe(self.df, self.fname)
 
     @property
     def columns(self) -> list:
@@ -1443,12 +1449,17 @@ class FoldChangeFilter(Filter):
     """
     __slots__ = {'numerator': 'name of the numerator', 'denominator': 'name of the denominator'}
 
-    def __init__(self, fname: Union[str, Path, tuple], numerator_name: str, denominator_name: str):
+    def __init__(self, fname: Union[str, Path, tuple], numerator_name: str, denominator_name: str,
+                 suppress_warnings: bool = False):
         super().__init__(fname)
         self.numerator = numerator_name
         self.denominator = denominator_name
         self.df.name = 'Fold Change'
         # inf/0 can be problematic for functions down the line (like randomization test)
+        if not suppress_warnings:
+            self._init_warnings()
+
+    def _init_warnings(self):
         if np.inf in self.df or 0 in self.df:
             warnings.warn(
                 " FoldChangeFilter does not support 'inf' or '0' values! "
@@ -1461,9 +1472,21 @@ class FoldChangeFilter(Filter):
         return f"{type(self).__name__} (numerator: '{self.numerator}', denominator: '{self.denominator}') " \
                f"of file {self.fname.name}"
 
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], numerator_name: str = 'numerator',
+                       denominator_name: str = 'denominator', suppress_warnings: bool = False) -> 'FoldChangeFilter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        obj.numerator = numerator_name
+        obj.denominator = denominator_name
+        if not suppress_warnings:
+            obj._init_warnings()
+        return obj
+
     def __copy__(self):
-        return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
-                          denominator_name=self.denominator)
+        return type(self).from_dataframe(self.df, self.fname, numerator_name=self.numerator,
+                                         denominator_name=self.denominator)
 
     @property
     def columns(self) -> list:
@@ -1697,16 +1720,33 @@ class DESeqFilter(Filter):
         super().__init__(fname, drop_columns)
         self.log2fc_col = log2fc_col
         self.padj_col = padj_col
-        if not suppress_warnings and log2fc_col not in self.columns:
-            warnings.warn(f"The specified log2fc_col '{log2fc_col}' does not appear in the DESeqFilter's columns: "
+        if not suppress_warnings:
+            self._init_warnings()
+
+    def _init_warnings(self):
+        if self.log2fc_col not in self.columns:
+            warnings.warn(f"The specified log2fc_col '{self.log2fc_col}' does not appear in the DESeqFilter's columns: "
                           f"{self.columns}. DESeqFilter-specific functions that depend on "
                           f"log2(fold change) may fail to run. ")
-        if not suppress_warnings and padj_col not in self.columns:
-            warnings.warn(f"The specified padj_col '{padj_col}' does not appear in the DESeqFilter's columns: "
+        if self.padj_col not in self.columns:
+            warnings.warn(f"The specified padj_col '{self.padj_col}' does not appear in the DESeqFilter's columns: "
                           f"{self.columns}. DESeqFilter-specific functions that depend on p-values may fail to run. ")
 
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path],
+                       log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj',
+                       suppress_warnings: bool = False) -> 'DESeqFilter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        obj.log2fc_col = log2fc_col
+        obj.padj_col = padj_col
+        if not suppress_warnings:
+            obj._init_warnings()
+        return obj
+
     def __copy__(self):
-        return type(self)((self.fname, self.df.copy(deep=True)), suppress_warnings=True)
+        return type(self).from_dataframe(self.df, self.fname, self.log2fc_col, self.padj_col, suppress_warnings=True)
 
     def _assert_padj_col(self):
         if self.padj_col not in self.df.columns:
@@ -1933,10 +1973,25 @@ class CountFilter(Filter):
         super().__init__(fname, drop_columns)
         self._is_normalized = is_normalized
 
+    def _init_warnings(self):
         if len(self._numeric_columns) < len(self.columns):
             warnings.warn(f"The following columns in the CountFilter are not numeric, and will therefore be ignored "
                           f"when running some CountFilter-specific functions: "
                           f"{set(self.df.columns).difference(self._numeric_columns)}")
+
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], is_normalized: bool = False,
+                       suppress_warnings: bool = False) -> 'CountFilter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        obj._is_normalized = is_normalized
+        if not suppress_warnings:
+            obj._init_warnings()
+        return obj
+
+    def __copy__(self):
+        return type(self).from_dataframe(self.df, self.fname, self.is_normalized, suppress_warnings=True)
 
     @property
     def is_normalized(self) -> bool:
@@ -2027,7 +2082,7 @@ class CountFilter(Filter):
         new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
         # init the FoldChangeFilter object from an existing Series
-        fcfilt = FoldChangeFilter((new_fname, srs), numerator_name=numer_name, denominator_name=denom_name)
+        fcfilt = FoldChangeFilter.from_dataframe(srs, new_fname, numerator_name=numer_name, denominator_name=denom_name)
 
         return fcfilt
 
@@ -3273,7 +3328,7 @@ class CountFilter(Filter):
             io.save_csv(df=uncounted, filename=uncounted_fname)
 
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
-        count_filter_obj = cls((Path(fname), counts))
+        count_filter_obj = cls.from_dataframe(counts, Path(fname))
         if norm_to_rpm:
             count_filter_obj.normalize_to_rpm(uncounted)
         return count_filter_obj
