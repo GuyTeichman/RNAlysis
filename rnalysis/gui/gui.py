@@ -1855,6 +1855,7 @@ class InplaceCommand(QtWidgets.QUndoCommand):
         self.obj_copy = self.tab_page.filter_obj.__copy__()
 
     def undo(self):
+        del self.tab_page.filter_obj
         self.tab_page.filter_obj = self.obj_copy.__copy__()
         self.tab_page.update_tab(is_unsaved=True)
 
@@ -1870,6 +1871,7 @@ class PipelineInplaceCommand(QtWidgets.QUndoCommand):
         self.obj_copy = self.tab_page.filter_obj.__copy__()
 
     def undo(self):
+        del self.tab_page.filter_obj
         self.tab_page.filter_obj = self.obj_copy.__copy__()
         self.tab_page.update_tab(is_unsaved=True)
 
