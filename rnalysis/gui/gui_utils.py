@@ -941,10 +941,12 @@ class RadioButtonBox(QtWidgets.QGroupBox):
     def set_selection(self, selection: typing.Union[str, int]):
         if isinstance(selection, str):
             for button_name, button in self.radio_buttons.items():
-                button.setChecked(button_name == selection)
+                if button_name == selection:
+                    button.click()
         else:
             for i, button in enumerate(self.radio_buttons.values()):
-                button.setChecked(i == selection)
+                if i == selection:
+                    button.click()
         self.selectionChanged.emit()
 
 

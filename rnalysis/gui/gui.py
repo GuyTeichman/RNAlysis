@@ -525,11 +525,9 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
                 items[s_name] = s_set
             if 2 <= len(set_names) <= 3:
                 canvas = gui_graphics.VennInteractiveCanvas(items, self)
-                self._connect_canvas(canvas)
 
             else:
                 canvas = gui_graphics.UpSetInteractiveCanvas(items, self)
-                self._connect_canvas(canvas)
         if 'canvas' in self.widgets:
             self.widgets['canvas'].deleteLater()
             self.widgets['toolbar'].deleteLater()
@@ -546,6 +544,9 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         for row in range(1, 4):
             self.operations_grid.setRowStretch(row, 1)
 
+        if not isinstance(canvas, gui_graphics.EmptyCanvas):
+            self._connect_canvas(canvas)
+
     def _connect_canvas(self, canvas: gui_graphics.BaseInteractiveCanvas):
         canvas.manualChoice.connect(self._set_op_other)
         self.widgets['radio_button_box'].radio_buttons['Union'].clicked.connect(canvas.union)
@@ -556,6 +557,9 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         if isinstance(canvas, gui_graphics.VennInteractiveCanvas):
             self.widgets['radio_button_box'].radio_buttons['Symmetric Difference'].clicked.connect(
                 canvas.symmetric_difference)
+        this_button = self.widgets['radio_button_box'].checkedButton()
+        if this_button is not None:
+            self.widgets['radio_button_box'].set_selection(this_button.text())
 
     def init_ui(self):
         self.setWindowTitle('Set Operations')
@@ -603,7 +607,8 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         for func in [self.update_paremeter_ui, self._validate_input, self._toggle_choose_primary_set]:
             self.widgets['radio_button_box'].buttonClicked.connect(func)
             self.widgets['radio_button_box'].selectionChanged.connect(func)
-
+        self.widgets['radio_button_box'].radio_buttons['Majority-Vote Intersection'].clicked.connect(
+            self._majority_vote_intersection)
         self.widgets['set_op_box_layout'].addWidget(self.widgets['radio_button_box'], stretch=1)
 
         self.widgets['choose_primary_set'] = gui_utils.MandatoryComboBox('Choose primary set...', self)
@@ -620,7 +625,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
         self.create_canvas()
 
-        self.widgets['apply_button'] = QtWidgets.QPushButton(text='Apply')
+        self.widgets['apply_button'] = QtWidgets.QPushButton('Apply')
         self.widgets['apply_button'].clicked.connect(self.apply_set_op)
         self.widgets['apply_button'].setEnabled(False)
         self.operations_grid.addWidget(self.widgets['apply_button'], 4, 0, 1, 6)
@@ -637,6 +642,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
             self.primarySetChangedDifference.emit(set_name)
         elif func_name == 'intersection':
             self.primarySetChangedIntersection.emit()
+        self._validate_input()
 
     def update_paremeter_ui(self):
         # delete previous widgets
