@@ -139,7 +139,7 @@ def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List
     return df
 
 
-def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = True):
+def save_csv(df: pd.DataFrame, filename: Union[str, Path], suffix: str = None, index: bool = True):
     """
     save a pandas DataFrame to csv.
 
@@ -620,7 +620,7 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None)
     if gene_id_type is not None:
         gene_id_type = parsing.data_to_tuple(gene_id_type)
     translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=gene_id_type,
-                                              map_to_options=('Ensembl', 'Ensembl Genomes'))
+                                                     map_to_options=('Ensembl', 'Ensembl Genomes'))
     output = _ensmbl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     species = dict()
     for gene_id in output:
