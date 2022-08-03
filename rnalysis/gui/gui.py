@@ -1416,7 +1416,7 @@ class FilterTabPage(TabPage):
         func_name = this_stack.get_function_name()
         func_params = this_stack.get_function_params()
         if func_params.get('inplace', False):
-            command = InplaceCommand(self, func_name, args=[], kwargs=func_params, description=func_name + '...')
+            command = InplaceCommand(self, func_name, args=[], kwargs=func_params, description=f'Apply "{func_name}"')
             self.undo_stack.push(command)
         else:
             self._apply_function_from_params(func_name, args=[], kwargs=func_params)
@@ -1466,7 +1466,7 @@ class FilterTabPage(TabPage):
                                                apply_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
         if reply == QtWidgets.QMessageBox.Yes:
-            command = PipelineInplaceCommand(self, pipeline, description=f'Pipeline "{pipeline_name}"')
+            command = PipelineInplaceCommand(self, pipeline, description=f'Apply Pipeline "{pipeline_name}"')
             self.undo_stack.push(command)
         else:
             self._apply_pipeline(pipeline, inplace=False)
