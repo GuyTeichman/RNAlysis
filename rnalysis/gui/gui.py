@@ -10,6 +10,7 @@ from collections import OrderedDict
 from pathlib import Path
 from queue import Queue
 from typing import List, Union, Callable
+import hashlib
 
 import matplotlib
 import numpy as np
@@ -928,10 +929,10 @@ class TabPage(QtWidgets.QWidget):
     tabNameChange = QtCore.pyqtSignal(str, bool)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
-    commandIssued = QtCore.pyqtSignal(QtWidgets.QUndoCommand)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent)
+        self.undo_stack = undo_stack
         self.sup_layout = QtWidgets.QVBoxLayout(self)
         self.container = QtWidgets.QWidget(self)
         self.layout = QtWidgets.QVBoxLayout(self.container)
@@ -953,6 +954,12 @@ class TabPage(QtWidgets.QWidget):
 
         self.init_stdout_ui()
 
+    def obj_type(self):
+        raise NotImplementedError
+
+    def obj_properties(self) -> dict:
+        return {}
+
     def is_empty(self):
         return True
 
@@ -973,12 +980,15 @@ class TabPage(QtWidgets.QWidget):
             new_name = self.overview_widgets['table_name'].text()
         prev_name = self.get_tab_name()
         command = RenameCommand(prev_name, new_name, self, f'Rename "{prev_name}" to "{new_name}"')
-        self.commandIssued.emit(command)
+        self.undo_stack.push(command)
 
     def _rename(self, new_name: str = None):
         self.tabNameChange.emit(new_name, True)
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{new_name}</b>'")
         self.overview_widgets['table_name'].setText('')
+
+    def cache(self):
+        raise NotImplementedError
 
     def _get_parent_window(self):
         parent = self.parent()
@@ -1002,8 +1012,9 @@ class TabPage(QtWidgets.QWidget):
 
 
 class SetTabPage(TabPage):
-    def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None):
-        super().__init__(parent)
+    def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
+                 undo_stack: QtWidgets.QUndoStack = None):
+        super().__init__(parent, undo_stack)
         if gene_set is None:
             gene_set = enrichment.FeatureSet(set(), set_name)
         elif isinstance(gene_set, set):
@@ -1014,6 +1025,9 @@ class SetTabPage(TabPage):
         self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
         self.overview_widgets = {}
         self.init_overview_ui(set_name)
+
+    def obj_type(self):
+        return type(self.gene_set)
 
     def init_overview_ui(self, set_name: str):
         this_row = 0
@@ -1068,6 +1082,13 @@ class SetTabPage(TabPage):
     def _rename(self, new_name: str = None):
         super()._rename(new_name)
         self.gene_set.change_set_name(new_name)
+
+    def cache(self) -> str:
+        base_str = str(time.time_ns()) + self.get_tab_name() + str(len(self.gene_set))
+        hex_hash = hashlib.sha1(base_str.encode('utf-8')).hexdigest()
+        filename = f"{hex_hash}.txt"
+        io.cache_gui_file(self.gene_set, filename)
+        return filename
 
     def is_empty(self):
         return self.gene_set is None
@@ -1198,8 +1219,8 @@ class FilterTabPage(TabPage):
     GENERAL_FUNCS = {'sort', 'transform', 'fold_change'}
     filterObjectCreated = QtCore.pyqtSignal(filtering.Filter)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
+        super().__init__(parent, undo_stack)
         self.filter_obj = None
         self.df_views = []
 
@@ -1219,11 +1240,31 @@ class FilterTabPage(TabPage):
 
         self.init_basic_ui()
 
+    def obj_type(self):
+        return type(self.filter_obj)
+
+    def obj_properties(self) -> dict:
+        if self.obj_type() == filtering.CountFilter:
+            return dict(is_normalized=self.filter_obj.is_normalized)
+        elif self.obj_type() == filtering.DESeqFilter:
+            return dict(log2fc_col=self.filter_obj.log2fc_col, padj_col=self.filter_obj.padj_col)
+        elif self.obj_type() == filtering.FoldChangeFilter:
+            return dict(numerator_name=self.filter_obj.numerator, denominator_name=self.filter_obj.denominator)
+        else:
+            return {}
+
     @QtCore.pyqtSlot()
     def _rename(self, new_name: str = None):
         super()._rename(new_name)
         self.filter_obj.fname = Path(
             os.path.join(str(self.filter_obj.fname.parent), f"{new_name}{self.filter_obj.fname.suffix}"))
+
+    def cache(self):
+        base_str = str(time.time_ns()) + str(self.filter_obj.fname) + str(len(self.filter_obj.shape))
+        hex_hash = hashlib.sha1(base_str.encode('utf-8')).hexdigest()
+        filename = f"{hex_hash}.csv"
+        io.cache_gui_file(self.filter_obj.df, filename)
+        return filename
 
     def is_empty(self):
         return self.filter_obj is None
@@ -1772,6 +1813,28 @@ class RenameCommand(QtWidgets.QUndoCommand):
         self.tab._rename(self.new_name)
 
 
+class CloseTabCommand(QtWidgets.QUndoCommand):
+    def __init__(self, tab_widget: ReactiveTabWidget, tab_index: int, description: str):
+        super().__init__(description)
+        self.tab_widget = tab_widget
+        self.tab_index = tab_index
+        self.tab_name = tab_widget.tabText(self.tab_index).rstrip('*')
+        self.obj_type = self.tab_widget.widget(self.tab_index).obj_type()
+        self.filename = self.tab_widget.widget(self.tab_index).cache()
+
+        self.kwargs = self.tab_widget.widget(self.tab_index).obj_properties()
+
+    def undo(self):
+        item = io.load_cached_gui_file(self.filename)
+        if isinstance(item, pd.DataFrame):
+            item = self.obj_type.from_dataframe(item, self.tab_name, **self.kwargs)
+
+        self.tab_widget.new_tab_from_item(item, self.tab_name)
+
+    def redo(self):
+        self.tab_widget.removeTab(self.tab_index)
+
+
 class MainWindow(QtWidgets.QMainWindow):
     USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide.html'
 
@@ -1780,9 +1843,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs = ReactiveTabWidget(self)
         self.next_tab_n = 0
 
-        self.undo_stack = QtWidgets.QUndoStack(self)
-        self.undo_view = QtWidgets.QUndoView(self.undo_stack)
-        self.undo_stack_widget = QtWidgets.QDockWidget('Command history', self)
+        self.closed_tabs_stack = QtWidgets.QUndoStack(self)
+        self.undo_group = QtWidgets.QUndoGroup(self)
+        self.tabs.currentChanged.connect(self._change_undo_stack)
+
+        self.undo_view = QtWidgets.QUndoView(self.undo_group)
+        self.command_history_dock = QtWidgets.QDockWidget('Command history', self)
 
         self.add_tab_button = QtWidgets.QToolButton()
         self.add_tab_button.setToolTip('Add New Tab')
@@ -1829,11 +1895,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_style_sheet()
 
         self.tabs.tabRightClicked.connect(self.init_tab_contextmenu)
-        self.tabs.tabCloseRequested.connect(self.delete)
+        self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.newTabFromSet.connect(self.new_tab_from_gene_set)
+        self.tabs.newTabFromFilter.connect(self.new_tab_from_filter_obj)
 
-        self.undo_stack_widget.setWidget(self.undo_view)
-        self.undo_stack_widget.setFloating(False)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.undo_stack_widget)
+        self.command_history_dock.setWidget(self.undo_view)
+        self.command_history_dock.setFloating(False)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.command_history_dock)
 
         self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
         self.setCentralWidget(self.tabs)
@@ -1870,6 +1938,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_style_sheet(self):
         self.setStyleSheet(gui_style.get_stylesheet())
+
+    @QtCore.pyqtSlot(int)
+    def _change_undo_stack(self, ind: int):
+        if self.tabs.count() == 0:
+            self.undo_group.setActiveStack(self.undo_group.stacks()[0])
+        else:
+            stack = self.tabs.widget(ind).undo_stack
+            self.undo_group.setActiveStack(stack)
 
     def sort_reverse(self):
         prev_order = {i: self.tabs.widget(i) for i in range(self.tabs.count())}
@@ -1940,6 +2016,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.tabBar().moveTab(from_ind, to_ind)
 
     def add_new_tab(self, name: str = None, is_set: bool = False):
+        new_undo_stack = QtWidgets.QUndoStack()
+        self.undo_group.addStack(new_undo_stack)
         if name is None:
             name = f'New Table {self.next_tab_n + 1}'
             self.next_tab_n += 1
@@ -1948,9 +2026,9 @@ class MainWindow(QtWidgets.QMainWindow):
             print(name)
 
         if is_set:
-            tab = SetTabPage(name, parent=self.tabs)
+            tab = SetTabPage(name, parent=self.tabs, undo_stack=new_undo_stack)
         else:
-            tab = FilterTabPage(self.tabs)
+            tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack)
             tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
         tab.changeIcon.connect(self.set_current_tab_icon)
         tab.tabNameChange.connect(self.rename_tab)
@@ -2089,8 +2167,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 gene_set = {line.strip() for line in f.readlines()}
         return gene_set
 
-    def delete(self, index):
-        self.tabs.removeTab(index)
+    def close_current_tab(self):
+        ind = self.tabs.currentIndex()
+        self.close_tab(ind)
+
+    def close_tab(self, index):
+        if self.tabs.widget(index).is_empty():
+            self.tabs.removeTab(index)
+        else:
+            command = CloseTabCommand(self.tabs, index, self.tabs.tabText(index).rstrip('*'))
+            self.closed_tabs_stack.push(command)
 
     def copy_gene_set(self):
         gene_set = self.tabs.currentWidget().get_index_string()
@@ -2153,8 +2239,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.exit_action = QtWidgets.QAction("&Exit", self)
         self.exit_action.triggered.connect(self.closeEvent)
 
-        self.undo_action = self.undo_stack.createUndoAction(self)
-        self.redo_action = self.undo_stack.createRedoAction(self)
+        self.undo_action = self.undo_group.createUndoAction(self)
+        self.redo_action = self.undo_group.createRedoAction(self)
+        self.restore_tab_action = self.closed_tabs_stack.createUndoAction(self, 'Restore tab')
+        self.close_current_action = QtWidgets.QAction("&Close current tab", self)
+        self.close_current_action.triggered.connect(self.close_current_tab)
 
         self.show_history_action = QtWidgets.QAction("Command &History")
         self.show_history_action.setCheckable(True)
@@ -2196,6 +2285,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.undo_action.setShortcut(QtGui.QKeySequence("Ctrl+Z"))
         self.redo_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+Z"))
+        self.restore_tab_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+T"))
+        self.close_current_action.setShortcut(QtGui.QKeySequence("Ctrl+W"))
 
         self.import_set_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+I"))
         self.import_multiple_sets_action.setShortcut(QtGui.QKeySequence("Ctrl+Shift+M"))
@@ -2211,9 +2302,9 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(bool)
     def toggle_history_window(self, state: bool):
         if state:
-            self.undo_stack_widget.show()
+            self.command_history_dock.show()
         else:
-            self.undo_stack_widget.close()
+            self.command_history_dock.close()
 
     def save_file(self):
         self.tabs.currentWidget().save_file()
@@ -2313,7 +2404,7 @@ class MainWindow(QtWidgets.QMainWindow):
             [self.save_action, self.settings_action, self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
-        edit_menu.addActions([self.undo_action, self.redo_action])
+        edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action])
 
         view_menu = self.menu_bar.addMenu("&View")
         view_menu.addActions([self.show_history_action])
