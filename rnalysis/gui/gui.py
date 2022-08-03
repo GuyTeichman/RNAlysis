@@ -1466,9 +1466,12 @@ class FilterTabPage(TabPage):
                                                apply_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
         if reply == QtWidgets.QMessageBox.Yes:
-            inplace = True
+            command = PipelineInplaceCommand(self, pipeline, description=f'Pipeline "{pipeline_name}"')
+            self.undo_stack.push(command)
         else:
-            inplace = False
+            self._apply_pipeline(pipeline, inplace=False)
+
+    def _apply_pipeline(self, pipeline, inplace: bool):
         prev_name = self.filter_obj.fname.name
         result = pipeline.apply_to(self.filter_obj, inplace)
         self.update_tab(prev_name != self.filter_obj.fname.name)
@@ -1591,10 +1594,16 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         super().init_function_ui()
         self.function_group.setTitle("Add functions to Pipeline")
 
-    def _apply_function_from_params(self, func_name, *args, **kwargs):
-        self.pipeline.add_function(func_name, *args, **kwargs)
+    def apply_function(self):
+        this_stack: FuncTypeStack = self.stack.currentWidget()
+        func_name = this_stack.get_function_name()
+        func_params = this_stack.get_function_params()
+        self.pipeline.add_function(func_name, **func_params)
         self.update_pipeline_preview()
         self.is_unsaved = True
+
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
+        raise NotImplementedError
 
     def update_pipeline_preview(self):
         self.overview_widgets['preview'].setPlainText(str(self.pipeline))
@@ -1851,6 +1860,21 @@ class InplaceCommand(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.tab_page._apply_function_from_params(self.func_name, self.args, self.kwargs)
+
+
+class PipelineInplaceCommand(QtWidgets.QUndoCommand):
+    def __init__(self, tab_page: FilterTabPage, pipeline: filtering.Pipeline, description: str):
+        super().__init__(description)
+        self.tab_page = tab_page
+        self.pipeline = pipeline
+        self.obj_copy = self.tab_page.filter_obj.__copy__()
+
+    def undo(self):
+        self.tab_page.filter_obj = self.obj_copy.__copy__()
+        self.tab_page.update_tab(is_unsaved=True)
+
+    def redo(self):
+        self.tab_page._apply_pipeline(self.pipeline, inplace=True)
 
 
 class MainWindow(QtWidgets.QMainWindow):
