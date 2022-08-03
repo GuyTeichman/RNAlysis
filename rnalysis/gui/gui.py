@@ -1720,6 +1720,8 @@ class MultiOpenWindow(QtWidgets.QDialog):
 
 class ReactiveTabWidget(QtWidgets.QTabWidget):
     tabRightClicked = QtCore.pyqtSignal(int)
+    newTabFromSet = QtCore.pyqtSignal(set, str)
+    newTabFromFilter = QtCore.pyqtSignal(filtering.Filter, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1739,6 +1741,22 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
                 return
             self.tabRightClicked.emit(ind)
 
+    def new_tab_from_item(self, item: Union[filtering.Filter, set], name: str):
+        if isinstance(item, set):
+            self.newTabFromSet.emit(item, name)
+        elif validation.isinstanceinh(item, filtering.Filter):
+            self.newTabFromFilter.emit(item, name)
+        else:
+            raise TypeError(type(item))
+
+    def removeTab(self, index):
+        h = self.cornerWidget().height()
+
+        super().removeTab(index)
+        self.update()
+        if self.count() == 0:
+            self.cornerWidget().setMinimumHeight(h)
+            self.setMinimumHeight(h)
 
 class RenameCommand(QtWidgets.QUndoCommand):
     def __init__(self, prev_name: str, new_name: str, tab: TabPage, description: str):

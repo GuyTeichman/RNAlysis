@@ -1,10 +1,8 @@
 import os
 
 import pytest
-from pytestqt import qtbot
-from PyQt5 import QtCore, QtWidgets, QtGui
-import sys
 from rnalysis.gui.gui_utils import *
+from utils.io import save_gene_set
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
