@@ -2234,7 +2234,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             "Text document (*.txt);;"
                                                             "All Files (*)")
         if filename:
-            gui_utils.save_gene_set(gene_set, filename)
+            io.save_gene_set(gene_set, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
     def open_user_guide(self):

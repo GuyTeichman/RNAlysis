@@ -1109,3 +1109,9 @@ def get_datetime():
     now = datetime.now()
     now_str = now.strftime('%H:%M:%S %Y/%m/%d')
     return now_str
+
+
+def save_gene_set(gene_set: set, path):
+    with open(path, 'w') as f:
+        f.writelines(
+            [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])

@@ -1,5 +1,4 @@
 import ast
-import functools
 import itertools
 import inspect
 import traceback
@@ -14,7 +13,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
-from rnalysis.utils import io, parsing, settings, validation, generic
+from rnalysis.utils import io, parsing, settings, validation, generic, io
 from rnalysis.gui import gui_style
 from joblib import Parallel
 
@@ -559,7 +558,7 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
 
     def delete_all(self):
         accepted = QtWidgets.QMessageBox.question(self, "Delete all items?",
-                                                  "Are you sure you want to delete all items?",
+                                                  "Are you sure you want to close_tab all items?",
                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if accepted == QtWidgets.QMessageBox.Yes:
             for n_item in reversed(range(len(self.items))):
@@ -1347,7 +1346,7 @@ class GeneSetView(DataView):
                                                             "Text document (*.txt);;"
                                                             "All Files (*)")
         if filename:
-            save_gene_set(self.data, filename)
+            io.save_gene_set(self.data, filename)
             print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
 
@@ -1818,12 +1817,6 @@ def get_val_from_widget(widget):
     else:
         raise TypeError(f"Invalid QtWidget type {type(widget)}.")
     return val
-
-
-def save_gene_set(gene_set: set, path):
-    with open(path, 'w') as f:
-        f.writelines(
-            [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
 
 
 def clear_layout(layout, exceptions: set = frozenset()):
