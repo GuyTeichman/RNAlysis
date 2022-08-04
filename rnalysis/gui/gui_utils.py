@@ -592,6 +592,9 @@ class MandatoryComboBox(QtWidgets.QComboBox):
     def is_legal(self):
         return self.currentText() != self.default_choice
 
+    def setEnabled(self, to_enable: bool):
+        self.setDisabled(not to_enable)
+
     def setDisabled(self, to_disable: bool):
         if to_disable:
             self.disable_bg_color()
@@ -881,6 +884,19 @@ class PathLineEdit(QtWidgets.QWidget):
             self.file_path.setStyleSheet("QLineEdit{border: 1.5px solid #57C4AD;}")
         else:
             self.file_path.setStyleSheet("QLineEdit{border: 1.5px solid #DB4325;}")
+
+    def disable_bg_color(self):
+        self.file_path.setStyleSheet("QLineEdit{}")
+
+    def setEnabled(self, to_enable: bool):
+        self.setDisabled(not to_enable)
+
+    def setDisabled(self, to_disable: bool):
+        if to_disable:
+            self.disable_bg_color()
+        else:
+            self.set_file_path_bg_color()
+        super().setDisabled(to_disable)
 
     def choose_file(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
