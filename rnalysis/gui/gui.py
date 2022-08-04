@@ -2595,6 +2595,13 @@ def run():
     sys.excepthook = window.excepthook
     builtins.input = window.input
 
+    try:
+        import numba
+    except ImportError:
+        warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
+                      "If you want to improve the performance of slow operations on RNAlysis, "
+                      "please install package 'numba'. ")
+
     # enrichment.enrichment_runner.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui,
     #                                                                           parent=window)
     enrichment.enrichment_runner.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)

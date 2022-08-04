@@ -2,17 +2,35 @@ import itertools
 import inspect
 from functools import lru_cache
 from typing import Union, Callable, Tuple
+import warnings
 
 import numpy as np
 import pandas as pd
-from joblib import Parallel
+import joblib
 from scipy.special import comb
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 from tqdm.auto import tqdm
 from rnalysis.utils import parsing
 
+try:
+    import numba
+except ImportError:
+    warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
+                  "If you want to improve the performance of slow operations on RNAlysis, "
+                  "please install package 'numba'. ")
 
-class ProgressParallel(Parallel):
+
+    class numba:
+        @staticmethod
+        def jit(*args, **kwargs):
+            return lambda f: f
+
+        @staticmethod
+        def njit(*args, **kwargs):
+            return lambda f: f
+
+
+class ProgressParallel(joblib.Parallel):
     # tqdm progress bar for parallel tasks based on:
     # https://stackoverflow.com/questions/37804279/how-can-we-use-tqdm-in-a-parallel-execution-with-joblib/50925708
     # answer by 'user394430'
@@ -21,13 +39,14 @@ class ProgressParallel(Parallel):
         self._total = total
         self._desc = desc
         self._unit = unit
-        super().__init__(*args, **kwargs)
+        kwargs['n_jobs'] = -2
+        super().__init__(*args, **kwargs, verbose=100)
 
     def __call__(self, *args, **kwargs):
         fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]'
         with tqdm(disable=not self._use_tqdm, total=self._total, desc=self._desc, unit=self._unit,
                   bar_format=fmt) as self._pbar:
-            return Parallel.__call__(self, *args, **kwargs)
+            return joblib.Parallel.__call__(self, *args, **kwargs)
 
     def print_progress(self):
         if self._total is None:

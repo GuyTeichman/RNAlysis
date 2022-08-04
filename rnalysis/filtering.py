@@ -24,7 +24,6 @@ except ImportError:
     from typing_extensions import Literal
 
 import matplotlib.pyplot as plt
-import numba
 import numpy as np
 import pairwisedist as pwdist
 import pandas as pd
@@ -34,6 +33,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from rnalysis.utils import clustering, io, parsing, generic, settings, validation
+
 
 
 class Filter:
@@ -1566,7 +1566,7 @@ class FoldChangeFilter(Filter):
         return res_df
 
     @staticmethod
-    @numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True)
     def _foldchange_randomization(vals: np.ndarray, reps: int, obs_fc: float, exp_fc: float, n: int):
         success = 0
         # determine the randomization test's direction (is observed greater/lesser than expected)

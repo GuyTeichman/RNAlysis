@@ -10,7 +10,6 @@ import io as builtin_io
 import matplotlib.image as mpimg
 import joblib
 import matplotlib.pyplot as plt
-import numba
 import numpy as np
 import pandas as pd
 import graphviz
@@ -295,7 +294,7 @@ class EnrichmentRunner:
         return [attribute, de_size, obs, exp, log2_fold_enrichment, pval]
 
     @staticmethod
-    @numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True)
     def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float) -> float:
         ind_range = np.arange(bg_array.shape[0])
         success = 0
