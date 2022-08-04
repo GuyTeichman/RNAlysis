@@ -81,6 +81,12 @@ class FeatureSet:
         self.gene_set = gene_set
         self.set_name = set_name
 
+    def __copy__(self):
+        obj = type(self).__new__(type(self))
+        obj.gene_set = self.gene_set.copy()
+        obj.set_name = self.set_name
+        return obj
+
     def __repr__(self):
         return f"{self.__class__.__name__}: '{self.set_name}'"
 
@@ -972,6 +978,13 @@ class RankedSet(FeatureSet):
 
         super().__init__(ranked_genes, set_name)
         assert len(self.ranked_genes) == len(self.gene_set), f"'ranked_genes' must have no repeating elements!"
+
+    def __copy__(self):
+        obj = type(self).__new__(type(self))
+        obj.ranked_genes = self.ranked_genes.copy()
+        obj.gene_set = self.gene_set.copy()
+        obj.set_name = self.set_name
+        return obj
 
     def __iter__(self):
         return self.ranked_genes.__iter__()
