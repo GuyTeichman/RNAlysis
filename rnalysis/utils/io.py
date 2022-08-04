@@ -1,5 +1,7 @@
 import concurrent.futures
 import functools
+import yaml
+import shutil
 import json
 import os
 import queue
@@ -81,6 +83,61 @@ def cache_gui_file(item: Union[pd.DataFrame, set], filename: str):
         save_gene_set(item, file_path)
     else:
         raise TypeError(type(item))
+
+
+def save_gui_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str],
+                     item_types: list, item_properties: list):
+    session_filename = Path(session_filename)
+    session_folder = session_filename
+    if session_folder.exists():
+        if session_folder.is_dir():
+            shutil.rmtree(session_folder)
+        else:
+            session_folder.unlink()
+    session_folder.mkdir(parents=True)
+
+    session_data = dict(files=dict(), pipelines=dict(), metadata=dict())
+    for file_name, item_name, item_type, item_property in zip(file_names, item_names, item_types, item_properties):
+        Path(get_gui_cache_dir().joinpath(file_name)).replace(session_folder.joinpath(file_name))
+        session_data['files'][file_name] = (item_name, item_type.__name__, item_property)
+
+    with open(session_folder.joinpath('session_data.yaml'), 'w') as f:
+        yaml.safe_dump(session_data, f)
+    shutil.make_archive(session_folder.with_suffix(''), 'zip', session_folder)
+    shutil.rmtree(session_folder)
+    session_filename.with_suffix('.zip').replace(session_filename.with_suffix('.rnal'))
+
+
+def load_gui_session(session_filename: Union[str, Path]):
+    session_filename = Path(session_filename)
+    try:
+        session_filename.with_suffix('.rnal').rename(session_filename.with_suffix('.rnal.zip'))
+        shutil.unpack_archive(session_filename.with_suffix('.rnal.zip'),
+                              get_gui_cache_dir().joinpath(session_filename.name))
+    finally:
+        session_filename.with_suffix('.rnal.zip').rename(session_filename.with_suffix('.rnal'))
+
+    session_dir = get_gui_cache_dir().joinpath(session_filename.name)
+    print(session_dir)
+    assert session_dir.exists()
+
+    items = []
+    item_names = []
+    item_types = []
+    item_properties = []
+    with open(session_dir.joinpath('session_data.yaml')) as f:
+        session_data = yaml.safe_load(f)
+    for file_name in session_data['files'].keys():
+        file_path = session_dir.joinpath(file_name)
+        assert file_path.exists() and file_path.is_file()
+        item = load_cached_gui_file(Path(session_filename.name).joinpath(file_name))
+        item_name, item_type, item_property = session_data['files'][file_name]
+        items.append(item)
+        item_names.append(item_name)
+        item_types.append(item_type)
+        item_properties.append(item_property)
+    shutil.rmtree(session_dir)
+    return items, item_names, item_types, item_properties
 
 
 def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,

@@ -2362,6 +2362,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.save_action = QtWidgets.QAction("&Save...", self)
         self.save_action.triggered.connect(self.save_file)
+
+        self.load_session_action = QtWidgets.QAction("&Load session...")
+        self.load_session_action.triggered.connect(self.load_session)
+        self.save_session_action = QtWidgets.QAction("Sa&ve session...")
+        self.save_session_action.triggered.connect(self.save_session)
+
         self.settings_action = QtWidgets.QAction("&Settings...", self)
         self.settings_action.triggered.connect(self.settings)
         self.exit_action = QtWidgets.QAction("&Exit", self)
@@ -2524,7 +2530,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_menu = file_menu.addMenu("&New...")
         self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
         file_menu.addActions(
-            [self.save_action, self.settings_action, self.exit_action])
+            [self.save_action, self.load_session_action, self.save_session_action, self.settings_action,
+             self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
         edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action])
@@ -2557,6 +2564,46 @@ class MainWindow(QtWidgets.QMainWindow):
             actions.append(action)
         # Step 3. Add the actions to the menu
         self.apply_pipeline_menu.addActions(actions)
+
+    def load_session(self):
+        session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load session",
+                                                                    str(Path.home()),
+                                                                    "RNAlysis session files (*.rnal);;"
+                                                                    "All Files (*)")
+        if session_filename:
+            items, item_names, item_types, item_properties = io.load_gui_session(session_filename)
+            for item, item_name, item_type, item_property in zip(items, item_names, item_types, item_properties):
+                if item_type == 'set':
+                    self.new_tab_from_gene_set(item, item_name)
+                else:
+                    try:
+                        cls = getattr(filtering, item_type)
+                    except AttributeError:
+                        raise TypeError(f"Invalid object type in session file: '{item_type}'")
+                    obj = cls.from_dataframe(item, item_name, **item_property)
+                    self.new_tab_from_filter_obj(obj, item_name)
+                QtWidgets.QApplication.processEvents()
+
+    def save_session(self):
+        default_name = 'Untitled session.rnal'
+        session_filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save session",
+                                                                    str(Path.home().joinpath(default_name)),
+                                                                    "RNAlysis session files (*.rnal);;"
+                                                                    "All Files (*)")
+        if session_filename:
+            filenames = []
+            item_names = []
+            item_types = []
+            item_properties = []
+            for ind in range(self.tabs.count()):
+                tab = self.tabs.widget(ind)
+                if not tab.is_empty():
+                    filenames.append(tab.cache())
+                    item_names.append(self.tabs.tabText(ind).rstrip('*'))
+                    item_types.append(tab.obj_type())
+                    item_properties.append(tab.obj_properties())
+            io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties)
+            print(f"Session saved successfully at {io.get_datetime()} under {session_filename}")
 
     def about(self):
         self.about_window.exec()
