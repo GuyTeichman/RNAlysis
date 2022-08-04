@@ -1047,9 +1047,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
         aspects = ('biological_process', 'cellular_component',
                    'molecular_function') if self.aspects == 'any' else parsing.data_to_tuple(self.aspects)
         for go_aspect in aspects:
-            self._dag_plot_for_namespace(go_aspect, title, ylabel, dpi=dpi)
+            status = self._dag_plot_for_namespace(go_aspect, title, ylabel, dpi=dpi)
+            if not status:
+                return
 
-    def _dag_plot_for_namespace(self, namespace: str, title: str, ylabel: str, dpi: int = 300):
+    def _dag_plot_for_namespace(self, namespace: str, title: str, ylabel: str, dpi: int = 300) -> bool:
         # colormap
         scores_no_inf = [i for i in self.results[self.en_score_col] if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
@@ -1102,8 +1104,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
         while savepath.exists():
             i += 1
             savepath = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}_{i}.{self.ontology_graph_format}')
-        graph.render(savepath, view=True, format=self.ontology_graph_format)
-
+        try:
+            graph.render(savepath, view=True, format=self.ontology_graph_format)
+        except graphviz.backend.execute.ExecutableNotFound:
+            warnings.warn("You must install 'GraphViz' in order to generate Ontology Graphs. \n"
+                          "Please see https://graphviz.org/download/ for more information. ")
+            return False
         # show graph in a matplotlib window
         png_str = graph.pipe(format='png')
         sio = builtin_io.BytesIO()
@@ -1126,6 +1132,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         cbar.ax.tick_params(labelsize=14, pad=6)
 
         plt.show()
+        return True
 
     def format_results(self, unformatted_results_dict: dict):
         if self.single_set:
