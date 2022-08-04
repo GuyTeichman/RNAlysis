@@ -20,12 +20,24 @@ from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
-import xlmhg
-from xlmhg import get_xlmhg_test_result as xlmhg_test
 
 from rnalysis.utils import ontology, io, parsing, settings, validation, generic
 
-logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
+try:
+    import xlmhg
+
+    logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
+    HAS_XLMHG = True
+except ImportError:
+    HAS_XLMHG = False
+
+
+    class xlmhg:
+        class mHGResult:
+            pass
+
+        def get_xlmhg_test_result(self):
+            pass
 
 
 class EnrichmentRunner:
@@ -81,6 +93,8 @@ class EnrichmentRunner:
         self.set_name = set_name
         self.parallel = parallel
         self.enrichment_func = self._get_enrichment_func(enrichment_func_name)
+        if not self.enrichment_func:
+            return
         self.pvalue_kwargs = pvalue_kwargs
         self.single_set = single_set
         if self.single_set:
@@ -119,6 +133,8 @@ class EnrichmentRunner:
         return runner
 
     def run(self) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+        if not self.enrichment_func:
+            return pd.DataFrame()
         self.fetch_annotations()
         self.fetch_attributes()
         if not self.single_set:
@@ -180,7 +196,13 @@ class EnrichmentRunner:
         elif pval_func_name == 'hypergeometric':
             return self._hypergeometric_enrichment
         elif pval_func_name == 'xlmhg':
-            return self._xlmhg_enrichment
+            if HAS_XLMHG:
+                return self._xlmhg_enrichment
+            else:
+                warnings.warn(f"Package 'xlmhg' is not installed. \n"
+                              f"If you want to run single-set enrichment analysis, "
+                              f"please install package 'xlmhg' and try again. ")
+                return False
         else:
             raise ValueError(f"Unknown enrichment function '{pval_func_name}'.")
 
@@ -212,8 +234,8 @@ class EnrichmentRunner:
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(attribute)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
-        res_obj_fwd = xlmhg_test(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhg_test(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+        res_obj_fwd = xlmhg.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhg.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
         en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
         return [attribute, n, en_score, pval]
@@ -753,6 +775,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
                          single_set, random_seed, **pvalue_kwargs)
+        if not self.enrichment_func:
+            return
         self.gene_id_type = gene_id_type
         self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.plot_pathway_graphs = plot_pathway_graphs
@@ -890,6 +914,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                          set_name, parallel,
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
                          **pvalue_kwargs)
+        if not self.enrichment_func:
+            return
         self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
         self.gene_id_type = gene_id_type
@@ -1407,8 +1433,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(go_id, mod_df_ind)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
-        res_obj_fwd = xlmhg_test(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhg_test(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+        res_obj_fwd = xlmhg.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhg.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
         en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
         return [go_name, n, en_score, pval]
