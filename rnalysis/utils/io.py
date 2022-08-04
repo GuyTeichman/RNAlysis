@@ -72,7 +72,7 @@ def load_cached_gui_file(filename: str):
         return None
 
 
-def cache_gui_file(item: Union[pd.DataFrame, set], filename: str):
+def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
     directory = get_gui_cache_dir()
     if not directory.exists():
         directory.mkdir(parents=True)
