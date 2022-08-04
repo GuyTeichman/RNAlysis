@@ -1218,9 +1218,10 @@ class RankedSet(FeatureSet):
 
         return runner.run()
 
-    def single_set_enrichment(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
+    def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                               alpha: float = 0.05,
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
+                              return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None,
                               return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True):
         """
@@ -1244,6 +1245,9 @@ class RankedSet(FeatureSet):
         :param alpha: Indicates the FDR threshold for significance.
         :type attr_ref_path: str or pathlib.Path (default='predefined')
         :param attr_ref_path: path of the Attribute Reference Table from which user-defined attributes will be drawn.
+        :param return_nonsignificant: if True (default), the results DataFrame will include all tested attributes - \
+        both significant and non-significant ones. If False, only significant attributes will be returned.
+        :type return_nonsignificant: bool (default=True)
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
         :type fname: str or pathlib.Path
@@ -1276,7 +1280,8 @@ class RankedSet(FeatureSet):
            Example plot of single_set_enrichment(plot_horizontal = False)
 
         """
-        runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path, True, save_csv,
+        runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path,
+                                                    return_nonsignificant, save_csv,
                                                     fname, return_fig, plot_horizontal, self.set_name,
                                                     parallel=parallel, enrichment_func_name='xlmhg', single_set=True)
         return runner.run()
