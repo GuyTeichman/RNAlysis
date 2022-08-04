@@ -2034,6 +2034,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
         self.setCentralWidget(self.tabs)
 
+    def clear_history(self):
+        clear_msg = """Are you sure you want to clear all command history?
+        This cannot be undone!"""
+        reply = QtWidgets.QMessageBox.question(self, 'Clear history',
+                                               clear_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+
+        if reply == QtWidgets.QMessageBox.Yes:
+            for stack in self.undo_group.stacks():
+                stack.clear()
+
     @QtCore.pyqtSlot(int)
     def init_tab_contextmenu(self, ind: int):
         tab_contextmenu = QtWidgets.QMenu(self)
@@ -2383,6 +2393,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_history_action.setCheckable(True)
         self.show_history_action.setChecked(True)
         self.show_history_action.triggered.connect(self.toggle_history_window)
+        self.clear_history_action = QtWidgets.QAction("Clea&r command history")
+        self.clear_history_action.triggered.connect(self.clear_history)
 
         self.copy_action = QtWidgets.QAction("&Copy Gene Set", self)
         self.copy_action.triggered.connect(self.copy_gene_set)
@@ -2534,7 +2546,8 @@ class MainWindow(QtWidgets.QMainWindow):
              self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
-        edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action])
+        edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action,
+                              self.clear_history_action])
 
         view_menu = self.menu_bar.addMenu("&View")
         view_menu.addActions([self.show_history_action])
