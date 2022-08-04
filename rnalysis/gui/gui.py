@@ -2223,6 +2223,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
         self.add_new_tab(filter_obj.fname.name)
         self.tabs.currentWidget().start_from_filter_obj(filter_obj, name)
+        QtWidgets.QApplication.processEvents()
 
     @QtCore.pyqtSlot(str)
     def set_current_tab_icon(self, icon_name: str = None):
@@ -2243,6 +2244,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def new_tab_from_gene_set(self, gene_set: set, gene_set_name: str):
         self.add_new_tab(gene_set_name, is_set=True)
         self.tabs.currentWidget().update_gene_set(gene_set)
+        QtWidgets.QApplication.processEvents()
 
     def export_pipeline(self):
         if len(self.pipelines) == 0:
