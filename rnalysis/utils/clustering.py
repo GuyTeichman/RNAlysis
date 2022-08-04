@@ -881,7 +881,6 @@ class HDBSCANRunner(ClusteringRunner):
         self.min_samples = min_samples
         self.cluster_selection_epsilon = cluster_selection_epsilon
         self.cluster_selection_method = cluster_selection_method
-        self.return_probabilities = return_probabilities
         self.clusterer_kwargs = dict(min_cluster_size=self.min_cluster_size, min_samples=self.min_samples,
                                      cluster_selection_epsilon=self.cluster_selection_epsilon,
                                      cluster_selection_method=self.cluster_selection_method)
