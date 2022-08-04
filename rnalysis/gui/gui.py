@@ -1661,6 +1661,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.pipeline = filtering.Pipeline(filt_obj_type)
         self.init_overview_ui()
         self.init_function_ui()
+        self.basic_group.setVisible(False)
         self.is_unsaved = True
 
     def init_overview_ui(self):
@@ -1670,16 +1671,21 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.overview_widgets['preview'].setReadOnly(True)
         self.update_pipeline_preview()
 
-        self.overview_grid.addWidget(QtWidgets.QLabel('Pipeline preview', self.overview_widgets['preview']), 0, 0, 2, 4)
-        self.overview_grid.addWidget(self.overview_widgets['preview'], 1, 0, 2, 4)
+        self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline name: "
+                                                      f"'<b>{self._get_pipeline_name()}</b>'"), 0, 0, 1, 2)
+        self.overview_grid.addWidget(self.overview_widgets['preview'], 2, 0, 2, 4)
+
+        self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline table type: "
+                                                      f"{self.basic_widgets['table_type_combo'].currentText()}"),
+                                     5, 0, 1, 2)
 
         self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save Pipeline')
         self.overview_widgets['save_button'].clicked.connect(self.save_file)
-        self.overview_grid.addWidget(self.overview_widgets['save_button'], 3, 3)
+        self.overview_grid.addWidget(self.overview_widgets['save_button'], 5, 3)
 
         self.overview_widgets['export_button'] = QtWidgets.QPushButton('Export Pipeline')
         self.overview_widgets['export_button'].clicked.connect(self.export_pipeline)
-        self.overview_grid.addWidget(self.overview_widgets['export_button'], 3, 2, 1, 1)
+        self.overview_grid.addWidget(self.overview_widgets['export_button'], 5, 2, 1, 1)
 
     def _get_pipeline_name(self):
         return self.basic_widgets['pipeline_name'].text()
