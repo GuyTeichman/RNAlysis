@@ -81,6 +81,9 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
         save_csv(item, file_path, index=True)
     elif isinstance(item, set):
         save_gene_set(item, file_path)
+    elif isinstance(item, str):
+        with open(file_path, 'w') as f:
+            f.write(item)
     else:
         raise TypeError(type(item))
 
