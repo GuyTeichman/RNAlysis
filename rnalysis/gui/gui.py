@@ -949,6 +949,12 @@ class TabPage(QtWidgets.QWidget):
         self.sup_layout = QtWidgets.QVBoxLayout(self)
         self.container = QtWidgets.QWidget(self)
         self.layout = QtWidgets.QVBoxLayout(self.container)
+        self.scroll = QtWidgets.QScrollArea()
+        self.scroll.setWidget(self.container)
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+
         self.name = None
         self.creation_time = time.time()
 
@@ -956,12 +962,11 @@ class TabPage(QtWidgets.QWidget):
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.sup_layout.addWidget(self.splitter)
-        self.splitter.addWidget(self.container)
+        self.splitter.addWidget(self.scroll)
         self.splitter.addWidget(self.stdout_group)
-        # self.splitter.setSizes([int(self.width() * 0.2), int(self.width() * 0.8)
+        self.splitter.setStretchFactor(0, 1)
 
-        # self.layout.addWidget(self.stdout_group)
-        self.sup_layout.addStretch(1)
+        # self.sup_layout.addStretch(1)
         self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
         self.stdout_widgets = {}
 
@@ -1060,11 +1065,13 @@ class SetTabPage(TabPage):
     def init_overview_ui(self, set_name: str):
         this_row = 0
         self.layout.insertWidget(0, self.overview_group)
+        self.layout.addStretch(1)
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel(f"Gene set name: '<b>{set_name}</b>'")
+        self.overview_widgets['table_name_label'].setWordWrap(True)
 
         self.overview_widgets['preview'] = QtWidgets.QListWidget()
         self.update_set_preview()
-        self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 1)
+        self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 4)
         this_row += 1
         self.overview_widgets['table_name'] = QtWidgets.QLineEdit()
         self.overview_widgets['rename_label'] = QtWidgets.QLabel('Rename your gene set (optional):')
@@ -1089,6 +1096,12 @@ class SetTabPage(TabPage):
         self.overview_widgets['view_button'] = QtWidgets.QPushButton('View full gene set')
         self.overview_widgets['view_button'].clicked.connect(self.view_full_gene_set)
         self.overview_grid.addWidget(self.overview_widgets['view_button'], this_row, 2, 2, 1)
+        this_row += 2
+
+        self.overview_grid.addWidget(QtWidgets.QWidget(self), this_row, 0)
+        self.overview_grid.addWidget(QtWidgets.QWidget(self), 0, 4)
+        self.overview_grid.setRowStretch(this_row, 1)
+        self.overview_grid.setColumnStretch(4, 1)
 
     def view_full_gene_set(self):
         set_window = gui_utils.GeneSetView(self.gene_set.gene_set, self.get_tab_name())
@@ -1161,7 +1174,9 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.init_ui()
 
     def init_ui(self):
+
         self.layout.addLayout(self.func_combo_layout)
+        self.layout.addLayout(self.parameter_grid)
         self.func_combo_layout.addWidget(self.func_combo)
         self.func_combo_layout.addWidget(self.func_help_button)
         self._set_empty_tooltip()
@@ -1312,6 +1327,7 @@ class FilterTabPage(TabPage):
 
     def update_table_name_label(self):
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{self.get_tab_name()}</b>'")
+        self.overview_widgets['table_name_label'].setWordWrap(True)
 
     def init_overview_ui(self):
         this_row = 0
@@ -1319,6 +1335,7 @@ class FilterTabPage(TabPage):
         self.overview_widgets['table_type_label'] = QtWidgets.QLabel(
             f"Table type: {self.get_table_type()}")
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel()
+        self.overview_widgets['table_name_label'].setWordWrap(True)
 
         self.overview_widgets['preview'] = QtWidgets.QTableView()
         # self.overview_widgets['preview'].setFixedWidth(550)
@@ -1328,7 +1345,7 @@ class FilterTabPage(TabPage):
         # self.overview_widgets['preview'].setFlags(self.overview_widgets['preview'].flags() & ~QtCore.Qt.ItemIsEditable)
         self.overview_widgets['preview'].horizontalHeader().setStretchLastSection(True)
         self.overview_widgets['preview'].verticalHeader().setStretchLastSection(True)
-        self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 1)
+        self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 4)
         this_row += 1
         self.overview_widgets['table_name'] = QtWidgets.QLineEdit()
         self.overview_widgets['rename_label'] = QtWidgets.QLabel('Rename your table (optional):')
@@ -1355,6 +1372,7 @@ class FilterTabPage(TabPage):
 
         this_row += 1
         self.overview_grid.addWidget(self.overview_widgets['table_type_label'], this_row, 0, 1, 1)
+        this_row += 1
 
         self.update_tab(False)
 
@@ -1396,6 +1414,11 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(self.basic_widgets['table_type_combo'], 1, 2)
         self.basic_grid.addWidget(self.basic_widgets['table_name'], 1, 3)
         self.basic_grid.addWidget(self.basic_widgets['start_button'], 2, 0, 1, 4)
+
+        self.basic_grid.addWidget(QtWidgets.QWidget(self), 3, 0, 1, 4)
+        self.basic_grid.addWidget(QtWidgets.QWidget(self), 0, 4, 4, 1)
+        self.basic_grid.setRowStretch(3, 1)
+        self.basic_grid.setColumnStretch(4, 1)
 
     def init_function_ui(self):
         self.layout.insertWidget(2, self.function_group)
@@ -1596,7 +1619,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         super().__init__(parent)
         self.setLayout(self.layout)
         self.setWindowTitle(f'Create new Pipeline')
-        self.setGeometry(500, 200, 500, 300)
+        self.setGeometry(500, 200, 800, 800)
         self.pipeline = None
         self.is_unsaved = False
 
@@ -1627,6 +1650,11 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.basic_grid.addWidget(self.basic_widgets['type_label'], 0, 2)
         self.basic_grid.addWidget(self.basic_widgets['table_type_combo'], 1, 2)
         self.basic_grid.addWidget(self.basic_widgets['start_button'], 1, 3)
+
+        self.basic_grid.addWidget(QtWidgets.QWidget(), 2, 0)
+        self.basic_grid.addWidget(QtWidgets.QWidget(), 0, 4)
+        self.basic_grid.setRowStretch(2, 1)
+        self.basic_grid.setColumnStretch(4, 1)
 
     def init_function_ui(self):
         super().init_function_ui()
@@ -1992,7 +2020,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
         self.setWindowIcon(QtGui.QIcon('../../docs/source/favicon.ico'))
-        self.setGeometry(600, 50, 1000, 500)
+        self.setGeometry(600, 50, 1050, 800)
         self.update_style_sheet()
 
         self.tabs.tabRightClicked.connect(self.init_tab_contextmenu)
