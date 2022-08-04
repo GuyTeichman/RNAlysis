@@ -1180,7 +1180,6 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.func_combo_layout.addWidget(self.func_combo)
         self.func_combo_layout.addWidget(self.func_help_button)
         self._set_empty_tooltip()
-        self.layout.addLayout(self.parameter_grid)
         self.layout.addStretch(1)
         self.func_combo.addItem(self.NO_FUNC_CHOSEN_TEXT)
         self.func_combo.addItems(self.funcs)
