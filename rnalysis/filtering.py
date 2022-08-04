@@ -2721,7 +2721,7 @@ class CountFilter(Filter):
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
                       power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False
-                      ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]]]:
+                      ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]], None]:
         """
         Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -2801,6 +2801,9 @@ class CountFilter(Filter):
             [clusterer], probabilities = runner.run()
         else:
             [clusterer] = runner.run()
+
+        if clusterer is None: return  # if hdbscan is not installed, the runner will return None
+
         n_clusters = clusterer.labels_.max() + 1
         if n_clusters == 0:
             print("Found 0 clusters with the given parameters. Please try again with different parameters. ")

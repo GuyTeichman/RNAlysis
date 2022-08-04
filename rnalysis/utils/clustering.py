@@ -2,7 +2,7 @@ import itertools
 from abc import ABC
 from typing import List, Set, Tuple, Union, Callable
 
-import hdbscan
+import warnings
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,6 +18,13 @@ from tqdm.auto import tqdm
 import sklearn.metrics.pairwise as sklearn_pairwise
 
 from rnalysis.utils import generic, parsing, validation
+
+try:
+    import hdbscan
+
+    HAS_HDBSCAN = True
+except ImportError:
+    HAS_HDBSCAN = False
 
 
 class BinaryFormatClusters:
@@ -855,12 +862,15 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
 
 
 class HDBSCANRunner(ClusteringRunner):
-    clusterer_class = hdbscan.HDBSCAN
-    legal_metrics = set(hdbscan.dist_metrics.METRIC_MAPPING.keys())
+    clusterer_class = hdbscan.HDBSCAN if HAS_HDBSCAN else None
+    legal_metrics = set(hdbscan.dist_metrics.METRIC_MAPPING.keys()) if HAS_HDBSCAN else set()
 
     def __init__(self, data, power_transform: bool, min_cluster_size: int = 5, min_samples: int = 1,
                  metric: str = 'euclidean', cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
                  return_probabilities: bool = False, plot_style: str = 'none', split_plots: bool = False):
+        self.return_probabilities = return_probabilities
+        if not HAS_HDBSCAN:
+            return
         assert isinstance(metric, str)
         assert isinstance(min_cluster_size, int) and min_cluster_size > 1
         assert isinstance(min_samples, int) and min_samples >= 1
@@ -877,7 +887,17 @@ class HDBSCANRunner(ClusteringRunner):
                                      cluster_selection_method=self.cluster_selection_method)
         super().__init__(data, power_transform, ('metric', metric), plot_style, split_plots)
 
-    def run(self) -> Union[List[ArbitraryClusterer], Tuple[List[ArbitraryClusterer], np.ndarray]]:
+    @staticmethod
+    def _missing_dependency_warning():
+        warnings.warn(f"Package 'hdbscan' is not installed. \n"
+                      f"If you want to use HDBSCAN clustering, please install package 'hdbscan' and try again. ")
+
+    def run(self) -> Union[List[ArbitraryClusterer], Tuple[List[ArbitraryClusterer], np.ndarray], List[None]]:
+        if not HAS_HDBSCAN:
+            self._missing_dependency_warning()
+            if self.return_probabilities:
+                return [None], np.array([])
+            return [None]
         self.clusterers = []
 
         # calculate clustering result
