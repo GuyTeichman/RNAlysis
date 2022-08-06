@@ -1284,6 +1284,11 @@ class FilterTabPage(TabPage):
         self.function_grid = QtWidgets.QGridLayout(self.function_group)
         self.function_widgets = {}
 
+        self.stack = QtWidgets.QStackedWidget(self)
+        self.button_box = QtWidgets.QButtonGroup(self)
+        self.stack_buttons = []
+        self.stack_widgets = {}
+
         self.clicom_window = None
 
         self.init_basic_ui()
@@ -1430,10 +1435,6 @@ class FilterTabPage(TabPage):
         self.layout.insertWidget(2, self.function_group)
         sorted_actions = self.get_all_actions()
 
-        self.stack = QtWidgets.QStackedWidget(self)
-        self.button_box = QtWidgets.QButtonGroup(self)
-        self.stack_buttons = []
-        self.stack_widgets = {}
         self.stack.addWidget(QtWidgets.QWidget(self))  # start the stack empty
         for i, action_type in enumerate(sorted_actions):
             bttn = QtWidgets.QPushButton(action_type)
@@ -1662,6 +1663,10 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
         self.basic_grid.addWidget(QtWidgets.QWidget(), 0, 4)
         self.basic_grid.setRowStretch(2, 1)
         self.basic_grid.setColumnStretch(4, 1)
+
+    @QtCore.pyqtSlot(int)
+    def _update_stack_status(self, ind: int):
+        self.stack.widget(ind).check_selection_status()
 
     def init_function_ui(self):
         super().init_function_ui()
