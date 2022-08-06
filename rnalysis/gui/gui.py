@@ -2667,6 +2667,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # reply.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
 
         if reply == QtWidgets.QMessageBox.Yes:
+            io.clear_gui_cache()
             event.accept()
         else:
             event.ignore()

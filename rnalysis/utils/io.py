@@ -55,6 +55,15 @@ def cache_file(content: str, filename: str):
         f.write(content)
 
 
+def clear_gui_cache():
+    directory = get_gui_cache_dir()
+    for item in directory.iterdir():
+        if item.is_file():
+            item.unlink()
+        elif item.is_dir():
+            shutil.rmtree(item, ignore_errors=True)
+
+
 def load_cached_gui_file(filename: str):
     directory = get_gui_cache_dir()
     file_path = directory.joinpath(filename)
