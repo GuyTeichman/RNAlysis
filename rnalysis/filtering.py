@@ -35,7 +35,6 @@ from sklearn.preprocessing import PowerTransformer, StandardScaler
 from rnalysis.utils import clustering, io, parsing, generic, settings, validation
 
 
-
 class Filter:
     """
     An all-purpose Filter object.
@@ -3402,18 +3401,39 @@ class Pipeline:
             return True
         return False
 
-    def export_pipeline(self, filename: Union[str, Path]):
+    def export_pipeline(self, filename: Union[str, Path, None]) -> Union[None, str]:
+        """
+        Export a Pipeline to a Pipeline YAML file or YAML-like string.
+
+        :param filename: filename to save the Pipeline YAML to, or None to return a YAML-like string instead.
+        :type filename: str, pathlib.Path, or None
+        :return: if filename is None, returns the Pipeline YAML-like string.
+        """
         pipeline_dict = dict(filter_type=self.FILTER_TYPES_REV[self.filter_type], functions=[], params=[])
         for func, params in zip(self.functions, self.params):
             pipeline_dict['functions'].append(func.__name__)
             pipeline_dict['params'].append(params)
-        with open(filename, 'w') as f:
-            yaml.safe_dump(pipeline_dict, f)
+        if filename is None:
+            return yaml.safe_dump(pipeline_dict)
+        else:
+            with open(filename, 'w') as f:
+                yaml.safe_dump(pipeline_dict, f)
 
     @classmethod
     def import_pipeline(cls, filename: Union[str, Path]) -> 'Pipeline':
-        with open(filename) as f:
-            pipeline_dict = yaml.safe_load(f)
+        """
+        Import a Pipeline from a Pipeline YAML file or YAML-like string.
+
+        :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
+        :type filename: str or pathlib.Path
+        :return: the imported Pipeline
+        :rtype: Pipeline
+        """
+        if Path(filename).exists() and Path(filename).is_file():
+            with open(filename) as f:
+                pipeline_dict = yaml.safe_load(f)
+        else:
+            pipeline_dict = yaml.safe_load(filename)
         pipeline = cls.__new__(cls)
         pipeline.filter_type = cls.FILTER_TYPES[pipeline_dict['filter_type']]
         pipeline.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
