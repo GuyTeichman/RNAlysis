@@ -88,8 +88,8 @@ def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
         raise TypeError(type(item))
 
 
-def save_gui_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str],
-                     item_types: list, item_properties: list):
+def save_gui_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str], item_types: list,
+                     item_properties: list, pipeline_names: List[str], pipeline_files: List[str]):
     session_filename = Path(session_filename)
     session_folder = session_filename
     if session_folder.exists():
@@ -103,6 +103,11 @@ def save_gui_session(session_filename: Union[str, Path], file_names: List[str], 
     for file_name, item_name, item_type, item_property in zip(file_names, item_names, item_types, item_properties):
         Path(get_gui_cache_dir().joinpath(file_name)).replace(session_folder.joinpath(file_name))
         session_data['files'][file_name] = (item_name, item_type.__name__, item_property)
+
+    for i, (pipeline_name, pipeline_file) in enumerate(zip(pipeline_names, pipeline_files)):
+        pipeline_filename = session_folder.joinpath(f"pipeline_{i}.yaml")
+        Path(pipeline_filename).write_text(pipeline_file)
+        session_data['pipelines'][pipeline_filename.name] = pipeline_name
 
     with open(session_folder.joinpath('session_data.yaml'), 'w') as f:
         yaml.safe_dump(session_data, f)
@@ -121,13 +126,14 @@ def load_gui_session(session_filename: Union[str, Path]):
         session_filename.with_suffix('.rnal.zip').rename(session_filename.with_suffix('.rnal'))
 
     session_dir = get_gui_cache_dir().joinpath(session_filename.name)
-    print(session_dir)
     assert session_dir.exists()
 
     items = []
     item_names = []
     item_types = []
     item_properties = []
+    pipeline_files = []
+    pipeline_names = []
     with open(session_dir.joinpath('session_data.yaml')) as f:
         session_data = yaml.safe_load(f)
     for file_name in session_data['files'].keys():
@@ -139,8 +145,15 @@ def load_gui_session(session_filename: Union[str, Path]):
         item_names.append(item_name)
         item_types.append(item_type)
         item_properties.append(item_property)
+
+    for pipeline_filename in session_data['pipelines'].keys():
+        pipeline_path = session_dir.joinpath(pipeline_filename)
+        assert pipeline_path.exists() and pipeline_path.is_file()
+        pipeline_files.append(pipeline_path.read_text())
+        pipeline_names.append(session_data['pipelines'][pipeline_filename])
+
     shutil.rmtree(session_dir)
-    return items, item_names, item_types, item_properties
+    return items, item_names, item_types, item_properties, pipeline_names, pipeline_files
 
 
 def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,

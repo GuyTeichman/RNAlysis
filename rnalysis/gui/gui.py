@@ -1986,7 +1986,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menu_bar = QtWidgets.QMenuBar(self)
 
-        self.pipelines = OrderedDict()
+        self.pipelines: typing.OrderedDict[str, filtering.Pipeline] = OrderedDict()
         self.pipeline_window = None
 
         self.about_window = gui_utils.AboutWindow(self)
@@ -2586,7 +2586,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                     "RNAlysis session files (*.rnal);;"
                                                                     "All Files (*)")
         if session_filename:
-            items, item_names, item_types, item_properties = io.load_gui_session(session_filename)
+            items, item_names, item_types, item_properties, pipeline_names, pipeline_files = io.load_gui_session(
+                session_filename)
+
+            for pipeline_name, pipeline_file in zip(pipeline_names, pipeline_files):
+                pipeline = filtering.Pipeline.import_pipeline(pipeline_file)
+                self.pipelines[pipeline_name] = pipeline
+            QtWidgets.QApplication.processEvents()
+
             for item, item_name, item_type, item_property in zip(items, item_names, item_types, item_properties):
                 if item_type == 'set':
                     self.new_tab_from_gene_set(item, item_name)
@@ -2617,7 +2624,15 @@ class MainWindow(QtWidgets.QMainWindow):
                     item_names.append(self.tabs.tabText(ind).rstrip('*'))
                     item_types.append(tab.obj_type())
                     item_properties.append(tab.obj_properties())
-            io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties)
+
+            pipeline_names = []
+            pipeline_files = []
+            for pipeline_name, pipeline in self.pipelines.items():
+                pipeline_files.append(pipeline.export_pipeline(filename=None))
+                pipeline_names.append(pipeline_name)
+
+            io.save_gui_session(session_filename, filenames, item_names, item_types, item_properties, pipeline_names,
+                                pipeline_files)
             print(f"Session saved successfully at {io.get_datetime()} under {session_filename}")
 
     def about(self):
