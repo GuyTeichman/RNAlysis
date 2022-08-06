@@ -2676,9 +2676,22 @@ def customwarn(message, category, filename, lineno, file=None, line=None):
     sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
 
 
+def splash_screen():
+    splash_pixmap = QtGui.QPixmap("splash.png")
+    splash_font = QtGui.QFont('Calibri', 16)
+    splash = QtWidgets.QSplashScreen(splash_pixmap)
+    splash.setFont(splash_font)
+    splash.showMessage(f"<i>RNAlysis</i> version {__version__}", QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+    splash.show()
+    return splash
+
+
 def run():
-    matplotlib.use('Qt5Agg')
     app = QtWidgets.QApplication(sys.argv)
+    splash = splash_screen()
+    app.processEvents()
+
+    matplotlib.use('Qt5Agg')
     window = MainWindow()
     warnings.showwarning = customwarn
     sys.excepthook = window.excepthook
@@ -2701,6 +2714,7 @@ def run():
     # filtering.clustering.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui, parent=window)
 
     window.show()
+    splash.finish(window)
     sys.exit(app.exec())
 
 
