@@ -1193,6 +1193,9 @@ class FuncTypeStack(QtWidgets.QWidget):
     def deselect(self):
         self.func_combo.setCurrentIndex(0)
 
+    def check_selection_status(self):
+        self.funcSelected.emit(self.get_function_name() != self.NO_FUNC_CHOSEN_TEXT)
+
     def update_parameter_ui(self):
         # delete previous widgets
         gui_utils.clear_layout(self.parameter_grid)
@@ -1419,6 +1422,10 @@ class FilterTabPage(TabPage):
         self.basic_grid.setRowStretch(3, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
+    @QtCore.pyqtSlot(int)
+    def _update_stack_status(self, ind: int):
+        self.stack.widget(ind).check_selection_status()
+
     def init_function_ui(self):
         self.layout.insertWidget(2, self.function_group)
         sorted_actions = self.get_all_actions()
@@ -1443,6 +1450,7 @@ class FilterTabPage(TabPage):
             self.button_box.addButton(bttn)
             self.stack_buttons.append(bttn)
             self.function_grid.addWidget(bttn, 0, i)
+        self.stack.currentChanged.connect(self._update_stack_status)
 
         self.function_grid.addWidget(self.stack, 1, 0, 1, i + 1)
 
@@ -2604,7 +2612,6 @@ class MainWindow(QtWidgets.QMainWindow):
                         raise TypeError(f"Invalid object type in session file: '{item_type}'")
                     obj = cls.from_dataframe(item, item_name, **item_property)
                     self.new_tab_from_filter_obj(obj, item_name)
-                QtWidgets.QApplication.processEvents()
 
     def save_session(self):
         default_name = 'Untitled session.rnal'

@@ -1319,7 +1319,7 @@ def plot_enrichment_results(results_df: pd.DataFrame, alpha=0.05, en_score_col: 
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
-    runner = enrichment_runner.EnrichmentRunner(set(), results_df['name'], alpha, '', True, False, '', True,
+    runner = enrichment_runner.EnrichmentRunner(set(), results_df.index, alpha, '', True, False, '', True,
                                                 plot_horizontal, '', False, 'hypergeometric', 'all')
     runner.en_score_col = en_score_col
     runner.results = results_df
