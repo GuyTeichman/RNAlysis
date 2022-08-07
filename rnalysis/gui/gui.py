@@ -19,7 +19,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import filtering, enrichment, __version__
-from rnalysis.gui import gui_style, gui_utils, gui_graphics
+from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics
 from rnalysis.utils import io, validation, generic, parsing
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
@@ -27,7 +27,7 @@ FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential express
 FILTER_OBJ_TYPES_INV = {val: key for key, val in FILTER_OBJ_TYPES.items()}
 
 
-class ClicomWindow(gui_utils.MinMaxDialog):
+class ClicomWindow(gui_widgets.MinMaxDialog):
     CLICOM_FUNC = filtering.CountFilter.split_clicom
     CLICOM_SIGNATURE = generic.get_method_signature(CLICOM_FUNC)
     CLICOM_DESC, CLICOM_PARAM_DESC = generic.get_method_docstring(CLICOM_FUNC)
@@ -79,15 +79,15 @@ class ClicomWindow(gui_utils.MinMaxDialog):
             if name in self.EXCLUDED_PARAMS:
                 continue
             this_desc = self.CLICOM_PARAM_DESC.get(name, '')
-            self.param_widgets[name] = gui_utils.param_to_widget(param, name)
-            if isinstance(self.param_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+            self.param_widgets[name] = gui_widgets.param_to_widget(param, name)
+            if isinstance(self.param_widgets[name], (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
                 self.param_widgets[name].add_columns(self.filter_obj.columns)
-            elif isinstance(self.param_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
-                self.param_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+            elif isinstance(self.param_widgets[name], gui_widgets.ComboBoxOrOtherWidget) and isinstance(
+                self.param_widgets[name].other, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
                 self.param_widgets[name].other.add_columns(self.filter_obj.columns)
             label = QtWidgets.QLabel(f'{name}:', self.param_widgets[name])
             label.setToolTip(this_desc)
-            help_button = gui_utils.HelpButton()
+            help_button = gui_widgets.HelpButton()
             self.param_grid.addWidget(help_button, i, 2)
             self.param_grid.addWidget(label, i, 0)
             self.param_grid.addWidget(self.param_widgets[name], i, 1)
@@ -97,7 +97,7 @@ class ClicomWindow(gui_utils.MinMaxDialog):
 
     def init_setups_ui(self):
         self.setups_grid.addWidget(self.stack, 1, 0)
-        self.setups_widgets['list'] = gui_utils.MultiChoiceListWithDelete(list(), parent=self.setups_group)
+        self.setups_widgets['list'] = gui_widgets.MultiChoiceListWithDelete(list(), parent=self.setups_group)
         self.setups_widgets['list'].itemDeleted.connect(self.remove_clustering_setup)
         self.setups_grid.addWidget(QtWidgets.QLabel('<b>Added setups</b>'), 0, 1, QtCore.Qt.AlignCenter)
         self.setups_grid.addWidget(self.setups_widgets['list'], 1, 1, 2, 1)
@@ -126,7 +126,7 @@ class ClicomWindow(gui_utils.MinMaxDialog):
         for param_name, widget in self.param_widgets.items():
             if param_name in {'help_link'}:
                 continue
-            val = gui_utils.get_val_from_widget(widget)
+            val = gui_widgets.get_val_from_widget(widget)
             kwargs[param_name] = val
         return kwargs
 
@@ -139,7 +139,7 @@ class ClicomWindow(gui_utils.MinMaxDialog):
             self.show()
 
 
-class EnrichmentWindow(gui_utils.MinMaxDialog):
+class EnrichmentWindow(gui_widgets.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
                        'statistical_test', 'parametric_test', 'biotype_ref_path'}
 
@@ -241,12 +241,12 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.scroll_layout.addStretch(1)
 
         for lst in ['enrichment_list', 'bg_list']:
-            self.widgets[lst] = gui_utils.MandatoryComboBox('Choose gene set...', self)
+            self.widgets[lst] = gui_widgets.MandatoryComboBox('Choose gene set...', self)
             for obj_name in self.available_objects:
                 self.widgets[lst].addItem(self.available_objects[obj_name][1], obj_name)
 
-        self.widgets['dataset_radiobox'] = gui_utils.RadioButtonBox('Choose enrichment dataset',
-                                                                    self.ANALYSIS_TYPES_BUTTONS)
+        self.widgets['dataset_radiobox'] = gui_widgets.RadioButtonBox('Choose enrichment dataset',
+                                                                      self.ANALYSIS_TYPES_BUTTONS)
         self.widgets['dataset_radiobox'].buttonClicked.connect(self.update_uis)
 
         self.list_grid.addWidget(self.widgets['dataset_radiobox'], 0, 0, 6, 1)
@@ -350,14 +350,14 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.plot_group.setVisible(True)
         # delete previous widgets
         self.plot_widgets = {}
-        gui_utils.clear_layout(self.plot_grid)
+        gui_widgets.clear_layout(self.plot_grid)
 
         i = 0
         for name, (param, desc) in self.plot_signature.items():
-            self.plot_widgets[name] = gui_utils.param_to_widget(param, name)
+            self.plot_widgets[name] = gui_widgets.param_to_widget(param, name)
             label = QtWidgets.QLabel(f'{name}:', self.plot_widgets[name])
             label.setToolTip(desc)
-            help_button = gui_utils.HelpButton()
+            help_button = gui_widgets.HelpButton()
             self.plot_grid.addWidget(label, i, 0)
             self.plot_grid.addWidget(self.plot_widgets[name], i, 1)
             self.plot_grid.addWidget(help_button, i, 2)
@@ -369,14 +369,14 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         self.parameter_group.setVisible(True)
         # delete previous widgets
         self.parameter_widgets = {}
-        gui_utils.clear_layout(self.parameter_grid)
+        gui_widgets.clear_layout(self.parameter_grid)
 
         i = 0
         for name, (param, desc) in self.parameters_signature.items():
-            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
+            self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name)
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             label.setToolTip(desc)
-            help_button = gui_utils.HelpButton()
+            help_button = gui_widgets.HelpButton()
             self.parameter_grid.addWidget(help_button, i, 2)
             self.parameter_grid.addWidget(label, i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
@@ -391,11 +391,11 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
 
         # delete previous widgets
         self.stats_widgets = {}
-        gui_utils.clear_layout(self.stats_grid)
+        gui_widgets.clear_layout(self.stats_grid)
 
         radio_options = parsing.data_to_list(self.STATISTICAL_TESTS.keys() if self.is_categorical() else \
                                                  self.ORDINAL_STATISTICAL_TESTS.keys())
-        self.stats_widgets['stats_radiobox'] = gui_utils.RadioButtonBox('Choose statistical test:', radio_options)
+        self.stats_widgets['stats_radiobox'] = gui_widgets.RadioButtonBox('Choose statistical test:', radio_options)
         if prev_test_name is not None:
             self.stats_widgets['stats_radiobox'].set_selection(prev_test_name)
         self.stats_widgets['stats_radiobox'].buttonClicked.connect(self.update_stats_ui)
@@ -405,10 +405,10 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
         i = 0
         for name, (param, desc) in self.stats_signature.items():
             if name in self.STATISTICAL_TEST_ARGS[prev_test]:
-                self.stats_widgets[name] = gui_utils.param_to_widget(param, name)
+                self.stats_widgets[name] = gui_widgets.param_to_widget(param, name)
                 label = QtWidgets.QLabel(f'{name}:', self.stats_widgets[name])
                 label.setToolTip(desc)
-                help_button = gui_utils.HelpButton()
+                help_button = gui_widgets.HelpButton()
                 self.stats_grid.addWidget(help_button, i, 4)
                 self.stats_grid.addWidget(label, i, 2)
                 self.stats_grid.addWidget(self.stats_widgets[name], i, 3)
@@ -439,7 +439,7 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                                                   self.stats_widgets.items()):
             if param_name in {'help_link', 'dataset_radiobox', 'stats_radiobox'}:
                 continue
-            val = gui_utils.get_val_from_widget(widget)
+            val = gui_widgets.get_val_from_widget(widget)
             kwargs[param_name] = val
 
         if not self.is_single_set():
@@ -467,12 +467,12 @@ class EnrichmentWindow(gui_utils.MinMaxDialog):
                 result = func(feature_set_obj, **kwargs)
             else:
                 result = func(feature_set_obj, background_genes=bg_set_obj, **kwargs)
+            self.enrichmentFinished.emit(result, set_name)
         finally:
             self.show()
-            self.enrichmentFinished.emit(result, set_name)
 
 
-class SetOperationWindow(gui_utils.MinMaxDialog):
+class SetOperationWindow(gui_widgets.MinMaxDialog):
     SET_OPERATIONS = {'Union': 'union', 'Majority-Vote Intersection': 'majority_vote_intersection',
                       'Intersection': 'intersection', 'Difference': 'difference',
                       'Symmetric Difference': 'symmetric_difference', 'Other': 'other'}
@@ -576,9 +576,9 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.init_operations_ui()
 
     def init_sets_ui(self):
-        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects,
-                                                                [val[1] for val in self.available_objects.values()],
-                                                                self)
+        self.widgets['set_list'] = gui_widgets.MultipleChoiceList(self.available_objects,
+                                                                  [val[1] for val in self.available_objects.values()],
+                                                                  self)
 
         for func in [self.create_canvas, self._check_legal_operations, self._validate_input,
                      self._toggle_choose_primary_set]:
@@ -602,7 +602,8 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.widgets['set_op_box'] = QtWidgets.QWidget(self)
         self.widgets['set_op_box_layout'] = QtWidgets.QVBoxLayout(self.widgets['set_op_box'])
         self.operations_grid.addWidget((self.widgets['set_op_box']), 1, 0, 3, 1)
-        self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose set operation', self.SET_OPERATIONS.keys())
+        self.widgets['radio_button_box'] = gui_widgets.RadioButtonBox('Choose set operation',
+                                                                      self.SET_OPERATIONS.keys())
 
         for func in [self.update_paremeter_ui, self._validate_input, self._toggle_choose_primary_set]:
             self.widgets['radio_button_box'].buttonClicked.connect(func)
@@ -611,7 +612,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
             self._majority_vote_intersection)
         self.widgets['set_op_box_layout'].addWidget(self.widgets['radio_button_box'], stretch=1)
 
-        self.widgets['choose_primary_set'] = gui_utils.MandatoryComboBox('Choose primary set...', self)
+        self.widgets['choose_primary_set'] = gui_widgets.MandatoryComboBox('Choose primary set...', self)
         self.widgets['choose_primary_set'].currentTextChanged.connect(self._primary_set_changed)
         self.widgets['choose_primary_set_label'] = QtWidgets.QLabel('Primary set for operation:')
         self.widgets['set_op_box_layout'].addWidget(self.widgets['choose_primary_set_label'])
@@ -632,7 +633,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
 
     def _majority_vote_intersection(self):
         if not isinstance(self.widgets['canvas'], gui_graphics.EmptyCanvas):
-            threshold = gui_utils.get_val_from_widget(self.parameter_widgets['majority_threshold'])
+            threshold = gui_widgets.get_val_from_widget(self.parameter_widgets['majority_threshold'])
             self.widgets['canvas'].majority_vote_intersection(threshold)
 
     @QtCore.pyqtSlot(str)
@@ -652,7 +653,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         except KeyError:
             pass
         self.parameter_widgets = {}
-        gui_utils.clear_layout(self.parameter_grid)
+        gui_widgets.clear_layout(self.parameter_grid)
 
         chosen_func_name = self.get_current_func_name()
         signature = generic.get_method_signature(chosen_func_name, filtering.Filter)
@@ -660,7 +661,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
-            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
+            self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name)
             self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             if chosen_func_name == 'majority_vote_intersection':
@@ -720,7 +721,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
                 continue
-            val = gui_utils.get_val_from_widget(widget)
+            val = gui_widgets.get_val_from_widget(widget)
 
             kwargs[param_name] = val
         return set_names, primary_set_name, kwargs
@@ -754,7 +755,7 @@ class SetOperationWindow(gui_utils.MinMaxDialog):
         self.close()
 
 
-class SetVisualizationWindow(gui_utils.MinMaxDialog):
+class SetVisualizationWindow(gui_widgets.MinMaxDialog):
     VISUALIZATION_FUNCS = {'Venn Diagram': 'venn_diagram', 'UpSet Plot': 'upset_plot'}
     EXCLUDED_PARAMS = {'objs', 'ref', 'fig'}
 
@@ -792,9 +793,9 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.init_visualization_ui()
 
     def init_list_ui(self):
-        self.widgets['set_list'] = gui_utils.MultipleChoiceList(self.available_objects,
-                                                                [val[1] for val in self.available_objects.values()],
-                                                                self)
+        self.widgets['set_list'] = gui_widgets.MultipleChoiceList(self.available_objects,
+                                                                  [val[1] for val in self.available_objects.values()],
+                                                                  self)
 
         for func in [self._check_legal_operations, self._validate_input, self.create_canvas]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
@@ -802,8 +803,8 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.list_grid.addWidget(self.widgets['set_list'], 0, 0)
 
     def init_visualization_ui(self):
-        self.widgets['radio_button_box'] = gui_utils.RadioButtonBox('Choose visualization type:',
-                                                                    self.VISUALIZATION_FUNCS, parent=self)
+        self.widgets['radio_button_box'] = gui_widgets.RadioButtonBox('Choose visualization type:',
+                                                                      self.VISUALIZATION_FUNCS, parent=self)
         for func in [self.update_parameter_ui, self._validate_input, self.create_canvas]:
             self.widgets['radio_button_box'].buttonClicked.connect(func)
             self.widgets['radio_button_box'].selectionChanged.connect(func)
@@ -812,7 +813,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         self.visualization_grid.addWidget(self.parameter_group, 2, 0, 2, 1)
         self.visualization_grid.setRowStretch(self.visualization_grid.count(), 1)
 
-        self.widgets['generate_button'] = QtWidgets.QPushButton(text='Generate graph')
+        self.widgets['generate_button'] = QtWidgets.QPushButton('Generate graph')
         self.widgets['generate_button'].clicked.connect(self.generate_graph)
         self.widgets['generate_button'].setEnabled(False)
         self.visualization_grid.addWidget(self.widgets['generate_button'], 4, 0, 1, 5)
@@ -891,7 +892,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         except KeyError:
             pass
         self.parameter_widgets = {}
-        gui_utils.clear_layout(self.parameter_grid)
+        gui_widgets.clear_layout(self.parameter_grid)
 
         chosen_func_name = self.get_current_func_name()
         signature = generic.get_method_signature(chosen_func_name, enrichment)
@@ -899,7 +900,8 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         for name, param in signature.items():
             if name in self.EXCLUDED_PARAMS:
                 continue
-            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name, actions_to_connect=self.create_canvas)
+            self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name,
+                                                                       actions_to_connect=self.create_canvas)
             self.parameter_grid.addWidget(QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name]), i, 0)
             self.parameter_grid.addWidget(self.parameter_widgets[name], i, 1)
             i += 1
@@ -926,7 +928,7 @@ class SetVisualizationWindow(gui_utils.MinMaxDialog):
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
                 continue
-            val = gui_utils.get_val_from_widget(widget)
+            val = gui_widgets.get_val_from_widget(widget)
 
             kwargs[param_name] = val
         return objs_to_plot, kwargs
@@ -991,7 +993,7 @@ class TabPage(QtWidgets.QWidget):
         return True
 
     def init_stdout_ui(self):
-        self.stdout_widgets['text_edit_stdout'] = gui_utils.StdOutTextEdit(self)
+        self.stdout_widgets['text_edit_stdout'] = gui_widgets.StdOutTextEdit(self)
         self.stdout_widgets['text_edit_stdout'].setStyleSheet("""QTextEdit {background: #dddddd;}""")
         self.stdout_grid.addWidget(self.stdout_widgets['text_edit_stdout'], 0, 0, 3, 4)
 
@@ -1104,7 +1106,7 @@ class SetTabPage(TabPage):
         self.overview_grid.setColumnStretch(4, 1)
 
     def view_full_gene_set(self):
-        set_window = gui_utils.GeneSetView(self.gene_set.gene_set, self.get_tab_name())
+        set_window = gui_windows.GeneSetView(self.gene_set.gene_set, self.get_tab_name())
         self.overview_widgets['full_table_view'] = set_window
         set_window.show()
 
@@ -1158,14 +1160,14 @@ class FuncTypeStack(QtWidgets.QWidget):
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
 
-    def __init__(self, funcs: list, filter_obj: filtering.Filter, parent=None, additional_excluded_params: set = None,
-                 pipeline_mode: bool = False):
+    def __init__(self, funcs: typing.Iterable, filter_obj: filtering.Filter, parent=None,
+                 additional_excluded_params: set = None, pipeline_mode: bool = False):
         super().__init__(parent)
         self.parameter_widgets = {}
         self.layout = QtWidgets.QVBoxLayout(self)
         self.parameter_grid = QtWidgets.QGridLayout()
         self.func_combo = QtWidgets.QComboBox(self)
-        self.func_help_button = gui_utils.HelpButton(self)
+        self.func_help_button = gui_widgets.HelpButton(self)
         self.func_combo_layout = QtWidgets.QHBoxLayout()
         self.funcs = funcs
         self.filter_obj = filter_obj
@@ -1200,7 +1202,7 @@ class FuncTypeStack(QtWidgets.QWidget):
 
     def update_parameter_ui(self):
         # delete previous widgets
-        gui_utils.clear_layout(self.parameter_grid)
+        gui_widgets.clear_layout(self.parameter_grid)
         self.parameter_widgets = {}
         chosen_func_name = self.get_function_name()
         if chosen_func_name == self.NO_FUNC_CHOSEN_TEXT:
@@ -1216,18 +1218,19 @@ class FuncTypeStack(QtWidgets.QWidget):
         for name, param in signature.items():
             if name in self.excluded_params:
                 continue
-            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name, pipeline_mode=self.pipeline_mode)
+            self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name, pipeline_mode=self.pipeline_mode)
             if not self.pipeline_mode:
-                if isinstance(self.parameter_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                if isinstance(self.parameter_widgets[name],
+                              (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
                     self.parameter_widgets[name].add_columns(self.filter_obj.columns)
-                elif isinstance(self.parameter_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
-                    self.parameter_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                elif isinstance(self.parameter_widgets[name], gui_widgets.ComboBoxOrOtherWidget) and isinstance(
+                    self.parameter_widgets[name].other, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
                     self.parameter_widgets[name].other.add_columns(self.filter_obj.columns)
 
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
-                help_button = gui_utils.HelpButton()
+                help_button = gui_widgets.HelpButton()
                 self.parameter_grid.addWidget(help_button, i, 2)
                 help_button.connect_param_help(name, param_desc[name])
 
@@ -1251,7 +1254,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'function_combo', 'help_link'}:
                 continue
-            val = gui_utils.get_val_from_widget(widget)
+            val = gui_widgets.get_val_from_widget(widget)
 
             func_params[param_name] = val
         return func_params
@@ -1399,7 +1402,7 @@ class FilterTabPage(TabPage):
         self.basic_widgets['start_button'].clicked.connect(self.start)
         self.basic_widgets['start_button'].setEnabled(False)
 
-        self.basic_widgets['file_path'] = gui_utils.PathLineEdit()
+        self.basic_widgets['file_path'] = gui_widgets.PathLineEdit()
         self.basic_widgets['file_path'].textChanged.connect(self._change_start_button_state)
 
         self.basic_widgets['table_name'] = QtWidgets.QLineEdit()
@@ -1471,12 +1474,12 @@ class FilterTabPage(TabPage):
             self.clicom_window.show()
 
     def view_full_dataframe(self):
-        df_window = gui_utils.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
+        df_window = gui_windows.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
         self.overview_widgets['full_table_view'] = df_window
         df_window.show()
 
     def update_table_preview(self):
-        model = gui_utils.DataFramePreviewModel(self.filter_obj.df)
+        model = gui_windows.DataFramePreviewModel(self.filter_obj.df)
         self.overview_widgets['preview'].setModel(model)
         self.overview_widgets['preview'].resizeColumnsToContents()
         self.overview_widgets['preview'].resizeRowsToContents()
@@ -1515,7 +1518,7 @@ class FilterTabPage(TabPage):
         if validation.isinstanceinh(outputs, filtering.Filter):
             self.filterObjectCreated.emit(outputs)
         elif isinstance(outputs, pd.DataFrame):
-            self.df_views.append(gui_utils.DataFrameView(outputs, source_name))
+            self.df_views.append(gui_windows.DataFrameView(outputs, source_name))
             self.df_views[-1].show()
         elif isinstance(outputs, np.ndarray):
             df = pd.DataFrame(outputs)
@@ -1539,6 +1542,7 @@ class FilterTabPage(TabPage):
             self._proccess_outputs(output, source_name)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
+        # TODO: apply to multiple tabs at the same time
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
         reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
                                                apply_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
@@ -1611,7 +1615,7 @@ class FilterTabPage(TabPage):
         self.init_overview_ui()
         self.init_function_ui()
 
-        gui_utils.clear_layout(self.basic_grid)
+        gui_widgets.clear_layout(self.basic_grid)
         self.layout.removeWidget(self.basic_group)
         self.basic_group.deleteLater()
 
@@ -1628,7 +1632,7 @@ class FilterTabPage(TabPage):
         self.changeIcon.emit(type(self.filter_obj).__name__)
 
 
-class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
+class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     pipelineSaved = QtCore.pyqtSignal(str, filtering.Pipeline)
     pipelineExported = QtCore.pyqtSignal(str, filtering.Pipeline)
 
@@ -1750,8 +1754,9 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
             self.pipelineSaved.emit(self._get_pipeline_name(), self.pipeline)
             print(f"Successfully saved Pipeline '{self.basic_widgets['pipeline_name'].text()}'")
             self.is_unsaved = False
-        except Exception:
+        except Exception as e:
             print("Failed to save Pipeline")
+            raise e
 
     def closeEvent(self, event):
         if self.is_unsaved:
@@ -1769,7 +1774,7 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
             event.accept()
 
 
-class MultiKeepWindow(gui_utils.MinMaxDialog):
+class MultiKeepWindow(gui_widgets.MinMaxDialog):
     def __init__(self, objs: List[filtering.Filter], parent=None):
         super().__init__(parent)
         self.objs = {str(obj.fname.stem): obj for obj in objs}
@@ -1812,7 +1817,7 @@ class MultiKeepWindow(gui_utils.MinMaxDialog):
 
     def result(self):
         keep_tables = {file: widget.isChecked() for file, widget in self.keep_marks.items()}
-        new_names = {file: gui_utils.get_val_from_widget(widget) for file, widget in self.names.items()}
+        new_names = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.names.items()}
         out = []
         for file in keep_tables:
             if keep_tables[file]:
@@ -1847,7 +1852,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.layout.addWidget(QtWidgets.QLabel('Table types:'), 1, 1)
         self.layout.addWidget(QtWidgets.QLabel('Table names (optional):'), 1, 2)
         for i, file in enumerate(self.files):
-            self.paths[file] = gui_utils.PathLineEdit(file, parent=self)
+            self.paths[file] = gui_widgets.PathLineEdit(file, parent=self)
             self.table_types[file] = QtWidgets.QComboBox(self)
             self.table_types[file].addItems(list(FILTER_OBJ_TYPES.keys()))
             self.names[file] = QtWidgets.QLineEdit(self)
@@ -1858,9 +1863,9 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.layout.addWidget(self.button_box, i + 3, 0, 1, 3)
 
     def result(self):
-        paths = {file: gui_utils.get_val_from_widget(widget) for file, widget in self.paths.items()}
-        types = {file: gui_utils.get_val_from_widget(widget) for file, widget in self.table_types.items()}
-        names = {file: gui_utils.get_val_from_widget(widget) for file, widget in self.names.items()}
+        paths = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.paths.items()}
+        types = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.table_types.items()}
+        names = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.names.items()}
         return paths, types, names
 
 
@@ -2014,8 +2019,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pipelines: typing.OrderedDict[str, filtering.Pipeline] = OrderedDict()
         self.pipeline_window = None
 
-        self.about_window = gui_utils.AboutWindow(self)
-        self.settings_window = gui_utils.SettingsWindow(self)
+        self.about_window = gui_windows.AboutWindow(self)
+        self.settings_window = gui_windows.SettingsWindow(self)
         self.set_op_window = None
         self.set_visualization_window = None
         self.enrichment_window = None
@@ -2030,8 +2035,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.queue_stdout = Queue()
         # create console text read thread + receiver object
         self.thread_stdout_queue_listener = QtCore.QThread()
-        self.stdout_receiver = gui_utils.ThreadStdOutStreamTextQueueReceiver(self.queue_stdout)
-        sys.stdout = gui_utils.WriteStream(self.queue_stdout)
+        self.stdout_receiver = gui_widgets.ThreadStdOutStreamTextQueueReceiver(self.queue_stdout)
+        sys.stdout = gui_widgets.WriteStream(self.queue_stdout)
 
         # connect receiver object to widget for text update
         self.stdout_receiver.queue_stdout_element_received_signal.connect(self.append_text_to_current_console)
@@ -2171,7 +2176,7 @@ class MainWindow(QtWidgets.QMainWindow):
             tab_types[tuple(key)] = widget
         self._sort_by_map(tab_types, sorted(tab_types.keys()))
 
-    def _sort_by_map(self, key_map: dict, sorted_keys: list):
+    def _sort_by_map(self, key_map: dict, sorted_keys: typing.Iterable):
         for to_ind, name in enumerate(sorted_keys):
             widget = key_map[name]
             from_ind = self.tabs.indexOf(widget)
@@ -2224,7 +2229,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.new_tab_from_filter_obj(filter_obj)
 
     def load_multiple_files(self):
-        dialog = gui_utils.MultiFileSelectionDialog()
+        dialog = gui_windows.MultiFileSelectionDialog()
         accepted = dialog.exec()
         if accepted == QtWidgets.QDialog.Accepted:
             filenames = dialog.result()
@@ -2298,7 +2303,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.pipelines[str(Path(filename).stem)] = pipeline
 
     def import_multiple_gene_sets(self):
-        dialog = gui_utils.MultiFileSelectionDialog()
+        dialog = gui_windows.MultiFileSelectionDialog()
         accepted = dialog.exec()
         if accepted == QtWidgets.QDialog.Accepted:
             filenames = dialog.result()
@@ -2349,7 +2354,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def excepthook(self, exc_type, exc_value, exc_tb):
         sys.__excepthook__(exc_type, exc_value, exc_tb)
-        self.error_window = gui_utils.ErrorMessage(exc_type, exc_value, exc_tb, self)
+        self.error_window = gui_windows.ErrorMessage(exc_type, exc_value, exc_tb, self)
         self.error_window.exec()
 
     def _get_current_console(self):
@@ -2551,7 +2556,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
 
     def display_enrichment_results(self, result: pd.DataFrame, gene_set_name: str):
-        df_window = gui_utils.DataFrameView(result, "Enrichment results for set " + gene_set_name)
+        df_window = gui_windows.DataFrameView(result, "Enrichment results for set " + gene_set_name)
         self.enrichment_results.append(df_window)
         df_window.show()
 
@@ -2663,7 +2668,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.about_window.exec()
 
     def input(self, message: str):
-        dialog = gui_utils.PathInputDialog(message, parent=self)
+        dialog = gui_widgets.PathInputDialog(message, parent=self)
         accepted = dialog.exec()
         if accepted:
             return dialog.result()
@@ -2717,14 +2722,20 @@ def run():
                       "If you want to improve the performance of slow operations on RNAlysis, "
                       "please install package 'numba'. ")
 
-    # enrichment.enrichment_runner.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui,
+    # enrichment.enrichment_runner.generic.ProgressParallel = functools.partial(gui_widgets.ProgressParallelGui,
     #                                                                           parent=window)
-    enrichment.enrichment_runner.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
-    # generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui, parent=window)
-    enrichment.enrichment_runner.parsing.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
-    filtering.clustering.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
-    enrichment.enrichment_runner.io.tqdm = functools.partial(gui_utils.ProgressSerialGui, parent=window)
-    # filtering.clustering.generic.ProgressParallel = functools.partial(gui_utils.ProgressParallelGui, parent=window)
+    enrichment.enrichment_runner.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
+    # generic.ProgressParallel = functools.partial(gui_widgets.ProgressParallelGui, parent=window)
+    enrichment.enrichment_runner.parsing.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
+    filtering.clustering.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
+    enrichment.enrichment_runner.io.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
+    # filtering.clustering.generic.ProgressParallel = functools.partial(gui_widgets.ProgressParallelGui, parent=window)
+
+    from joblib import Parallel, delayed
+    from collections import defaultdict
+    # patch joblib progress callback
+    class BatchCompletionCallBack(object):
+        completed = defaultdict(int)
 
     window.show()
     splash.finish(window)
