@@ -212,7 +212,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     ValueRole = QtCore.Qt.UserRole + 1001
 
     def __init__(self, df=pd.DataFrame(), parent=None):
-        super(DataFrameModel, self).__init__(parent)
+        super().__init__(parent)
         if isinstance(df, pd.Series):
             df = df.to_frame()
         self._dataframe = df
