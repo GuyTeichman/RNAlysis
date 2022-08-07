@@ -1267,7 +1267,7 @@ class FuncTypeStack(QtWidgets.QWidget):
 class FilterTabPage(TabPage):
     INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
-                      'from_folder', 'save_txt', 'save_csv'}
+                      'from_folder', 'save_txt', 'save_csv', 'from_dataframe'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
