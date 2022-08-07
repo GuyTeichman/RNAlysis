@@ -63,10 +63,12 @@ class Filter:
     def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = False):
 
         """
+        Load a table.
+
         :param fname: full path/filename of the .csv file to be loaded into the Filter object
         :type fname: Union[str, Path]
         :param drop_columns: if a string or list of strings are specified, \
-        the columns of the same name/s will be dropped from the loaded DataFrame.
+        the columns of the same name/s will be dropped from the loaded table.
         :type drop_columns: str, list of str, or False (default=False)
 
         :Examples:
@@ -1451,6 +1453,20 @@ class FoldChangeFilter(Filter):
 
     def __init__(self, fname: Union[str, Path, tuple], numerator_name: str, denominator_name: str,
                  suppress_warnings: bool = False):
+        """
+        Load a fold-change table. Valid fold-change tables should contain exactly two columns: \
+        the first column containing gene names/indices, and the second column containing log2(fold change) values.
+
+        :param fname: full path/filename of the .csv file to be loaded into the Filter object
+        :type fname: Union[str, Path]
+        :param numerator_name: name of the numerator condition in the fold-change table
+        :type numerator_name: str
+        :param denominator_name: name of the denominator condition in the fold-change table
+        :type denominator_name: str
+        :param suppress_warnings: if True, RNAlysis will not issue warnings about the loaded table's \
+        structure or content.
+        :type suppress_warnings: bool (default=False)
+        """
         super().__init__(fname)
         self.numerator = numerator_name
         self.denominator = denominator_name
@@ -1717,6 +1733,24 @@ class DESeqFilter(Filter):
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
                  log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', suppress_warnings: bool = False):
+        """
+        Load a differential expression table. A valid differential expression table should have \
+        a column containing log2(fold change) values for each gene, and another column containing \
+        adjusted p-values for each gene.
+
+        :param fname: full path/filename of the .csv file to be loaded into the Filter object
+        :type fname: Union[str, Path]
+        :param drop_columns: if a string or list of strings are specified, \
+        the columns of the same name/s will be dropped from the loaded table.
+        :type drop_columns: str, list of str, or False (default=False)
+        :param log2fc_col: name of the table column containing log2(fold change) values.
+        :type log2fc_col: str (default='Log2FoldChange')
+        :param padj_col: name of the table column containing adjusted p-values.
+        :type padj_col: str (default='padj')
+        :param suppress_warnings: if True, RNAlysis will not issue warnings about the loaded table's \
+        structure or content.
+        :type suppress_warnings: bool (default=False)
+        """
         super().__init__(fname, drop_columns)
         self.log2fc_col = log2fc_col
         self.padj_col = padj_col
@@ -1970,6 +2004,20 @@ class CountFilter(Filter):
 
     def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
                  is_normalized: bool = False):
+        """
+        Load a count matrix. A valid count matrix should have one row per gene/genomic feature \
+        and one column per condition/RNA library. The contents of the count matrix can be raw or pre-normalized.
+
+        :param fname: full path/filename of the .csv file to be loaded into the Filter object
+        :type fname: Union[str, Path]
+        :param drop_columns: if a string or list of strings are specified, \
+        the columns of the same name/s will be dropped from the loaded table.
+        :type drop_columns: str, list of str, or False (default=False)
+        :param is_normalized: indicates whether this count table is pre-normalized. \
+        RNAlysis issues a warning when a function meant for normalized tables is applied to a \
+        table that was not already normalized.
+        :type is_normalized: bool (default=False)
+        """
         super().__init__(fname, drop_columns)
         self._is_normalized = is_normalized
 
