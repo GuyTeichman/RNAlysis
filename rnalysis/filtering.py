@@ -1045,10 +1045,10 @@ class Filter:
         new_df = self.df.copy(deep=True)
         try:
             new_df[columns] = function(new_df[columns], **function_kwargs)
-        except:
+        except Exception:
             try:
                 new_df[columns] = self.df.apply(function, axis=1, result_type='broadcast', **function_kwargs)
-            except:
+            except Exception:
                 new_df[columns] = self.df.applymap(function, **function_kwargs)
         return self._inplace(new_df, False, inplace, suffix, 'transform')
 
