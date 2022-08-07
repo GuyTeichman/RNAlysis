@@ -60,7 +60,7 @@ class Filter:
     """
     __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data'}
 
-    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = False):
+    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = None):
 
         """
         Load a table.
@@ -69,7 +69,7 @@ class Filter:
         :type fname: Union[str, Path]
         :param drop_columns: if a string or list of strings are specified, \
         the columns of the same name/s will be dropped from the loaded table.
-        :type drop_columns: str, list of str, or False (default=False)
+        :type drop_columns: str, list of str, or None (default=None)
 
         :Examples:
             >>> from rnalysis import filtering
@@ -1731,7 +1731,7 @@ class DESeqFilter(Filter):
     """
     __slots__ = {'log2fc_col': 'name of the log2 fold change column', 'padj_col': 'name of the adjusted p-value column'}
 
-    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
                  log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', suppress_warnings: bool = False):
         """
         Load a differential expression table. A valid differential expression table should have \
@@ -1742,7 +1742,7 @@ class DESeqFilter(Filter):
         :type fname: Union[str, Path]
         :param drop_columns: if a string or list of strings are specified, \
         the columns of the same name/s will be dropped from the loaded table.
-        :type drop_columns: str, list of str, or False (default=False)
+        :type drop_columns: str, list of str, or None (default=None)
         :param log2fc_col: name of the table column containing log2(fold change) values.
         :type log2fc_col: str (default='Log2FoldChange')
         :param padj_col: name of the table column containing adjusted p-values.
@@ -2002,7 +2002,7 @@ class CountFilter(Filter):
     _numeric_dtypes = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     __slots__ = {'_is_normalized': 'indicates whether the values in this CountFilter were normalized'}
 
-    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
                  is_normalized: bool = False):
         """
         Load a count matrix. A valid count matrix should have one row per gene/genomic feature \
@@ -2012,7 +2012,7 @@ class CountFilter(Filter):
         :type fname: Union[str, Path]
         :param drop_columns: if a string or list of strings are specified, \
         the columns of the same name/s will be dropped from the loaded table.
-        :type drop_columns: str, list of str, or False (default=False)
+        :type drop_columns: str, list of str, or None (default=None)
         :param is_normalized: indicates whether this count table is pre-normalized. \
         RNAlysis issues a warning when a function meant for normalized tables is applied to a \
         table that was not already normalized.
