@@ -1345,13 +1345,9 @@ class FilterTabPage(TabPage):
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
         self.overview_widgets['preview'] = QtWidgets.QTableView()
-        # self.overview_widgets['preview'].setFixedWidth(550)
-        # self.overview_widgets['preview'].setFixedHeight(175)
         self.overview_widgets['preview'].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.overview_widgets['preview'].setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # self.overview_widgets['preview'].setFlags(self.overview_widgets['preview'].flags() & ~QtCore.Qt.ItemIsEditable)
-        self.overview_widgets['preview'].horizontalHeader().setStretchLastSection(True)
-        self.overview_widgets['preview'].verticalHeader().setStretchLastSection(True)
+
         self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 4)
         this_row += 1
         self.overview_widgets['table_name'] = QtWidgets.QLineEdit()
@@ -1363,8 +1359,8 @@ class FilterTabPage(TabPage):
         self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1)
         self.overview_grid.addWidget(self.overview_widgets['rename'], this_row, 2)
         this_row += 1
-        self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 4, 4)
-        this_row += 4
+        self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 1, 4)
+        this_row += 1
 
         self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save table')
         self.overview_widgets['save_button'].clicked.connect(self.save_file)
@@ -1478,7 +1474,16 @@ class FilterTabPage(TabPage):
     def update_table_preview(self):
         model = gui_utils.DataFramePreviewModel(self.filter_obj.df)
         self.overview_widgets['preview'].setModel(model)
+        self.overview_widgets['preview'].resizeColumnsToContents()
         self.overview_widgets['preview'].resizeRowsToContents()
+
+        self.overview_widgets['preview'].setFixedWidth(
+            self.overview_widgets['preview'].horizontalHeader().length() + self.overview_widgets[
+                'preview'].verticalHeader().width())
+
+        self.overview_widgets['preview'].setFixedHeight(
+            self.overview_widgets['preview'].verticalHeader().length() + self.overview_widgets[
+                'preview'].horizontalHeader().height())
 
     def apply_function(self):
         this_stack: FuncTypeStack = self.stack.currentWidget()
