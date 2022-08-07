@@ -114,6 +114,38 @@ class TableColumnPicker(QtWidgets.QPushButton):
             self._update_window_size()
 
 
+class TableSingleColumnPicker(TableColumnPicker):
+    def __init__(self, text: str = 'Choose a column', parent=None):
+        super().__init__(text, parent)
+        self.button_group = QtWidgets.QButtonGroup(self)
+        self.button_group.setExclusive(True)
+
+    def select_all(self):
+        raise NotImplementedError
+
+    def init_ui(self):
+        super().init_ui()
+        self.dialog.setWindowTitle("Choose a table column")
+        self.dialog_layout.removeWidget(self.select_all_button)
+        self.select_all_button.deleteLater()
+        self.dialog_layout.removeWidget(self.clear_button)
+        self.clear_button.deleteLater()
+
+    def update_table(self):
+        start_ind = self.dialog_table.rowCount()
+        super().update_table()
+        self.clear_selection()
+        for i in range(start_ind, len(self.column_checks)):
+            checkbox = self.column_checks[i]
+            self.button_group.addButton(checkbox.switch)
+
+    def get_values(self):
+        picked_cols = super().get_values()
+        assert len(picked_cols) > 0, "Not enough columns were picked!"
+        assert len(picked_cols) < 2, "Too many columns were picked!"
+        return picked_cols[0]
+
+
 class TableColumnGroupPicker(TableColumnPicker):
 
     def __init__(self, text: str = 'Choose columns', parent=None):
@@ -1682,6 +1714,11 @@ def param_to_widget(param, name: str,
 
     elif name in {'sample_names', 'sample1', 'sample2'} and (not pipeline_mode):
         widget = TableColumnPicker()
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif name in {'by', 'column'} and param.annotation == str and (not pipeline_mode):
+        widget = TableSingleColumnPicker()
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
