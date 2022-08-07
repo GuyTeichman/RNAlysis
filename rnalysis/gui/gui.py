@@ -1158,7 +1158,8 @@ class FuncTypeStack(QtWidgets.QWidget):
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
 
-    def __init__(self, funcs: list, filter_obj: filtering.Filter, parent=None, additional_excluded_params: set = None):
+    def __init__(self, funcs: list, filter_obj: filtering.Filter, parent=None, additional_excluded_params: set = None,
+                 pipeline_mode: bool = False):
         super().__init__(parent)
         self.parameter_widgets = {}
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -1171,6 +1172,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.excluded_params = self.EXCLUDED_PARAMS
         if additional_excluded_params is not None:
             self.excluded_params.update(additional_excluded_params)
+        self.pipeline_mode = pipeline_mode
         self.init_ui()
 
     def init_ui(self):
@@ -1214,12 +1216,14 @@ class FuncTypeStack(QtWidgets.QWidget):
         for name, param in signature.items():
             if name in self.excluded_params:
                 continue
-            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name)
-            if isinstance(self.parameter_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
-                self.parameter_widgets[name].add_columns(self.filter_obj.columns)
-            elif isinstance(self.parameter_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
-                self.parameter_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
-                self.parameter_widgets[name].other.add_columns(self.filter_obj.columns)
+            self.parameter_widgets[name] = gui_utils.param_to_widget(param, name, pipeline_mode=self.pipeline_mode)
+            if not self.pipeline_mode:
+                if isinstance(self.parameter_widgets[name], (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                    self.parameter_widgets[name].add_columns(self.filter_obj.columns)
+                elif isinstance(self.parameter_widgets[name], gui_utils.ComboBoxOrOtherWidget) and isinstance(
+                    self.parameter_widgets[name].other, (gui_utils.TableColumnPicker, gui_utils.TableColumnPicker)):
+                    self.parameter_widgets[name].other.add_columns(self.filter_obj.columns)
+
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
                 label.setToolTip(param_desc[name])
@@ -1676,6 +1680,9 @@ class CreatePipelineWindow(gui_utils.MinMaxDialog, FilterTabPage):
     def init_function_ui(self):
         super().init_function_ui()
         self.function_group.setTitle("Add functions to Pipeline")
+        sorted_actions = self.get_all_actions()
+        for action_type in sorted_actions:
+            self.stack_widgets[action_type].pipeline_mode = True
 
     def apply_function(self):
         this_stack: FuncTypeStack = self.stack.currentWidget()
