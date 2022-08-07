@@ -976,6 +976,8 @@ class QMultiInput(QtWidgets.QPushButton):
         while len(self.dialog_widgets['inputs']) > 0:
             self.remove_widget()
         for item in defaults:
+            if item is None:
+                continue
             self.add_widget()
             self.set_widget_value(-1, item)
 
@@ -1040,6 +1042,12 @@ class QMultiLineEdit(QMultiInput):
 
     def set_widget_value(self, ind: int, val):
         self.dialog_widgets['inputs'][ind].setText(str(val))
+
+    def get_values(self):
+        res = super().get_values()
+        if res == '':
+            return []
+        return res
 
 
 class QMultiStrIntLineEdit(QMultiLineEdit):
