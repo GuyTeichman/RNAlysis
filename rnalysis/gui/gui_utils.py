@@ -1654,7 +1654,8 @@ class NewParam:
 
 
 def param_to_widget(param, name: str,
-                    actions_to_connect: typing.Union[typing.Iterable[typing.Callable], typing.Callable] = tuple()):
+                    actions_to_connect: typing.Union[typing.Iterable[typing.Callable], typing.Callable] = tuple(),
+                    pipeline_mode: bool = False):
     actions_to_connect = parsing.data_to_tuple(actions_to_connect)
 
     if param.default == inspect._empty:
@@ -1674,12 +1675,12 @@ def param_to_widget(param, name: str,
             for action in actions_to_connect:
                 widget.valueChanged.connect(action)
 
-    elif name in {'samples', 'sample_grouping'}:
+    elif name in {'samples', 'sample_grouping'} and (not pipeline_mode):
         widget = TableColumnGroupPicker()
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif name in {'sample_names', 'sample1', 'sample2'}:
+    elif name in {'sample_names', 'sample1', 'sample2'} and (not pipeline_mode):
         widget = TableColumnPicker()
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
@@ -1726,7 +1727,7 @@ def param_to_widget(param, name: str,
             other_default = param.default
         widget = ComboBoxOrOtherWidget(typing_extensions.get_args(literal),
                                        param_to_widget(NewParam(typing.Union[without_literal], other_default), name,
-                                                       actions_to_connect), this_default)
+                                                       actions_to_connect, pipeline_mode), this_default)
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
     elif typing_extensions.get_origin(param.annotation) == typing.Literal:
@@ -1817,7 +1818,6 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.textChanged.connect(action)
     return widget
-
 
 def get_val_from_widget(widget):
     if isinstance(widget, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox)) or (hasattr(widget, 'IS_SPIN_BOX_LIKE')):
