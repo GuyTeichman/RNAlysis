@@ -213,6 +213,8 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 
     def __init__(self, df=pd.DataFrame(), parent=None):
         super(DataFrameModel, self).__init__(parent)
+        if isinstance(df, pd.Series):
+            df = df.to_frame()
         self._dataframe = df
 
     def setDataFrame(self, dataframe):
@@ -275,9 +277,24 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 
 class DataFramePreviewModel(DataFrameModel):
     def __init__(self, df=pd.DataFrame(), parent=None):
-        df = df.iloc[0:2, 0:3]
-        df['...'] = '...'
-        df.loc['...', :] = '...'
+        shape = df.shape
+        if len(shape) == 1:
+            shape = (shape[0], 1)
+
+        n_rows = min(2, shape[0])
+        n_cols = min(3, shape[1])
+        if isinstance(df, pd.DataFrame):
+            df = df.iloc[:n_rows, :n_cols]
+        elif isinstance(df, pd.Series):
+            df = df.iloc[:n_rows]
+
+        if n_rows < shape[0]:
+            if isinstance(df, pd.DataFrame):
+                df.loc['...', :] = '...'
+            elif isinstance(df, pd.Series):
+                df.loc['...'] = '...'
+        if n_cols < shape[1]:
+            df['...'] = '...'
         super().__init__(df, parent)
 
 
@@ -336,7 +353,10 @@ class GeneSetView(DataView):
 class DataFrameView(DataView):
     def __init__(self, data: pd.DataFrame, name: str, parent=None):
         super().__init__(data, name, parent)
-        self.label = QtWidgets.QLabel(f"Table '{name}': {self.data.shape[0]} rows, {self.data.shape[1]} columns")
+        shape = self.data.shape
+        if len(shape) == 1:
+            shape = (shape[0], 1)
+        self.label = QtWidgets.QLabel(f"Table '{name}': {shape[0]} rows, {shape[1]} columns")
 
         self.data_view = QtWidgets.QTableView()
         self.save_button = QtWidgets.QPushButton('Save table', self)
