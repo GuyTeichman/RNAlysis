@@ -1852,6 +1852,8 @@ def param_to_widget(param, name: str,
         widget = QtWidgets.QTextEdit()
         default = param.default if is_default else ''
         widget.setText(str(default))
+        widget.setToolTip('Enter a Python expression here')
+        widget.setToolTipDuration(0)
         for action in actions_to_connect:
             widget.textChanged.connect(action)
     return widget
