@@ -206,7 +206,6 @@ def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List
             df = df.str.strip()
     # if there remained only empty string "", change to Nan
     df = df.replace({"": np.nan})
-
     if drop_columns:
         drop_columns_lst = parsing.data_to_list(drop_columns)
         assert validation.isinstanceiter(drop_columns_lst,
