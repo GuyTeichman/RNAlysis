@@ -203,7 +203,8 @@ def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
     desc = split[0]
     params_str = split[1]
     free_text_match = '[\w\s\.\(\)\-\:%\*=@!\?\+\_,/' + "'" + ']'
-    params_matches = list(re.finditer('^:param ([a-zA-Z_]+):(' + free_text_match + '+?)(?=^\:.*\:)', params_str,re.MULTILINE))
+    params_matches = list(
+        re.finditer('^:param ([a-zA-Z_0-9]+):(' + free_text_match + '+?)(?=^\:.*\:)', params_str, re.MULTILINE))
     params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
     return desc, params
 
