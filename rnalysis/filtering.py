@@ -989,7 +989,8 @@ class Filter:
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def transform(self, function: Union[str, Callable], columns: Union[str, List[str], Literal['all']] = 'all',
+    def transform(self, function: Union[Literal['Box-Cox', 'log2', 'log10', 'ln', 'Standardize'], Callable],
+                  columns: Union[str, List[str], Literal['all']] = 'all',
                   inplace: bool = True, **function_kwargs):
         """
         Transform the values in the Filter object with the specified function.
@@ -1019,7 +1020,7 @@ class Filter:
 
         suffix = "_customtransform" if callable(function) else f"_{str(function)}transform"
 
-        if columns == 'all':
+        if isinstance(columns, str) and columns.lower() == 'all':
             columns = parsing.data_to_list(self.columns)
         else:
             columns = parsing.data_to_list(columns)
