@@ -1265,6 +1265,7 @@ class FuncTypeStack(QtWidgets.QWidget):
 
 
 class FilterTabPage(TabPage):
+    INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
                       'from_folder', 'save_txt', 'save_csv'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
@@ -1282,6 +1283,9 @@ class FilterTabPage(TabPage):
         self.basic_group = QtWidgets.QGroupBox('Load a data table')
         self.basic_grid = QtWidgets.QGridLayout(self.basic_group)
         self.basic_widgets = {}
+        self.basic_param_container = QtWidgets.QWidget(self)
+        self.basic_param_widgets = {}
+        self.basic_param_grid = QtWidgets.QGridLayout(self.basic_param_container)
 
         self.overview_group = QtWidgets.QGroupBox('Data overview')
         self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
@@ -1388,15 +1392,44 @@ class FilterTabPage(TabPage):
 
     def update_filter_obj_shape(self):
         shape = self.filter_obj.shape
+        if len(shape) == 1:
+            shape = (shape[0], 1)
         self.overview_widgets['shape'].setText(f'This table contains {shape[0]} rows, {shape[1]} columns')
 
     def _change_start_button_state(self, is_legal: bool):
         self.basic_widgets['start_button'].setEnabled(is_legal)
 
+    def update_basic_ui(self):
+        # clear previous layout
+        gui_widgets.clear_layout(self.basic_param_grid)
+        self.basic_param_widgets = {}
+        func_name = '__init__'
+        filter_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
+        signature = generic.get_method_signature(func_name, filter_obj_type)
+        desc, param_desc = generic.get_method_docstring(func_name, filter_obj_type)
+        self.basic_widgets['table_type_combo'].setToolTip(desc)
+        i = 1
+        for name, param in signature.items():
+            if name in self.INIT_EXCLUDED_PARAMS:
+                continue
+            self.basic_param_widgets[name] = gui_widgets.param_to_widget(param, name)
+            label = QtWidgets.QLabel(f'{name}:', self.basic_param_widgets[name])
+            if name in param_desc:
+                label.setToolTip(param_desc[name])
+                help_button = gui_widgets.HelpButton()
+                self.basic_param_grid.addWidget(help_button, i, 2)
+                help_button.connect_param_help(name, param_desc[name])
+
+            self.basic_param_grid.addWidget(label, i, 0)
+            self.basic_param_grid.addWidget(self.basic_param_widgets[name], i, 1)
+            i += 1
+
     def init_basic_ui(self):
         self.layout.insertWidget(0, self.basic_group)
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
         self.basic_widgets['table_type_combo'].addItems(FILTER_OBJ_TYPES.keys())
+        self.basic_widgets['table_type_combo'].currentIndexChanged.connect(self.update_basic_ui)
+        self.basic_widgets['table_type_combo'].setCurrentText("Other")
 
         self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
         self.basic_widgets['start_button'].clicked.connect(self.start)
@@ -1423,11 +1456,12 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(self.basic_widgets['file_path'], 1, 0, 1, 2)
         self.basic_grid.addWidget(self.basic_widgets['table_type_combo'], 1, 2)
         self.basic_grid.addWidget(self.basic_widgets['table_name'], 1, 3)
-        self.basic_grid.addWidget(self.basic_widgets['start_button'], 2, 0, 1, 4)
+        self.basic_grid.addWidget(self.basic_param_container, 2, 0, 1, 4)
+        self.basic_grid.addWidget(self.basic_widgets['start_button'], 3, 0, 1, 4)
 
-        self.basic_grid.addWidget(QtWidgets.QWidget(self), 3, 0, 1, 4)
+        self.basic_grid.addWidget(QtWidgets.QWidget(self), 4, 0, 1, 4)
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 0, 4, 4, 1)
-        self.basic_grid.setRowStretch(3, 1)
+        self.basic_grid.setRowStretch(4, 1)
         self.basic_grid.setColumnStretch(4, 1)
 
     @QtCore.pyqtSlot(int)
@@ -1602,9 +1636,15 @@ class FilterTabPage(TabPage):
             self.tabSaved.emit()
 
     def start(self):
-        self.filter_obj = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()](
-            self.basic_widgets['file_path'].text())
+        filter_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
+        file_path = self.basic_widgets['file_path'].text()
+        kwargs = {}
+        for name, widget in self.basic_param_widgets.items():
+            kwargs[name] = gui_widgets.get_val_from_widget(widget)
+        self.filter_obj = filter_obj_type(file_path, **kwargs)
+
         print(self.filter_obj)
+
         table_name_user_input = self.basic_widgets['table_name'].text()
         if table_name_user_input != '':
             new_name = table_name_user_input
