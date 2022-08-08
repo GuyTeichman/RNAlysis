@@ -1130,7 +1130,7 @@ class SetTabPage(TabPage):
         base_str = str(time.time_ns()) + self.get_tab_name() + str(len(self.gene_set))
         hex_hash = hashlib.sha1(base_str.encode('utf-8')).hexdigest()
         filename = f"{hex_hash}.txt"
-        io.cache_gui_file(self.gene_set, filename)
+        io.cache_gui_file(self.gene_set.gene_set, filename)
         return filename
 
     def is_empty(self):
