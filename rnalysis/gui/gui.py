@@ -2619,7 +2619,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
-        return [self.tabs.tabText(i) for i in range(self.tabs.count())]
+        return [self.tabs.tabText(i).rstrip('*') for i in range(self.tabs.count())]
 
     def init_menu_ui(self):
         self.setMenuBar(self.menu_bar)
