@@ -1648,6 +1648,7 @@ class FilterTabPage(TabPage):
         table_name_user_input = self.basic_widgets['table_name'].text()
         if table_name_user_input != '':
             new_name = table_name_user_input
+            self.filter_obj._update(fname=Path(new_name).with_suffix('.csv'))
         else:
             new_name = self.filter_obj.fname.stem
         self.tabNameChange.emit(new_name, False)
