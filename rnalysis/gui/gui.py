@@ -1567,8 +1567,9 @@ class FilterTabPage(TabPage):
                 for output in outputs:
                     self._proccess_outputs(output, source_name)
         elif isinstance(outputs, dict):
-            for output, this_src_name in outputs.items():
-                self._proccess_outputs(output, this_src_name)
+            tab_name = self.get_tab_name()
+            for this_src_name, output in outputs.items():
+                self._proccess_outputs(output, f"{this_src_name} {tab_name}")
 
     def _multi_keep_window_accepted(self, dialog: QtWidgets.QDialog, source_name: str):
         kept_outputs = dialog.result()
