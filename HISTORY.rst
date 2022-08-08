@@ -25,7 +25,7 @@ Changed
 Fixed
 ******
 * enrichment.venn_diagram can now be plotted with outlines when the circles are unweighted
-
+* Fixed bug in Pipeline.apply_to() where a Filter object would be returned even when the Pipeline was applied inplace
 
 Removed
 ********
