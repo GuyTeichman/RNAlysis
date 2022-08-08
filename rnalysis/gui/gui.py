@@ -19,8 +19,8 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import filtering, enrichment, __version__
-from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics
-from rnalysis.utils import io, validation, generic, parsing
+from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_tutorial
+from rnalysis.utils import io, validation, generic, parsing, settings
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
@@ -2066,6 +2066,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_window = gui_windows.SettingsWindow(self)
         self.set_op_window = None
         self.set_visualization_window = None
+        self.tutorial_window = gui_tutorial.WelcomeWizard(self)
+        self.cite_window = gui_windows.HowToCiteWindow(self)
         self.enrichment_window = None
         self.enrichment_results = []
 
@@ -2074,6 +2076,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_actions()
         self.init_menu_ui()
         self.init_shortcuts()
+
+        if settings.get_show_tutorial_settings():
+            self.tutorial_window.show()
 
         self.queue_stdout = Queue()
         # create console text read thread + receiver object
@@ -2487,10 +2492,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
         self.export_set_action.triggered.connect(self.export_gene_set)
 
+        self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
+        self.tutorial_action.triggered.connect(self.tutorial_window.show)
         self.user_guide_action = QtWidgets.QAction("&User Guide", self)
         self.user_guide_action.triggered.connect(self.open_user_guide)
         self.about_action = QtWidgets.QAction("&About", self)
         self.about_action.triggered.connect(self.about)
+        self.cite_action = QtWidgets.QAction("How to &cite RNAlysis", self)
+        self.cite_action.triggered.connect(self.cite)
 
         self.new_pipeline_action = QtWidgets.QAction("&New Pipeline...", self)
         self.new_pipeline_action.triggered.connect(self.add_pipeline)
@@ -2639,7 +2648,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.apply_pipeline_menu.aboutToShow.connect(self._populate_pipelines)
 
         help_menu = self.menu_bar.addMenu("&Help")
-        help_menu.addActions([self.user_guide_action, self.about_action])
+        help_menu.addActions([self.tutorial_action, self.user_guide_action, self.about_action, self.cite_action])
 
     def _populate_pipelines(self):
         # Remove the old options from the menu
@@ -2710,6 +2719,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def about(self):
         self.about_window.exec()
+
+    def cite(self):
+        self.cite_window.exec()
 
     def input(self, message: str):
         dialog = gui_widgets.PathInputDialog(message, parent=self)
