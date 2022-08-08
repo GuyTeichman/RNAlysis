@@ -1576,13 +1576,8 @@ class FilterTabPage(TabPage):
         for output in kept_outputs:
             self._proccess_outputs(output, source_name)
 
-    def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
-        # TODO: apply to multiple tabs at the same time
-        apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
-        reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
-                                               apply_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-
-        if reply == QtWidgets.QMessageBox.Yes:
+    def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, inplace: bool):
+        if inplace:
             command = PipelineInplaceCommand(self, pipeline, description=f'Apply Pipeline "{pipeline_name}"')
             self.undo_stack.push(command)
         else:
@@ -1592,7 +1587,7 @@ class FilterTabPage(TabPage):
         prev_name = self.filter_obj.fname.name
         result = pipeline.apply_to(self.filter_obj, inplace)
         self.update_tab(prev_name != self.filter_obj.fname.name)
-        self._proccess_outputs(result, 'pipeline')
+        self._proccess_outputs(result, f'Pipeline on {self.get_tab_name()}')
 
     def get_index_string(self):
         return self.filter_obj.index_string
@@ -2036,6 +2031,30 @@ class PipelineInplaceCommand(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.tab_page._apply_pipeline(self.pipeline, inplace=True)
+
+
+class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
+    def __init__(self, available_objects: dict, parent=None):
+        super().__init__(parent)
+        self.available_objects = available_objects
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.label = QtWidgets.QLabel('Choose the tables you wish to apply your Pipeline to', self)
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.list = gui_widgets.MultipleChoiceList(self.available_objects,
+                                                   [val[1] for val in self.available_objects.values()],
+                                                   self)
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.list)
+        self.layout.addWidget(self.button_box, QtCore.Qt.AlignCenter)
+
+    def result(self):
+        return [item.text() for item in self.list.selectedItems()]
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -2658,11 +2677,35 @@ class MainWindow(QtWidgets.QMainWindow):
         actions = []
         for name, pipeline in self.pipelines.items():
             action = QtWidgets.QAction(name, self)
-            action.triggered.connect(
-                functools.partial(self.tabs.currentWidget().apply_pipeline, pipeline, name))
+            action.triggered.connect(functools.partial(self.apply_pipeline, pipeline, name))
             actions.append(action)
         # Step 3. Add the actions to the menu
         self.apply_pipeline_menu.addActions(actions)
+
+    def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
+        apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
+        reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
+                                               apply_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+
+        inplace = reply == QtWidgets.QMessageBox.Yes
+
+        available_objs = self.get_available_objects()
+        filtered_available_objs = {}
+        for i, (key, val) in enumerate(available_objs.items()):
+            if (self.tabs.widget(i).obj_type() == pipeline.filter_type) or (
+                pipeline.filter_type == filtering.Filter and issubclass(self.tabs.widget(i).obj_type(),
+                                                                        filtering.Filter)):
+                filtered_available_objs[key] = val
+        window = ApplyPipelineWindow(filtered_available_objs, self)
+        accepted = window.exec()
+        if accepted:
+            current_ind = self.tabs.currentIndex()
+            chosen_names = window.result()
+            for name in chosen_names:
+                self.tabs.setCurrentWidget(filtered_available_objs[name][0])
+                filtered_available_objs[name][0].apply_pipeline(pipeline, name, inplace)
+                QtWidgets.QApplication.processEvents()
+            self.tabs.setCurrentIndex(current_ind)
 
     def load_session(self):
         session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load session",
