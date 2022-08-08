@@ -15,6 +15,7 @@ __biotype_file_key__ = "biotype_reference_table"
 __font_key__ = "gui_font"
 __font_size_key__ = "gui_font_size"
 __stylesheet_key__ = "gui_stylesheet"
+__show_tutorial_key__ = "show_tutorial_on_startup"
 
 
 def _simple_warning_format(msg, *args, **kwargs):
