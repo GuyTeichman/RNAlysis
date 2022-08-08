@@ -2043,7 +2043,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.tabs = ReactiveTabWidget(self)
-        self.next_tab_n = 0
 
         self.closed_tabs_stack = QtWidgets.QUndoStack(self)
         self.undo_group = QtWidgets.QUndoGroup(self)
@@ -2154,6 +2153,7 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(int)
     def _change_undo_stack(self, ind: int):
         if self.tabs.count() == 0:
+            self.add_new_tab()
             self.undo_group.setActiveStack(self.undo_group.stacks()[0])
         else:
             stack = self.tabs.widget(ind).undo_stack
@@ -2231,8 +2231,7 @@ class MainWindow(QtWidgets.QMainWindow):
         new_undo_stack = QtWidgets.QUndoStack()
         self.undo_group.addStack(new_undo_stack)
         if name is None:
-            name = f'New Table {self.next_tab_n + 1}'
-            self.next_tab_n += 1
+            name = 'New Table'
 
         else:
             print(name)
