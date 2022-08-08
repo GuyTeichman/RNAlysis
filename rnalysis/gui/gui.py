@@ -2337,6 +2337,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             "YAML file (*.yaml)")
         if filename:
             pipeline.export_pipeline(filename)
+            print(f"Successfully saved at {io.get_datetime()} under {filename}")
 
     def import_pipeline(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a Pipeline file", str(Path.home()),
