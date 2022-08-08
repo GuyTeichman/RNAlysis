@@ -1691,6 +1691,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
         self.basic_widgets['table_type_combo'] = QtWidgets.QComboBox()
         self.basic_widgets['table_type_combo'].addItems(FILTER_OBJ_TYPES.keys())
+        self.basic_widgets['table_type_combo'].setCurrentText('Other')
 
         self.basic_widgets['pipeline_name'] = QtWidgets.QLineEdit()
         self.basic_widgets['pipeline_name'].setText('New Pipeline')
