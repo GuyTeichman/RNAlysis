@@ -31,7 +31,7 @@ def get_parametric_stylesheet(font_base_size: int, font_name: str):
 
 
 def get_stylesheet():
-    font_name, font_base_size, stylesheet_name = settings.get_gui_settings()
+    font_name, font_base_size, stylesheet_name, _ = settings.get_gui_settings()
     palette = STYLESHEETS[stylesheet_name]
     param_stylesheet = get_parametric_stylesheet(font_base_size, font_name)
     if palette is None:
