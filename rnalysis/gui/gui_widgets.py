@@ -1112,6 +1112,7 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
         self.moveCursor(QtGui.QTextCursor.End)
         if text == '\n':
             return
+        text = text.replace("<", "&lt;").replace(">", "&gt;")
         if text.startswith('Warning: '):
             self.insertHtml(f'<div style="color:red;">{text}</div><br>')
         else:
