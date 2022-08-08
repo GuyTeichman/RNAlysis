@@ -569,7 +569,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.layout.addWidget(self.widgets['splitter'])
         self.widgets['splitter'].addWidget(self.list_group)
         self.widgets['splitter'].addWidget(self.operations_group)
-        self.widgets['splitter'].setSizes([self.width() * 0.2, self.width() * 0.8])
+        self.widgets['splitter'].setSizes([int(self.width() * 0.15), int(self.width() * 0.85)])
         self.parameter_group.setVisible(False)
 
         self.init_sets_ui()
