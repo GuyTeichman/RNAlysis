@@ -496,7 +496,7 @@ def test_upset_plot_api():
     upset_plot(
         {'obj': 'attribute1', 'obj2': 'attribute2', 'obj3': {'WBGene00000001', 'WBGene00001234'}, 'obj4': 'attribute3',
          'obj5': 'attribute4'},
-        ref=__attr_ref__)
+        attr_ref_table_path=__attr_ref__)
     plt.close('all')
 
 

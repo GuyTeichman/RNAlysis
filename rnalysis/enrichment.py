@@ -1364,7 +1364,7 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
 
 def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: Iterable[str] = ('black',),
                title: str = 'UpSet Plot', title_fontsize: int = 20, show_percentages: bool = True,
-               ref: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None):
+               attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None):
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1383,9 +1383,9 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: It
     :type title_fontsize: int (default=20)
     :param show_percentages: if True, shows the percentage that each set or subset takes out of the entire dataset.
     :type show_percentages: bool (default=True)
-    :param ref: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
+    :param attr_ref_table_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
-    :type ref: str or pathlib.Path (default='predefined')
+    :type attr_ref_table_path: str or pathlib.Path (default='predefined')
     :param fig: optionally, supply your own Figure to generate the plot onto.
     :type fig: matplotlib.Figure
 
@@ -1399,7 +1399,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: It
            Example plot of upset_plot()
     """
 
-    upset_df = parsing.generate_upset_series(_fetch_sets(objs=objs, ref=ref))
+    upset_df = parsing.generate_upset_series(_fetch_sets(objs=objs, ref=attr_ref_table_path))
     upset_obj = upsetplot.UpSet(upset_df, sort_by='degree', sort_categories_by=None, show_percentages=show_percentages)
     axes = upset_obj.plot(fig=fig)
     if fig is None:
