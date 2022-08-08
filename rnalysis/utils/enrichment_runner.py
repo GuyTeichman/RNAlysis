@@ -1132,7 +1132,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         try:
             graph.render(savepath, view=True, format=self.ontology_graph_format)
         except graphviz.backend.execute.ExecutableNotFound:
-            warnings.warn("You must install 'GraphViz' in order to generate Ontology Graphs. \n"
+            warnings.warn("You must install 'GraphViz' and add it to PATH in order to generate Ontology Graphs. \n"
                           "Please see https://graphviz.org/download/ for more information. ")
             return False
         # show graph in a matplotlib window
