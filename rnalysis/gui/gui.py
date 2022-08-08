@@ -2354,7 +2354,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.tabs.removeTab(self.tabs.currentIndex())
             for filename in filenames:
                 gene_set = self._filename_to_gene_set(filename)
-                self.new_tab_from_gene_set(gene_set, filename)
+                self.new_tab_from_gene_set(gene_set, Path(filename).stem)
 
     def import_gene_set(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
@@ -2366,7 +2366,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.tabs.currentWidget().is_empty():
                 self.tabs.removeTab(self.tabs.currentIndex())
             gene_set = self._filename_to_gene_set(filename)
-            self.new_tab_from_gene_set(gene_set, filename)
+            self.new_tab_from_gene_set(gene_set, Path(filename).stem)
 
     @staticmethod
     def _filename_to_gene_set(filename: str):
