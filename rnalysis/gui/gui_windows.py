@@ -446,7 +446,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.setWindowTitle("Settings")
 
-        self.appearance_group = QtWidgets.QGroupBox('Appearance settings')
+        self.appearance_group = QtWidgets.QGroupBox('User Interface settings')
         self.appearance_grid = QtWidgets.QGridLayout(self.appearance_group)
         self.appearance_widgets = {}
 
@@ -472,13 +472,18 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
     def _trigger_settings_changed(self):
         self.settings_changed = True
 
+    def exec(self):
+        self.set_choices()
+        super().exec()
+
     def set_choices(self):
-        current_font, current_font_size, current_theme = settings.get_gui_settings()
+        current_font, current_font_size, current_theme, current_show_tutorial = settings.get_gui_settings()
         current_theme = {val: key for key, val in self.THEMES.items()}[current_theme]
 
         self.appearance_widgets['app_theme'].setCurrentText(current_theme)
         self.appearance_widgets['app_font'].setCurrentText(current_font)
         self.appearance_widgets['app_font_size'].setCurrentText(str(current_font_size))
+        self.appearance_widgets['show_tutorial'].setChecked(current_show_tutorial)
 
         attr_ref_path = settings.get_attr_ref_path('predefined') if settings.is_setting_in_file(
             settings.__attr_file_key__) else 'No file chosen'
@@ -502,8 +507,11 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_widgets['app_font_size'] = QtWidgets.QComboBox(self.appearance_group)
         self.appearance_widgets['app_font_size'].addItems(self.FONT_SIZES)
 
+        self.appearance_widgets['show_tutorial'] = QtWidgets.QCheckBox("Show tutorial page on startup")
+
         for widget_name in ['app_theme', 'app_font', 'app_font_size']:
             self.appearance_widgets[widget_name].currentIndexChanged.connect(self._trigger_settings_changed)
+        self.appearance_widgets['show_tutorial'].stateChanged.connect(self._trigger_settings_changed)
 
         self.appearance_grid.addWidget(QtWidgets.QLabel('Theme'), 0, 0)
         self.appearance_grid.addWidget(self.appearance_widgets['app_theme'], 0, 1)
@@ -511,6 +519,7 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_grid.addWidget(self.appearance_widgets['app_font'], 1, 1)
         self.appearance_grid.addWidget(QtWidgets.QLabel('Application Font Size'), 2, 0)
         self.appearance_grid.addWidget(self.appearance_widgets['app_font_size'], 2, 1)
+        self.appearance_grid.addWidget(self.appearance_widgets['show_tutorial'], 3, 0, 1, 2)
 
     def save_settings(self):
         if self.settings_changed:
@@ -518,7 +527,8 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             font = self.appearance_widgets['app_font'].currentText()
             font_size = int(self.appearance_widgets['app_font_size'].currentText())
             theme = self.THEMES[self.appearance_widgets['app_theme'].currentText()]
-            settings.set_gui_settings(font, font_size, theme)
+            show_tutorial = self.appearance_widgets['show_tutorial'].isChecked()
+            settings.set_gui_settings(font, font_size, theme, show_tutorial)
 
             attr_ref_path = self.tables_widgets['attr_ref_path'].text() if self.tables_widgets[
                 'attr_ref_path'].is_legal else ''
