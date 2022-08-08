@@ -757,7 +757,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
 class SetVisualizationWindow(gui_widgets.MinMaxDialog):
     VISUALIZATION_FUNCS = {'Venn Diagram': 'venn_diagram', 'UpSet Plot': 'upset_plot'}
-    EXCLUDED_PARAMS = {'objs', 'ref', 'fig'}
+    EXCLUDED_PARAMS = {'objs', 'attr_ref_table_path', 'fig'}
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
