@@ -578,3 +578,43 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             event.accept()
         else:
             event.ignore()
+
+
+class HowToCiteWindow(gui_widgets.MinMaxDialog):
+    CITATION = f"Teichman, G. (2021) RNAlysis: RNA Sequencing analysis software (Python package version {__version__})."
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        text = f"""<p><b><i>RNAlysis</i> version {__version__}</b>
+                </p>
+                <br>
+                <img src="../../docs/source/logo.png" width="500"/>"""
+        self.label = QtWidgets.QLabel(text)
+        self.text_edit = QtWidgets.QTextEdit(self.CITATION)
+        self.ok_button = QtWidgets.QPushButton('OK')
+        self.copy_button = QtWidgets.QPushButton('Copy to clipboard')
+        self.copied_label = QtWidgets.QLabel()
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("How to cite RNAlysis")
+
+        self.label.setWordWrap(True)
+        self.layout.addWidget(self.label)
+        self.text_edit.setReadOnly(True)
+        self.layout.addWidget(self.text_edit)
+
+        self.ok_button.clicked.connect(self.close)
+        self.layout.addWidget(self.ok_button)
+
+        self.copy_button.clicked.connect(self.copy_to_clipboard)
+        self.layout.addWidget(self.copy_button)
+        self.layout.addWidget(self.copied_label)
+
+    def copy_to_clipboard(self):
+        cb = QtWidgets.QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+        cb.setText(self.text_edit.toPlainText())
+        self.copied_label.setText('Copied to clipboard')
