@@ -1971,6 +1971,7 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
         super().__init__(description)
         self.tab_container = tab_container
         self.tab_index = tab_index
+        self.tab_icon = tab_container.tabIcon(self.tab_index)
         self.tab_name = tab_container.tabText(self.tab_index).rstrip('*')
         self.obj_type = self.tab_container.widget(self.tab_index).obj_type()
         self.filename = self.tab_container.widget(self.tab_index).cache()
@@ -1983,6 +1984,7 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
             item = self.obj_type.from_dataframe(item, self.tab_name, **self.kwargs)
 
         self.tab_container.new_tab_from_item(item, self.tab_name)
+        self.tab_container.setTabIcon(self.tab_container.currentIndex(), self.tab_icon)
 
     def redo(self):
         self.tab_container.removeTab(self.tab_index)
