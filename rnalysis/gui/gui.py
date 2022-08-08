@@ -563,7 +563,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
     def init_ui(self):
         self.setWindowTitle('Set Operations')
-        self.setGeometry(200, 200, 1250, 500)
+        self.setGeometry(600, 50, 1050, 800)
         self.setLayout(self.layout)
         self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.layout.addWidget(self.widgets['splitter'])
@@ -779,13 +779,13 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
     def init_ui(self):
         self.setWindowTitle('Gene Set Visualization')
-        self.setGeometry(200, 200, 1250, 500)
+        self.setGeometry(600, 50, 1050, 800)
         self.setLayout(self.layout)
         self.widgets['splitter'] = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.layout.addWidget(self.widgets['splitter'])
         self.widgets['splitter'].addWidget(self.list_group)
         self.widgets['splitter'].addWidget(self.visualization_group)
-        self.widgets['splitter'].setSizes([int(self.width() * 0.2), int(self.width() * 0.8)])
+        self.widgets['splitter'].setSizes([int(self.width() * 0.1), int(self.width() * 0.9)])
 
         self.parameter_group.setVisible(False)
 
