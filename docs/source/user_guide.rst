@@ -768,7 +768,7 @@ The output table would look like this:
 
 Sequentially applying filtering operations using Pipelines
 ============================================================
-:term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects' of your choice in a specific and consistent order.
+:term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects` of your choice in a specific and consistent order.
 Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
 
 
