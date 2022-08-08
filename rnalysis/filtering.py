@@ -9,7 +9,7 @@ When you save filtered/modified data, its new file name will include by default 
  all of the operations performed on it, in the order they were performed, to allow easy traceback of your analyses.
 
 """
-
+import copy
 import os
 import re
 import types
@@ -3752,6 +3752,7 @@ class Pipeline:
                                              f"mismatches the specified filter_type {self.filter_type}. "
         assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
 
+        original_filter_obj = copy.copy(filter_object)
         other_outputs = dict()
         other_cnt = dict()
         # iterate over all functions and arguments
@@ -3766,9 +3767,10 @@ class Pipeline:
                 self._apply_other(func, filter_object, args, kwargs, other_outputs, other_cnt)
 
         if not inplace or isinstance(filter_object, tuple):
-            if len(other_outputs) > 0:
-                return filter_object, other_outputs
-            return filter_object
+            if filter_object != original_filter_obj:
+                if len(other_outputs) > 0:
+                    return filter_object, other_outputs
+                return filter_object
         if len(other_outputs) > 0:
             return other_outputs
 
