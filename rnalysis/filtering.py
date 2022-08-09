@@ -1958,7 +1958,7 @@ class DESeqFilter(Filter):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plt.style.use('seaborn-white')
-        colors = pd.Series(index=self.df.index)
+        colors = pd.Series(index=self.df.index, dtype='float64')
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] > 0)] = 'tab:red'
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] < 0)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
