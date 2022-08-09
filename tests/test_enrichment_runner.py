@@ -521,7 +521,7 @@ def test_enrichment_runner_xlmhg_enrichment(monkeypatch, attr, index_vector, pva
         n_calls_xlmhg_test[0] += 1
         return ResultObject(pval, escore)
 
-    monkeypatch.setattr(enrichment_runner, 'xlmhg_test', _xlmhg_test_validate_parameters)
+    monkeypatch.setattr(xlmhg, 'get_xlmhg_test_result', _xlmhg_test_validate_parameters)
 
     if mode == 'GOEnrichmentRunner':
         runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)

@@ -91,7 +91,7 @@ def test_save_to_csv(monkeypatch):
                         lambda x, y: None if isinstance(x, pd.DataFrame) else (_ for _ in ()).throw(AssertionError))
     df = pd.DataFrame([[1, 2, 3], [4, 5, 6]])
     save_to_csv(df, 'filename')
-    f = Filter(('filename', df))
+    f = Filter.from_dataframe(df, 'filename')
     save_to_csv(f, 'filename')
     with pytest.raises(TypeError):
         save_to_csv(5, 'filename')

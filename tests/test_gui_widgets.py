@@ -303,8 +303,8 @@ def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_inter
 @pytest.mark.parametrize("widget_class,default,excepted_val_empty,expected_val,kwargs", [
     (QMultiSpinBox, [0, 2, 3], 0, [0, 2, 3], {}),
     (QMultiDoubleSpinBox, [0.1, 3.2, 5], 0.0, [0.1, 3.2, 5], {}),
-    (QMultiLineEdit, ['', 'text', 'other text'], '', ['', 'text', 'other text'], {}),
-    (QMultiStrIntLineEdit, ['3', '-7', 'text', 'othertext', 'param5'], '', [3, -7, 'text', 'othertext', 'param5'], {}),
+    (QMultiLineEdit, ['', 'text', 'other text'], [], ['', 'text', 'other text'], {}),
+    (QMultiStrIntLineEdit, ['3', '-7', 'text', 'othertext', 'param5'], [], [3, -7, 'text', 'othertext', 'param5'], {}),
     (QMultiBoolComboBox, [True, True, False, True], True, [True, True, False, True], {}),
     (MultiColorPicker, ['r', 'black', '#0000ff'], None, ['#ff0000', '#000000', '#0000ff'], {}),
     (QMultiComboBox, ['option3', 'option2', 'option2'], 'option1', ['option3', 'option2', 'option2'],
