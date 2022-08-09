@@ -2,7 +2,6 @@ import os
 
 import pytest
 from rnalysis.gui.gui_widgets import *
-from utils.io import save_gene_set
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
@@ -247,23 +246,6 @@ def test_clear_layout(qtbot):
 
     assert layout.count() == 0
 
-
-@pytest.mark.parametrize("gene_set,expected_split", [
-    ({1, 2, 3}, ['1', '2', '3']),
-    ({'geneA', 'geneB', 'geneC', 'geneD'}, ["geneA", "geneB", "geneC", "geneD"])
-])
-def test_save_gene_set(gene_set, expected_split):
-    pth = 'tests/test_files/tmp_saved_gene_set.txt'
-    try:
-        save_gene_set(gene_set, pth)
-        with open(pth) as f:
-            split = f.read().split('\n')
-        assert sorted(split) == sorted(expected_split)
-    finally:
-        try:
-            os.unlink(pth)
-        except FileNotFoundError:
-            pass
 
 
 class FilledComboBox(QtWidgets.QComboBox):

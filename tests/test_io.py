@@ -462,7 +462,7 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
              'UniProtKB_to': 'UniProtKB',
              'UniProtKB_from': 'UniProtKB_AC-ID',
              'UniProtKB': 'UniProtKB'}
-        return d,d
+        return d, d
 
     def mock_get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
                                  session, verbose):
@@ -522,6 +522,24 @@ def test_cache_file():
             assert f.read() == cache_content_truth
     finally:
         remove_cached_test_file(cached_filename)
+
+
+@pytest.mark.parametrize("gene_set,expected_split", [
+    ({1, 2, 3}, ['1', '2', '3']),
+    ({'geneA', 'geneB', 'geneC', 'geneD'}, ["geneA", "geneB", "geneC", "geneD"])
+])
+def test_save_gene_set(gene_set, expected_split):
+    pth = 'tests/test_files/tmp_saved_gene_set.txt'
+    try:
+        save_gene_set(gene_set, pth)
+        with open(pth) as f:
+            split = f.read().split('\n')
+        assert sorted(split) == sorted(expected_split)
+    finally:
+        try:
+            os.unlink(pth)
+        except FileNotFoundError:
+            pass
 
 
 def test_kegg_annotation_iterator_api():

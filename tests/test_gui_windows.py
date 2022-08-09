@@ -2,7 +2,6 @@ import os
 
 import pytest
 from rnalysis.gui.gui_windows import *
-from utils.io import save_gene_set
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
