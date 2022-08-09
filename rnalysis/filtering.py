@@ -110,6 +110,8 @@ class Filter:
         return self.shape[0]
 
     def __eq__(self, other):
+        if type(self) != type(other):
+            return False
         if self.df.equals(other.df) and self.shape == other.shape:
             return True
         return False
