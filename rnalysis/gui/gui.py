@@ -1,26 +1,27 @@
 import builtins
+import copy
 import functools
+import hashlib
 import itertools
-import time
 import os
 import sys
+import time
 import typing
 import warnings
 from collections import OrderedDict
 from pathlib import Path
 from queue import Queue
 from typing import List, Union, Callable
-import hashlib
-import copy
 
 import matplotlib
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
+from joblib.externals.loky import get_reusable_executor
 
 from rnalysis import filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_tutorial
-from rnalysis.utils import io, validation, generic, parsing, settings
+from rnalysis.utils import io, validation, generic, parsing, settings, enrichment_runner
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
@@ -141,7 +142,7 @@ class ClicomWindow(gui_widgets.MinMaxDialog):
 
 class EnrichmentWindow(gui_widgets.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
-                       'statistical_test', 'parametric_test', 'biotype_ref_path'}
+                       'statistical_test', 'parametric_test', 'biotype_ref_path', 'gui_mode'}
 
     ANALYSIS_TYPES = {'Gene Ontology (GO)': 'go',
                       'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
@@ -179,6 +180,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
     enrichmentFinished = QtCore.pyqtSignal(pd.DataFrame, str)
+    enrichmentStarted = QtCore.pyqtSignal(object, str)
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
@@ -221,7 +223,6 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.plot_group.setVisible(False)
         self.stats_group.setVisible(False)
 
-        # self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
@@ -453,6 +454,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
     def run_analysis(self):
         func = self.get_current_func()
         gene_set, bg_set, set_name, kwargs = self.get_analysis_params()
+        kwargs['gui_mode'] = True
         print("Enrichment analysis started")
         self.close()
         try:
@@ -463,13 +465,34 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                 bg_set_obj = enrichment.FeatureSet(bg_set, 'background_set')
             feature_set_obj = enrichment.RankedSet(gene_set, set_name) if is_single_set \
                 else enrichment.FeatureSet(gene_set, set_name)
+
             if is_single_set:
-                result = func(feature_set_obj, **kwargs)
+                partial = functools.partial(func, feature_set_obj, **kwargs)
             else:
-                result = func(feature_set_obj, background_genes=bg_set_obj, **kwargs)
-            self.enrichmentFinished.emit(result, set_name)
-        finally:
+                partial = functools.partial(func, feature_set_obj, background_genes=bg_set_obj, **kwargs)
+
+            self.enrichmentStarted.emit(partial, set_name)
+
+        except Exception:
             self.show()
+            raise Exception
+
+
+class Worker(QtCore.QObject):
+    finished = QtCore.pyqtSignal(pd.DataFrame, enrichment_runner.EnrichmentRunner, str)
+    startProgBar = QtCore.pyqtSignal(object)
+    progress = QtCore.pyqtSignal(int)
+    updateBarTotal = QtCore.pyqtSignal(int)
+    endProgBar = QtCore.pyqtSignal()
+
+    def __init__(self, partial, set_name):
+        self.partial = partial
+        self.set_name = set_name
+        super().__init__()
+
+    def run(self):
+        result = self.partial()
+        self.finished.emit(*result, self.set_name)
 
 
 class SetOperationWindow(gui_widgets.MinMaxDialog):
@@ -1893,6 +1916,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
             self.paths[file] = gui_widgets.PathLineEdit(file, parent=self)
             self.table_types[file] = QtWidgets.QComboBox(self)
             self.table_types[file].addItems(list(FILTER_OBJ_TYPES.keys()))
+            self.table_types[file].setCurrentText('Other')
             self.names[file] = QtWidgets.QLineEdit(self)
 
             self.layout.addWidget(self.paths[file], i + +2, 0)
@@ -2113,6 +2137,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # attach to start / stop methods
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
+
+        self.progress_bar = None
+        self.worker = None
+        self.thread = None
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
@@ -2635,7 +2663,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_enrichment_analysis(self):
         self.enrichment_window = EnrichmentWindow(self.get_available_objects(), self)
-        self.enrichment_window.enrichmentFinished.connect(self.display_enrichment_results)
+        self.enrichment_window.enrichmentStarted.connect(self.start_enrichment)
         self.enrichment_window.show()
 
     def get_tab_names(self) -> List[str]:
@@ -2789,19 +2817,118 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
+    @QtCore.pyqtSlot(object, str)
+    def start_enrichment(self, partial: Callable, set_name: str):
+        self.run_partial(partial, self.finish_enrichment, set_name=set_name)
+
+    @QtCore.pyqtSlot(pd.DataFrame, enrichment_runner.EnrichmentRunner, str)
+    def finish_enrichment(self, results, runner, set_name: str):
+        self.show()
+        runner.plot_results()
+        self.display_enrichment_results(results, set_name)
+
+    def run_partial(self, partial: Callable, output_slot: Callable, **kwargs):
+        # Step 2: Create a QThread object
+        self.thread = QtCore.QThread()
+        # Step 3: Create a worker object
+
+        self.worker = Worker(partial, **kwargs)
+        # Step 4: Move worker to the thread
+        self.worker.moveToThread(self.thread)
+        # Step 5: Connect signals and slots
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(output_slot)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
+                     total: int = None):
+            self.worker.startProgBar.emit(
+                dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
+            obj = gui_widgets.AltTQDM(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
+            obj.barUpdate.connect(self.worker.progress)
+            obj.barFinished.connect(self.worker.endProgBar)
+            return obj
+
+        def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
+                         total: int = None, max_nbytes=None):
+            self.worker.startProgBar.emit(
+                dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
+            print(f"{desc}: started" + (f" {total} jobs\r" if isinstance(total, int) else "\r"))
+            if max_nbytes is not None:
+                obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
+                                              total=total, max_nbytes=max_nbytes)
+            else:
+                obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
+                                              total=total)
+            obj.barUpdate.connect(self.worker.progress)
+            obj.barFinished.connect(self.worker.endProgBar)
+            obj.barTotalUpdate.connect(self.worker.updateBarTotal)
+            return obj
+
+        enrichment.enrichment_runner.generic.ProgressParallel = alt_parallel
+        generic.ProgressParallel = alt_parallel
+        filtering.clustering.generic.ProgressParallel = alt_parallel
+
+        enrichment.enrichment_runner.parsing.tqdm = alt_tqdm
+        enrichment.enrichment_runner.io.tqdm = alt_tqdm
+        enrichment.enrichment_runner.tqdm = alt_tqdm
+        filtering.clustering.tqdm = alt_tqdm
+
+        self.worker.startProgBar.connect(self.start_progress_bar)
+        self.worker.progress.connect(self.move_progress_bar)
+        self.worker.endProgBar.connect(self.end_progress_bar)
+        self.worker.updateBarTotal.connect(self.update_bar_total)
+        # Step 6: Start the thread
+        self.thread.start()
+
+    def start_progress_bar(self, arg_dict):
+        total = arg_dict.get('total', None)
+        iter_obj = arg_dict['iter_obj']
+        self.desc = arg_dict.get('desc', '')
+        if total is not None:
+            self.total = total
+        else:
+            try:
+                self.total = len(iter_obj)
+            except TypeError:
+                self.total = 2
+        if self.progress_bar is not None:
+            self.progress_bar.close()
+
+        self.progress_bar = QtWidgets.QProgressDialog(self.desc, "Hide", 0, self.total, self)
+        self.start_time = time.time()
+        self.progress_bar.setMinimumDuration(0)
+        self.progress_bar.setWindowTitle(self.desc)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setWindowModality(QtCore.Qt.WindowModal)
+        self.completed_items = 0
+
+    def move_progress_bar(self, n: int):
+        self.completed_items += n
+        self.elapsed_time = time.time() - self.start_time
+        remaining_time = (self.elapsed_time / self.completed_items) * abs(self.total - self.completed_items)
+        try:
+            self.progress_bar.setLabelText(self.desc + '\n' + f"Elapsed time: {self.elapsed_time:.2f} seconds"
+                                           + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
+            self.progress_bar.setValue(self.completed_items)
+        except AttributeError:
+            pass
+
+    def update_bar_total(self, n: int):
+        self.total = n
+        self.progress_bar.setMaximum(n)
+        QtWidgets.QApplication.processEvents()
+
+    def end_progress_bar(self):
+        if self.progress_bar is not None:
+            self.progress_bar.close()
+            self.progress_bar = None
+
 
 def customwarn(message, category, filename, lineno, file=None, line=None):
     sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
-
-
-def splash_screen():
-    splash_pixmap = QtGui.QPixmap("splash.png")
-    splash_font = QtGui.QFont('Calibri', 16)
-    splash = QtWidgets.QSplashScreen(splash_pixmap)
-    splash.setFont(splash_font)
-    splash.showMessage(f"<i>RNAlysis</i> version {__version__}", QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
-    splash.show()
-    return splash
 
 
 def run():
@@ -2821,21 +2948,6 @@ def run():
         warnings.warn("RNAlysis can perform faster when package 'numba' is installed. \n"
                       "If you want to improve the performance of slow operations on RNAlysis, "
                       "please install package 'numba'. ")
-
-    # enrichment.enrichment_runner.generic.ProgressParallel = functools.partial(gui_widgets.ProgressParallelGui,
-    #                                                                           parent=window)
-    enrichment.enrichment_runner.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
-    # generic.ProgressParallel = functools.partial(gui_widgets.ProgressParallelGui, parent=window)
-    enrichment.enrichment_runner.parsing.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
-    filtering.clustering.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
-    enrichment.enrichment_runner.io.tqdm = functools.partial(gui_widgets.ProgressSerialGui, parent=window)
-    # filtering.clustering.generic.ProgressParallel = functools.partial(gui_widgets.ProgressParallelGui, parent=window)
-
-    from joblib import Parallel, delayed
-    from collections import defaultdict
-    # patch joblib progress callback
-    class BatchCompletionCallBack(object):
-        completed = defaultdict(int)
 
     window.show()
     splash.finish(window)

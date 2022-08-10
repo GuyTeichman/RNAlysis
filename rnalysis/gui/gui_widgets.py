@@ -1,10 +1,7 @@
 import ast
 import collections
-import inspect
-import time
-import warnings
 import functools
-from tqdm.auto import tqdm
+import inspect
 import typing
 from pathlib import Path
 from queue import Queue
@@ -13,6 +10,7 @@ import matplotlib
 import typing_extensions
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel
+from tqdm.auto import tqdm
 
 from rnalysis.utils import parsing, validation, generic
 
@@ -254,77 +252,58 @@ class PathInputDialog(QtWidgets.QDialog):
         return self.path.text()
 
 
-class ProgressSerialGui:
-    def __init__(self, iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
-                 total: int = None, parent=None):
-        self.iter_obj = iter_obj
-        self.desc = desc
-        self.parent = parent
-        if total is not None:
-            self.total = total
-        else:
-            try:
-                self.total = len(iter_obj)
-            except TypeError:
-                self.total = 2
-        self.dialog = QtWidgets.QProgressDialog(self.desc, "Cancel", 0, self.total, parent)
+class AltTQDM(QtCore.QObject):
+    barUpdate = QtCore.pyqtSignal(int)
+    barFinished = QtCore.pyqtSignal()
 
-        self.start_time = None
-        self.elapsed_time = None
-        self.start_bar()
+    def __init__(self, iter_obj: typing.Iterable = None, desc: str = '', unit: str = '',
+                 bar_format: str = '', total: int = None):
+        self.tqdm = tqdm(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
+        super().__init__()
 
-    def start_bar(self):
-        self.start_time = time.time()
-        self.dialog.setMinimumDuration(0)
-        self.dialog.setWindowTitle(self.desc)
-        self.dialog.setValue(0)
-        self.dialog.setWindowModality(QtCore.Qt.WindowModal)
-        self.completed_items = 0
-
-    def update(self, n: int = 1):
-        self.completed_items += n
-        self.elapsed_time = time.time() - self.start_time
-        remaining_time = (self.elapsed_time / self.completed_items) * abs(self.total - self.completed_items)
-        self.dialog.setValue(self.completed_items)
-        self.dialog.setLabelText(self.desc + '\n' + f"Elapsed time: {self.elapsed_time:.2f} seconds"
-                                 + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
-
-        if self.completed_items == self.total:
-            self.dialog.close()
-        QtWidgets.QApplication.processEvents()
+    def __iter__(self):
+        for i, item in enumerate(self.tqdm):
+            self.barUpdate.emit(1)
+            yield item
+        self.barFinished.emit()
 
     def __enter__(self):
-        self.completed_items = 0
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.dialog.close()
-
-    def __iter__(self):
-        for i, item in enumerate(self.iter_obj):
-            self.update(1)
-            yield item
-        self.dialog.close()
+        self.barFinished.emit()
 
 
-class ProgressParallelGui(Parallel):
-    def __init__(self, total=None, desc: str = '', unit: str = 'it', bar_format: str = '', parent=None, *args,
-                 **kwargs):
-        self.total = total
+class AltParallel(QtCore.QObject):
+    barUpdate = QtCore.pyqtSignal(int)
+    barTotalUpdate = QtCore.pyqtSignal(int)
+    barFinished = QtCore.pyqtSignal()
+
+    def __init__(self, n_jobs: int = -1, total=None, desc: str = '', unit: str = 'it',
+                 bar_format: str = '', *args, **kwargs):
+        self.parallel = Parallel(*args, n_jobs=n_jobs, **kwargs)
         self.desc = desc
-        # self.dialog = QtWidgets.QProgressDialog(desc, "Cancel", 0, 2 if total is None else total, parent)
-        # self.dialog.setMinimumDuration(0)
-        # self.dialog.setWindowTitle(self.desc)
-        # self.dialog.setValue(0)
-        # self.dialog.setWindowModality(QtCore.Qt.WindowModal)
-        super().__init__(verbose=100, *args, **kwargs)
+        self.total = total
+        self.prev_total = 0
+        self.prev_report = 0
+        super().__init__()
 
     def __call__(self, *args, **kwargs):
-        return Parallel.__call__(self, *args, **kwargs)
+
+        self.parallel.print_progress = functools.partial(self.print_progress)
+        return self.parallel.__call__(*args, **kwargs)
 
     def print_progress(self):
-        super().print_progress()
-        QtWidgets.QApplication.processEvents()
+        if self.total is None and self.prev_total < self.parallel.n_dispatched_tasks:
+            self.prev_total = self.parallel.n_dispatched_tasks
+            self.barTotalUpdate.emit(self.parallel.n_dispatched_tasks)
+
+        if self.parallel.n_completed_tasks - self.prev_report > 0:
+            self.barUpdate.emit(self.parallel.n_completed_tasks - self.prev_report)
+            self.prev_report = self.parallel.n_completed_tasks
+            print(f"{self.desc}: finished {self.parallel.n_completed_tasks} of {self.prev_total} tasks\r")
+            if self.prev_report == self.total:
+                self.barFinished.emit()
 
 
 class ToggleSwitchCore(QtWidgets.QPushButton):
@@ -1108,12 +1087,14 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
         self.setReadOnly(True)
         self.setLineWidth(50)
         self.setMinimumWidth(500)
+        self.document().setMaximumBlockCount(500)
         self.setFont(QtGui.QFont('Consolas', 11))
         self.carriage = False
         self.prev_coord = 0
 
     @QtCore.pyqtSlot(str)
     def append_text(self, text: str):
+
         self.moveCursor(QtGui.QTextCursor.End)
         if text == '\n':
             return
