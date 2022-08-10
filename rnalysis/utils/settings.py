@@ -128,7 +128,8 @@ def get_attr_ref_path(ref):
         print(f'Attribute Reference Table used: {pth}')
         return pth
     else:
-        print(f'Attribute Reference Table used: {ref}')
+        if ref is not None:
+            print(f'Attribute Reference Table used: {ref}')
         return ref
 
 
