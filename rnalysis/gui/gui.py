@@ -2806,7 +2806,7 @@ def splash_screen():
 
 def run():
     app = QtWidgets.QApplication(sys.argv)
-    splash = splash_screen()
+    splash = gui_windows.splash_screen()
     app.processEvents()
 
     matplotlib.use('Qt5Agg')

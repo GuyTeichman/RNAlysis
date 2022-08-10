@@ -628,3 +628,13 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
         cb.clear(mode=cb.Clipboard)
         cb.setText(self.text_edit.toPlainText())
         self.copied_label.setText('Copied to clipboard')
+
+
+def splash_screen():
+    splash_pixmap = QtGui.QPixmap("splash.png")
+    splash_font = QtGui.QFont('Calibri', 16)
+    splash = QtWidgets.QSplashScreen(splash_pixmap)
+    splash.setFont(splash_font)
+    splash.showMessage(f"<i>RNAlysis</i> version {__version__}", QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+    splash.show()
+    return splash
