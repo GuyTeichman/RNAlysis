@@ -2,6 +2,9 @@ import ast
 import collections
 import inspect
 import time
+import warnings
+import functools
+from tqdm.auto import tqdm
 import typing
 from pathlib import Path
 from queue import Queue
@@ -1106,6 +1109,8 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
         self.setLineWidth(50)
         self.setMinimumWidth(500)
         self.setFont(QtGui.QFont('Consolas', 11))
+        self.carriage = False
+        self.prev_coord = 0
 
     @QtCore.pyqtSlot(str)
     def append_text(self, text: str):
@@ -1113,6 +1118,20 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
         if text == '\n':
             return
         text = text.replace("<", "&lt;").replace(">", "&gt;")
+
+        if self.carriage:
+            self.carriage = False
+            diff = self.document().characterCount() - self.prev_coord
+            cursor = self.textCursor()
+            cursor.movePosition(QtGui.QTextCursor.PreviousCharacter, QtGui.QTextCursor.MoveAnchor, n=diff)
+            cursor.movePosition(QtGui.QTextCursor.End, QtGui.QTextCursor.KeepAnchor)
+            cursor.removeSelectedText()
+
+        if text.endswith('\r'):
+            self.carriage = True
+            self.prev_coord = self.document().characterCount()
+            text.rstrip('\r')
+
         if text.startswith('Warning: '):
             self.insertHtml(f'<div style="color:red;">{text}</div><br>')
         else:
