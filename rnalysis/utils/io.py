@@ -57,6 +57,9 @@ def cache_file(content: str, filename: str):
 
 def clear_gui_cache():
     directory = get_gui_cache_dir()
+    if not directory.exists():
+        return
+
     for item in directory.iterdir():
         if item.is_file():
             item.unlink()
