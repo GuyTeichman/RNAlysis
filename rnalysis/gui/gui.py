@@ -2813,6 +2813,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if reply == QtWidgets.QMessageBox.Yes:
             io.clear_gui_cache()
+            get_reusable_executor().shutdown(wait=True)
             event.accept()
         else:
             event.ignore()
