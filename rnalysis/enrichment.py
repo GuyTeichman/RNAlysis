@@ -275,7 +275,8 @@ class FeatureSet:
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                       plot_ontology_graph: bool = True, ontology_graph_format: Literal['pdf', 'svg', 'png'] = 'pdf',
                       randomization_reps: int = 10000, random_seed: Union[int, None] = None,
-                      parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                      parallel: bool = True, gui_mode: bool = False
+                      ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set. \
         The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
@@ -418,6 +419,8 @@ class FeatureSet:
                                                       background_genes, biotype_ref_path,
                                                       ontology_graph_format=ontology_graph_format, **kwargs)
 
+        if gui_mode:
+            return runner.run(plot=False), runner
         return runner.run()
 
     def kegg_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[_DEFAULT_ORGANISMS]] = 'auto',
@@ -431,7 +434,8 @@ class FeatureSet:
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
                         randomization_reps: int = 10000, random_seed: Union[int, None] = None,
-                        parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                        parallel: bool = True, gui_mode: bool = False
+                        ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
         curated pathways against a background set. \
@@ -533,6 +537,8 @@ class FeatureSet:
                                                         background_genes, biotype_ref_path,
                                                         pathway_graphs_format=pathway_graphs_format, **kwargs)
 
+        if gui_mode:
+            return runner.run(plot=False), runner
         return runner.run()
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
@@ -644,7 +650,7 @@ class FeatureSet:
                                 return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
                                 plot_horizontal: bool = True, randomization_reps: int = 10000,
-                                random_seed: Union[int, None] = None, parallel: bool = True
+                                random_seed: Union[int, None] = None, parallel: bool = True, gui_mode: bool = False
                                 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.\
@@ -734,6 +740,8 @@ class FeatureSet:
                                                     self.set_name, parallel, statistical_test, biotype,
                                                     background_genes, biotype_ref_path, single_set=False,
                                                     random_seed=random_seed, **kwargs)
+        if gui_mode:
+            return runner.run(plot=False), runner
         return runner.run()
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
@@ -838,7 +846,7 @@ class FeatureSet:
                                    biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                    plot_log_scale: bool = True,
                                    plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: int = 50,
-                                   save_csv: bool = False, fname=None, return_fig: bool = False
+                                   save_csv: bool = False, fname=None, return_fig: bool = False, gui_mode: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined non-categorical attributes \
@@ -915,6 +923,8 @@ class FeatureSet:
                                                                   return_fig, plot_log_scale, plot_style,
                                                                   n_bins, self.set_name, parallel=False,
                                                                   parametric_test=parametric_test)
+        if gui_mode:
+            return runner.run(plot=False), runner
         return runner.run()
 
     def biotypes(self, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
@@ -1013,7 +1023,7 @@ class RankedSet(FeatureSet):
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
                                  plot_ontology_graph: bool = True, ontology_graph_format: str = 'pdf',
-                                 parallel: bool = True
+                                 parallel: bool = True, gui_mode: bool = False
                                  ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
@@ -1135,6 +1145,8 @@ class RankedSet(FeatureSet):
                                                       parallel=parallel, enrichment_func_name='xlmhg', single_set=True,
                                                       ontology_graph_format=ontology_graph_format)
 
+        if gui_mode:
+            return runner.run(plot=False), runner
         return runner.run()
 
     def single_set_kegg_enrichment(self,
@@ -1143,7 +1155,8 @@ class RankedSet(FeatureSet):
                                    alpha: float = 0.05, return_nonsignificant: bool = False, save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
-                                   parallel: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                                   parallel: bool = True, gui_mode: bool = False
+                                   ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
         curated pathways WITHOUT a background set, using the generalized Minimum Hypergeometric Test \
@@ -1216,14 +1229,16 @@ class RankedSet(FeatureSet):
                                                         parallel=parallel, enrichment_func_name='xlmhg',
                                                         single_set=True, pathway_graphs_format=pathway_graphs_format)
 
+        if gui_mode:
+            return runner.run(plot=False), runner
         return runner.run()
 
     def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                               alpha: float = 0.05,
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               return_nonsignificant: bool = True,
-                              save_csv: bool = False, fname=None,
-                              return_fig: bool = False, plot_horizontal: bool = True, parallel: bool = True):
+                              save_csv: bool = False, fname=None, return_fig: bool = False,
+                              plot_horizontal: bool = True, parallel: bool = True, gui_mode: bool = False):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1284,6 +1299,8 @@ class RankedSet(FeatureSet):
                                                     return_nonsignificant, save_csv,
                                                     fname, return_fig, plot_horizontal, self.set_name,
                                                     parallel=parallel, enrichment_func_name='xlmhg', single_set=True)
+        if gui_mode:
+            return runner.run(plot=False), runner
         return runner.run()
 
 

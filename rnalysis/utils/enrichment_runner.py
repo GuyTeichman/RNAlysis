@@ -131,7 +131,7 @@ class EnrichmentRunner:
         runner.set_name = set_name
         return runner
 
-    def run(self) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+    def run(self, plot: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         if not self.enrichment_func:
             return pd.DataFrame()
         self.fetch_annotations()
@@ -142,11 +142,13 @@ class EnrichmentRunner:
         self.filter_annotations()
         unformatted_results = self.calculate_enrichment()
         self.format_results(unformatted_results)
-        fig = self.plot_results()
         if self.save_csv:
             self.results_to_csv()
-        if self.return_fig:
-            return self.results, fig
+        if plot:
+            fig = self.plot_results()
+
+            if self.return_fig:
+                return self.results, fig
         return self.results
 
     def _update_ranked_genes(self):
