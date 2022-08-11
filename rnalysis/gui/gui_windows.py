@@ -298,7 +298,7 @@ class DataFramePreviewModel(DataFrameModel):
         super().__init__(df, parent)
 
 
-class DataView(QtWidgets.QWidget):
+class DataView(gui_widgets.MinMaxDialog):
     def __init__(self, data, name: str, parent=None):
         super().__init__(parent)
         self.data = data
@@ -309,14 +309,14 @@ class DataView(QtWidgets.QWidget):
     def init_ui(self):
         self.setGeometry(1000, 200, 1000, 500)
         self.setWindowTitle(f"View of '{self.name}'")
-        self.label_font.setPointSize(14)
+        self.label_font.setPointSize(12)
         self.label.setFont(self.label_font)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.save_button)
         self.layout.addWidget(self.data_view)
         self.save_button.clicked.connect(self.save)
-        # self.table.setFlags(self.table.flags() & ~QtCore.Qt.ItemIsEditable)
         self.setLayout(self.layout)
+        self.setStyleSheet(gui_style.get_stylesheet())
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.deleteLater()
