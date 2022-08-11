@@ -1,19 +1,19 @@
 import collections
+import io as builtin_io
 import itertools
 import logging
+import queue
 import warnings
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
 
-import io as builtin_io
-import matplotlib.image as mpimg
+import graphviz
 import joblib
+import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import graphviz
-import queue
 import statsmodels.stats.multitest as multitest
 from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
@@ -513,7 +513,7 @@ class EnrichmentRunner:
 
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
         if self.plot_horizontal:
-            figsize = [14, 0.4 * (6.4 + self.results.shape[0])]
+            figsize = [10.5, 0.4 * (4.8 + self.results.shape[0])]
             bar_func = plt.Axes.barh
             line_func = plt.Axes.axvline
             cbar_kwargs = dict(location='bottom')
@@ -523,7 +523,7 @@ class EnrichmentRunner:
             for lst in (enrichment_names, enrichment_scores, enrichment_pvalue):
                 lst.reverse()
         else:
-            figsize = [0.5 * (6.4 + self.results.shape[0]), 5.6]
+            figsize = [0.5 * (4.8 + self.results.shape[0]), 4.2]
             bar_func = plt.Axes.bar
             line_func = plt.Axes.axhline
             cbar_kwargs = dict(location='left')
