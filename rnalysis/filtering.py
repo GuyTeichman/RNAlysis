@@ -15,8 +15,9 @@ import re
 import types
 import warnings
 from pathlib import Path
+from typing import Any, Iterable, List, Tuple, Union, Callable
+
 import yaml
-from typing import Any, Dict, Iterable, List, Tuple, Union, Callable
 
 try:
     from typing import Literal
@@ -2398,8 +2399,8 @@ class CountFilter(Filter):
                      max_iter: int = 300,
                      random_seed: Union[int, None] = None, power_transform: bool = True,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                     split_plots: bool = False, max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
-                     ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                     split_plots: bool = False, max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                     gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-means clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -2466,7 +2467,7 @@ class CountFilter(Filter):
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                          max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style,
                                          split_plots)
-        clusterers = runner.run()
+        clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
             # split the CountFilter object
@@ -2474,7 +2475,8 @@ class CountFilter(Filter):
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length
-        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return return_val if not gui_mode else return_val, runner
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
@@ -2483,8 +2485,8 @@ class CountFilter(Filter):
                            power_transform: bool = True,
                            distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                           max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
-                           ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                           max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                           gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -2554,7 +2556,7 @@ class CountFilter(Filter):
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                                max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
                                                split_plots)
-        clusterers = runner.run()
+        clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
             # split the CountFilter object
@@ -2563,7 +2565,8 @@ class CountFilter(Filter):
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(this_n_clusters)]))
         # if only a single K was calculated, don't return it as a list of length
-        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return return_val, runner if gui_mode else return_val
 
     def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                        max_iter: int = 300,
@@ -2572,8 +2575,8 @@ class CountFilter(Filter):
                                                   'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
                        power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                       max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto'
-                       ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                       max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                       gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -2643,7 +2646,7 @@ class CountFilter(Filter):
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                            max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
                                            split_plots)
-        clusterers = runner.run()
+        clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
             # split the CountFilter object
@@ -2651,13 +2654,13 @@ class CountFilter(Filter):
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length 1
-        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return return_val, runner if gui_mode else return_val
 
     def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                     split_plots: bool = False
-                     ) -> Tuple['CountFilter']:
+                     split_plots: bool = False, gui_mode: bool = False) -> Tuple['CountFilter']:
         """
         Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
         (Mimaroglu and Yagci 2012), \
@@ -2749,7 +2752,7 @@ class CountFilter(Filter):
         runner = clustering.CLICOMRunner(self.df.loc[:, self._numeric_columns], power_transform, evidence_threshold,
                                          cluster_unclustered_features, min_cluster_size,
                                          *parameter_dicts, plot_style=plot_style, split_plots=split_plots)
-        [clusterer] = runner.run()
+        [clusterer] = runner.run(plot=not gui_mode)
         n_clusters = clusterer.n_clusters_
         if n_clusters == 0:
             print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
@@ -2763,14 +2766,15 @@ class CountFilter(Filter):
         filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                          suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)])
 
-        return filt_objs
+        return_val = filt_objs
+        return return_val, runner if gui_mode else return_val
 
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                                                  'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
                       power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                      split_plots: bool = False, return_probabilities: bool = False
+                      split_plots: bool = False, return_probabilities: bool = False, gui_mode: bool = False
                       ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]], None]:
         """
         Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
@@ -2848,9 +2852,9 @@ class CountFilter(Filter):
                                           min_samples, metric, cluster_selection_epsilon, cluster_selection_method,
                                           return_probabilities, plot_style, split_plots)
         if return_probabilities:
-            [clusterer], probabilities = runner.run()
+            [clusterer], probabilities = runner.run(plot=not gui_mode)
         else:
-            [clusterer] = runner.run()
+            [clusterer] = runner.run(plot=not gui_mode)
 
         if clusterer is None: return  # if hdbscan is not installed, the runner will return None
 
@@ -2868,7 +2872,8 @@ class CountFilter(Filter):
                                          suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
 
         # noinspection PyUnboundLocalVariable
-        return [filt_objs, probabilities] if return_probabilities else filt_objs
+        return_val = [filt_objs, probabilities] if return_probabilities else filt_objs
+        return return_val, runner if gui_mode else return_val
 
     def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'Euclidean',
                     linkage: Literal[
