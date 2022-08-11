@@ -1050,7 +1050,7 @@ class CLICOMRunner(ClusteringRunner):
     def run_clustering_setup(self, setup) -> list:
         runner_class, kwargs = setup
         runner = runner_class(self.data, **kwargs)
-        clusterers = runner.run()
+        clusterers = runner.run(plot=False)
         return [clusterer.labels_ for clusterer in clusterers]
 
     def clusterers_to_binary_format(self) -> BinaryFormatClusters:
