@@ -1,4 +1,10 @@
-import pytest
-from pytestqt import qtbot
-from rnalysis.gui.gui_style import *
+def test_get_stylesheet_names():
+    assert False
 
+
+def test_get_parametric_stylesheet():
+    assert False
+
+
+def test_get_stylesheet():
+    assert False
