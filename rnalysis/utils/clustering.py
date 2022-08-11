@@ -1,3 +1,4 @@
+import functools
 import itertools
 import warnings
 from abc import ABC
@@ -413,6 +414,7 @@ class ClusteringRunner:
         self.centers: list = []
 
         self.data_for_plot = None
+        self.n_clusters_determine_plot = None
 
         self.data: pd.DataFrame = data
         self.power_transform: bool = power_transform
@@ -552,6 +554,8 @@ class ClusteringRunner:
         data = self.data_for_plot
         for clusterer, centers, title in zip(self.clusterers, self.centers, self.titles):
             self._generate_plots(clusterer.n_clusters_, data, clusterer.labels_, centers, title)
+        if self.n_clusters_determine_plot is not None:
+            self.n_clusters_determine_plot()
 
     def clustering_labels_to_binary_format(self) -> np.ndarray:
         pass
@@ -650,8 +654,9 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
             print(f"Other potentially good values of K that were found: {list(k_candidates[1:])}. ")
 
         # plot results
-        fig = self._plot_gap_statistic(n_clusters_range, log_disp_obs, log_disp_exp, gap_scores, gap_error,
-                                       best_n_clusters, n_clusters_ind)
+        self.n_clusters_determine_plot = functools.partial(self._plot_gap_statistic, n_clusters_range, log_disp_obs,
+                                                           log_disp_exp, gap_scores, gap_error, best_n_clusters,
+                                                           n_clusters_ind)
 
         return best_n_clusters
 
@@ -706,7 +711,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
             silhouette_scores.append(silhouette_score(data, clusterer.fit_predict(data)))
         best_n_clusters = int(n_clusters_range[int(np.argmax(silhouette_scores))])
 
-        fig = self._plot_silhouette(best_n_clusters, n_clusters_range, silhouette_scores)
+        self.n_clusters_determine_plot = functools.partial(self._plot_silhouette, best_n_clusters, n_clusters_range,
+                                                           silhouette_scores)
         print(f"Using the Silhouette method, {best_n_clusters} was chosen as the best number of clusters (k).")
         return best_n_clusters
 
