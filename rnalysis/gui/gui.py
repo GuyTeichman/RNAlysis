@@ -245,6 +245,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.widgets[lst] = gui_widgets.MandatoryComboBox('Choose gene set...', self)
             for obj_name in self.available_objects:
                 self.widgets[lst].addItem(self.available_objects[obj_name][1], obj_name)
+            self.widgets[lst].currentTextChanged.connect(self._verify_inputs)
 
         self.widgets['dataset_radiobox'] = gui_widgets.RadioButtonBox('Choose enrichment dataset',
                                                                       self.ANALYSIS_TYPES_BUTTONS)
@@ -319,6 +320,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.update_stats_ui()
         self.update_plot_ui()
         self.widgets['run_button'].setVisible(True)
+        self.widgets['run_button'].setDisabled(True)
 
         if 'help_link' in self.widgets:
             self.scroll_layout.removeWidget(self.widgets['help_link'])
@@ -334,6 +336,17 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
 
         _, _, width, height = self.scroll.geometry().getRect()
         self.resize(width, 750)
+
+    @QtCore.pyqtSlot()
+    def _verify_inputs(self):
+        is_legal = True
+        if not self.widgets['enrichment_list'].is_legal():
+            is_legal = False
+        if self.widgets['bg_list'].isEnabled() and (not self.widgets['bg_list'].is_legal()):
+            is_legal = False
+        if self._get_statistical_test() is None:
+            is_legal = False
+        self.widgets['run_button'].setEnabled(is_legal)
 
     def get_current_analysis_type(self):
         button = self.widgets['dataset_radiobox'].checkedButton()
@@ -397,6 +410,8 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         radio_options = parsing.data_to_list(self.STATISTICAL_TESTS.keys() if self.is_categorical() else \
                                                  self.ORDINAL_STATISTICAL_TESTS.keys())
         self.stats_widgets['stats_radiobox'] = gui_widgets.RadioButtonBox('Choose statistical test:', radio_options)
+        self.stats_widgets['stats_radiobox'].selectionChanged.connect(self._verify_inputs)
+        self.stats_widgets['stats_radiobox'].buttonClicked.connect(self._verify_inputs)
         if prev_test_name is not None:
             self.stats_widgets['stats_radiobox'].set_selection(prev_test_name)
         self.stats_widgets['stats_radiobox'].buttonClicked.connect(self.update_stats_ui)
