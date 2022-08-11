@@ -21,7 +21,7 @@ from joblib.externals.loky import get_reusable_executor
 
 from rnalysis import filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_tutorial
-from rnalysis.utils import io, validation, generic, parsing, settings, enrichment_runner
+from rnalysis.utils import io, validation, generic, parsing, settings, enrichment_runner, clustering
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
@@ -32,8 +32,8 @@ class ClicomWindow(gui_widgets.MinMaxDialog):
     CLICOM_FUNC = filtering.CountFilter.split_clicom
     CLICOM_SIGNATURE = generic.get_method_signature(CLICOM_FUNC)
     CLICOM_DESC, CLICOM_PARAM_DESC = generic.get_method_docstring(CLICOM_FUNC)
-    EXCLUDED_PARAMS = {'self', 'parameter_dicts'}
-    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities'}
+    EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
+    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode'}
     paramsAccepted = QtCore.pyqtSignal(list, dict)
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
@@ -491,23 +491,6 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         except Exception:
             self.show()
             raise Exception
-
-
-class Worker(QtCore.QObject):
-    finished = QtCore.pyqtSignal(pd.DataFrame, enrichment_runner.EnrichmentRunner, str)
-    startProgBar = QtCore.pyqtSignal(object)
-    progress = QtCore.pyqtSignal(int)
-    updateBarTotal = QtCore.pyqtSignal(int)
-    endProgBar = QtCore.pyqtSignal()
-
-    def __init__(self, partial, set_name):
-        self.partial = partial
-        self.set_name = set_name
-        super().__init__()
-
-    def run(self):
-        result = self.partial()
-        self.finished.emit(*result, self.set_name)
 
 
 class SetOperationWindow(gui_widgets.MinMaxDialog):
@@ -1194,7 +1177,7 @@ class SetTabPage(TabPage):
 
 
 class FuncTypeStack(QtWidgets.QWidget):
-    EXCLUDED_PARAMS = {'self'}
+    EXCLUDED_PARAMS = {'self', 'gui_mode'}
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
 
@@ -1312,6 +1295,7 @@ class FilterTabPage(TabPage):
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
     GENERAL_FUNCS = {'sort', 'transform', 'fold_change'}
     filterObjectCreated = QtCore.pyqtSignal(filtering.Filter)
+    startedClustering = QtCore.pyqtSignal(object, str)
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
@@ -1581,6 +1565,12 @@ class FilterTabPage(TabPage):
         self.update_table_name_label()
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
+        # since clustering functions can be computationally intensive, start it in another thread
+        if func_name in self.CLUSTERING_FUNCS:
+            kwargs['gui_mode'] = True
+            partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
+            self.startedClustering.emit(partial, func_name)
+            return
         prev_name = self.get_tab_name()
         result = getattr(self.filter_obj, func_name)(*args, **kwargs)
         self.update_tab(prev_name != self.filter_obj.fname.name)
@@ -2153,7 +2143,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
 
+        # init progress bar and thread execution attributes
         self.progress_bar = None
+        self.progbar_desc = ''
+        self.progbar_total = 0
+        self.progbar_start_time = 0
+        self.progbar_completed_items = 0
         self.worker = None
         self.thread = None
 
@@ -2309,6 +2304,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack)
             tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
+            tab.startedClustering.connect(self.start_clustering)
         tab.changeIcon.connect(self.set_current_tab_icon)
         tab.tabNameChange.connect(self.rename_tab)
         self.tabs.addTab(tab, name)
@@ -2834,8 +2830,17 @@ class MainWindow(QtWidgets.QMainWindow):
             event.ignore()
 
     @QtCore.pyqtSlot(object, str)
+    def start_clustering(self, partial: Callable, func_name: str):
+        self.run_partial(partial, self.finish_clustering, func_name)
+
+    @QtCore.pyqtSlot(tuple, clustering.ClusteringRunner, str, )
+    def finish_clustering(self, return_val: tuple, runner: clustering.ClusteringRunner, func_name: str):
+        runner.plot_clustering()
+        self.tabs.currentWidget()._proccess_outputs(return_val, func_name)
+
+    @QtCore.pyqtSlot(object, str)
     def start_enrichment(self, partial: Callable, set_name: str):
-        self.run_partial(partial, self.finish_enrichment, set_name=set_name)
+        self.run_partial(partial, self.finish_enrichment, set_name)
 
     @QtCore.pyqtSlot(pd.DataFrame, enrichment_runner.EnrichmentRunner, str)
     def finish_enrichment(self, results, runner, set_name: str):
@@ -2843,44 +2848,30 @@ class MainWindow(QtWidgets.QMainWindow):
         runner.plot_results()
         self.display_enrichment_results(results, set_name)
 
-    def run_partial(self, partial: Callable, output_slot: Callable, **kwargs):
-        # Step 2: Create a QThread object
-        self.thread = QtCore.QThread()
-        # Step 3: Create a worker object
-
-        self.worker = Worker(partial, **kwargs)
-        # Step 4: Move worker to the thread
-        self.worker.moveToThread(self.thread)
-        # Step 5: Connect signals and slots
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(output_slot)
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
+    def run_partial(self, partial: Callable, output_slot: Callable, *args):
+        # Create a worker object
+        self.worker = gui_widgets.Worker(partial, *args)
 
         def alt_tqdm(iter_obj: typing.Iterable = None, desc: str = '', unit: str = '', bar_format: str = '',
                      total: int = None):
             self.worker.startProgBar.emit(
                 dict(iter_obj=iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total))
             obj = gui_widgets.AltTQDM(iter_obj, desc=desc, unit=unit, bar_format=bar_format, total=total)
-            obj.barUpdate.connect(self.worker.progress)
-            obj.barFinished.connect(self.worker.endProgBar)
+            obj.barUpdate.connect(self.move_progress_bar)
+            obj.barFinished.connect(self.end_progress_bar)
             return obj
 
         def alt_parallel(n_jobs: int = -1, desc: str = '', unit: str = '', bar_format: str = '',
-                         total: int = None, max_nbytes=None):
+                         total: int = None, **kwargs):
             self.worker.startProgBar.emit(
                 dict(iter_obj=None, desc=desc, unit=unit, bar_format=bar_format, total=total))
             print(f"{desc}: started" + (f" {total} jobs\r" if isinstance(total, int) else "\r"))
-            if max_nbytes is not None:
-                obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
-                                              total=total, max_nbytes=max_nbytes)
-            else:
-                obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
-                                              total=total)
-            obj.barUpdate.connect(self.worker.progress)
-            obj.barFinished.connect(self.worker.endProgBar)
-            obj.barTotalUpdate.connect(self.worker.updateBarTotal)
+            obj = gui_widgets.AltParallel(n_jobs=n_jobs, desc=desc, unit=unit, bar_format=bar_format,
+                                          total=total, **kwargs)
+            obj.barUpdate.connect(self.move_progress_bar)
+            obj.barFinished.connect(self.end_progress_bar)
+            obj.barTotalUpdate.connect(self.update_bar_total)
+
             return obj
 
         enrichment.enrichment_runner.generic.ProgressParallel = alt_parallel
@@ -2893,49 +2884,61 @@ class MainWindow(QtWidgets.QMainWindow):
         filtering.clustering.tqdm = alt_tqdm
 
         self.worker.startProgBar.connect(self.start_progress_bar)
-        self.worker.progress.connect(self.move_progress_bar)
-        self.worker.endProgBar.connect(self.end_progress_bar)
-        self.worker.updateBarTotal.connect(self.update_bar_total)
-        # Step 6: Start the thread
+
+        #  Start the thread
+        self.thread = QtCore.QThread()
+
+        #  Move worker to the thread
+        self.worker.moveToThread(self.thread)
+        #  Connect signals and slots
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(output_slot)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
         self.thread.start()
 
     def start_progress_bar(self, arg_dict):
         total = arg_dict.get('total', None)
         iter_obj = arg_dict['iter_obj']
-        self.desc = arg_dict.get('desc', '')
+        self.progbar_desc = arg_dict.get('desc', '')
         if total is not None:
-            self.total = total
+            self.progbar_total = total
         else:
             try:
-                self.total = len(iter_obj)
+                self.progbar_total = len(iter_obj)
             except TypeError:
-                self.total = 2
+                self.progbar_total = 2
         if self.progress_bar is not None:
             self.progress_bar.close()
 
-        self.progress_bar = QtWidgets.QProgressDialog(self.desc, "Hide", 0, self.total, self)
-        self.start_time = time.time()
+        self.progress_bar = QtWidgets.QProgressDialog(self.progbar_desc, "Hide", 0, self.progbar_total, self)
+        self.progbar_start_time = time.time()
         self.progress_bar.setMinimumDuration(0)
-        self.progress_bar.setWindowTitle(self.desc)
+        self.progress_bar.setWindowTitle(self.progbar_desc)
         self.progress_bar.setValue(0)
         self.progress_bar.setWindowModality(QtCore.Qt.WindowModal)
-        self.completed_items = 0
+        self.progbar_completed_items = 0
 
     def move_progress_bar(self, n: int):
-        self.completed_items += n
-        self.elapsed_time = time.time() - self.start_time
-        remaining_time = (self.elapsed_time / self.completed_items) * abs(self.total - self.completed_items)
+        self.progbar_completed_items += n
+        elapsed_time = time.time() - self.progbar_start_time
+        remaining_time = (elapsed_time / self.progbar_completed_items) * abs(
+            self.progbar_total - self.progbar_completed_items)
         try:
-            self.progress_bar.setLabelText(self.desc + '\n' + f"Elapsed time: {self.elapsed_time:.2f} seconds"
+            self.progress_bar.setLabelText(self.progbar_desc + '\n' + f"Elapsed time: {elapsed_time:.2f} seconds"
                                            + '\n' + f"Remaining time: {remaining_time:.2f} seconds")
-            self.progress_bar.setValue(self.completed_items)
+            self.progress_bar.setValue(self.progbar_completed_items)
         except AttributeError:
             pass
 
     def update_bar_total(self, n: int):
-        self.total = n
-        self.progress_bar.setMaximum(n)
-        QtWidgets.QApplication.processEvents()
+        self.progbar_total = n
+        try:
+            self.progress_bar.setMaximum(n)
+        except AttributeError:
+            pass
 
     def end_progress_bar(self):
         if self.progress_bar is not None:

@@ -252,6 +252,21 @@ class PathInputDialog(QtWidgets.QDialog):
         return self.path.text()
 
 
+class Worker(QtCore.QObject):
+    finished = QtCore.pyqtSignal(object, object, str)
+    startProgBar = QtCore.pyqtSignal(object)
+
+    def __init__(self, partial, *args):
+        self.partial = partial
+        self.args = args
+        super().__init__()
+
+    def run(self):
+        result = self.partial()
+        if result is not None:
+            self.finished.emit(*result, *self.args)
+
+
 class AltTQDM(QtCore.QObject):
     barUpdate = QtCore.pyqtSignal(int)
     barFinished = QtCore.pyqtSignal()
@@ -270,6 +285,9 @@ class AltTQDM(QtCore.QObject):
     def __enter__(self):
         return self
 
+    def update(self, n: int):
+        self.barUpdate.emit(n)
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.barFinished.emit()
 
@@ -287,21 +305,28 @@ class AltParallel(QtCore.QObject):
         self.prev_total = 0
         self.prev_report = 0
         super().__init__()
+        self.barUpdate.emit(1)
 
     def __call__(self, *args, **kwargs):
 
         self.parallel.print_progress = functools.partial(self.print_progress)
         return self.parallel.__call__(*args, **kwargs)
 
+    def update(self, n: int):
+        self.barUpdate.emit(n)
+        print(f"{self.desc}: finished {self.parallel.n_completed_tasks} of {self.prev_total} tasks\r")
+
+    def total_update(self, n: int):
+        self.barTotalUpdate.emit(n)
+
     def print_progress(self):
         if self.total is None and self.prev_total < self.parallel.n_dispatched_tasks:
             self.prev_total = self.parallel.n_dispatched_tasks
-            self.barTotalUpdate.emit(self.parallel.n_dispatched_tasks)
+            self.total_update(self.parallel.n_dispatched_tasks)
 
         if self.parallel.n_completed_tasks - self.prev_report > 0:
-            self.barUpdate.emit(self.parallel.n_completed_tasks - self.prev_report)
+            self.update(self.parallel.n_completed_tasks - self.prev_report)
             self.prev_report = self.parallel.n_completed_tasks
-            print(f"{self.desc}: finished {self.parallel.n_completed_tasks} of {self.prev_total} tasks\r")
             if self.prev_report == self.total:
                 self.barFinished.emit()
 
