@@ -616,8 +616,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         gap_error = np.zeros((len(n_clusters_range)))
 
         # iterate over K values in the range
-        for ind, this_n_clusters in tqdm(enumerate(n_clusters_range), desc="Testing 'n_clusters' values",
-                                         unit='values'):
+        for ind, this_n_clusters in enumerate(
+            tqdm(n_clusters_range, desc="Testing 'n_clusters' values", unit='values')):
             # init the clusterer with given arguments
             clusterer = self.clusterer_class(n_clusters=this_n_clusters, **self.clusterer_kwargs)
             # cluster each of the n_refs reference arrays into Ki clusters
