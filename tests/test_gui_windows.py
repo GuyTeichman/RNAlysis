@@ -1,3 +1,6 @@
+import numpy as np
+import pytest
+
 from rnalysis import __version__
 from rnalysis.gui.gui_windows import *
 
@@ -105,16 +108,54 @@ def test_MultiFileSelectionDialog_no_selection(qtbot):
     assert False
 
 
-def test_DataFramePreviewModel(qtbot):
-    assert False
+@pytest.mark.parametrize('df,shape_truth', [
+    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
+    (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (2, 4)),
+    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (3, 3)),
+    (pd.Series([1, 2]), (2, 1)),
+    (pd.Series([1, 2, 3, 4, 5]), (3, 1)),
+    (pd.Series(), (0, 1)),
+    (pd.DataFrame(), (0, 0))
+])
+def test_DataFramePreviewModel(qtbot, df, shape_truth):
+    model = DataFramePreviewModel(df)
+
+    assert model._dataframe.shape == shape_truth
+    if shape_truth[0] > 2:
+        assert np.all(model._dataframe.iloc[-1, :] == "...")
+    if shape_truth[1] > 3:
+        assert np.all(model._dataframe.iloc[:, -1] == "...")
 
 
-def test_GeneSetView_init(qtbot):
-    assert False
+@pytest.mark.parametrize('gene_set', [{1, 2, 3}, {'a', 'b', 'c', 'd'}, set()])
+def test_GeneSetView_init(qtbot, gene_set):
+    qtbot, dialog = widget_setup(qtbot, GeneSetView, gene_set, 'my set name')
+    assert 'my set name' in dialog.label.text()
+    assert str(len(gene_set)) in dialog.label.text()
+    assert dialog.data_view.count() == len(gene_set)
 
 
-def test_GeneSetView_save(qtbot):
-    assert False
+@pytest.mark.parametrize('gene_set,truth', [
+    ({1, 2, 3}, '1\n2\n3'),
+    ({'a', 'b', 'c', 'd'}, 'a\nb\nc\nd'),
+    (set(), '')])
+def test_GeneSetView_save(qtbot, gene_set, truth, monkeypatch):
+    pth = 'tests/test_files/my_gene_set_saved_file.txt'
+
+    def get_savepath(*args, **kwargs):
+        return pth, '.txt'
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', get_savepath)
+    qtbot, dialog = widget_setup(qtbot, GeneSetView, gene_set, 'my set name')
+    try:
+        qtbot.mouseClick(dialog.save_button, LEFT_CLICK)
+        assert Path(pth).exists()
+        with open(pth) as f:
+            assert sorted(f.read().split('\n')) == truth.split('\n')
+
+    finally:
+        if Path(pth).exists():
+            Path(pth).unlink()
 
 
 def test_DataFrameView_init(qtbot):
