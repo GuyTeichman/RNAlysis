@@ -96,18 +96,6 @@ def test_HowToCiteWindow_copy_to_clipboard(qtbot, monkeypatch):
     assert str(__version__) in cb
 
 
-def test_MultiFileSelectionDialog_init(qtbot):
-    assert False
-
-
-def test_MultiFileSelectionDialog_selection(qtbot):
-    assert False
-
-
-def test_MultiFileSelectionDialog_no_selection(qtbot):
-    assert False
-
-
 @pytest.mark.parametrize('df,shape_truth', [
     (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
     (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (2, 4)),
@@ -158,12 +146,54 @@ def test_GeneSetView_save(qtbot, gene_set, truth, monkeypatch):
             Path(pth).unlink()
 
 
-def test_DataFrameView_init(qtbot):
-    assert False
+@pytest.mark.parametrize('df,shape_truth', [
+    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
+    (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (2, 4)),
+    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]]), (5, 3)),
+    (pd.Series([1, 2]), (2, 1)),
+    (pd.Series([1, 2, 3, 4, 5]), (5, 1)),
+    (pd.Series(), (0, 1)),
+    (pd.DataFrame(), (0, 0))
+])
+def test_DataFrameView_init(qtbot, df, shape_truth):
+    qtbot, dialog = widget_setup(qtbot, DataFrameView, df, 'my df name')
+    assert 'my df name' in dialog.label.text()
+    assert str(shape_truth[0]) in dialog.label.text()
+    assert str(shape_truth[1]) in dialog.label.text()
+    assert dialog.data_view.model().rowCount() == shape_truth[0]
+    assert dialog.data_view.model().columnCount() == shape_truth[1]
 
 
-def test_DataFrameView_save(qtbot):
-    assert False
+@pytest.mark.parametrize('df,shape_truth', [
+    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]], columns=['a', 'b', 'c']), (3, 3)),
+    (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]], columns=['a', 'b', 'c', 'd']), (2, 4)),
+    (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]], columns=['a', 'b', 'c']), (5, 3)),
+    (pd.Series([1, 2], name='a'), (2, 1)),
+    (pd.Series([1, 2, 3, 4, 5], name='a'), (5, 1)),
+    (pd.Series(), (0, 1)),
+    (pd.DataFrame(), (0, 0))
+])
+def test_DataFrameView_save(qtbot, monkeypatch, df, shape_truth):
+    pth = 'tests/test_files/my_dataframe_saved_file.csv'
+
+    def get_savepath(*args, **kwargs):
+        return pth, '.csv'
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', get_savepath)
+    qtbot, dialog = widget_setup(qtbot, DataFrameView, df, 'my df name')
+    try:
+        qtbot.mouseClick(dialog.save_button, LEFT_CLICK)
+        assert Path(pth).exists()
+        if isinstance(df, pd.DataFrame):
+            assert df.equals(pd.read_csv(pth, index_col=0))
+        else:
+            if len(df) == 0:
+                assert df.to_frame().shape == pd.read_csv(pth, index_col=0).shape
+            else:
+                assert df.to_frame().equals(pd.read_csv(pth, index_col=0))
+    finally:
+        if Path(pth).exists():
+            Path(pth).unlink()
 
 
 def test_SettingsWindow_init(qtbot):
@@ -179,4 +209,16 @@ def test_SettingsWindow_reset(qtbot):
 
 
 def test_SettingsWindow_save(qtbot):
+    assert False
+
+
+def test_MultiFileSelectionDialog_init(qtbot):
+    assert False
+
+
+def test_MultiFileSelectionDialog_selection(qtbot):
+    assert False
+
+
+def test_MultiFileSelectionDialog_no_selection(qtbot):
     assert False
