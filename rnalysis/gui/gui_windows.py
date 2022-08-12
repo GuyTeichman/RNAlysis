@@ -438,6 +438,7 @@ class AboutWindow(QtWidgets.QMessageBox):
 class SettingsWindow(gui_widgets.MinMaxDialog):
     THEMES = gui_style.get_stylesheet_names()
     FONT_SIZES = [str(i) for i in [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72]]
+    styleSheetUpdated = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -536,15 +537,15 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
             settings.set_table_settings(attr_ref_path, biotype_ref_path)
 
-            self.parent().update_style_sheet()
+            self.styleSheetUpdated.emit()
             print('Settings saved successfully')
 
     def reset_settings(self):
         self.settings_changed = False
         settings.reset_settings()
-        print("Settings reset successfully")
-        self.parent().update_style_sheet()
+        self.styleSheetUpdated.emit()
         self.set_choices()
+        print("Settings reset successfully")
 
     def save_and_exit(self):
         self.save_settings()

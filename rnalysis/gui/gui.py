@@ -2113,6 +2113,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.about_window = gui_windows.AboutWindow(self)
         self.settings_window = gui_windows.SettingsWindow(self)
+        self.settings_window.styleSheetUpdated.connect(self.update_style_sheet)
         self.set_op_window = None
         self.set_visualization_window = None
         self.tutorial_window = gui_tutorial.WelcomeWizard(self)
