@@ -287,9 +287,19 @@ def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file
     assert settings_saved[1]
 
 
-def test_SettingsWindow_cancel(qtbot, use_temp_settings_file):
+def test_SettingsWindow_cancel(qtbot, monkeypatch, use_temp_settings_file):
+    save_done = []
+
+    def mock_save():
+        save_done.append(True)
+
+    monkeypatch.setattr(settings, 'set_gui_settings', mock_save)
+    monkeypatch.setattr(settings, 'set_table_settings', mock_save)
     qtbot, dialog = widget_setup(qtbot, SettingsWindow)
-    assert False
+    dialog.appearance_widgets['app_font'].setCurrentText("David")
+    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.Cancel), LEFT_CLICK)
+
+    assert len(save_done) == 0
 
 
 def test_MultiFileSelectionDialog_init(qtbot, use_temp_settings_file):
