@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 import pytest
 
@@ -6,6 +8,13 @@ from rnalysis.gui.gui_windows import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
+
+
+@pytest.fixture
+def use_temp_settings_file(request):
+    settings.make_temp_copy_of_settings_file()
+    request.addfinalizer(settings.remove_temp_copy_of_settings_file)
+    request.addfinalizer(settings.set_temp_copy_of_settings_file_as_default)
 
 
 def widget_setup(qtbot, widget_class, *args, **kwargs):
@@ -196,29 +205,100 @@ def test_DataFrameView_save(qtbot, monkeypatch, df, shape_truth):
             Path(pth).unlink()
 
 
-def test_SettingsWindow_init(qtbot):
+def test_SettingsWindow_init(qtbot, use_temp_settings_file):
+    qtbot, dialog = widget_setup(qtbot, SettingsWindow)
+
+
+def test_SettingsWindow_get_defaults(qtbot, use_temp_settings_file):
+    font_truth = 'Arial'
+    font_size_truth = '16'
+    theme_truth = 'Light'
+    show_tutorial_truth = False
+    attr_truth = os.path.abspath('tests/test_files/counted.tsv')
+    biotype_truth = os.path.abspath('tests/test_files/counted.csv')
+
+    settings.set_gui_settings(font_truth, int(font_size_truth), theme_truth.lower(), show_tutorial_truth)
+    settings.set_table_settings(attr_truth, biotype_truth)
+
+    qtbot, dialog = widget_setup(qtbot, SettingsWindow)
+
+    assert dialog.appearance_widgets['app_font'].currentText() == font_truth
+    assert dialog.appearance_widgets['app_font_size'].currentText() == font_size_truth
+    assert dialog.appearance_widgets['app_theme'].currentText() == theme_truth
+    assert dialog.appearance_widgets['show_tutorial'].isChecked() == show_tutorial_truth
+    assert dialog.tables_widgets['attr_ref_path'].text() == attr_truth
+    assert dialog.tables_widgets['biotype_ref_path'].text() == biotype_truth
+
+
+def test_SettingsWindow_reset_settings(qtbot, monkeypatch, use_temp_settings_file):
+    reset_done = []
+
+    def mock_reset():
+        reset_done.append(True)
+
+    monkeypatch.setattr(settings, 'reset_settings', mock_reset)
+    qtbot, dialog = widget_setup(qtbot, SettingsWindow)
+    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.RestoreDefaults), LEFT_CLICK)
+    assert len(reset_done) == 1
+    assert reset_done[0]
+
+
+def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file):
+    settings_saved = [False, False]
+    font_truth = 'Arial'
+    font_size_truth = '16'
+    theme_truth = 'Light'
+    show_tutorial_truth = False
+    attr_truth = os.path.abspath('tests/test_files/counted.tsv')
+    biotype_truth = os.path.abspath('tests/test_files/counted.csv')
+
+    def mock_save_gui(font, font_size, theme, show_tutorial):
+        assert font == font_truth
+        assert font_size == int(font_size_truth)
+        assert theme == theme_truth.lower()
+        assert show_tutorial == show_tutorial_truth
+        settings_saved[0] = True
+
+    def mock_save_tables(attr, biotype):
+        assert attr == attr_truth
+        assert biotype == biotype_truth
+        settings_saved[1] = True
+
+    monkeypatch.setattr(settings, 'set_gui_settings', mock_save_gui)
+    monkeypatch.setattr(settings, 'set_table_settings', mock_save_tables)
+
+    qtbot, dialog = widget_setup(qtbot, SettingsWindow)
+
+    # set gui selections to truth values
+    for widget in ['app_font']:
+        dialog.appearance_widgets[widget].clear()
+    for widget in ['attr_ref_path', 'biotype_ref_path']:
+        dialog.tables_widgets[widget].clear()
+    qtbot.keyClicks(dialog.appearance_widgets['app_font'], font_truth)
+    qtbot.keyClicks(dialog.appearance_widgets['app_font_size'], font_size_truth)
+    qtbot.keyClicks(dialog.appearance_widgets['app_theme'], theme_truth)
+    qtbot.mouseClick(dialog.appearance_widgets['show_tutorial'], LEFT_CLICK)
+
+    qtbot.keyClicks(dialog.tables_widgets['attr_ref_path'].file_path, attr_truth)
+    qtbot.keyClicks(dialog.tables_widgets['biotype_ref_path'].file_path, biotype_truth)
+
+    qtbot.mouseClick(dialog.button_box.button(QtWidgets.QDialogButtonBox.Apply), LEFT_CLICK)
+    assert settings_saved[0]
+    assert settings_saved[1]
+
+
+def test_SettingsWindow_cancel(qtbot, use_temp_settings_file):
+    qtbot, dialog = widget_setup(qtbot, SettingsWindow)
     assert False
 
 
-def test_SettingsWindow_set_defaults(qtbot):
+def test_MultiFileSelectionDialog_init(qtbot, use_temp_settings_file):
     assert False
 
 
-def test_SettingsWindow_reset(qtbot):
+def test_MultiFileSelectionDialog_selection(qtbot, use_temp_settings_file):
     assert False
 
 
-def test_SettingsWindow_save(qtbot):
-    assert False
-
-
-def test_MultiFileSelectionDialog_init(qtbot):
-    assert False
-
-
-def test_MultiFileSelectionDialog_selection(qtbot):
-    assert False
-
-
-def test_MultiFileSelectionDialog_no_selection(qtbot):
+def test_MultiFileSelectionDialog_no_selection(qtbot, use_temp_settings_file):
     assert False
