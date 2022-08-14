@@ -1061,7 +1061,7 @@ class SetTabPage(TabPage):
         elif isinstance(gene_set, set):
             gene_set = enrichment.FeatureSet(gene_set, set_name)
         self.gene_set = gene_set
-
+        self.name = set_name
         self.overview_group = QtWidgets.QGroupBox('Data overview')
         self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
         self.overview_widgets = {}
