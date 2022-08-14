@@ -1195,7 +1195,7 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif name in {'sample_names', 'sample1', 'sample2'} and (not pipeline_mode):
+    elif name in {'sample_names', 'sample1', 'sample2', 'columns'} and (not pipeline_mode):
         widget = TableColumnPicker()
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
