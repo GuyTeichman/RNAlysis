@@ -2476,7 +2476,7 @@ class CountFilter(Filter):
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length
         return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
-        return return_val if not gui_mode else return_val, runner
+        return (return_val, runner) if gui_mode else return_val
 
     def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
@@ -2566,7 +2566,7 @@ class CountFilter(Filter):
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(this_n_clusters)]))
         # if only a single K was calculated, don't return it as a list of length
         return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
-        return return_val, runner if gui_mode else return_val
+        return (return_val, runner) if gui_mode else return_val
 
     def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                        max_iter: int = 300,
@@ -2655,7 +2655,7 @@ class CountFilter(Filter):
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length 1
         return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
-        return return_val, runner if gui_mode else return_val
+        return (return_val, runner) if gui_mode else return_val
 
     def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
@@ -2767,7 +2767,7 @@ class CountFilter(Filter):
                                          suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)])
 
         return_val = filt_objs
-        return return_val, runner if gui_mode else return_val
+        return (return_val, runner) if gui_mode else return_val
 
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
@@ -2873,7 +2873,7 @@ class CountFilter(Filter):
 
         # noinspection PyUnboundLocalVariable
         return_val = [filt_objs, probabilities] if return_probabilities else filt_objs
-        return return_val, runner if gui_mode else return_val
+        return (return_val, runner) if gui_mode else return_val
 
     def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'Euclidean',
                     linkage: Literal[
