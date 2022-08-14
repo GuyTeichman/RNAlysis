@@ -303,12 +303,57 @@ def test_SettingsWindow_cancel(qtbot, monkeypatch, use_temp_settings_file):
 
 
 def test_MultiFileSelectionDialog_init(qtbot, use_temp_settings_file):
-    assert False
+    _, _ = widget_setup(qtbot, MultiFileSelectionDialog)
 
 
-def test_MultiFileSelectionDialog_selection(qtbot, use_temp_settings_file):
-    assert False
+@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files'])
+def test_MultiFileSelectionDialog_selection_log(qtbot, use_temp_settings_file, pth):
+    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
+    model = dialog.tree_mycomputer.model()
+
+    for parent in reversed(list(Path(pth).absolute().parents)):
+        dialog.tree_mycomputer.expand(model.index(str(parent)))
+
+    index = model.index(str(Path(pth).absolute()))
+    model.setCheckState(index, True)
+
+    dialog.update_log()
+    txt = dialog.logger.toPlainText()
+    assert str(Path(pth).name) in txt
+
+    if Path(pth).is_dir():
+        for item in Path(pth).rglob('*'):
+            assert str(item.absolute()) in txt
+
+
+@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'])
+def test_MultiFileSelectionDialog_selection_files(qtbot, use_temp_settings_file, pth):
+    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
+    model = dialog.tree_mycomputer.model()
+
+    for parent in reversed(list(Path(pth).absolute().parents)):
+        dialog.tree_mycomputer.expand(model.index(str(parent)))
+
+    index = model.index(str(Path(pth).absolute()))
+    model.setCheckState(index, True)
+    assert dialog.result() == [str(Path(pth).absolute())]
+
+
+@pytest.mark.parametrize('pth', ['tests/test_files/test_count_from_folder', 'tests/test_files'])
+def test_MultiFileSelectionDialog_selection_folders(qtbot, use_temp_settings_file, pth):
+    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
+    model = dialog.tree_mycomputer.model()
+
+    for parent in reversed(list(Path(pth).absolute().parents)):
+        dialog.tree_mycomputer.expand(model.index(str(parent)))
+
+    index = model.index(str(Path(pth).absolute()))
+    model.setCheckState(index, True)
+    assert sorted(dialog.result()) == sorted(
+        [str(Path(child).absolute()) for child in Path(pth).rglob('*') if child.is_file()])
 
 
 def test_MultiFileSelectionDialog_no_selection(qtbot, use_temp_settings_file):
-    assert False
+    qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
+
+    assert len(dialog.result()) == 0
