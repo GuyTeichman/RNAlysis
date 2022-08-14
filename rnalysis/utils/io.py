@@ -121,6 +121,12 @@ def save_gui_session(session_filename: Union[str, Path], file_names: List[str], 
         Path(pipeline_filename).write_text(pipeline_file)
         session_data['pipelines'][pipeline_filename.name] = pipeline_name
 
+    session_data['metadata']['creation_time'] = get_datetime()
+    session_data['metadata']['name'] = Path(session_filename).stem
+    session_data['metadata']['n_tabs'] = len(session_data['files'])
+    session_data['metadata']['n_pipelines'] = len(session_data['pipelines'])
+    session_data['metadata']['tab_order'] = file_names
+
     with open(session_folder.joinpath('session_data.yaml'), 'w') as f:
         yaml.safe_dump(session_data, f)
     shutil.make_archive(session_folder.with_suffix(''), 'zip', session_folder)
@@ -148,7 +154,13 @@ def load_gui_session(session_filename: Union[str, Path]):
     pipeline_names = []
     with open(session_dir.joinpath('session_data.yaml')) as f:
         session_data = yaml.safe_load(f)
-    for file_name in session_data['files'].keys():
+    if 'tab_order' in session_data['metadata'] and len(session_data['metadata']['tab_order']) == len(
+        session_data['files']):
+        filenames = session_data['metadata']['tab_order']
+    else:
+        filenames = session_data['files'].keys()
+
+    for file_name in filenames:
         file_path = session_dir.joinpath(file_name)
         assert file_path.exists() and file_path.is_file()
         item = load_cached_gui_file(Path(session_filename.name).joinpath(file_name))
