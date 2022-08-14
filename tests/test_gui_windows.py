@@ -357,3 +357,9 @@ def test_MultiFileSelectionDialog_no_selection(qtbot, use_temp_settings_file):
     qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
 
     assert len(dialog.result()) == 0
+
+
+def test_splash_screen(qtbot):
+    splash = splash_screen()
+    splash.show()
+    qtbot.add_widget(splash)
