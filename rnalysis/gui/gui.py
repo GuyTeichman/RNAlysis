@@ -2338,8 +2338,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 accepted = window.exec()
                 if accepted:
                     paths, types, names = window.result()
+                    tabs_to_close = None
                     if self.tabs.currentWidget().is_empty():
-                        self.tabs.removeTab(self.tabs.currentIndex())
+                        tabs_to_close = self.tabs.currentIndex()
+
                     for filename in filenames:
                         path = paths[filename]
                         table_type = FILTER_OBJ_TYPES[types[filename]]
@@ -2349,6 +2351,8 @@ class MainWindow(QtWidgets.QMainWindow):
                             self.new_tab_from_filter_obj(filter_obj)
                         else:
                             self.new_tab_from_filter_obj(filter_obj, name)
+                    if tabs_to_close is not None:
+                        self.tabs.removeTab(tabs_to_close)
 
     def new_tab_from_filter_obj(self, filter_obj: filtering.Filter, name: str = None):
         self.add_new_tab(filter_obj.fname.name)
@@ -2408,12 +2412,14 @@ class MainWindow(QtWidgets.QMainWindow):
         accepted = dialog.exec()
         if accepted == QtWidgets.QDialog.Accepted:
             filenames = dialog.result()
+            tabs_to_close = None
             if len(filenames) > 0 and self.tabs.currentWidget().is_empty():
-                self.tabs.removeTab(self.tabs.currentIndex())
+                tabs_to_close = self.tabs.currentIndex()
             for filename in filenames:
                 gene_set = self._filename_to_gene_set(filename)
                 self.new_tab_from_gene_set(gene_set, Path(filename).stem)
-
+            if tabs_to_close is not None:
+                self.tabs.removeTab(tabs_to_close)
     def import_gene_set(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
                                                             "Text Document (*.txt);;"
@@ -2421,10 +2427,13 @@ class MainWindow(QtWidgets.QMainWindow):
                                                             "Tab-Separated Values (*.tsv);;"
                                                             "All Files (*)")
         if filename:
+            tabs_to_close = None
             if self.tabs.currentWidget().is_empty():
-                self.tabs.removeTab(self.tabs.currentIndex())
+                tabs_to_close = self.tabs.currentIndex()
             gene_set = self._filename_to_gene_set(filename)
             self.new_tab_from_gene_set(gene_set, Path(filename).stem)
+            if tabs_to_close is not None:
+                self.tabs.removeTab(tabs_to_close)
 
     @staticmethod
     def _filename_to_gene_set(filename: str):
@@ -2753,6 +2762,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.pipelines[pipeline_name] = pipeline
             QtWidgets.QApplication.processEvents()
 
+            tabs_to_close = None
+            if self.tabs.currentWidget().is_empty():
+                tabs_to_close = self.tabs.currentIndex()
+
             for item, item_name, item_type, item_property in zip(items, item_names, item_types, item_properties):
                 if item_type == 'set':
                     self.new_tab_from_gene_set(item, item_name)
@@ -2763,6 +2776,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         raise TypeError(f"Invalid object type in session file: '{item_type}'")
                     obj = cls.from_dataframe(item, item_name, **item_property)
                     self.new_tab_from_filter_obj(obj, item_name)
+            if tabs_to_close is not None:
+                self.tabs.removeTab(tabs_to_close)
 
     def save_session(self):
         default_name = 'Untitled session.rnal'
