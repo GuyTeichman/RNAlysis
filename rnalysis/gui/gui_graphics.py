@@ -95,6 +95,10 @@ class BaseInteractiveCanvas(FigureCanvasQTAgg):
     def get_tuple_patch_ids(self) -> List[Tuple[int, ...]]:
         raise NotImplementedError
 
+    def draw(self):
+        self.fig.suptitle(f"{len(self.get_custom_selection())} selected genes")
+        super().draw()
+
 
 class VennInteractiveCanvas(BaseInteractiveCanvas):
     def __init__(self, gene_sets: dict, parent=None):
