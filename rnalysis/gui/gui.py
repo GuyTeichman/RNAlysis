@@ -1074,7 +1074,7 @@ class SetTabPage(TabPage):
         self.update_gene_set(obj)
 
     def obj_type(self):
-        return type(self.gene_set)
+        return type(self.gene_set.gene_set)
 
     def init_overview_ui(self, set_name: str):
         this_row = 0
@@ -2262,7 +2262,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def sort_tabs_by_type(self):
         widgets = [self.tabs.widget(i) for i in range(self.tabs.count())]
         type_to_order = {filtering.CountFilter: 1, filtering.DESeqFilter: 2, filtering.FoldChangeFilter: 3,
-                         filtering.Filter: 4, set: 5, type(None): 6}
+                         filtering.Filter: 4, enrichment.FeatureSet: 5, type(None): 6}
         tab_types = {}
         for widget in widgets:
             if isinstance(widget, FilterTabPage):
