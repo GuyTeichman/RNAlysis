@@ -1,6 +1,7 @@
 import itertools
 import traceback
 from pathlib import Path
+import warnings
 from queue import Queue
 
 import pandas as pd
@@ -151,8 +152,8 @@ class MultiFileSelectionDialog(gui_widgets.MinMaxDialog):
         self.tree_home.setModel(proxy)
         self.tree_home.setRootIndex(proxy.mapFromSource(
             model_home.index(QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.HomeLocation)[0])))
-        model_mycomputer.finishedDataChange.connect(self.updateLog)
-        model_home.finishedDataChange.connect(self.updateLog)
+        model_mycomputer.finishedDataChange.connect(self.update_log)
+        model_home.finishedDataChange.connect(self.update_log)
 
     def init_ui(self):
         self.setWindowTitle('Choose files:')
@@ -177,9 +178,9 @@ class MultiFileSelectionDialog(gui_widgets.MinMaxDialog):
         self.open_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
 
-        self.updateLog()
+        self.update_log()
 
-    def updateLog(self):
+    def update_log(self):
         self.logger.setPlainText("\n".join(self.result()))
         self.logger.verticalScrollBar().setValue(
             self.logger.verticalScrollBar().maximum())
@@ -197,8 +198,11 @@ class MultiFileSelectionDialog(gui_widgets.MinMaxDialog):
             if this_path.is_file():
                 files_to_open.append(str(this_path))
             else:
-                for item in this_path.iterdir():
-                    queue.put(item)
+                try:
+                    for item in this_path.iterdir():
+                        queue.put(item)
+                except PermissionError:
+                    warnings.warn(f'Cannot access items under {this_path} - permission denied. ')
         return files_to_open
 
 
