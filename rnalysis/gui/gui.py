@@ -1036,25 +1036,13 @@ class TabPage(QtWidgets.QWidget):
         self.tabNameChange.emit(new_name, True)
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{new_name}</b>'")
         self.overview_widgets['table_name'].setText('')
+        self.name = new_name.rstrip('*')
 
     def cache(self):
         raise NotImplementedError
 
-    def _get_parent_window(self):
-        parent = self.parent()
-        while not isinstance(parent, MainWindow):
-            parent = parent.parent()
-        return parent
-
-    def _get_parent_tabwidget(self):
-        parent = self.parent()
-        while not isinstance(parent, QtWidgets.QTabWidget):
-            parent = parent.parent()
-        return parent
-
     def get_tab_name(self):
-        parent = self._get_parent_tabwidget()
-        return str(parent.tabText(parent.currentIndex())).rstrip("*")
+        return self.name.rstrip("*")
 
     # custom method to write anything printed out to console/terminal to my QTextEdit widget via append function.
     def output_terminal_written(self, text):
@@ -1562,6 +1550,7 @@ class FilterTabPage(TabPage):
         self.update_filter_obj_shape()
         self.update_table_preview()
         self.tabNameChange.emit(self.filter_obj.fname.stem, is_unsaved)
+        self.name = str(self.filter_obj.fname.stem)
         self.update_table_name_label()
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
