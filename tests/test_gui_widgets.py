@@ -246,7 +246,6 @@ def test_clear_layout(qtbot):
     assert layout.count() == 0
 
 
-
 class FilledComboBox(QtWidgets.QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -463,6 +462,38 @@ def test_RadioButtonBox_set_selection(qtbot):
     qtbot, widget = widget_setup(qtbot, RadioButtonBox, 'title', actions)
     widget.set_selection('action2')
     assert widget.checkedButton().text() == 'action2'
+
+
+def test_TableColumnPicker_select_all(qtbot):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    qtbot, widget = widget_setup(qtbot, TableColumnPicker)
+    widget.add_columns(cols)
+    qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
+    qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == cols
+
+
+def test_TableColumnPicker_clear_selection(qtbot):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    qtbot, widget = widget_setup(qtbot, TableColumnPicker)
+    widget.add_columns(cols)
+    qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == []
+
+
+@pytest.mark.parametrize('selections', [['e'], ['b', 'e'], ['a', 'b', 'c']])
+def test_TableColumnPicker_custom_selection(qtbot, selections):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    qtbot, widget = widget_setup(qtbot, TableColumnPicker)
+    widget.add_columns(cols)
+    qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
+    for selection in selections:
+        ind = cols.index(selection)
+        qtbot.mouseClick(widget.column_checks[ind], LEFT_CLICK)
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == selections
 
 
 def test_RadioButtonBox_add_buttons(qtbot):
