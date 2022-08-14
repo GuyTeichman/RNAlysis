@@ -654,7 +654,10 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
     def _majority_vote_intersection(self):
         if not isinstance(self.widgets['canvas'], gui_graphics.EmptyCanvas):
-            threshold = gui_widgets.get_val_from_widget(self.parameter_widgets['majority_threshold'])
+            if 'majority_threshold' in self.parameter_widgets:
+                threshold = gui_widgets.get_val_from_widget(self.parameter_widgets['majority_threshold'])
+            else:
+                threshold = 0.5
             self.widgets['canvas'].majority_vote_intersection(threshold)
 
     @QtCore.pyqtSlot(str)
