@@ -1,6 +1,6 @@
 import pytest
-
 from rnalysis.gui.gui_widgets import *
+import time
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
@@ -597,6 +597,10 @@ def test_TableColumnGroupPicker_custom_selection_grouped(qtbot, selections):
     assert widget.get_values() == selections
     assert len(changed) == 1
 
+    widget.reset()
+
+    assert widget.get_values() == [[item] for item in cols]
+
 
 def test_PathInputDialog(qtbot):
     pth = str(Path('tests/test_files/test_deseq.csv').absolute())
@@ -605,6 +609,22 @@ def test_PathInputDialog(qtbot):
     qtbot.keyClicks(widget.path.file_path, pth)
     qtbot.mouseClick(widget.button_box.buttons()[0], LEFT_CLICK)
     assert widget.result() == pth
+
+
+def test_worker(qtbot):
+    def func(a, b, c):
+        time.sleep(0.5)
+        return a * b * c, a + b + c
+
+    partial = functools.partial(func, 5, 6, 7)
+    thread = QtCore.QThread()
+    worker = Worker(partial, 'other input')
+    worker.moveToThread(thread)
+    thread.started.connect(worker.run)
+    worker.finished.connect(thread.quit)
+    with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
+        thread.start()
+    assert blocker.args == [5 * 6 * 7, 5 + 6 + 7, 'other input']
 
 
 def test_RadioButtonBox_add_buttons(qtbot):
