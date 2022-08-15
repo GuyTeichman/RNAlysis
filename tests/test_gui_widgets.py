@@ -661,6 +661,77 @@ def test_ToggleSwitchCore(qtbot):
     assert widget.isChecked()
 
 
+def test_MultiChoiceListWithDelete_delete_all(qtbot, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
+    qtbot.mouseClick(widget.delete_all_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.selectedItems()]
+    assert selected_items == []
+    assert widget.items == []
+
+
+def test_MultiChoiceListWithDelete_delete(qtbot):
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
+
+    qtbot.mouseClick(widget.delete_button, LEFT_CLICK)
+
+    assert widget.items == items
+
+    qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
+    qtbot.mouseClick(widget.delete_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.selectedItems()]
+    assert selected_items == []
+    assert widget.items == []
+
+
+def test_MultiChoiceListWithDelete_select_all(qtbot):
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
+    qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.selectedItems()]
+    assert selected_items == items
+
+
+def test_MultiChoiceListWithDelete_clear_selection(qtbot):
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
+    for item in widget.list_items:
+        item.setSelected(True)
+
+    assert len(widget.selectedItems()) == len(items)
+
+    qtbot.mouseClick(widget.clear_all_button, LEFT_CLICK)
+
+    selected_items = widget.selectedItems()
+    assert len(selected_items) == 0
+
+
+def test_MultiChoiceListWithDelete_emit(qtbot):
+    selection_changed = []
+
+    def selection_changed_slot(*args, **kwargs):
+        selection_changed.append(1)
+
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
+    widget.itemSelectionChanged.connect(selection_changed_slot)
+
+    assert len(selection_changed) == 0
+
+    qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
+    assert selection_changed == [1] * len(items)
+    qtbot.mouseClick(widget.clear_all_button, LEFT_CLICK)
+    assert selection_changed == [1] * len(items) * 2
+    widget.list_items[0].setSelected(True)
+    assert selection_changed == [1] * len(items) * 2 + [1]
+
+
 def test_RadioButtonBox_add_buttons(qtbot):
     assert False
 
