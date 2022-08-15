@@ -672,6 +672,9 @@ class TrueFalseBoth(QtWidgets.QWidget):
         self.layout.addWidget(self.false_button)
         self.layout.addStretch(1)
 
+        self.set_defaults(default)
+
+    def set_defaults(self, default):
         default = parsing.data_to_list(default)
         if True in default:
             self.true_button.click()
