@@ -324,7 +324,7 @@ def test_get_val_from_widget_bad_widget(qtbot, widget_class):
         get_val_from_widget(widget)
 
 
-def test_HelpButton(qtbot, monkeypatch):
+def test_HelpButton_param_help(qtbot, monkeypatch):
     param_name = 'myparam'
     desc = 'mydesc'
     help_shown = []
@@ -339,6 +339,25 @@ def test_HelpButton(qtbot, monkeypatch):
 
     qtbot, widget = widget_setup(qtbot, HelpButton)
     widget.connect_param_help(param_name, desc)
+
+    qtbot.mouseClick(widget, LEFT_CLICK)
+
+    assert help_shown == [1]
+
+
+def test_HelpButton_desc_help(qtbot, monkeypatch):
+    desc = 'mydesc'
+    help_shown = []
+
+    def mock_show_text(pos, text):
+        assert text == desc
+        assert pos == QtGui.QCursor.pos()
+        help_shown.append(1)
+
+    monkeypatch.setattr(QtWidgets.QToolTip, 'showText', mock_show_text)
+
+    qtbot, widget = widget_setup(qtbot, HelpButton)
+    widget.connect_desc_help(desc)
 
     qtbot.mouseClick(widget, LEFT_CLICK)
 
