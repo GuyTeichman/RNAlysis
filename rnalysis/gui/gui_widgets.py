@@ -1091,9 +1091,8 @@ class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
 
 
 class StdOutTextEdit(QtWidgets.QTextEdit):
-    def __init__(self, parent):
-        super(StdOutTextEdit, self).__init__()
-        self.setParent(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setReadOnly(True)
         self.setLineWidth(50)
         self.setMinimumWidth(500)
