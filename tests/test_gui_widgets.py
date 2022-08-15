@@ -598,6 +598,15 @@ def test_TableColumnGroupPicker_custom_selection_grouped(qtbot, selections):
     assert len(changed) == 1
 
 
+def test_PathInputDialog(qtbot):
+    pth = str(Path('tests/test_files/test_deseq.csv').absolute())
+    qtbot, widget = widget_setup(qtbot, PathInputDialog)
+    widget.path.clear()
+    qtbot.keyClicks(widget.path.file_path, pth)
+    qtbot.mouseClick(widget.button_box.buttons()[0], LEFT_CLICK)
+    assert widget.result() == pth
+
+
 def test_RadioButtonBox_add_buttons(qtbot):
     assert False
 
