@@ -468,19 +468,29 @@ def test_TableColumnPicker_select_all(qtbot):
     cols = ['a', 'b', 'c', 'd', 'e']
     qtbot, widget = widget_setup(qtbot, TableColumnPicker)
     widget.add_columns(cols)
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
     assert widget.get_values() == cols
+    assert len(changed) == 1
 
 
 def test_TableColumnPicker_clear_selection(qtbot):
     cols = ['a', 'b', 'c', 'd', 'e']
     qtbot, widget = widget_setup(qtbot, TableColumnPicker)
     widget.add_columns(cols)
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
     assert widget.get_values() == []
+    assert len(changed) == 1
 
 
 @pytest.mark.parametrize('selections', [['e'], ['b', 'e'], ['a', 'b', 'c']])
@@ -488,12 +498,104 @@ def test_TableColumnPicker_custom_selection(qtbot, selections):
     cols = ['a', 'b', 'c', 'd', 'e']
     qtbot, widget = widget_setup(qtbot, TableColumnPicker)
     widget.add_columns(cols)
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     for selection in selections:
         ind = cols.index(selection)
         qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
     assert widget.get_values() == selections
+    assert len(changed) == 1
+
+
+@pytest.mark.parametrize('selections', [['e'], ['b', 'e'], ['a', 'b', 'c']])
+def test_TableSingleColumnPicker_custom_selection(qtbot, selections):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    qtbot, widget = widget_setup(qtbot, TableSingleColumnPicker)
+    widget.add_columns(cols)
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
+    for selection in selections:
+        ind = cols.index(selection)
+        qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == selections[-1]
+    assert len(changed) == 1
+
+
+def test_TableColumnGroupPicker_select_all(qtbot):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    truth = [[item] for item in cols]
+    qtbot, widget = widget_setup(qtbot, TableColumnGroupPicker)
+    widget.add_columns(cols)
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
+    qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
+    qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == truth
+    assert len(changed) == 1
+
+
+def test_TableColumnGroupPicker_clear_selection(qtbot):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    qtbot, widget = widget_setup(qtbot, TableColumnGroupPicker)
+    widget.add_columns(cols)
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
+    qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == []
+    assert len(changed) == 1
+
+
+@pytest.mark.parametrize('selections', [['e'], ['b', 'e'], ['a', 'b', 'c']])
+def test_TableColumnGroupPicker_custom_selection(qtbot, selections):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    qtbot, widget = widget_setup(qtbot, TableColumnGroupPicker)
+    widget.add_columns(cols)
+    truth = [[item] for item in selections]
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
+    qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
+    for selection in selections:
+        ind = cols.index(selection)
+        qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == truth
+    assert len(changed) == 1
+
+
+@pytest.mark.parametrize('selections', [[['d', 'e']], [['a'], ['b'], ['c', 'd', 'e']], [['a', 'b'], ['c']]])
+def test_TableColumnGroupPicker_custom_selection_grouped(qtbot, selections):
+    cols = ['a', 'b', 'c', 'd', 'e']
+    qtbot, widget = widget_setup(qtbot, TableColumnGroupPicker)
+    widget.add_columns(cols)
+
+    changed = []
+    widget.valueChanged.connect(functools.partial(changed.append, True))
+
+    qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
+    for i, grp in enumerate(selections):
+        for selection in grp:
+            ind = cols.index(selection)
+            qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
+            qtbot.keyClicks(widget.column_combos[ind], str(i + 1))
+
+    qtbot.mouseClick(widget.done_button, LEFT_CLICK)
+    assert widget.get_values() == selections
+    assert len(changed) == 1
 
 
 def test_RadioButtonBox_add_buttons(qtbot):
