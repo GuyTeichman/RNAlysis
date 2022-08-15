@@ -992,24 +992,6 @@ class QMultiInput(QtWidgets.QPushButton):
             self.set_widget_value(-1, item)
 
 
-class QMultiInputNamedDict(QMultiInput):
-    def __init__(self, label: str, text='Set input', parent=None):
-        super().__init__(label, text, parent)
-        self.dialog_widgets['inputs_keys'] = []
-
-    @QtCore.pyqtSlot()
-    def add_widget(self):
-        self.dialog_widgets['inputs'].append(self.CHILD_QWIDGET())
-        self.dialog_widgets['inputs_keys'].append(QtWidgets.QLineEdit())
-        self.dialog_layout.addWidget(self.dialog_widgets['inputs'][-1], len(self.dialog_widgets['inputs']) + 2, 2)
-        self.dialog_layout.addWidget(self.dialog_widgets['inputs_keys'][-1],
-                                     len(self.dialog_widgets['inputs_keys']) + 2, 1)
-
-        self.dialog_widgets['input_labels'].append(
-            QtWidgets.QLabel(f'{self.label}:', self.dialog_widgets['inputs'][-1]))
-        self.dialog_layout.addWidget(self.dialog_widgets['input_labels'][-1], len(self.dialog_widgets['inputs']) + 2, 0)
-
-
 class MultiColorPicker(QMultiInput):
     CHILD_QWIDGET = ColorPicker
 
