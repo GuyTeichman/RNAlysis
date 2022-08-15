@@ -363,3 +363,15 @@ def test_splash_screen(qtbot):
     splash = splash_screen()
     splash.show()
     qtbot.add_widget(splash)
+
+
+@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/fc_1_nan.csv'])
+def test_dataframe_model(qtmodeltester, pth):
+    model = DataFrameModel(pd.read_csv(pth, index_col=0))
+    qtmodeltester.check(model)
+
+
+@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/fc_1_nan.csv'])
+def test_dataframe_preview_model(qtmodeltester, pth):
+    model = DataFramePreviewModel(pd.read_csv(pth, index_col=0))
+    qtmodeltester.check(model)
