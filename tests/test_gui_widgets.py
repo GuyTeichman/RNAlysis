@@ -491,7 +491,7 @@ def test_TableColumnPicker_custom_selection(qtbot, selections):
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     for selection in selections:
         ind = cols.index(selection)
-        qtbot.mouseClick(widget.column_checks[ind], LEFT_CLICK)
+        qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
     assert widget.get_values() == selections
 
