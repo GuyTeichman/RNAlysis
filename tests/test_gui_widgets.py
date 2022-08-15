@@ -307,10 +307,14 @@ def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_inter
     (QMultiBoolComboBox, [True, True, False, True], True, [True, True, False, True], {}),
     (MultiColorPicker, ['r', 'black', '#0000ff'], None, ['#ff0000', '#000000', '#0000ff'], {}),
     (QMultiComboBox, ['option3', 'option2', 'option2'], 'option1', ['option3', 'option2', 'option2'],
-     {'items': ['option1', 'option2', 'option3']})
+     {'items': ['option1', 'option2', 'option3']}),
+    (TrueFalseBoth, [True, False], [], [True, False], None)
 ])
 def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, excepted_val_empty, expected_val, kwargs):
-    qtbot, widget = widget_setup(qtbot, widget_class, label='label', **kwargs)
+    if kwargs is None:
+        qtbot, widget = widget_setup(qtbot, widget_class)
+    else:
+        qtbot, widget = widget_setup(qtbot, widget_class, label='label', **kwargs)
     assert get_val_from_widget(widget) == excepted_val_empty
 
     widget.set_defaults(default)
@@ -730,6 +734,26 @@ def test_MultiChoiceListWithDelete_emit(qtbot):
     assert selection_changed == [1] * len(items) * 2
     widget.list_items[0].setSelected(True)
     assert selection_changed == [1] * len(items) * 2 + [1]
+
+
+def test_TrueFalseBoth(qtbot):
+    selection_changed = []
+    qtbot, widget = widget_setup(qtbot, TrueFalseBoth)
+    widget.selectionChanged.connect(functools.partial(selection_changed.append, True))
+    assert widget.get_values() == []
+    assert selection_changed == []
+
+    qtbot.mouseClick(widget.true_button, LEFT_CLICK)
+    assert widget.get_values() == [True]
+    assert selection_changed == [True]
+
+    qtbot.mouseClick(widget.false_button, LEFT_CLICK)
+    assert widget.get_values() == [True, False]
+    assert selection_changed == [True, True]
+
+    qtbot.mouseClick(widget.true_button, LEFT_CLICK)
+    assert widget.get_values() == [False]
+    assert selection_changed == [True, True, True]
 
 
 def test_RadioButtonBox_add_buttons(qtbot):
