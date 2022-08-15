@@ -785,6 +785,27 @@ def test_TrueFalseBoth(qtbot):
     assert selection_changed == [True, True, True]
 
 
+def test_StdOutTextEdit_print(qtbot):
+    qtbot, widget = widget_setup(qtbot, StdOutTextEdit)
+    widget.append('hello world')
+    assert widget.toPlainText() == 'hello world'
+    widget.append('<tag> </tag>')
+    assert widget.toPlainText() == 'hello world' + '\n' + '<tag> </tag>'
+
+
+def test_StdOutTextEdit_warnings(qtbot):
+    qtbot, widget = widget_setup(qtbot, StdOutTextEdit)
+    widget.append('Warning: warning text goes here')
+    assert widget.toPlainText() == 'Warning: warning text goes here'
+
+
+def test_StdOutTextEdit_empty_line(qtbot):
+    qtbot, widget = widget_setup(qtbot, StdOutTextEdit)
+    for i in range(10):
+        widget.append('')
+    assert widget.toPlainText() == ''
+
+
 def test_RadioButtonBox_add_buttons(qtbot):
     assert False
 
