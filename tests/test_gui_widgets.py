@@ -234,6 +234,20 @@ def test_MandatoryComboBox_clear(qtbot):
     assert widget.itemText(0) == default
 
 
+def test_MandatoryComboBox_disable(qtbot):
+    default = 'default_chocie'
+    qtbot, widget = widget_setup(qtbot, MandatoryComboBox, default)
+    widget.addItems(['a', 'b', 'c'])
+    widget.setDisabled(True)
+    assert not widget.isEnabled()
+
+    widget.setEnabled(True)
+    assert widget.isEnabled()
+
+    widget.setEnabled(False)
+    assert not widget.isEnabled()
+
+
 def test_clear_layout(qtbot):
     qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
     layout = QtWidgets.QGridLayout(widget)
@@ -366,6 +380,19 @@ def test_HelpButton_desc_help(qtbot, monkeypatch):
     qtbot.mouseClick(widget, LEFT_CLICK)
 
     assert help_shown == [1]
+
+
+def test_PathLineEdit_disable(qtbot):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit)
+
+    widget.setDisabled(True)
+    assert not widget.isEnabled()
+
+    widget.setEnabled(True)
+    assert widget.isEnabled()
+
+    widget.setEnabled(False)
+    assert not widget.isEnabled()
 
 
 def test_PathLineEdit_is_legal(qtbot):
@@ -663,6 +690,8 @@ def test_ToggleSwitchCore(qtbot):
     assert not widget.isChecked()
     qtbot.mouseClick(widget, LEFT_CLICK)
     assert widget.isChecked()
+
+    widget.paintEvent(QtGui.QPaintEvent(QtCore.QRect(0, 0, 1, 1)))
 
 
 def test_MultiChoiceListWithDelete_delete_all(qtbot, monkeypatch):
