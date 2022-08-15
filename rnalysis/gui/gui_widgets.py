@@ -1311,10 +1311,6 @@ def param_to_widget(param, name: str,
         widget = TrueFalseBoth(param.default)
         for action in actions_to_connect:
             widget.selectionChanged.connect(action)
-    # elif param.annotation == typing.Dict[str, typing.List[str]]:
-    #     pass
-    # elif param.annotation == typing.Dict[str, typing.List[int]]:
-    #     pass
     else:
         widget = QtWidgets.QTextEdit()
         default = param.default if is_default else ''

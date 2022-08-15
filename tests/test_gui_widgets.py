@@ -508,13 +508,6 @@ def test_MultipleChoiceList_icons(qtbot):
     assert [icon.pixmap(32, 32).toImage() for icon in icons] == [icon.pixmap(32, 32).toImage() for icon in actual_icons]
 
 
-def test_RadioButtonBox_set_selection(qtbot):
-    actions = ['action1', 'action2', 'action3']
-    qtbot, widget = widget_setup(qtbot, RadioButtonBox, 'title', actions)
-    widget.set_selection('action2')
-    assert widget.checkedButton().text() == 'action2'
-
-
 def test_TableColumnPicker_select_all(qtbot):
     cols = ['a', 'b', 'c', 'd', 'e']
     qtbot, widget = widget_setup(qtbot, TableColumnPicker)
@@ -806,17 +799,40 @@ def test_StdOutTextEdit_empty_line(qtbot):
     assert widget.toPlainText() == ''
 
 
+def test_NewParam():
+    _ = NewParam('annotation')
+    _ = NewParam('annotation', 'default')
+
+
+def test_RadioButtonBox_set_selection(qtbot):
+    actions = ['action1', 'action2', 'action3']
+    qtbot, widget = widget_setup(qtbot, RadioButtonBox, 'title', actions)
+    widget.set_selection('action2')
+    assert widget.checkedButton().text() == 'action2'
+
+
 def test_RadioButtonBox_add_buttons(qtbot):
-    assert False
+    actions = ['action1', 'action2', 'action3']
+    qtbot, widget = widget_setup(qtbot, RadioButtonBox, 'title', [])
+    widget.add_items(actions)
+    assert len(widget.radio_buttons) == len(actions)
 
 
 def test_RadioButtonBox_add_buttons_indented(qtbot):
-    assert False
+    actions = [('set1', ('action1', 'action2')), ('set2', ('action3',))]
+    qtbot, widget = widget_setup(qtbot, RadioButtonBox, 'title', [])
+    widget.add_items(actions)
+    assert len(widget.radio_buttons) == 3
 
 
 def test_RadioButtonBox_emit(qtbot):
-    assert False
+    actions = ['action1', 'action2', 'action3']
+    qtbot, widget = widget_setup(qtbot, RadioButtonBox, 'title', actions)
+    with qtbot.waitSignal(widget.selectionChanged, timeout=1000) as blocker:
+        widget.set_selection('action2')
+    assert widget.checkedButton().text() == 'action2'
 
-
-def test_QMultiInput_dialog(qtbot):
-    assert False
+    with qtbot.waitSignal(widget.buttonClicked, timeout=1000) as blocker:
+        qtbot.mouseClick(widget.radio_buttons['action1'], LEFT_CLICK)
+    assert widget.checkedButton().text() == 'action1'
+    assert blocker.args[0] == widget.radio_buttons['action1']
