@@ -283,6 +283,7 @@ def test_get_val_from_widget_native_types(qtbot, widget_class, keyboard_interact
      {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
     (ComboBoxOrOtherWidget, True, 'other', '12',
      {'items': ['opt1', 'opt2', 'opt3'], 'default': None}),
+    (ToggleSwitch, False, 'switch', True, {}),
 ])
 def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_interact, attr, expected_val, kwargs):
     if widget_class == ComboBoxOrOtherWidget:
@@ -625,6 +626,20 @@ def test_worker(qtbot):
     with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
         thread.start()
     assert blocker.args == [5 * 6 * 7, 5 + 6 + 7, 'other input']
+
+
+def test_ToggleSwitch(qtbot):
+    qtbot, widget = widget_setup(qtbot, ToggleSwitch)
+    assert not widget.isChecked()
+    qtbot.mouseClick(widget.switch, LEFT_CLICK)
+    assert widget.isChecked()
+
+
+def test_ToggleSwitchCore(qtbot):
+    qtbot, widget = widget_setup(qtbot, ToggleSwitchCore)
+    assert not widget.isChecked()
+    qtbot.mouseClick(widget, LEFT_CLICK)
+    assert widget.isChecked()
 
 
 def test_RadioButtonBox_add_buttons(qtbot):
