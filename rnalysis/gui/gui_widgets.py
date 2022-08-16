@@ -1312,7 +1312,7 @@ def param_to_widget(param, name: str,
         if is_default:
             widget.setText(param.default)
     elif typing_extensions.get_origin(param.annotation) in (
-        collections.abc.Iterable, typing.List, typing.Tuple, typing.Set) and typing_extensions.get_origin(
+        collections.abc.Iterable, list, tuple, set) and typing_extensions.get_origin(
         typing_extensions.get_args(param.annotation)[0]) == typing_extensions.Literal:
         widget = QMultiComboBox(name, items=typing_extensions.get_args(typing_extensions.get_args(param.annotation)[0]))
         if is_default:
