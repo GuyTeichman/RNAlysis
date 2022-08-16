@@ -1264,7 +1264,9 @@ def param_to_widget(param, name: str,
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
-    elif param.annotation in (typing.Union[str, typing.List[str]], typing.Union[str, typing.Iterable[str]]):
+    elif param.annotation in (
+        typing.Union[str, typing.List[str]], typing.Union[str, typing.Iterable[str]], typing.List[str],
+        typing.Iterable[str]):
         widget = QMultiLineEdit(name)
         if is_default:
             widget.set_defaults(param.default)
@@ -1277,13 +1279,17 @@ def param_to_widget(param, name: str,
             widget.set_defaults(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
-    elif param.annotation in (typing.Union[int, typing.List[int]], typing.Union[int, typing.Iterable[int]]):
+    elif param.annotation in (
+        typing.Union[int, typing.List[int]], typing.Union[int, typing.Iterable[int]], typing.List[int],
+        typing.Iterable[int]):
         widget = QMultiSpinBox(name)
         if is_default:
             widget.set_defaults(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
-    elif param.annotation in (typing.Union[bool, typing.List[bool]], typing.Union[bool, typing.Iterable[bool]]):
+    elif param.annotation in (
+        typing.Union[bool, typing.List[bool]], typing.Union[bool, typing.Iterable[bool]], typing.List[bool],
+        typing.Iterable[bool]):
         widget = QMultiBoolComboBox(name)
         if is_default:
             widget.set_defaults(param.default)
@@ -1294,7 +1300,8 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.textChanged.connect(action)
     elif param.annotation in (typing.Union[str, int, typing.Iterable[str], typing.Iterable[int]],
-                              typing.Union[str, int, typing.List[str], typing.List[int]]):
+                              typing.Union[str, int, typing.List[str], typing.List[int]],
+                              typing.Union[typing.List[int], typing.List[str]]):
         widget = QMultiStrIntLineEdit(name)
         widget.set_defaults(param.default if is_default else '')
         for action in actions_to_connect:

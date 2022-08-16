@@ -868,17 +868,22 @@ def test_param_to_widget_nonnative_types(qtbot, param_type, default, name, expec
     _run_param_to_widget(qtbot, param_type, default, name, expected_widget)
 
 
-#
-# @pytest.mark.parametrize('param_type,default,name,expected_widget,expected_widget_pipeline', [
-#     (),
-#
-# ])
-# def test_param_to_widget_pipeline_mode_types(qtbot, param_type, default, name, expected_widget,
-#                                              expected_widget_pipeline):
-#     _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expected_widget_pipeline,
-#                          test_pipeline_mode=True)
-#
-#
+@pytest.mark.parametrize('param_type,,name,expected_widget,expected_widget_pipeline', [
+    (typing.Union[str, typing.List[str]], 'samples', TableColumnGroupPicker, QMultiLineEdit),
+    (typing.Iterable[str], 'sample_grouping', TableColumnGroupPicker, QMultiLineEdit),
+    (typing.Union[str, typing.List[str]], 'sample_names', TableColumnPicker, QMultiLineEdit),
+    (typing.List[str], 'sample1', TableColumnPicker, QMultiLineEdit),
+    (typing.List[str], 'sample2', TableColumnPicker, QMultiLineEdit),
+    (typing.List[str], 'columns', TableColumnPicker, QMultiLineEdit),
+    (str, 'by', TableSingleColumnPicker, QtWidgets.QLineEdit),
+    (str, 'column', TableSingleColumnPicker, QtWidgets.QLineEdit),
+
+])
+def test_param_to_widget_pipeline_mode_types(qtbot, param_type, name, expected_widget, expected_widget_pipeline):
+    _run_param_to_widget(qtbot, param_type, 'default', name, expected_widget, expected_widget_pipeline,
+                         test_pipeline_mode=True)
+
+
 # def test_param_to_widget_with_literals(qtbot, param_type, default, literal_default, name, expected_widget,
 #                                        expected_sub_widget):
 #     assert False
@@ -897,20 +902,21 @@ def _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expe
     widget.show()
     qtbot.add_widget(widget)
     assert type(widget) == expected_widget
-    val = get_val_from_widget(widget)
-    if isinstance(val, list) and len(val) <= 1:
-        if default is None:
-            assert len(val) == 0
-        else:
-            assert (val[0] == default)
-    else:
-        assert val == default
 
     if test_pipeline_mode:
         widget = param_to_widget(param, name, pipeline_mode=True)
         widget.show()
         qtbot.add_widget(widget)
         assert type(widget) == expected_widget_pipeline
+    else:
+        val = get_val_from_widget(widget)
+        if isinstance(val, list) and len(val) <= 1:
+            if default is None:
+                assert len(val) == 0
+            else:
+                assert (val[0] == default)
+        else:
+            assert val == default
 
 
 def test_worker(qtbot):
