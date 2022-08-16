@@ -761,11 +761,17 @@ class PathLineEdit(QtWidgets.QWidget):
 class StrIntLineEdit(QtWidgets.QLineEdit):
     IS_LINE_EDIT_LIKE = True
 
+    def __init__(self, text: typing.Union[str, int] = '', parent=None):
+        super().__init__(str(text), parent)
+
     def text(self) -> typing.Union[str, int]:
         val = super().text()
         if val.lstrip('-').isnumeric():
             return int(val)
         return val
+
+    def setText(self, p_str):
+        super().setText(str(p_str))
 
 
 class RadioButtonBox(QtWidgets.QGroupBox):
@@ -1239,6 +1245,8 @@ def param_to_widget(param, name: str,
         widget.addItems(typing_extensions.get_args(param.annotation))
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
+        if is_default:
+            widget.setCurrentText(str(param.default))
     elif param.annotation == typing.Union[int, None]:
         widget = OptionalSpinBox()
         widget.setMinimum(-2147483648)
@@ -1295,10 +1303,14 @@ def param_to_widget(param, name: str,
         widget = PathLineEdit()
         for action in actions_to_connect:
             widget.textChanged.connect(action)
+        if is_default:
+            widget.setText(str(param.default))
     elif param.annotation == typing.Union[str, None]:
         widget = OptionalLineEdit()
         for action in actions_to_connect:
             widget.textChanged.connect(action)
+        if is_default:
+            widget.setText(param.default)
     elif typing_extensions.get_origin(param.annotation) in (
         collections.abc.Iterable, typing.List, typing.Tuple, typing.Set) and typing_extensions.get_origin(
         typing_extensions.get_args(param.annotation)[0]) == typing_extensions.Literal:

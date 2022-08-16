@@ -853,12 +853,16 @@ def test_param_to_widget_native_types(qtbot, param_type, default, expected_widge
     (typing.Union[bool, typing.List[bool]], [True, False, True], 'name', QMultiBoolComboBox),
     (typing.Union[bool, typing.Iterable[bool]], None, 'name', QMultiBoolComboBox),
     (typing.List[typing_extensions.Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
+    (typing.Set[typing_extensions.Literal['a', 'b', 'c']], 'c', 'name', QMultiComboBox),
     (typing.Iterable[typing_extensions.Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
     (typing.Union[str, int], 5, 'name', StrIntLineEdit),
     (typing.Union[str, int], 'text', 'name', StrIntLineEdit),
     (typing.Union[str, Path], str(Path('tests/test_files/test_deseq.csv').absolute()), 'name', PathLineEdit),
     (typing.Union[bool, typing.Tuple[bool, bool]], True, 'name', TrueFalseBoth),
-    (typing.Union[bool, typing.Tuple[bool, bool]], [True, False], 'name', TrueFalseBoth)
+    (typing.Union[bool, typing.Tuple[bool, bool]], [True, False], 'name', TrueFalseBoth),
+    (typing.Union[str, int, typing.List[str], typing.List[int]], [3, 5, -2], 'name', QMultiStrIntLineEdit),
+    (typing.Union[str, int, typing.Iterable[str], typing.Iterable[int]], ['a', 'b', 'c'], 'name', QMultiStrIntLineEdit)
+
 ])
 def test_param_to_widget_nonnative_types(qtbot, param_type, default, name, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, name, expected_widget)
@@ -920,9 +924,10 @@ def test_worker(qtbot):
         worker = Worker(partial, 'other input')
 
         worker.moveToThread(thread)
-        thread.started.connect(worker.run)
+
         with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
             thread.start()
+            worker.run()
         assert blocker.args == [5 * 6 * 7, 5 + 6 + 7, 'other input']
     finally:
         try:

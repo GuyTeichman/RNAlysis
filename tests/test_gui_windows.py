@@ -375,3 +375,18 @@ def test_dataframe_model(qtmodeltester, pth):
 def test_dataframe_preview_model(qtmodeltester, pth):
     model = DataFramePreviewModel(pd.read_csv(pth, index_col=0))
     qtmodeltester.check(model)
+
+
+def test_checkable_file_system_model(qtmodeltester):
+    model = CheckableFileSystemModel()
+    model.setRootPath('')
+    qtmodeltester.check(model, force_py=True)
+
+
+def test_proxy_model(qtmodeltester):
+    model = FilterProxy(False)
+    file_system = CheckableFileSystemModel()
+    file_system.setRootPath('')
+    model.setSourceModel(file_system)
+    model.setFilterRegularExpression(r'^(?![.])(?!.*[-_.]$).+')
+    qtmodeltester.check(model, force_py=True)
