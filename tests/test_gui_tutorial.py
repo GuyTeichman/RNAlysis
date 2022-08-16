@@ -1,3 +1,5 @@
+import pytest
+
 from rnalysis.gui.gui_tutorial import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
@@ -12,11 +14,77 @@ def widget_setup(qtbot, widget_class, *args, **kwargs):
 
 
 def test_TutorialMovie_init(qtbot):
-    assert False
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    assert window.video.isValid()
 
 
-def test_TutorialMovie_buttons(qtbot):
-    assert False
+def test_TutorialMovie_set_frame(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    window.video.start()
+    window.pause()
+    window.set_frame(17)
+    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.currentFrameNumber() == 17
+    window.set_frame(19)
+    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.currentFrameNumber() == 19
+    window.set_frame(1)
+    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.currentFrameNumber() == 1
+
+
+def test_TutorialMovie_restart(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    window.restart()
+    assert window.video.state() == QtGui.QMovie.Running
+
+
+def test_TutorialMovie_stop(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    window.video.start()
+    window.stop()
+    assert window.video.state() == QtGui.QMovie.NotRunning
+
+
+def test_TutorialMovie_pause(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    window.video.start()
+    window.pause()
+    assert window.video.state() == QtGui.QMovie.Paused
+
+
+def test_TutorialMovie_stop_button(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot.mouseClick(window.stop_button, LEFT_CLICK)
+    assert window.video.state() == QtGui.QMovie.NotRunning
+
+
+def test_TutorialMovie_pause_button(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    window.video.start()
+    qtbot.mouseClick(window.play_button, LEFT_CLICK)
+    assert window.video.state() == QtGui.QMovie.Paused
+    qtbot.mouseClick(window.play_button, LEFT_CLICK)
+    assert window.video.state() == QtGui.QMovie.Running
+
+
+def test_TutorialMovie_pause_click_video(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    window.video.start()
+    qtbot.mouseClick(window, LEFT_CLICK)
+    assert window.video.state() == QtGui.QMovie.Paused
+    qtbot.mouseClick(window, LEFT_CLICK)
+    assert window.video.state() == QtGui.QMovie.Running
+
+
+def test_TutorialMovie_speed_button(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    window.video.start()
+    default_speed = window.video.speed()
+    qtbot.mouseClick(window.speed_button, LEFT_CLICK)
+    assert window.video.speed() > default_speed
+    qtbot.mouseClick(window.speed_button, LEFT_CLICK)
+    assert window.video.speed() == default_speed
 
 
 def test_WelcomeWizard_init(qtbot):
@@ -24,6 +92,14 @@ def test_WelcomeWizard_init(qtbot):
     for i in range(len(window.TITLES) + 1):
         qtbot.mouseClick(window.button(QtWidgets.QWizard.NextButton), LEFT_CLICK)
     qtbot.mouseClick(window.button(QtWidgets.QWizard.FinishButton), LEFT_CLICK)
+
+
+@pytest.mark.parametrize('n_next', [0, 1, len(WelcomeWizard.TITLES)])
+def test_WelcomeWizard_cancel(qtbot, n_next):
+    qtbot, window = widget_setup(qtbot, WelcomeWizard)
+    for i in range(n_next):
+        qtbot.mouseClick(window.button(QtWidgets.QWizard.NextButton), LEFT_CLICK)
+    qtbot.mouseClick(window.button(QtWidgets.QWizard.CancelButton), LEFT_CLICK)
 
 
 def test_WelcomeWizard_do_not_show_again_saved(qtbot):

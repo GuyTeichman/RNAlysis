@@ -311,13 +311,14 @@ class TutorialMovie(QtWidgets.QWidget):
             self.video.stop()
             while desired_frame < self.video.currentFrameNumber():
                 self.video.jumpToNextFrame()
+            self.video.start()
             self.video.setPaused(self.paused)
 
     def change_speed(self):
         if self.speed_button.isChecked():
             self.video.setSpeed(400)
         else:
-            self.video.setSpeed(125)
+            self.video.setSpeed(100)
 
 
 class TutorialPage(QtWidgets.QWizardPage):
