@@ -655,22 +655,6 @@ def test_PathInputDialog(qtbot):
     assert widget.result() == pth
 
 
-def test_worker(qtbot):
-    def func(a, b, c):
-        time.sleep(0.5)
-        return a * b * c, a + b + c
-
-    partial = functools.partial(func, 5, 6, 7)
-    thread = QtCore.QThread()
-    worker = Worker(partial, 'other input')
-    worker.moveToThread(thread)
-    thread.started.connect(worker.run)
-    worker.finished.connect(thread.quit)
-    with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
-        thread.start()
-    assert blocker.args == [5 * 6 * 7, 5 + 6 + 7, 'other input']
-
-
 def test_ToggleSwitch(qtbot):
     qtbot, widget = widget_setup(qtbot, ToggleSwitch)
     assert not widget.isChecked()
@@ -836,3 +820,114 @@ def test_RadioButtonBox_emit(qtbot):
         qtbot.mouseClick(widget.radio_buttons['action1'], LEFT_CLICK)
     assert widget.checkedButton().text() == 'action1'
     assert blocker.args[0] == widget.radio_buttons['action1']
+
+
+@pytest.mark.parametrize('param_type,default,expected_widget', [
+    (str, 'default', QtWidgets.QLineEdit),
+    (int, 15, QtWidgets.QSpinBox),
+    (float, 3.14, QtWidgets.QDoubleSpinBox),
+    (typing_extensions.Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
+    (typing.Union[str, float, None, bool], True, QtWidgets.QTextEdit),
+    (typing.Union[str, float, None, bool], 17, QtWidgets.QTextEdit)
+])
+def test_param_to_widget_native_types(qtbot, param_type, default, expected_widget):
+    _run_param_to_widget(qtbot, param_type, default, 'param_name', expected_widget)
+
+
+@pytest.mark.parametrize('param_type,default,name,expected_widget', [
+    (bool, True, 'status', ToggleSwitch),
+    (str, '#000000', 'linecolor', ColorPicker),
+    (typing.List[str], ['#000000', '#aabbcc'], 'colors', MultiColorPicker),
+    (typing.Union[str, None], None, 'name', OptionalLineEdit),
+    (typing.Union[str, None], 'text', 'name', OptionalLineEdit),
+    (typing.Union[int, None], None, 'name', OptionalSpinBox),
+    (typing.Union[int, None], 5, 'name', OptionalSpinBox),
+    (typing.Union[float, None], None, 'name', OptionalDoubleSpinBox),
+    (typing.Union[float, None], -0.5, 'name', OptionalDoubleSpinBox),
+    (typing.Union[str, typing.List[str]], ['a', 'b'], 'name', QMultiLineEdit),
+    (typing.Union[str, typing.Iterable[str]], None, 'name', QMultiLineEdit),
+    (typing.Union[int, typing.List[int]], [2, 7], 'name', QMultiSpinBox),
+    (typing.Union[int, typing.Iterable[int]], None, 'name', QMultiSpinBox),
+    (typing.Union[float, typing.List[float]], [2.5, -0.72], 'name', QMultiDoubleSpinBox),
+    (typing.Union[float, typing.Iterable[float]], None, 'name', QMultiDoubleSpinBox),
+    (typing.Union[bool, typing.List[bool]], [True, False, True], 'name', QMultiBoolComboBox),
+    (typing.Union[bool, typing.Iterable[bool]], None, 'name', QMultiBoolComboBox),
+    (typing.List[typing_extensions.Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
+    (typing.Iterable[typing_extensions.Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
+    (typing.Union[str, int], 5, 'name', StrIntLineEdit),
+    (typing.Union[str, int], 'text', 'name', StrIntLineEdit),
+    (typing.Union[str, Path], str(Path('tests/test_files/test_deseq.csv').absolute()), 'name', PathLineEdit),
+    (typing.Union[bool, typing.Tuple[bool, bool]], True, 'name', TrueFalseBoth),
+    (typing.Union[bool, typing.Tuple[bool, bool]], [True, False], 'name', TrueFalseBoth)
+])
+def test_param_to_widget_nonnative_types(qtbot, param_type, default, name, expected_widget):
+    _run_param_to_widget(qtbot, param_type, default, name, expected_widget)
+
+
+#
+# @pytest.mark.parametrize('param_type,default,name,expected_widget,expected_widget_pipeline', [
+#     (),
+#
+# ])
+# def test_param_to_widget_pipeline_mode_types(qtbot, param_type, default, name, expected_widget,
+#                                              expected_widget_pipeline):
+#     _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expected_widget_pipeline,
+#                          test_pipeline_mode=True)
+#
+#
+# def test_param_to_widget_with_literals(qtbot, param_type, default, literal_default, name, expected_widget,
+#                                        expected_sub_widget):
+#     assert False
+
+
+def _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expected_widget_pipeline=None,
+                         test_pipeline_mode: bool = False):
+    param = NewParam(param_type)
+    widget = param_to_widget(param, name)
+    widget.show()
+    qtbot.add_widget(widget)
+    assert type(widget) == expected_widget
+
+    param_with_default = NewParam(param_type, default)
+    widget = param_to_widget(param_with_default, name)
+    widget.show()
+    qtbot.add_widget(widget)
+    assert type(widget) == expected_widget
+    val = get_val_from_widget(widget)
+    if isinstance(val, list) and len(val) <= 1:
+        if default is None:
+            assert len(val) == 0
+        else:
+            assert (val[0] == default)
+    else:
+        assert val == default
+
+    if test_pipeline_mode:
+        widget = param_to_widget(param, name, pipeline_mode=True)
+        widget.show()
+        qtbot.add_widget(widget)
+        assert type(widget) == expected_widget_pipeline
+
+
+def test_worker(qtbot):
+    def func(a, b, c):
+        time.sleep(0.5)
+        return a * b * c, a + b + c
+
+    partial = functools.partial(func, 5, 6, 7)
+    try:
+        thread = QtCore.QThread()
+        worker = Worker(partial, 'other input')
+
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
+            thread.start()
+        assert blocker.args == [5 * 6 * 7, 5 + 6 + 7, 'other input']
+    finally:
+        try:
+            thread.quit()
+            worker.deleteLater()
+            thread.deleteLater()
+        except Exception:
+            pass
