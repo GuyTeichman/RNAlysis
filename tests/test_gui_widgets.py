@@ -1,6 +1,7 @@
 import pytest
 from rnalysis.gui.gui_widgets import *
 import time
+from typing_extensions import Literal
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
@@ -826,7 +827,7 @@ def test_RadioButtonBox_emit(qtbot):
     (str, 'default', QtWidgets.QLineEdit),
     (int, 15, QtWidgets.QSpinBox),
     (float, 3.14, QtWidgets.QDoubleSpinBox),
-    (typing_extensions.Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
+    (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
     (typing.Union[str, float, None, bool], True, QtWidgets.QTextEdit),
     (typing.Union[str, float, None, bool], 17, QtWidgets.QTextEdit)
 ])
@@ -852,9 +853,9 @@ def test_param_to_widget_native_types(qtbot, param_type, default, expected_widge
     (typing.Union[float, typing.Iterable[float]], None, 'name', QMultiDoubleSpinBox),
     (typing.Union[bool, typing.List[bool]], [True, False, True], 'name', QMultiBoolComboBox),
     (typing.Union[bool, typing.Iterable[bool]], None, 'name', QMultiBoolComboBox),
-    (typing.List[typing_extensions.Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
-    (typing.Set[typing_extensions.Literal['a', 'b', 'c']], 'c', 'name', QMultiComboBox),
-    (typing.Iterable[typing_extensions.Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
+    (typing.List[Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
+    (typing.Set[Literal['a', 'b', 'c']], 'c', 'name', QMultiComboBox),
+    (typing.Iterable[Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
     (typing.Union[str, int], 5, 'name', StrIntLineEdit),
     (typing.Union[str, int], 'text', 'name', StrIntLineEdit),
     (typing.Union[str, Path], str(Path('tests/test_files/test_deseq.csv').absolute()), 'name', PathLineEdit),
@@ -868,7 +869,7 @@ def test_param_to_widget_nonnative_types(qtbot, param_type, default, name, expec
     _run_param_to_widget(qtbot, param_type, default, name, expected_widget)
 
 
-@pytest.mark.parametrize('param_type,,name,expected_widget,expected_widget_pipeline', [
+@pytest.mark.parametrize('param_type,name,expected_widget,expected_widget_pipeline', [
     (typing.Union[str, typing.List[str]], 'samples', TableColumnGroupPicker, QMultiLineEdit),
     (typing.Iterable[str], 'sample_grouping', TableColumnGroupPicker, QMultiLineEdit),
     (typing.Union[str, typing.List[str]], 'sample_names', TableColumnPicker, QMultiLineEdit),
@@ -884,9 +885,22 @@ def test_param_to_widget_pipeline_mode_types(qtbot, param_type, name, expected_w
                          test_pipeline_mode=True)
 
 
-# def test_param_to_widget_with_literals(qtbot, param_type, default, literal_default, name, expected_widget,
-#                                        expected_sub_widget):
-#     assert False
+@pytest.mark.parametrize('param_type,default,literal_default,expected_sub_widget', [
+    (typing.Union[Literal['all'], str], 'text', 'all', QtWidgets.QLineEdit),
+    (typing.Union[Literal['any'], typing.Union[str, None]], None, 'any', OptionalLineEdit),
+    (typing.Union[Literal['any', 'none'], typing.Union[int, typing.List[int]]], [15, 16], 'any', QMultiSpinBox),
+
+])
+def test_param_to_widget_with_literals(qtbot, param_type, default, literal_default, expected_sub_widget):
+    expected_widget = ComboBoxOrOtherWidget
+    _run_param_to_widget(qtbot, param_type, default, 'name', expected_widget)
+    _run_param_to_widget(qtbot, param_type, literal_default, 'name', expected_widget)
+
+    param = NewParam(param_type)
+    widget = param_to_widget(param, 'name')
+    widget.show()
+    qtbot.add_widget(widget)
+    assert type(widget.other) == expected_sub_widget
 
 
 def _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expected_widget_pipeline=None,
