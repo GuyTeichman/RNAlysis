@@ -765,22 +765,32 @@ def test_TrueFalseBoth(qtbot):
 
 def test_StdOutTextEdit_print(qtbot):
     qtbot, widget = widget_setup(qtbot, StdOutTextEdit)
-    widget.append('hello world')
-    assert widget.toPlainText() == 'hello world'
-    widget.append('<tag> </tag>')
-    assert widget.toPlainText() == 'hello world' + '\n' + '<tag> </tag>'
+    widget.append_text('hello world')
+    assert widget.toPlainText() == 'hello world' + '\n'
+    widget.append_text('<tag> </tag>')
+    assert widget.toPlainText() == 'hello world' + '\n' + '<tag> </tag>' + '\n'
 
 
 def test_StdOutTextEdit_warnings(qtbot):
     qtbot, widget = widget_setup(qtbot, StdOutTextEdit)
-    widget.append('Warning: warning text goes here')
-    assert widget.toPlainText() == 'Warning: warning text goes here'
+    widget.append_text('Warning: warning text goes here')
+    assert widget.toPlainText() == 'Warning: warning text goes here' + '\n'
+
+
+def test_StdOutTextEdit_carriage(qtbot):
+    line1, line2, line3 = 'first line', 'second line\r', 'last line'
+    qtbot, widget = widget_setup(qtbot, StdOutTextEdit)
+    widget.append_text(line1)
+    widget.append_text(line2)
+    assert widget.toPlainText() == line1 + '\n' + 'second line ' + '\n'
+    widget.append_text(line3)
+    assert widget.toPlainText() == line1 + '\n' + line3 + '\n'
 
 
 def test_StdOutTextEdit_empty_line(qtbot):
     qtbot, widget = widget_setup(qtbot, StdOutTextEdit)
     for i in range(10):
-        widget.append('')
+        widget.append_text('\n')
     assert widget.toPlainText() == ''
 
 
@@ -956,3 +966,11 @@ def test_worker(qtbot):
             thread.deleteLater()
         except Exception:
             pass
+
+
+def test_AltTqdm():
+    assert False
+
+
+def test_AltParallel():
+    assert False
