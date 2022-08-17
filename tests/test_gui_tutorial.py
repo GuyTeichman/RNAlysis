@@ -113,5 +113,35 @@ def test_WelcomeWizard_cancel(qtbot, n_next):
     qtbot.mouseClick(window.button(QtWidgets.QWizard.CancelButton), LEFT_CLICK)
 
 
-def test_WelcomeWizard_do_not_show_again_saved(qtbot):
-    assert False
+def test_WelcomeWizard_do_not_show_again_finish(qtbot, monkeypatch):
+    saved = []
+
+    def save_func(show_tutorial):
+        assert not show_tutorial
+        saved.append(True)
+
+    monkeypatch.setattr(settings, 'set_show_tutorial_settings', save_func)
+    monkeypatch.setattr(settings, 'get_show_tutorial_settings', lambda: True)
+    qtbot, window = widget_setup(qtbot, WelcomeWizard)
+    assert not window.currentPage().dont_show_again.isChecked()
+    window.currentPage().dont_show_again.setChecked(True)
+    qtbot.mouseClick(window.button(QtWidgets.QWizard.FinishButton), LEFT_CLICK)
+
+    assert saved[0]
+
+
+@pytest.mark.parametrize("show", [True, False])
+def test_WelcomeWizard_do_not_show_again_cancel(qtbot, monkeypatch, show):
+    saved = []
+
+    def save_func(show_tutorial):
+        assert show_tutorial != show
+        saved.append(True)
+
+    monkeypatch.setattr(settings, 'set_show_tutorial_settings', save_func)
+    monkeypatch.setattr(settings, 'get_show_tutorial_settings', lambda: show)
+    qtbot, window = widget_setup(qtbot, WelcomeWizard)
+    assert window.currentPage().dont_show_again.isChecked() != show
+    window.currentPage().dont_show_again.setChecked(show)
+    qtbot.mouseClick(window.button(QtWidgets.QWizard.CancelButton), LEFT_CLICK)
+    assert saved[0]
