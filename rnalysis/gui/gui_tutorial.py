@@ -302,17 +302,8 @@ class TutorialMovie(QtWidgets.QWidget):
     def set_frame(self, desired_frame: int):
         if desired_frame == self.video.currentFrameNumber():
             return
-        elif desired_frame > self.video.currentFrameNumber():
-            self.video.setPaused(True)
-            while desired_frame > self.video.currentFrameNumber():
-                self.video.jumpToNextFrame()
-            self.video.setPaused(self.paused)
         else:
-            self.video.stop()
-            while desired_frame < self.video.currentFrameNumber():
-                self.video.jumpToNextFrame()
-            self.video.start()
-            self.video.setPaused(self.paused)
+            self.video.jumpToFrame(desired_frame)
 
     def change_speed(self):
         if self.speed_button.isChecked():
