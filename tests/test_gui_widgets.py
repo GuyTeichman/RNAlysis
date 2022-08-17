@@ -1,4 +1,5 @@
 import pytest
+import joblib
 from rnalysis.gui.gui_widgets import *
 import time
 from typing_extensions import Literal
@@ -913,16 +914,21 @@ def test_param_to_widget_with_literals(qtbot, param_type, default, literal_defau
     assert type(widget.other) == expected_sub_widget
 
 
+@QtCore.pyqtSlot(name='my_signal')
+def _func_to_connect():
+    return
+
+
 def _run_param_to_widget(qtbot, param_type, default, name, expected_widget, expected_widget_pipeline=None,
                          test_pipeline_mode: bool = False):
     param = NewParam(param_type)
-    widget = param_to_widget(param, name)
-    widget.show()
-    qtbot.add_widget(widget)
-    assert type(widget) == expected_widget
+    plain_widget = param_to_widget(param, name)
+    plain_widget.show()
+    qtbot.add_widget(plain_widget)
+    assert type(plain_widget) == expected_widget
 
     param_with_default = NewParam(param_type, default)
-    widget = param_to_widget(param_with_default, name)
+    widget = param_to_widget(param_with_default, name, _func_to_connect)
     widget.show()
     qtbot.add_widget(widget)
     assert type(widget) == expected_widget
@@ -962,9 +968,51 @@ def test_worker(qtbot):
             pass
 
 
-def test_AltTqdm():
-    assert False
+def test_AltTqdm_init():
+    assert list(range(10)) == list(AltTQDM(range(10)))
 
 
-def test_AltParallel():
-    assert False
+def test_AltTqdm_iter_signals(qtbot):
+    bar_updates = []
+    iterator = AltTQDM(range(5))
+    iterator.barUpdate.connect(bar_updates.append)
+    with qtbot.waitSignal(iterator.barFinished) as blocker:
+        for i in iterator:
+            assert len(bar_updates) == i + 1
+            assert bar_updates[-1] == 1
+    assert bar_updates == [1, 1, 1, 1, 1]
+
+
+def test_AltTqdm_enter_signals():
+    bar_updates = []
+    bar_finished = []
+    with AltTQDM(total=10) as pbar:
+        pbar.barUpdate.connect(bar_updates.append)
+        pbar.barFinished.connect(functools.partial(bar_finished.append, True))
+        for i in range(10):
+            if i % 2 == 1:
+                pbar.update(2)
+                assert len(bar_updates) == (i + 1) // 2
+                assert bar_updates[-1] == 2
+    assert bar_updates == [2, 2, 2, 2, 2]
+    assert bar_finished == [True]
+
+
+def _power(a, b):
+    return a ** b
+
+
+def test_AltParallel_init():
+    res = AltParallel(n_jobs=1, desc='description')(
+        joblib.delayed(_power)(a, b) for a, b in zip(range(5), [2, 2, 2, 2, 2]))
+    assert res == [0, 1, 4, 9, 16]
+
+
+def test_AltParallel_signals(qtbot):
+    bar_updates = []
+    parallel = AltParallel(n_jobs=1, desc='description', total=5)
+    parallel.barUpdate.connect(bar_updates.append)
+    with qtbot.waitSignal(parallel.barFinished) as blocker:
+        res = parallel(joblib.delayed(_power)(a, b) for a, b in zip(range(5), [2, 2, 2, 2, 2]))
+    assert bar_updates == [1, 1, 1, 1, 1]
+    assert res == [0, 1, 4, 9, 16]
