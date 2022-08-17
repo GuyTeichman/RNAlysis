@@ -1134,7 +1134,8 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
             self.insertHtml(f'<div style="color:black;">{text}</div><br>')
         self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
 
-        QtWidgets.QApplication.processEvents()
+        if self.parent is not None:
+            QtWidgets.QApplication.processEvents()
 
 
 class WriteStream(QtCore.QObject):
