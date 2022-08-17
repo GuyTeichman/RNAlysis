@@ -950,20 +950,14 @@ def test_worker(qtbot):
 
     partial = functools.partial(func, 5, 6, 7)
     try:
-        thread = QtCore.QThread()
         worker = Worker(partial, 'other input')
 
-        worker.moveToThread(thread)
-
         with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
-            thread.start()
             worker.run()
         assert blocker.args == [5 * 6 * 7, 5 + 6 + 7, 'other input']
     finally:
         try:
-            thread.quit()
             worker.deleteLater()
-            thread.deleteLater()
         except Exception:
             pass
 
