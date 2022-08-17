@@ -28,14 +28,25 @@ def test_TutorialMovie_set_frame(qtbot):
     window.set_frame(19)
     assert window.video.state() == QtGui.QMovie.Paused
     assert window.video.currentFrameNumber() == 19
+    window.set_frame(19)
+    assert window.video.state() == QtGui.QMovie.Paused
+    assert window.video.currentFrameNumber() == 19
     window.set_frame(1)
     assert window.video.state() == QtGui.QMovie.Paused
     assert window.video.currentFrameNumber() == 1
 
 
+def test_TutorialMovie_start(qtbot):
+    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    assert window.video.state() == QtGui.QMovie.NotRunning
+    window.start()
+    assert window.video.state() == QtGui.QMovie.Running
+
+
 def test_TutorialMovie_restart(qtbot):
     qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
     window.restart()
+    assert window.video.currentFrameNumber() == 0
     assert window.video.state() == QtGui.QMovie.Running
 
 
