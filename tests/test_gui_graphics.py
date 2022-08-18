@@ -190,3 +190,14 @@ def test_UpSetInteractiveCanvas_majority_vote_intersection(qtbot, four_gene_sets
     qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, three_gene_sets_with_disjoint)
     widget.majority_vote_intersection(threshold)
     assert widget.get_custom_selection() == expected_disjoint
+
+
+def test_BasePreviewCanvas(qtbot):
+    def plotting_func(fig: plt.Figure, title: str):
+        ax = fig.add_subplot()
+        ax.scatter([1, 2, 3, 4], [5, 7, 6, 8])
+        plt.title(title)
+
+    canvas = BasePreviewCanvas(plotting_func, title='my title')
+    canvas.show()
+    qtbot.add_widget(canvas)
