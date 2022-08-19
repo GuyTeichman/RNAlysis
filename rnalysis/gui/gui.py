@@ -1146,7 +1146,7 @@ class SetTabPage(TabPage):
         return filename
 
     def is_empty(self):
-        return self.gene_set is None
+        return self.gene_set is None or len(self.gene_set) == 0
 
     def update_set_shape(self):
         if self.gene_set is not None:
@@ -2420,6 +2420,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.new_tab_from_gene_set(gene_set, Path(filename).stem)
             if tabs_to_close is not None:
                 self.tabs.removeTab(tabs_to_close)
+
     def import_gene_set(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
                                                             "Text Document (*.txt);;"
