@@ -1,6 +1,5 @@
 import pytest
 
-import filtering
 from rnalysis.gui.gui import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
