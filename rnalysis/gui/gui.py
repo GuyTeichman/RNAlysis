@@ -1089,12 +1089,12 @@ class SetTabPage(TabPage):
         this_row += 1
         self.overview_widgets['table_name'] = QtWidgets.QLineEdit()
         self.overview_widgets['rename_label'] = QtWidgets.QLabel('Rename your gene set (optional):')
-        self.overview_widgets['rename'] = QtWidgets.QPushButton('Rename')
-        self.overview_widgets['rename'].clicked.connect(self.rename)
+        self.overview_widgets['rename_button'] = QtWidgets.QPushButton('Rename')
+        self.overview_widgets['rename_button'].clicked.connect(self.rename)
 
         self.overview_grid.addWidget(self.overview_widgets['rename_label'], this_row, 0)
         self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1)
-        self.overview_grid.addWidget(self.overview_widgets['rename'], this_row, 2)
+        self.overview_grid.addWidget(self.overview_widgets['rename_button'], this_row, 2)
         this_row += 1
         self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 3, 4)
         this_row += 3
@@ -1376,12 +1376,12 @@ class FilterTabPage(TabPage):
         this_row += 1
         self.overview_widgets['table_name'] = QtWidgets.QLineEdit()
         self.overview_widgets['rename_label'] = QtWidgets.QLabel('Rename your table (optional):')
-        self.overview_widgets['rename'] = QtWidgets.QPushButton('Rename')
-        self.overview_widgets['rename'].clicked.connect(self.rename)
+        self.overview_widgets['rename_button'] = QtWidgets.QPushButton('Rename')
+        self.overview_widgets['rename_button'].clicked.connect(self.rename)
 
         self.overview_grid.addWidget(self.overview_widgets['rename_label'], this_row, 0)
         self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1)
-        self.overview_grid.addWidget(self.overview_widgets['rename'], this_row, 2)
+        self.overview_grid.addWidget(self.overview_widgets['rename_button'], this_row, 2)
         this_row += 1
         self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 1, 4)
         this_row += 1
