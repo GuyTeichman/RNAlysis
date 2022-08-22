@@ -1024,9 +1024,6 @@ class TabPage(QtWidgets.QWidget):
     def get_console(self):
         return self.stdout_widgets['text_edit_stdout']
 
-    def get_pbar(self):
-        return self.stdout_widgets['progress_bar']
-
     @QtCore.pyqtSlot()
     def rename(self, new_name: str = None):
         if new_name is None:
@@ -2479,16 +2476,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def append_text_to_current_console(self, text: str):
         current_console = self._get_current_console()
         current_console.append_text(text)
-
-    def _get_current_pbar(self):
-
-        current_pbar = self.tabs.currentWidget().get_pbar()
-        return current_pbar
-
-    @QtCore.pyqtSlot(str)
-    def append_text_to_current_pbar(self, text: str):
-        current_pbar = self._get_current_pbar()
-        current_pbar.set_text(text)
 
     def add_pipeline(self):
         self.pipeline_window = CreatePipelineWindow(self)
