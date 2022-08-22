@@ -117,12 +117,37 @@ def test_FilterTabPage_from_obj(qtbot):
     assert window.get_table_type() == 'Differential expression'
 
 
-def test_FilterTabPage_cache(qtbot):
-    assert False
+def test_FilterTabPage_cache(qtbot, monkeypatch):
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
+    window.start_from_filter_obj(filt, 'table name')
+    cached = []
+
+    def mock_cache(obj, filename):
+        assert isinstance(obj, pd.DataFrame)
+        assert obj.equals(filt.df)
+        cached.append(True)
+
+    monkeypatch.setattr(io, 'cache_gui_file', mock_cache)
+
+    fname = window.cache()
+    assert fname.endswith('.csv')
+    assert len(fname) == 44
+
+    time.sleep(0.01)
+    fname2 = window.cache()
+    assert cached == [True, True]
+    assert fname != fname2
 
 
 def test_FilterTabPage_obj_properties(qtbot):
-    assert False
+    log2fc_col = 'my log2fc col'
+    padj_col = 'my padj col'
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv', log2fc_col=log2fc_col, padj_col=padj_col)
+    window.start_from_filter_obj(filt, 'table name')
+
+    assert window.obj_properties() == {'log2fc_col': log2fc_col, 'padj_col': padj_col}
 
 
 def test_FilterTabPage_rename(qtbot):
@@ -133,8 +158,26 @@ def test_FilterTabPage_undo_rename(qtbot):
     assert False
 
 
-def test_FilterTabPage_save_table(qtbot):
-    assert False
+def test_FilterTabPage_save_table(qtbot, monkeypatch):
+    fname = 'my filename.tsv'
+    saved = []
+
+    def mock_get_save_name(*args, **kwargs):
+        saved.append('got name')
+        return fname, '.tsv'
+
+    def mock_save_csv(self, filename):
+        saved.append(filename)
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', mock_get_save_name)
+    monkeypatch.setattr(filtering.Filter, 'save_csv', mock_save_csv)
+
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv')
+    window.start_from_filter_obj(filt, 'table name')
+    qtbot.mouseClick(window.overview_widgets['save_button'], LEFT_CLICK)
+
+    assert saved == ['got name', fname]
 
 
 def test_FilterTabPage_view_full_table(qtbot):
@@ -180,8 +223,26 @@ def test_SetTabPage_from_set(qtbot):
     assert window.name == set_name
 
 
-def test_SetTabPage_cache(qtbot):
-    assert False
+def test_SetTabPage_cache(qtbot, monkeypatch):
+    s = {'abc', 'def', 'ghi', '123'}
+    qtbot, window = widget_setup(qtbot, SetTabPage, 'set name', s)
+    cached = []
+
+    def mock_cache(obj, filename):
+        assert isinstance(obj, set)
+        assert obj == s
+        cached.append(True)
+
+    monkeypatch.setattr(io, 'cache_gui_file', mock_cache)
+
+    fname = window.cache()
+    assert fname.endswith('.txt')
+    assert len(fname) == 44
+
+    time.sleep(0.01)
+    fname2 = window.cache()
+    assert cached == [True, True]
+    assert fname != fname2
 
 
 def test_SetTabPage_obj_properties(qtbot):
@@ -196,8 +257,24 @@ def test_SetTabPage_undo_rename(qtbot):
     assert False
 
 
-def test_SetTabPage_save_table(qtbot):
-    assert False
+def test_SetTabPage_save_gene_set(qtbot, monkeypatch):
+    fname = 'my filename.txt'
+    saved = []
+
+    def mock_get_save_name(*args, **kwargs):
+        saved.append('got name')
+        return fname, '.txt'
+
+    def mock_save_txt(self, filename):
+        saved.append(filename)
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', mock_get_save_name)
+    monkeypatch.setattr(enrichment.FeatureSet, 'save_txt', mock_save_txt)
+
+    qtbot, window = widget_setup(qtbot, SetTabPage, 'set name', {'1', '2', '3'})
+    qtbot.mouseClick(window.overview_widgets['save_button'], LEFT_CLICK)
+
+    assert saved == ['got name', fname]
 
 
 def test_SetTabPage_view_full_table(qtbot):
