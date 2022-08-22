@@ -407,30 +407,76 @@ def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch):
 
 
 def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
+    pipeline_truth = filtering.Pipeline('DESeqFilter')
+    pipeline_truth.add_function('split_fold_change_direction')
+
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
-    assert False
+    window.basic_widgets['pipeline_name'].clear()
+    qtbot.keyClicks(window.basic_widgets['pipeline_name'], 'pipeline_name')
+    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Differential expression')
+    qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
+
+    qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'split_fold_change_direction')
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+
+    assert window.pipeline == pipeline_truth
 
 
 def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
+    pipeline_truth = filtering.Pipeline('DESeqFilter')
+    pipeline_truth.add_function('filter_significant', alpha=0.01, opposite=True)
+
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
-    assert False
+    window.basic_widgets['pipeline_name'].clear()
+    qtbot.keyClicks(window.basic_widgets['pipeline_name'], 'pipeline_name')
+    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Differential expression')
+    qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
+
+    qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().parameter_widgets['alpha'].clear()
+    qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
+    qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    assert window.pipeline == pipeline_truth
+
+    # add a second function
+    pipeline_truth.add_function('split_fold_change_direction')
+
+    window.stack.currentWidget().func_combo.setCurrentText('split_fold_change_direction')
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    assert window.pipeline == pipeline_truth
 
 
 def test_CreatePipelineWindow_save_pipeline(qtbot, monkeypatch):
+    pipeline_truth = filtering.Pipeline('DESeqFilter')
+    pipeline_truth.add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
+    pipeline_name = 'my pipeline name'
+
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
-    assert False
+    window.basic_widgets['pipeline_name'].clear()
+    qtbot.keyClicks(window.basic_widgets['pipeline_name'], pipeline_name)
+    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Differential expression')
+    qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
+
+    qtbot.mouseClick(window.stack_buttons[2], LEFT_CLICK)
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'describe')
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+
+    with qtbot.waitSignal(window.pipelineSaved) as blocker:
+        qtbot.mouseClick(window.overview_widgets['save_button'], LEFT_CLICK)
+    assert blocker.args[0] == pipeline_name
+    assert blocker.args[1] == pipeline_truth
 
 
 def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
-    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
-    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
-    assert False
-
-
-def test_CreatePipelineWindow_close_without_saving(qtbot, monkeypatch):
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     assert False
