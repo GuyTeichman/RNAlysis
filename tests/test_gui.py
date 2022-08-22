@@ -244,7 +244,9 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
 
 
 def test_FilterTabPage_view_full_table(qtbot, filtertabpage):
-    assert False
+    qtbot.mouseClick(filtertabpage.overview_widgets['view_button'], LEFT_CLICK)
+    assert isinstance(filtertabpage.overview_widgets['full_table_view'], gui_windows.DataFrameView)
+    assert filtertabpage.overview_widgets['full_table_view'].data_view.model()._dataframe.equals(filtertabpage.obj().df)
 
 
 def test_FilterTabPage_apply_function(qtbot, filtertabpage_with_undo_stack):
@@ -440,7 +442,13 @@ def test_SetTabPage_save_gene_set(qtbot, monkeypatch):
 
 
 def test_SetTabPage_view_full_set(qtbot):
-    assert False
+    qtbot, window = widget_setup(qtbot, SetTabPage, 'set name', {'a', 'b', 'c', 'd'})
+    qtbot.mouseClick(window.overview_widgets['view_button'], LEFT_CLICK)
+    assert isinstance(window.overview_widgets['full_table_view'], gui_windows.GeneSetView)
+
+    view = window.overview_widgets['full_table_view'].data_view
+    genes_in_view = {view.item(i).text() for i in range(view.count())}
+    assert genes_in_view == window.obj()
 
 
 def test_FuncTypeStack_init(qtbot):
