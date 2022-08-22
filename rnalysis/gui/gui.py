@@ -1742,6 +1742,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         sorted_actions = self.get_all_actions()
         for action_type in sorted_actions:
             self.stack_widgets[action_type].pipeline_mode = True
+            self.stack_widgets[action_type].excluded_params.add('inplace')
 
     def apply_function(self):
         this_stack: FuncTypeStack = self.stack.currentWidget()
