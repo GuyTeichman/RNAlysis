@@ -1241,7 +1241,7 @@ def param_to_widget(param, name: str,
                                                        actions_to_connect, pipeline_mode), this_default)
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
-    elif typing_extensions.get_origin(param.annotation) == typing.Literal:
+    elif typing_extensions.get_origin(param.annotation) == typing_extensions.Literal:
         widget = QtWidgets.QComboBox()
         widget.addItems(typing_extensions.get_args(param.annotation))
         for action in actions_to_connect:
