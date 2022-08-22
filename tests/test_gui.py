@@ -42,14 +42,14 @@ def available_objects_no_tabpages(blank_icon, red_icon, green_icon):
 
 
 @pytest.fixture
-def get_filtertabpage(qtbot):
+def filtertabpage(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
     return window
 
 
 @pytest.fixture
-def get_filtertabpage_with_undo_stack(qtbot):
+def filtertabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
@@ -57,10 +57,19 @@ def get_filtertabpage_with_undo_stack(qtbot):
 
 
 @pytest.fixture
-def get_settabpage_with_undo_stack(qtbot):
+def settabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, SetTabPage, 'my set name', {'a', 'b', 'c', 'd'}, undo_stack=stack)
     return window, stack
+
+
+@pytest.fixture
+def pipeline():
+    pipeline = filtering.Pipeline('DESeqFilter')
+    pipeline.add_function(filtering.DESeqFilter.describe)
+    pipeline.add_function(filtering.DESeqFilter.filter_significant, 0.2)
+    pipeline.add_function(filtering.DESeqFilter.filter_top_n, 'padj', n=1)
+    return pipeline
 
 
 def widget_setup(qtbot, widget_class, *args, **kwargs):
@@ -173,9 +182,9 @@ def test_FilterTabPage_obj_properties(qtbot):
     assert window.obj_properties() == {'log2fc_col': log2fc_col, 'padj_col': padj_col}
 
 
-def test_FilterTabPage_rename(qtbot, get_filtertabpage_with_undo_stack):
+def test_FilterTabPage_rename(qtbot, filtertabpage_with_undo_stack):
     new_name = 'my new table name'
-    window, stack = get_filtertabpage_with_undo_stack
+    window, stack = filtertabpage_with_undo_stack
     qtbot.keyClicks(window.overview_widgets['table_name'], new_name)
     with qtbot.waitSignal(window.tabNameChange) as blocker:
         qtbot.mouseClick(window.overview_widgets['rename_button'], LEFT_CLICK)
@@ -186,9 +195,9 @@ def test_FilterTabPage_rename(qtbot, get_filtertabpage_with_undo_stack):
     assert window.name == new_name
 
 
-def test_FilterTabPage_undo_rename(qtbot, get_filtertabpage_with_undo_stack):
+def test_FilterTabPage_undo_rename(qtbot, filtertabpage_with_undo_stack):
     new_name = 'my new table name'
-    window, stack = get_filtertabpage_with_undo_stack
+    window, stack = filtertabpage_with_undo_stack
     prev_name = window.name
     qtbot.keyClicks(window.overview_widgets['table_name'], new_name)
     with qtbot.waitSignal(window.tabNameChange) as blocker:
@@ -226,24 +235,46 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
     assert saved == ['got name', fname]
 
 
-def test_FilterTabPage_view_full_table(qtbot, get_filtertabpage):
+def test_FilterTabPage_view_full_table(qtbot, filtertabpage):
     assert False
 
 
-def test_FilterTabPage_apply_function(qtbot, get_filtertabpage_with_undo_stack):
+def test_FilterTabPage_apply_function(qtbot, filtertabpage_with_undo_stack):
+    window, stack = filtertabpage_with_undo_stack
     assert False
 
 
-def test_FilterTabPage_undo_function(qtbot, get_filtertabpage_with_undo_stack):
+def test_FilterTabPage_undo_function(qtbot, filtertabpage_with_undo_stack):
+    window, stack = filtertabpage_with_undo_stack
     assert False
 
 
-def test_FilterTabPage_apply_pipeline(qtbot, get_filtertabpage_with_undo_stack):
-    assert False
+def test_FilterTabPage_apply_pipeline(qtbot, filtertabpage_with_undo_stack, pipeline):
+    window, stack = filtertabpage_with_undo_stack
+    filter_obj_orig = window.obj().__copy__()
+
+    filter_obj_truth = pipeline.apply_to(window.obj(), inplace=False)[0]
+
+    with qtbot.waitSignal(window.filterObjectCreated) as blocker:
+        window.apply_pipeline(pipeline, pipeline_name='my pipeline', inplace=False)
+    assert blocker.args[0] == filter_obj_truth
+    assert window.obj() == filter_obj_orig
+
+    window.apply_pipeline(pipeline, pipeline_name='my pipeline', inplace=True)
+    assert window.obj() == filter_obj_truth
 
 
-def test_FilterTabPage_undo_pipeline(qtbot, get_filtertabpage_with_undo_stack):
-    assert False
+def test_FilterTabPage_undo_pipeline(qtbot, filtertabpage_with_undo_stack, pipeline):
+    window, stack = filtertabpage_with_undo_stack
+    orig_name = window.name
+    filter_obj_orig = window.obj().__copy__()
+    filter_obj_truth = pipeline.apply_to(window.obj(), inplace=False)[0]
+    window.apply_pipeline(pipeline, pipeline_name='my pipeline', inplace=True)
+    assert window.obj() == filter_obj_truth
+
+    stack.undo()
+    assert window.obj() == filter_obj_orig
+    assert window.name == orig_name
 
 
 def test_FilterTabPage_get_all_actions(qtbot):
@@ -297,8 +328,8 @@ def test_SetTabPage_obj_properties(qtbot):
     assert window.obj_properties() == {}
 
 
-def test_SetTabPage_rename(qtbot, get_settabpage_with_undo_stack):
-    window, stack = get_settabpage_with_undo_stack
+def test_SetTabPage_rename(qtbot, settabpage_with_undo_stack):
+    window, stack = settabpage_with_undo_stack
     new_name = 'my new set name'
     prev_name = window.name
     qtbot.keyClicks(window.overview_widgets['table_name'], new_name)
@@ -311,8 +342,8 @@ def test_SetTabPage_rename(qtbot, get_settabpage_with_undo_stack):
     assert window.name == new_name
 
 
-def test_SetTabPage_undo_rename(qtbot, get_settabpage_with_undo_stack):
-    window, stack = get_settabpage_with_undo_stack
+def test_SetTabPage_undo_rename(qtbot, settabpage_with_undo_stack):
+    window, stack = settabpage_with_undo_stack
     new_name = 'my new set name'
     prev_name = window.name
     qtbot.keyClicks(window.overview_widgets['table_name'], new_name)
