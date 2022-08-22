@@ -346,7 +346,7 @@ def test_SetTabPage_save_gene_set(qtbot, monkeypatch):
     assert saved == ['got name', fname]
 
 
-def test_SetTabPage_view_full_table(qtbot):
+def test_SetTabPage_view_full_set(qtbot):
     assert False
 
 
@@ -355,6 +355,36 @@ def test_FuncTypeStack_init(qtbot):
 
 
 def test_CreatePipelineWindow_init(qtbot):
+    _, _ = widget_setup(qtbot, CreatePipelineWindow)
+
+
+def test_CreatePipelineWindow_create_pipeline(qtbot):
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
+    assert False
+
+
+def test_CreatePipelineWindow_add_function(qtbot):
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
+    assert False
+
+
+def test_CreatePipelineWindow_add_function_with_args(qtbot):
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
+    assert False
+
+
+def test_CreatePipelineWindow_save_pipeline(qtbot):
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
+    assert False
+
+
+def test_CreatePipelineWindow_export_pipeline(qtbot):
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
+    assert False
+
+
+def test_CreatePipelineWindow_close_without_saving(qtbot):
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     assert False
 
 
