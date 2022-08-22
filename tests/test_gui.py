@@ -52,7 +52,7 @@ def filtertabpage(qtbot):
 def filtertabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
-    window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
+    window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_sig.csv'))
     return window, stack
 
 
@@ -212,6 +212,14 @@ def test_FilterTabPage_undo_rename(qtbot, filtertabpage_with_undo_stack):
     assert new_name not in window.overview_widgets['table_name_label'].text()
     assert window.name == prev_name
 
+    with qtbot.waitSignal(window.tabNameChange) as blocker:
+        stack.redo()
+    assert blocker.args[0] == new_name
+    assert str(window.obj().fname.stem) == new_name
+    assert new_name in window.overview_widgets['table_name_label'].text()
+    assert prev_name not in window.overview_widgets['table_name_label'].text()
+    assert window.name == new_name
+
 
 def test_FilterTabPage_save_table(qtbot, monkeypatch):
     fname = 'my filename.tsv'
@@ -244,9 +252,37 @@ def test_FilterTabPage_apply_function(qtbot, filtertabpage_with_undo_stack):
     assert False
 
 
+def test_FilterTabPage_apply_function_inplace(qtbot, filtertabpage_with_undo_stack):
+    window, stack = filtertabpage_with_undo_stack
+    truth = window.obj().filter_significant(0.01, opposite=True, inplace=False)
+    window.stack_buttons[0].click()
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().parameter_widgets['alpha'].clear()
+    qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
+    qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    assert window.obj() == truth
+
+
 def test_FilterTabPage_undo_function(qtbot, filtertabpage_with_undo_stack):
     window, stack = filtertabpage_with_undo_stack
-    assert False
+    truth = window.obj().filter_significant(0.01, opposite=True, inplace=False)
+    orig = window.obj().__copy__()
+    window.stack_buttons[0].click()
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().parameter_widgets['alpha'].clear()
+    qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
+    qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    assert window.obj() == truth
+
+    stack.undo()
+
+    assert window.obj() == orig
+
+    stack.redo()
+
+    assert window.obj() == truth
 
 
 def test_FilterTabPage_apply_pipeline(qtbot, filtertabpage_with_undo_stack, pipeline):
@@ -275,6 +311,10 @@ def test_FilterTabPage_undo_pipeline(qtbot, filtertabpage_with_undo_stack, pipel
     stack.undo()
     assert window.obj() == filter_obj_orig
     assert window.name == orig_name
+
+    stack.redo()
+    assert window.obj() == filter_obj_truth
+    assert window.name != orig_name
 
 
 def test_FilterTabPage_get_all_actions(qtbot):
@@ -350,6 +390,7 @@ def test_SetTabPage_undo_rename(qtbot, settabpage_with_undo_stack):
     with qtbot.waitSignal(window.tabNameChange) as blocker:
         qtbot.mouseClick(window.overview_widgets['rename_button'], LEFT_CLICK)
     assert window.name == new_name
+
     with qtbot.waitSignal(window.tabNameChange) as blocker:
         stack.undo()
     assert blocker.args[0] == prev_name
@@ -357,6 +398,14 @@ def test_SetTabPage_undo_rename(qtbot, settabpage_with_undo_stack):
     assert prev_name in window.overview_widgets['table_name_label'].text()
     assert new_name not in window.overview_widgets['table_name_label'].text()
     assert window.name == prev_name
+
+    with qtbot.waitSignal(window.tabNameChange) as blocker:
+        stack.redo()
+    assert blocker.args[0] == new_name
+    assert str(window.gene_set.set_name) == new_name
+    assert new_name in window.overview_widgets['table_name_label'].text()
+    assert prev_name not in window.overview_widgets['table_name_label'].text()
+    assert window.name == new_name
 
 
 def test_SetTabPage_save_gene_set(qtbot, monkeypatch):
