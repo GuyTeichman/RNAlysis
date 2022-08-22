@@ -290,7 +290,9 @@ def test_SetTabPage_cache(qtbot, monkeypatch):
 
 
 def test_SetTabPage_obj_properties(qtbot):
-    assert False
+    s = {'abc', 'def', 'ghi', '123'}
+    qtbot, window = widget_setup(qtbot, SetTabPage, 'set name', s)
+    assert window.obj_properties() == {}
 
 
 def test_SetTabPage_rename(qtbot, get_settabpage_with_undo_stack):
