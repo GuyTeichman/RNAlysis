@@ -249,7 +249,18 @@ def test_FilterTabPage_view_full_table(qtbot, filtertabpage):
 
 def test_FilterTabPage_apply_function(qtbot, filtertabpage_with_undo_stack):
     window, stack = filtertabpage_with_undo_stack
-    assert False
+    orig = window.obj().__copy__()
+    truth = window.obj().filter_significant(0.01, opposite=True, inplace=False)
+    window.stack_buttons[0].click()
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().parameter_widgets['alpha'].clear()
+    qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
+    qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
+    qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['inplace'].switch, LEFT_CLICK)
+    with qtbot.waitSignal(window.filterObjectCreated, timeout=10000) as blocker:
+        qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+    assert blocker.args[0] == truth
+    assert window.obj() == orig
 
 
 def test_FilterTabPage_apply_function_inplace(qtbot, filtertabpage_with_undo_stack):
