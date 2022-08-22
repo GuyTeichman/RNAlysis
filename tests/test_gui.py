@@ -1,4 +1,6 @@
 import pytest
+
+from rnalysis import filtering, enrichment
 from rnalysis.gui.gui import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
@@ -224,23 +226,23 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
     assert saved == ['got name', fname]
 
 
-def test_FilterTabPage_view_full_table(qtbot):
+def test_FilterTabPage_view_full_table(qtbot, get_filtertabpage):
     assert False
 
 
-def test_FilterTabPage_apply_function(qtbot):
+def test_FilterTabPage_apply_function(qtbot, get_filtertabpage_with_undo_stack):
     assert False
 
 
-def test_FilterTabPage_undo_function(qtbot):
+def test_FilterTabPage_undo_function(qtbot, get_filtertabpage_with_undo_stack):
     assert False
 
 
-def test_FilterTabPage_apply_pipeline(qtbot):
+def test_FilterTabPage_apply_pipeline(qtbot, get_filtertabpage_with_undo_stack):
     assert False
 
 
-def test_FilterTabPage_undo_pipeline(qtbot):
+def test_FilterTabPage_undo_pipeline(qtbot, get_filtertabpage_with_undo_stack):
     assert False
 
 
@@ -249,8 +251,8 @@ def test_FilterTabPage_get_all_actions(qtbot):
 
 
 def test_SetTabPage_init(qtbot):
-    qtbot, window = widget_setup(qtbot, SetTabPage, 'set name')
-    qtbot, window = widget_setup(qtbot, SetTabPage, 'set name', {'aa', 'bb', 'cc', 'dd'})
+    _, _ = widget_setup(qtbot, SetTabPage, 'set name')
+    _, _ = widget_setup(qtbot, SetTabPage, 'set name', {'aa', 'bb', 'cc', 'dd'})
 
 
 def test_SetTabPage_from_set(qtbot):
@@ -358,32 +360,47 @@ def test_CreatePipelineWindow_init(qtbot):
     _, _ = widget_setup(qtbot, CreatePipelineWindow)
 
 
-def test_CreatePipelineWindow_create_pipeline(qtbot):
+def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    pipeline_name = 'my pipeline name'
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
+    window.basic_widgets['pipeline_name'].clear()
+    qtbot.keyClicks(window.basic_widgets['pipeline_name'], pipeline_name)
+    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Differential expression')
+    qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
+
+    assert not window.basic_group.isVisible()
+    assert isinstance(window.pipeline, filtering.Pipeline)
+    assert window.pipeline.filter_type == filtering.DESeqFilter
+    assert window._get_pipeline_name() == pipeline_name
+
+
+def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     assert False
 
 
-def test_CreatePipelineWindow_add_function(qtbot):
+def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     assert False
 
 
-def test_CreatePipelineWindow_add_function_with_args(qtbot):
+def test_CreatePipelineWindow_save_pipeline(qtbot, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     assert False
 
 
-def test_CreatePipelineWindow_save_pipeline(qtbot):
+def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     assert False
 
 
-def test_CreatePipelineWindow_export_pipeline(qtbot):
-    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
-    assert False
-
-
-def test_CreatePipelineWindow_close_without_saving(qtbot):
+def test_CreatePipelineWindow_close_without_saving(qtbot, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
     assert False
 
