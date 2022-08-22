@@ -1821,7 +1821,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
             quit_msg = "Are you sure you want to close this window without saving your Pipeline?\n" \
                        "All unsaved progress will be lost"
 
-            reply = QtWidgets.QMessageBox.question(self, 'Close program',
+            reply = QtWidgets.QMessageBox.question(self, "Close 'Create Pipeline' window?",
                                                    quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
 
             if reply == QtWidgets.QMessageBox.Yes:
