@@ -1579,7 +1579,7 @@ class FilterTabPage(TabPage):
             if validation.isinstanceiter_inh(outputs, filtering.Filter):
                 dialog = MultiKeepWindow(outputs, self)
                 dialog.accepted.connect(functools.partial(self._multi_keep_window_accepted, dialog, source_name))
-                dialog.show()
+                dialog.exec()
             else:
                 for output in outputs:
                     self._proccess_outputs(output, source_name)
