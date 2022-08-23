@@ -1,5 +1,7 @@
 import pytest
+import matplotlib
 
+matplotlib.use('Agg')
 from rnalysis import filtering, enrichment
 from rnalysis.gui.gui import *
 
@@ -53,6 +55,14 @@ def filtertabpage_with_undo_stack(qtbot):
     stack = QtWidgets.QUndoStack()
     qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_sig.csv'))
+    return window, stack
+
+
+@pytest.fixture
+def countfiltertabpage_with_undo_stack(qtbot):
+    stack = QtWidgets.QUndoStack()
+    qtbot, window = widget_setup(qtbot, FilterTabPage, undo_stack=stack)
+    window.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.csv'))
     return window, stack
 
 
@@ -271,6 +281,41 @@ def test_FilterTabPage_apply_function(qtbot, filtertabpage_with_undo_stack):
     assert window.obj() == orig
 
 
+def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, countfiltertabpage_with_undo_stack):
+    def mock_show_multikeep(self):
+        self.select_all.setChecked(True)
+        self.change_all()
+        self.accept()
+        self.button_box.button(QtWidgets.QDialogButtonBox.Ok).click()
+
+    monkeypatch.setattr(MultiKeepWindow, 'exec', mock_show_multikeep)
+
+    window, stack = countfiltertabpage_with_undo_stack
+
+    def my_slot(partial, func_name):
+        window._proccess_outputs(partial()[0], func_name)
+
+    window.startedClustering.connect(my_slot)
+
+    orig = window.obj().__copy__()
+    orig_renamed = orig.__copy__()
+    orig_renamed.fname = Path('counted')
+    truth = orig_renamed.split_kmeans(n_clusters=3, random_seed=0)
+    truth = sorted(truth, key=lambda obj: obj.shape[0])
+
+    window.stack_buttons[4].click()
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'split_kmeans')
+    window.stack.currentWidget().parameter_widgets['n_clusters'].other.set_defaults([3])
+    qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['random_seed'].checkbox, LEFT_CLICK)
+    with qtbot.waitSignals([window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated],
+                           timeout=15000) as blocker:
+        qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+
+    res = sorted([sig.args[0] for sig in blocker.all_signals_and_args], key=lambda obj: obj.shape[0])
+    assert res == truth
+    assert window.obj() == orig
+
+
 def test_FilterTabPage_apply_function_inplace(qtbot, filtertabpage_with_undo_stack):
     window, stack = filtertabpage_with_undo_stack
     truth = window.obj().filter_significant(0.01, opposite=True, inplace=False)
@@ -334,6 +379,10 @@ def test_FilterTabPage_undo_pipeline(qtbot, filtertabpage_with_undo_stack, pipel
     stack.redo()
     assert window.obj() == filter_obj_truth
     assert window.name != orig_name
+
+
+def test_FilterTabPage_open_clicom(qtbot):
+    assert False
 
 
 def test_FilterTabPage_get_all_actions(qtbot):
