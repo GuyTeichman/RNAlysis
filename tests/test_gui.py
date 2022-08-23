@@ -172,14 +172,20 @@ def test_FilterTabPage_cache(qtbot, monkeypatch):
     assert fname != fname2
 
 
-def test_FilterTabPage_obj_properties(qtbot):
-    log2fc_col = 'my log2fc col'
-    padj_col = 'my padj col'
-    qtbot, window = widget_setup(qtbot, FilterTabPage)
-    filt = filtering.DESeqFilter('tests/test_files/test_deseq.csv', log2fc_col=log2fc_col, padj_col=padj_col)
-    window.start_from_filter_obj(filt, 'table name')
+@pytest.mark.parametrize('filter_obj,truth', [
+    (filtering.DESeqFilter('tests/test_files/test_deseq.csv', log2fc_col='my log2fc col', padj_col='my padj col'),
+     {'log2fc_col': 'my log2fc col', 'padj_col': 'my padj col'}),
+    (filtering.CountFilter('tests/test_files/counted.tsv'), {'is_normalized': False}),
+    (filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'num_name', 'denom_name'),
+     {'numerator_name': 'num_name', 'denominator_name': 'denom_name'}),
+    (filtering.Filter('tests/test_files/test_deseq.csv'), {})
 
-    assert window.obj_properties() == {'log2fc_col': log2fc_col, 'padj_col': padj_col}
+])
+def test_FilterTabPage_obj_properties(qtbot, filter_obj, truth):
+    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    window.start_from_filter_obj(filter_obj, 'table name')
+
+    assert window.obj_properties() == truth
 
 
 def test_FilterTabPage_rename(qtbot, filtertabpage_with_undo_stack):
