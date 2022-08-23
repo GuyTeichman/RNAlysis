@@ -107,7 +107,36 @@ def test_ApplyPipelineWindow_clear_all(qtbot, available_objects_no_tabpages):
 
 
 def test_ClicomWindow_init(qtbot):
-    # qtbot, window = widget_setup(qtbot, ClicomWindow)
+    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
+             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
+    _, _ = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
+
+
+def test_ClicomWindow_add_setup(qtbot):
+    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
+             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
+    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
+    assert False
+
+
+def test_ClicomWindow_remove_setup(qtbot):
+    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
+             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
+    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
+    assert False
+
+
+def test_ClicomWindow_get_analysis_params(qtbot):
+    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
+             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
+    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
+    assert False
+
+
+def test_ClicomWindow_start_clustering(qtbot):
+    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
+             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
+    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
     assert False
 
 
