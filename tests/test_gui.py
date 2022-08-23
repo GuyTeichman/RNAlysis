@@ -619,5 +619,143 @@ def test_ReactiveTabWidget_init(qtbot):
 
 def test_MainWindow_init(qtbot, use_temp_settings_file):
     # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
 
+
+def test_MainMenu_add_new_tab(qtbot, use_temp_settings_file):
+    assert False
+
+
+def test_MainWindow_close_tab(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_close_tab_undo(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_type(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_n_features(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_creation_time(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_name(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_reverse_order(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_change_tab_icon(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_clear_history(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_rename_tab(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_new_table_from_folder(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_multiple_new_tables(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_export_pipeline(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_import_pipeline(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_import_gene_set(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_copy_gene_set(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_append_to_current_console(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_add_pipeline(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_open_enrichment_analysis(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_save_session(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_load_session(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_about(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
+    assert False
+
+
+def test_MainWindow_cite(qtbot, use_temp_settings_file):
+    # qtbot, window = widget_setup(qtbot, MainWindow)
     assert False
