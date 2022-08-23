@@ -593,7 +593,7 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
 
     def delete_all(self):
         accepted = QtWidgets.QMessageBox.question(self, "Delete all items?",
-                                                  "Are you sure you want to close_tab all items?",
+                                                  "Are you sure you want to delete all items?",
                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if accepted == QtWidgets.QMessageBox.Yes:
             for n_item in reversed(range(len(self.items))):
