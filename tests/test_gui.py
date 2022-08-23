@@ -82,6 +82,14 @@ def pipeline():
     return pipeline
 
 
+@pytest.fixture
+def clicom_window(qtbot):
+    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
+             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
+    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
+    return window
+
+
 def widget_setup(qtbot, widget_class, *args, **kwargs):
     widget = widget_class(*args, **kwargs)
     widget.show()
@@ -106,38 +114,70 @@ def test_ApplyPipelineWindow_clear_all(qtbot, available_objects_no_tabpages):
     assert window.result() == []
 
 
-def test_ClicomWindow_init(qtbot):
-    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
-             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
-    _, _ = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
+def test_ClicomWindow_init(qtbot, clicom_window):
+    _ = clicom_window
 
 
-def test_ClicomWindow_add_setup(qtbot):
-    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
-             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
-    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
-    assert False
+def test_ClicomWindow_add_setup(qtbot, clicom_window):
+    truth = dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
+                 max_n_clusters_estimate='auto')
+
+    qtbot.keyClicks(clicom_window.stack.func_combo, 'split_kmeans')
+    clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
+    qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
+    assert len(clicom_window.parameter_dicts) == 1
+    assert clicom_window.parameter_dicts[0] == truth
 
 
-def test_ClicomWindow_remove_setup(qtbot):
-    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
-             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
-    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
-    assert False
+def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.Yes)
+    qtbot.keyClicks(clicom_window.stack.func_combo, 'split_kmeans')
+    clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
+    qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
+    assert len(clicom_window.parameter_dicts) == 1
+
+    qtbot.mouseClick(clicom_window.setups_widgets['list'].delete_all_button, LEFT_CLICK)
+
+    assert len(clicom_window.parameter_dicts) == 0
 
 
-def test_ClicomWindow_get_analysis_params(qtbot):
-    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
-             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
-    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
-    assert False
+def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
+    truth = dict(power_transform=[True, False], evidence_threshold=0.35, cluster_unclustered_features=True,
+                 min_cluster_size=15, plot_style='all', split_plots=False)
+
+    qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
+    qtbot.mouseClick(clicom_window.param_widgets['cluster_unclustered_features'].switch, LEFT_CLICK)
+    clicom_window.param_widgets['evidence_threshold'].clear()
+    qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
+
+    assert clicom_window.get_analysis_params() == truth
 
 
-def test_ClicomWindow_start_clustering(qtbot):
-    funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
-             'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
-    qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
-    assert False
+def test_ClicomWindow_start_clustering(qtbot, clicom_window):
+    truth_setups = [dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
+                         max_n_clusters_estimate='auto'),
+                    dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
+                         distance_threshold=None, max_n_clusters_estimate='auto')]
+    truth_params = dict(power_transform=[True, False], evidence_threshold=0.35, cluster_unclustered_features=True,
+                        min_cluster_size=15, plot_style='all', split_plots=False)
+
+    qtbot.keyClicks(clicom_window.stack.func_combo, 'split_kmeans')
+    clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
+    qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
+
+    clicom_window.stack.func_combo.setCurrentText('split_hierarchical')
+    qtbot.keyClicks(clicom_window.stack.parameter_widgets['n_clusters'].combo, 'silhouette')
+    qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
+
+    qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
+    qtbot.mouseClick(clicom_window.param_widgets['cluster_unclustered_features'].switch, LEFT_CLICK)
+    clicom_window.param_widgets['evidence_threshold'].clear()
+    qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
+
+    with qtbot.waitSignal(clicom_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(clicom_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_setups
+    assert blocker.args[1] == truth_params
 
 
 def test_EnrichmentWindow_init(qtbot):
@@ -334,7 +374,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
 
     window.stack_buttons[4].click()
     qtbot.keyClicks(window.stack.currentWidget().func_combo, 'split_kmeans')
-    window.stack.currentWidget().parameter_widgets['n_clusters'].other.set_defaults([3])
+    window.stack.currentWidget().parameter_widgets['n_clusters'].other.set_defaults(3)
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['random_seed'].checkbox, LEFT_CLICK)
     with qtbot.waitSignals([window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated],
                            timeout=15000) as blocker:
