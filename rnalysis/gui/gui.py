@@ -161,7 +161,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                       ('non_categorical', False): enrichment.FeatureSet.non_categorical_enrichment}
 
     STATISTICAL_TESTS = {'Randomization test': 'randomization', "Fisher's Exact test": 'fisher',
-                         'Hypergeometric test': 'hypergeometric', 'Single-list enrichment (XL-mHG test)': 'single_set'}
+                         'Hypergeometric test': 'hypergeometric', 'Single-set enrichment (XL-mHG test)': 'single_set'}
 
     ORDINAL_STATISTICAL_TESTS = {'One-sample T-test (parametric)': True, 'Sign test (non-parametric)': False}
 
@@ -175,7 +175,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                              False: {'alpha'}}
 
     PLOT_ARGS = {'user_defined': {'plot_horizontal'},
-                 'go': {'plot_horizontal', 'plot_plot_ontology_graph', 'ontology_graph_format'},
+                 'go': {'plot_horizontal', 'plot_ontology_graph', 'ontology_graph_format'},
                  'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
@@ -287,9 +287,6 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         except KeyError:
             return None
 
-    def _get_analysis_type(self):
-        return self.ANALYSIS_TYPES[self.widgets['dataset_radiobox'].checkedButton().text()]
-
     def _update_single_set(self):
         if self.is_single_set():
             self._set_background_select_mode(False)
@@ -301,7 +298,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.stats_signature = {}
         self.plot_signature = {}
 
-        analysis_type = self._get_analysis_type()
+        analysis_type = self.get_current_analysis_type()
         chosen_func = self.get_current_func()
         signature = generic.get_method_signature(chosen_func)
         func_desc, param_desc = generic.get_method_docstring(chosen_func)
