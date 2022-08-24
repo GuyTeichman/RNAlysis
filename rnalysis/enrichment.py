@@ -99,6 +99,18 @@ class FeatureSet:
     def __iter__(self):
         return self.gene_set.__iter__()
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+
+        if self.set_name != other.set_name:
+            return False
+
+        if self.gene_set != other.gene_set:
+            return False
+
+        return True
+
     def change_set_name(self, new_name: str):
         """
         Change the 'set_name' of a FeatureSet to a new name.
@@ -998,6 +1010,18 @@ class RankedSet(FeatureSet):
 
     def __iter__(self):
         return self.ranked_genes.__iter__()
+
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+
+        if self.set_name != other.set_name:
+            return False
+
+        if self.ranked_genes != other.ranked_genes:
+            return False
+
+        return True
 
     def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
         warnings.warn("Warning: when performing set operations with RankedSet objects, "
