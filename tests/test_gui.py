@@ -44,6 +44,22 @@ def available_objects_no_tabpages(blank_icon, red_icon, green_icon):
 
 
 @pytest.fixture
+def available_objects(qtbot, red_icon, green_icon):
+    qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
+                                {'WBGene00000002', 'WBGene00000006', 'WBGene00000015', 'WBGene00000017'})
+
+    qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
+    second.rename('second tab')
+
+    qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    third.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'))
+    third.rename('third tab')
+
+    return {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, green_icon)}
+
+
+@pytest.fixture
 def filtertabpage(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
@@ -87,6 +103,12 @@ def clicom_window(qtbot):
     funcs = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
              'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN'}
     qtbot, window = widget_setup(qtbot, ClicomWindow, funcs, filtering.CountFilter('tests/test_files/counted.csv'))
+    return window
+
+
+@pytest.fixture
+def enrichment_window(qtbot, available_objects):
+    qtbot, window = widget_setup(qtbot, EnrichmentWindow, available_objects)
     return window
 
 
@@ -180,8 +202,344 @@ def test_ClicomWindow_start_clustering(qtbot, clicom_window):
     assert blocker.args[1] == truth_params
 
 
-def test_EnrichmentWindow_init(qtbot):
-    assert False
+def test_EnrichmentWindow_init(qtbot, enrichment_window):
+    _ = enrichment_window
+
+
+@pytest.mark.parametrize('button_name,truth', [
+    ('Gene Ontology (GO)', 'go'),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'kegg'),
+    ('Categorical attributes', 'user_defined'),
+    ('Non-categorical attributes', 'non_categorical')
+])
+def test_EnrichmentWindow_get_analysis_type(qtbot, enrichment_window, button_name, truth):
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    assert enrichment_window.get_current_analysis_type() == truth
+
+
+@pytest.mark.parametrize('button_name', [
+    'Gene Ontology (GO)',
+    'Kyoto Encyclopedia of Genes and Genomes (KEGG)',
+    'Categorical attributes',
+])
+@pytest.mark.parametrize('test_name,truth', [
+    ("Fisher's Exact test", False),
+    ('Hypergeometric test', False),
+    ('Randomization test', False),
+    ('Single-set enrichment (XL-mHG test)', True)
+])
+def test_EnrichmentWindow_is_single_set(qtbot, enrichment_window, button_name, test_name, truth):
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
+
+    assert enrichment_window.is_single_set() == truth
+
+
+@pytest.mark.parametrize('test_name,truth', [
+    ("One-sample T-test (parametric)", False),
+    ('Sign test (non-parametric)', False)])
+def test_EnrichmentWindow_is_single_set_non_categorical(qtbot, enrichment_window, test_name, truth):
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons['Non-categorical attributes'].click()
+    enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
+
+    assert enrichment_window.is_single_set() == truth
+
+
+@pytest.mark.parametrize('button_name,test_name,func_truth', [
+    ('Gene Ontology (GO)', "Fisher's Exact test", enrichment.FeatureSet.go_enrichment),
+    ('Gene Ontology (GO)', 'Hypergeometric test', enrichment.FeatureSet.go_enrichment),
+    ('Gene Ontology (GO)', 'Randomization test', enrichment.FeatureSet.go_enrichment),
+    ('Gene Ontology (GO)', 'Single-set enrichment (XL-mHG test)', enrichment.RankedSet.single_set_go_enrichment),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', "Fisher's Exact test", enrichment.FeatureSet.kegg_enrichment),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'Hypergeometric test', enrichment.FeatureSet.kegg_enrichment),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'Randomization test', enrichment.FeatureSet.kegg_enrichment),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'Single-set enrichment (XL-mHG test)',
+     enrichment.RankedSet.single_set_kegg_enrichment),
+    ('Categorical attributes', "Fisher's Exact test", enrichment.FeatureSet.user_defined_enrichment),
+    ('Categorical attributes', 'Hypergeometric test', enrichment.FeatureSet.user_defined_enrichment),
+    ('Categorical attributes', 'Randomization test', enrichment.FeatureSet.user_defined_enrichment),
+    ('Categorical attributes', 'Single-set enrichment (XL-mHG test)', enrichment.RankedSet.single_set_enrichment),
+    ('Non-categorical attributes', "One-sample T-test (parametric)", enrichment.FeatureSet.non_categorical_enrichment),
+    ('Non-categorical attributes', "Sign test (non-parametric)", enrichment.FeatureSet.non_categorical_enrichment)
+])
+def test_EnrichmentWindow_get_func(qtbot, enrichment_window, button_name, test_name, func_truth):
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
+
+    assert enrichment_window.get_current_func() == func_truth
+
+
+@pytest.mark.parametrize('button_name,truth', [
+    ('Gene Ontology (GO)', True),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', True),
+    ('Categorical attributes', True),
+    ('Non-categorical attributes', False)
+])
+def test_EnrichmentWindow_is_categorical(qtbot, enrichment_window, button_name, truth):
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    assert enrichment_window.is_categorical() == truth
+
+
+@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
+    ('first tab', 'second tab', 'first tab', 'second tab'),
+    ('third tab', 'first tab', 'third tab', 'first tab'),
+    ('second tab', 'third tab', 'second tab', 'third tab'),
+])
+@pytest.mark.parametrize('button_name,dataset_kwargs', [
+    ('Gene Ontology (GO)',
+     dict(plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental')),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)',
+     dict(plot_horizontal=True, plot_pathway_graphs=True, gene_id_type='auto')),
+    ('Categorical attributes', dict(attributes='all', plot_horizontal=False))
+])
+@pytest.mark.parametrize('test_name,is_single_set,test_arg_truth,stats_kwargs', [
+    ("Fisher's Exact test", False, 'fisher', dict(alpha=0.05)),
+    ('Hypergeometric test', False, 'hypergeometric', dict(alpha=0.5)),
+    ('Randomization test', False, 'randomization', dict(alpha=0.13, random_seed=42)),
+    ('Single-set enrichment (XL-mHG test)', True, 'single_set', dict(alpha=0.01))
+])
+def test_EnrichmentWindow_get_analysis_params(qtbot, enrichment_window, button_name, test_name, test_arg_truth, en_set,
+                                              en_set_truth, bg_set, bg_set_truth, is_single_set, available_objects,
+                                              stats_kwargs, dataset_kwargs):
+    kwargs_truth = dict()
+    kwargs_truth.update(stats_kwargs)
+    kwargs_truth.update(dataset_kwargs)
+
+    set_name_truth = available_objects[en_set_truth][0].name
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
+
+    qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
+
+    enrichment_window.stats_widgets['alpha'].clear()
+    qtbot.keyClicks(enrichment_window.stats_widgets['alpha'], str(kwargs_truth['alpha']))
+
+    for key in stats_kwargs:
+        if key not in {'alpha'}:
+            enrichment_window.stats_widgets[key].setValue(stats_kwargs[key])
+
+    for key in dataset_kwargs:
+        if key in enrichment_window.parameter_widgets:
+            qtbot.keyClicks(enrichment_window.parameter_widgets[key].combo, dataset_kwargs[key])
+        elif key in enrichment_window.plot_widgets:
+            if not dataset_kwargs[key]:
+                enrichment_window.plot_widgets[key].switch.click()
+
+    if not is_single_set:
+        qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
+
+    gene_set, bg_set, gene_set_name, kwargs = enrichment_window.get_analysis_params()
+
+    assert gene_set == available_objects[en_set_truth][0].obj()
+    if is_single_set:
+        assert bg_set is None
+        assert 'statistical_test' not in kwargs
+    else:
+        assert bg_set == available_objects[bg_set_truth][0].obj()
+        assert kwargs['statistical_test'] == test_arg_truth
+
+    for key in kwargs_truth:
+        assert kwargs[key] == kwargs_truth[key]
+
+    assert gene_set_name == set_name_truth
+
+
+@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
+    ('first tab', 'second tab', 'first tab', 'second tab'),
+    ('third tab', 'first tab', 'third tab', 'first tab'),
+    ('second tab', 'third tab', 'second tab', 'third tab'),
+])
+@pytest.mark.parametrize('button_name,dataset_kwargs', [
+    ('Non-categorical attributes', dict(plot_log_scale=False, attributes='all')),
+])
+@pytest.mark.parametrize('test_name,test_arg_truth,stats_kwargs', [
+    ("One-sample T-test (parametric)", True, dict(alpha=0.08)),
+    ('Sign test (non-parametric)', False, dict(alpha=0.5))
+])
+def test_EnrichmentWindow_get_analysis_params_single_set(qtbot, enrichment_window, button_name, test_name,
+                                                         test_arg_truth, en_set, en_set_truth, bg_set, bg_set_truth,
+                                                         available_objects, stats_kwargs, dataset_kwargs):
+    kwargs_truth = dict()
+    kwargs_truth.update(stats_kwargs)
+    kwargs_truth.update(dataset_kwargs)
+
+    set_name_truth = available_objects[en_set_truth][0].name
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
+
+    qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
+
+    enrichment_window.stats_widgets['alpha'].clear()
+    qtbot.keyClicks(enrichment_window.stats_widgets['alpha'], str(kwargs_truth['alpha']))
+
+    for key in stats_kwargs:
+        if key not in {'alpha'}:
+            enrichment_window.stats_widgets[key].setValue(stats_kwargs[key])
+
+    for key in dataset_kwargs:
+        if key in enrichment_window.parameter_widgets:
+            qtbot.keyClicks(enrichment_window.parameter_widgets[key].combo, dataset_kwargs[key])
+        elif key in enrichment_window.plot_widgets:
+            if not dataset_kwargs[key]:
+                enrichment_window.plot_widgets[key].switch.click()
+
+    qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
+
+    gene_set, bg_set, gene_set_name, kwargs = enrichment_window.get_analysis_params()
+
+    assert gene_set == available_objects[en_set_truth][0].obj()
+
+    assert bg_set == available_objects[bg_set_truth][0].obj()
+    assert kwargs['parametric_test'] == test_arg_truth
+
+    assert gene_set_name == set_name_truth
+
+
+@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
+    ('third tab', 'first tab', 'third tab', 'first tab'),
+    ('second tab', 'third tab', 'second tab', 'third tab'),
+])
+@pytest.mark.parametrize('button_name,dataset_name_truth,dataset_kwargs', [
+    ('Gene Ontology (GO)', 'go',
+     dict(plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental')),
+    ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'kegg',
+     dict(plot_horizontal=True, plot_pathway_graphs=True, gene_id_type='auto')),
+    ('Categorical attributes', 'user_defined', dict(attributes='all', plot_horizontal=False))
+])
+@pytest.mark.parametrize('test_name,is_single_set,test_arg_truth,stats_kwargs', [
+    ("Fisher's Exact test", False, 'fisher', dict(alpha=0.05)),
+    ('Hypergeometric test', False, 'hypergeometric', dict(alpha=0.5)),
+    ('Randomization test', False, 'randomization', dict(alpha=0.13, random_seed=42)),
+    ('Single-set enrichment (XL-mHG test)', True, 'single_set', dict(alpha=0.01))
+])
+def test_EnrichmentWindow_run_analysis(qtbot, enrichment_window, button_name, test_name,
+                                       test_arg_truth, en_set, en_set_truth, bg_set, bg_set_truth, dataset_name_truth,
+                                       available_objects, stats_kwargs, dataset_kwargs, is_single_set):
+    func_truth = {
+        ('go', False): enrichment.FeatureSet.go_enrichment,
+        ('go', True): enrichment.RankedSet.single_set_go_enrichment,
+        ('kegg', False): enrichment.FeatureSet.kegg_enrichment,
+        ('kegg', True): enrichment.RankedSet.single_set_kegg_enrichment,
+        ('user_defined', False): enrichment.FeatureSet.user_defined_enrichment,
+        ('user_defined', True): enrichment.RankedSet.single_set_enrichment}
+
+    set_name_truth = available_objects[en_set_truth][0].name
+
+    if is_single_set:
+        gene_set_truth = enrichment.RankedSet(available_objects[en_set_truth][0].obj(), set_name_truth)
+    else:
+        gene_set_truth = enrichment.FeatureSet(available_objects[en_set_truth][0].obj() if isinstance(
+            available_objects[en_set_truth][0].obj(), set) else available_objects[en_set_truth][0].obj().index_set,
+                                               set_name_truth)
+
+    kwargs_truth = dict()
+    kwargs_truth.update(stats_kwargs)
+    kwargs_truth.update(dataset_kwargs)
+
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
+
+    qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
+
+    enrichment_window.stats_widgets['alpha'].clear()
+    qtbot.keyClicks(enrichment_window.stats_widgets['alpha'], str(kwargs_truth['alpha']))
+
+    for key in stats_kwargs:
+        if key not in {'alpha'}:
+            enrichment_window.stats_widgets[key].setValue(stats_kwargs[key])
+
+    for key in dataset_kwargs:
+        if key in enrichment_window.parameter_widgets:
+            qtbot.keyClicks(enrichment_window.parameter_widgets[key].combo, dataset_kwargs[key])
+        elif key in enrichment_window.plot_widgets:
+            if not dataset_kwargs[key]:
+                enrichment_window.plot_widgets[key].switch.click()
+
+    if not is_single_set:
+        qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
+
+    with qtbot.waitSignal(enrichment_window.enrichmentStarted) as blocker:
+        enrichment_window.widgets['run_button'].click()
+
+    assert callable(blocker.args[0])
+    assert blocker.args[1] == set_name_truth
+
+    if is_single_set:
+        pass
+    else:
+        assert blocker.args[0].keywords['statistical_test'] == test_arg_truth
+        assert blocker.args[0].keywords['background_genes'].gene_set == available_objects[bg_set_truth][
+            0].obj() if isinstance(available_objects[bg_set_truth][0].obj(), set) else available_objects[bg_set_truth][
+            0].obj().index_set
+
+    for kw in kwargs_truth:
+        assert blocker.args[0].keywords[kw] == kwargs_truth[kw]
+
+    assert blocker.args[0].func == func_truth[(dataset_name_truth, is_single_set)]
+    assert blocker.args[0].args[0] == gene_set_truth
+
+
+@pytest.mark.parametrize('en_set,bg_set,en_set_truth,bg_set_truth,', [
+    ('first tab', 'second tab', 'first tab', 'second tab'),
+    ('third tab', 'first tab', 'third tab', 'first tab'),
+    ('second tab', 'third tab', 'second tab', 'third tab'),
+])
+@pytest.mark.parametrize('button_name,dataset_kwargs', [
+    ('Non-categorical attributes', dict(plot_log_scale=False, attributes='all')),
+])
+@pytest.mark.parametrize('test_name,test_arg_truth,stats_kwargs', [
+    ("One-sample T-test (parametric)", True, dict(alpha=0.08)),
+    ('Sign test (non-parametric)', False, dict(alpha=0.5))
+])
+def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window, button_name, test_name,
+                                                       test_arg_truth, en_set, en_set_truth, bg_set, bg_set_truth,
+                                                       available_objects, stats_kwargs, dataset_kwargs):
+    set_name_truth = available_objects[en_set_truth][0].name
+    gene_set_truth = enrichment.FeatureSet(available_objects[en_set_truth][0].obj() if isinstance(
+        available_objects[en_set_truth][0].obj(), set) else available_objects[en_set_truth][0].obj().index_set,
+                                           set_name_truth)
+
+    kwargs_truth = dict()
+    kwargs_truth.update(stats_kwargs)
+    kwargs_truth.update(dataset_kwargs)
+
+    enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
+    enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
+
+    qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
+
+    enrichment_window.stats_widgets['alpha'].clear()
+    qtbot.keyClicks(enrichment_window.stats_widgets['alpha'], str(kwargs_truth['alpha']))
+
+    for key in stats_kwargs:
+        if key not in {'alpha'}:
+            enrichment_window.stats_widgets[key].setValue(stats_kwargs[key])
+
+    for key in dataset_kwargs:
+        if key in enrichment_window.parameter_widgets:
+            qtbot.keyClicks(enrichment_window.parameter_widgets[key].combo, dataset_kwargs[key])
+        elif key in enrichment_window.plot_widgets:
+            if not dataset_kwargs[key]:
+                enrichment_window.plot_widgets[key].switch.click()
+
+    qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
+
+    with qtbot.waitSignal(enrichment_window.enrichmentStarted) as blocker:
+        enrichment_window.widgets['run_button'].click()
+
+    assert callable(blocker.args[0])
+    assert blocker.args[1] == set_name_truth
+
+    assert blocker.args[0].keywords['parametric_test'] == test_arg_truth
+    for kw in kwargs_truth:
+        assert blocker.args[0].keywords[kw] == kwargs_truth[kw]
+
+    assert blocker.args[0].func == enrichment.FeatureSet.non_categorical_enrichment
+    assert blocker.args[0].args[0] == gene_set_truth
+
+    assert blocker.args[0].keywords['background_genes'].gene_set == available_objects[bg_set_truth][
+        0].obj() if isinstance(available_objects[bg_set_truth][0].obj(), set) else available_objects[bg_set_truth][
+        0].obj().index_set
 
 
 def test_SetOperationWindowinit(qtbot):
