@@ -856,6 +856,7 @@ class OptionalLineEdit(QtWidgets.QWidget):
         if val is None:
             self.checkbox.setChecked(True)
         else:
+            self.checkbox.setChecked(False)
             self.line.setText(val)
 
     def text(self):
@@ -888,6 +889,7 @@ class OptionalSpinBox(QtWidgets.QWidget):
         if val is None:
             self.checkbox.setChecked(True)
         else:
+            self.checkbox.setChecked(False)
             self.spinbox.setValue(val)
 
     def value(self):
