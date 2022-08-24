@@ -112,6 +112,18 @@ def enrichment_window(qtbot, available_objects):
     return window
 
 
+@pytest.fixture
+def set_op_window(qtbot, available_objects):
+    qtbot, window = widget_setup(qtbot, SetOperationWindow, available_objects)
+    return window
+
+
+@pytest.fixture
+def set_vis_window(qtbot, available_objects):
+    qtbot, window = widget_setup(qtbot, SetVisualizationWindow, available_objects)
+    return window
+
+
 def widget_setup(qtbot, widget_class, *args, **kwargs):
     widget = widget_class(*args, **kwargs)
     widget.show()
@@ -542,11 +554,59 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
         0].obj().index_set
 
 
-def test_SetOperationWindowinit(qtbot):
+def test_SetOperationWindow_init(qtbot, set_op_window):
+    _ = set_op_window
+
+
+def test_SetOperationWindow_get_current_func_name(qtbot, set_op_window):
     assert False
 
 
-def test_SetVisualizationWindowinit(qtbot):
+def test_SetOperationWindow_canvas_types(qtbot, set_op_window):
+    assert False
+
+
+def test_SetOperationWindow_function_change_canvas(qtbot, set_op_window):
+    assert False
+
+
+def test_SetOperationWindow_primary_set_change(qtbot, set_op_window):
+    assert False
+
+
+def test_SetOperationWindow_apply_set_op(qtbot, set_op_window):
+    assert False
+
+
+def test_SetOperationWindow_apply_set_op_other(qtbot, set_op_window):
+    assert False
+
+
+def test_SetOperationWindow_apply_set_op_inplace(qtbot, set_op_window):
+    assert False
+
+
+def test_SetVisualizationWindow_init(qtbot, set_vis_window):
+    _ = set_vis_window
+
+
+def test_SetVisualizationWindow_get_current_func_name(qtbot, set_vis_window):
+    assert False
+
+
+def test_SetVisualizationWindow_canvas_types(qtbot, set_vis_window):
+    assert False
+
+
+def test_SetVisualizationWindow_function_change_canvas(qtbot, set_vis_window):
+    assert False
+
+
+def test_SetVisualizationWindow_parameter_change_canvas(qtbot, set_vis_window):
+    assert False
+
+
+def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window):
     assert False
 
 
