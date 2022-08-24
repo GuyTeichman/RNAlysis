@@ -179,7 +179,6 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                  'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
-    enrichmentFinished = QtCore.pyqtSignal(pd.DataFrame, str)
     enrichmentStarted = QtCore.pyqtSignal(object, str)
 
     def __init__(self, available_objects: dict, parent=None):
