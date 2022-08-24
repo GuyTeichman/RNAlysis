@@ -876,16 +876,6 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         for row in range(0, 4):
             self.visualization_grid.setRowStretch(row, 1)
 
-    def select_all(self):
-        for ind in range(self.widgets['set_list'].count()):
-            item = self.widgets['set_list'].item(ind)
-            if not item.isSelected():
-                item.setSelected(True)
-
-    def clear_all(self):
-        for item in self.widgets['set_list'].selectedItems():
-            item.setSelected(False)
-
     def _validate_input(self):
         is_legal = True
 
