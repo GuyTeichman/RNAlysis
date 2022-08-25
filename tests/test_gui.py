@@ -60,7 +60,7 @@ def available_objects(qtbot, red_icon, green_icon):
 
 
 @pytest.fixture
-def four_available_objects(qtbot, red_icon, green_icon):
+def four_available_objects(qtbot, red_icon, green_icon, blank_icon):
     qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
                                 {'WBGene00008447', 'WBGene00044258', 'WBGene00045410', 'WBGene00010100'})
 
@@ -77,7 +77,7 @@ def four_available_objects(qtbot, red_icon, green_icon):
     fourth.rename('fourth tab')
 
     return {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
-            'fourth': (fourth, green_icon)}
+            'fourth tab': (fourth, green_icon), 'empty tab': (None, blank_icon)}
 
 
 @pytest.fixture
