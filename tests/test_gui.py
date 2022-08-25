@@ -60,6 +60,27 @@ def available_objects(qtbot, red_icon, green_icon):
 
 
 @pytest.fixture
+def four_available_objects(qtbot, red_icon, green_icon):
+    qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
+                                {'WBGene00008447', 'WBGene00044258', 'WBGene00045410', 'WBGene00010100'})
+
+    qtbot, second = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    second.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_1.csv'))
+    second.rename('second tab')
+
+    qtbot, third = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    third.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq_set_ops_2.csv'))
+    third.rename('third tab')
+
+    qtbot, fourth = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+    fourth.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'))
+    fourth.rename('fourth tab')
+
+    return {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
+            'fourth': (fourth, green_icon)}
+
+
+@pytest.fixture
 def filtertabpage(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
@@ -113,15 +134,26 @@ def enrichment_window(qtbot, available_objects):
 
 
 @pytest.fixture
-def set_op_window(qtbot, available_objects):
-    qtbot, window = widget_setup(qtbot, SetOperationWindow, available_objects)
+def set_op_window(qtbot, four_available_objects):
+    qtbot, window = widget_setup(qtbot, SetOperationWindow, four_available_objects)
     return window
 
 
 @pytest.fixture
-def set_vis_window(qtbot, available_objects):
-    qtbot, window = widget_setup(qtbot, SetVisualizationWindow, available_objects)
+def set_vis_window(qtbot, four_available_objects):
+    qtbot, window = widget_setup(qtbot, SetVisualizationWindow, four_available_objects)
     return window
+
+
+@pytest.fixture
+def monkeypatch_create_canvas(monkeypatch):
+    canvas_created = []
+
+    def mock_create_canvas(self):
+        canvas_created.append(True)
+
+    monkeypatch.setattr(SetVisualizationWindow, 'create_canvas', mock_create_canvas)
+    return canvas_created
 
 
 def widget_setup(qtbot, widget_class, *args, **kwargs):
@@ -558,12 +590,48 @@ def test_SetOperationWindow_init(qtbot, set_op_window):
     _ = set_op_window
 
 
-def test_SetOperationWindow_get_current_func_name(qtbot, set_op_window):
-    assert False
+@pytest.mark.parametrize('op_name,truth', [
+    ('Intersection', 'intersection'),
+    ('Union', 'union'),
+    ('Symmetric Difference', 'symmetric_difference'),
+    ('Majority-Vote Intersection', 'majority_vote_intersection'),
+    ('Other', 'other')
+])
+@pytest.mark.parametrize('second_op_name,second_truth', [
+    ('Intersection', 'intersection'),
+    ('Union', 'union'),
+    ('Symmetric Difference', 'symmetric_difference'),
+    ('Majority-Vote Intersection', 'majority_vote_intersection'),
+    ('Other', 'other')
+])
+def test_SetOperationWindow_get_current_func_name(qtbot, set_op_window, op_name, truth, second_op_name, second_truth):
+    assert set_op_window.get_current_func_name() is None
+    set_op_window.widgets['radio_button_box'].radio_buttons[op_name].click()
+    assert set_op_window.get_current_func_name() == truth
+    set_op_window.widgets['radio_button_box'].radio_buttons[second_op_name].click()
+    assert set_op_window.get_current_func_name() == second_truth
 
 
 def test_SetOperationWindow_canvas_types(qtbot, set_op_window):
-    assert False
+    assert isinstance(set_op_window.widgets['canvas'], gui_graphics.EmptyCanvas)
+
+    set_op_window.widgets['set_list'].list_items[0].setSelected(True)
+    assert isinstance(set_op_window.widgets['canvas'], gui_graphics.EmptyCanvas)
+
+    set_op_window.widgets['set_list'].list_items[1].setSelected(True)
+    assert isinstance(set_op_window.widgets['canvas'], gui_graphics.VennInteractiveCanvas)
+
+    set_op_window.widgets['set_list'].list_items[2].setSelected(True)
+    assert isinstance(set_op_window.widgets['canvas'], gui_graphics.VennInteractiveCanvas)
+
+    set_op_window.widgets['set_list'].select_all_button.click()
+    assert isinstance(set_op_window.widgets['canvas'], gui_graphics.UpSetInteractiveCanvas)
+
+    set_op_window.widgets['set_list'].list_items[0].setSelected(False)
+    assert isinstance(set_op_window.widgets['canvas'], gui_graphics.VennInteractiveCanvas)
+
+    set_op_window.widgets['set_list'].clear_all_button.click()
+    assert isinstance(set_op_window.widgets['canvas'], gui_graphics.EmptyCanvas)
 
 
 def test_SetOperationWindow_function_change_canvas(qtbot, set_op_window):
@@ -590,24 +658,137 @@ def test_SetVisualizationWindow_init(qtbot, set_vis_window):
     _ = set_vis_window
 
 
-def test_SetVisualizationWindow_get_current_func_name(qtbot, set_vis_window):
-    assert False
+@pytest.mark.parametrize('op_name,truth', [
+    ('Venn Diagram', 'venn_diagram'),
+    ('UpSet Plot', 'upset_plot')
+])
+@pytest.mark.parametrize('second_op_name,second_truth', [
+    ('Venn Diagram', 'venn_diagram'),
+    ('UpSet Plot', 'upset_plot')
+])
+def test_SetVisualizationWindow_get_current_func_name(qtbot, set_vis_window, op_name, truth, second_op_name,
+                                                      second_truth):
+    assert set_vis_window.get_current_func_name() is None
+    set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
+    assert set_vis_window.get_current_func_name() == truth
+    set_vis_window.widgets['radio_button_box'].radio_buttons[second_op_name].click()
+    assert set_vis_window.get_current_func_name() == second_truth
 
 
-def test_SetVisualizationWindow_canvas_types(qtbot, set_vis_window):
-    assert False
+@pytest.mark.parametrize('is_func_selected', ['Venn Diagram', 'UpSet Plot', False])
+def test_SetVisualizationWindow_canvas_types(qtbot, set_vis_window, is_func_selected):
+    expected_canvas = gui_graphics.BasePreviewCanvas if is_func_selected else gui_graphics.EmptyCanvas
+    if is_func_selected:
+        set_vis_window.widgets['radio_button_box'].radio_buttons[is_func_selected].click()
+
+    assert isinstance(set_vis_window.widgets['canvas'], gui_graphics.EmptyCanvas)
+
+    set_vis_window.widgets['set_list'].list_items[0].setSelected(True)
+    assert isinstance(set_vis_window.widgets['canvas'], gui_graphics.EmptyCanvas)
+
+    set_vis_window.widgets['set_list'].list_items[1].setSelected(True)
+    assert isinstance(set_vis_window.widgets['canvas'], expected_canvas)
+
+    set_vis_window.widgets['set_list'].list_items[2].setSelected(True)
+    assert isinstance(set_vis_window.widgets['canvas'], expected_canvas)
+
+    set_vis_window.widgets['set_list'].select_all_button.click()
+    assert isinstance(set_vis_window.widgets['canvas'], expected_canvas)
+
+    set_vis_window.widgets['set_list'].list_items[0].setSelected(False)
+    assert isinstance(set_vis_window.widgets['canvas'], expected_canvas)
+
+    set_vis_window.widgets['set_list'].clear_all_button.click()
+    assert isinstance(set_vis_window.widgets['canvas'], gui_graphics.EmptyCanvas)
 
 
-def test_SetVisualizationWindow_function_change_canvas(qtbot, set_vis_window):
-    assert False
+@pytest.mark.parametrize('op_name', [
+    'Venn Diagram',
+    'UpSet Plot'
+])
+@pytest.mark.parametrize('second_op_name', [
+    'Venn Diagram',
+    'UpSet Plot'
+])
+def test_SetVisualizationWindow_function_change_canvas(monkeypatch_create_canvas, set_vis_window, qtbot, op_name,
+                                                       second_op_name):
+    n_sets = 3
+    for i in range(n_sets):
+        set_vis_window.widgets['set_list'].list_items[i].setSelected(True)
+
+    while len(monkeypatch_create_canvas) > 0:
+        monkeypatch_create_canvas.pop(-1)
+
+    set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
+    assert monkeypatch_create_canvas == [True]
+    set_vis_window.widgets['radio_button_box'].radio_buttons[second_op_name].click()
+    assert monkeypatch_create_canvas == [True, True]
 
 
-def test_SetVisualizationWindow_parameter_change_canvas(qtbot, set_vis_window):
-    assert False
+@pytest.mark.parametrize('op_name,n_sets,sample_bool_param', [
+    ('Venn Diagram', 2, 'weighted'),
+    ('UpSet Plot', 4, 'show_percentages')
+])
+def test_SetVisualizationWindow_parameter_change_canvas(monkeypatch, qtbot, set_vis_window, op_name, n_sets,
+                                                        sample_bool_param):
+    canvas_created = []
+
+    def mock_create_canvas(self):
+        canvas_created.append(True)
+
+    monkeypatch.setattr(SetVisualizationWindow, 'create_canvas', mock_create_canvas)
+
+    set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
+    for i in range(n_sets):
+        set_vis_window.widgets['set_list'].list_items[i].setSelected(True)
+
+    set_vis_window.parameter_widgets['title'].clear()
+
+    assert canvas_created == [True]
+
+    qtbot.keyClicks(set_vis_window.parameter_widgets['title'], 'x')
+
+    assert canvas_created == [True, True]
+
+    qtbot.mouseClick(set_vis_window.parameter_widgets[sample_bool_param].switch, LEFT_CLICK)
+
+    assert canvas_created == [True, True, True]
 
 
-def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window):
-    assert False
+@pytest.mark.parametrize('func_name,op_name,n_sets,kwargs_truth', [
+    ('venn_diagram', 'Venn Diagram', 2, {'title': 'my title', 'weighted': True, 'transparency': 0.4}),
+    ('venn_diagram', 'Venn Diagram', 3, {'title': 'my title', 'weighted': True, 'linestyle': 'solid'}),
+    ('upset_plot', 'UpSet Plot', 2, {'title': 'my title', 'title_fontsize': 20}),
+    ('upset_plot', 'UpSet Plot', 4, {'title': 'my title', 'show_percentages': True}),
+
+])
+def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatch, func_name, op_name, n_sets,
+                                               kwargs_truth, four_available_objects):
+    called = []
+
+    def mock_func(*args, **kwargs):
+        for key in kwargs_truth:
+            assert kwargs[key] == kwargs_truth[key]
+        assert 'fig' not in kwargs
+        assert len(args) == 1
+        objs_truth = {
+            list(four_available_objects.keys())[i]: four_available_objects[list(four_available_objects.keys())[i]][
+                0].obj() for i in range(n_sets)}
+        assert args[0] == objs_truth
+
+        called.append(True)
+
+    set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
+    for i in range(n_sets):
+        set_vis_window.widgets['set_list'].list_items[i].setSelected(True)
+
+    set_vis_window.parameter_widgets['title'].clear()
+    qtbot.keyClicks(set_vis_window.parameter_widgets['title'], 'my title')
+
+    monkeypatch.setattr(enrichment, func_name, mock_func)
+
+    qtbot.mouseClick(set_vis_window.widgets['generate_button'], LEFT_CLICK)
+    assert called == [True]
 
 
 def test_FilterTabPage_init(qtbot):
