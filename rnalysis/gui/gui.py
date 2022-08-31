@@ -520,7 +520,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         sets = [self.available_objects[name][0].obj() for name in set_names]
         ind = 0
         while ind < len(set_names):
-            if sets[ind] is None:
+            if sets[ind] is None or self.available_objects[set_names[ind]][0].is_empty():
                 set_names.pop(ind)
                 sets.pop(ind)
             else:
@@ -845,7 +845,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         sets = [self.available_objects[name][0].obj() for name in set_names]
         ind = 0
         while ind < len(set_names):
-            if sets[ind] is None:
+            if sets[ind] is None or self.available_objects[set_names[ind]][0].is_empty():
                 set_names.pop(ind)
                 sets.pop(ind)
             else:
@@ -933,7 +933,8 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
     def _get_function_params(self):
         set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        objs_to_plot = {key: val[0].obj() for key, val in self.available_objects.items() if key in set_names}
+        objs_to_plot = {key: val[0].obj() for key, val in self.available_objects.items() if
+                        key in set_names and not val[0].is_empty()}
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
