@@ -756,6 +756,8 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
             set_names, primary_set_name, kwargs = self._get_function_params()
 
             first_obj = self.available_objects[primary_set_name][0].obj()
+            if isinstance(first_obj, set):
+                first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
             other_objs = []
             for name in set_names:
                 if name != primary_set_name:
