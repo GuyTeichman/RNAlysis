@@ -60,7 +60,7 @@ def available_objects(qtbot, red_icon, green_icon):
 
 
 @pytest.fixture
-def four_available_objects(qtbot, red_icon, green_icon, blank_icon):
+def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
     qtbot, first = widget_setup(qtbot, SetTabPage, 'first tab',
                                 {'WBGene00008447', 'WBGene00044258', 'WBGene00045410', 'WBGene00010100'})
 
@@ -76,8 +76,10 @@ def four_available_objects(qtbot, red_icon, green_icon, blank_icon):
     fourth.start_from_filter_obj(filtering.CountFilter('tests/test_files/counted.tsv'))
     fourth.rename('fourth tab')
 
+    qtbot, empty = widget_setup(qtbot, FilterTabPage, undo_stack=QtWidgets.QUndoStack())
+
     return {'first tab': (first, red_icon), 'second tab': (second, red_icon), 'third tab': (third, red_icon),
-            'fourth tab': (fourth, green_icon), 'empty tab': (None, blank_icon)}
+            'fourth tab': (fourth, green_icon), 'empty tab': (empty, blank_icon)}
 
 
 @pytest.fixture
@@ -134,14 +136,14 @@ def enrichment_window(qtbot, available_objects):
 
 
 @pytest.fixture
-def set_op_window(qtbot, four_available_objects):
-    qtbot, window = widget_setup(qtbot, SetOperationWindow, four_available_objects)
+def set_op_window(qtbot, four_available_objects_and_empty):
+    qtbot, window = widget_setup(qtbot, SetOperationWindow, four_available_objects_and_empty)
     return window
 
 
 @pytest.fixture
-def set_vis_window(qtbot, four_available_objects):
-    qtbot, window = widget_setup(qtbot, SetVisualizationWindow, four_available_objects)
+def set_vis_window(qtbot, four_available_objects_and_empty):
+    qtbot, window = widget_setup(qtbot, SetVisualizationWindow, four_available_objects_and_empty)
     return window
 
 
@@ -638,19 +640,90 @@ def test_SetOperationWindow_function_change_canvas(qtbot, set_op_window):
     assert False
 
 
-def test_SetOperationWindow_primary_set_change(qtbot, set_op_window):
-    assert False
+@pytest.mark.parametrize('n_selected', [3, 4])
+def test_SetOperationWindow_primary_set_change(qtbot, set_op_window, n_selected):
+    for i in range(n_selected):
+        set_op_window.widgets['set_list'].list_items[i].setSelected(True)
+
+    with qtbot.waitSignal(set_op_window.primarySetChangedDifference):
+        set_op_window.widgets['radio_button_box'].radio_buttons['Difference'].click()
+
+    for tab in ['first tab', 'second tab', 'third tab']:
+        with qtbot.waitSignal(set_op_window.primarySetChangedDifference) as blocker:
+            set_op_window.widgets['choose_primary_set'].setCurrentText(tab)
+            print(qtbot.screenshot(set_op_window))
+        assert blocker.args[0] == tab
+
+    with qtbot.waitSignal(set_op_window.primarySetChangedIntersection):
+        set_op_window.widgets['radio_button_box'].radio_buttons['Intersection'].click()
+
+    for tab in ['first tab', 'second tab', 'third tab']:
+        with qtbot.waitSignal(set_op_window.primarySetChangedIntersection):
+            set_op_window.widgets['choose_primary_set'].setCurrentText(tab)
 
 
-def test_SetOperationWindow_apply_set_op(qtbot, set_op_window):
-    assert False
+@pytest.mark.parametrize('operation,set_indices,truth', [
+    ('Union', [0, 2],
+     {'WBGene00018199', 'WBGene00020407', 'WBGene00045366', 'WBGene00044258', 'WBGene00010100', 'WBGene00018193',
+      'WBGene00219307', 'WBGene00021019', 'WBGene00045410', 'WBGene00194708', 'WBGene00021589', 'WBGene00219304',
+      'WBGene00023036', 'WBGene00021375', 'WBGene00008447', 'WBGene00044799', 'WBGene00001118', 'WBGene00077437',
+      'WBGene00010755', 'WBGene00012919', 'WBGene00021654', 'WBGene00013816', 'WBGene00022486', 'WBGene00019174',
+      'WBGene00007674', 'WBGene00012648', 'WBGene00021605'}
+     ),
+    ('Union', [1, 2, 3],
+     {'WBGene00018199', 'WBGene00007064', 'WBGene00020407', 'WBGene00007079', 'WBGene00044478', 'WBGene00045366',
+      'WBGene00043989', 'WBGene00007075', 'WBGene00044258', 'WBGene00010100', 'WBGene00043987', 'WBGene00007066',
+      'WBGene00018193', 'WBGene00022730', 'WBGene00044022', 'WBGene00077504', 'WBGene00219307', 'WBGene00014997',
+      'WBGene00021019', 'WBGene00043990', 'WBGene00045410', 'WBGene00021018', 'WBGene00194708', 'WBGene00007078',
+      'WBGene00021589', 'WBGene00219304', 'WBGene00023036', 'WBGene00007069', 'WBGene00021375', 'WBGene00007076',
+      'WBGene00008447', 'WBGene00044799', 'WBGene00001118', 'WBGene00077502', 'WBGene00007067', 'WBGene00077503',
+      'WBGene00007071', 'WBGene00012961', 'WBGene00077437', 'WBGene00022438', 'WBGene00010755', 'WBGene00007063',
+      'WBGene00012919', 'WBGene00021654', 'WBGene00013816', 'WBGene00007074', 'WBGene00010507', 'WBGene00016635',
+      'WBGene00022486', 'WBGene00043988', 'WBGene00007077', 'WBGene00019174', 'WBGene00012452', 'WBGene00007674',
+      'WBGene00012648', 'WBGene00044951', 'WBGene00021605'}
+     ),
+    ('Intersection', [0, 2], {'WBGene00044258', 'WBGene00045410', 'WBGene00010100'}),
+    ('Intersection', [1, 2, 3], set()),
+    ('Difference', [0, 2], {'WBGene00008447'}),
+    ('Difference', [1, 2, 3],
+     {'WBGene00044478', 'WBGene00008447', 'WBGene00021018', 'WBGene00010507', 'WBGene00016635', 'WBGene00012452',
+      'WBGene00022730', 'WBGene00012961', 'WBGene00022438'}
+     ),
+    ('Symmetric Difference', [0, 1],
+     {'WBGene00018199', 'WBGene00044478', 'WBGene00045366', 'WBGene00022730', 'WBGene00219307', 'WBGene00021019',
+      'WBGene00021018', 'WBGene00194708', 'WBGene00219304', 'WBGene00023036', 'WBGene00021375', 'WBGene00012961',
+      'WBGene00077437', 'WBGene00022438', 'WBGene00013816', 'WBGene00010507', 'WBGene00016635', 'WBGene00022486',
+      'WBGene00019174', 'WBGene00012452', 'WBGene00007674', 'WBGene00012648'}
+     ),
+    ('Symmetric Difference', [2, 3],
+     {'WBGene00018199', 'WBGene00045366', 'WBGene00043989', 'WBGene00043987', 'WBGene00007066', 'WBGene00219307',
+      'WBGene00021019', 'WBGene00043990', 'WBGene00007078', 'WBGene00219304', 'WBGene00023036', 'WBGene00044799',
+      'WBGene00077502', 'WBGene00001118', 'WBGene00007067', 'WBGene00077437', 'WBGene00010755', 'WBGene00007063',
+      'WBGene00021654', 'WBGene00013816', 'WBGene00007674', 'WBGene00012648', 'WBGene00007064', 'WBGene00020407',
+      'WBGene00007079', 'WBGene00007075', 'WBGene00044258', 'WBGene00010100', 'WBGene00021605', 'WBGene00018193',
+      'WBGene00044022', 'WBGene00077504', 'WBGene00045410', 'WBGene00194708', 'WBGene00021589', 'WBGene00007069',
+      'WBGene00021375', 'WBGene00007076', 'WBGene00077503', 'WBGene00007071', 'WBGene00012919', 'WBGene00007074',
+      'WBGene00043988', 'WBGene00007077', 'WBGene00022486', 'WBGene00019174', 'WBGene00044951', 'WBGene00014997'}
+     )
+])
+def test_SetOperationWindow_apply_set_op(qtbot, set_op_window, operation, set_indices, truth):
+    for ind in set_indices:
+        set_op_window.widgets['set_list'].list_items[ind].setSelected(True)
+    set_op_window.widgets['radio_button_box'].radio_buttons[operation].click()
+    if operation in ['Difference', 'Intersection']:
+        set_op_window.widgets['choose_primary_set'].setCurrentText(
+            set_op_window.widgets['set_list'].items[set_indices[0]])
+    with qtbot.waitSignal(set_op_window.geneSetReturned) as blocker:
+        set_op_window.widgets['apply_button'].click()
+    assert blocker.args[0] == truth
 
 
 def test_SetOperationWindow_apply_set_op_other(qtbot, set_op_window):
     assert False
 
 
-def test_SetOperationWindow_apply_set_op_inplace(qtbot, set_op_window):
+@pytest.mark.parametrize('operation', ['Difference', 'Intersection'])
+def test_SetOperationWindow_apply_set_op_inplace(qtbot, set_op_window, operation):
     assert False
 
 
@@ -679,8 +752,7 @@ def test_SetVisualizationWindow_get_current_func_name(qtbot, set_vis_window, op_
 def test_SetVisualizationWindow_canvas_types(qtbot, set_vis_window, is_func_selected):
     expected_canvas = gui_graphics.BasePreviewCanvas if is_func_selected else gui_graphics.EmptyCanvas
     if is_func_selected:
-        set_vis_window.widgets['radio_button_box'].radio_buttons[is_func_selected].click()
-
+        qtbot.mouseClick(set_vis_window.widgets['radio_button_box'].radio_buttons[is_func_selected], LEFT_CLICK)
     assert isinstance(set_vis_window.widgets['canvas'], gui_graphics.EmptyCanvas)
 
     set_vis_window.widgets['set_list'].list_items[0].setSelected(True)
@@ -763,7 +835,7 @@ def test_SetVisualizationWindow_parameter_change_canvas(monkeypatch, qtbot, set_
 
 ])
 def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatch, func_name, op_name, n_sets,
-                                               kwargs_truth, four_available_objects):
+                                               kwargs_truth, four_available_objects_and_empty):
     called = []
 
     def mock_func(*args, **kwargs):
@@ -772,8 +844,9 @@ def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatc
         assert 'fig' not in kwargs
         assert len(args) == 1
         objs_truth = {
-            list(four_available_objects.keys())[i]: four_available_objects[list(four_available_objects.keys())[i]][
-                0].obj() for i in range(n_sets)}
+            list(four_available_objects_and_empty.keys())[i]:
+                four_available_objects_and_empty[list(four_available_objects_and_empty.keys())[i]][
+                    0].obj() for i in range(n_sets)}
         assert args[0] == objs_truth
 
         called.append(True)
@@ -792,7 +865,7 @@ def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatc
 
 
 def test_FilterTabPage_init(qtbot):
-    qtbot, window = widget_setup(qtbot, FilterTabPage)
+    _, _ = widget_setup(qtbot, FilterTabPage)
 
 
 def test_FilterTabPage_load_file(qtbot):
