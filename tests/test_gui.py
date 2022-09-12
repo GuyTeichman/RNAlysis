@@ -662,7 +662,7 @@ def test_SetOperationWindow_primary_set_change(qtbot, set_op_window, n_selected)
             set_op_window.widgets['choose_primary_set'].setCurrentText(tab)
 
 
-@pytest.mark.parametrize('operation,set_indices,truth', [
+apply_set_ops_parametrize = [
     ('Union', [0, 2],
      {'WBGene00018199', 'WBGene00020407', 'WBGene00045366', 'WBGene00044258', 'WBGene00010100', 'WBGene00018193',
       'WBGene00219307', 'WBGene00021019', 'WBGene00045410', 'WBGene00194708', 'WBGene00021589', 'WBGene00219304',
@@ -705,7 +705,10 @@ def test_SetOperationWindow_primary_set_change(qtbot, set_op_window, n_selected)
       'WBGene00021375', 'WBGene00007076', 'WBGene00077503', 'WBGene00007071', 'WBGene00012919', 'WBGene00007074',
       'WBGene00043988', 'WBGene00007077', 'WBGene00022486', 'WBGene00019174', 'WBGene00044951', 'WBGene00014997'}
      )
-])
+]
+
+
+@pytest.mark.parametrize('operation,set_indices,truth', apply_set_ops_parametrize)
 def test_SetOperationWindow_apply_set_op(qtbot, set_op_window, operation, set_indices, truth):
     for ind in set_indices:
         set_op_window.widgets['set_list'].list_items[ind].setSelected(True)
@@ -718,12 +721,70 @@ def test_SetOperationWindow_apply_set_op(qtbot, set_op_window, operation, set_in
     assert blocker.args[0] == truth
 
 
-def test_SetOperationWindow_apply_set_op_other(qtbot, set_op_window):
-    assert False
+@pytest.mark.parametrize('operation,set_indices,truth', apply_set_ops_parametrize)
+def test_SetOperationWindow_apply_set_op_other(qtbot, set_op_window, operation, set_indices, truth):
+    for ind in set_indices:
+        set_op_window.widgets['set_list'].list_items[ind].setSelected(True)
+    set_op_window.widgets['radio_button_box'].radio_buttons[operation].click()
+    if operation in ['Difference', 'Intersection']:
+        set_op_window.widgets['choose_primary_set'].setCurrentText(
+            set_op_window.widgets['set_list'].items[set_indices[0]])
+
+    set_op_window.widgets['radio_button_box'].radio_buttons['Other'].click()
+    with qtbot.waitSignal(set_op_window.geneSetReturned) as blocker:
+        set_op_window.widgets['apply_button'].click()
+    assert blocker.args[0] == truth
 
 
-@pytest.mark.parametrize('operation', ['Difference', 'Intersection'])
-def test_SetOperationWindow_apply_set_op_inplace(qtbot, set_op_window, operation):
+@pytest.mark.parametrize('operation,set_indices,primary_set,truth',
+                         [('Intersection', [0, 2], 2, {'WBGene00044258', 'WBGene00045410', 'WBGene00010100'}),
+                          ('Intersection', [1, 2, 3], 1, set()),
+                          ('Difference', [0, 2], 2,
+                           {'WBGene00001118', 'WBGene00007674', 'WBGene00010755', 'WBGene00012648', 'WBGene00012919',
+                            'WBGene00013816', 'WBGene00018193', 'WBGene00018199', 'WBGene00019174', 'WBGene00020407',
+                            'WBGene00021019', 'WBGene00021375', 'WBGene00021589', 'WBGene00021605', 'WBGene00021654',
+                            'WBGene00022486', 'WBGene00023036', 'WBGene00044799', 'WBGene00045366', 'WBGene00077437',
+                            'WBGene00194708', 'WBGene00219304', 'WBGene00219307'}),
+                          ('Difference', [1, 2, 3], 1,
+                           {'WBGene00044478', 'WBGene00008447', 'WBGene00021018', 'WBGene00010507', 'WBGene00016635',
+                            'WBGene00012452',
+                            'WBGene00022730', 'WBGene00012961', 'WBGene00022438'})])
+def test_SetOperationWindow_apply_set_op_inplace(qtbot, four_available_objects_and_empty, set_op_window, operation,
+                                                 set_indices, primary_set, truth):
+    primary_set_name = set_op_window.widgets['set_list'].items[primary_set]
+
+    for ind in set_indices:
+        set_op_window.widgets['set_list'].list_items[ind].setSelected(True)
+    set_op_window.widgets['radio_button_box'].radio_buttons[operation].click()
+    set_op_window.widgets['choose_primary_set'].setCurrentText(
+        primary_set_name)
+
+    with qtbot.waitSignal(set_op_window.geneSetReturned) as blocker:
+        set_op_window.widgets['apply_button'].click()
+    assert blocker.args[0] == truth
+
+    inplace_truth = four_available_objects_and_empty[primary_set_name][0].obj().__copy__()
+    obj_names = [set_op_window.widgets['set_list'].items[ind] for ind in set_indices if ind != primary_set]
+    objs_for_operation = [four_available_objects_and_empty[name][0].obj() for name in obj_names]
+    if operation == 'Difference':
+        inplace_truth.difference(
+            *objs_for_operation, inplace=True)
+    else:
+        inplace_truth.intersection(*objs_for_operation, inplace=True)
+    set_op_window.parameter_widgets['inplace'].switch.click()
+    with qtbot.assertNotEmitted(set_op_window.geneSetReturned) as blocker:
+        set_op_window.widgets['apply_button'].click()
+    assert four_available_objects_and_empty[primary_set_name][0].obj() == inplace_truth
+
+
+@pytest.mark.parametrize('threshold,truth', [
+    (0, {}),
+    (0.25, {}),
+    (0.57, {}),
+    (0.99, {}),
+    (1, {})
+])
+def test_SetOperationWindow_apply_set_op_majority_vote(qtbot, set_op_window, threshold, truth):
     assert False
 
 
