@@ -1866,9 +1866,9 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
         out = []
         for file in keep_tables:
             if keep_tables[file]:
-                name = str(file) if new_names[file] == '' else new_names[file]
                 obj = self.objs[file]
-                obj.fname = Path(name)
+                if new_names[file] != '':
+                    obj.fname = Path(new_names[file])
                 out.append(obj)
         return out
 
