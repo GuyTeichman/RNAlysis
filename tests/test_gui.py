@@ -1155,9 +1155,8 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     window.startedClustering.connect(my_slot)
 
     orig = window.obj().__copy__()
-    orig_renamed = orig.__copy__()
-    orig_renamed.fname = Path('counted')
-    truth = orig_renamed.split_kmeans(n_clusters=3, random_seed=0)
+
+    truth = orig.split_kmeans(n_clusters=3, random_seed=0)
     truth = sorted(truth, key=lambda obj: obj.shape[0])
 
     window.stack_buttons[4].click()
@@ -1726,9 +1725,11 @@ def test_MainWindow_about(qtbot, use_temp_settings_file, main_window):
     assert False
 
 
-def test_MainWindow_cite(qtbot, use_temp_settings_file, main_window):
-    assert False
+def test_MainWindow_cite(qtbot, use_temp_settings_file, main_window, monkeypatch):
+    window_opened = []
 
+    monkeypatch.setattr(gui_windows.HowToCiteWindow, 'exec', functools.partial(window_opened.append, True))
 
-def test_MainWindow_close(qtbot, use_temp_settings_file, main_window):
-    assert False
+    qtbot.mouseClick(main_window.menu_bar, LEFT_CLICK,
+                     pos=main_window.menu_bar.actionGeometry(main_window.cite_action).center())
+    assert window_opened == [True]
