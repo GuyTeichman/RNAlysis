@@ -83,6 +83,12 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 
 
 @pytest.fixture
+def tab_widget(qtbot):
+    qtbot, window = widget_setup(qtbot, ReactiveTabWidget)
+    return window
+
+
+@pytest.fixture
 def multi_keep_window(qtbot):
     objs = [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
             filtering.CountFilter('tests/test_files/counted.tsv'),
@@ -1532,8 +1538,73 @@ def test_MultiOpenWindow_result(qtbot, multi_open_window, path_ops, type_ops, na
     assert multi_open_window.result() == truth
 
 
-def test_ReactiveTabWidget_init(qtbot):
-    assert False
+def test_ReactiveTabWidget_init(qtbot, tab_widget):
+    _ = tab_widget
+
+
+def test_ReactiveTabWidget_new_tab_from_item(qtbot, tab_widget):
+    with qtbot.waitSignal(tab_widget.newTabFromSet) as blocker:
+        tab_widget.new_tab_from_item({'a', 'b', 'c', 'd'}, 'my name')
+    assert blocker.args == [{'a', 'b', 'c', 'd'}, 'my name']
+
+    with qtbot.waitSignal(tab_widget.newTabFromFilter) as blocker:
+        tab_widget.new_tab_from_item(filtering.CountFilter('tests/test_files/counted.tsv'), 'my name')
+    assert blocker.args == [filtering.CountFilter('tests/test_files/counted.tsv'), 'my name']
+
+    with pytest.raises(TypeError):
+        with qtbot.assertNotEmitted(tab_widget.newTabFromSet):
+            with qtbot.assertNotEmitted(tab_widget.newTabFromFilter):
+                tab_widget.new_tab_from_item(['invalid item type'], 'my name')
+
+
+def test_ReactiveTabWidget_remove_tab(qtbot, tab_widget):
+    qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
+    tab_widget.setCornerWidget(widget, QtCore.Qt.TopRightCorner)
+    for i in range(3):
+        qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
+        tab_widget.addTab(widget, 'name')
+
+    for i in range(3):
+        tab_widget.removeTab(0)
+
+    assert tab_widget.count() == 0
+
+
+def test_ReactiveTabWidget_left_click(qtbot, tab_widget, monkeypatch):
+    super_triggered = []
+
+    def mock_mouse_press_event(self, event):
+        super_triggered.append(True)
+
+    monkeypatch.setattr(QtWidgets.QTabWidget, 'mousePressEvent', mock_mouse_press_event)
+
+    for i in range(3):
+        qtbot.mouseClick(tab_widget, LEFT_CLICK)
+        assert super_triggered == [True] * (i + 1)
+
+
+def test_ReactiveTabWidget_right_click(qtbot, tab_widget, monkeypatch):
+    super_triggered = []
+
+    def mock_mouse_press_event(self, event):
+        super_triggered.append(True)
+
+    monkeypatch.setattr(QtWidgets.QTabWidget, 'mousePressEvent', mock_mouse_press_event)
+
+    for i in range(3):
+        # with qtbot.waitSignal(tab_widget.tabRightClicked) as blocker:
+        qtbot.mouseClick(tab_widget, RIGHT_CLICK)
+        assert super_triggered == []
+
+    for i in range(3):
+        qtbot, widget = widget_setup(qtbot, QtWidgets.QWidget)
+        tab_widget.addTab(widget, 'name')
+
+        for j in range(i + 1):
+            with qtbot.waitSignal(tab_widget.tabRightClicked) as blocker:
+                qtbot.mouseClick(tab_widget, RIGHT_CLICK, pos=tab_widget.tabBar().tabRect(j).center())
+            assert super_triggered == []
+            assert blocker.args[0] == j
 
 
 def test_MainWindow_init(qtbot, use_temp_settings_file):
