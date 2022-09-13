@@ -83,6 +83,15 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 
 
 @pytest.fixture
+def multi_keep_window(qtbot):
+    objs = [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+            filtering.CountFilter('tests/test_files/counted.tsv'),
+            filtering.Filter('tests/test_files/test_deseq_biotype.csv')]
+    qtbot, window = widget_setup(qtbot, MultiKeepWindow, objs)
+    return window
+
+
+@pytest.fixture
 def filtertabpage(qtbot):
     qtbot, window = widget_setup(qtbot, FilterTabPage)
     window.start_from_filter_obj(filtering.DESeqFilter('tests/test_files/test_deseq.csv'))
@@ -1440,8 +1449,37 @@ def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
     assert False
 
 
-def test_MultiKeepWindow_init(qtbot):
-    assert False
+def test_MultiKeepWindow_init(qtbot, multi_keep_window):
+    _ = multi_keep_window
+
+
+@pytest.mark.parametrize('keep_ops,name_ops,truth', [
+    ({}, {}, []),
+    ({'all': True}, {}, [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+                         filtering.CountFilter('tests/test_files/counted.tsv'),
+                         filtering.Filter('tests/test_files/test_deseq_biotype.csv')]),
+    ({'test_deseq': True, 'test_deseq_biotype': True}, {},
+     [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+      filtering.Filter('tests/test_files/test_deseq_biotype.csv')]),
+    ({'test_deseq': True, 'test_deseq_biotype': True},
+     {'test_deseq': 'new name1', 'test_deseq_biotype': 'new name 2', 'counted': 'new name 3'},
+     [filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+      filtering.Filter('tests/test_files/test_deseq_biotype.csv')])
+])
+def test_MultiKeepWindow_result(qtbot, multi_keep_window, keep_ops, name_ops, truth):
+    for ind, op in keep_ops.items():
+        if ind == 'all':
+            qtbot.mouseClick(multi_keep_window.select_all, LEFT_CLICK)
+        else:
+            qtbot.mouseClick(multi_keep_window.keep_marks[ind], LEFT_CLICK)
+    for ind, op in name_ops.items():
+        qtbot.keyClicks(multi_keep_window.names[ind], op)
+
+        for item in truth:
+            if item.fname.stem == ind:
+                item.fname = Path(op)
+
+    assert multi_keep_window.result() == truth
 
 
 def test_MultiOpenWindow_init(qtbot, multi_open_window):
