@@ -147,6 +147,15 @@ def set_vis_window(qtbot, four_available_objects_and_empty):
     return window
 
 
+multi_open_window_files = ['tests/counted.csv', 'tests/test_deseq.csv', 'tests/counted.tsv']
+
+
+@pytest.fixture
+def multi_open_window(qtbot):
+    qtbot, window = widget_setup(qtbot, MultiOpenWindow, multi_open_window_files)
+    return window
+
+
 @pytest.fixture
 def monkeypatch_create_canvas(monkeypatch):
     canvas_created = []
@@ -1435,8 +1444,54 @@ def test_MultiKeepWindow_init(qtbot):
     assert False
 
 
-def test_MultiOpenWindow_init(qtbot):
-    assert False
+def test_MultiOpenWindow_init(qtbot, multi_open_window):
+    _ = multi_open_window
+
+
+@pytest.mark.parametrize('path_ops,type_ops,name_ops,truth', [
+    ({}, {}, {}, ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
+                   'tests/counted.tsv': 'tests/counted.tsv'},
+                  {'tests/counted.csv': 'Other', 'tests/test_deseq.csv': 'Other', 'tests/counted.tsv': 'Other'},
+                  {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''})),
+    (
+        {}, {}, {1: 'new name', 2: 'second new name'},
+        ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
+          'tests/counted.tsv': 'tests/counted.tsv'},
+         {'tests/counted.csv': 'Other', 'tests/test_deseq.csv': 'Other',
+          'tests/counted.tsv': 'Other'},
+         {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'})),
+
+    ({}, {0: 'Count matrix', 1: 'Differential expression'}, {},
+     ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
+       'tests/counted.tsv': 'tests/counted.tsv'},
+      {'tests/counted.csv': 'Count matrix', 'tests/test_deseq.csv': 'Differential expression',
+       'tests/counted.tsv': 'Other'},
+      {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''})),
+
+    ({1: 'tests/big_counted.csv'}, {}, {},
+     ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/big_counted.csv',
+       'tests/counted.tsv': 'tests/counted.tsv'},
+      {'tests/counted.csv': 'Other', 'tests/test_deseq.csv': 'Other', 'tests/counted.tsv': 'Other'},
+      {'tests/counted.csv': '', 'tests/test_deseq.csv': '', 'tests/counted.tsv': ''})),
+
+    ({}, {0: 'Count matrix', 1: 'Differential expression'}, {1: 'new name', 2: 'second new name'},
+     ({'tests/counted.csv': 'tests/counted.csv', 'tests/test_deseq.csv': 'tests/test_deseq.csv',
+       'tests/counted.tsv': 'tests/counted.tsv'},
+      {'tests/counted.csv': 'Count matrix', 'tests/test_deseq.csv': 'Differential expression',
+       'tests/counted.tsv': 'Other'},
+      {'tests/counted.csv': '', 'tests/test_deseq.csv': 'new name', 'tests/counted.tsv': 'second new name'})),
+])
+def test_MultiOpenWindow_result(qtbot, multi_open_window, path_ops, type_ops, name_ops, truth):
+    files = multi_open_window_files
+    for ind, op in path_ops.items():
+        multi_open_window.paths[files[ind]].clear()
+        qtbot.keyClicks(multi_open_window.paths[files[ind]].file_path, op)
+    for ind, op in type_ops.items():
+        qtbot.keyClicks(multi_open_window.table_types[files[ind]], op)
+    for ind, op in name_ops.items():
+        qtbot.keyClicks(multi_open_window.names[files[ind]], op)
+
+    assert multi_open_window.result() == truth
 
 
 def test_ReactiveTabWidget_init(qtbot):
