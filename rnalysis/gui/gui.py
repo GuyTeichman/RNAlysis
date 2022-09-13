@@ -2806,11 +2806,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         reply = QtWidgets.QMessageBox.question(self, 'Close program',
                                                quit_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
-        # reply.setWindowIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
 
         if reply == QtWidgets.QMessageBox.Yes:
+            self.thread_stdout_queue_listener.exit()
+
             io.clear_gui_cache()
             get_reusable_executor().shutdown(wait=True)
+
             event.accept()
         else:
             event.ignore()
