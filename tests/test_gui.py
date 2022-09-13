@@ -83,8 +83,9 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 
 
 @pytest.fixture
-def main_window(qtbot, monkeypatch):
+def main_window(qtbot, monkeypatch, use_temp_settings_file):
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
     qtbot, window = widget_setup(qtbot, MainWindow)
     return window
 
@@ -1613,115 +1614,137 @@ def test_ReactiveTabWidget_right_click(qtbot, tab_widget, monkeypatch):
             assert blocker.args[0] == j
 
 
-def test_MainWindow_init(qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_init(qtbot, main_window):
     _ = main_window
 
 
-# def test_MainWindow_add_new_tab(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_close_tab(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_close_tab_undo(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_sort_tabs_by_type(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_sort_tabs_by_n_features(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_sort_tabs_by_creation_time(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_sort_tabs_by_name(qtbot, use_temp_settings_fil, main_windowe):
-#     assert False
-#
-#
-# def test_MainWindow_reverse_order(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_change_tab_icon(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_clear_history(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_rename_tab(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_new_table_from_folder(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_multiple_new_tables(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_export_pipeline(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_import_pipeline(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_import_gene_set(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_copy_gene_set(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_append_to_current_console(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_add_pipeline(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_open_enrichment_analysis(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-# def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window):
-#     assert False
-#
-#
-def test_MainWindow_about(qtbot, use_temp_settings_file, main_window, monkeypatch):
+def test_MainWindow_add_new_tab(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_close_tab(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_close_tab_undo(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_type(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_n_features(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_creation_time(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_sort_tabs_by_name(qtbot, main_windowe):
+    assert False
+
+
+def test_MainWindow_reverse_order(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_change_tab_icon(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_clear_history(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_rename_tab(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_new_table_from_folder(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_multiple_new_tables(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_export_pipeline(use_temp_settings_file, main_window, monkeypatch):
+    fname = 'path/to/pipeline.yaml'
+    pipeline_exported = []
+    pipeline_truth = filtering.Pipeline.import_pipeline('tests/test_files/test_pipeline.yaml')
+
+    def mock_export(pipeline, filename):
+        assert filename == fname
+        assert pipeline == pipeline_truth
+        pipeline_exported.append(True)
+
+    monkeypatch.setattr(QtWidgets.QInputDialog, 'getItem', lambda *args, **kwargs: ('test_pipeline', True))
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args, **kwargs: (fname, '.yaml'))
+    monkeypatch.setattr(filtering.Pipeline, 'export_pipeline', mock_export)
+    main_window.pipelines['test_pipeline'] = pipeline_truth
+
+    main_window.export_pipeline_action.trigger()
+    assert pipeline_exported == [True]
+
+
+def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeypatch):
+    fname = 'tests/test_files/test_pipeline.yaml'
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (fname, '.yaml'))
+    main_window.import_pipeline_action.trigger()
+    assert main_window.pipelines == {'test_pipeline': filtering.Pipeline.import_pipeline(fname)}
+
+
+def test_MainWindow_import_gene_set(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_copy_gene_set(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_append_to_current_console(qtbot, main_window):
+    assert False
+
+
+def test_MainWindow_add_pipeline(qtbot, main_window, monkeypatch):
+    window_opened = []
+    monkeypatch.setattr(CreatePipelineWindow, 'exec', functools.partial(window_opened.append, True))
+
+    main_window.new_pipeline_action.trigger()
+    assert window_opened == [True]
+
+
+def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
+def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
+def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
+def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
+def test_MainWindow_open_enrichment_analysis(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
+def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
+def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
+def test_MainWindow_about(qtbot, main_window, monkeypatch):
     window_opened = []
     monkeypatch.setattr(gui_windows.AboutWindow, 'exec', functools.partial(window_opened.append, True))
 
@@ -1729,7 +1752,7 @@ def test_MainWindow_about(qtbot, use_temp_settings_file, main_window, monkeypatc
     assert window_opened == [True]
 
 
-def test_MainWindow_cite(qtbot, use_temp_settings_file, main_window, monkeypatch):
+def test_MainWindow_cite(qtbot, main_window, monkeypatch):
     window_opened = []
     monkeypatch.setattr(gui_windows.HowToCiteWindow, 'exec', functools.partial(window_opened.append, True))
 
