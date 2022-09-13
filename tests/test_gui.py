@@ -778,14 +778,38 @@ def test_SetOperationWindow_apply_set_op_inplace(qtbot, four_available_objects_a
 
 
 @pytest.mark.parametrize('threshold,truth', [
-    (0, {}),
-    (0.25, {}),
-    (0.57, {}),
-    (0.99, {}),
-    (1, {})
+    (0, {'WBGene00194708', 'WBGene00044951', 'WBGene00018193', 'WBGene00022730', 'WBGene00012919', 'WBGene00044022',
+         'WBGene00044799', 'WBGene00001118', 'WBGene00007069', 'WBGene00021375', 'WBGene00021654', 'WBGene00077437',
+         'WBGene00010507', 'WBGene00043987', 'WBGene00010755', 'WBGene00012648', 'WBGene00077503', 'WBGene00007079',
+         'WBGene00010100', 'WBGene00012452', 'WBGene00013816', 'WBGene00022438', 'WBGene00012961', 'WBGene00016635',
+         'WBGene00007064', 'WBGene00219307', 'WBGene00043989', 'WBGene00007063', 'WBGene00023036', 'WBGene00007078',
+         'WBGene00043988', 'WBGene00077504', 'WBGene00007066', 'WBGene00007674', 'WBGene00044258', 'WBGene00021589',
+         'WBGene00021605', 'WBGene00021019', 'WBGene00007071', 'WBGene00219304', 'WBGene00043990', 'WBGene00014997',
+         'WBGene00045410', 'WBGene00077502', 'WBGene00020407', 'WBGene00007075', 'WBGene00018199', 'WBGene00045366',
+         'WBGene00007067', 'WBGene00044478', 'WBGene00022486', 'WBGene00007074', 'WBGene00007076', 'WBGene00007077',
+         'WBGene00008447', 'WBGene00019174', 'WBGene00021018'}),
+    (0.25, {'WBGene00194708', 'WBGene00044951', 'WBGene00018193', 'WBGene00022730', 'WBGene00012919', 'WBGene00044022',
+            'WBGene00044799', 'WBGene00001118', 'WBGene00007069', 'WBGene00021375', 'WBGene00021654', 'WBGene00077437',
+            'WBGene00010507', 'WBGene00043987', 'WBGene00010755', 'WBGene00012648', 'WBGene00077503', 'WBGene00007079',
+            'WBGene00010100', 'WBGene00012452', 'WBGene00013816', 'WBGene00022438', 'WBGene00012961', 'WBGene00016635',
+            'WBGene00007064', 'WBGene00219307', 'WBGene00043989', 'WBGene00007063', 'WBGene00023036', 'WBGene00007078',
+            'WBGene00043988', 'WBGene00077504', 'WBGene00007066', 'WBGene00007674', 'WBGene00044258', 'WBGene00021589',
+            'WBGene00021605', 'WBGene00021019', 'WBGene00007071', 'WBGene00219304', 'WBGene00043990', 'WBGene00014997',
+            'WBGene00045410', 'WBGene00077502', 'WBGene00020407', 'WBGene00007075', 'WBGene00018199', 'WBGene00045366',
+            'WBGene00007067', 'WBGene00044478', 'WBGene00022486', 'WBGene00007074', 'WBGene00007076', 'WBGene00007077',
+            'WBGene00008447', 'WBGene00019174', 'WBGene00021018'}),
+    (0.57, {'WBGene00044258', 'WBGene00010100', 'WBGene00045410'}),
+    (0.99, set()),
+    (1, set())
 ])
 def test_SetOperationWindow_apply_set_op_majority_vote(qtbot, set_op_window, threshold, truth):
-    assert False
+    for ind in range(4):
+        set_op_window.widgets['set_list'].list_items[ind].setSelected(True)
+    set_op_window.widgets['radio_button_box'].radio_buttons['Majority-Vote Intersection'].click()
+    set_op_window.parameter_widgets['majority_threshold'].setValue(threshold)
+    with qtbot.waitSignal(set_op_window.geneSetReturned) as blocker:
+        set_op_window.widgets['apply_button'].click()
+    assert blocker.args[0] == truth
 
 
 def test_SetVisualizationWindow_init(qtbot, set_vis_window):
