@@ -91,6 +91,14 @@ def main_window(qtbot, monkeypatch, use_temp_settings_file):
 
 
 @pytest.fixture
+def main_window_with_tabs(main_window, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
+                        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+    main_window.load_session_action.trigger()
+    return main_window
+
+
+@pytest.fixture
 def tab_widget(qtbot):
     qtbot, window = widget_setup(qtbot, ReactiveTabWidget)
     return window
@@ -1622,43 +1630,43 @@ def test_MainWindow_add_new_tab(qtbot, main_window):
     assert False
 
 
-def test_MainWindow_close_tab(qtbot, main_window):
+def test_MainWindow_close_tab(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_close_tab_undo(qtbot, main_window):
+def test_MainWindow_close_tab_undo(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_sort_tabs_by_type(qtbot, main_window):
+def test_MainWindow_sort_tabs_by_type(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_sort_tabs_by_n_features(qtbot, main_window):
+def test_MainWindow_sort_tabs_by_n_features(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_sort_tabs_by_creation_time(qtbot, main_window):
+def test_MainWindow_sort_tabs_by_creation_time(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_sort_tabs_by_name(qtbot, main_windowe):
+def test_MainWindow_sort_tabs_by_name(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_reverse_order(qtbot, main_window):
+def test_MainWindow_reverse_order(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_change_tab_icon(qtbot, main_window):
+def test_MainWindow_change_tab_icon(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_clear_history(qtbot, main_window):
+def test_MainWindow_clear_history(qtbot, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_rename_tab(qtbot, main_window):
+def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
     assert False
 
 
@@ -1700,16 +1708,28 @@ def test_MainWindow_import_gene_set(qtbot, main_window):
     assert False
 
 
-def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window_with_tabs):
     assert False
 
 
-def test_MainWindow_copy_gene_set(qtbot, main_window):
-    assert False
-
-
-def test_MainWindow_append_to_current_console(qtbot, main_window):
-    assert False
+@pytest.mark.parametrize('ind,gene_set', [
+    (4, {'WBGene00007069', 'WBGene00007064', 'WBGene00007063', 'WBGene00007074', 'WBGene00077502',
+         'WBGene00007076', 'WBGene00044951', 'WBGene00007067', 'WBGene00044022', 'WBGene00043990',
+         'WBGene00077504', 'WBGene00007066', 'WBGene00043987', 'WBGene00014997', 'WBGene00043989',
+         'WBGene00007071', 'WBGene00007075', 'WBGene00007078', 'WBGene00007079', 'WBGene00007077',
+         'WBGene00077503', 'WBGene00043988'}),
+    (1, {'WBGene00007066', 'WBGene00007076', 'WBGene00044022', 'WBGene00007067', 'WBGene00043987',
+         'WBGene00007077', 'WBGene00044951', 'WBGene00007075', 'WBGene00077502', 'WBGene00077504',
+         'WBGene00007069', 'WBGene00007079', 'WBGene00043990', 'WBGene00043989', 'WBGene00014997',
+         'WBGene00007074', 'WBGene00007071', 'WBGene00077503', 'WBGene00007063', 'WBGene00043988',
+         'WBGene00007064', 'WBGene00007078'})
+])
+def test_MainWindow_copy_gene_set(qtbot, main_window_with_tabs, ind, gene_set):
+    main_window_with_tabs.tabs.setCurrentIndex(1)
+    main_window_with_tabs.copy_action.trigger()
+    txt = QtWidgets.QApplication.clipboard().text()
+    assert len(txt.split()) == len(gene_set)
+    assert sorted(gene_set) == sorted(txt.split())
 
 
 def test_MainWindow_add_pipeline(qtbot, main_window, monkeypatch):
@@ -1766,7 +1786,7 @@ def test_MainWindow_open_enrichment_analysis(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window):
+def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window_with_tabs):
     assert False
 
 
@@ -1820,3 +1840,7 @@ def test_MainWindow_cite(qtbot, main_window, monkeypatch):
 
     main_window.cite_action.trigger()
     assert window_opened == [True]
+
+
+def test_MainWindow_append_to_current_console(qtbot, main_window):
+    assert False
