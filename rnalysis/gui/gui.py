@@ -1062,6 +1062,9 @@ class SetTabPage(TabPage):
     def obj_type(self):
         return type(self.gene_set.gene_set)
 
+    def get_index_string(self):
+        return "\n".join(self.obj())
+
     def init_overview_ui(self, set_name: str):
         this_row = 0
         self.layout.insertWidget(0, self.overview_group)
