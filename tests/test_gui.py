@@ -1700,6 +1700,10 @@ def test_MainWindow_import_gene_set(qtbot, main_window):
     assert False
 
 
+def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window):
+    assert False
+
+
 def test_MainWindow_copy_gene_set(qtbot, main_window):
     assert False
 
@@ -1716,32 +1720,90 @@ def test_MainWindow_add_pipeline(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window):
-    assert False
-
-
 def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_window):
     assert False
 
 
-def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window):
-    assert False
+def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window, monkeypatch):
+    def mock_init(self, available_objs, parent):
+        assert available_objs == 'my available objects'
+        QtWidgets.QWidget.__init__(self)
+
+    monkeypatch.setattr(main_window, 'get_available_objects', lambda: 'my available objects')
+    window_opened = []
+    monkeypatch.setattr(SetOperationWindow, '__init__', mock_init)
+    monkeypatch.setattr(SetOperationWindow, 'show', functools.partial(window_opened.append, True))
+
+    main_window.set_op_action.trigger()
+    assert window_opened == [True]
 
 
-def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_window):
-    assert False
+def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_window, monkeypatch):
+    def mock_init(self, available_objs, parent):
+        assert available_objs == 'my available objects'
+        QtWidgets.QWidget.__init__(self)
+
+    monkeypatch.setattr(main_window, 'get_available_objects', lambda: 'my available objects')
+    window_opened = []
+    monkeypatch.setattr(SetVisualizationWindow, '__init__', mock_init)
+    monkeypatch.setattr(SetVisualizationWindow, 'show', functools.partial(window_opened.append, True))
+
+    main_window.set_vis_action.trigger()
+    assert window_opened == [True]
 
 
-def test_MainWindow_open_enrichment_analysis(qtbot, use_temp_settings_file, main_window):
-    assert False
+def test_MainWindow_open_enrichment_analysis(qtbot, main_window, monkeypatch):
+    def mock_init(self, available_objs, parent):
+        assert available_objs == 'my available objects'
+        QtWidgets.QWidget.__init__(self)
+
+    monkeypatch.setattr(main_window, 'get_available_objects', lambda: 'my available objects')
+    window_opened = []
+    monkeypatch.setattr(EnrichmentWindow, '__init__', mock_init)
+    monkeypatch.setattr(EnrichmentWindow, 'show', functools.partial(window_opened.append, True))
+
+    main_window.enrichment_action.trigger()
+    assert window_opened == [True]
 
 
 def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window):
     assert False
 
 
-def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window):
-    assert False
+def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
+    pipelines_truth = {'New Pipeline': filtering.Pipeline('Filter'),
+                       'Other Pipeline': filtering.Pipeline('DESeqFilter')}
+    pipelines_truth['New Pipeline'].add_function('filter_top_n', by='log2FoldChange', n=99, ascending=True,
+                                                 na_position='last', opposite=False)
+    pipelines_truth['New Pipeline'].add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
+    pipelines_truth['Other Pipeline'].add_function('split_fold_change_direction')
+    pipelines_truth['Other Pipeline'].add_function('volcano_plot', alpha=0.1)
+
+    objs_truth = [filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
+                  filtering.CountFilter('tests/test_files/counted.tsv'),
+                  filtering.Filter('tests/test_files/counted_6cols.csv'),
+                  filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+                  {'WBGene00007069', 'WBGene00007064', 'WBGene00007063', 'WBGene00007074', 'WBGene00077502',
+                   'WBGene00007076', 'WBGene00044951', 'WBGene00007067', 'WBGene00044022', 'WBGene00043990',
+                   'WBGene00077504', 'WBGene00007066', 'WBGene00043987', 'WBGene00014997', 'WBGene00043989',
+                   'WBGene00007071', 'WBGene00007075', 'WBGene00007078', 'WBGene00007079', 'WBGene00007077',
+                   'WBGene00077503', 'WBGene00043988'}]
+    objs_truth[0].fname = Path('my table')
+    objs_truth[1].fname = Path('counted')
+    objs_truth[2].fname = Path('counted_6cols')
+    objs_truth[3].fname = Path('test_deseq')
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
+                        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+    main_window.load_session_action.trigger()
+    assert main_window.tabs.count() == 5
+    assert len(main_window.pipelines) == 2
+    assert main_window.pipelines == pipelines_truth
+
+    for i in range(1, main_window.tabs.count()):
+        assert (main_window.tabs.widget(i).obj() == objs_truth[i]) or (
+            np.all(np.isclose(main_window.tabs.widget(i).obj().df, objs_truth[i].df)) and (
+            main_window.tabs.widget(i).obj().fname == objs_truth[i].fname))
 
 
 def test_MainWindow_about(qtbot, main_window, monkeypatch):
