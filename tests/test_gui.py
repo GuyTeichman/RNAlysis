@@ -1740,8 +1740,34 @@ def test_MainWindow_add_pipeline(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_window):
-    assert False
+def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_window_with_tabs):
+    objs_truth = {'my table': filtering.FoldChangeFilter('tests/test_files/fc_1.csv', 'a', 'b'),
+                  'counted': filtering.CountFilter('tests/test_files/counted.tsv'),
+                  'counted_6cols': filtering.Filter('tests/test_files/counted_6cols.csv'),
+                  'test_deseq': filtering.DESeqFilter('tests/test_files/test_deseq.csv'),
+                  'majority_vote_intersection output': {'WBGene00007069', 'WBGene00007064', 'WBGene00007063',
+                                                        'WBGene00007074', 'WBGene00077502',
+                                                        'WBGene00007076', 'WBGene00044951', 'WBGene00007067',
+                                                        'WBGene00044022', 'WBGene00043990',
+                                                        'WBGene00077504', 'WBGene00007066', 'WBGene00043987',
+                                                        'WBGene00014997', 'WBGene00043989',
+                                                        'WBGene00007071', 'WBGene00007075', 'WBGene00007078',
+                                                        'WBGene00007079', 'WBGene00007077',
+                                                        'WBGene00077503', 'WBGene00043988'}}
+    objs_truth['my table'].fname = Path('my table')
+    objs_truth['counted'].fname = Path('counted')
+    objs_truth['counted_6cols'].fname = Path('counted_6cols')
+    objs_truth['test_deseq'].fname = Path('test_deseq')
+
+    res = main_window_with_tabs.get_available_objects()
+    assert len(res) == len(objs_truth)
+    for name in res.keys():
+        assert isinstance(res[name][0], TabPage)
+        assert (res[name][0].obj() == objs_truth[name]) or (
+            np.all(np.isclose(np.squeeze(res[name][0].obj().df), np.squeeze(objs_truth[name].df))) and (
+            res[name][0].obj().fname == objs_truth[name].fname))
+
+        assert isinstance(res[name][1], QtGui.QIcon)
 
 
 def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window, monkeypatch):
@@ -1786,7 +1812,7 @@ def test_MainWindow_open_enrichment_analysis(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window_with_tabs):
+def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window_with_tabs, monkeypatch):
     assert False
 
 
