@@ -2585,10 +2585,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def export_gene_set(self):
         this_tab = self.tabs.currentWidget()
         if isinstance(this_tab, FilterTabPage):
-            filter_obj = this_tab.filter_obj
+            filter_obj = this_tab.obj()
             gene_set = filter_obj.index_set if filter_obj is not None else None
         else:
-            gene_set = this_tab.gene_set
+            gene_set = this_tab.obj()
         if gene_set is None:
             warnings.warn('Cannot export an empty gene set')
             return
