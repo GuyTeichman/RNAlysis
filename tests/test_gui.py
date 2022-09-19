@@ -1,5 +1,6 @@
 import pytest
 import matplotlib
+import copy
 
 matplotlib.use('Agg')
 from rnalysis import filtering, enrichment
@@ -1627,15 +1628,39 @@ def test_MainWindow_init(qtbot, main_window):
 
 
 def test_MainWindow_add_new_tab(qtbot, main_window):
-    assert False
+    main_window.new_table_action.trigger()
+    assert main_window.tabs.count() == 2
 
 
-def test_MainWindow_close_tab(qtbot, main_window_with_tabs):
-    assert False
+def test_MainWindow_close_current_tab(qtbot, main_window_with_tabs):
+    current_tab_name = main_window_with_tabs.tabs.currentWidget().get_tab_name()
+    main_window_with_tabs.close_current_action.trigger()
+    assert main_window_with_tabs.tabs.count() == 4
+    assert current_tab_name not in main_window_with_tabs.get_available_objects()
+    assert main_window_with_tabs.tabs.currentWidget().get_tab_name() != current_tab_name
+
+
+@pytest.mark.parametrize('ind', range(5))
+def test_MainWindow_close_tab(qtbot, main_window_with_tabs, ind):
+    tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
+    main_window_with_tabs.close_tab(ind)
+    assert main_window_with_tabs.tabs.count() == 4
+    assert tab_name not in main_window_with_tabs.get_available_objects()
+    assert main_window_with_tabs.tabs.currentWidget().get_tab_name() != tab_name
 
 
 def test_MainWindow_close_tab_undo(qtbot, main_window_with_tabs):
-    assert False
+    current_tab_name = main_window_with_tabs.tabs.currentWidget().get_tab_name()
+    current_obj = copy.copy(main_window_with_tabs.tabs.currentWidget().obj())
+    main_window_with_tabs.close_current_action.trigger()
+    assert main_window_with_tabs.tabs.count() == 4
+
+    main_window_with_tabs.restore_tab_action.trigger()
+
+    assert main_window_with_tabs.tabs.count() == 5
+    assert current_tab_name in main_window_with_tabs.get_available_objects()
+    assert main_window_with_tabs.tabs.currentWidget().get_tab_name() == current_tab_name
+    assert main_window_with_tabs.tabs.currentWidget().obj() == current_obj
 
 
 def test_MainWindow_sort_tabs_by_type(qtbot, main_window_with_tabs):
@@ -1685,11 +1710,31 @@ def test_MainWindow_clear_history(qtbot, main_window_with_tabs):
 
 
 def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
-    assert False
+    new_name = 'my new tab name'
+
+    qtbot.keyClicks(main_window_with_tabs.tabs.currentWidget().overview_widgets['table_name'], new_name)
+    qtbot.mouseClick(main_window_with_tabs.tabs.currentWidget().overview_widgets['rename_button'], LEFT_CLICK)
+
+    assert main_window_with_tabs.tabs.currentWidget().get_tab_name() == new_name
+    assert main_window_with_tabs.tabs.tabText(main_window_with_tabs.tabs.currentIndex()).rstrip('*') == new_name
 
 
-def test_MainWindow_new_table_from_folder(qtbot, main_window):
-    assert False
+@pytest.mark.parametrize('normalize', [True, False])
+def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normalize, monkeypatch):
+    dir_path = 'tests/test_files/test_count_from_folder'
+
+    def mock_get_dir(*args, **kwargs):
+        return dir_path
+
+    def mock_question(*args, **kwargs):
+        return QtWidgets.QMessageBox.Yes if normalize else QtWidgets.QMessageBox.No
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', mock_get_dir)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question', mock_question)
+
+    main_window_with_tabs.new_table_from_folder_action.trigger()
+    assert main_window_with_tabs.tabs.count() == 6
+    assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder(dir_path, normalize)
 
 
 def test_MainWindow_multiple_new_tables(qtbot, main_window):
@@ -1722,12 +1767,49 @@ def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeyp
     assert main_window.pipelines == {'test_pipeline': filtering.Pipeline.import_pipeline(fname)}
 
 
-def test_MainWindow_import_gene_set(qtbot, main_window):
-    assert False
+@pytest.mark.parametrize('filename', ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
+                                      'tests/test_files/test_gene_set.txt'])
+def test_MainWindow_import_gene_set(qtbot, main_window_with_tabs, monkeypatch, filename):
+    if filename.endswith('.txt'):
+        with open(filename) as f:
+            truth_set = set(f.read().split())
+    else:
+        df = io.load_csv(filename, index_col=0)
+        truth_set = set(df.index)
+
+    def mock_get_file(*args, **kwargs):
+        return filename, '.csv'
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', mock_get_file)
+    main_window_with_tabs.import_set_action.trigger()
+    assert main_window_with_tabs.tabs.count() == 6
+    assert isinstance(main_window_with_tabs.tabs.currentWidget(), SetTabPage)
+    assert main_window_with_tabs.tabs.currentWidget().obj() == truth_set
 
 
-def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window_with_tabs):
-    assert False
+@pytest.mark.parametrize('ind', range(5))
+def test_MainWindow_export_gene_set(qtbot, use_temp_settings_file, main_window_with_tabs, monkeypatch, ind):
+    save_path = 'test/save/path.csv'
+    save_called = []
+
+    def mock_save(gene_set, filename):
+        assert gene_set == gene_set_truth
+        assert filename == save_path
+        save_called.append(True)
+
+    def mock_get_file(*args, **kwargs):
+        return save_path, '.csv'
+
+    monkeypatch.setattr(io, 'save_gene_set', mock_save)
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', mock_get_file)
+    main_window_with_tabs.tabs.setCurrentIndex(ind)
+    obj = main_window_with_tabs.tabs.currentWidget().obj()
+    if isinstance(obj, set):
+        gene_set_truth = obj
+    else:
+        gene_set_truth = obj.index_set
+    main_window_with_tabs.export_set_action.trigger()
+    assert save_called == [True]
 
 
 @pytest.mark.parametrize('ind,gene_set', [
