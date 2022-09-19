@@ -1812,6 +1812,17 @@ def test_MainWindow_open_enrichment_analysis(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
+def test_MainWindow_choose_tab_by_name(qtbot, use_temp_settings_file, main_window_with_tabs, monkeypatch):
+    truth = sorted(['my table', 'counted', 'counted_6cols', 'test_deseq', 'majority_vote_intersection output'])
+    keys = truth.copy()
+    np.random.shuffle(keys)
+    main_window_with_tabs.sort_tabs_by_name()
+
+    for key in keys:
+        main_window_with_tabs.choose_tab_by_name(key)
+        assert main_window_with_tabs.tabs.currentIndex() == truth.index(key)
+
+
 def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window_with_tabs, monkeypatch):
     assert False
 
