@@ -1639,23 +1639,41 @@ def test_MainWindow_close_tab_undo(qtbot, main_window_with_tabs):
 
 
 def test_MainWindow_sort_tabs_by_type(qtbot, main_window_with_tabs):
-    assert False
+    truth = ['counted', 'test_deseq', 'my table', 'counted_6cols', 'majority_vote_intersection output']
+    main_window_with_tabs.sort_tabs_by_type()
+    for i, name in enumerate(truth):
+        assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
 def test_MainWindow_sort_tabs_by_n_features(qtbot, main_window_with_tabs):
-    assert False
+    truth = ['test_deseq', 'my table', 'majority_vote_intersection output', 'counted_6cols', 'counted']
+    main_window_with_tabs.sort_tabs_by_name()
+    main_window_with_tabs.sort_tabs_by_n_features()
+    for i, name in enumerate(truth):
+        assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
 def test_MainWindow_sort_tabs_by_creation_time(qtbot, main_window_with_tabs):
-    assert False
+    truth = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
+    main_window_with_tabs.sort_tabs_by_name()
+    main_window_with_tabs.sort_tabs_by_creation_time()
+    for i, name in enumerate(truth):
+        assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
 def test_MainWindow_sort_tabs_by_name(qtbot, main_window_with_tabs):
-    assert False
+    truth = ['counted', 'counted_6cols', 'majority_vote_intersection output', 'my table', 'test_deseq']
+    main_window_with_tabs.sort_tabs_by_name()
+    for i, name in enumerate(truth):
+        assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
 def test_MainWindow_reverse_order(qtbot, main_window_with_tabs):
-    assert False
+    truth = reversed(['counted', 'counted_6cols', 'majority_vote_intersection output', 'my table', 'test_deseq'])
+    main_window_with_tabs.sort_tabs_by_name()
+    main_window_with_tabs.sort_reverse()
+    for i, name in enumerate(truth):
+        assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
 def test_MainWindow_change_tab_icon(qtbot, main_window_with_tabs):
