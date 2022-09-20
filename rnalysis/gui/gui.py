@@ -26,6 +26,7 @@ from rnalysis.utils import io, validation, generic, parsing, settings, enrichmen
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
 FILTER_OBJ_TYPES_INV = {val: key for key, val in FILTER_OBJ_TYPES.items()}
+INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 
 class ClicomWindow(gui_widgets.MinMaxDialog):
@@ -1266,7 +1267,6 @@ class FuncTypeStack(QtWidgets.QWidget):
 
 
 class FilterTabPage(TabPage):
-    INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
                       'from_folder', 'save_txt', 'save_csv', 'from_dataframe'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
@@ -1412,7 +1412,7 @@ class FilterTabPage(TabPage):
         self.basic_widgets['table_type_combo'].setToolTip(desc)
         i = 1
         for name, param in signature.items():
-            if name in self.INIT_EXCLUDED_PARAMS:
+            if name in INIT_EXCLUDED_PARAMS:
                 continue
             self.basic_param_widgets[name] = gui_widgets.param_to_widget(param, name)
             label = QtWidgets.QLabel(f'{name}:', self.basic_param_widgets[name])
@@ -1885,6 +1885,8 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.paths = dict()
         self.table_types = dict()
         self.names = dict()
+        self.kwargs = dict()
+        self.kwargs_widgets = dict()
 
         self.init_ui()
 
@@ -1899,23 +1901,57 @@ class MultiOpenWindow(QtWidgets.QDialog):
         self.layout.addWidget(QtWidgets.QLabel('Table paths:'), 1, 0)
         self.layout.addWidget(QtWidgets.QLabel('Table types:'), 1, 1)
         self.layout.addWidget(QtWidgets.QLabel('Table names (optional):'), 1, 2)
+        self.layout.addWidget(QtWidgets.QLabel('Additional parameters:'), 1, 3)
         for i, file in enumerate(self.files):
             self.paths[file] = gui_widgets.PathLineEdit(file, parent=self)
             self.table_types[file] = QtWidgets.QComboBox(self)
             self.table_types[file].addItems(list(FILTER_OBJ_TYPES.keys()))
-            self.table_types[file].setCurrentText('Other')
             self.names[file] = QtWidgets.QLineEdit(self)
+            kwargs_widget = QtWidgets.QWidget(self)
+            self.kwargs[file] = QtWidgets.QGridLayout(kwargs_widget)
 
-            self.layout.addWidget(self.paths[file], i + +2, 0)
-            self.layout.addWidget(self.table_types[file], i + +2, 1)
-            self.layout.addWidget(self.names[file], i + +2, 2)
+            self.table_types[file].currentTextChanged.connect(functools.partial(self.update_args_ui, file))
+            self.table_types[file].setCurrentText('Other')
+
+            self.layout.addWidget(self.paths[file], i + 2, 0)
+            self.layout.addWidget(self.table_types[file], i + 2, 1)
+            self.layout.addWidget(self.names[file], i + 2, 2)
+            self.layout.addWidget(kwargs_widget, i + 2, 3)
         self.layout.addWidget(self.button_box, i + 3, 0, 1, 3)
+
+    @QtCore.pyqtSlot(str)
+    def update_args_ui(self, file: str):
+        # clear previous layout
+        gui_widgets.clear_layout(self.kwargs[file])
+        self.kwargs_widgets[file] = {}
+        func_name = '__init__'
+        filter_obj_type = FILTER_OBJ_TYPES[self.table_types[file].currentText()]
+        signature = generic.get_method_signature(func_name, filter_obj_type)
+        desc, param_desc = generic.get_method_docstring(func_name, filter_obj_type)
+        self.table_types[file].setToolTip(desc)
+        i = 1
+        for name, param in signature.items():
+            if name in INIT_EXCLUDED_PARAMS:
+                continue
+            self.kwargs_widgets[file][name] = gui_widgets.param_to_widget(param, name)
+            label = QtWidgets.QLabel(f'{name}:', self.kwargs_widgets[file][name])
+            if name in param_desc:
+                label.setToolTip(param_desc[name])
+                help_button = gui_widgets.HelpButton()
+                self.kwargs[file].addWidget(help_button, i, 2)
+                help_button.connect_param_help(name, param_desc[name])
+
+            self.kwargs[file].addWidget(label, i, 0)
+            self.kwargs[file].addWidget(self.kwargs_widgets[file][name], i, 1)
+            i += 1
 
     def result(self):
         paths = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.paths.items()}
         types = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.table_types.items()}
         names = {file: gui_widgets.get_val_from_widget(widget) for file, widget in self.names.items()}
-        return paths, types, names
+        kwargs = {file: {key: gui_widgets.get_val_from_widget(val) for key, val in widget_dict.items()} for
+                  file, widget_dict in self.kwargs_widgets.items()}
+        return paths, types, names, kwargs
 
 
 class ReactiveTabWidget(QtWidgets.QTabWidget):
@@ -2327,7 +2363,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 window = MultiOpenWindow(filenames, self)
                 accepted = window.exec()
                 if accepted:
-                    paths, types, names = window.result()
+                    paths, types, names, kwargs = window.result()
                     tabs_to_close = None
                     if self.tabs.currentWidget().is_empty():
                         tabs_to_close = self.tabs.currentIndex()
@@ -2336,7 +2372,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         path = paths[filename]
                         table_type = FILTER_OBJ_TYPES[types[filename]]
                         name = names[filename]
-                        filter_obj = table_type(path)
+                        filter_obj = table_type(path, **kwargs[filename])
                         if name == '':
                             self.new_tab_from_filter_obj(filter_obj)
                         else:
