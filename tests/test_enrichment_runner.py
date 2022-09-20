@@ -948,6 +948,7 @@ def test_go_enrichment_runner_get_enrichment_func_invalid_value(test_input, err)
                           ('c elegans', ('c elegans_mapped_id', 'organism'))])
 def test_go_enrichment_runner_get_taxon_id(monkeypatch, organism, got_gene_id_type, truth):
     gene_id_type_truth = 'UniProtKB'
+
     def alt_infer_taxon_id(gene_set, gene_id_type=None):
         assert isinstance(gene_set, set)
         if got_gene_id_type:
@@ -963,8 +964,10 @@ def test_go_enrichment_runner_get_taxon_id(monkeypatch, organism, got_gene_id_ty
     runner.organism = organism
 
     if got_gene_id_type:
-        res_id, res_organism = runner.get_taxon_id(organism, gene_id_type_truth)
+        runner.gene_id_type = gene_id_type_truth
+        res_id, res_organism = runner.get_taxon_id(organism)
     else:
+        runner.gene_id_type = 'auto'
         res_id, res_organism = runner.get_taxon_id(organism)
 
     assert res_id, res_organism == truth
