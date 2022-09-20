@@ -1737,8 +1737,36 @@ def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normaliz
     assert main_window_with_tabs.tabs.currentWidget().obj() == filtering.CountFilter.from_folder(dir_path, normalize)
 
 
-def test_MainWindow_multiple_new_tables(qtbot, main_window):
-    assert False
+def test_MainWindow_multiple_new_tables(qtbot, main_window, monkeypatch):
+    filenames = ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv', 'tests/test_files/fc_1.csv']
+    objs_truth = [filtering.DESeqFilter(filenames[0]), filtering.CountFilter(filenames[1], drop_columns='cond2'),
+                  filtering.FoldChangeFilter(filenames[2], 'num', 'denom')]
+    objs_truth[1].fname = Path('new name')
+
+    def mock_exec(self):
+        return True
+
+    def mock_multi_selection_result(self):
+        return filenames
+
+    def mock_multi_open_result(self):
+        filename_dict = {fname: fname for fname in filenames}
+        types_dict = {filenames[0]: 'Differential expression', filenames[1]: 'Count matrix',
+                      filenames[2]: 'Fold change'}
+        names_dict = {filenames[0]: '', filenames[1]: 'new name', filenames[2]: ''}
+        kwargs_dict = {filenames[0]: {}, filenames[1]: {'drop_columns': ['cond2']},
+                       filenames[2]: {'numerator_name': 'num', 'denominator_name': 'denom'}}
+        return filename_dict, types_dict, names_dict, kwargs_dict
+
+    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'exec', mock_exec)
+    monkeypatch.setattr(MultiOpenWindow, 'exec', mock_exec)
+    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'result', mock_multi_selection_result)
+    monkeypatch.setattr(MultiOpenWindow, 'result', mock_multi_open_result)
+    main_window.new_multiple_action.trigger()
+
+    assert main_window.tabs.count() == 3
+    for i in range(3):
+        assert main_window.tabs.widget(i).obj() == objs_truth[i]
 
 
 def test_MainWindow_export_pipeline(use_temp_settings_file, main_window, monkeypatch):
