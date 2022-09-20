@@ -2154,10 +2154,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.stdout_receiver = gui_widgets.ThreadStdOutStreamTextQueueReceiver(self.queue_stdout)
         sys.stdout = gui_widgets.WriteStream(self.queue_stdout)
 
-        # connect receiver object to widget for text update
-        self.stdout_receiver.queue_stdout_element_received_signal.connect(self.append_text_to_current_console)
         # attach console text receiver to console text thread
         self.stdout_receiver.moveToThread(self.thread_stdout_queue_listener)
+        # connect receiver object to widget for text update
+        self.stdout_receiver.queue_stdout_element_received_signal.connect(self.append_text_to_current_console)
         # attach to start / stop methods
         self.thread_stdout_queue_listener.started.connect(self.stdout_receiver.run)
         self.thread_stdout_queue_listener.start()
@@ -2910,14 +2910,13 @@ class MainWindow(QtWidgets.QMainWindow):
         enrichment.enrichment_runner.tqdm = alt_tqdm
         filtering.clustering.tqdm = alt_tqdm
 
-        self.worker.startProgBar.connect(self.start_progress_bar)
-
         #  Start the thread
         self.thread = QtCore.QThread()
 
         #  Move worker to the thread
         self.worker.moveToThread(self.thread)
         #  Connect signals and slots
+        self.worker.startProgBar.connect(self.start_progress_bar)
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(output_slot)
         self.worker.finished.connect(self.thread.quit)
