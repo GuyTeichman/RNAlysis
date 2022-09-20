@@ -1711,7 +1711,7 @@ def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
     assert main_window_with_tabs.tabs.tabText(main_window_with_tabs.tabs.currentIndex()).rstrip('*') == new_name
 
 
-@pytest.mark.parametrize('normalize', [True])
+@pytest.mark.parametrize('normalize', [False, True])
 def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normalize, monkeypatch):
     dir_path = 'tests/test_files/test_count_from_folder'
 
@@ -1719,6 +1719,8 @@ def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normaliz
         return dir_path
 
     def mock_question(*args, **kwargs):
+        if args[1] == 'Close program':
+            return QtWidgets.QMessageBox.Yes
         return QtWidgets.QMessageBox.Yes if normalize else QtWidgets.QMessageBox.No
 
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', mock_get_dir)
@@ -1785,6 +1787,31 @@ def test_MainWindow_import_pipeline(use_temp_settings_file, main_window, monkeyp
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', lambda *args, **kwargs: (fname, '.yaml'))
     main_window.import_pipeline_action.trigger()
     assert main_window.pipelines == {'test_pipeline': filtering.Pipeline.import_pipeline(fname)}
+
+
+def test_MainWindow_import_multiple_gene_sets(qtbot, main_window_with_tabs, monkeypatch):
+    filenames = ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
+                 'tests/test_files/test_gene_set.txt']
+    truth = []
+    for filename in filenames:
+        if filename.endswith('.txt'):
+            with open(filename) as f:
+                truth_set = set(f.read().split())
+        else:
+            df = io.load_csv(filename, index_col=0)
+            truth_set = set(df.index)
+        truth.append(truth_set)
+
+    def mock_get_files(*args, **kwargs):
+        return filenames
+
+    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'result', mock_get_files)
+    monkeypatch.setattr(gui_windows.MultiFileSelectionDialog, 'exec', lambda *args, **kwargs: True)
+    main_window_with_tabs.import_multiple_sets_action.trigger()
+    assert main_window_with_tabs.tabs.count() == 5 + len(filenames)
+    assert isinstance(main_window_with_tabs.tabs.currentWidget(), SetTabPage)
+    for i in range(3):
+        assert main_window_with_tabs.tabs.widget(i + 5).obj() == truth[i]
 
 
 @pytest.mark.parametrize('filename', ['tests/test_files/counted.tsv', 'tests/test_files/test_deseq.csv',
@@ -1996,6 +2023,27 @@ def test_MainWindow_cite(qtbot, main_window, monkeypatch):
     monkeypatch.setattr(gui_windows.HowToCiteWindow, 'exec', functools.partial(window_opened.append, True))
 
     main_window.cite_action.trigger()
+    assert window_opened == [True]
+
+
+def test_MainWindow_settings(qtbot, main_window, monkeypatch):
+    window_opened = []
+    monkeypatch.setattr(gui_windows.SettingsWindow, 'exec', functools.partial(window_opened.append, True))
+
+    main_window.settings_action.trigger()
+    assert window_opened == [True]
+
+
+def test_MainWindow_user_guide(qtbot, main_window, monkeypatch):
+    window_opened = []
+
+    def mock_open_url(url):
+        window_opened.append(True)
+        return True
+
+    monkeypatch.setattr(QtGui.QDesktopServices, 'openUrl', mock_open_url)
+
+    main_window.user_guide_action.trigger()
     assert window_opened == [True]
 
 
