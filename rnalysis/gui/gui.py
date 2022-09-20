@@ -2352,6 +2352,8 @@ class MainWindow(QtWidgets.QMainWindow):
             to_normalize = normalize_answer == QtWidgets.QMessageBox.Yes
 
             filter_obj = filtering.CountFilter.from_folder(folder_name, norm_to_rpm=to_normalize)
+            if self.tabs.currentWidget().is_empty():
+                self.tabs.removeTab(self.tabs.currentIndex())
             self.new_tab_from_filter_obj(filter_obj)
 
     def load_multiple_files(self):
