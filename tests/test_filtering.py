@@ -1413,7 +1413,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
     pl_c.add_function('biotypes', ref=__biotype_ref__)
-    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=15000, opposite=True)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=17500, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
@@ -1426,7 +1426,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
     c_dict['biotypes_1'] = c.biotypes(ref=__biotype_ref__)
-    c_res = c.filter_top_n(by='cond3rep1', n=15000, opposite=True, inplace=False)
+    c_res = c.filter_top_n(by='cond3rep1', n=17500, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=40, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
     for obj in c_res:
