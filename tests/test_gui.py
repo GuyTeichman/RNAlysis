@@ -1701,14 +1701,6 @@ def test_MainWindow_reverse_order(qtbot, main_window_with_tabs):
         assert main_window_with_tabs.tabs.widget(i).get_tab_name() == name
 
 
-def test_MainWindow_change_tab_icon(qtbot, main_window_with_tabs):
-    assert False
-
-
-def test_MainWindow_clear_history(qtbot, main_window_with_tabs):
-    assert False
-
-
 def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
     new_name = 'my new tab name'
 
@@ -1719,7 +1711,7 @@ def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
     assert main_window_with_tabs.tabs.tabText(main_window_with_tabs.tabs.currentIndex()).rstrip('*') == new_name
 
 
-@pytest.mark.parametrize('normalize', [False, True])
+@pytest.mark.parametrize('normalize', [True])
 def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normalize, monkeypatch):
     dir_path = 'tests/test_files/test_count_from_folder'
 
@@ -2007,5 +1999,9 @@ def test_MainWindow_cite(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_append_to_current_console(qtbot, main_window):
+def test_MainWindow_change_tab_icon(qtbot, main_window_with_tabs):
+    assert False
+
+
+def test_MainWindow_clear_history(qtbot, main_window_with_tabs):
     assert False
