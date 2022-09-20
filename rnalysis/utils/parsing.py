@@ -154,12 +154,15 @@ def sparse_dict_to_bool_df(sparse_dict: Dict[str, set], progress_bar_desc: str =
     fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}]'
 
     rows = list(sparse_dict.keys())
-    columns = set()
+    columns_set = set()
+
     for val in sparse_dict.values():
-        columns.update(val)
+        columns_set.update(val)
+    columns = data_to_list(columns_set)
     df = pd.DataFrame(np.zeros((len(rows), len(columns)), dtype=bool), columns=columns, index=rows)
     for row, col in zip(tqdm(sparse_dict.keys(), desc=progress_bar_desc, bar_format=fmt), sparse_dict.values()):
-        df.loc[row, list(col)] = True
+        print([data_to_list(row), data_to_list(col)])
+        df.loc[data_to_list(row), data_to_list(col)] = True
     return df
 
 
