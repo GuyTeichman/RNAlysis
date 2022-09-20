@@ -89,7 +89,7 @@ def test_is_iterable_not_emptying_generator():
     ({'one': 1, 'two': 2, 'three': 3}, {'one': 1, 'two': 2, 'three': 3}, ['one'], [2, 'three'], False),
     ({'one': 1, 'two': 2, 'three': 3}, {'one': 1, 'two': 2, 'three': 3}, ['one', 'two', 'three'],
      ['one', 'two', 'three'], True),
-({'one': 1, 'two': 2, 'three': 3}, {'one': 1, 'two': 2, 'three': 3}, ['one', 'Two', 'three'],
+    ({'one': 1, 'two': 2, 'three': 3}, {'one': 1, 'two': 2, 'three': 3}, ['one', 'Two', 'three'],
      ['one', 'two', 'three'], False),
     ({'one': 1, 'two': 2, 'three': 3}, {'two': 2, 'three': 3}, ['one', 'two', 'three'],
      ['one', 'two', 'three'], False),
@@ -102,7 +102,6 @@ def test_validate_uniprot_dataset_name(from_dict, to_dict, from_names, to_names,
     else:
         with pytest.raises(AssertionError):
             validate_uniprot_dataset_name((to_dict, from_dict), to_names, from_names)
-
 
 
 @pytest.mark.parametrize('min_cluster_size,metric,cluster_selection_method,n_features,expected_to_pass',
@@ -241,5 +240,11 @@ def test_validate_threshold(threshold, expected_to_pass):
             validate_threshold(threshold)
 
 
-def test_is_legal_file_path():
-    assert False
+@pytest.mark.parametrize('path,is_legal_truth', [
+    ('tests/test_files/test_deseq.csv', True),
+    ('test_deseq.csv', False),
+    ('tests/test_files', False),
+    ('tests/test_files/test_gene_set.txt', True)
+])
+def test_is_legal_file_path(path, is_legal_truth):
+    assert is_legal_file_path(path) == is_legal_truth
