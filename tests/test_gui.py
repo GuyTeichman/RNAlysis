@@ -1719,7 +1719,7 @@ def test_MainWindow_rename_tab(qtbot, main_window_with_tabs):
     assert main_window_with_tabs.tabs.tabText(main_window_with_tabs.tabs.currentIndex()).rstrip('*') == new_name
 
 
-@pytest.mark.parametrize('normalize', [True, False])
+@pytest.mark.parametrize('normalize', [False, True])
 def test_MainWindow_new_table_from_folder(qtbot, main_window_with_tabs, normalize, monkeypatch):
     dir_path = 'tests/test_files/test_count_from_folder'
 
