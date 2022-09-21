@@ -538,7 +538,10 @@ class EnrichmentRunner:
         for i in range(len(enrichment_scores)):
             if enrichment_scores[i] == -np.inf:
                 enrichment_scores[i] = min(scores_no_inf)
-        max_score = max(np.max(np.abs(enrichment_scores)), 2)
+        if len(enrichment_scores) > 3:
+            max_score = max(np.max(np.abs(enrichment_scores)), 2)
+        else:
+            max_score = 2
 
         # get color values for bars
         data_color_norm = [0.5 * (1 + i / (np.floor(max_score) + 1)) * 255 for i in enrichment_scores]
