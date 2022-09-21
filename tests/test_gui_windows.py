@@ -277,7 +277,7 @@ def test_SettingsWindow_save_settings(qtbot, monkeypatch, use_temp_settings_file
     qtbot.keyClicks(dialog.appearance_widgets['app_font'], font_truth)
     qtbot.keyClicks(dialog.appearance_widgets['app_font_size'], font_size_truth)
     qtbot.keyClicks(dialog.appearance_widgets['app_theme'], theme_truth)
-    qtbot.mouseClick(dialog.appearance_widgets['show_tutorial'], LEFT_CLICK)
+    dialog.appearance_widgets['show_tutorial'].setChecked(False)
 
     qtbot.keyClicks(dialog.tables_widgets['attr_ref_path'].file_path, attr_truth)
     qtbot.keyClicks(dialog.tables_widgets['biotype_ref_path'].file_path, biotype_truth)
