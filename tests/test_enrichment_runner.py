@@ -1150,6 +1150,7 @@ def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_
     res = runner.plot_results()
     assert isinstance(res, plt.Figure)
 
+
 @pytest.mark.parametrize('return_nonsignificant,truth_file',
                          [(True, 'tests/test_files/go_enrichment_runner_format_results_with_nonsignificant_truth.csv'),
                           (False, 'tests/test_files/go_enrichment_runner_format_results_truth.csv')])
@@ -1262,7 +1263,7 @@ def test_go_enrichment_runner_calculate_enrichment_parallel(monkeypatch, propaga
     assert res == truth
 
 
-def test_go_enrichment_runner_generate_goa_df(monkeypatch):
+def test_go_enrichment_runner_generate_annotation_df(monkeypatch):
     annotation_dict = {}
     source_to_id_dict = {}
 
@@ -1771,25 +1772,116 @@ def test_kegg_enrichment_runner_format_results(monkeypatch):
     assert truth.equals(runner.results)
 
 
-def test_kegg_enrichment_runner_fetch_annotations():
-    assert False
+def test_kegg_enrichment_runner_fetch_annotations(monkeypatch):
+    monkeypatch.setattr(KEGGEnrichmentRunner, '_get_query_key', lambda self: 'the_query_key')
+    monkeypatch.setattr(KEGGEnrichmentRunner, '_generate_annotation_df', lambda self: ('kegg_df', 'pathway_names'))
+    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
+    runner.fetch_annotations()
+    assert runner.annotation_df == 'kegg_df'
+    assert runner.KEGG_DF_QUERIES['the_query_key'] == ('kegg_df', 'pathway_names')
+    assert runner.pathway_names_dict == 'pathway_names'
+
+    runner.KEGG_DF_QUERIES['the_query_key'] = ('another_kegg_df', 'other_pathway_names')
+    runner.fetch_annotations()
+    assert runner.annotation_df == 'another_kegg_df'
+    assert runner.pathway_names_dict == 'other_pathway_names'
+    assert runner.KEGG_DF_QUERIES['the_query_key'] == ('another_kegg_df', 'other_pathway_names')
 
 
-def test_kegg_enrichment_runner_generate_annotation_df():
-    assert False
+def test_kegg_enrichment_runner_generate_annotation_df(monkeypatch):
+    annotation_dict = {}
+    name_dict = {}
+    truth = pd.DataFrame([[True, np.nan], [np.nan, np.nan]])
+
+    def process_annotations(self):
+        annotation_dict['proccess_annotations'] = True
+        name_dict['process_annotations_source'] = True
+        return annotation_dict, name_dict
+
+    def translate_gene_ids(self, annotation_dict):
+        assert annotation_dict['proccess_annotations']
+        assert name_dict['process_annotations_source']
+        return {'translate_annotation': True}
+
+    def sparse_dict_to_bool_df(annotation_dict, progress_bar_desc):
+        assert annotation_dict['translate_annotation']
+        return pd.DataFrame([[True, False], [False, False]])
+
+    monkeypatch.setattr(KEGGEnrichmentRunner, '_process_annotations', process_annotations)
+    monkeypatch.setattr(KEGGEnrichmentRunner, '_translate_gene_ids', translate_gene_ids)
+    monkeypatch.setattr(parsing, 'sparse_dict_to_bool_df', sparse_dict_to_bool_df)
+    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
+
+    res, name_res = runner._generate_annotation_df()
+    assert np.all(res.notna() == truth.notna())
 
 
-def test_kegg_enrichment_runner_process_annotations():
-    assert False
+def test_kegg_enrichment_runner_process_annotations(monkeypatch):
+    annotation_dict_truth = {'gene_id1': {'go_id1', 'go_id2'}, 'gene_id2': {'go_id1', 'go_id3'}, 'gene_id3': {'go_id4'}}
+    name_dict_truth = {'go_id1': 'name1', 'go_id2': 'name2', 'go_id3': 'name3', 'go_id4': 'name4'}
+
+    def get_annotation_iter(self):
+        iterator = io.KEGGAnnotationIterator.__new__(io.KEGGAnnotationIterator)
+        iterator.n_annotations = 4
+        return iterator
+
+    def annotation_iter(self):
+        annotations = [['go_id1', 'name1', {'gene_id1', 'gene_id2'}],
+                       ['go_id2', 'name2', {'gene_id1'}],
+                       ['go_id3', 'name3', {'gene_id2'}],
+                       ['go_id4', 'name4', {'gene_id3'}]]
+        for annotation in annotations:
+            yield annotation
+
+    monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_pathway_annotations', annotation_iter)
+    monkeypatch.setattr(KEGGEnrichmentRunner, '_get_annotation_iterator', get_annotation_iter)
+
+    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
+    runner.organism = 'organism'
+    runner.taxon_id = 'taxon_id'
+
+    annotation_dict, name_dict = runner._process_annotations()
+
+    assert annotation_dict == annotation_dict_truth
+    assert name_dict == name_dict_truth
 
 
-def test_kegg_enrichment_runner_translate_gene_ids():
-    assert False
+@pytest.mark.parametrize("mapping_dict,truth", [
+    ({}, {}),
+    ({'gene1': 'gene1_translated', 'gene3': 'gene3_translated'},
+     {'gene1_translated': {'GO1', 'GO2'}, 'gene3_translated': {'GO2'}}),
+    ({'gene1': 'gene1_translated', 'gene2': 'gene2_translated', 'gene3': 'gene3_translated'},
+     {'gene1_translated': {'GO1', 'GO2'}, 'gene2_translated': {'GO1'}, 'gene3_translated': {'GO2'}})])
+def test_kegg_enrichment_runner_translate_gene_ids(monkeypatch, mapping_dict, truth):
+    monkeypatch.setattr(io, 'map_gene_ids', lambda gene_id, source, gene_id_type: mapping_dict)
+    sparse_annotation_dict = {'gene1': {'GO1', 'GO2'}, 'gene2': {'GO1'}, 'gene3': {'GO2'}}
+
+    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
+    runner.gene_id_type = 'gene_id_type'
+
+    res = runner._translate_gene_ids(sparse_annotation_dict)
+    assert res == truth
 
 
 def test_kegg_enrichment_runner_get_query_key():
-    assert False
+    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
+    runner.taxon_id = 'taxon_id'
+    runner.gene_id_type = 'id_type'
+
+    truth = ('taxon_id', 'id_type')
+    key = runner._get_query_key()
+    assert key == truth
+    try:
+        _ = hash(key)
+    except TypeError:
+        assert False
 
 
 def test_kegg_enrichment_runner_fetch_attributes():
-    assert False
+    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
+    runner.annotation_df = pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0)
+    truth_attributes = ['attribute1', 'attribute2', 'attribute3', 'attribute4']
+    truth_attributes_set = {'attribute1', 'attribute2', 'attribute3', 'attribute4'}
+    runner.fetch_attributes()
+    assert runner.attributes == truth_attributes
+    assert runner.attributes_set == truth_attributes_set
