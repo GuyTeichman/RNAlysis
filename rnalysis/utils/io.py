@@ -270,7 +270,8 @@ class KEGGAnnotationIterator:
         self.pathway_names, self.n_annotations = self.get_pathways()
         self.pathway_annotations = None
 
-    def _kegg_request(self, operation: str, arguments: Union[str, List[str]], cached_filename: Union[str, None] = None
+    @staticmethod
+    def _kegg_request(operation: str, arguments: Union[str, List[str]], cached_filename: Union[str, None] = None
                       ) -> Tuple[str, bool]:
         if cached_filename is not None:
             cached_file = load_cached_file(cached_filename)
@@ -279,7 +280,7 @@ class KEGGAnnotationIterator:
                 return cached_file, is_cached
 
         is_cached = False
-        address = self.URL + operation + '/' + '/'.join(parsing.data_to_list(arguments))
+        address = KEGGAnnotationIterator.URL + operation + '/' + '/'.join(parsing.data_to_list(arguments))
         response = requests.get(address)
         if not response.ok:
             response.raise_for_status()
@@ -341,14 +342,16 @@ class KEGGAnnotationIterator:
     def get_pathway_annotations(self):
         if self.pathway_annotations is not None:
             for pathway, annotations in self.pathway_annotations.items():
-                yield pathway, annotations
+                name = self.pathway_names[pathway]
+                yield pathway, name, annotations
         else:
             pathway_annotations = {}
             partitioned_pathways = parsing.partition_list(list(self.pathway_names.keys()), self.REQ_MAX_ENTRIES)
             for chunk in partitioned_pathways:
                 prev_time = time.time()
                 data, was_cached = self._kegg_request('get', '+'.join(chunk), self._generate_cached_filename(chunk))
-                entries = data.split('ENTRY')
+                entries = data.split('ENTRY')[1:]
+                assert len(entries) == len(chunk)
                 for pathway, entry in zip(chunk, entries):
                     pathway_name = self.pathway_names[pathway]
                     pathway_annotations[pathway] = set()
