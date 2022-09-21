@@ -7,13 +7,14 @@ from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
 
 class MockResponse(object):
     def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = 'default',
-                 text: str = '', json_output: dict = dict()):
+                 text: str = '', json_output: dict = dict(), content: str = ''):
         self.status_code = status_code
         self.url = url
         self.headers = {'default': 'default'} if headers == 'default' else headers
         self.text = text
         self.ok = self.status_code == 200
         self._json = json_output
+        self.content = bytes(content, 'utf8')
 
     def raise_for_status(self):
         if not self.ok:
@@ -21,6 +22,12 @@ class MockResponse(object):
 
     def json(self):
         return self._json
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return
 
 
 def test_load_csv_bad_input():
@@ -543,28 +550,53 @@ def test_save_gene_set(gene_set, expected_split):
 
 
 def test_kegg_annotation_iterator_api():
+    _ = KEGGAnnotationIterator(6239)
+
+
+def test_kegg_annotation_iterator_kegg_request(monkeypatch):
     assert False
 
 
-def test_kegg_annotation_iterator_kegg_request():
+def test_kegg_annotation_iterator_get_pathways(monkeypatch):
     assert False
 
 
-def test_kegg_annotation_iterator_kegg_request_connectivity():
+def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
     assert False
 
 
-def test_kegg_annotation_iterator_get_pathways():
+def test_kegg_annotation_iterator_get_kegg_organism_code(monkeypatch):
     assert False
 
 
-def test_kegg_annotation_iterator_get_pathway_annotations():
-    assert False
+def test_kegg_annotation_iterator_get_taxon_tree(monkeypatch):
+    truth = {"sample": "json", "lorem": "ipsum"}
+    truth_text = '{"sample": "json", "lorem": "ipsum"}'
+
+    def mock_get_cached_file(filename):
+        return None
+
+    def mock_cache_file(content, filename):
+        assert filename == 'kegg_taxon_tree.json'
+        assert content == truth_text
+
+    def mock_get(url, params):
+        assert url == 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
+        assert params == {'format': 'json'}
+        return MockResponse(content=truth_text)
+
+    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, 'cache_file', mock_cache_file)
+
+    assert KEGGAnnotationIterator._get_taxon_tree() == truth
 
 
-def test_kegg_annotation_iterator_get_kegg_organism_code():
-    assert False
+def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
+    truth = {"sample": "json", "lorem": "ipsum"}
 
+    def mock_get_cached_file(filename):
+        return '{"sample":"json","lorem":"ipsum"}'
 
-def test_kegg_annotation_iterator_get_taxon_tree():
-    assert False
+    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
+    assert KEGGAnnotationIterator._get_taxon_tree() == truth

@@ -261,6 +261,7 @@ class KEGGAnnotationIterator:
     TAXON_MAPPING_URL = 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
+    TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
 
     def __init__(self, taxon_id: int):
         self.pathway_names = {}
@@ -292,7 +293,7 @@ class KEGGAnnotationIterator:
 
     @staticmethod
     def _get_taxon_tree():
-        cached_filename = 'kegg_taxon_tree.json'
+        cached_filename = KEGGAnnotationIterator.TAXON_TREE_CACHED_FILENAME
         cached_file = load_cached_file(cached_filename)
         if cached_file is not None:
             try:
