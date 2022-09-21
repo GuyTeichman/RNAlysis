@@ -1,0 +1,225 @@
+ENTRY       cel00010                    Pathway
+NAME        Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)
+DESCRIPTION Glycolysis is the process of converting glucose into pyruvate and generating small amounts of ATP (energy) and NADH (reducing power). It is a central pathway that produces important precursor metabolites: six-carbon compounds of glucose-6P and fructose-6P and three-carbon compounds of glycerone-P, glyceraldehyde-3P, glycerate-3P, phosphoenolpyruvate, and pyruvate [MD:M00001]. Acetyl-CoA, another important precursor metabolite, is produced by oxidative decarboxylation of pyruvate [MD:M00307]. When the enzyme genes of this pathway are examined in completely sequenced genomes, the reaction steps of three-carbon compounds from glycerone-P to pyruvate form a conserved core module [MD:M00002], which is found in almost all organisms and which sometimes contains operon structures in bacterial genomes. Gluconeogenesis is a synthesis pathway of glucose from noncarbohydrate precursors. It is essentially a reversal of glycolysis with minor variations of alternative paths [MD:M00003].
+CLASS       Metabolism; Carbohydrate metabolism
+PATHWAY_MAP cel00010  Glycolysis / Gluconeogenesis
+MODULE      cel_M00001  Glycolysis (Embden-Meyerhof pathway), glucose => pyruvate [PATH:cel00010]
+            cel_M00002  Glycolysis, core module involving three-carbon compounds [PATH:cel00010]
+            cel_M00003  Gluconeogenesis, oxaloacetate => fructose-6P [PATH:cel00010]
+            cel_M00307  Pyruvate oxidation, pyruvate => acetyl-CoA [PATH:cel00010]
+DBLINKS     GO: 0006096 0006094
+ORGANISM    Caenorhabditis elegans (nematode) [GN:cel]
+GENE        CELE_F14B4.2  hxk-1; Phosphotransferase [KO:K00844] [EC:2.7.1.1]
+            CELE_Y87G2A.8  gpi-1; Glucose-6-phosphate isomerase [KO:K01810] [EC:5.3.1.9]
+            CELE_C50F4.2  pfk-1.2; ATP-dependent 6-phosphofructokinase 2 [KO:K00850] [EC:2.7.1.11]
+            CELE_Y71H10A.1  pfk-1.1; ATP-dependent 6-phosphofructokinase 1 [KO:K00850] [EC:2.7.1.11]
+COMPOUND    C00022  Pyruvate
+            C00024  Acetyl-CoA
+            C00031  D-Glucose
+            C00033  Acetate
+            C00036  Oxaloacetate
+            C00068  Thiamin diphosphate
+            C00074  Phosphoenolpyruvate
+            C00084  Acetaldehyde
+            C00103  D-Glucose 1-phosphate
+            C00111  Glycerone phosphate
+            C00118  D-Glyceraldehyde 3-phosphate
+            C00186  (S)-Lactate
+            C00197  3-Phospho-D-glycerate
+            C00221  beta-D-Glucose
+            C00236  3-Phospho-D-glyceroyl phosphate
+            C00267  alpha-D-Glucose
+            C00469  Ethanol
+            C00631  2-Phospho-D-glycerate
+            C00668  alpha-D-Glucose 6-phosphate
+            C01159  2,3-Bisphospho-D-glycerate
+            C01172  beta-D-Glucose 6-phosphate
+            C01451  Salicin
+            C05125  2-(alpha-Hydroxyethyl)thiamine diphosphate
+            C05345  beta-D-Fructose 6-phosphate
+            C05378  beta-D-Fructose 1,6-bisphosphate
+            C06186  Arbutin
+            C06187  Arbutin 6-phosphate
+            C06188  Salicin 6-phosphate
+            C15972  Enzyme N6-(lipoyl)lysine
+            C15973  Enzyme N6-(dihydrolipoyl)lysine
+            C16255  [Dihydrolipoyllysine-residue acetyltransferase] S-acetyldihydrolipoyllysine
+REFERENCE
+  AUTHORS   Nishizuka Y (ed).
+  TITLE     [Metabolic Maps] (In Japanese)
+  JOURNAL   Tokyo Kagaku Dojin (1980)
+REFERENCE
+  AUTHORS   Nishizuka Y, Seyama Y, Ikai A, Ishimura Y, Kawaguchi A (eds).
+  TITLE     [Cellular Functions and Metabolic Maps] (In Japanese)
+  JOURNAL   Tokyo Kagaku Dojin (1997)
+REFERENCE
+  AUTHORS   Michal G.
+  TITLE     Biochemical Pathways
+  JOURNAL   Wiley (1999)
+REL_PATHWAY cel00020  Citrate cycle (TCA cycle)
+            cel00030  Pentose phosphate pathway
+            cel00500  Starch and sucrose metabolism
+            cel00620  Pyruvate metabolism
+            cel00640  Propanoate metabolism
+KO_PATHWAY  ko00010
+///
+ENTRY       cel00020                    Pathway
+NAME        Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)
+DESCRIPTION The citrate cycle (TCA cycle, Krebs cycle) is an important aerobic pathway for the final steps of the oxidation of carbohydrates and fatty acids. The cycle starts with acetyl-CoA, the activated form of acetate, derived from glycolysis and pyruvate oxidation for carbohydrates and from beta oxidation of fatty acids. The two-carbon acetyl group in acetyl-CoA is transferred to the four-carbon compound of oxaloacetate to form the six-carbon compound of citrate. In a series of reactions two carbons in citrate are oxidized to CO2 and the reaction pathway supplies NADH for use in the oxidative phosphorylation and other metabolic processes. The pathway also supplies important precursor metabolites including 2-oxoglutarate. At the end of the cycle the remaining four-carbon part is transformed back to oxaloacetate. According to the genome sequence data, many organisms seem to lack genes for the full cycle [MD:M00009], but contain genes for specific segments [MD:M00010 M00011].
+CLASS       Metabolism; Carbohydrate metabolism
+PATHWAY_MAP cel00020  Citrate cycle (TCA cycle)
+MODULE      cel_M00003  Gluconeogenesis, oxaloacetate => fructose-6P [PATH:cel00020]
+            cel_M00009  Citrate cycle (TCA cycle, Krebs cycle) [PATH:cel00020]
+            cel_M00010  Citrate cycle, first carbon oxidation, oxaloacetate => 2-oxoglutarate [PATH:cel00020]
+            cel_M00011  Citrate cycle, second carbon oxidation, 2-oxoglutarate => oxaloacetate [PATH:cel00020]
+            cel_M00307  Pyruvate oxidation, pyruvate => acetyl-CoA [PATH:cel00020]
+DBLINKS     GO: 0006099
+ORGANISM    Caenorhabditis elegans (nematode) [GN:cel]
+GENE        CELE_T20G5.2  cts-1; putative citrate synthase, mitochondrial [KO:K01647] [EC:2.3.3.1]
+            CELE_B0365.1  acly-2; ATP-citrate synthase [KO:K01648] [EC:2.3.3.8]
+            CELE_D1005.1  acly-1; putative ATP-citrate synthase [KO:K01648] [EC:2.3.3.8]
+COMPOUND    C00022  Pyruvate
+            C00024  Acetyl-CoA
+            C00026  2-Oxoglutarate
+            C00036  Oxaloacetate
+            C00042  Succinate
+            C00068  Thiamin diphosphate
+            C00074  Phosphoenolpyruvate
+            C00091  Succinyl-CoA
+            C00122  Fumarate
+            C00149  (S)-Malate
+            C00158  Citrate
+            C00311  Isocitrate
+            C00417  cis-Aconitate
+            C05125  2-(alpha-Hydroxyethyl)thiamine diphosphate
+            C05379  Oxalosuccinate
+            C05381  3-Carboxy-1-hydroxypropyl-ThPP
+            C15972  Enzyme N6-(lipoyl)lysine
+            C15973  Enzyme N6-(dihydrolipoyl)lysine
+            C16254  [Dihydrolipoyllysine-residue succinyltransferase] S-succinyldihydrolipoyllysine
+            C16255  [Dihydrolipoyllysine-residue acetyltransferase] S-acetyldihydrolipoyllysine
+REFERENCE
+  AUTHORS   Nishizuka Y (ed).
+  TITLE     [Metabolic Maps] (In Japanese)
+  JOURNAL   Tokyo Kagaku Dojin (1980)
+REFERENCE
+  AUTHORS   Nishizuka Y, Seyama Y, Ikai A, Ishimura Y, Kawaguchi A (eds).
+  TITLE     [Cellular Functions and Metabolic Maps] (In Japanese)
+  JOURNAL   Tokyo Kagaku Dojin (1997)
+REFERENCE
+  AUTHORS   Michal G.
+  TITLE     Biochemical Pathways
+  JOURNAL   Wiley (1999)
+REL_PATHWAY cel00010  Glycolysis / Gluconeogenesis
+            cel00053  Ascorbate and aldarate metabolism
+            cel00061  Fatty acid biosynthesis
+            cel00062  Fatty acid elongation
+            cel00071  Fatty acid degradation
+            cel00190  Oxidative phosphorylation
+            cel00220  Arginine biosynthesis
+            cel00250  Alanine, aspartate and glutamate metabolism
+            cel00280  Valine, leucine and isoleucine degradation
+            cel00350  Tyrosine metabolism
+            cel00470  D-Amino acid metabolism
+            cel00630  Glyoxylate and dicarboxylate metabolism
+KO_PATHWAY  ko00020
+///
+ENTRY       cel00030                    Pathway
+NAME        Pentose phosphate pathway - Caenorhabditis elegans (nematode)
+DESCRIPTION The pentose phosphate pathway is a process of glucose turnover that produces NADPH as reducing equivalents and pentoses as essential parts of nucleotides. There are two different phases in the pathway. One is irreversible oxidative phase in which glucose-6P is converted to ribulose-5P by oxidative decarboxylation, and NADPH is generated [MD:M00006]. The other is reversible non-oxidative phase in which phosphorylated sugars are interconverted to generate xylulose-5P, ribulose-5P, and ribose-5P [MD:M00007]. Phosphoribosyl pyrophosphate (PRPP) formed from ribose-5P [MD:M00005] is an activated compound used in the biosynthesis of histidine and purine/pyrimidine nucleotides. This pathway map also shows the Entner-Doudoroff pathway where 6-P-gluconate is dehydrated and then cleaved into pyruvate and glyceraldehyde-3P [MD:M00008].
+CLASS       Metabolism; Carbohydrate metabolism
+PATHWAY_MAP cel00030  Pentose phosphate pathway
+MODULE      cel_M00004  Pentose phosphate pathway (Pentose phosphate cycle) [PATH:cel00030]
+            cel_M00005  PRPP biosynthesis, ribose 5P => PRPP [PATH:cel00030]
+            cel_M00006  Pentose phosphate pathway, oxidative phase, glucose 6P => ribulose 5P [PATH:cel00030]
+            cel_M00007  Pentose phosphate pathway, non-oxidative phase, fructose 6P => ribose 5P [PATH:cel00030]
+DBLINKS     GO: 0006098
+ORGANISM    Caenorhabditis elegans (nematode) [GN:cel]
+GENE        CELE_Y87G2A.8  gpi-1; Glucose-6-phosphate isomerase [KO:K01810] [EC:5.3.1.9]
+            CELE_B0035.5  gspd-1; Glucose-6-phosphate 1-dehydrogenase [KO:K00036] [EC:1.1.1.49 1.1.1.363]
+COMPOUND    C00022  Pyruvate
+            C00031  D-Glucose
+            C00117  D-Ribose 5-phosphate
+            C00118  D-Glyceraldehyde 3-phosphate
+            C00119  5-Phospho-alpha-D-ribose 1-diphosphate
+            C00121  D-Ribose
+            C00197  3-Phospho-D-glycerate
+            C00198  D-Glucono-1,5-lactone
+            C00199  D-Ribulose 5-phosphate
+            C00204  2-Dehydro-3-deoxy-D-gluconate
+            C00221  beta-D-Glucose
+            C00231  D-Xylulose 5-phosphate
+            C00257  D-Gluconic acid
+            C00258  D-Glycerate
+            C00279  D-Erythrose 4-phosphate
+            C00345  6-Phospho-D-gluconate
+            C00577  D-Glyceraldehyde
+            C00620  alpha-D-Ribose 1-phosphate
+            C00631  2-Phospho-D-glycerate
+            C00668  alpha-D-Glucose 6-phosphate
+            C00672  2-Deoxy-D-ribose 1-phosphate
+            C00673  2-Deoxy-D-ribose 5-phosphate
+            C01151  D-Ribose 1,5-bisphosphate
+            C01172  beta-D-Glucose 6-phosphate
+            C01218  6-Phospho-2-dehydro-D-gluconate
+            C01236  D-Glucono-1,5-lactone 6-phosphate
+            C01801  Deoxyribose
+            C03752  2-Amino-2-deoxy-D-gluconate
+            C04442  2-Dehydro-3-deoxy-6-phospho-D-gluconate
+            C05345  beta-D-Fructose 6-phosphate
+            C05378  beta-D-Fructose 1,6-bisphosphate
+            C05382  Sedoheptulose 7-phosphate
+            C06019  D-arabino-Hex-3-ulose 6-phosphate
+            C06473  2-Keto-D-gluconic acid
+            C20589  D-Glucosaminate-6-phosphate
+REFERENCE
+  AUTHORS   Nishizuka Y (ed).
+  TITLE     [Metabolic Maps] (In Japanese)
+  JOURNAL   Tokyo Kagaku Dojin (1980)
+REFERENCE
+  AUTHORS   Nishizuka Y, Seyama Y, Ikai A, Ishimura Y, Kawaguchi A (eds).
+  TITLE     [Cellular Functions and Metabolic Maps] (In Japanese)
+  JOURNAL   Tokyo Kagaku Dojin (1997)
+REFERENCE
+  AUTHORS   Michal G.
+  TITLE     Biochemical Pathways
+  JOURNAL   Wiley (1999)
+REFERENCE   PMID:12700258
+  AUTHORS   Hove-Jensen B, Rosenkrantz TJ, Haldimann A, Wanner BL.
+  TITLE     Escherichia coli phnN, encoding ribose 1,5-bisphosphokinase activity (phosphoribosyl diphosphate forming): dual role in phosphonate degradation and NAD biosynthesis pathways.
+  JOURNAL   J Bacteriol 185:2793-801 (2003)
+            DOI:10.1128/JB.185.9.2793-2801.2003
+REFERENCE   PMID:16788179
+  AUTHORS   Orita I, Sato T, Yurimoto H, Kato N, Atomi H, Imanaka T, Sakai Y
+  TITLE     The ribulose monophosphate pathway substitutes for the missing pentose phosphate pathway in the archaeon Thermococcus kodakaraensis.
+  JOURNAL   J Bacteriol 188:4698-704 (2006)
+            DOI:10.1128/JB.00492-06
+REFERENCE   PMID:16428816
+  AUTHORS   Kato N, Yurimoto H, Thauer RK
+  TITLE     The physiological role of the ribulose monophosphate pathway in bacteria and archaea.
+  JOURNAL   Biosci Biotechnol Biochem 70:10-21 (2006)
+            DOI:10.1271/bbb.70.10
+REFERENCE   PMID:23279921
+  AUTHORS   Kouril T, Wieloch P, Reimann J, Wagner M, Zaparty M, Albers SV, Schomburg D, Ruoff P, Siebers B
+  TITLE     Unraveling the function of the two Entner-Doudoroff branches in the thermoacidophilic Crenarchaeon Sulfolobus solfataricus P2.
+  JOURNAL   FEBS J 280:1126-38 (2013)
+            DOI:10.1111/febs.12106
+REFERENCE   PMID:16458304
+  AUTHORS   Reher M, Schonheit P
+  TITLE     Glyceraldehyde dehydrogenases from the thermoacidophilic euryarchaeota Picrophilus torridus and Thermoplasma acidophilum, key enzymes of the non-phosphorylative Entner-Doudoroff pathway, constitute a novel enzyme family within the aldehyde dehydrogenase superfamily.
+  JOURNAL   FEBS Lett 580:1198-204 (2006)
+            DOI:10.1016/j.febslet.2006.01.029
+REFERENCE   PMID:20023024
+  AUTHORS   Reher M, Fuhrer T, Bott M, Schonheit P
+  TITLE     The nonphosphorylative Entner-Doudoroff pathway in the thermoacidophilic euryarchaeon Picrophilus torridus involves a novel 2-keto-3-deoxygluconate- specific aldolase.
+  JOURNAL   J Bacteriol 192:964-74 (2010)
+            DOI:10.1128/JB.01281-09
+REL_PATHWAY cel00010  Glycolysis / Gluconeogenesis
+            cel00040  Pentose and glucuronate interconversions
+            cel00052  Galactose metabolism
+            cel00230  Purine metabolism
+            cel00240  Pyrimidine metabolism
+            cel00340  Histidine metabolism
+            cel00750  Vitamin B6 metabolism
+KO_PATHWAY  ko00030
+///

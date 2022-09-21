@@ -1,0 +1,224 @@
+ENTRY       cel00040                    Pathway
+NAME        Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)
+CLASS       Metabolism; Carbohydrate metabolism
+PATHWAY_MAP cel00040  Pentose and glucuronate interconversions
+ORGANISM    Caenorhabditis elegans (nematode) [GN:cel]
+GENE        CELE_Y105E8B.9  Y105E8B.9; Beta-glucuronidase [KO:K01195] [EC:3.2.1.31]
+            CELE_B0310.5  ugt-46; Putative UDP-glucuronosyltransferase ugt-46 [KO:K00699] [EC:2.4.1.17]
+            CELE_T04H1.7  ugt-55; Putative UDP-glucuronosyltransferase ugt-55 [KO:K00699] [EC:2.4.1.17]
+            CELE_T04H1.8  ugt-56; Putative UDP-glucuronosyltransferase ugt-56 [KO:K00699] [EC:2.4.1.17]
+COMPOUND    C00022  Pyruvate
+            C00026  2-Oxoglutarate
+            C00029  UDP-glucose
+            C00103  D-Glucose 1-phosphate
+            C00111  Glycerone phosphate
+            C00116  Glycerol
+            C00167  UDP-glucuronate
+            C00181  D-Xylose
+            C00191  D-Glucuronate
+            C00199  D-Ribulose 5-phosphate
+            C00204  2-Dehydro-3-deoxy-D-gluconate
+            C00216  D-Arabinose
+            C00231  D-Xylulose 5-phosphate
+            C00259  L-Arabinose
+            C00266  Glycolaldehyde
+            C00309  D-Ribulose
+            C00310  D-Xylulose
+            C00312  L-Xylulose
+            C00333  D-Galacturonate
+            C00379  Xylitol
+            C00433  2,5-Dioxopentanoate
+            C00470  Pectate
+            C00474  Ribitol
+            C00476  D-Lyxose
+            C00502  D-Xylonate
+            C00508  L-Ribulose
+            C00514  D-Mannonate
+            C00532  L-Arabitol
+            C00558  D-Tagaturonate
+            C00618  3-Dehydro-L-gulonate
+            C00714  Pectin
+            C00789  CDP-ribitol
+            C00800  L-Gulonate
+            C00817  D-Altronate
+            C00905  D-Fructuronate
+            C01068  D-Ribitol 5-phosphate
+            C01101  L-Ribulose 5-phosphate
+            C01508  L-Lyxose
+            C01904  D-Arabitol
+            C02266  D-Xylonolactone
+            C02273  Digalacturonate
+            C02426  L-Glyceraldehyde
+            C02753  D-Xylono-1,4-lactone
+            C06441  L-Xylulose 1-phosphate
+            C14899  3-Dehydro-L-gulonate 6-phosphate
+            C15930  L-Galactonate
+            C20680  2-Dehydro-3-deoxy-L-galactonate
+            C22337  D-Ribulose 1-phosphate
+REFERENCE   PMID:11741871
+  AUTHORS   Yew WS, Gerlt JA.
+  TITLE     Utilization of L-ascorbate by Escherichia coli K-12: assignments of functions to products of the yjf-sga and yia-sgb operons.
+  JOURNAL   J Bacteriol 184:302-6 (2002)
+            DOI:10.1128/JB.184.1.302-306.2002
+REFERENCE   PMID:15697206
+  AUTHORS   Yew WS, Akana J, Wise EL, Rayment I, Gerlt JA
+  TITLE     Evolution of enzymatic activities in the orotidine 5'-monophosphate decarboxylase suprafamily: enhancing the promiscuous D-arabino-hex-3-ulose 6-phosphate synthase reaction catalyzed by 3-keto-L-gulonate 6-phosphate decarboxylase.
+  JOURNAL   Biochemistry 44:1807-15 (2005)
+            DOI:10.1021/bi047815v
+REFERENCE   PMID:10572115
+  AUTHORS   Yasueda H, Kawahara Y, Sugimoto S.
+  TITLE     Bacillus subtilis yckG and yckF encode two key enzymes of the ribulose monophosphate pathway used by methylotrophs, and yckH is required for their expression.
+  JOURNAL   J Bacteriol 181:7154-60 (1999)
+            DOI:10.1128/JB.181.23.7154-7160.1999
+REFERENCE   PMID:10913097
+  AUTHORS   Ibanez E, Gimenez R, Pedraza T, Baldoma L, Aguilar J, Badia J
+  TITLE     Role of the yiaR and yiaS genes of Escherichia coli in metabolism of endogenously formed L-xylulose.
+  JOURNAL   J Bacteriol 182:4625-7 (2000)
+            DOI:10.1128/JB.182.16.4625-4627.2000
+REFERENCE   PMID:15901685
+  AUTHORS   Orita I, Yurimoto H, Hirai R, Kawarabayasi Y, Sakai Y, Kato N
+  TITLE     The archaeon Pyrococcus horikoshii possesses a bifunctional enzyme for formaldehyde fixation via the ribulose monophosphate pathway.
+  JOURNAL   J Bacteriol 187:3636-42 (2005)
+            DOI:10.1128/JB.187.11.3636-3642.2005
+REL_PATHWAY cel00010  Glycolysis / Gluconeogenesis
+            cel00020  Citrate cycle (TCA cycle)
+            cel00030  Pentose phosphate pathway
+            cel00052  Galactose metabolism
+            cel00053  Ascorbate and aldarate metabolism
+            cel00500  Starch and sucrose metabolism
+            cel00520  Amino sugar and nucleotide sugar metabolism
+            cel00561  Glycerolipid metabolism
+            cel00562  Inositol phosphate metabolism
+            cel00740  Riboflavin metabolism
+KO_PATHWAY  ko00040
+///
+ENTRY       cel00051                    Pathway
+NAME        Fructose and mannose metabolism - Caenorhabditis elegans (nematode)
+CLASS       Metabolism; Carbohydrate metabolism
+PATHWAY_MAP cel00051  Fructose and mannose metabolism
+DBLINKS     GO: 0006000 0006013
+ORGANISM    Caenorhabditis elegans (nematode) [GN:cel]
+GENE        CELE_C05C8.7  C05C8.7; Mannose-6-phosphate isomerase [KO:K01809] [EC:5.3.1.8]
+            CELE_ZK632.4  ZK632.4; putative mannose-6-phosphate isomerase [KO:K01809] [EC:5.3.1.8]
+COMPOUND    C00095  D-Fructose
+            C00096  GDP-mannose
+            C00111  Glycerone phosphate
+            C00118  D-Glyceraldehyde 3-phosphate
+            C00159  D-Mannose
+            C00186  (S)-Lactate
+            C00247  L-Sorbose
+            C00267  alpha-D-Glucose
+            C00275  D-Mannose 6-phosphate
+            C00325  GDP-L-fucose
+            C00392  Mannitol
+            C00424  (S)-Lactaldehyde
+            C00464  Mannan
+            C00507  L-Rhamnose
+            C00577  D-Glyceraldehyde
+            C00636  D-Mannose 1-phosphate
+            C00644  D-Mannitol 1-phosphate
+            C00665  beta-D-Fructose 2,6-bisphosphate
+            C00794  D-Sorbitol
+            C00861  L-Rhamnulose
+            C00976  GDP-D-mannuronate
+            C01019  L-Fucose
+            C01094  D-Fructose 1-phosphate
+            C01096  Sorbitol 6-phosphate
+            C01099  L-Fuculose 1-phosphate
+            C01131  L-Rhamnulose 1-phosphate
+            C01222  GDP-4-dehydro-6-deoxy-D-mannose
+            C01355  Fructan
+            C01487  D-Allose
+            C01720  L-Fuconate
+            C01721  L-Fuculose
+            C01768  (Alginate)n
+            C01934  L-Rhamnonate
+            C02431  L-Rhamnofuranose
+            C02492  1,4-beta-D-Mannan
+            C02888  Sorbose 1-phosphate
+            C02962  D-Allose 6-phosphate
+            C02977  GDP-6-deoxy-D-talose
+            C02985  L-Fucose 1-phosphate
+            C02991  L-Rhamnono-1,4-lactone
+            C03117  GDP-6-deoxy-D-mannose
+            C03267  beta-D-Fructose 2-phosphate
+            C03827  2-Dehydro-3-deoxy-L-fuconate
+            C03979  2-Dehydro-3-deoxy-L-rhamnonate
+            C05144  (beta-D-Mannuronate)n
+            C05345  beta-D-Fructose 6-phosphate
+            C05378  beta-D-Fructose 1,6-bisphosphate
+            C05392  Oligouronide with 4-deoxy-alpha-L-erythro-hex-4-enopyranuronosyl group
+            C06192  ADP-mannose
+            C11516  2-(alpha-D-Mannosyl)-3-phosphoglycerate
+            C11544  2-O-(alpha-D-Mannosyl)-D-glycerate
+            C18028  L-Fucono-1,5-lactone
+            C18096  D-Allulose 6-phosphate
+            C20781  2,4-Diketo-3-deoxy-L-fuconate
+REL_PATHWAY cel00010  Glycolysis / Gluconeogenesis
+            cel00052  Galactose metabolism
+            cel00053  Ascorbate and aldarate metabolism
+            cel00510  N-Glycan biosynthesis
+            cel00520  Amino sugar and nucleotide sugar metabolism
+            cel00620  Pyruvate metabolism
+KO_PATHWAY  ko00051
+///
+ENTRY       cel00052                    Pathway
+NAME        Galactose metabolism - Caenorhabditis elegans (nematode)
+CLASS       Metabolism; Carbohydrate metabolism
+PATHWAY_MAP cel00052  Galactose metabolism
+DBLINKS     GO: 0006012
+ORGANISM    Caenorhabditis elegans (nematode) [GN:cel]
+GENE        CELE_C01B4.6  C01B4.6; Aldose 1-epimerase [KO:K01785] [EC:5.1.3.3]
+COMPOUND    C00029  UDP-glucose
+            C00031  D-Glucose
+            C00052  UDP-alpha-D-galactose
+            C00085  D-Fructose 6-phosphate
+            C00089  Sucrose
+            C00095  D-Fructose
+            C00103  D-Glucose 1-phosphate
+            C00111  Glycerone phosphate
+            C00116  Glycerol
+            C00118  D-Glyceraldehyde 3-phosphate
+            C00124  D-Galactose
+            C00137  myo-Inositol
+            C00159  D-Mannose
+            C00243  Lactose
+            C00267  alpha-D-Glucose
+            C00446  alpha-D-Galactose 1-phosphate
+            C00492  Raffinose
+            C00577  D-Glyceraldehyde
+            C00668  alpha-D-Glucose 6-phosphate
+            C00794  D-Sorbitol
+            C00795  D-Tagatose
+            C00880  D-Galactonate
+            C00984  alpha-D-Galactose
+            C01097  D-Tagatose 6-phosphate
+            C01113  D-Galactose 6-phosphate
+            C01132  N-Acetyl-D-galactosamine
+            C01216  2-Dehydro-3-deoxy-D-galactonate
+            C01235  alpha-D-Galactosyl-(1->3)-1D-myo-inositol
+            C01286  2-Dehydro-3-deoxy-6-phospho-D-galactonate
+            C01613  Stachyose
+            C01697  Galactitol
+            C02262  D-Galactosamine
+            C02669  D-Galactono-1,5-lactone
+            C03383  D-Galactono-1,4-lactone
+            C03733  UDP-alpha-D-galactofuranose
+            C03785  D-Tagatose 1,6-bisphosphate
+            C05396  Lactose 6'-phosphate
+            C05399  Melibiitol
+            C05400  Epimelibiose
+            C05401  3-beta-D-Galactosyl-sn-glycerol
+            C05402  Melibiose
+            C05404  D-Gal alpha 1->6D-Gal alpha 1->6D-Glucose
+            C05796  Galactan
+            C06311  Galactitol 1-phosphate
+            C06376  N-Acetyl-D-galactosamine 6-phosphate
+            C06377  D-Galactosamine 6-phosphate
+REL_PATHWAY cel00010  Glycolysis / Gluconeogenesis
+            cel00030  Pentose phosphate pathway
+            cel00040  Pentose and glucuronate interconversions
+            cel00051  Fructose and mannose metabolism
+            cel00520  Amino sugar and nucleotide sugar metabolism
+KO_PATHWAY  ko00052
+///
