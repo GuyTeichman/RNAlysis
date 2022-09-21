@@ -955,7 +955,7 @@ def test_go_enrichment_runner_get_taxon_id(monkeypatch, organism, got_gene_id_ty
             assert gene_id_type == gene_id_type_truth
         else:
             assert gene_id_type is None
-        return 'inferred_id', 'inferred_organism'
+        return ('inferred_id', 'inferred_organism'), 'map_from'
 
     monkeypatch.setattr(io, 'map_taxon_id', lambda input_organism: (input_organism + 'mapped_id', 'organism'))
     monkeypatch.setattr(io, 'infer_taxon_from_gene_ids', alt_infer_taxon_id)
@@ -965,12 +965,12 @@ def test_go_enrichment_runner_get_taxon_id(monkeypatch, organism, got_gene_id_ty
 
     if got_gene_id_type:
         runner.gene_id_type = gene_id_type_truth
-        res_id, res_organism = runner.get_taxon_id(organism)
+        res = runner.get_taxon_id(organism)
     else:
         runner.gene_id_type = 'auto'
-        res_id, res_organism = runner.get_taxon_id(organism)
+        res = runner.get_taxon_id(organism)
 
-    assert res_id, res_organism == truth
+    assert res == truth
 
 
 def test_go_enrichment_runner_fetch_annotations(monkeypatch):
