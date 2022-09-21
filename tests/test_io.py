@@ -366,7 +366,7 @@ def test_ensmbl_lookup_post_request(monkeypatch):
 ])
 def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
-    assert infer_sources_from_gene_ids([])[0] == truth
+    assert infer_sources_from_gene_ids([]) == truth
 
 
 @pytest.mark.parametrize("gene_id_info,truth", [
