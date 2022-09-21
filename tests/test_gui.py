@@ -1181,7 +1181,8 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     for i in range(3):
         res[i].df.sort_index(inplace=True)
         truth[i].df.sort_index(inplace=True)
-    assert res == truth
+        assert res[i].fname == truth[i].fname
+        assert np.all(np.isclose(res[i].df, truth[i].df, equal_nan=True))
     assert window.obj() == orig
 
 
