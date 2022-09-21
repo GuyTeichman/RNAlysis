@@ -542,9 +542,21 @@ def test_fetch_sets_bad_type(objs: dict):
         _ = _fetch_sets(objs, __attr_ref__)
 
 
-def test_kegg_enrichment_api():
-    assert False
+@pytest.mark.parametrize("organism,statistical_test,kwargs",
+                         [('auto', 'hypergeometric', {}),
+                          (6239, 'fisher', {}),
+                          ('caenorhabditis elegans', 'randomization', dict(randomization_reps=100))])
+def test_kegg_enrichment_api(organism, statistical_test, kwargs):
+    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195',
+             'WBGene00000833' 'WBGene00007150', 'WBGene00016995'}
+    en = FeatureSet(gene_set=genes, set_name='test_set')
+    _ = en.kegg_enrichment(organism, 'WormBase', statistical_test=statistical_test, biotype='protein_coding',
+                           biotype_ref_path=__biotype_ref__, **kwargs)
+    plt.close('all')
 
 
-def test_single_list_kegg_enrichment_api():
-    assert False
+def test_kegg_enrichment_single_list_api():
+    genes = ['WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195']
+    en = RankedSet(genes, set_name='test_set')
+    _ = en.single_set_kegg_enrichment(6239, 'WormBase')
+    plt.close('all')
