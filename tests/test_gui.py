@@ -1178,6 +1178,9 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
         qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
 
     res = sorted([sig.args[0] for sig in blocker.all_signals_and_args], key=lambda obj: obj.shape[0])
+    for i in range(3):
+        res[i].df.sort_index(inplace=True)
+        truth[i].df.sort_index(inplace=True)
     assert res == truth
     assert window.obj() == orig
 
