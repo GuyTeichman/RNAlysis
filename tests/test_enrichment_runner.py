@@ -1759,17 +1759,21 @@ def test_kegg_enrichment_runner_get_taxon_id(monkeypatch, organism, got_gene_id_
 
 
 def test_kegg_enrichment_runner_format_results(monkeypatch):
-    monkeypatch.setattr(KEGGEnrichmentRunner, '_correct_multiple_comparisons', lambda self: None)
+    def mock_correct_multiple_comparisons(self):
+        self.results['significant'] = [False, True, True]
+
+    monkeypatch.setattr(KEGGEnrichmentRunner, '_correct_multiple_comparisons', mock_correct_multiple_comparisons)
     runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
-    results_dict = {'name1': ['name1', 50, 10, 5.5, 2.3, 0.05], 'name2': ['name2', 17, 0, 3, 0, 1],
-                    'name3': ['name3', 1, np.nan, -2, -0.7, 0.04]}
+    results_dict = [['name1', 50, 10, 5.5, 2.3, 0.05], ['name2', 17, 0, 3, 0, 1],
+                    ['name3', 1, 2, -2, -0.7, 0.04]]
     truth = pd.read_csv('tests/test_files/kegg_enrichment_runner_format_results_truth.csv', index_col=0)
     runner.en_score_col = 'colName'
     runner.single_set = False
     runner.return_nonsignificant = False
+    runner.pathway_names_dict = {'name1': 'desc1', 'name2': 'desc2', 'name3': 'desc3'}
 
     runner.format_results(results_dict)
-    assert truth.equals(runner.results)
+    assert np.all(truth.sort_index() == runner.results.sort_index())
 
 
 def test_kegg_enrichment_runner_fetch_annotations(monkeypatch):
