@@ -33,6 +33,32 @@ def test_featureset_api():
     up = FeatureSet(up_feature_set)
 
 
+def test_featureset_copy():
+    s = FeatureSet(up_feature_set, 'name')
+    s2 = s.__copy__()
+    assert s == s2
+    assert s is not s2
+    assert s.gene_set is not s2.gene_set
+
+
+@pytest.mark.parametrize("s1,s2,expected", [
+    (FeatureSet(up_feature_set), FeatureSet(up_feature_set), True),
+    (FeatureSet(up_feature_set), FeatureSet(up_feature_set.copy()), True),
+    (FeatureSet(up_feature_set), FeatureSet(up_feature_set.union({'other'})), False),
+    (FeatureSet(up_feature_set, 'name'), FeatureSet(up_feature_set.copy(), 'name2'), False),
+    (FeatureSet(set()), FeatureSet(set()), True),
+    (FeatureSet(up_feature_set, 'name'), FeatureSet(up_feature_set.union({'other'}), 'name2'), False),
+    (FeatureSet(up_feature_set), up_feature_set, False)
+])
+def test_featureset_eq(s1, s2, expected):
+    assert (s1 == s2) == expected
+
+
+@pytest.mark.parametrize("s", [FeatureSet(set(), 'name'), FeatureSet(up_feature_set)])
+def test_featureset_iter(s):
+    assert set(s.__iter__()) == s.gene_set
+
+
 def test_featureset_change_set_name():
     en = FeatureSet(up_feature_set, set_name='up feature set')
     en.change_set_name('different name')
@@ -326,6 +352,36 @@ def test_rankedset_api():
     assert en.gene_set == {'1', '9', '4'}
     assert (en.ranked_genes == np.array(['1', '9', '4'], dtype='str')).all()
     assert en.set_name == 'name'
+
+
+def test_rankedset_copy():
+    s = RankedSet(['a', 'b', 'd', 'c'], 'name')
+    s2 = s.__copy__()
+    assert s == s2
+    assert s is not s2
+    assert s.gene_set is not s2.gene_set
+    assert s.ranked_genes is not s2.ranked_genes
+
+
+@pytest.mark.parametrize("s1,s2,expected", [
+    (RankedSet(['a', 'b', 'c']), RankedSet(['a', 'b', 'c']), True),
+    (RankedSet(['a', 'b', 'c'], 'name'), RankedSet(['a', 'b', 'c'], 'name'), True),
+    (RankedSet(['a', 'b', 'c']), FeatureSet(['a', 'b', 'c']), False),
+    (RankedSet(['a', 'b', 'c']), RankedSet(['a', 'b', 'c', 'd']), False),
+    (RankedSet(['a', 'b', 'c']), RankedSet(['a', 'c', 'b']), False),
+    (RankedSet(['a', 'b', 'c'], 'name'), RankedSet(['a', 'b', 'c'], 'name2'), False),
+    (RankedSet([]), RankedSet([]), True),
+    (RankedSet(['a', 'b', 'c'], 'name'), RankedSet(['a', 'd', 'b', 'c'], 'name2'), False),
+    (RankedSet(['a', 'b', 'c']), ['a', 'b', 'c'], False)
+])
+def test_rankedset_eq(s1, s2, expected):
+    assert (s1 == s2) == expected
+
+
+@pytest.mark.parametrize("s", [RankedSet([], 'name'), RankedSet(['1', '2', '3', '4', '5']),
+                               RankedSet(['a', 'c', 'b', 'e', 'd'], 'othername')])
+def test_ranked_iter(s):
+    assert list(s.__iter__()) == list(s.ranked_genes)
 
 
 def test_rankedset_repr():
