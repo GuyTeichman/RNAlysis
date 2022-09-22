@@ -1018,7 +1018,7 @@ class RankedSet(FeatureSet):
         if self.set_name != other.set_name:
             return False
 
-        if np.all(self.ranked_genes != other.ranked_genes):
+        if len(self.ranked_genes) != len(other.ranked_genes) or not np.all(self.ranked_genes == other.ranked_genes):
             return False
 
         return True
