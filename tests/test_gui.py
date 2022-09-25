@@ -2070,8 +2070,9 @@ def test_MainWindow_user_guide(qtbot, main_window, monkeypatch):
     assert window_opened == [True]
 
 
-def test_MainWindow_change_tab_icon(qtbot, main_window_with_tabs):
-    assert False
+def test_MainWindow_context_menu(qtbot, main_window_with_tabs):
+    qtbot.mouseClick(main_window_with_tabs.tabs.tabBar(), RIGHT_CLICK,
+                     pos=main_window_with_tabs.tabs.tabBar().tabRect(1).center())
 
 
 def test_MainWindow_clear_history(qtbot, main_window_with_tabs):
