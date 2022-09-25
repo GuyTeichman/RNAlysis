@@ -117,3 +117,10 @@ def test_get_biotype_ref_path_not_predefined():
 def test_get_attr_ref_path_not_predefined():
     pth = 'some/attr/ref/path'
     assert get_biotype_ref_path(pth) == pth
+
+
+def test_reset_settings(use_temp_settings_file):
+    with open(get_settings_file_path(), 'w') as f:
+        f.write('abcde\nfgh')
+    reset_settings()
+    assert not get_settings_file_path().exists()
