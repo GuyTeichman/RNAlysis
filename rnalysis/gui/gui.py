@@ -2125,7 +2125,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.error_window = None
 
         self.menu_bar = QtWidgets.QMenuBar(self)
-
+        self.tab_contextmenu = None
         self.pipelines: typing.OrderedDict[str, filtering.Pipeline] = OrderedDict()
         self.pipeline_window = None
 
@@ -2201,8 +2201,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def init_tab_contextmenu(self, ind: int):
-        tab_contextmenu = QtWidgets.QMenu(self)
-        color_menu = tab_contextmenu.addMenu("Change tab &color")
+        self.tab_contextmenu = QtWidgets.QMenu(self)
+        color_menu = self.tab_contextmenu.addMenu("Change tab &color")
         actions = []
         for color in gui_graphics.COLOR_ICONS:
             this_action = QtWidgets.QAction(color.capitalize())
@@ -2214,7 +2214,7 @@ class MainWindow(QtWidgets.QMainWindow):
         reset_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=None))
         color_menu.addAction(reset_action)
 
-        sort_menu = tab_contextmenu.addMenu("Sort tabs")
+        sort_menu = self.tab_contextmenu.addMenu("Sort tabs")
         sort_by_name = QtWidgets.QAction("Sort by tab &name")
         sort_by_name.triggered.connect(self.sort_tabs_by_name)
         sort_by_time = QtWidgets.QAction("Sort by creation &time")
@@ -2227,7 +2227,7 @@ class MainWindow(QtWidgets.QMainWindow):
         reverse.triggered.connect(self.sort_reverse)
         sort_menu.addActions([sort_by_name, sort_by_time, sort_by_type, sort_by_size, reverse])
 
-        tab_contextmenu.exec(QtGui.QCursor.pos())
+        self.tab_contextmenu.exec(QtGui.QCursor.pos())
 
     def update_style_sheet(self):
         self.setStyleSheet(gui_style.get_stylesheet())
