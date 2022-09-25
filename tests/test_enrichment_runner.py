@@ -1141,6 +1141,7 @@ def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_
 
     def go_dag_plot(dpi, **kwargs):
         assert plot_ontology_graph
+        dag_plotted.append(True)
 
     monkeypatch.setattr(GOEnrichmentRunner, 'enrichment_bar_plot', validate_params)
     monkeypatch.setattr(GOEnrichmentRunner, 'go_dag_plot', go_dag_plot)
@@ -1151,6 +1152,8 @@ def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_
     runner.plot_ontology_graph = plot_ontology_graph
     res = runner.plot_results()
     assert isinstance(res, plt.Figure)
+    if plot_ontology_graph:
+        assert dag_plotted == [True]
 
 
 @pytest.mark.parametrize('return_nonsignificant,truth_file',
