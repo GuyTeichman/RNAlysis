@@ -124,3 +124,8 @@ def test_reset_settings(use_temp_settings_file):
         f.write('abcde\nfgh')
     reset_settings()
     assert not get_settings_file_path().exists()
+
+
+def test_reset_settings_no_previous_file(use_temp_settings_file):
+    reset_settings()
+    assert not get_settings_file_path().exists()
