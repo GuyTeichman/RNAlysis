@@ -1129,6 +1129,8 @@ def test_go_enrichment_runner_correct_multiple_comparisons():
 @pytest.mark.parametrize('results,n_bars_truth', [([1, 2, 3], 3), (list(range(15)), 10)])
 @pytest.mark.parametrize('plot_ontology_graph', [False, True])
 def test_go_enrichment_runner_plot_results(monkeypatch, single_list, results, n_bars_truth, plot_ontology_graph):
+    dag_plotted = []
+
     def validate_params(self, title, n_bars, ylabel=''):
         assert isinstance(title, str)
         assert self.set_name in title
@@ -1889,3 +1891,12 @@ def test_kegg_enrichment_runner_fetch_attributes():
     runner.fetch_attributes()
     assert runner.attributes == truth_attributes
     assert runner.attributes_set == truth_attributes_set
+
+
+def test_dag_plot_for_namespace():
+    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.results = io.load_csv('tests/test_files/go_enrichment_runner_sample_results.csv', index_col=0)
+    runner.dag_tree = io.fetch_go_basic()
+    runner.en_score_col = 'colName'
+    runner.ontology_graph_format = 'png'
+    runner._dag_plot_for_namespace('biological_process', 'title', 'ylabel', 50)
