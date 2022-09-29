@@ -1177,7 +1177,6 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     for i in range(3):
         res[i].df.sort_index(inplace=True)
         truth[i].df.sort_index(inplace=True)
-        assert res[i].fname == truth[i].fname
         assert np.all(np.isclose(res[i].df, truth[i].df, equal_nan=True))
 
     assert window.obj() == orig
@@ -1263,8 +1262,31 @@ def test_FilterTabPage_open_clicom(countfiltertabpage_with_undo_stack, qtbot, mo
     assert opened == [True]
 
 
-def test_FilterTabPage_get_all_actions(qtbot):
-    assert False
+def test_FilterTabPage_get_all_actions(qtbot, countfiltertabpage_with_undo_stack, filtertabpage_with_undo_stack):
+    countfilter = countfiltertabpage_with_undo_stack[0]
+    deseqfilter = filtertabpage_with_undo_stack[0]
+    truth_counts = {'Filter': [], 'Summarize': [], 'Visualize': [], 'Normalize': [], 'Cluster': [], 'General': []}
+    truth_deseq = {'Filter': [], 'Summarize': [], 'Visualize': [], 'Normalize': [], 'Cluster': [], 'General': []}
+
+    counts_res = countfilter.get_all_actions()
+    deseq_res = deseqfilter.get_all_actions()
+
+    assert sorted(counts_res.keys()) == sorted(truth_counts.keys())
+    assert sorted(deseq_res.keys()) == sorted(truth_deseq.keys())
+
+    assert len(counts_res['Cluster']) >= 5
+    assert len(deseq_res['Cluster']) == 0
+
+    for res in (counts_res, deseq_res):
+        for action in res['Filter']:
+            assert 'filter' in action or action.startswith('split')
+        for action in res['Normalize']:
+            assert action.startswith('normalize')
+        for action in ['sort', 'transform']:
+            assert action in res['General']
+        for action in itertools.chain(res['General'], res['Visualize'], res['Summarize']):
+            for keyword in ['split', 'filter', 'normalize']:
+                assert keyword not in action
 
 
 def test_SetTabPage_init(qtbot):
@@ -1384,8 +1406,12 @@ def test_SetTabPage_view_full_set(qtbot):
     assert genes_in_view == window.obj()
 
 
-def test_FuncTypeStack_init(qtbot):
-    assert False
+@pytest.mark.parametrize('exc_params', [None, ['self', 'other']])
+@pytest.mark.parametrize('pipeline_mode', [True, False])
+def test_FuncTypeStack_init(qtbot, pipeline_mode, exc_params):
+    qtbot, stack = widget_setup(qtbot, FuncTypeStack, ['filter_biotype', 'number_filters', 'describe'],
+                                filtering.Filter('tests/test_files/test_deseq.csv'),
+                                additional_excluded_params=exc_params, pipeline_mode=pipeline_mode)
 
 
 def test_CreatePipelineWindow_init(qtbot):
@@ -1478,9 +1504,26 @@ def test_CreatePipelineWindow_save_pipeline(qtbot, monkeypatch):
 
 
 def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
+    pipeline_truth = filtering.Pipeline('DESeqFilter')
+    pipeline_truth.add_function('describe', percentiles=[0.01, 0.25, 0.5, 0.75, 0.99])
+    pipeline_name = 'my pipeline name'
+
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+
     qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
-    assert False
+    window.basic_widgets['pipeline_name'].clear()
+    qtbot.keyClicks(window.basic_widgets['pipeline_name'], pipeline_name)
+    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Differential expression')
+    qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
+
+    qtbot.mouseClick(window.stack_buttons[2], LEFT_CLICK)
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'describe')
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+
+    with qtbot.waitSignal(window.pipelineExported) as blocker:
+        qtbot.mouseClick(window.overview_widgets['export_button'], LEFT_CLICK)
+    assert blocker.args[0] == pipeline_name
+    assert blocker.args[1] == pipeline_truth
 
 
 def test_MultiKeepWindow_init(qtbot, multi_keep_window):
