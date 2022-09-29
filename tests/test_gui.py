@@ -677,10 +677,6 @@ def test_SetOperationWindow_canvas_types(qtbot, set_op_window):
     assert isinstance(set_op_window.widgets['canvas'], gui_graphics.EmptyCanvas)
 
 
-def test_SetOperationWindow_function_change_canvas(qtbot, set_op_window):
-    assert False
-
-
 @pytest.mark.parametrize('n_selected', [3, 4])
 def test_SetOperationWindow_primary_set_change(qtbot, set_op_window, n_selected):
     for i in range(n_selected):
@@ -1167,7 +1163,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     orig = window.obj().__copy__()
 
     truth = orig.split_kmeans(n_clusters=3, random_seed=0)
-    truth = sorted(truth, key=lambda obj: obj.shape[0])
+    truth = sorted(truth, key=lambda obj: sorted(obj.df.index)[0])
 
     window.stack_buttons[4].click()
     qtbot.keyClicks(window.stack.currentWidget().func_combo, 'split_kmeans')
@@ -1177,12 +1173,13 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
                            timeout=15000) as blocker:
         qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
 
-    res = sorted([sig.args[0] for sig in blocker.all_signals_and_args], key=lambda obj: obj.shape[0])
+    res = sorted([sig.args[0] for sig in blocker.all_signals_and_args], key=lambda obj: sorted(obj.df.index)[0])
     for i in range(3):
         res[i].df.sort_index(inplace=True)
         truth[i].df.sort_index(inplace=True)
         assert res[i].fname == truth[i].fname
         assert np.all(np.isclose(res[i].df, truth[i].df, equal_nan=True))
+
     assert window.obj() == orig
 
 
@@ -1251,8 +1248,19 @@ def test_FilterTabPage_undo_pipeline(qtbot, filtertabpage_with_undo_stack, pipel
     assert window.name != orig_name
 
 
-def test_FilterTabPage_open_clicom(qtbot):
-    assert False
+def test_FilterTabPage_open_clicom(countfiltertabpage_with_undo_stack, qtbot, monkeypatch):
+    tabpage = countfiltertabpage_with_undo_stack[0]
+    opened = []
+
+    def mock_show(*args, **kwargs):
+        opened.append(True)
+
+    monkeypatch.setattr(ClicomWindow, 'show', mock_show)
+
+    tabpage.stack_buttons[4].click()
+    tabpage.stack_widgets['Cluster'].func_combo.setCurrentText('split_clicom')
+
+    assert opened == [True]
 
 
 def test_FilterTabPage_get_all_actions(qtbot):
@@ -2081,5 +2089,16 @@ def test_MainWindow_context_menu(qtbot, main_window_with_tabs, monkeypatch):
                      pos=main_window_with_tabs.tabs.tabBar().tabRect(1).center())
     assert opened == [True]
 
-def test_MainWindow_clear_history(qtbot, main_window_with_tabs):
-    assert False
+
+def test_MainWindow_clear_history(qtbot, main_window_with_tabs, monkeypatch):
+    cleared = [False for i in range(len(main_window_with_tabs.get_available_objects()))]
+    truth = [True for i in cleared]
+
+    def mock_clear(*args, ind):
+        cleared[ind] = True
+
+    for i in range(len(truth)):
+        monkeypatch.setattr(main_window_with_tabs.undo_group.stacks()[i], 'clear', functools.partial(mock_clear, ind=i))
+
+    main_window_with_tabs.clear_history()
+    assert cleared == truth
