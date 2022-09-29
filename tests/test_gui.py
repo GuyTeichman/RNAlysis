@@ -2044,8 +2044,41 @@ def test_MainWindow_choose_tab_by_name(qtbot, use_temp_settings_file, main_windo
         assert main_window_with_tabs.tabs.currentIndex() == truth.index(key)
 
 
-def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window_with_tabs, monkeypatch):
-    assert False
+def test_MainWindow_save_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName',
+                        lambda *args, **kwargs: ('tests/test_files/test_session.rnal', '.rnal'))
+    main_window.load_session()
+
+    session_fname = 'session filename.rnal'
+    n_files = main_window.tabs.count()
+    n_pipelines = len(main_window.pipelines)
+    item_types_truth = [filtering.FoldChangeFilter, filtering.CountFilter, filtering.Filter, filtering.DESeqFilter, set]
+    item_properties_truth = [{'numerator_name': 'a', 'denominator_name': 'b'}, {'is_normalized': False}, {},
+                             {'log2fc_col': 'log2FoldChange', 'padj_col': 'padj'}, {}]
+    pipeline_names_truth = ['New Pipeline', 'Other Pipeline']
+    pipeline_files_truth = [pipeline.export_pipeline(filename=None) for pipeline in main_window.pipelines.values()]
+    func_called = []
+
+    def mock_save_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str],
+                          item_types: list, item_properties: list, pipeline_names: List[str],
+                          pipeline_files: List[str]):
+        assert session_filename == session_fname
+        assert len(file_names) == n_files
+        assert item_types == item_types_truth
+        assert item_properties == item_properties_truth
+
+        assert len(pipeline_names) == n_pipelines
+        assert len(pipeline_files) == n_pipelines
+        assert pipeline_names == pipeline_names_truth
+        assert pipeline_files == pipeline_files_truth
+
+        func_called.append(True)
+
+    monkeypatch.setattr(io, 'save_gui_session', mock_save_session)
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getSaveFileName', lambda *args, **kwargs: (session_fname, '.rnal'))
+
+    main_window.save_session_action.trigger()
+    assert func_called == [True]
 
 
 def test_MainWindow_load_session(qtbot, use_temp_settings_file, main_window, monkeypatch):
@@ -2134,7 +2167,7 @@ def test_MainWindow_context_menu(qtbot, main_window_with_tabs, monkeypatch):
 
 
 def test_MainWindow_clear_history(qtbot, main_window_with_tabs, monkeypatch):
-    cleared = [False for i in range(len(main_window_with_tabs.get_available_objects()))]
+    cleared = [False for i in range(main_window_with_tabs.tabs.count())]
     truth = [True for i in cleared]
 
     def mock_clear(*args, ind):
