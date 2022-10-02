@@ -7,7 +7,7 @@ import yaml
 from rnalysis import __attr_file_key__, __biotype_file_key__, __font_key__, __font_size_key__, __stylesheet_key__, \
     __show_tutorial_key__, __path__
 
-DEFAULT_VALUES = {__font_key__: 'Times New Roman', __font_size_key__: 10, __stylesheet_key__: 'light',
+DEFAULT_VALUES = {__font_key__: 'Times New Roman', __font_size_key__: 10, __stylesheet_key__: 'base',
                   __show_tutorial_key__: True}
 
 
