@@ -3485,10 +3485,10 @@ class Pipeline:
         :return: the imported Pipeline
         :rtype: Pipeline
         """
-        if Path(filename).exists() and Path(filename).is_file():
+        try:
             with open(filename) as f:
                 pipeline_dict = yaml.safe_load(f)
-        else:
+        except OSError:
             pipeline_dict = yaml.safe_load(filename)
         pipeline = cls.__new__(cls)
         pipeline.filter_type = cls.FILTER_TYPES[pipeline_dict['filter_type']]
