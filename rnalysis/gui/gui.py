@@ -2243,7 +2243,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def sort_reverse(self):
         prev_order = {i: self.tabs.widget(i) for i in range(self.tabs.count())}
-        self._sort_by_map(prev_order, reversed(prev_order.keys()))
+        self._sort_by_map(prev_order, reversed(list(prev_order.keys())))
 
     def sort_tabs_by_name(self):
         tab_names = {}
