@@ -28,5 +28,6 @@
     FeatureSet.save_txt
     FeatureSet.symmetric_difference
     FeatureSet.union
+    FeatureSet.user_defined_enrichment
     
     

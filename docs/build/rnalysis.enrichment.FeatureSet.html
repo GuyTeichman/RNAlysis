@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.FeatureSet &mdash; RNAlysis 2.1.1 documentation</title>
+  <title>rnalysis.enrichment.FeatureSet &mdash; RNAlysis 3.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -76,6 +77,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.save_txt.html">rnalysis.enrichment.FeatureSet.save_txt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.symmetric_difference.html">rnalysis.enrichment.FeatureSet.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html">rnalysis.enrichment.FeatureSet.union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html">rnalysis.enrichment.FeatureSet.user_defined_enrichment</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a></li>
@@ -117,7 +119,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="rnalysis-enrichment-featureset">
+  <section id="rnalysis-enrichment-featureset">
 <h1>rnalysis.enrichment.FeatureSet<a class="headerlink" href="#rnalysis-enrichment-featureset" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="rnalysis.enrichment.FeatureSet">
@@ -164,10 +166,10 @@
 <td><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_hypergeometric.html#rnalysis.enrichment.FeatureSet.enrich_hypergeometric" title="rnalysis.enrichment.FeatureSet.enrich_hypergeometric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.enrich_hypergeometric</span></code></a>([...])</p></td>
-<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using the Hypergeometric Test.</p></td>
+<td><p>This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.enrich_randomization.html#rnalysis.enrichment.FeatureSet.enrich_randomization" title="rnalysis.enrichment.FeatureSet.enrich_randomization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.enrich_randomization</span></code></a>([...])</p></td>
-<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using a randomization test.</p></td>
+<td><p>This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.go_enrichment.html#rnalysis.enrichment.FeatureSet.go_enrichment" title="rnalysis.enrichment.FeatureSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.go_enrichment</span></code></a>([organism, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set.</p></td>
@@ -190,9 +192,12 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.union.html#rnalysis.enrichment.FeatureSet.union" title="rnalysis.enrichment.FeatureSet.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.union</span></code></a>(*others)</p></td>
 <td><p>Calculates the set union of the indices from multiple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html#rnalysis.enrichment.FeatureSet.user_defined_enrichment" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureSet.user_defined_enrichment</span></code></a>(attributes)</p></td>
+<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.</p></td>
+</tr>
 </tbody>
 </table>
-</div>
+</section>
 
 
            </div>

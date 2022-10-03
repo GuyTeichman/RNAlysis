@@ -1,4 +1,4 @@
-rnalysis.filtering.Pipeline
+﻿rnalysis.filtering.Pipeline
 ===========================
 
 .. currentmodule:: rnalysis.filtering
@@ -18,6 +18,8 @@ rnalysis.filtering.Pipeline
     
     Pipeline.add_function
     Pipeline.apply_to
+    Pipeline.export_pipeline
+    Pipeline.import_pipeline
     Pipeline.remove_last_function
     
     

@@ -24,6 +24,7 @@
     Filter.filter_missing_values
     Filter.filter_percentile
     Filter.filter_top_n
+    Filter.from_dataframe
     Filter.head
     Filter.intersection
     Filter.majority_vote_intersection

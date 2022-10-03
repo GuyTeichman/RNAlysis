@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.RankedSet &mdash; RNAlysis 2.1.1 documentation</title>
+  <title>rnalysis.enrichment.RankedSet &mdash; RNAlysis 3.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -20,7 +21,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.enrichment.RankedSet.biotypes" href="rnalysis.enrichment.RankedSet.biotypes.html" />
-    <link rel="prev" title="rnalysis.enrichment.FeatureSet.union" href="rnalysis.enrichment.FeatureSet.union.html" /> 
+    <link rel="prev" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -80,6 +81,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_kegg_enrichment.html">rnalysis.enrichment.RankedSet.single_set_kegg_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference.html">rnalysis.enrichment.RankedSet.symmetric_difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.union.html">rnalysis.enrichment.RankedSet.union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.user_defined_enrichment.html">rnalysis.enrichment.RankedSet.user_defined_enrichment</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.plot_enrichment_results.html">rnalysis.enrichment.plot_enrichment_results</a></li>
@@ -120,7 +122,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="rnalysis-enrichment-rankedset">
+  <section id="rnalysis-enrichment-rankedset">
 <h1>rnalysis.enrichment.RankedSet<a class="headerlink" href="#rnalysis-enrichment-rankedset" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="rnalysis.enrichment.RankedSet">
@@ -167,10 +169,10 @@
 <td><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_hypergeometric.html#rnalysis.enrichment.RankedSet.enrich_hypergeometric" title="rnalysis.enrichment.RankedSet.enrich_hypergeometric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_hypergeometric</span></code></a>([...])</p></td>
-<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using the Hypergeometric Test.</p></td>
+<td><p>This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization.html#rnalysis.enrichment.RankedSet.enrich_randomization" title="rnalysis.enrichment.RankedSet.enrich_randomization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_randomization</span></code></a>([attributes, ...])</p></td>
-<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set         using a randomization test.</p></td>
+<td><p>This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html#rnalysis.enrichment.RankedSet.go_enrichment" title="rnalysis.enrichment.RankedSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.go_enrichment</span></code></a>([organism, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set.</p></td>
@@ -187,7 +189,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.save_txt.html#rnalysis.enrichment.RankedSet.save_txt" title="rnalysis.enrichment.RankedSet.save_txt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.save_txt</span></code></a>(fname)</p></td>
 <td><p>Save the list of features in the FeatureSet object under the specified filename and path.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_enrichment.html#rnalysis.enrichment.RankedSet.single_set_enrichment" title="rnalysis.enrichment.RankedSet.single_set_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.single_set_enrichment</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_enrichment.html#rnalysis.enrichment.RankedSet.single_set_enrichment" title="rnalysis.enrichment.RankedSet.single_set_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.single_set_enrichment</span></code></a>(attributes)</p></td>
 <td><p>Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by          <a href="#id1"><span class="problematic" id="id2">`</span></a>Prof.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_go_enrichment.html#rnalysis.enrichment.RankedSet.single_set_go_enrichment" title="rnalysis.enrichment.RankedSet.single_set_go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.single_set_go_enrichment</span></code></a>([...])</p></td>
@@ -202,15 +204,18 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.union.html#rnalysis.enrichment.RankedSet.union" title="rnalysis.enrichment.RankedSet.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.union</span></code></a>(*others)</p></td>
 <td><p>Calculates the set union of the indices from multiple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.user_defined_enrichment.html#rnalysis.enrichment.RankedSet.user_defined_enrichment" title="rnalysis.enrichment.RankedSet.user_defined_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.user_defined_enrichment</span></code></a>(attributes)</p></td>
+<td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.</p></td>
+</tr>
 </tbody>
 </table>
-</div>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.enrichment.FeatureSet.union.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet.union" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.enrichment.RankedSet.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

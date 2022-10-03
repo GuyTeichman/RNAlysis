@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.DESeqFilter.split_by_attribute &mdash; RNAlysis 2.1.1 documentation</title>
+  <title>rnalysis.filtering.DESeqFilter.split_by_attribute &mdash; RNAlysis 3.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -75,6 +76,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_percentile.html">rnalysis.filtering.DESeqFilter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_significant.html">rnalysis.filtering.DESeqFilter.filter_significant</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_top_n.html">rnalysis.filtering.DESeqFilter.filter_top_n</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.from_dataframe.html">rnalysis.filtering.DESeqFilter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.head.html">rnalysis.filtering.DESeqFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.intersection.html">rnalysis.filtering.DESeqFilter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.majority_vote_intersection.html">rnalysis.filtering.DESeqFilter.majority_vote_intersection</a></li>
@@ -133,11 +135,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="rnalysis-filtering-deseqfilter-split-by-attribute">
+  <section id="rnalysis-filtering-deseqfilter-split-by-attribute">
 <h1>rnalysis.filtering.DESeqFilter.split_by_attribute<a class="headerlink" href="#rnalysis-filtering-deseqfilter-split-by-attribute" title="Permalink to this headline"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.DESeqFilter.split_by_attribute">
-<span class="sig-prename descclassname"><span class="pre">DESeqFilter.</span></span><span class="sig-name descname"><span class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.split_by_attribute" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">DESeqFilter.</span></span><span class="sig-name descname"><span class="pre">split_by_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'predefined'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.split_by_attribute" title="Permalink to this definition"></a></dt>
 <dd><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.         Each new Filter object will contain only features that belong to its Attribute Reference Table attribute.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -165,7 +167,7 @@
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>

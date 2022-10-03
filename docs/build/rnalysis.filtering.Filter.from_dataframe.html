@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rnalysis.filtering.Filter.from_dataframe &mdash; RNAlysis 3.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.filtering.Filter.head" href="rnalysis.filtering.Filter.head.html" />
+    <link rel="prev" title="rnalysis.filtering.Filter.filter_top_n" href="rnalysis.filtering.Filter.filter_top_n.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html">rnalysis.filtering.Filter.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html">rnalysis.filtering.Filter.filter_biotype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html">rnalysis.filtering.Filter.filter_missing_values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.Filter.from_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html">rnalysis.filtering.Filter.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html">rnalysis.filtering.Filter.majority_vote_intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html">rnalysis.filtering.Filter.number_filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html">rnalysis.filtering.Filter.print_features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html">rnalysis.filtering.Filter.save_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.sort.html">rnalysis.filtering.Filter.sort</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html">rnalysis.filtering.Filter.split_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.split_by_percentile.html">rnalysis.filtering.Filter.split_by_percentile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html">rnalysis.filtering.Filter.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.tail.html">rnalysis.filtering.Filter.tail</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html">rnalysis.filtering.Filter.text_filters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.transform.html">rnalysis.filtering.Filter.transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.union.html">rnalysis.filtering.Filter.union</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
+          <li><a href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a> &raquo;</li>
+      <li>rnalysis.filtering.Filter.from_dataframe</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rnalysis.filtering.Filter.from_dataframe.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rnalysis-filtering-filter-from-dataframe">
+<h1>rnalysis.filtering.Filter.from_dataframe<a class="headerlink" href="#rnalysis-filtering-filter-from-dataframe" title="Permalink to this headline"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="rnalysis.filtering.Filter.from_dataframe">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Filter.</span></span><span class="sig-name descname"><span class="pre">from_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">rnalysis.filtering.Filter</span></a></span></span><a class="headerlink" href="#rnalysis.filtering.Filter.from_dataframe" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rnalysis.filtering.Filter.filter_top_n.html" class="btn btn-neutral float-left" title="rnalysis.filtering.Filter.filter_top_n" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.filtering.Filter.head.html" class="btn btn-neutral float-right" title="rnalysis.filtering.Filter.head" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

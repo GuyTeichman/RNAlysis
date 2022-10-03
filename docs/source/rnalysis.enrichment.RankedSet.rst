@@ -31,5 +31,6 @@
     RankedSet.single_set_kegg_enrichment
     RankedSet.symmetric_difference
     RankedSet.union
+    RankedSet.user_defined_enrichment
     
     
