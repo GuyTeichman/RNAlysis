@@ -285,7 +285,7 @@ class AltTQDM(QtCore.QObject):
     def __enter__(self):
         return self
 
-    def update(self, n: int):
+    def update(self, n: int = 1):
         self.barUpdate.emit(n)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -312,7 +312,7 @@ class AltParallel(QtCore.QObject):
         self.parallel.print_progress = functools.partial(self.print_progress)
         return self.parallel.__call__(*args, **kwargs)
 
-    def update(self, n: int):
+    def update(self, n: int = 1):
         self.barUpdate.emit(n)
         print(f"{self.desc}: finished {self.parallel.n_completed_tasks} of {self.prev_total} tasks\r")
 
