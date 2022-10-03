@@ -80,6 +80,6 @@ setup(
     zip_safe=False,
     entry_points={
         'gui_scripts': [
-            'rnalysis-gui = gui:run_gui',
+            'rnalysis-gui = rnalysis.gui:run_gui',
         ]}
 )
