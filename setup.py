@@ -79,7 +79,7 @@ setup(
     version='3.0.0',
     zip_safe=False,
     entry_points={
-        'gui_scripts': [
+        'console_scripts': [
             'rnalysis-gui = rnalysis.gui:run_gui',
         ]}
 )
