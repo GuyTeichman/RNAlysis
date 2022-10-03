@@ -2173,7 +2173,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
-        self.setWindowIcon(QtGui.QIcon('../../docs/source/favicon.ico'))
+        icon_pth = str(Path(__file__).parent.parent.joinpath('favicon.ico').absolute())
+        self.setWindowIcon(QtGui.QIcon(icon_pth))
         self.setGeometry(600, 50, 1050, 800)
         self.update_style_sheet()
 
