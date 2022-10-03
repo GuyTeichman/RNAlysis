@@ -4,14 +4,16 @@ History
 
 
 
-3.0.0 (2022-08-??)
+3.0.0 (2022-10-10)
 ------------------
 * This version introduces a graphical user interface for RNAlysis, as well as new functions for KEGG Pathways enrichment analysis.
 
 
 Added
 ******
+* RNAlysis now includes a graphical user interface
 * Pipelines can now be imported and exported
+* Enrichment and single-set-enrichment for KEGG pathway data
 
 Changed
 *******
