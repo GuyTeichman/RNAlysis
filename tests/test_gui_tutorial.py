@@ -14,12 +14,12 @@ def widget_setup(qtbot, widget_class, *args, **kwargs):
 
 
 def test_TutorialMovie_init(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     assert window.video.isValid()
 
 
 def test_TutorialMovie_set_frame(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     window.pause()
     window.set_frame(17)
@@ -37,41 +37,41 @@ def test_TutorialMovie_set_frame(qtbot):
 
 
 def test_TutorialMovie_start(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     assert window.video.state() == QtGui.QMovie.NotRunning
     window.start()
     assert window.video.state() == QtGui.QMovie.Running
 
 
 def test_TutorialMovie_restart(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.restart()
     assert window.video.currentFrameNumber() == 0
     assert window.video.state() == QtGui.QMovie.Running
 
 
 def test_TutorialMovie_stop(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     window.stop()
     assert window.video.state() == QtGui.QMovie.NotRunning
 
 
 def test_TutorialMovie_pause(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     window.pause()
     assert window.video.state() == QtGui.QMovie.Paused
 
 
 def test_TutorialMovie_stop_button(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     qtbot.mouseClick(window.stop_button, LEFT_CLICK)
     assert window.video.state() == QtGui.QMovie.NotRunning
 
 
 def test_TutorialMovie_pause_button(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     qtbot.mouseClick(window.play_button, LEFT_CLICK)
     assert window.video.state() == QtGui.QMovie.Paused
@@ -80,7 +80,7 @@ def test_TutorialMovie_pause_button(qtbot):
 
 
 def test_TutorialMovie_pause_click_video(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     qtbot.mouseClick(window, LEFT_CLICK)
     assert window.video.state() == QtGui.QMovie.Paused
@@ -89,7 +89,7 @@ def test_TutorialMovie_pause_click_video(qtbot):
 
 
 def test_TutorialMovie_speed_button(qtbot):
-    qtbot, window = widget_setup(qtbot, TutorialMovie, 'tests/test_files/test_video.webp')
+    qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.video.start()
     default_speed = window.video.speed()
     qtbot.mouseClick(window.speed_button, LEFT_CLICK)
