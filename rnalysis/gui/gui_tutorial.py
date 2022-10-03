@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 from rnalysis.utils import settings
+from pathlib import Path
 
 
 class WelcomeWizard(QtWidgets.QWizard):
@@ -187,8 +188,8 @@ class StartPage(QtWidgets.QWizardPage):
         self.dont_show_again.stateChanged.connect(self.setFinalPage)
         self.dont_show_again.stateChanged.connect(self.completeChanged.emit)
         self.registerField('dont_show_again', self.dont_show_again)
-
-        text = '<img src="../../docs/source/logo.png" width="750"/><br><br>'
+        img_path = str(Path(__file__).parent.joinpath('splash.png'))
+        text = f'<img src="{img_path}" width="750"/><br><br>'
 
         self.image = QtWidgets.QLabel(text)
         self.layout.addWidget(self.image)
@@ -198,11 +199,12 @@ class StartPage(QtWidgets.QWizardPage):
 class TutorialMovie(QtWidgets.QWidget):
     clicked = QtCore.pyqtSignal()
 
-    def __init__(self, video_path: str, parent=None):
+    def __init__(self, video_path: Path, parent=None):
         super().__init__(parent)
+        full_video_path = str(video_path.absolute())
         self.layout = QtWidgets.QGridLayout(self)
         self.label = QtWidgets.QLabel(self)
-        self.video = QtGui.QMovie(video_path)
+        self.video = QtGui.QMovie(full_video_path)
         self.video.setCacheMode(self.video.CacheAll)
         self.label.setMovie(self.video)
 
@@ -233,7 +235,7 @@ class TutorialMovie(QtWidgets.QWidget):
                 border-width: 3px;
                 border-color: black;}""")
 
-        pixmap = QtGui.QPixmap(video_path)
+        pixmap = QtGui.QPixmap(full_video_path)
         size = pixmap.size()
 
         size.scale(750, 750, QtCore.Qt.KeepAspectRatio)
@@ -318,7 +320,7 @@ class TutorialPage(QtWidgets.QWizardPage):
         self.setTitle('<b>' + title + '</b>')
         self.setSubTitle(content)
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.video_path = f'videos/{video_name}'
+        self.video_path = Path.joinpath(Path(__file__).parent, f'videos/{video_name}')
         self.label = QtWidgets.QLabel()
         self.movie = TutorialMovie(self.video_path)
         self.layout.addWidget(self.movie)
