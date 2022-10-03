@@ -635,7 +635,8 @@ class HowToCiteWindow(gui_widgets.MinMaxDialog):
 
 
 def splash_screen():
-    splash_pixmap = QtGui.QPixmap("splash.png")
+    img_path = str(Path(__file__).parent.joinpath('splash.png'))
+    splash_pixmap = QtGui.QPixmap(img_path)
     splash_font = QtGui.QFont('Calibri', 16)
     splash = QtWidgets.QSplashScreen(splash_pixmap)
     splash.setFont(splash_font)
