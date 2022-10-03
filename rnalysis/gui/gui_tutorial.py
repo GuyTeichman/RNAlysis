@@ -119,7 +119,6 @@ class WelcomeWizard(QtWidgets.QWizard):
         self.setWizardStyle(QtWidgets.QWizard.ModernStyle)
         self.setWindowTitle('Welcome to RNAlysis!')
         self.setPixmap(self.LogoPixmap, QtGui.QPixmap('../../docs/source/favicon.ico'))
-
         self.setField('dont_show_again', not settings.get_show_tutorial_settings())
 
     def play_tutorial(self, ind: int):
@@ -189,7 +188,7 @@ class StartPage(QtWidgets.QWizardPage):
         self.dont_show_again.stateChanged.connect(self.completeChanged.emit)
         self.registerField('dont_show_again', self.dont_show_again)
         img_path = str(Path(__file__).parent.joinpath('splash.png'))
-        text = f'<img src="{img_path}" width="750"/><br><br>'
+        text = f'<img src="{img_path}"/><br><br>'
 
         self.image = QtWidgets.QLabel(text)
         self.layout.addWidget(self.image)
