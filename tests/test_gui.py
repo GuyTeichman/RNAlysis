@@ -87,7 +87,11 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 def main_window(qtbot, monkeypatch, use_temp_settings_file):
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
     monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
+    settings.set_show_tutorial_settings(False)
     qtbot, window = widget_setup(qtbot, MainWindow)
+    warnings.showwarning = customwarn
+    sys.excepthook = window.excepthook
+    builtins.input = window.input
     return window
 
 
