@@ -637,6 +637,7 @@ To help in evaluating the result of these model selection methods, *RNAlysis* wi
            :width: 60 %
 .. image::  silhouette.png
            :width: 30 %
+
 |
 
 K-Means clustering
@@ -893,7 +894,6 @@ Sequentially applying filtering operations using Pipelines
 :term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects` of your choice in a specific and consistent order.
 Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
 
-
 Creating a new Pipeline
 ________________________
 To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
@@ -1059,7 +1059,7 @@ FeatureSet objects have two attributes: gene_set, a python set containing genomi
 GO Enrichment
 ---------------
 Using the *enrichment* module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
-You can read more about Gene Ontology `here <http://geneontology.org/docs/ontology-documentation/?>`_.
+You can read more about Gene Ontology on the `Gene Ontology Consortium website <http://geneontology.org/docs/ontology-documentation/?>`_.
 
 To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
 
@@ -1271,7 +1271,7 @@ Running enrichment analysis will calculate enrichment for each of the GO terms, 
 KEGG Pathways enrichment
 _________________________
 Using the *enrichment* module, you can perform enrichment analysis for KEGG pathways.
-You can read more about KEGG pathways `here <https://www.genome.jp/kegg/pathway.html>`_.
+You can read more about KEGG pathways on the `KEGG website <https://www.genome.jp/kegg/pathway.html>`_.
 
 
 To perform KEGG Enrichment analysis, we will start by creating an FeatureSet object::
@@ -1675,6 +1675,34 @@ An example for running single-set enrichment analysis would look like so::
     >>> from *RNAlysis* import enrichment
     >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
     >>> en_result = ranked_set.single_set_enrichment(['attribute1', 'attribute3'], attr_ref_path='tests/test_files/attr_ref_table_for_examples.csv')
+
+
+Performing single-set KEGG Enrichment analysis without a background set
+-------------------------------------------------------------------------
+Single-set KEGG Enrichment works much the same as normal KEGG Enrichment analysis, with two key differences:
+
+First, when performing single-set KEGG Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
+
+An example for running single-set KEGG Enrichment would look like so::
+
+    >>> from *RNAlysis* import enrichment
+    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
+    >>> go_en_result = ranked_set.single_set_kegg_enrichment(gene_id_type='WormBase')
+
+Performing single-set enrichment analysis for user-defined attributes without a background set
+------------------------------------------------------------------------------------------------
+Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:
+
+First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
+
+An example for running single-set enrichment analysis would look like so::
+
+    >>> from *RNAlysis* import enrichment
+    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
+    >>> en_result = ranked_set.single_set_enrichment(['attribute1', 'attribute3'], attr_ref_path='tests/test_files/attr_ref_table_for_examples.csv')
+
 
 
 Visualizing sets, intersections, and enrichment
