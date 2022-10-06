@@ -10,7 +10,6 @@ RNAlysis graphical user interface
 
 Open the program
 =================
-If you installed *RNAlysis* from Docker, do XYZ #TODO
 If you installed *RNAlysis* from pypi, you can open the graphical user interface by either executing the command `rnalysis-gui` from your terminal, or by typing the following code into a Python console::
 
     >>> from rnalysis import gui
@@ -1260,7 +1259,7 @@ Using the *enrichment* module, you can perform enrichment analysis for KEGG path
 You can read more about KEGG pathways `here <https://www.genome.jp/kegg/pathway.html>`_.
 
 
-To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
+To perform KEGG Enrichment analysis, we will start by creating an FeatureSet object::
 
     >>> counts = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
@@ -1279,15 +1278,15 @@ In order to do that, you need to specify which gene ID type your dataset uses.
 
 Define the background set
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain *GO Term*, in comparison to a more generalized set of genomic features that we determined as 'background'.
+In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain KEGG pathway, in comparison to a more generalized set of genomic features that we determined as 'background'.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
 
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that have at least one GO Annotation as a background set.
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that have at least one KEGG annotation as a background set.
 If you don't want to use the default setting, there are two methods of defining the background set:
 
 The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
 
-    >>> en.go_enrichment(biotype='all')
+    >>> en.kegg_enrichment(biotype='all')
 
 In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
 When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
@@ -1295,7 +1294,7 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 The second method of defining the background set is to define a specific set of genomic features to be used as background::
 
     >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> en.go_enrichment(background_genes=my_background_set)
+    >>> en.kegg_enrichment(background_genes=my_background_set)
 
 In this example, our background set consists of *feature1*, *feature2* and *feature3*.
 
