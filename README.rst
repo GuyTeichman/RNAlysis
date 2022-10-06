@@ -12,15 +12,9 @@
 What is *RNAlysis?*
 --------------------
 
-*RNAlysis* is a Python-based modular analysis pipeline for RNA sequencing data.
-You can use it to normalize, filter and visualize your data, cluster genes based on their expression patterns,
-and perform enrichment analysis for both Gene Ontology terms and user-defined attributes.
-
-*RNAlysis* allows you to perform filtering operations and analyses at any order you wish.
-You can save or load your progress at any given point; the operations you performed on your data and their order
-will be reflected in saved file's name.
-
-RNAlysis works with gene expression matrices and differential expression tables in general, and integrates in particular with Python's *HTSeq-count* and R's *DESeq2*.
+*RNAlysis* is a Python-based software for analyzing RNA sequencing data.
+*RNAlysis* allows you to build customized analysis pipelines suiting your specific research questions,
+going all the way from exploratory data analysis and data visualization through clustering analysis and gene-set enrichment analysis.
 
 ----
 
@@ -32,18 +26,44 @@ What can I do with *RNAlysis*?
 * Visualise, explore and describe your sequencing data
 * Find global relationships between sample expression profiles with clustering analyses and dimensionality reduction
 * Create and share analysis pipelines
-* Perform enrichment analysis with pre-determined Gene Ontology terms, or with used-defined attributes
-* Perform enrichment analysis on a single ranked list, instead of a test set and a background set
+* Perform enrichment analysis with pre-determined Gene Ontology terms/KEGG pathways, or with used-defined attributes
+* Perform enrichment analysis on a single ranked list of genes, instead of a test set and a background set
+
+To get an overview of what *RNAlysis* can do, read the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
+
+*RNAlysis* supports gene expression matrices and differential expression tables in general, and integrates in particular with Python's *HTSeq-count* and R's *DESeq2*.
 
 ----
 
 How do I install it?
 ---------------------
 You can install *RNAlysis* via PyPI.
-Use the following command in the python prompt::
+To install the basic version of *RNAlysis*, use the following command in your terminal window::
 
     pip install RNAlysis
 
+
+To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines), you should first install `GraphViz <https://graphviz.org/download/>`_, and `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater (on Windows computers only).
+Then use the following command in your terminal window::
+
+    pip install RNAlysis[all]
+
+
+----
+
+
+How do I use it?
+---------------------
+You can launch the *RNAlysis* software by typing the following command::
+
+    rnalysis-gui
+
+Or through a python console::
+
+    >>> from rnalysis import gui
+    >>> gui.run_gui()
+
+Alternatively, you can write Python code that uses *RNAlysis* functions as described in the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
 
 ----
 
@@ -71,6 +91,9 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `matplotlib-venn <https://github.com/konstantint/matplotlib-venn>`_
 * `xlmhg <https://github.com/flo-compbio/xlmhg>`_
 * `pairwisedist <https://github.com/GuyTeichman/pairwisedist/>`_
+* `typing_extensions <https://github.com/python/typing_extensions>`_
+* `PyQt5 <https://www.riverbankcomputing.com/software/pyqt/>`_
+* `qdarkstyle <https://github.com/ColinDuquesnoy/QDarkStyleSheet>`_
 
 ----
 
@@ -79,7 +102,7 @@ Credits
 
 How do I cite *RNAlysis*?
 **************************
-Teichman, G. (2021) RNAlysis: RNA Sequencing analysis software (Python package version 3.0.0).
+Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software (Python package version 3.0.0).
 
 Development Lead
 ******************
