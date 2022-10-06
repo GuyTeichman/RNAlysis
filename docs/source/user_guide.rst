@@ -1663,19 +1663,6 @@ An example for running single-set GO Enrichment would look like so::
     >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
     >>> go_en_result = ranked_set.single_set_go_enrichment(gene_id_type='WormBase')
 
-Performing single-set enrichment analysis without a background set
---------------------------------------------------------------------
-Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:
-
-First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
-Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
-
-An example for running single-set enrichment analysis would look like so::
-
-    >>> from *RNAlysis* import enrichment
-    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
-    >>> en_result = ranked_set.single_set_enrichment(['attribute1', 'attribute3'], attr_ref_path='tests/test_files/attr_ref_table_for_examples.csv')
-
 
 Performing single-set KEGG Enrichment analysis without a background set
 -------------------------------------------------------------------------
@@ -1694,7 +1681,7 @@ Performing single-set enrichment analysis for user-defined attributes without a 
 ------------------------------------------------------------------------------------------------
 Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:
 
-First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
+First, when performing single-set enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
 Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
 
 An example for running single-set enrichment analysis would look like so::
