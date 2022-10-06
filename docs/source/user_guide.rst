@@ -1060,7 +1060,7 @@ FeatureSet objects have two attributes: gene_set, a python set containing genomi
 GO Enrichment
 ---------------
 Using the *enrichment* module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
-You can read more about Gene Ontology here: http://geneontology.org/docs/ontology-documentation/
+You can read more about Gene Ontology `here <http://geneontology.org/docs/ontology-documentation/?>`_.
 
 To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
 
@@ -1221,6 +1221,117 @@ RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enri
 
 You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
 
+        .. figure::  plot_enrichment_results_go.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=True
+
+
+        .. figure::  plot_enrichment_results_go_vertical.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=False
+
+
+If you want to further customize this plot, you can request RNAlysis to return a Matplotlib Figure object of the barplot, by using the `return_fig` parameter.
+
+If you don't specify plotting parameters, RNALysis will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.
+
+Enrichment analysis output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:
+
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
++=============+==================+==============+=====+=======+======================+==========+==========+=============+
+|  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|  GO:0043186 |     P granule    |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+
+'samples' is the number of features that were used in the enrichment set. 'obs' is the observed number of features positive for the attribute in the enrichment set.
+'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
+
+KEGG Pathways enrichment
+_________________________
+Using the *enrichment* module, you can perform enrichment analysis for KEGG pathways.
+You can read more about KEGG pathways `here <https://www.genome.jp/kegg/pathway.html>`_.
+
+
+To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
+
+    >>> counts = filtering.CountFilter('path_to_my_file.csv')
+    >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
+
+Define the correct *organism* and *gene ID type* for your dataset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Since KEGG annotations refer to specific gene products, which can differ between different species, RNAlysis needs to know which organism your dataset refers to.
+The organism can be specified as either the organism's name, or the organism's *NCBI Taxon ID* (for example: 6239 for *Caenorhabditis elegans*).
+
+It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid mischaracterization of annotations.
+However, if you are not sure, RNAlysis will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
+
+
+Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), RNAlysis can translate gene IDs from one gene ID type to another.
+In order to do that, you need to specify which gene ID type your dataset uses.
+
+Define the background set
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain *GO Term*, in comparison to a more generalized set of genomic features that we determined as 'background'.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that have at least one GO Annotation as a background set.
+If you don't want to use the default setting, there are two methods of defining the background set:
+
+The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
+
+    >>> en.go_enrichment(biotype='all')
+
+In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
+
+The second method of defining the background set is to define a specific set of genomic features to be used as background::
+
+    >>> my_background_set = {'feature1','feature2','feature3'}
+    >>> en.go_enrichment(background_genes=my_background_set)
+
+In this example, our background set consists of *feature1*, *feature2* and *feature3*.
+
+It is not possible to specify both a biotype and a specific background set.
+
+If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
+
+Choose the statistical test (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Significance testing for KEGG enrichment analysis can be done using either the Hypergeometric Test, Fisher's Exact Test, or a randomization test.
+
+The hypergeometric test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute ('success') and *X* genes from the test set belonging to that attribute.
+If we were to randomly draw *n* genes from the background set (without replacement), what is the probability of drawing *X* or more (in case of enrichment)/*X* or less (in case of depletion) genes belonging to the given attribute?
+
+The Fisher's Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.
+
+The randomization test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute and *X* genes from the test set belonging to that attribute.
+We performs the number of randomizations specified by the user (10,000 by default).
+In each randomization we randomly draw a set of *n* genes from the background set (without replacement), and marks the randomization as a 'success' if the number of genes in the random set belonging to the attribute is >= *X* (in case of enrichment) or <= *X* (in case of depletion).
+The p-values are calculated as *(number of sucesses + 1)/(number of repetitions + 1)*.
+This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
+You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
+
+If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
+
+To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
+If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+
+
+Choose plotting parameters (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+After RNALysis is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
+RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.
+
+You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
+
         .. figure::  plot_enrichment_results.png
            :align:   center
            :scale: 40 %
@@ -1241,18 +1352,19 @@ If you don't specify plotting parameters, RNALysis will generate a horizontal ba
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:
 
-+-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
-+=============+==================+==============+=====+=======+======================+==========+==========+=============+
-|  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
-+-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|  GO:0043186 |     P granule    |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
-+-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
++-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|   KEGG ID |                              name                               |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
++===========+=================================================================+==============+=====+=======+======================+==========+==========+=============+
+|  cel00010 | Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
++-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|  cel00030 |  Pentose phosphate pathway - Caenorhabditis elegans (nematode)  |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
++-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 
 'samples' is the number of features that were used in the enrichment set. 'obs' is the observed number of features positive for the attribute in the enrichment set.
 'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
+
 
 Enrichment analysis for user-defined attributes
 --------------------------------------------------
