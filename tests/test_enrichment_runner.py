@@ -1727,9 +1727,9 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
 def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
                                     biotype_ref_path, random_seed, kwargs):
     monkeypatch.setattr(KEGGEnrichmentRunner, 'get_taxon_id', lambda *args: ('a', 'b'))
-    runner = KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, False,
+    runner = KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False,
                                   'set_name', False, pval_func,
-                                  biotypes, background_set, biotype_ref_path, single_list, random_seed, 'pdf', **kwargs)
+                                  biotypes, background_set, biotype_ref_path, single_list, random_seed, **kwargs)
 
 
 @pytest.mark.parametrize('got_gene_id_type', (True, False))

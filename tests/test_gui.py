@@ -381,7 +381,7 @@ def test_EnrichmentWindow_is_categorical(qtbot, enrichment_window, button_name, 
     ('Gene Ontology (GO)',
      dict(plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental')),
     ('Kyoto Encyclopedia of Genes and Genomes (KEGG)',
-     dict(plot_horizontal=True, plot_pathway_graphs=True, gene_id_type='auto')),
+     dict(plot_horizontal=True, gene_id_type='auto')),
     ('Categorical attributes', dict(attributes='all', plot_horizontal=False))
 ])
 @pytest.mark.parametrize('test_name,is_single_set,test_arg_truth,stats_kwargs', [
@@ -495,7 +495,7 @@ def test_EnrichmentWindow_get_analysis_params_single_set(qtbot, enrichment_windo
     ('Gene Ontology (GO)', 'go',
      dict(plot_horizontal=True, plot_ontology_graph=False, organism='auto', excluded_evidence_types='experimental')),
     ('Kyoto Encyclopedia of Genes and Genomes (KEGG)', 'kegg',
-     dict(plot_horizontal=True, plot_pathway_graphs=True, gene_id_type='auto')),
+     dict(plot_horizontal=True, gene_id_type='auto')),
     ('Categorical attributes', 'user_defined', dict(attributes='all', plot_horizontal=False))
 ])
 @pytest.mark.parametrize('test_name,is_single_set,test_arg_truth,stats_kwargs', [
