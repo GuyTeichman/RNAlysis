@@ -2,9 +2,42 @@
 History
 =======
 
+
+
+3.0.0 (2022-10-10)
+------------------
+* This version introduces a graphical user interface for RNAlysis, as well as new functions for KEGG Pathways enrichment analysis.
+
+
+Added
+******
+* RNAlysis now includes a graphical user interface
+* Pipelines can now be imported and exported
+* Enrichment and single-set-enrichment for KEGG pathway data
+
+Changed
+*******
+* Added function FeatureSet.user_defined_enrichment(), which will replace FeatureSet.enrich_hypergeometric() and FeatureSet.enrich_randomization()
+* Updated signature of enrichment.venn_diagram
+* enrichment.venn_diagram and enrichment.upset_plot can now be generated on a user-supplied FIgure
+* Clustering functions now apply a power transform to count data prior to clustering by default
+* Non-deprecated enrichment functions no longer filter the background set by biotype by default
+* Changed signature of CountFilter.pca, CountFilter.box_plot, CountFilter.enhanced_box_plot, CountFilter.clustergram, and CountFilter.pairplot to ensure consistency among visualization functions.
+
+Fixed
+******
+* enrichment.venn_diagram can now be plotted with outlines when the circles are unweighted
+* Fixed bug in Pipeline.apply_to() where a Filter object would be returned even when the Pipeline was applied inplace
+
+Removed
+********
+*
+
+
 2.1.1 (2022-07-05)
 ------------------
-* This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API. Moreover, this version slightly improves the performance of some functions.
+* This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API.
+Moreover, this version slightly improves the performance of some functions.
 
 Changed
 *******

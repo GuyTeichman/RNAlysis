@@ -3,14 +3,19 @@
 """Top-level package for RNA sequencing analysis pipeline."""
 import warnings
 
-__all__ = ['general', 'filtering', 'enrichment', '__attr_file_key__', '__biotype_file_key__']
+__all__ = ['general', 'filtering', 'enrichment', '__attr_file_key__', '__biotype_file_key__', '__font_key__',
+           '__font_size_key__', '__stylesheet_key__']
 __name__ = "rnalysis"
-__author__ = """Guy Teichman"""
+__author__ = "Guy Teichman"
 __email__ = "guyteichman@gmail.com"
-__version__ = "2.1.1"
+__version__ = "3.0.0"
 __license__ = "MIT"
-__attr_file_key__ = "attribute_reference_table"""
+__attr_file_key__ = "attribute_reference_table"
 __biotype_file_key__ = "biotype_reference_table"
+__font_key__ = "gui_font"
+__font_size_key__ = "gui_font_size"
+__stylesheet_key__ = "gui_stylesheet"
+__show_tutorial_key__ = "show_tutorial_on_startup"
 
 
 def _simple_warning_format(msg, *args, **kwargs):

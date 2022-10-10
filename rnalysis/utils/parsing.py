@@ -1,3 +1,4 @@
+import itertools
 import re
 from tqdm.auto import tqdm
 import warnings
@@ -96,6 +97,9 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = [data]
     elif data is None:
         lst = [None]
+
+    elif callable(data):
+        lst = [data]
     else:
         try:
             lst = list(data)
@@ -116,6 +120,8 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         tpl = data,
     elif data is None:
         tpl = None,
+    elif callable(data):
+        tpl = data,
     else:
         try:
             tpl = tuple(data)
@@ -135,6 +141,8 @@ def data_to_set(data: Any) -> set:
         return {data}
     elif data is None:
         return {None}
+    elif callable(data):
+        return {data}
     else:
         try:
             return set(data)
@@ -146,12 +154,14 @@ def sparse_dict_to_bool_df(sparse_dict: Dict[str, set], progress_bar_desc: str =
     fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}]'
 
     rows = list(sparse_dict.keys())
-    columns = set()
+    columns_set = set()
+
     for val in sparse_dict.values():
-        columns.update(val)
+        columns_set.update(val)
+    columns = data_to_list(columns_set)
     df = pd.DataFrame(np.zeros((len(rows), len(columns)), dtype=bool), columns=columns, index=rows)
     for row, col in zip(tqdm(sparse_dict.keys(), desc=progress_bar_desc, bar_format=fmt), sparse_dict.values()):
-        df.loc[row, list(col)] = True
+        df.loc[data_to_list(row), data_to_list(col)] = True
     return df
 
 
@@ -180,3 +190,44 @@ def flatten(lst: list) -> list:
         else:
             output.append(item)
     return output
+
+
+def parse_docstring(docstring: str) -> Tuple[str, Dict[str, str]]:
+    """
+    Parse a given docstring (str) to retreive the description text, as well as a dictionary of parameter descriptions.
+
+    :param docstring: the docstring to be parsed
+    :type docstring: str
+    :return: a string matching the description, and a dictionary containing the parameter descriptions
+    """
+    docstring = re.sub(' +', ' ', docstring)
+    split = docstring.split('\n\n')
+    desc = split[0]
+    params_str = split[1]
+    free_text_match = '[\w\s\.\(\)\-\:%\*=@!\?\+\_,/' + "'" + ']'
+    params_matches = list(
+        re.finditer('^:param ([a-zA-Z_0-9]+):(' + free_text_match + '+?)(?=^\:.*\:)', params_str, re.MULTILINE))
+    params = {match.group(1): match.group(2).replace('. ', '. \n') for match in params_matches}
+    return desc, params
+
+
+def generate_upset_series(objs: dict):
+    """
+    Receives a dictionary of sets from enrichment._fetch_sets(), \
+    and reformats it as a pandas Series to be used by the python package 'upsetplot'.
+
+    :param objs: the output of the enrichment._fetch_sets() function.
+    :type objs: dict of sets
+    :return: a pandas Series in the format requested by the 'upsetplot' package.
+
+    """
+    names = list(objs.keys())
+    multi_ind = pd.MultiIndex.from_product([[True, False] for _ in range(len(names))], names=names)[:-1]
+    srs = pd.Series(index=multi_ind, dtype='uint32')
+    for ind in multi_ind:
+        intersection_sets = list(itertools.compress(names, ind))
+        difference_sets = list(itertools.compress(names, (not i for i in ind)))
+        group = set.intersection(*[objs[s] for s in intersection_sets]).difference(*[objs[s] for s in difference_sets])
+        group_size = len(group)
+        srs.loc[ind] = group_size
+    return srs

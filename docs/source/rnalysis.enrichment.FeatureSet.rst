@@ -1,4 +1,4 @@
-rnalysis.enrichment.FeatureSet
+﻿rnalysis.enrichment.FeatureSet
 ==============================
 
 .. currentmodule:: rnalysis.enrichment
@@ -21,12 +21,13 @@ rnalysis.enrichment.FeatureSet
     FeatureSet.difference
     FeatureSet.enrich_hypergeometric
     FeatureSet.enrich_randomization
-    FeatureSet.enrich_randomization_parallel
     FeatureSet.go_enrichment
     FeatureSet.intersection
+    FeatureSet.kegg_enrichment
     FeatureSet.non_categorical_enrichment
     FeatureSet.save_txt
     FeatureSet.symmetric_difference
     FeatureSet.union
+    FeatureSet.user_defined_enrichment
     
     

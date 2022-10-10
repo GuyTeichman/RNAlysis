@@ -9,7 +9,7 @@ from typing import Union
 import pandas as pd
 
 from rnalysis import __attr_file_key__, __biotype_file_key__
-from rnalysis.utils import io, validation, ref_tables
+from rnalysis.utils import io, validation, settings
 from rnalysis.filtering import Filter
 
 
@@ -79,7 +79,7 @@ def reset_settings_file():
     """
     Resets the local settings by deleting the local settings file. Warning: this action is irreversible!
     """
-    settings_pth = ref_tables.get_settings_file_path()
+    settings_pth = settings.get_settings_file_path()
     if not settings_pth.exists():
         print("No local settings file exists. ")
     else:
@@ -101,7 +101,7 @@ def set_attr_ref_table_path(path: str = None):
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
-    ref_tables.update_settings_file(path, __attr_file_key__)
+    settings.update_settings_file(path, __attr_file_key__)
     print(f'Attribute Reference Table path set as: {path}')
 
 
@@ -119,7 +119,7 @@ def set_biotype_ref_table_path(path: str = None):
     """
     if path is None:
         path = input("Please write the new Attribute Reference Table Path:\n")
-    ref_tables.update_settings_file(path, __biotype_file_key__)
+    settings.update_settings_file(path, __biotype_file_key__)
     print(f'Biotype Reference Table path set as: {path}')
 
 
@@ -134,8 +134,8 @@ def print_settings_file():
         Biotype Reference Table used: my_biotype_reference_table_path
 
     """
-    ref_tables.get_attr_ref_path('predefined')
-    ref_tables.get_biotype_ref_path('predefined')
+    settings.get_attr_ref_path('predefined')
+    settings.get_biotype_ref_path('predefined')
 
 
 def save_to_csv(df: Union[pd.DataFrame, Filter], filename: str):

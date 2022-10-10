@@ -3,8 +3,130 @@ User guide
 ############################
 
 
+
+***********************************
+*RNAlysis* graphical user interface
+***********************************
+
+Open the program
+=================
+If you installed *RNAlysis* from pypi, you can open the graphical user interface by either executing the command `rnalysis-gui` from your terminal, or by typing the following code into a Python console::
+
+    >>> from *RNAlysis* import gui
+    >>> gui.run_gui()
+
+Load a table
+============
+Choose a file from your computer, and click 'start' to load it into *RNAlysis*.
+
+.. image:: ../../rnalysis/gui/videos/load_table.webp
+
+Examine your table
+==================
+You will now be able to see an overview of your data, including the table's name, type, and dimensions. Click the 'View full table' button to see your table in its entirety.
+
+.. image:: ../../rnalysis/gui/videos/view_table.webp
+
+Filter your table
+=================
+Choose a filtering function, set your desired parameters, and click 'Apply' to filter your table. The changes you make will not affect your original file until you save them.
+
+.. image:: ../../rnalysis/gui/videos/filter_table.webp
+
+Undo the operations you applied to your table
+=============================================
+At any moment, you can use the 'Command history' window to undo or redo an operation you applied to your table.
+
+.. image:: ../../rnalysis/gui/videos/undo_actions.webp
+
+Apply your operations 'in-place' or apply on a new table
+========================================================
+Instead of applying operations 'in-place', you can choose to apply the operation to a copy of your table in a new tab. The table in the original tab won't be modified.
+
+.. image:: ../../rnalysis/gui/videos/apply_inplace.webp
+
+Save the changes you made to your table
+=======================================
+To save result of your filtering operations, click the 'Save table' button and choose where to save the modified table.
+
+.. image:: ../../rnalysis/gui/videos/save_table.webp
+
+Work on multiple tables at the same time
+========================================
+You can work on multiple tables at the same time by opening a new tab and loading another table.
+
+.. image:: ../../rnalysis/gui/videos/new_tab.webp
+
+Different types of tables offer different ways to filter and analyze your data
+==============================================================================
+When loading a table, you can specify its type. Different types of tables support different types of functions: for example, count matrices support clustering analysis.
+
+.. image:: ../../rnalysis/gui/videos/table_types.webp
+
+Create and save graphs
+======================
+Some functions can generate graphs of your data. You can resize those graphs, and save them to your computer in multiple file formats.
+
+.. image:: ../../rnalysis/gui/videos/generate_graphs.webp
+
+Sort your tabs and change their icons
+=====================================
+To help organize your workspace, you can sort tabs by right-clicking a tab and choosing a sorting method. You can also change specific tabs' colors, to help you differentiate them.
+
+.. image:: ../../rnalysis/gui/videos/sort_tabs.webp
+
+Restore tabs you closed
+=======================
+If you accidentally closed one of your tabs - don't worry! You can restore closed tabs through the 'Edit' menu.
+
+.. image:: ../../rnalysis/gui/videos/restore_tabs.webp
+
+Import lists of genes as Gene Sets
+==================================
+In addition to tables, *RNAlysis* can also import lists of genes as Gene Sets. We will soon review what we can do with those gene sets.
+
+.. image:: ../../rnalysis/gui/videos/import_gene_sets.webp
+
+Visualize the intersections between your tables and gene sets
+=============================================================
+In the 'Visualize Gene Sets' window you can create Venn diagrams and UpSet plots that will display the various intersections between your tables and gene sets.
+
+.. image:: ../../rnalysis/gui/videos/visualize_gene_sets.webp
+
+Apply set operations to your tables and gene sets
+=================================================
+In the 'Set Operations' window you can extract specific subsets from your data. Either use predefined set operations, or click on specific subsets in the preview pane to select them.
+
+.. image:: ../../rnalysis/gui/videos/set_operations.webp
+
+Perform enrichment analysis on your tables and gene sets
+========================================================
+In the 'Enrichment Analysis' window, you can perform various types of enrichment analysis on the tables and gene sets you filtered.
+
+.. image:: ../../rnalysis/gui/videos/enrichment_analysis.webp
+
+Create Pipelines to streamline your data analysis
+=================================================
+You can group multiple operations in a specific order and with specific parameters into a Pipeline. Just add those functions to the Pipeline in the order you choose.
+
+.. image:: ../../rnalysis/gui/videos/create_pipeline.webp
+
+Apply Pipelines to one or more of your tables
+=============================================
+You can apply a Pipeline to a group of tables through the 'Pipelines' menu. Using Pipelines to analyze multiple datasets can make your workflow faster and less error-prone.
+
+.. image:: ../../rnalysis/gui/videos/apply_pipeline.webp
+
+Export and share Pipelines to make your analysis more reproducible
+==================================================================
+Pipelines you export can be imported from any computer, and can be shared with others to help make your analysis easier to understand and more reproducible.
+
+.. image:: ../../rnalysis/gui/videos/export_pipeline.webp
+
+
+
 ****************************
-RNAlysis filtering module
+*RNAlysis* filtering module
 ****************************
 RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
 
@@ -21,7 +143,7 @@ Initialize a Filter object
 
 We will start by importing the filtering module::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
 
 We can now, for example, create a :term:`DESeqFilter` object from a DESeq2 `csv` output file (see more details about :term:`DESeqFilter` in sections below).
 ::
@@ -81,7 +203,7 @@ If we now look at the shape of d, we will see that 5954 rows have been filtered 
     >>> d.shape
     (21, 6)
 
-By default, filtering operations on :term:`Filter objects` are performed in-place, meaning the original object is modified. However, we can save the results into a new :term:`Filter object` and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within RNAlysis. For example::
+By default, filtering operations on :term:`Filter objects` are performed in-place, meaning the original object is modified. However, we can save the results into a new :term:`Filter object` and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within *RNAlysis*. For example::
 
     >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
     >>> d.shape
@@ -95,7 +217,7 @@ By default, filtering operations on :term:`Filter objects` are performed in-plac
 
 In this case, the object 'd' remained unchanged, while 'd_filtered' became a new :term:`Filter object` which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using 'inplace=False' to create a new object at any point.
 
-Another useful option is to perform an opposite filter. When we specify the parameter 'opposite=True' to any filtering function within RNAlysis, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
+Another useful option is to perform an opposite filter. When we specify the parameter 'opposite=True' to any filtering function within *RNAlysis*, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
 For example, if we now wanted to remove the rows which are below the 25% percentile in the 'log2FoldChange' column, we will use the following code::
 
     >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True)
@@ -229,7 +351,7 @@ Loading from a `csv` file
 ----------------------------
 
 Any `csv` file that contains differential expression analysis data with log2 fold change and adjusted p-values can be used as input for :term:`DESeqFilter`.
-By default, RNAlysis assumes that log2 fold change values will be specified under a 'log2FoldChange' column, and adjusted p-values will be specified under a 'padj' column (as is the default in differential expression tables generated by DESeq2):
+By default, *RNAlysis* assumes that log2 fold change values will be specified under a 'log2FoldChange' column, and adjusted p-values will be specified under a 'padj' column (as is the default in differential expression tables generated by DESeq2):
 
 +----------------+----------+----------------+----------+----------+----------+----------+
 |                | baseMean | log2FoldChange | lfcSE    | stat     | pvalue   | padj     |
@@ -334,7 +456,7 @@ An HTSeq-count output file would follow the following format:
 | __alignment_not_unique | 100 |
 +------------------------+-----+
 
-When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two `csv` tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
+When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. *RNAlysis* can parse those .txt files into two `csv` tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
 
     >>> counts = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder')
 
@@ -349,7 +471,7 @@ It is also possible to automatically normalize the reads in the new :term:`Count
 
 Loading from a pre-made `csv` file
 ----------------------------------
-If you have previously generated a `csv` file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this `csv` file into an :term:`CountFilter` object as you would any other Filter object::
+If you have previously generated a `csv` file from HTSeq-count output files using *RNAlysis*, or have done so manually, you can directly load this `csv` file into an :term:`CountFilter` object as you would any other Filter object::
 
     >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
 
@@ -428,7 +550,7 @@ The resulting :term:`CountFilter` object will be normalized to RPM with the form
 
 Data clustering with CountFilter
 ----------------------------------
-RNAlysis supports a wide variety of clustering methods, which can group genomic features into clusters according to their similarity across different samples.
+*RNAlysis* supports a wide variety of clustering methods, which can group genomic features into clusters according to their similarity across different samples.
 
 When clustering genomic features in a :term:`CountFilter` object, the called function returns a tuple of :term:`CountFilter` objects, with each object corresponding to one cluster of genomic features.
 
@@ -452,9 +574,15 @@ Expression plots of the resulting clusters can be generated in one of multiple s
 
            Example expression plot of clustering results with plot_style='std_bar'
 
+ .. figure::  clustering_PCA_clicom.png
+           :align:   center
+           :scale: 40 %
+
+           Example PCA plot of clustering results
+
 The expression plots can also by split into separate graphs, one for each discovered cluster.
 
-All clustering methods in RNAlysis which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
+All clustering methods in *RNAlysis* which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
 You can specify a single value::
 
     >>> counts = CountFilter("tests/test_files/counted.csv")
@@ -483,7 +611,7 @@ You can specify a list of values to be used, and each value will be calculated a
     >>> print(len(two_clusters))
     2
 
-Finally, you can use a model selection method to estimate the number of clusters in your dataset. RNAlysis supports both the Silhouette method and the Gap Statistic method::
+Finally, you can use a model selection method to estimate the number of clusters in your dataset. *RNAlysis* supports both the Silhouette method and the Gap Statistic method::
 
     >>> counts = CountFilter("tests/test_files/counted.csv")
     >>> silhouette_clusters = counts.split_kmeans(n_clusters='silhouette')
@@ -503,12 +631,13 @@ Finally, you can use a model selection method to estimate the number of clusters
     >>> print(len(gap_stat_clusters))
     2
 
-To help in evaluating the result of these model selection methods, RNAlysis will also plot a summary of their outcome:
+To help in evaluating the result of these model selection methods, *RNAlysis* will also plot a summary of their outcome:
 
 .. image::  gap_statistic.png
            :width: 60 %
 .. image::  silhouette.png
            :width: 30 %
+
 |
 
 K-Means clustering
@@ -533,7 +662,7 @@ In addition, K-medoids attempts to minimize the sum of dissimilarities within ea
 
 Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the `metric` parameter.
 
-K-medoids clustering in RNALysis supports the following distance metrics:
+K-medoids clustering in *RNAlysis* supports the following distance metrics:
 
 * eucliidean
 * cosine
@@ -569,9 +698,9 @@ We can decide to 'cut' the tree at any height in order to generate the final clu
 This can be done by either specifying the estimated number of clusters like in K-means,
 or by specifiying a distance threshold above which clusters will not be merged.
 
-Hierarchical clustering in RNAlysis supports the following distance metrics:
+Hierarchical clustering in *RNAlysis* supports the following distance metrics:
 
-* eucliidean
+* euclidean
 * cosine
 * pearson
 * spearman
@@ -600,7 +729,7 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:
 
 HDBSCAN supports additional tuning parameters, which you can read more about in the `HDBSCAN documentation <https://hdbscan.readthedocs.io/en/latest/parameter_selection.html>`_:
 
-HDBSCAN in RNALysis supports the following distance metrics:
+HDBSCAN in *RNAlysis* supports the following distance metrics:
 
 * eucliidean
 * cosine
@@ -762,42 +891,41 @@ The output table would look like this:
 
 Sequentially applying filtering operations using Pipelines
 ============================================================
-:term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects' of your choice in a specific and consistent order.
+:term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects` of your choice in a specific and consistent order.
 Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
-
 
 Creating a new Pipeline
 ________________________
 To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
     >>> pipe = Pipeline()
 
 Because every :term:`Filter object` has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
 By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the *filtering* module that can apply to any Filter object.
 If we wanted, for example, to create a Pipeline for DESeqFilter objects, we would have to specify the parameter `filter_type`::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
     >>> deseq_pipe = filtering.Pipeline('deseqfilter')
 
 One we have an empty :term:`Pipeline`, we can start adding functions to it.
 We can do that either via the function's name::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function('filter_significant')
     Added function 'DESeqFilter.filter_significant()' to the pipeline.
 
 or via the function itself::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function(filtering.DESeqFilter.filter_significant)
     Added function 'DESeqFilter.filter_significant()' to the pipeline.
 
 We can also specify the function's arguments. We can specify both non-keyworded and keyworded arguments, just as we would if we called the function normally::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
     >>> pipe = filtering.Pipeline()
     >>> pipe.add_function(filtering.Filter.filter_biotype, biotype='protein_coding')
     Added function 'Filter.filter_biotype(biotype='protein_coding')' to the pipeline.
@@ -826,7 +954,7 @@ _____________________________________
 Just like with other functions in the *filtering* module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
 You can determine that via the `inplace` argument of the function `Pipeline.apply_to()`::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
     >>> # create the pipeline
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function(filtering.DESeqFilter.filter_missing_values)
@@ -853,7 +981,7 @@ If our pipeline contained other types of functions, they will not be applied inp
 
 If we apply a Pipeline with functions that return additional outputs (such as Figures, DataFrames, etc), they will be returned in a dictionary alongside the Filter object::
 
-    >>> from rnalysis import filtering
+    >>> from *RNAlysis* import filtering
     >>> # create the pipeline
     >>> pipe = filtering.Pipeline('DESeqFilter')
     >>> pipe.add_function('biotypes', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
@@ -891,7 +1019,7 @@ When an output dictionary is returned, the keys in the dictionary will be the na
 We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
 
 ****************************
-RNAlysis enrichment module
+*RNAlysis* enrichment module
 ****************************
 RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including Gene Ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
 
@@ -905,7 +1033,7 @@ Initialize an FeatureSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
-    >>> from rnalysis import enrichment
+    >>> from *RNAlysis* import enrichment
 
 A :term:`FeatureSet` object can now be initialized by one of three methods.
 The first method is to specify an existing Filter object::
@@ -931,7 +1059,7 @@ FeatureSet objects have two attributes: gene_set, a python set containing genomi
 GO Enrichment
 ---------------
 Using the *enrichment* module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
-You can read more about Gene Ontology here: http://geneontology.org/docs/ontology-documentation/
+You can read more about Gene Ontology on the `Gene Ontology Consortium website <http://geneontology.org/docs/ontology-documentation/?>`_.
 
 To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
 
@@ -940,14 +1068,14 @@ To perform GO Enrichment analysis, we will start by creating an FeatureSet objec
 
 Define the correct *organism* and *gene ID type* for your dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Since GO annotations refer to specific gene products, which can differ between different species, RNAlysis needs to know which organism your dataset refers to.
+Since GO annotations refer to specific gene products, which can differ between different species, *RNAlysis* needs to know which organism your dataset refers to.
 The organism can be specified as either the organism's name, or the organism's *NCBI Taxon ID* (for example: 6239 for *Caenorhabditis elegans*).
 
 It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid mischaracterization of annotations.
-However, if you are not sure, RNAlysis will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
+However, if you are not sure, *RNAlysis* will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
 
 
-Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), RNAlysis can translate gene IDs from one gene ID type to another.
+Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), *RNAlysis* can translate gene IDs from one gene ID type to another.
 In order to do that, you need to specify which gene ID type your dataset uses.
 
 Define the background set
@@ -955,7 +1083,7 @@ Define the background set
 In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain *GO Term*, in comparison to a more generalized set of genomic features that we determined as 'background'.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
 
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that have at least one GO Annotation as a background set.
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that have at least one GO Annotation as a background set.
 If you don't want to use the default setting, there are two methods of defining the background set:
 
 The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
@@ -1008,7 +1136,7 @@ Gene Ontology considers three discrete aspects by which gene products can be des
 Every GO term is exclusively associated with one of these *GO aspects*.
 If you are interested in testing enrichment only for GO terms associated with a subset of these *GO aspects* you can specify which *GO aspects* to use through the `aspects` parameter.
 
-If you don't specify *GO aspects* to be included, RNAlysis will test enrichment for GO Terms from all *GO aspects* by default.
+If you don't specify *GO aspects* to be included, *RNAlysis* will test enrichment for GO Terms from all *GO aspects* by default.
 
 Filter GO Annotations by Evidence Codes (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1027,7 +1155,7 @@ Each evidence category contains multiple evidence codes, each with its own defin
 You can choose to include only annotations with specific evidence codes, or to exclude annotations with specific annotation codes, using the `evidence_types` and `excluded_evidence_types` parameters.
 You can specify either specific evidence codes (e.g. 'IEA', 'IKR'), evidence categories ('experimental', 'electronic'), or any combination of those.
 
-If you don't specify evidence types to be included/excluded, RNAlysis will use annotations with all evidence codes by default.
+If you don't specify evidence types to be included/excluded, *RNAlysis* will use annotations with all evidence codes by default.
 
 You can read more about GO evidence codes here:
 http://geneontology.org/docs/guide-go-evidence-codes/
@@ -1037,7 +1165,7 @@ Filter GO Annotations by database (optional)
 GO annotations are curated by different databases, such as UniProt, WormBase, or The Arabidopsis Information Resource.
 You can choose to include only annotations from specific databases, or to exclude annotations from specific databases, using the `databases` and `excluded_databases` parameters.
 
-If you don't specify databases to be included/excluded, RNAlysis will use annotations from all databases by default.
+If you don't specify databases to be included/excluded, *RNAlysis* will use annotations from all databases by default.
 
 Filter GO Annotations by Qualifiers (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1050,7 +1178,7 @@ Annotations with the *NOT* qualifier are usually ignored during enrichment analy
 
 You can choose to include only annotations with specific qualifiers, or to exclude annotations with a specific qualifier, using the `qualifiers` and `excluded_qualifiers` parameters.
 
-If you don't specify qualifiers to be included/excluded, RNAlysis will ignore annotations with the *NOT* qualifier by default, and use annotations with any other qualifiers (or no qualifiers at all).
+If you don't specify qualifiers to be included/excluded, *RNAlysis* will ignore annotations with the *NOT* qualifier by default, and use annotations with any other qualifiers (or no qualifiers at all).
 
 You can read more about GO qualifiers here:
 http://geneontology.org/docs/go-annotations/
@@ -1080,15 +1208,141 @@ To deal with this problem, several alternative propagation methods were develope
 You can read more about some suggested methods in the following publication:
 https://pubmed.ncbi.nlm.nih.gov/16606683/
 
-RNAlysis implements three of these propagation methods: *elim*, *weight*, and *all.m*.
+*RNAlysis* implements three of these propagation methods: *elim*, *weight*, and *all.m*.
 You can decide which propagation method to use by specifying the `propagation_method` parameter: 'no' for no propagation of GO annotations, 'classic' for classic propagation of GO annotations, and 'elim'/'weight'/'all.m' for propagation using the *elim*/*weight*/*all.m* propagation algorithms.
 
 If you don't specify which propagation method to use in enrichment analysis, the *elim* method will be used by default.
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-After RNALysis is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
-RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.
+After *RNAlysis* is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
+*RNAlysis* plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.
+
+You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
+
+        .. figure::  plot_enrichment_results_go.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=True
+
+
+        .. figure::  plot_enrichment_results_go_vertical.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_horizontal`=False
+
+
+If you want to further customize this plot, you can request *RNAlysis* to return a Matplotlib Figure object of the barplot, by using the `return_fig` parameter.
+
+If you don't specify plotting parameters, *RNAlysis* will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.
+
+
+In addition, *RNAlysis* can generate an ontology graph, depicting all of the statistically significant GO terms and their hierarchical relationships:
+
+        .. figure::  ontology_graph.png
+           :align:   center
+           :scale: 40 %
+
+           `plot_ontology_graph`=True
+
+If you don't want to generate this graph, you can set the parameter `plot_ontology_graph` to False.
+
+Moreover, you can determine the file format of the generated graph (.pdf, .png, .svg, etc'), by setting the `ontology_graph_format` parameter.
+
+If you don't specify plotting parameters, *RNAlysis* will generate an ontology graph by default in a PDF format.
+
+Enrichment analysis output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:
+
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
++=============+==================+==============+=====+=======+======================+==========+==========+=============+
+|  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|  GO:0043186 |     P granule    |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
++-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+
+'samples' is the number of features that were used in the enrichment set. 'obs' is the observed number of features positive for the attribute in the enrichment set.
+'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
+
+KEGG Pathways enrichment
+_________________________
+Using the *enrichment* module, you can perform enrichment analysis for KEGG pathways.
+You can read more about KEGG pathways on the `KEGG website <https://www.genome.jp/kegg/pathway.html>`_.
+
+
+To perform KEGG Enrichment analysis, we will start by creating an FeatureSet object::
+
+    >>> counts = filtering.CountFilter('path_to_my_file.csv')
+    >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
+
+Define the correct *organism* and *gene ID type* for your dataset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Since KEGG annotations refer to specific gene products, which can differ between different species, *RNAlysis* needs to know which organism your dataset refers to.
+The organism can be specified as either the organism's name, or the organism's *NCBI Taxon ID* (for example: 6239 for *Caenorhabditis elegans*).
+
+It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid mischaracterization of annotations.
+However, if you are not sure, *RNAlysis* will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
+
+
+Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), *RNAlysis* can translate gene IDs from one gene ID type to another.
+In order to do that, you need to specify which gene ID type your dataset uses.
+
+Define the background set
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain KEGG pathway, in comparison to a more generalized set of genomic features that we determined as 'background'.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that have at least one KEGG annotation as a background set.
+If you don't want to use the default setting, there are two methods of defining the background set:
+
+The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
+
+    >>> en.kegg_enrichment(biotype='all')
+
+In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
+
+The second method of defining the background set is to define a specific set of genomic features to be used as background::
+
+    >>> my_background_set = {'feature1','feature2','feature3'}
+    >>> en.kegg_enrichment(background_genes=my_background_set)
+
+In this example, our background set consists of *feature1*, *feature2* and *feature3*.
+
+It is not possible to specify both a biotype and a specific background set.
+
+If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
+
+Choose the statistical test (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Significance testing for KEGG enrichment analysis can be done using either the Hypergeometric Test, Fisher's Exact Test, or a randomization test.
+
+The hypergeometric test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute ('success') and *X* genes from the test set belonging to that attribute.
+If we were to randomly draw *n* genes from the background set (without replacement), what is the probability of drawing *X* or more (in case of enrichment)/*X* or less (in case of depletion) genes belonging to the given attribute?
+
+The Fisher's Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.
+
+The randomization test is defined as: Given *M* genes in the background set, *n* genes in the test set, with *N* genes from the background set belonging to a specific attribute and *X* genes from the test set belonging to that attribute.
+We performs the number of randomizations specified by the user (10,000 by default).
+In each randomization we randomly draw a set of *n* genes from the background set (without replacement), and marks the randomization as a 'success' if the number of genes in the random set belonging to the attribute is >= *X* (in case of enrichment) or <= *X* (in case of depletion).
+The p-values are calculated as *(number of sucesses + 1)/(number of repetitions + 1)*.
+This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
+You can read more about the topic in the following publication: https://www.ncbi.nlm.nih.gov/pubmed/21044043
+
+If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
+
+To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
+If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+
+
+Choose plotting parameters (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+After *RNAlysis* is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
+*RNAlysis* plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.
 
 You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
 
@@ -1106,24 +1360,25 @@ You can determine the orientation of the bar plot (horizontal or vertical) using
            `plot_horizontal`=False
 
 
-If you want to further customize this plot, you can request RNAlysis to return a Matplotlib Figure object of the barplot, by using the `return_fig` parameter.
+If you want to further customize this plot, you can request *RNAlysis* to return a Matplotlib Figure object of the barplot, by using the `return_fig` parameter.
 
-If you don't specify plotting parameters, RNALysis will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.
+If you don't specify plotting parameters, *RNAlysis* will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:
+Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:
 
-+-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|             |       name       |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
-+=============+==================+==============+=====+=======+======================+==========+==========+=============+
-|  GO:0001556 | oocyte maturation|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
-+-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
-|  GO:0043186 |     P granule    |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
-+-------------+------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
++-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|   KEGG ID |                              name                               |    samples   | obs |   exp | log2_fold_enrichment |   pval   |   padj   | significant |
++===========+=================================================================+==============+=====+=======+======================+==========+==========+=============+
+|  cel00010 | Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)|    1327      | 451 | 319.52| 0.49722119558        | 0.0000999| 0.0000999| True        |
++-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
+|  cel00030 |  Pentose phosphate pathway - Caenorhabditis elegans (nematode)  |    1327      | 89  | 244.87| -1.46013879322       | 0.0000999| 0.0000999| True        |
++-----------+-----------------------------------------------------------------+--------------+-----+-------+----------------------+----------+----------+-------------+
 
 'samples' is the number of features that were used in the enrichment set. 'obs' is the observed number of features positive for the attribute in the enrichment set.
 'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
+
 
 Enrichment analysis for user-defined attributes
 --------------------------------------------------
@@ -1146,7 +1401,7 @@ Define the background set
 In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
 
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
 If you don't want to use the default setting, there are two methods of defining the background set:
 
 The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
@@ -1190,7 +1445,7 @@ If you choose to use a randomization test, you can specify the number of randomi
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-After performing enrichment analysis, RNAlysis will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
+After performing enrichment analysis, *RNAlysis* will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
 You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
 
 
@@ -1209,7 +1464,7 @@ You can determine the orientation of the bar plot (horizontal or vertical) using
 
 
 If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the `return_fig` parameter.
-When it is set as 'True', RNALysis will return the Figure object it generated in addition to the results table.
+When it is set as 'True', *RNAlysis* will return the Figure object it generated in addition to the results table.
 
 Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1244,7 +1499,7 @@ Define the background set
 In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
 
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
 If you don't want to use the default setting, there are two methods of defining the background set:
 
 The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
@@ -1269,13 +1524,13 @@ Choose the statistical test (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 When calculating enrichment for a non-categorical attribute, you can use either a parametric or non-parametric statistical test.
 
-If the `parametric_test` parameter is True, RNAlysis will calculate enrichment using the *one-sample Student's T-test*, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.
+If the `parametric_test` parameter is True, *RNAlysis* will calculate enrichment using the *one-sample Student's T-test*, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.
 
-If the `parametric_test` parameter is False, RNAlysis will calculate enrichment using the non-parametric *one-sample Sign test*, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.
+If the `parametric_test` parameter is False, *RNAlysis* will calculate enrichment using the non-parametric *one-sample Sign test*, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.
 
 The parametric T-test assumes that the values of your non-categorical attribute distribute normally. Therefore, if you are not sure your data meets this assumption, it is recommended to use the less-powerful non-parametric test.
 
-If you don't specify the statistical test, RNAlysis will automatically use a non-parametric test.
+If you don't specify the statistical test, *RNAlysis* will automatically use a non-parametric test.
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1301,10 +1556,10 @@ To better fit the visualization of the results to your needs, you can specify tw
 
            `plot_style`='interleaved'
 
-If you don't specify plotting parameters, RNAlysis will plot the histogram on a logarithmic scale using the 'overlap' style by default.
+If you don't specify plotting parameters, *RNAlysis* will plot the histogram on a logarithmic scale using the 'overlap' style by default.
 
 If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the `return_fig` parameter.
-When it is set as 'True', RNALysis will return the Figure object it generated in addition to the results table.
+When it is set as 'True', *RNAlysis* will return the Figure object it generated in addition to the results table.
 
 Non-Categorical Enrichment analysis output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1376,7 +1631,7 @@ Initialize an RankedSet object
 ------------------------------------------
 We will start by importing the enrichment module::
 
-    >>> from rnalysis import enrichment
+    >>> from *RNAlysis* import enrichment
 
 :term:`RankedSet` objects can be initialized by one of two methods.
 The first method is to specify an existing Filter object::
@@ -1404,22 +1659,37 @@ Second, you cannot specify which statistical test to use, since the *XL-mHG* tes
 
 An example for running single-set GO Enrichment would look like so::
 
-    >>> from rnalysis import enrichment
+    >>> from *RNAlysis* import enrichment
     >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
     >>> go_en_result = ranked_set.single_set_go_enrichment(gene_id_type='WormBase')
 
-Performing single-set enrichment analysis without a background set
---------------------------------------------------------------------
+
+Performing single-set KEGG Enrichment analysis without a background set
+-------------------------------------------------------------------------
+Single-set KEGG Enrichment works much the same as normal KEGG Enrichment analysis, with two key differences:
+
+First, when performing single-set KEGG Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
+
+An example for running single-set KEGG Enrichment would look like so::
+
+    >>> from *RNAlysis* import enrichment
+    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
+    >>> go_en_result = ranked_set.single_set_kegg_enrichment(gene_id_type='WormBase')
+
+Performing single-set enrichment analysis for user-defined attributes without a background set
+------------------------------------------------------------------------------------------------
 Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:
 
-First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
+First, when performing single-set enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
 Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
 
 An example for running single-set enrichment analysis would look like so::
 
-    >>> from rnalysis import enrichment
+    >>> from *RNAlysis* import enrichment
     >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
     >>> en_result = ranked_set.single_set_enrichment(['attribute1', 'attribute3'], attr_ref_path='tests/test_files/attr_ref_table_for_examples.csv')
+
 
 
 Visualizing sets, intersections, and enrichment
@@ -1427,7 +1697,7 @@ Visualizing sets, intersections, and enrichment
 
 Plotting results of enrichment analysis
 -----------------------------------------
-If you want to plot existing enrichment results using RNAlysis, you can use the `enrichment.plot_enrichment_results()` function. It employs a similar API to the enrichment functions in the enrichment modules, but accepts pre-calculated DataFrames.
+If you want to plot existing enrichment results using *RNAlysis*, you can use the `enrichment.plot_enrichment_results()` function. It employs a similar API to the enrichment functions in the enrichment modules, but accepts pre-calculated DataFrames.
 
 Plotting Venn Diagrams and UpSet Plots
 ---------------------------------------
@@ -1443,11 +1713,11 @@ There are three ways of specifying a set's content:
 
 For example::
 
-    >>> from rnalysis import enrichment
+    >>> from *RNAlysis* import enrichment
     >>> sets_to_visualize = {'First set':{'gene1', 'gene2', 'gene3'}, 'Second set':enrichment.FeatureSet({'gene2','gene3','gene4'}), 'Third set':'attribute1'}
 
 After defining the dictionary of sets, we can use it to plot set intersection via the `enrichment.venn_diagram()` or `enrichment.upset_plot()` functions.
-Venn diagrams in RNAlysis are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.
+Venn diagrams in *RNAlysis* are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.
 
        .. figure::  venn.png
            :align:   center
@@ -1464,7 +1734,7 @@ UpSet plots support the visualization of much larger groups of sets. You can rea
            Example plot of upset_plot()
 
 ****************************
-RNAlysis general module
+*RNAlysis* general module
 ****************************
 RNAlysis's general module (rnalysis.general) contains general functions that can be useful during analysis of RNA sequencing data, including regular expression parsers and setting the Reference Table path.
 
@@ -1515,9 +1785,9 @@ User-annotated biotypes should be defined in a :term:`Biotype Reference Table` `
 
 Set a Reference Table as default
 ----------------------------------
-Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of RNAlysis::
+Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of *RNAlysis*::
 
-    >>> from rnalysis import general
+    >>> from *RNAlysis* import general
     >>> path="the_new_attribute_reference_table_path"
     >>> general.set_attr_ref_table_path(path)
     Attribute Reference Table path set as: the_new_attribute_reference_table_path
@@ -1527,14 +1797,14 @@ Once we have an Attribute and/or Biotype Reference Table, we can set it to be th
     Attribute Reference Table path set as: the_new_biotype_reference_table_path
 
 This will create a file called 'settings.yaml', which will store the full paths of your reference tables.
-Whenever RNAlysis needs to use an Attribute/Biotype Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+Whenever *RNAlysis* needs to use an Attribute/Biotype Reference Table and no other path is specified, *RNAlysis* will automatically use the path saved in the settings file.
 The saved path can be changed any time using the general.set_attr_ref_table_path() and general.set_biotype_ref_table_path() functions.
 
 Load the default Attribute Reference Table path
 -------------------------------------------------
 You can read the saved path from the settings file using the general.read_attr_ref_table_path() and general.read_biotype_ref_table_path() functions::
 
-    >>> from rnalysis import general
+    >>> from *RNAlysis* import general
     >>> attr_table_path = general.read_attr_ref_table_path()
     Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file
 
@@ -1549,7 +1819,7 @@ Parse *C. elegans* gene names, WBGene indices and sequence names using regular e
 The general module includes functions which can parse *C. elegans* gene names (like *daf-2* or *lin-15B*), WBGene indices (like WBGene00023495) and sequence names (like Y55D5A.5 or T23G5.6).
 For example, we could extract all WBGene indices from the following string::
 
-    >>> from rnalysis import general
+    >>> from *RNAlysis* import general
     >>> my_string='''WBGene00000001 and WBGene00000002WBGene00000003
 
             WBGene00000004g

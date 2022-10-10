@@ -114,3 +114,4 @@ settings.ini
 /rnalysis/temp_settings.yaml
 /rnalysis/random_pvals.pyx
 /dask-worker-space/
+/rnalysis/qt6_convert.py

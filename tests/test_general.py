@@ -25,64 +25,64 @@ def test_parse_gene_name_string():
 
 
 def test_print_settings_file(capfd):
-    ref_tables.make_temp_copy_of_settings_file()
+    settings.make_temp_copy_of_settings_file()
     set_biotype_ref_table_path('temp_path')
     set_attr_ref_table_path('temp_path')
 
     print_settings_file()
 
-    ref_tables.set_temp_copy_of_settings_file_as_default()
-    ref_tables.remove_temp_copy_of_settings_file()
+    settings.set_temp_copy_of_settings_file_as_default()
+    settings.remove_temp_copy_of_settings_file()
 
 
 def test_set_attr_ref_path():
-    ref_tables.make_temp_copy_of_settings_file()
-    if ref_tables.get_settings_file_path().exists():
-        ref_tables.get_settings_file_path().unlink()
+    settings.make_temp_copy_of_settings_file()
+    if settings.get_settings_file_path().exists():
+        settings.get_settings_file_path().unlink()
 
     set_attr_ref_table_path('old/path')
-    success_1 = ref_tables.get_attr_ref_path('predefined') == 'old/path'
+    success_1 = settings.get_attr_ref_path('predefined') == 'old/path'
 
     set_attr_ref_table_path('new/path')
-    success_2 = ref_tables.get_attr_ref_path('predefined') == 'new/path'
+    success_2 = settings.get_attr_ref_path('predefined') == 'new/path'
 
-    ref_tables.set_temp_copy_of_settings_file_as_default()
-    ref_tables.remove_temp_copy_of_settings_file()
+    settings.set_temp_copy_of_settings_file_as_default()
+    settings.remove_temp_copy_of_settings_file()
     assert success_1
     assert success_2
 
 
 def test_set_biotype_ref_path():
-    ref_tables.make_temp_copy_of_settings_file()
-    if ref_tables.get_settings_file_path().exists():
-        ref_tables.get_settings_file_path().unlink()
+    settings.make_temp_copy_of_settings_file()
+    if settings.get_settings_file_path().exists():
+        settings.get_settings_file_path().unlink()
 
     set_biotype_ref_table_path('old/path')
-    success_1 = ref_tables.get_biotype_ref_path('predefined') == 'old/path'
+    success_1 = settings.get_biotype_ref_path('predefined') == 'old/path'
 
     set_biotype_ref_table_path('new/path')
-    success_2 = ref_tables.get_biotype_ref_path('predefined') == 'new/path'
+    success_2 = settings.get_biotype_ref_path('predefined') == 'new/path'
 
-    ref_tables.set_temp_copy_of_settings_file_as_default()
-    ref_tables.remove_temp_copy_of_settings_file()
+    settings.set_temp_copy_of_settings_file_as_default()
+    settings.remove_temp_copy_of_settings_file()
     assert success_1
     assert success_2
 
 
 def test_reset_settings_file():
-    ref_tables.make_temp_copy_of_settings_file()
+    settings.make_temp_copy_of_settings_file()
     try:
-        ref_tables.get_settings_file_path().unlink()
+        settings.get_settings_file_path().unlink()
     except FileNotFoundError:
         pass
-    ref_tables.update_settings_file('path/to/biotype/ref/file', __biotype_file_key__)
-    ref_tables.update_settings_file('path/to/attr/ref/file', __attr_file_key__)
+    settings.update_settings_file('path/to/biotype/ref/file', __biotype_file_key__)
+    settings.update_settings_file('path/to/attr/ref/file', __attr_file_key__)
     reset_settings_file()
 
-    success = not ref_tables.get_settings_file_path().exists()
+    success = not settings.get_settings_file_path().exists()
 
-    ref_tables.set_temp_copy_of_settings_file_as_default()
-    ref_tables.remove_temp_copy_of_settings_file()
+    settings.set_temp_copy_of_settings_file_as_default()
+    settings.remove_temp_copy_of_settings_file()
     assert success
 
 
@@ -91,7 +91,7 @@ def test_save_to_csv(monkeypatch):
                         lambda x, y: None if isinstance(x, pd.DataFrame) else (_ for _ in ()).throw(AssertionError))
     df = pd.DataFrame([[1, 2, 3], [4, 5, 6]])
     save_to_csv(df, 'filename')
-    f = Filter(('filename', df))
+    f = Filter.from_dataframe(df, 'filename')
     save_to_csv(f, 'filename')
     with pytest.raises(TypeError):
         save_to_csv(5, 'filename')

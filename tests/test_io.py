@@ -1,5 +1,3 @@
-import datetime
-
 import pytest
 
 from rnalysis.utils import io
@@ -9,13 +7,14 @@ from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
 
 class MockResponse(object):
     def __init__(self, status_code: int = 200, url: str = 'http://httpbin.org/get', headers: dict = 'default',
-                 text: str = '', json_output: dict = dict()):
+                 text: str = '', json_output: dict = dict(), content: str = ''):
         self.status_code = status_code
         self.url = url
         self.headers = {'default': 'default'} if headers == 'default' else headers
         self.text = text
         self.ok = self.status_code == 200
         self._json = json_output
+        self.content = bytes(content, 'utf8')
 
     def raise_for_status(self):
         if not self.ok:
@@ -23,6 +22,12 @@ class MockResponse(object):
 
     def json(self):
         return self._json
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return
 
 
 def test_load_csv_bad_input():
@@ -378,7 +383,7 @@ def test_infer_sources_from_gene_ids(monkeypatch, gene_id_info, truth):
 def test_infer_taxon_from_gene_ids(monkeypatch, gene_id_info, truth):
     monkeypatch.setattr(io, 'map_taxon_id', lambda x: x)
     monkeypatch.setattr(io, '_ensmbl_lookup_post_request', lambda x: gene_id_info)
-    assert infer_taxon_from_gene_ids([]) == truth
+    assert infer_taxon_from_gene_ids([])[0] == truth
 
 
 def test_infer_taxon_from_gene_ids_no_species(monkeypatch):
@@ -464,19 +469,20 @@ def test_map_gene_ids_with_duplicates(monkeypatch, ids, map_from, map_to, txt, r
              'UniProtKB_to': 'UniProtKB',
              'UniProtKB_from': 'UniProtKB_AC-ID',
              'UniProtKB': 'UniProtKB'}
-        return d
+        return d, d
 
     def mock_get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float,
-                                 session):
-        if to_db == mock_abbrev_dict()['UniProtKB_to']:
+                                 session, verbose):
+        mock_abbrev_dict_to, mock_abbrev_dict_from = mock_abbrev_dict()
+        if to_db == mock_abbrev_dict_to['UniProtKB_to']:
             return_txt = txt if map_to == 'UniProtKB' else rev_txt
-        elif from_db == mock_abbrev_dict()['UniProtKB_from']:
+        elif from_db == mock_abbrev_dict_from['UniProtKB_from']:
             return_txt = txt if map_from == 'UniProtKB' else rev_txt
         else:
             raise ValueError(to_db, from_db)
         return return_txt.split('\n')
 
-    monkeypatch.setattr(io, '_get_id_abbreviation_dict', mock_abbrev_dict)
+    monkeypatch.setattr(io, '_get_id_abbreviation_dicts', mock_abbrev_dict)
     monkeypatch.setattr(io, 'get_mapping_results', mock_get_mapping_results)
     res = map_gene_ids(ids, map_from, map_to)
     for gene_id in truth:
@@ -523,3 +529,184 @@ def test_cache_file():
             assert f.read() == cache_content_truth
     finally:
         remove_cached_test_file(cached_filename)
+
+
+@pytest.mark.parametrize("gene_set,expected_split", [
+    ({1, 2, 3}, ['1', '2', '3']),
+    ({'geneA', 'geneB', 'geneC', 'geneD'}, ["geneA", "geneB", "geneC", "geneD"])
+])
+def test_save_gene_set(gene_set, expected_split):
+    pth = 'tests/test_files/tmp_saved_gene_set.txt'
+    try:
+        save_gene_set(gene_set, pth)
+        with open(pth) as f:
+            split = f.read().split('\n')
+        assert sorted(split) == sorted(expected_split)
+    finally:
+        try:
+            os.unlink(pth)
+        except FileNotFoundError:
+            pass
+
+
+def test_kegg_annotation_iterator_api():
+    _ = KEGGAnnotationIterator(6239)
+
+
+@pytest.mark.parametrize('arguments,url_truth', [('argument', 'https://rest.kegg.jp/operation/argument'),
+                                                 (['arg1', 'arg2', 'arg3'],
+                                                  'https://rest.kegg.jp/operation/arg1/arg2/arg3'),
+                                                 (['argument'], 'https://rest.kegg.jp/operation/argument')], )
+def test_kegg_annotation_iterator_kegg_request(monkeypatch, arguments, url_truth):
+    truth = '{"sample": "json", "lorem": "ipsum"}'
+    cached = []
+
+    def mock_get_cached_file(filename):
+        return None
+
+    def mock_cache_file(content, filename):
+        assert filename == 'cached_filename.csv'
+        assert content == truth
+        cached.append(True)
+
+    def mock_get(url):
+        assert url == url_truth
+        return MockResponse(text=truth)
+
+    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, 'cache_file', mock_cache_file)
+    assert KEGGAnnotationIterator._kegg_request('operation', arguments, 'cached_filename.csv') == (
+        truth, False)
+    assert cached == [True]
+
+
+def test_kegg_annotation_iterator_kegg_request_cached(monkeypatch):
+    truth = {"sample": "json", "lorem": "ipsum"}
+
+    def mock_get_cached_file(filename):
+        return truth
+
+    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
+    assert KEGGAnnotationIterator._kegg_request('operation', 'argument', 'cached_filename.csv') == (truth, True)
+
+
+PATHWAY_NAMES_TRUTH = {'path:cel00010': 'Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
+                       'path:cel00020': 'Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
+                       'path:cel00030': 'Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
+                       'path:cel00040': 'Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
+                       'path:cel00051': 'Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
+                       'path:cel00052': 'Galactose metabolism - Caenorhabditis elegans (nematode)', }
+
+
+def test_kegg_annotation_iterator_get_pathways(monkeypatch):
+    truth = (PATHWAY_NAMES_TRUTH, 6)
+    organism_code = 'cel'
+
+    def mock_kegg_request(self, operation, arguments):
+        assert operation == 'list'
+        assert arguments == ['pathway', organism_code]
+        with open('tests/test_files/kegg_pathways.txt') as f:
+            return f.read(), False
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.organism_code = organism_code
+    assert kegg.get_pathways() == truth
+
+
+def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
+    truth = {'path:cel00010': ['Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)',
+                               {'cel:CELE_F14B4.2', 'cel:CELE_Y87G2A.8', 'cel:CELE_C50F4.2', 'cel:CELE_Y71H10A.1'}],
+             'path:cel00020': ['Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)',
+                               {'cel:CELE_T20G5.2', 'cel:CELE_B0365.1', 'cel:CELE_D1005.1'}],
+             'path:cel00030': ['Pentose phosphate pathway - Caenorhabditis elegans (nematode)',
+                               {'cel:CELE_Y87G2A.8', 'cel:CELE_B0035.5'}],
+             'path:cel00040': ['Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)',
+                               {'cel:CELE_Y105E8B.9', 'cel:CELE_B0310.5', 'cel:CELE_T04H1.7', 'cel:CELE_T04H1.8'}],
+             'path:cel00051': ['Fructose and mannose metabolism - Caenorhabditis elegans (nematode)',
+                               {'cel:CELE_C05C8.7', 'cel:CELE_ZK632.4'}],
+             'path:cel00052': ['Galactose metabolism - Caenorhabditis elegans (nematode)', {'cel:CELE_C01B4.6'}]}
+    args_truth = ['path:cel00010+path:cel00020+path:cel00030', 'path:cel00040+path:cel00051+path:cel00052']
+
+    def mock_kegg_request(self, operation, arguments, fname):
+        assert operation == 'get'
+        assert arguments == args_truth[0] or arguments == args_truth[1]
+        if arguments == args_truth[0]:
+            pth = 'tests/test_files/kegg_annotation_1of2.txt'
+        else:
+            pth = 'tests/test_files/kegg_annotation_2of2.txt'
+        with open(pth) as f:
+            return f.read(), False
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+    monkeypatch.setattr(KEGGAnnotationIterator, 'REQ_MAX_ENTRIES', 3)
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.pathway_annotations = None
+    kegg.taxon_id = 6239
+    kegg.organism_code = 'cel'
+    kegg.pathway_names = PATHWAY_NAMES_TRUTH
+    assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
+
+
+def test_kegg_annotation_iterator_get_pathway_annotations_cached():
+    annotation = {'a': 1, 'b': 2, 'c': 3}
+    names = {'a': 'namea', 'b': 'nameb', 'c': 'namec'}
+    truth = {'a': ['namea', 1], 'b': ['nameb', 2], 'c': ['namec', 3]}
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    kegg.pathway_annotations = annotation
+    kegg.pathway_names = names
+    assert {key: [name, ann] for key, name, ann in kegg.get_pathway_annotations()} == truth
+
+
+@pytest.mark.parametrize('taxon_id,truth', [
+    (6239, 'cel'),
+    (270351, 'maqu'),
+    (9606, 'hsa'),
+    (6238, 'cbr')
+])
+def test_kegg_annotation_iterator_get_kegg_organism_code(monkeypatch, taxon_id, truth):
+    def mock_get_tree():
+        with open('tests/test_files/kegg_taxon_tree_truth.json') as f:
+            return json.loads(f.read())
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_get_taxon_tree', mock_get_tree)
+
+    assert KEGGAnnotationIterator.get_kegg_organism_code(taxon_id) == truth
+
+
+def test_kegg_annotation_iterator_get_taxon_tree(monkeypatch):
+    truth = {"sample": "json", "lorem": "ipsum"}
+    truth_text = '{"sample": "json", "lorem": "ipsum"}'
+    cached = []
+
+    def mock_get_cached_file(filename):
+        return None
+
+    def mock_cache_file(content, filename):
+        assert filename == 'kegg_taxon_tree.json'
+        assert content == truth_text
+        cached.append(True)
+
+    def mock_get(url, params):
+        assert url == 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
+        assert params == {'format': 'json'}
+        return MockResponse(content=truth_text)
+
+    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(io, 'cache_file', mock_cache_file)
+
+    assert KEGGAnnotationIterator._get_taxon_tree() == truth
+    assert cached == [True]
+
+
+def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
+    truth = {"sample": "json", "lorem": "ipsum"}
+
+    def mock_get_cached_file(filename):
+        return '{"sample":"json","lorem":"ipsum"}'
+
+    monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
+    assert KEGGAnnotationIterator._get_taxon_tree() == truth

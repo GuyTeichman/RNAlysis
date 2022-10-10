@@ -30,6 +30,7 @@
     CountFilter.filter_percentile
     CountFilter.filter_top_n
     CountFilter.fold_change
+    CountFilter.from_dataframe
     CountFilter.from_folder
     CountFilter.head
     CountFilter.intersection

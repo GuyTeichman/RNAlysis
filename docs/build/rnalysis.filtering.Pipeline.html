@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Pipeline &mdash; RNAlysis 2.1.1 documentation</title>
+  <title>rnalysis.filtering.Pipeline &mdash; RNAlysis 3.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -44,6 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
@@ -69,6 +71,8 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.Pipeline</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.add_function.html">rnalysis.filtering.Pipeline.add_function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.apply_to.html">rnalysis.filtering.Pipeline.apply_to</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.export_pipeline.html">rnalysis.filtering.Pipeline.export_pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.import_pipeline.html">rnalysis.filtering.Pipeline.import_pipeline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.remove_last_function.html">rnalysis.filtering.Pipeline.remove_last_function</a></li>
 </ul>
 </li>
@@ -108,7 +112,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="rnalysis-filtering-pipeline">
+  <section id="rnalysis-filtering-pipeline">
 <h1>rnalysis.filtering.Pipeline<a class="headerlink" href="#rnalysis-filtering-pipeline" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="rnalysis.filtering.Pipeline">
@@ -154,12 +158,18 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Pipeline.apply_to.html#rnalysis.filtering.Pipeline.apply_to" title="rnalysis.filtering.Pipeline.apply_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline.apply_to</span></code></a>(filter_object[, inplace])</p></td>
 <td><p>Sequentially apply all functions in the Pipeline to a given Filter object.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Pipeline.export_pipeline.html#rnalysis.filtering.Pipeline.export_pipeline" title="rnalysis.filtering.Pipeline.export_pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline.export_pipeline</span></code></a>(filename)</p></td>
+<td><p>Export a Pipeline to a Pipeline YAML file or YAML-like string.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Pipeline.import_pipeline.html#rnalysis.filtering.Pipeline.import_pipeline" title="rnalysis.filtering.Pipeline.import_pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline.import_pipeline</span></code></a>(filename)</p></td>
+<td><p>Import a Pipeline from a Pipeline YAML file or YAML-like string.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Pipeline.remove_last_function.html#rnalysis.filtering.Pipeline.remove_last_function" title="rnalysis.filtering.Pipeline.remove_last_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline.remove_last_function</span></code></a>()</p></td>
 <td><p>Removes from the Pipeline the last function that was added to it.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
+</section>
 
 
            </div>

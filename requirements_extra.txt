@@ -1,0 +1,8 @@
+# FORMAT
+# Put your extra requirements here in the following format
+#
+# package[version_required]: tag1, tag2, ...
+
+hdbscan>=0.8.28:    hdbscan
+xlmhg>=2.5.4:       single-set
+numba>=0.55.1:      randomization

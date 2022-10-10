@@ -9,13 +9,15 @@ When you save filtered/modified data, its new file name will include by default 
  all of the operations performed on it, in the order they were performed, to allow easy traceback of your analyses.
 
 """
-
+import copy
 import os
 import re
 import types
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple, Union, Callable
+from typing import Any, Iterable, List, Tuple, Union, Callable
+
+import yaml
 
 try:
     from typing import Literal
@@ -23,7 +25,6 @@ except ImportError:
     from typing_extensions import Literal
 
 import matplotlib.pyplot as plt
-import numba
 import numpy as np
 import pairwisedist as pwdist
 import pandas as pd
@@ -32,7 +33,7 @@ from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
-from rnalysis.utils import clustering, io, parsing, generic, ref_tables, validation
+from rnalysis.utils import clustering, io, parsing, generic, settings, validation
 
 
 class Filter:
@@ -60,33 +61,41 @@ class Filter:
     """
     __slots__ = {'fname': 'filename with full path', 'df': 'pandas.DataFrame with the data'}
 
-    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False):
+    def __init__(self, fname: Union[str, Path], drop_columns: Union[str, List[str]] = None):
 
         """
+        Load a table.
+
         :param fname: full path/filename of the .csv file to be loaded into the Filter object
         :type fname: Union[str, Path]
         :param drop_columns: if a string or list of strings are specified, \
-        the columns of the same name/s will be dropped from the loaded DataFrame.
-        :type drop_columns: str, list of str, or False (default=False)
+        the columns of the same name/s will be dropped from the loaded table.
+        :type drop_columns: str, list of str, or None (default=None)
 
         :Examples:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_files/counted.csv")
 
         """
-        # init from a tuple (fname, DataFrame/Series). Used in self.__copy__(), self._inplace
-        if isinstance(fname, tuple):
-            assert isinstance(fname[1], (pd.DataFrame, pd.Series)) and isinstance(fname[0], (str, Path))
-            self.fname = fname[0]
-            self.df = fname[1]
         # init from a file (load the csv into a DataFrame/Series)
-        else:
-            assert isinstance(fname, (str, Path))
-            self.fname = Path(fname)
-            self.df = io.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
+        assert isinstance(fname, (str, Path))
+        self.fname = Path(fname)
+        self.df = io.load_csv(fname, 0, squeeze=True, drop_columns=drop_columns)
         # check for duplicate indices
         if self.df.index.has_duplicates:
             warnings.warn("This Filter object contains multiple rows with the same name/index.")
+
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path]) -> 'Filter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        if obj.df.index.has_duplicates:
+            warnings.warn("This Filter object contains multiple rows with the same name/index.")
+        return obj
+
+    def _init_warnings(self):
+        pass
 
     def __repr__(self):
         return f"{type(self).__name__}('{self.fname}')"
@@ -102,6 +111,8 @@ class Filter:
         return self.shape[0]
 
     def __eq__(self, other):
+        if type(self) != type(other):
+            return False
         if self.df.equals(other.df) and self.shape == other.shape:
             return True
         return False
@@ -113,7 +124,7 @@ class Filter:
         yield from self.df.index
 
     def __copy__(self):
-        return type(self)((self.fname, self.df.copy(deep=True)))
+        return type(self).from_dataframe(self.df, self.fname)
 
     @property
     def columns(self) -> list:
@@ -395,7 +406,8 @@ class Filter:
                                                                              opposite=True, inplace=False)
 
     def filter_biotype(self, biotype: Union[str, List[str]] = 'protein_coding',
-                       ref: str = 'predefined', opposite: bool = False, inplace: bool = True):
+                       ref: Union[str, Path, Literal['predefined']] = 'predefined', opposite: bool = False,
+                       inplace: bool = True):
 
         """
         Filters out all features that do not match the indicated biotype/biotypes. \
@@ -433,7 +445,7 @@ class Filter:
         assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
         suffix = f"_{'_'.join(biotype)}"
         # load the biotype reference table
-        ref = ref_tables.get_biotype_ref_path(ref)
+        ref = settings.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
         validation.validate_biotype_table(ref_df)
         ref_df.set_index('gene', inplace=True)
@@ -451,7 +463,8 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     def filter_by_attribute(self, attributes: Union[str, List[str]] = None,
-                            mode: Literal['union', 'intersection'] = 'union', ref: str = 'predefined',
+                            mode: Literal['union', 'intersection'] = 'union',
+                            ref: Union[str, Path, Literal['predefined']] = 'predefined',
                             opposite: bool = False, inplace: bool = True):
 
         """
@@ -528,7 +541,7 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal input {mode}: mode must be either 'union' or 'intersection'"
         # load the Attribute Reference Table
-        attr_ref_table = io.load_csv(ref_tables.get_attr_ref_path(ref))
+        attr_ref_table = io.load_csv(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
         attr_ref_table.set_index('gene', inplace=True)
         # generate list of the indices that are positive for each attribute
@@ -550,7 +563,8 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def split_by_attribute(self, attributes: List[str], ref: str = 'predefined') -> tuple:
+    def split_by_attribute(self, attributes: Union[str, List[str]],
+                           ref: Union[str, Path, Literal['predefined']] = 'predefined') -> tuple:
 
         """
         Splits the features in the Filter object into multiple Filter objects, \
@@ -581,7 +595,7 @@ class Filter:
                                           f"Attribute '{attr}' is of type {type(attr)}"
         return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
-    def describe(self, percentiles: Iterable[float] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
+    def describe(self, percentiles: Union[float, List[float]] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
 
         """
         Generate descriptive statistics that summarize the central tendency, dispersion and shape \
@@ -632,7 +646,7 @@ class Filter:
             max    15056.000000  12746.000000  22027.000000  15639.000000
 
         """
-        return self.df.describe(percentiles=percentiles)
+        return self.df.describe(percentiles=parsing.data_to_tuple(percentiles))
 
     @property
     def index_set(self) -> set:
@@ -747,7 +761,8 @@ class Filter:
         """
         print(self.index_string)
 
-    def biotypes(self, long_format: bool = False, ref: str = 'predefined') -> pd.DataFrame:
+    def biotypes(self, long_format: bool = False,
+                 ref: Union[str, Path, Literal['predefined']] = 'predefined') -> pd.DataFrame:
 
         """
         Returns a DataFrame of the biotypes in the Filter object and their count.
@@ -785,7 +800,7 @@ class Filter:
 
         """
         # load the Biotype Reference Table
-        ref = ref_tables.get_biotype_ref_path(ref)
+        ref = settings.get_biotype_ref_path(ref)
         ref_df = io.load_csv(ref)
         validation.validate_biotype_table(ref_df)
         # find which genes from tne Filter object don't appear in the Biotype Reference Table
@@ -924,7 +939,7 @@ class Filter:
         # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def filter_missing_values(self, columns: Union[str, List[str]] = 'all', opposite: bool = False,
+    def filter_missing_values(self, columns: Union[str, List[str], Literal['all']] = 'all', opposite: bool = False,
                               inplace: bool = True):
         """
         Remove all rows whose values in the specified columns are missing (NaN).
@@ -979,7 +994,8 @@ class Filter:
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    def transform(self, function: Union[str, Callable], columns: Union[str, Iterable[str]] = 'all',
+    def transform(self, function: Union[Literal['Box-Cox', 'log2', 'log10', 'ln', 'Standardize'], Callable],
+                  columns: Union[str, List[str], Literal['all']] = 'all',
                   inplace: bool = True, **function_kwargs):
         """
         Transform the values in the Filter object with the specified function.
@@ -1009,7 +1025,7 @@ class Filter:
 
         suffix = "_customtransform" if callable(function) else f"_{str(function)}transform"
 
-        if columns == 'all':
+        if isinstance(columns, str) and columns.lower() == 'all':
             columns = parsing.data_to_list(self.columns)
         else:
             columns = parsing.data_to_list(columns)
@@ -1034,10 +1050,10 @@ class Filter:
         new_df = self.df.copy(deep=True)
         try:
             new_df[columns] = function(new_df[columns], **function_kwargs)
-        except:
+        except Exception:
             try:
                 new_df[columns] = self.df.apply(function, axis=1, result_type='broadcast', **function_kwargs)
-            except:
+            except Exception:
                 new_df[columns] = self.df.applymap(function, **function_kwargs)
         return self._inplace(new_df, False, inplace, suffix, 'transform')
 
@@ -1256,6 +1272,8 @@ class Filter:
         """
         Returns a set/string of the features that appear in at least \
         (majority_threhold * 100)% of the given Filter objects/sets. \
+        Majority-vote intersection with majority_threshold=0 is equivalent to Union. \
+        Majority-vote intersection with majority_threshold=1 is equivalent to Intersection.
 
         :type others: Filter or set objects.
         :param others: Objects to calculate intersection with.
@@ -1436,12 +1454,31 @@ class FoldChangeFilter(Filter):
     """
     __slots__ = {'numerator': 'name of the numerator', 'denominator': 'name of the denominator'}
 
-    def __init__(self, fname: Union[str, Path, tuple], numerator_name: str, denominator_name: str):
+    def __init__(self, fname: Union[str, Path, tuple], numerator_name: str, denominator_name: str,
+                 suppress_warnings: bool = False):
+        """
+        Load a fold-change table. Valid fold-change tables should contain exactly two columns: \
+        the first column containing gene names/indices, and the second column containing log2(fold change) values.
+
+        :param fname: full path/filename of the .csv file to be loaded into the Filter object
+        :type fname: Union[str, Path]
+        :param numerator_name: name of the numerator condition in the fold-change table
+        :type numerator_name: str
+        :param denominator_name: name of the denominator condition in the fold-change table
+        :type denominator_name: str
+        :param suppress_warnings: if True, RNAlysis will not issue warnings about the loaded table's \
+        structure or content.
+        :type suppress_warnings: bool (default=False)
+        """
         super().__init__(fname)
         self.numerator = numerator_name
         self.denominator = denominator_name
         self.df.name = 'Fold Change'
         # inf/0 can be problematic for functions down the line (like randomization test)
+        if not suppress_warnings:
+            self._init_warnings()
+
+    def _init_warnings(self):
         if np.inf in self.df or 0 in self.df:
             warnings.warn(
                 " FoldChangeFilter does not support 'inf' or '0' values! "
@@ -1454,9 +1491,21 @@ class FoldChangeFilter(Filter):
         return f"{type(self).__name__} (numerator: '{self.numerator}', denominator: '{self.denominator}') " \
                f"of file {self.fname.name}"
 
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], numerator_name: str = 'numerator',
+                       denominator_name: str = 'denominator', suppress_warnings: bool = False) -> 'FoldChangeFilter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        obj.numerator = numerator_name
+        obj.denominator = denominator_name
+        if not suppress_warnings:
+            obj._init_warnings()
+        return obj
+
     def __copy__(self):
-        return type(self)((self.fname, self.df.copy(deep=True)), numerator_name=self.numerator,
-                          denominator_name=self.denominator)
+        return type(self).from_dataframe(self.df, self.fname, numerator_name=self.numerator,
+                                         denominator_name=self.denominator)
 
     @property
     def columns(self) -> list:
@@ -1469,7 +1518,7 @@ class FoldChangeFilter(Filter):
         return [self.df.name]
 
     def randomization_test(self, ref, alpha: float = 0.05, reps: int = 10000, save_csv: bool = False,
-                           fname: Union[str, None] = None, random_seed: int = None) -> pd.DataFrame:
+                           fname: Union[str, None] = None, random_seed: Union[int, None] = None) -> pd.DataFrame:
 
         """
         Perform a randomization test to examine whether the fold change of a group of specific genomic features \
@@ -1536,7 +1585,7 @@ class FoldChangeFilter(Filter):
         return res_df
 
     @staticmethod
-    @numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True)
     def _foldchange_randomization(vals: np.ndarray, reps: int, obs_fc: float, exp_fc: float, n: int):
         success = 0
         # determine the randomization test's direction (is observed greater/lesser than expected)
@@ -1685,21 +1734,56 @@ class DESeqFilter(Filter):
     """
     __slots__ = {'log2fc_col': 'name of the log2 fold change column', 'padj_col': 'name of the adjusted p-value column'}
 
-    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
                  log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj', suppress_warnings: bool = False):
+        """
+        Load a differential expression table. A valid differential expression table should have \
+        a column containing log2(fold change) values for each gene, and another column containing \
+        adjusted p-values for each gene.
+
+        :param fname: full path/filename of the .csv file to be loaded into the Filter object
+        :type fname: Union[str, Path]
+        :param drop_columns: if a string or list of strings are specified, \
+        the columns of the same name/s will be dropped from the loaded table.
+        :type drop_columns: str, list of str, or None (default=None)
+        :param log2fc_col: name of the table column containing log2(fold change) values.
+        :type log2fc_col: str (default='Log2FoldChange')
+        :param padj_col: name of the table column containing adjusted p-values.
+        :type padj_col: str (default='padj')
+        :param suppress_warnings: if True, RNAlysis will not issue warnings about the loaded table's \
+        structure or content.
+        :type suppress_warnings: bool (default=False)
+        """
         super().__init__(fname, drop_columns)
         self.log2fc_col = log2fc_col
         self.padj_col = padj_col
-        if not suppress_warnings and log2fc_col not in self.columns:
-            warnings.warn(f"The specified log2fc_col '{log2fc_col}' does not appear in the DESeqFilter's columns: "
+        if not suppress_warnings:
+            self._init_warnings()
+
+    def _init_warnings(self):
+        if self.log2fc_col not in self.columns:
+            warnings.warn(f"The specified log2fc_col '{self.log2fc_col}' does not appear in the DESeqFilter's columns: "
                           f"{self.columns}. DESeqFilter-specific functions that depend on "
                           f"log2(fold change) may fail to run. ")
-        if not suppress_warnings and padj_col not in self.columns:
-            warnings.warn(f"The specified padj_col '{padj_col}' does not appear in the DESeqFilter's columns: "
+        if self.padj_col not in self.columns:
+            warnings.warn(f"The specified padj_col '{self.padj_col}' does not appear in the DESeqFilter's columns: "
                           f"{self.columns}. DESeqFilter-specific functions that depend on p-values may fail to run. ")
 
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path],
+                       log2fc_col: str = 'log2FoldChange', padj_col: str = 'padj',
+                       suppress_warnings: bool = False) -> 'DESeqFilter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        obj.log2fc_col = log2fc_col
+        obj.padj_col = padj_col
+        if not suppress_warnings:
+            obj._init_warnings()
+        return obj
+
     def __copy__(self):
-        return type(self)((self.fname, self.df.copy(deep=True)), suppress_warnings=True)
+        return type(self).from_dataframe(self.df, self.fname, self.log2fc_col, self.padj_col, suppress_warnings=True)
 
     def _assert_padj_col(self):
         if self.padj_col not in self.df.columns:
@@ -1875,7 +1959,7 @@ class DESeqFilter(Filter):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plt.style.use('seaborn-white')
-        colors = pd.Series(index=self.df.index)
+        colors = pd.Series(index=self.df.index, dtype='float64')
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] > 0)] = 'tab:red'
         colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] < 0)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
@@ -1921,15 +2005,44 @@ class CountFilter(Filter):
     _numeric_dtypes = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     __slots__ = {'_is_normalized': 'indicates whether the values in this CountFilter were normalized'}
 
-    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = False,
+    def __init__(self, fname: Union[str, Path, tuple], drop_columns: Union[str, List[str]] = None,
                  is_normalized: bool = False):
+        """
+        Load a count matrix. A valid count matrix should have one row per gene/genomic feature \
+        and one column per condition/RNA library. The contents of the count matrix can be raw or pre-normalized.
+
+        :param fname: full path/filename of the .csv file to be loaded into the Filter object
+        :type fname: Union[str, Path]
+        :param drop_columns: if a string or list of strings are specified, \
+        the columns of the same name/s will be dropped from the loaded table.
+        :type drop_columns: str, list of str, or None (default=None)
+        :param is_normalized: indicates whether this count table is pre-normalized. \
+        RNAlysis issues a warning when a function meant for normalized tables is applied to a \
+        table that was not already normalized.
+        :type is_normalized: bool (default=False)
+        """
         super().__init__(fname, drop_columns)
         self._is_normalized = is_normalized
 
+    def _init_warnings(self):
         if len(self._numeric_columns) < len(self.columns):
             warnings.warn(f"The following columns in the CountFilter are not numeric, and will therefore be ignored "
                           f"when running some CountFilter-specific functions: "
                           f"{set(self.df.columns).difference(self._numeric_columns)}")
+
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], is_normalized: bool = False,
+                       suppress_warnings: bool = False) -> 'CountFilter':
+        obj = cls.__new__(cls)
+        obj.df = df.copy(deep=True)
+        obj.fname = Path(name)
+        obj._is_normalized = is_normalized
+        if not suppress_warnings:
+            obj._init_warnings()
+        return obj
+
+    def __copy__(self):
+        return type(self).from_dataframe(self.df, self.fname, self.is_normalized, suppress_warnings=True)
 
     @property
     def is_normalized(self) -> bool:
@@ -2020,21 +2133,21 @@ class CountFilter(Filter):
         new_fname = Path(f"{str(self.fname.parent)}/{self.fname.stem}'_fold_change_'"
                          f"{numer_name}_over_{denom_name}_{self.fname.suffix}")
         # init the FoldChangeFilter object from an existing Series
-        fcfilt = FoldChangeFilter((new_fname, srs), numerator_name=numer_name, denominator_name=denom_name)
+        fcfilt = FoldChangeFilter.from_dataframe(srs, new_fname, numerator_name=numer_name, denominator_name=denom_name)
 
         return fcfilt
 
         pass
 
-    def pairplot(self, sample_list: list = 'all', log2: bool = True) -> sns.PairGrid:
+    def pairplot(self, samples: Union[List[str], Literal['all']] = 'all', log2: bool = True) -> sns.PairGrid:
 
         """
         Plot pairwise relationships in the dataset. \
         Can plot both single samples and average multiple replicates. \
         For more information see the documentation of seaborn.pairplot.
 
-        :type sample_list: 'all', list, or nested list.
-        :param sample_list: A list of the sample names and/or grouped sample names to be included in the pairplot. \
+        :type samples: 'all', list, or nested list.
+        :param samples: A list of the sample names and/or grouped sample names to be included in the pairplot. \
         All specified samples must be present in the CountFilter object. \
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
@@ -2051,10 +2164,10 @@ class CountFilter(Filter):
            Example plot of pairplot()
 
         """
-        if sample_list == 'all':
+        if samples == 'all':
             sample_df = self.df
         else:
-            sample_df = self._avg_subsamples(sample_list)
+            sample_df = self._avg_subsamples(samples)
 
         if log2:
             sample_df = np.log2(sample_df + 1)
@@ -2284,10 +2397,10 @@ class CountFilter(Filter):
 
     def split_kmeans(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                      max_iter: int = 300,
-                     random_seed: int = None, power_transform: bool = False,
+                     random_seed: Union[int, None] = None, power_transform: bool = True,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                     split_plots: bool = False, max_n_clusters_estimate: int = 'auto'
-                     ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                     split_plots: bool = False, max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                     gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-means clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -2297,7 +2410,7 @@ class CountFilter(Filter):
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
-        :type random_seed: int or None (default=None)
+        :type random_seed: Union[int, None] or None (default=None)
         :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
         The final results will be the best output of n_init consecutive runs in terms of inertia.
         :type n_init: int (default=3)
@@ -2305,7 +2418,7 @@ class CountFilter(Filter):
         :type max_iter: int (default=300)
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -2345,43 +2458,53 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_kmeans(plot_style='all')
+
+         .. figure::  clustering_PCA_kmeans.png
+           :align:   center
+
+           Example plot of split_kmeans()
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                          max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style,
                                          split_plots)
-        clusterers = runner.run()
+        clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
             # split the CountFilter object
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                     suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
+                                     suffix=f'_kmeanscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length
-        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return (return_val, runner) if gui_mode else return_val
 
-    def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette'], None],
-                           metric: str = 'euclidean',
-                           linkage: str = 'average', power_transform: bool = False, distance_threshold: float = None,
+    def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
+                           metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
+                                           'L1', 'L2', 'Jackknife', 'YS1', 'YR1'] = 'Euclidean',
+                           linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
+                           power_transform: bool = True,
+                           distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                           max_n_clusters_estimate: int = 'auto'
-                           ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                           max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                           gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
         based on the clustering result.
 
-        :param n_clusters: The number of clusters the algorithm will seek.
-        :type n_clusters: int, list of ints, 'gap', or 'slihouette'
+        :param n_clusters: The number of clusters the algorithm will seek. If set to 'distance', \
+        the algorithm will derive the number of clusters from the distance threshold (see 'distance_threshold').
+        :type n_clusters: int, list of ints, 'gap', 'slihouette', or 'distance'
         :param metric: the distance metric used to determine similarity between data points. \
-        If linkage is 'ward', only the 'euclidean' metric is accepted. \
+        If linkage is 'ward', only the 'Euclidean' metric is accepted. \
         For a full list of supported distance metrics see the user guide.
-        :type metric: 'euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default='euclidean')
+        :type metric: 'Euclidean', 'l1', 'l2', 'manhattan', or 'cosine',  (default='Euclidean')
         :param linkage: Which linkage criterion to use. The linkage criterion determines which distance to use between \
         sets of observation. The algorithm will merge the pairs of cluster that minimize this criterion.
-        :type linkage: 'single', 'average', 'complete', or 'ward' (default='average')
+        :type linkage: 'single', 'Average', 'complete', or 'ward' (default='Average')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param distance_threshold: a distance threshold above which clusters will not be merged. \
         If a number is specified, `n_clusters` must be None.
         :type distance_threshold: float or None (default=None)
@@ -2404,7 +2527,7 @@ class CountFilter(Filter):
             >>> dev_stages = filtering.CountFilter('tests/test_files/elegans_developmental_stages.tsv')
             >>> dev_stages.filter_low_reads(100)
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
-            >>> clusters = dev_stages.split_hierarchical(n_clusters=13, metric='euclidean',linkage='ward'
+            >>> clusters = dev_stages.split_hierarchical(n_clusters=13, metric='Euclidean',linkage='ward'
             ...                                         ,power_transform=True)
             Filtered 1718 features, leaving 608 of the original 2326 features. Filtering result saved to new object.
             Filtered 1979 features, leaving 347 of the original 2326 features. Filtering result saved to new object.
@@ -2424,11 +2547,16 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_hierarchical(plot_style='all')
+
+                   .. figure::  clustering_PCA_hierarchical.png
+           :align:   center
+
+           Example plot of split_hierarchical()
         """
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                                max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
                                                split_plots)
-        clusterers = runner.run()
+        clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
             # split the CountFilter object
@@ -2437,14 +2565,18 @@ class CountFilter(Filter):
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(this_n_clusters)]))
         # if only a single K was calculated, don't return it as a list of length
-        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return (return_val, runner) if gui_mode else return_val
 
     def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                        max_iter: int = 300,
-                       random_seed: int = None, metric: str = 'euclidean', power_transform: bool = False,
+                       random_seed: Union[int, None] = None,
+                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
+                                                  'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
+                       power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                       max_n_clusters_estimate: int = 'auto'
-                       ) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                       max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                       gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -2454,7 +2586,7 @@ class CountFilter(Filter):
         :type n_clusters: int, list of ints, 'gap', or 'slihouette'
         :param random_seed: determines random number generation for centroid initialization. \
         Use an int to make the randomness deterministic.
-        :type random_seed: int or None (default=None)
+        :type random_seed: Union[int, None] or None (default=None)
         :param n_init: number of time the k-medoids algorithm will be run with different medoid seeds. \
         The final results will be the best output of n_init consecutive runs in terms of inertia.
         :type n_init: int (default=3)
@@ -2462,10 +2594,10 @@ class CountFilter(Filter):
         :type max_iter: int (default=300)
         :param metric: the distance metric used to determine similarity between data points. \
         For a full list of supported distance metrics see the user guide.
-        :type metric: str (default='euclidean')
+        :type metric: str (default='Euclidean')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -2505,11 +2637,16 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_kmedoids(plot_style='all')
+
+        .. figure::  clustering_PCA_kmedoids.png
+           :align:   center
+
+           Example plot of split_kmedoids()
         """
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                            max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
                                            split_plots)
-        clusterers = runner.run()
+        clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
             # split the CountFilter object
@@ -2517,13 +2654,13 @@ class CountFilter(Filter):
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
         # if only a single K was calculated, don't return it as a list of length 1
-        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        return (return_val, runner) if gui_mode else return_val
 
-    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, List[bool]] = False,
+    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                     split_plots: bool = False
-                     ) -> Tuple['CountFilter']:
+                     split_plots: bool = False, gui_mode: bool = False) -> Tuple['CountFilter']:
         """
         Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
         (Mimaroglu and Yagci 2012), \
@@ -2539,9 +2676,8 @@ class CountFilter(Filter):
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering. If both True and False are supplied, \
         RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
-        :type power_transform: True, False, or [True, False] (default=False)
-        :param evidence_threshold: Determines the Evidence Threshold that determines \
-        whether each pair of features can be reliably clustered together. \
+        :type power_transform: True, False, or (True, False) (default=True)
+        :param evidence_threshold: determines whether each pair of features can be reliably clustered together. \
         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if \
         they were clustered together in at least 50% of the tested clustering solutions.
         :type evidence_threshold: float between 0 and 1 (default=2/3)
@@ -2559,9 +2695,9 @@ class CountFilter(Filter):
         for each of the clustering algorithm's parameters. \
         Yoy can specify a list of values for each of those parameters, \
         and then RNAlysis will run the clustering algorithm with all legal combinations of parameters you specified. \
-        For example, {'method':'k-medoids', 'n_clusters':[3,5], 'metric':['euclidean', 'cosine']} \
+        For example, {'method':'k-medoids', 'n_clusters':[3,5], 'metric':['Euclidean', 'cosine']} \
         will run the K-Medoids algorithm four times with the following parameter combinations: \
-        (n_clusters=3,metric='euclidean'), (n_clusters=5, metric='euclidean'), \
+        (n_clusters=3,metric='Euclidean'), (n_clusters=5, metric='Euclidean'), \
         (n_clusters=3, metric='cosine'), (n_clusters=5, metric='cosine').
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
@@ -2578,7 +2714,7 @@ class CountFilter(Filter):
             Filtered 44072 features, leaving 2326 of the original 46398 features. Filtered inplace.
             >>> clusters = dev_stages.split_clicom(
             ... {'method': 'hdbscan', 'min_cluster_size': [50, 75, 140], 'metric': ['ys1', 'yr1', 'spearman']},
-            ... {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['euclidean', 'jackknife', 'yr1'],
+            ... {'method': 'hierarchical', 'n_clusters': [7, 12], 'metric': ['Euclidean', 'jackknife', 'yr1'],
             ... 'linkage': ['average', 'ward']}, {'method': 'kmedoids', 'n_clusters': [7, 16], 'metric': 'spearman'},
             ... power_transform=True, evidence_threshold=0.5, min_cluster_size=40)
             Found 19 legal clustering setups.
@@ -2607,12 +2743,17 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_clicom(plot_style='all')
+
+         .. figure::  clustering_PCA_clicom.png
+           :align:   center
+
+           Example plot of split_clicom()
         """
         runner = clustering.CLICOMRunner(self.df.loc[:, self._numeric_columns], power_transform, evidence_threshold,
                                          cluster_unclustered_features, min_cluster_size,
                                          *parameter_dicts, plot_style=plot_style, split_plots=split_plots)
-        [clusterer] = runner.run()
-        n_clusters = clusterer.labels_.max() + 1
+        [clusterer] = runner.run(plot=not gui_mode)
+        n_clusters = clusterer.n_clusters_
         if n_clusters == 0:
             print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
         else:
@@ -2625,13 +2766,16 @@ class CountFilter(Filter):
         filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                          suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)])
 
-        return filt_objs
+        return_val = filt_objs
+        return (return_val, runner) if gui_mode else return_val
 
-    def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1, metric: str = 'euclidean',
+    def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
+                      metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
+                                                 'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
-                      power_transform: bool = False, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                      split_plots: bool = False, return_probabilities: bool = False
-                      ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]]]:
+                      power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
+                      split_plots: bool = False, return_probabilities: bool = False, gui_mode: bool = False
+                      ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]], None]:
         """
         Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -2647,7 +2791,7 @@ class CountFilter(Filter):
         :type min_samples: int or None (default=1)
         :param metric: the distance metric used to determine similarity between data points. \
         For a full list of supported distance metrics see the user guide.
-        :type metric: str (default='euclidean')
+        :type metric: str (default='Euclidean')
         :param cluster_selection_epsilon: a distance threshold below which clusters will be merged.
         :type cluster_selection_epsilon: float (default=0.0)
         :param cluster_selection_method: The method used to select clusters from the condensed tree. \
@@ -2656,7 +2800,7 @@ class CountFilter(Filter):
         :type cluster_selection_method: 'eom' or 'leaf' (default='eom')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering.
-        :type power_transform: bool (default=False)
+        :type power_transform: bool (default=True)
         :param plot_style: determines the visual style of the cluster expression plot.
         :type plot_style: 'all', 'std_area', or 'std_bar' (default='all')
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
@@ -2696,6 +2840,11 @@ class CountFilter(Filter):
            :align:   center
 
            Example plot of split_hdbscan(plot_style='all')
+
+        .. figure::  clustering_PCA_hdbscan.png
+           :align:   center
+
+           Example plot of split_hdbscan()
            """
         validation.validate_hdbscan_parameters(min_cluster_size, metric, cluster_selection_method, self.shape[0])
 
@@ -2703,9 +2852,12 @@ class CountFilter(Filter):
                                           min_samples, metric, cluster_selection_epsilon, cluster_selection_method,
                                           return_probabilities, plot_style, split_plots)
         if return_probabilities:
-            [clusterer], probabilities = runner.run()
+            [clusterer], probabilities = runner.run(plot=not gui_mode)
         else:
-            [clusterer] = runner.run()
+            [clusterer] = runner.run(plot=not gui_mode)
+
+        if clusterer is None: return  # if hdbscan is not installed, the runner will return None
+
         n_clusters = clusterer.labels_.max() + 1
         if n_clusters == 0:
             print("Found 0 clusters with the given parameters. Please try again with different parameters. ")
@@ -2720,10 +2872,12 @@ class CountFilter(Filter):
                                          suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
 
         # noinspection PyUnboundLocalVariable
-        return [filt_objs, probabilities] if return_probabilities else filt_objs
+        return_val = [filt_objs, probabilities] if return_probabilities else filt_objs
+        return (return_val, runner) if gui_mode else return_val
 
-    def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'euclidean',
-                    linkage: str = 'average'):
+    def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'Euclidean',
+                    linkage: Literal[
+                        'Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'] = 'Average'):
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
@@ -2731,7 +2885,7 @@ class CountFilter(Filter):
         :param sample_names: the names of the relevant samples in a list. \
         Example input: ["condition1_rep1", "condition1_rep2", "condition1_rep3", \
         "condition2_rep1", "condition3_rep1", "condition3_rep2"]
-        :type metric: 'euclidean', 'hamming', 'correlation', or any other \
+        :type metric: 'Euclidean', 'hamming', 'correlation', or any other \
         distance metric available in scipy.spatial.distance.pdist
         :param metric: the distance metric to use in the clustergram. \
         For all possible inputs and their meaning see scipy.spatial.distance.pdist documentation online.
@@ -2750,11 +2904,14 @@ class CountFilter(Filter):
 
         """
         assert isinstance(metric, str) and isinstance(linkage, str), "Linkage and Metric must be strings!"
+        metric = metric.lower()
+        linkage = linkage.lower()
         metrics = ['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation', 'cosine', 'dice', 'euclidean',
                    'hamming', 'jaccard', 'jensenshannon', 'kulsinski', 'mahalanobis', 'matching', 'minkowski',
-                   'rogerstanimoto', 'russellrao', 'seuclidean', 'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
+                   'rogerstanimoto', 'russellrao', 'sEuclidean', 'sokalmichener', 'sokalsneath', 'sqEuclidean', 'yule']
         linkages = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
-        assert metric in metrics and linkage in linkages
+        assert metric in metrics, f"Invalid metric {metric}."
+        assert linkage in linkages, f"Invalid linkage {linkage}."
 
         if sample_names == 'all':
             sample_names = list(self.df.columns)
@@ -2766,21 +2923,18 @@ class CountFilter(Filter):
         return clustergram
 
     def plot_expression(self, features: Union[List[str], str],
-                        sample_grouping: Union[Dict[str, List[int]], Dict[str, List[str]]],
+                        samples: Union[List[str], Literal['all']] = 'all',
                         count_unit: str = 'Reads per million') -> plt.Figure:
         """
         Plot the average expression and standard error of the specified features under the specified conditions.
 
         :type features: str or list of strings
         :param features: the feature/features to plot expression for.
-        :type sample_grouping: dict, with condition names as keys \
-        and list of the sample numbers or names for each condition as a list
-        :param sample_grouping: a dictionary of the conditions to plot expression for. \
-        Each key should be a name of a conditions, and the value for each key is \
-        a list of the numbers of columns to be used as samples of that condition. \
-        For example, if the first 3 columns are replicates of the condition 'condition 1' and \
-        the last 3 column are replicates of the condition 'condition 2', then sample_grouping should be: \
-        {'condition 1':[0, 1, 2], 'condition 2':[3, 4, 5]}
+        :param samples: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the CountFilter object. \
+        To average multiple replicates of the same condition, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :type count_unit: str, default 'Reads per million'
         :param count_unit: The unit of the count data. Will be displayed in the y axis.
 
@@ -2792,9 +2946,23 @@ class CountFilter(Filter):
 
         """
         plt.style.use('seaborn-white')
-        if isinstance(features, str):
-            features = [features]
-        assert isinstance(features, list), "'features' must be a string or list of strings!"
+        features = parsing.data_to_list(features)
+        assert validation.isinstanceiter(features, str), "'features' must be a string or list of strings!"
+        for feature in features:
+            assert feature in self.df.index, f"Supplied feature '{feature}' does not appear in this table. "
+
+        if isinstance(samples, str) and samples.lower() == 'all':
+            samples = [[item] for item in self.columns]
+        else:
+            samples = samples.copy()
+
+        for i in range(len(samples)):
+            if not isinstance(samples[i], list):
+                samples[i] = parsing.data_to_list(samples[i])
+            if not validation.isinstanceiter(samples[i], str):
+                for j in range(len(samples[i])):
+                    samples[i][j] = self.columns[samples[i][j]]
+        sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]
 
         g = strategies.SquareStrategy()
         subplots = g.get_grid(len(features))
@@ -2804,23 +2972,24 @@ class CountFilter(Filter):
         ylims = []
         for subplot, feature in zip(subplots, features):
             axes.append(fig.add_subplot(subplot))
-            mean = [self.df.loc[feature].iloc[ind].mean() if np.all([isinstance(i, int) for i in ind]) else
-                    self.df.loc[feature][ind].mean()
-                    for ind in sample_grouping.values()]
-            sem = [self.df.loc[feature].iloc[ind].sem() if np.all([isinstance(i, int) for i in ind]) else
-                   self.df.loc[feature][ind].sem() for
-                   ind in sample_grouping.values()]
-            points_y = parsing.flatten([self.df.loc[feature].iloc[ind] if np.all([isinstance(i, int) for i in ind]) else
-                                        [self.df.loc[feature][ind]] for ind in sample_grouping.values()])
+            mean = [self.df.loc[feature].iloc[ind].mean() if validation.isinstanceiter(ind, int) else
+                    self.df.loc[feature, ind].mean() for ind in samples]
+
+            sem = [self.df.loc[feature].iloc[ind].sem() if validation.isinstanceiter(ind, int) else
+                   self.df.loc[feature, ind].sem() for ind in samples]
+
+            points_y = parsing.flatten(
+                [[self.df.loc[feature].iloc[i] for i in ind] if validation.isinstanceiter(ind, int) else
+                 [self.df.loc[feature, i] for i in ind] for ind in samples])
             points_x = []
-            for i, grouping in enumerate(sample_grouping.values()):
+            for i, grouping in enumerate(samples):
                 for _ in grouping:
                     points_x.append(i)
-            axes[-1].bar(np.arange(len(sample_grouping)), mean, yerr=sem, edgecolor='k', width=0.5,
+            axes[-1].bar(np.arange(len(samples)), mean, yerr=sem, edgecolor='k', width=0.5,
                          facecolor='slateblue', capsize=6.5, error_kw=dict(capthick=2, lw=2))
             axes[-1].scatter(points_x, points_y, edgecolor='k', facecolor=[0.90, 0.6, 0.25], linewidths=0.9)
-            axes[-1].set_xticks(np.arange(len(sample_grouping)))
-            axes[-1].set_xticklabels(list(sample_grouping.keys()), fontsize=12)
+            axes[-1].set_xticks(np.arange(len(samples)))
+            axes[-1].set_xticklabels(list(sample_names), fontsize=12)
             axes[-1].set_title(feature, fontsize=16)
             plt.ylabel(count_unit, fontsize=14)
             sns.despine()
@@ -2831,30 +3000,23 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def pca(self, sample_names: Union[List[str], Literal['all']] = 'all', n_components: int = 3,
-            power_transform: bool = False, sample_grouping: list = None,
-            labels: bool = True) -> Tuple[PCA, List[plt.Figure]]:
+    def pca(self, samples: Union[List[str], Literal['all']] = 'all', n_components: int = 3,
+            power_transform: bool = True, labels: bool = True, label_fontsize: int = 16) -> Tuple[
+        PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
-         variance between the different samples. The function will automatically plot Principal Component #1 \
-         with every other Principal Components calculated.
+        variance between the different samples. The function will automatically plot Principal Component #1 \
+        with every other Principal Components calculated.
+        :type samples: 'all' or list.
+        :param samples: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the CountFilter object. \
+        To draw multiple replicates of the same condition in the same color, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
-        :type power_transform: bool (default=False)
-        :type sample_names: 'all' or list.
-        :param sample_names: the names of the relevant samples in a list. \
-        Example input: ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"]
+        :type power_transform: bool (default=True)
         :type n_components: positive int (default=3)
         :param n_components: number of PCA components to return.
-        :type sample_grouping: list of positive integers, 'triplicates' or None (default)
-        :param sample_grouping: Optional. Indicates which samples are grouped together as replicates, \
-        so they will be colored similarly in the PCA plot. A list of indices from 1 and up, that indicates the sample \
-         grouping. \
-         For example, if sample_names is: \
-        ["1_REP_A", "1_REP_B", "1_REP_C", "2_REP_A", "2_REP_B", "2_REP_C", "2_REP_D", "3_REP_A"], \
-        then the sample_grouping will be: \
-        [1, 1, 1, 2, 2, 2, 2, 3]. \
-        If 'triplicate', then sample_groupins will automatically group samples into triplicates. For example: \
-        [1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4].
         :type labels: bool (default=True)
         :param labels: if True, labels the points on the PCA plot.
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
@@ -2869,9 +3031,9 @@ class CountFilter(Filter):
         """
         assert isinstance(n_components, int) and n_components >= 2, \
             f"'n_components' must be an integer >=2. Instead got {n_components}."
-        if sample_names == 'all':
-            sample_names = list(self._numeric_columns)
-        data = self.df[sample_names].transpose()
+        if samples == 'all':
+            samples = [[col] for col in self._numeric_columns]
+        data = self.df[parsing.flatten(samples)].transpose()
         data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
 
         pca_obj = PCA(n_components=n_components)
@@ -2879,7 +3041,7 @@ class CountFilter(Filter):
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
         principal_df = pd.DataFrame(data=pcomps, columns=columns)
         final_df = principal_df
-        final_df['lib'] = pd.Series(sample_names)
+        final_df['lib'] = pd.Series(parsing.flatten(samples))
 
         pc_var = pca_obj.explained_variance_ratio_
         graphs = 2 if n_components > 2 else 1
@@ -2887,32 +3049,32 @@ class CountFilter(Filter):
         for graph in range(graphs):
             figs.append(CountFilter._plot_pca(
                 final_df=final_df[['Principal component 1', f'Principal component {2 + graph}', 'lib']],
-                pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=sample_grouping, labels=labels))
+                pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=samples, labels=labels,
+                label_fontsize=label_fontsize))
 
         return pca_obj, figs
 
     @staticmethod
-    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool):
+    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool,
+                  label_fontsize: int):
         """
         Internal method, used to plot the results from CountFilter.pca().
 
         :param final_df: The DataFrame output from pca
         :param pc1_var: Variance explained by the first PC.
         :param pc2_var: Variance explained by the second PC.
-        :param sample_grouping: a list of indices from 0 and up, that indicates what samples are grouped together as \
-        biological replicates. For example, if sample_names is: \
-        ["1A_N2_25", "1B_N2_25", "1C_N2_25", "2A_rde4_25", "2B_rde4_25", "2C_rde4_25"], \
-        then the sample_grouping will be: \
-        [0,0,0,1,1,1]
+        :param sample_grouping: A list of the sample names and/or grouped sample names to be plotted. \
+        All specified samples must be present in the DataFrame object. \
+        To draw multiple replicates of the same condition in the same color, they can be grouped in an inner list. \
+        Example input: \
+        [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :return: an axis object containing the PCA plot.
 
         """
         plt.style.use('seaborn-whitegrid')
 
-        if sample_grouping is None:
-            sample_grouping = [i + 1 for i in range(final_df.shape[0])]
-        elif sample_grouping == 'triplicate' or sample_grouping == 'triplicates':
-            sample_grouping = [1 + i // 3 for i in range(final_df.shape[0])]
+        # elif sample_grouping == 'triplicate' or sample_grouping == 'triplicates':
+        #     sample_grouping = [1 + i // 3 for i in range(final_df.shape[0])]
 
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
@@ -2922,20 +3084,25 @@ class CountFilter(Filter):
         ax.set_title('PCA', fontsize=20)
 
         color_generator = generic.color_generator()
-        color_opts = [next(color_generator) for _ in range(max(sample_grouping))]
-        colors = [color_opts[i - 1] for i in sample_grouping]
+        color_opts = [next(color_generator) for _ in range(len(sample_grouping))]
+        colors = parsing.flatten(
+            [[color_opts[i]] * len(parsing.data_to_list(grp)) for i, grp in enumerate(sample_grouping)])
 
         ax.scatter(final_df.iloc[:, 0], final_df.iloc[:, 1], c=colors, s=50)
         if labels:
-            for _, row in final_df.iterrows():
-                row[0] += 1
-                row[1] += 1
-                ax.text(*row)
+            for i, (_, row) in enumerate(final_df.iterrows()):
+                # row[0] += 1
+                # row[1] += 1
+                ax.annotate(row[2], (row[0], row[1]), textcoords='offset pixels',
+                            xytext=(label_fontsize, label_fontsize),
+                            fontsize=label_fontsize, color=colors[i])
         ax.grid(True)
         return fig
 
     def scatter_sample_vs_sample(self, sample1: Union[str, List[str]], sample2: Union[str, List[str]],
-                                 xlabel: str = None, ylabel: str = None, title: str = None,
+                                 xlabel: Union[str, Literal['auto']] = 'auto',
+                                 ylabel: Union[str, Literal['auto']] = 'auto',
+                                 title: Union[str, Literal['auto']] = 'auto',
                                  highlight: Union['Filter', Iterable[str]] = None) -> plt.Figure:
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
@@ -2948,11 +3115,11 @@ class CountFilter(Filter):
         If sample2 is a list, they will be averaged as replicates.
         :type sample2: string or list of strings
         :param xlabel: optional. If not specified, sample1 will be used as xlabel.
-        :type xlabel: str
+        :type xlabel: str or 'auto'
         :param ylabel: optional. If not specified, sample2 will be used as ylabel.
-        :type ylabel: str
+        :type ylabel: str or 'auto'
         :param title: optional. If not specified, a title will be generated automatically.
-        :type title: str
+        :type title: str or 'auto'
         :param highlight: If specified, the points in the scatter corresponding to the names/features in 'highlight' \
         will be highlighted in red.
         :type highlight: Filter object or iterable of strings
@@ -2967,7 +3134,7 @@ class CountFilter(Filter):
 
         """
         self._validate_is_normalized()
-        assert isinstance(sample1, (str, list, tuple, set)) and isinstance(sample2, (str, list, tuple, set))
+        sample1, sample2 = parsing.data_to_list(sample1), parsing.data_to_list(sample2)
 
         xvals = np.log10(self.df[sample1].values + 1) if isinstance(sample1, str) else np.log10(
             self.df[sample1].mean(axis=1).values + 1)
@@ -2975,11 +3142,11 @@ class CountFilter(Filter):
             self.df[sample2].mean(axis=1).values + 1)
 
         plt.style.use('seaborn-whitegrid')
-        if xlabel is None:
-            xlabel = f'log10(reads per million + 1) from library {sample1}'
-        if ylabel is None:
-            ylabel = f'log10(reads per million + 1) from sample {sample2}'
-        if title is None:
+        if xlabel.lower() == 'auto':
+            xlabel = f'log10(reads per million + 1) from {sample1}'
+        if ylabel.lower() == 'auto':
+            ylabel = f'log10(reads per million + 1) from {sample2}'
+        if title.lower() == 'auto':
             title = f'{sample1} vs {sample2}'
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
@@ -3007,8 +3174,8 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def box_plot(self, samples: Union[List[str], Literal['all']] = 'all', notch: bool = True, scatter: bool = False,
-                 ylabel: str = 'log10(RPM + 1)'):
+    def box_plot(self, samples: Union[List[List[str]], Literal['all']] = 'all', notch: bool = True,
+                 scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
         Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -3046,9 +3213,11 @@ class CountFilter(Filter):
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
 
-        box = sns.boxplot(data=np.log10(samples_df + 1), notch=notch)
+        color_gen = generic.color_generator()
+        palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
+        box = sns.boxplot(data=np.log10(samples_df + 1), notch=notch, palette=palette)
         if scatter:
-            _ = sns.stripplot(data=np.log10(samples_df + 1), color='gray', size=2)
+            _ = sns.stripplot(data=np.log10(samples_df + 1), color=(0.25, 0.25, 0.25), size=3)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
@@ -3091,9 +3260,12 @@ class CountFilter(Filter):
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
 
-        boxen = sns.boxenplot(data=samples_df)
+        color_gen = generic.color_generator()
+        palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
+
+        boxen = sns.boxenplot(data=samples_df, palette=palette)
         if scatter:
-            _ = sns.stripplot(data=samples_df, color='gray', size=2)
+            _ = sns.stripplot(data=samples_df, color=(0.25, 0.25, 0.25), size=3)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
@@ -3134,8 +3306,10 @@ class CountFilter(Filter):
 
         samples_df = np.log10(samples_df + 1)
         _ = plt.figure(figsize=(8, 8))
+        color_gen = generic.color_generator()
+        palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
 
-        violin = sns.violinplot(data=samples_df)
+        violin = sns.violinplot(data=samples_df, palette=palette)
         plt.style.use('seaborn-whitegrid')
         plt.xlabel("Samples")
         plt.ylabel(ylabel)
@@ -3212,7 +3386,7 @@ class CountFilter(Filter):
             io.save_csv(df=uncounted, filename=uncounted_fname)
 
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
-        count_filter_obj = cls((Path(fname), counts))
+        count_filter_obj = cls.from_dataframe(counts, Path(fname))
         if norm_to_rpm:
             count_filter_obj.normalize_to_rpm(uncounted)
         return count_filter_obj
@@ -3234,6 +3408,9 @@ class Pipeline:
     """
     __slots__ = {'functions': 'list of functions to perform', 'params': 'list of function parameters',
                  'filter_type': 'type of filter objects to which the Pipeline can be applied'}
+    FILTER_TYPES = {'filter': Filter, 'deseqfilter': DESeqFilter, 'foldchangefilter': FoldChangeFilter,
+                    'countfilter': CountFilter}
+    FILTER_TYPES_REV = {val: key for key, val in FILTER_TYPES.items()}
 
     def __init__(self, filter_type: Union[str, 'Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'] = Filter):
         """
@@ -3249,15 +3426,13 @@ class Pipeline:
         self.functions = []
         self.params = []
 
-        filter_types = {'filter': Filter, 'deseqfilter': DESeqFilter, 'foldchangefilter': FoldChangeFilter,
-                        'countfilter': CountFilter}
         assert isinstance(filter_type,
                           (type, str)), f"'filter_type' must be type of a Filter object, is instead {type(filter_type)}"
         if isinstance(filter_type, str):
-            assert filter_type.lower() in filter_types, f"Invalid filter_type {filter_type}. "
-            filter_type = filter_types[filter_type.lower()]
+            assert filter_type.lower() in self.FILTER_TYPES, f"Invalid filter_type {filter_type}. "
+            filter_type = self.FILTER_TYPES[filter_type.lower()]
         else:
-            assert filter_type in filter_types.values(), f"Invalid filter_type {filter_type}"
+            assert filter_type in self.FILTER_TYPES.values(), f"Invalid filter_type {filter_type}"
         self.filter_type = filter_type
 
     def __str__(self):
@@ -3276,6 +3451,50 @@ class Pipeline:
 
     def __len__(self):
         return len(self.functions)
+
+    def __eq__(self, other):
+        if self.filter_type == other.filter_type and self.functions == other.functions and self.params == other.params:
+            return True
+        return False
+
+    def export_pipeline(self, filename: Union[str, Path, None]) -> Union[None, str]:
+        """
+        Export a Pipeline to a Pipeline YAML file or YAML-like string.
+
+        :param filename: filename to save the Pipeline YAML to, or None to return a YAML-like string instead.
+        :type filename: str, pathlib.Path, or None
+        :return: if filename is None, returns the Pipeline YAML-like string.
+        """
+        pipeline_dict = dict(filter_type=self.FILTER_TYPES_REV[self.filter_type], functions=[], params=[])
+        for func, params in zip(self.functions, self.params):
+            pipeline_dict['functions'].append(func.__name__)
+            pipeline_dict['params'].append(params)
+        if filename is None:
+            return yaml.safe_dump(pipeline_dict)
+        else:
+            with open(filename, 'w') as f:
+                yaml.safe_dump(pipeline_dict, f)
+
+    @classmethod
+    def import_pipeline(cls, filename: Union[str, Path]) -> 'Pipeline':
+        """
+        Import a Pipeline from a Pipeline YAML file or YAML-like string.
+
+        :param filename: name of the YAML file containing the Pipeline, or a YAML-like string.
+        :type filename: str or pathlib.Path
+        :return: the imported Pipeline
+        :rtype: Pipeline
+        """
+        try:
+            with open(filename) as f:
+                pipeline_dict = yaml.safe_load(f)
+        except OSError:
+            pipeline_dict = yaml.safe_load(filename)
+        pipeline = cls.__new__(cls)
+        pipeline.filter_type = cls.FILTER_TYPES[pipeline_dict['filter_type']]
+        pipeline.params = [(parsing.data_to_tuple(p[0]), p[1]) for p in pipeline_dict['params']]
+        pipeline.functions = [getattr(pipeline.filter_type, func) for func in pipeline_dict['functions']]
+        return pipeline
 
     @staticmethod
     def _param_string(args: tuple, kwargs: dict):
@@ -3540,6 +3759,7 @@ class Pipeline:
                                              f"mismatches the specified filter_type {self.filter_type}. "
         assert len(self.functions) > 0 and len(self.params) > 0, "Cannot apply an empty pipeline!"
 
+        original_filter_obj = copy.copy(filter_object)
         other_outputs = dict()
         other_cnt = dict()
         # iterate over all functions and arguments
@@ -3554,9 +3774,10 @@ class Pipeline:
                 self._apply_other(func, filter_object, args, kwargs, other_outputs, other_cnt)
 
         if not inplace or isinstance(filter_object, tuple):
-            if len(other_outputs) > 0:
-                return filter_object, other_outputs
-            return filter_object
+            if filter_object != original_filter_obj:
+                if len(other_outputs) > 0:
+                    return filter_object, other_outputs
+                return filter_object
         if len(other_outputs) > 0:
             return other_outputs
 

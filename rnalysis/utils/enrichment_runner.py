@@ -1,31 +1,42 @@
 import collections
+import io as builtin_io
 import itertools
 import logging
+import queue
 import warnings
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
 
-import io as builtin_io
-import matplotlib.image as mpimg
+import graphviz
 import joblib
+import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import numba
 import numpy as np
 import pandas as pd
-import graphviz
-import queue
 import statsmodels.stats.multitest as multitest
 from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
-import xlmhg
-from xlmhg import get_xlmhg_test_result as xlmhg_test
 
-from rnalysis.utils import ontology, io, parsing, ref_tables, validation, generic
+from rnalysis.utils import ontology, io, parsing, settings, validation, generic
 
-logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
+try:
+    import xlmhg
+
+    logging.getLogger('xlmhg').setLevel(50)  # suppress warnings from xlmhg module
+    HAS_XLMHG = True
+except ImportError:
+    HAS_XLMHG = False
+
+
+    class xlmhg:
+        class mHGResult:
+            pass
+
+        def get_xlmhg_test_result(self):
+            pass
 
 
 class EnrichmentRunner:
@@ -66,7 +77,7 @@ class EnrichmentRunner:
         self.gene_set = parsing.data_to_set(genes)
         self.attributes = attributes
         self.alpha = alpha
-        self.attr_ref_path = ref_tables.get_attr_ref_path(attr_ref_path)
+        self.attr_ref_path = settings.get_attr_ref_path(attr_ref_path)
         self.return_nonsignificant = return_nonsignificant
         self.save_csv = save_csv
 
@@ -81,6 +92,8 @@ class EnrichmentRunner:
         self.set_name = set_name
         self.parallel = parallel
         self.enrichment_func = self._get_enrichment_func(enrichment_func_name)
+        if not self.enrichment_func:
+            return
         self.pvalue_kwargs = pvalue_kwargs
         self.single_set = single_set
         if self.single_set:
@@ -105,7 +118,7 @@ class EnrichmentRunner:
             self.random_seed = random_seed
             self.biotypes = biotypes
             self.background_set = background_set
-            self.biotype_ref_path = ref_tables.get_biotype_ref_path(biotype_ref_path) if biotypes != 'all' else None
+            self.biotype_ref_path = settings.get_biotype_ref_path(biotype_ref_path) if biotypes != 'all' else None
             self.en_score_col = 'log2_fold_enrichment'
             self.ranked_genes = None
 
@@ -118,7 +131,9 @@ class EnrichmentRunner:
         runner.set_name = set_name
         return runner
 
-    def run(self) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+    def run(self, plot: bool = True) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+        if not self.enrichment_func:
+            return pd.DataFrame()
         self.fetch_annotations()
         self.fetch_attributes()
         if not self.single_set:
@@ -127,11 +142,13 @@ class EnrichmentRunner:
         self.filter_annotations()
         unformatted_results = self.calculate_enrichment()
         self.format_results(unformatted_results)
-        fig = self.plot_results()
         if self.save_csv:
             self.results_to_csv()
-        if self.return_fig:
-            return self.results, fig
+        if plot:
+            fig = self.plot_results()
+
+            if self.return_fig:
+                return self.results, fig
         return self.results
 
     def _update_ranked_genes(self):
@@ -180,7 +197,13 @@ class EnrichmentRunner:
         elif pval_func_name == 'hypergeometric':
             return self._hypergeometric_enrichment
         elif pval_func_name == 'xlmhg':
-            return self._xlmhg_enrichment
+            if HAS_XLMHG:
+                return self._xlmhg_enrichment
+            else:
+                warnings.warn(f"Package 'xlmhg' is not installed. \n"
+                              f"If you want to run single-set enrichment analysis, "
+                              f"please install package 'xlmhg' and try again. ")
+                return False
         else:
             raise ValueError(f"Unknown enrichment function '{pval_func_name}'.")
 
@@ -212,8 +235,8 @@ class EnrichmentRunner:
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(attribute)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
-        res_obj_fwd = xlmhg_test(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhg_test(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+        res_obj_fwd = xlmhg.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhg.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
         en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
         return [attribute, n, en_score, pval]
@@ -273,7 +296,7 @@ class EnrichmentRunner:
         return [attribute, de_size, obs, exp, log2_fold_enrichment, pval]
 
     @staticmethod
-    @numba.jit(nopython=True)
+    @generic.numba.jit(nopython=True)
     def _calc_randomization_pval(n: int, log2fc: float, bg_array: np.ndarray, reps: int, obs_frac: float) -> float:
         ind_range = np.arange(bg_array.shape[0])
         success = 0
@@ -434,6 +457,7 @@ class EnrichmentRunner:
             columns = ['name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
         self.results = pd.DataFrame(unformatted_results_list, columns=columns).set_index('name')
         self._correct_multiple_comparisons()
+
         # filter non-significant results
         if not self.return_nonsignificant:
             self.results = self.results[self.results['significant']]
@@ -489,7 +513,7 @@ class EnrichmentRunner:
 
         # choose functions and parameters according to the graph's orientation (horizontal vs vertical)
         if self.plot_horizontal:
-            figsize = [14, 0.4 * (6.4 + self.results.shape[0])]
+            figsize = [10.5, 0.4 * (4.8 + self.results.shape[0])]
             bar_func = plt.Axes.barh
             line_func = plt.Axes.axvline
             cbar_kwargs = dict(location='bottom')
@@ -499,7 +523,7 @@ class EnrichmentRunner:
             for lst in (enrichment_names, enrichment_scores, enrichment_pvalue):
                 lst.reverse()
         else:
-            figsize = [0.5 * (6.4 + self.results.shape[0]), 5.6]
+            figsize = [0.5 * (4.8 + self.results.shape[0]), 4.2]
             bar_func = plt.Axes.bar
             line_func = plt.Axes.axhline
             cbar_kwargs = dict(location='left')
@@ -514,7 +538,10 @@ class EnrichmentRunner:
         for i in range(len(enrichment_scores)):
             if enrichment_scores[i] == -np.inf:
                 enrichment_scores[i] = min(scores_no_inf)
-        max_score = max(np.max(np.abs(enrichment_scores)), 2)
+        if len(enrichment_scores) > 3:
+            max_score = max(np.max(np.abs(enrichment_scores)), 2)
+        else:
+            max_score = 2
 
         # get color values for bars
         data_color_norm = [0.5 * (1 + i / (np.floor(max_score) + 1)) * 255 for i in enrichment_scores]
@@ -621,7 +648,8 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         self.plot_style = plot_style
         self.n_bins = n_bins
         super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
-                         parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set=False)
+                         parallel,
+                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set=False)
 
     def _get_enrichment_func(self, pval_func_name: str):
         assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
@@ -729,6 +757,130 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         return fig
 
 
+class KEGGEnrichmentRunner(EnrichmentRunner):
+    __slots__ = {'organism': 'the organism name for which to fetch GO Annotations',
+                 'taxon_id': 'NCBI Taxon ID for which to fetch GO Annotations',
+                 'gene_id_type': 'the type of gene ID index that is used',
+                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
+                                          'statistically significant after enrichment analysis',
+                 'attributes_set': 'set of the attributes/KEGG Pathways for which enrichment should be calculated',
+                 'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values'}
+    KEGG_DF_QUERIES = {}
+    printout_params = "have any KEGG Annotations asocciated with them"
+
+    def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
+                 return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
+                 set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
+                 background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
+                 random_seed: int = None, **pvalue_kwargs):
+        super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
+                         set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
+                         single_set, random_seed, **pvalue_kwargs)
+        if not self.enrichment_func:
+            return
+        self.gene_id_type = gene_id_type
+        self.taxon_id, self.organism = self.get_taxon_id(organism)
+        self.pathway_names_dict: dict = {}
+
+    def get_taxon_id(self, organism: str):
+        if isinstance(organism, str) and organism.lower() == 'auto':
+            id_type = None if self.gene_id_type.lower() == 'auto' else self.gene_id_type
+            res, map_from = io.infer_taxon_from_gene_ids(self.gene_set, id_type)
+            if self.gene_id_type.lower() == 'auto':
+                self.gene_id_type = map_from
+            return res
+        else:
+            return io.map_taxon_id(organism)
+
+    def _get_annotation_iterator(self):
+        return io.KEGGAnnotationIterator(self.taxon_id)
+
+    def format_results(self, unformatted_results_list: list):
+        if self.single_set:
+            columns = ['KEGG ID', 'name', 'samples', self.en_score_col, 'pval']
+        else:
+            columns = ['KEGG ID', 'name', 'samples', 'obs', 'exp', self.en_score_col, 'pval']
+        named_results_list = [[entry[0], self.pathway_names_dict[entry[0]]] + entry[1:] for entry in
+                              unformatted_results_list]
+        self.results = pd.DataFrame(named_results_list, columns=columns).set_index('KEGG ID')
+        self._correct_multiple_comparisons()
+        # filter non-significant results
+        if not self.return_nonsignificant:
+            self.results = self.results[self.results['significant']]
+
+    def _correct_multiple_comparisons(self):
+        significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
+                                                    alpha=self.alpha, method='negcorr')
+        self.results.loc[self.results['pval'].notna(), 'padj'] = padj
+        self.results.loc[self.results['padj'].notna(), 'significant'] = significant
+
+    def fetch_annotations(self):
+        # check if annotations for the requested query were previously fetched and cached
+        query_key = self._get_query_key()
+        if query_key in self.KEGG_DF_QUERIES:
+            self.annotation_df, self.pathway_names_dict = self.KEGG_DF_QUERIES[query_key]
+            return
+        else:
+            self.annotation_df, self.pathway_names_dict = self._generate_annotation_df()
+            # save query results to KEGG_DF_QUERIES
+            self.KEGG_DF_QUERIES[query_key] = self.annotation_df, self.pathway_names_dict
+
+    def _generate_annotation_df(self) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        # fetch and process KEGG annotations
+        sparse_annotation_dict, pathway_name_dict = self._process_annotations()
+        print(f"Found annotations for {len(sparse_annotation_dict)} genes.")
+
+        # translate gene IDs
+        translated_sparse_annotation_dict = self._translate_gene_ids(sparse_annotation_dict)
+
+        # get boolean DataFrame for enrichment
+        annotation_df = parsing.sparse_dict_to_bool_df(translated_sparse_annotation_dict,
+                                                       progress_bar_desc="Generating Gene Ontology Referene Table")
+        annotation_df[~annotation_df] = np.nan
+        return annotation_df, pathway_name_dict
+
+    def _process_annotations(self) -> Tuple[Dict[str, Set[str]], Dict[str, str]]:
+        desc = f"Fetching KEGG annotations for organism '{self.organism}' (taxon ID:{self.taxon_id})"
+
+        sparse_annotation_dict = {}
+        pathway_name_dict = {}
+        annotation_iter = self._get_annotation_iterator()
+        assert annotation_iter.n_annotations > 0, "No KEGG annotations were found for the given parameters. " \
+                                                  "Please try again with a different set of parameters. "
+        for pathway_id, pathway_name, annotations in tqdm(annotation_iter, desc=desc,
+                                                          total=annotation_iter.n_annotations, unit=' annotations'):
+
+            pathway_name_dict[pathway_id] = pathway_name
+            # add annotation to annotation dictionary
+            for gene_id in annotations:
+                if gene_id not in sparse_annotation_dict:
+                    sparse_annotation_dict[gene_id] = (set())
+                sparse_annotation_dict[gene_id].add(pathway_id)
+
+        return sparse_annotation_dict, pathway_name_dict
+
+    def _translate_gene_ids(self, sparse_annotation_dict: dict):
+        source = 'KEGG'
+        translated_sparse_annotation_dict = {}
+        sparse_dict_cp = sparse_annotation_dict.copy()
+        if self.gene_id_type.lower() == 'auto':
+            translator, _, self.gene_id_type = io.find_best_gene_mapping(
+                parsing.data_to_tuple(sparse_annotation_dict.keys()), (source,), None)
+        else:
+            translator = io.map_gene_ids(parsing.data_to_list(sparse_annotation_dict.keys()), source, self.gene_id_type)
+        for gene_id in sparse_annotation_dict:
+            if gene_id in translator:
+                translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
+        return translated_sparse_annotation_dict
+
+    def _get_query_key(self):
+        return self.taxon_id, self.gene_id_type
+
+    def fetch_attributes(self):
+        self.attributes = parsing.data_to_list(self.annotation_df.columns)
+        self.attributes_set = parsing.data_to_set(self.attributes)
+
+
 class GOEnrichmentRunner(EnrichmentRunner):
     __slots__ = {'dag_tree': 'DAG tree containing the hierarchical structure of all GO Terms',
                  'mod_annotation_dfs': "Additional copies of 'annotation_df' which are "
@@ -744,6 +896,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  'excluded_databases': 'the ontology databases from which GO Annotations should NOT be fetched',
                  'qualifiers': 'the evidence types for which GO Annotations should be fetched',
                  'excluded_qualifiers': 'the evidence types for which GO Annotations should NOT be fetched',
+                 'return_nonsignificant': 'indicates whether to return results which were not found to be '
+                                          'statistically significant after enrichment analysis',
                  'plot_ontology_graph': 'indicates whether to plot ontology graph of the statistically significant GO Terms',
                  'ontology_graph_format': 'file format for the generated ontology graph',
                  'attributes_set': 'set of the attributes/GO Terms for which enrichment should be calculated'}
@@ -762,12 +916,15 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                         set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         single_set, random_seed, **pvalue_kwargs)
+                         set_name, parallel,
+                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
+                         **pvalue_kwargs)
+        if not self.enrichment_func:
+            return
         self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
-        self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.gene_id_type = gene_id_type
+        self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.aspects = aspects
         self.evidence_types = evidence_types
         self.excluded_evidence_types = excluded_evidence_types
@@ -791,7 +948,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def get_taxon_id(self, organism: str):
         if isinstance(organism, str) and organism.lower() == 'auto':
-            return io.infer_taxon_from_gene_ids(self.gene_set)
+            id_type = None if self.gene_id_type.lower() == 'auto' else self.gene_id_type
+            res, map_from = io.infer_taxon_from_gene_ids(self.gene_set, id_type)
+            if self.gene_id_type.lower() == 'auto':
+                self.gene_id_type = map_from
+            return res
         else:
             return io.map_taxon_id(organism)
 
@@ -865,11 +1026,15 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
     def _translate_gene_ids(self, sparse_annotation_dict: dict, source_to_gene_id_dict: dict):
         translated_sparse_annotation_dict = {}
+        sparse_dict_cp = sparse_annotation_dict.copy()
+        if self.gene_id_type.lower() == 'auto':
+            _, self.gene_id_type, _ = io.find_best_gene_mapping(parsing.data_to_tuple(self.gene_set), None,
+                                                                ('UniProtKB',))
         for source in source_to_gene_id_dict:
             translator = io.map_gene_ids(source_to_gene_id_dict[source], source, self.gene_id_type)
-            for gene_id in sparse_annotation_dict.copy():
+            for gene_id in sparse_dict_cp.copy():
                 if gene_id in translator:
-                    translated_sparse_annotation_dict[translator[gene_id]] = sparse_annotation_dict.pop(gene_id)
+                    translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
         return translated_sparse_annotation_dict
 
     def _get_query_key(self):
@@ -913,9 +1078,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
         aspects = ('biological_process', 'cellular_component',
                    'molecular_function') if self.aspects == 'any' else parsing.data_to_tuple(self.aspects)
         for go_aspect in aspects:
-            self._dag_plot_for_namespace(go_aspect, title, ylabel, dpi=dpi)
+            status = self._dag_plot_for_namespace(go_aspect, title, ylabel, dpi=dpi)
+            if not status:
+                return
 
-    def _dag_plot_for_namespace(self, namespace: str, title: str, ylabel: str, dpi: int = 300):
+    def _dag_plot_for_namespace(self, namespace: str, title: str, ylabel: str, dpi: int = 300) -> bool:
         # colormap
         scores_no_inf = [i for i in self.results[self.en_score_col] if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
@@ -968,8 +1135,12 @@ class GOEnrichmentRunner(EnrichmentRunner):
         while savepath.exists():
             i += 1
             savepath = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}_{i}.{self.ontology_graph_format}')
-        graph.render(savepath, view=True, format=self.ontology_graph_format)
-
+        try:
+            graph.render(savepath, view=True, format=self.ontology_graph_format)
+        except graphviz.backend.execute.ExecutableNotFound:
+            warnings.warn("You must install 'GraphViz' and add it to PATH in order to generate Ontology Graphs. \n"
+                          "Please see https://graphviz.org/download/ for more information. ")
+            return False
         # show graph in a matplotlib window
         png_str = graph.pipe(format='png')
         sio = builtin_io.BytesIO()
@@ -992,6 +1163,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
         cbar.ax.tick_params(labelsize=14, pad=6)
 
         plt.show()
+        return True
 
     def format_results(self, unformatted_results_dict: dict):
         if self.single_set:
@@ -1266,8 +1438,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
         index_vec, rev_index_vec = self._generate_xlmhg_index_vectors(go_id, mod_df_ind)
         n, X, L, table = self._get_xlmhg_parameters(index_vec)
 
-        res_obj_fwd = xlmhg_test(N=n, indices=index_vec, X=X, L=L, table=table)
-        res_obj_rev = xlmhg_test(N=n, indices=rev_index_vec, X=X, L=L, table=table)
+        res_obj_fwd = xlmhg.get_xlmhg_test_result(N=n, indices=index_vec, X=X, L=L, table=table)
+        res_obj_rev = xlmhg.get_xlmhg_test_result(N=n, indices=rev_index_vec, X=X, L=L, table=table)
 
         en_score, pval = self._extract_xlmhg_results(res_obj_fwd, res_obj_rev)
         return [go_name, n, en_score, pval]

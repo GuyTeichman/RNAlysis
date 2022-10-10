@@ -27,6 +27,7 @@
     DESeqFilter.filter_percentile
     DESeqFilter.filter_significant
     DESeqFilter.filter_top_n
+    DESeqFilter.from_dataframe
     DESeqFilter.head
     DESeqFilter.intersection
     DESeqFilter.majority_vote_intersection

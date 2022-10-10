@@ -1,0 +1,6 @@
+path:cel00010	Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)
+path:cel00020	Citrate cycle (TCA cycle) - Caenorhabditis elegans (nematode)
+path:cel00030	Pentose phosphate pathway - Caenorhabditis elegans (nematode)
+path:cel00040	Pentose and glucuronate interconversions - Caenorhabditis elegans (nematode)
+path:cel00051	Fructose and mannose metabolism - Caenorhabditis elegans (nematode)
+path:cel00052	Galactose metabolism - Caenorhabditis elegans (nematode)

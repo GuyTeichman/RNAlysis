@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter &mdash; RNAlysis 2.1.1 documentation</title>
+  <title>rnalysis.filtering.Filter &mdash; RNAlysis 3.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -44,6 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
@@ -73,6 +75,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_missing_values.html">rnalysis.filtering.Filter.filter_missing_values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_percentile.html">rnalysis.filtering.Filter.filter_percentile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html">rnalysis.filtering.Filter.filter_top_n</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html">rnalysis.filtering.Filter.from_dataframe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.head.html">rnalysis.filtering.Filter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html">rnalysis.filtering.Filter.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html">rnalysis.filtering.Filter.majority_vote_intersection</a></li>
@@ -127,11 +130,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="rnalysis-filtering-filter">
+  <section id="rnalysis-filtering-filter">
 <h1>rnalysis.filtering.Filter<a class="headerlink" href="#rnalysis-filtering-filter" title="Permalink to this headline"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="rnalysis.filtering.Filter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rnalysis.filtering.</span></span><span class="sig-name descname"><span class="pre">Filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rnalysis.filtering.</span></span><span class="sig-name descname"><span class="pre">Filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter" title="Permalink to this definition"></a></dt>
 <dd><p>An all-purpose Filter object.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
@@ -150,12 +153,13 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.Filter.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.__init__" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Filter.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Load a table.</p>
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>fname</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – full path/filename of the .csv file to be loaded into the Filter object</p></li>
-<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>False</em><em> (</em><em>default=False</em><em>)</em>) – if a string or list of strings are specified,         the columns of the same name/s will be dropped from the loaded DataFrame.</p></li>
+<li><p><strong>drop_columns</strong> (<em>str</em><em>, </em><em>list of str</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – if a string or list of strings are specified,         the columns of the same name/s will be dropped from the loaded table.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Examples</dt>
@@ -199,51 +203,54 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_top_n.html#rnalysis.filtering.Filter.filter_top_n" title="rnalysis.filtering.Filter.filter_top_n"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_top_n</span></code></a>(by[, n, ascending, ...])</p></td>
 <td><p>Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.head.html#rnalysis.filtering.Filter.head" title="rnalysis.filtering.Filter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.head</span></code></a>([n])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.from_dataframe.html#rnalysis.filtering.Filter.from_dataframe" title="rnalysis.filtering.Filter.from_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.from_dataframe</span></code></a>(df, name)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.head.html#rnalysis.filtering.Filter.head" title="rnalysis.filtering.Filter.head"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.head</span></code></a>([n])</p></td>
 <td><p>Return the first n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html#rnalysis.filtering.Filter.intersection" title="rnalysis.filtering.Filter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.intersection</span></code></a>(*others[, return_type, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.intersection.html#rnalysis.filtering.Filter.intersection" title="rnalysis.filtering.Filter.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.intersection</span></code></a>(*others[, return_type, ...])</p></td>
 <td><p>Keep only the features that exist in ALL of the given Filter objects/sets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html#rnalysis.filtering.Filter.majority_vote_intersection" title="rnalysis.filtering.Filter.majority_vote_intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.majority_vote_intersection</span></code></a>(*others[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.majority_vote_intersection.html#rnalysis.filtering.Filter.majority_vote_intersection" title="rnalysis.filtering.Filter.majority_vote_intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.majority_vote_intersection</span></code></a>(*others[, ...])</p></td>
 <td><p>Returns a set/string of the features that appear in at least         (majority_threhold * 100)% of the given Filter objects/sets.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html#rnalysis.filtering.Filter.number_filters" title="rnalysis.filtering.Filter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.number_filters</span></code></a>(column, operator, value)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.number_filters.html#rnalysis.filtering.Filter.number_filters" title="rnalysis.filtering.Filter.number_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.number_filters</span></code></a>(column, operator, value)</p></td>
 <td><p>Applay a number filter (greater than, equal, lesser than) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html#rnalysis.filtering.Filter.print_features" title="rnalysis.filtering.Filter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.print_features</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.print_features.html#rnalysis.filtering.Filter.print_features" title="rnalysis.filtering.Filter.print_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.print_features</span></code></a>()</p></td>
 <td><p>Print the feature indices in the Filter object, sorted by their current order in the FIlter object,         and separated by newline.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html#rnalysis.filtering.Filter.save_csv" title="rnalysis.filtering.Filter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.save_csv</span></code></a>([alt_filename])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.save_csv.html#rnalysis.filtering.Filter.save_csv" title="rnalysis.filtering.Filter.save_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.save_csv</span></code></a>([alt_filename])</p></td>
 <td><p>Saves the current filtered data to a .csv file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.sort.html#rnalysis.filtering.Filter.sort" title="rnalysis.filtering.Filter.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.sort</span></code></a>(by[, ascending, na_position, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.sort.html#rnalysis.filtering.Filter.sort" title="rnalysis.filtering.Filter.sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.sort</span></code></a>(by[, ascending, na_position, ...])</p></td>
 <td><p>Sort the rows by the values of specified column or columns.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html#rnalysis.filtering.Filter.split_by_attribute" title="rnalysis.filtering.Filter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.split_by_attribute</span></code></a>(attributes[, ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.split_by_attribute.html#rnalysis.filtering.Filter.split_by_attribute" title="rnalysis.filtering.Filter.split_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.split_by_attribute</span></code></a>(attributes[, ref])</p></td>
 <td><p>Splits the features in the Filter object into multiple Filter objects,         each corresponding to one of the specified Attribute Reference Table attributes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.split_by_percentile.html#rnalysis.filtering.Filter.split_by_percentile" title="rnalysis.filtering.Filter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.split_by_percentile</span></code></a>(percentile, column)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.split_by_percentile.html#rnalysis.filtering.Filter.split_by_percentile" title="rnalysis.filtering.Filter.split_by_percentile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.split_by_percentile</span></code></a>(percentile, column)</p></td>
 <td><p>Splits the features in the Filter object into two non-overlapping Filter objects:         one containing features below the specified percentile in the specfieid column,         and the other containing features about the specified percentile in the specified column.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html#rnalysis.filtering.Filter.symmetric_difference" title="rnalysis.filtering.Filter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.symmetric_difference</span></code></a>(other[, return_type])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.symmetric_difference.html#rnalysis.filtering.Filter.symmetric_difference" title="rnalysis.filtering.Filter.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.symmetric_difference</span></code></a>(other[, return_type])</p></td>
 <td><p>Returns a set/string of the WBGene indices that exist either in the first Filter object/set OR the second,         but NOT in both (set symmetric difference).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.tail.html#rnalysis.filtering.Filter.tail" title="rnalysis.filtering.Filter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.tail</span></code></a>([n])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.tail.html#rnalysis.filtering.Filter.tail" title="rnalysis.filtering.Filter.tail"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.tail</span></code></a>([n])</p></td>
 <td><p>Return the last n rows of the Filter object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html#rnalysis.filtering.Filter.text_filters" title="rnalysis.filtering.Filter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.text_filters</span></code></a>(column, operator, value)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.text_filters.html#rnalysis.filtering.Filter.text_filters" title="rnalysis.filtering.Filter.text_filters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.text_filters</span></code></a>(column, operator, value)</p></td>
 <td><p>Applay a text filter (equals, contains, starts with, ends with) on a particular column in the Filter object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.transform.html#rnalysis.filtering.Filter.transform" title="rnalysis.filtering.Filter.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.transform</span></code></a>(function[, columns, inplace])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.transform.html#rnalysis.filtering.Filter.transform" title="rnalysis.filtering.Filter.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.transform</span></code></a>(function[, columns, inplace])</p></td>
 <td><p>Transform the values in the Filter object with the specified function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.union.html#rnalysis.filtering.Filter.union" title="rnalysis.filtering.Filter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.union</span></code></a>(*others[, return_type])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.union.html#rnalysis.filtering.Filter.union" title="rnalysis.filtering.Filter.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.union</span></code></a>(*others[, return_type])</p></td>
 <td><p>Returns a set/string of the union of features between multiple Filter objects/sets         (the features that exist in at least one of the Filter objects/sets).</p></td>
 </tr>
 </tbody>
 </table>
-</div>
+</section>
 
 
            </div>

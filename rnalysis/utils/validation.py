@@ -3,6 +3,12 @@ from typing import Union, Iterable, Tuple
 import types
 import pandas as pd
 import warnings
+from rnalysis.utils import parsing
+
+
+def is_legal_file_path(file_path: str):
+    pth = Path(file_path)
+    return pth.exists() and pth.is_file()
 
 
 def check_is_df_like(inp):
@@ -45,7 +51,7 @@ def is_method_of_class(mthd, cls):
 
 def isinstanceinh(obj, parent_class):
     """
-    Returns True if 'obj' is is an instance of class 'parent_class', or of a subclass of 'parent_class'.
+    Returns True if 'obj'  is an instance of class 'parent_class', or of a subclass of 'parent_class'.
 
     :param obj: object to be tested
     :type obj: Any
@@ -71,6 +77,23 @@ def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...
     """
     assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
     return all([isinstance(i, object_class) for i in iterable])
+
+
+def isinstanceiter_inh(iterable: Iterable, parent_class: Union[type, Tuple[type, ...]]):
+    """
+    Returns True if all members of an Iterable object are instances of a parent_class or of a subclass of parent_class.\
+    This function consumes iterators/generators. Always returns True when 'iterable' is empty.
+
+    :param iterable: the Iterable object whose members' types should be checked.
+    :type iterable: Iterable (list, tuple, str, dict, set, etc')
+    :param parent_class: class to be checked against
+    :type parent_class: type (e.g. list, tuple, int, bool) or Iterable of types
+    :return: True if all members of 'iterable' are of type 'parent_class' or one of its subclasses, \
+    and False otherwise.
+    :rtype: bool
+    """
+    assert isiterable(iterable), f"Object of type {type(iterable)} is not iterable."
+    return all([isinstanceinh(i, parent_class) for i in iterable])
 
 
 def isinstanceiter_any(iterable: Iterable, object_class: Union[type, Tuple[type, ...]]):
@@ -135,10 +158,15 @@ def validate_attr_table(attr_df: pd.DataFrame):
     attr_df.rename(columns={attr_df.columns[0]: 'gene'}, inplace=True)
 
 
-def validate_uniprot_dataset_name(dataset_dict: dict, *names: str):
-    for name in names:
-        assert name in dataset_dict, f"Dataset '{name}' is not a valid Uniprot Dataset for mapping gene names/IDs. " \
-                                     f"Valid Uniprot Datasets are: {', '.join(dataset_dict.keys())}."
+def validate_uniprot_dataset_name(dataset_dicts: Tuple[dict, dict], map_to_names: Union[str, Iterable[str]],
+                                  map_from_names: Union[str, Iterable[str]]):
+    dataset_to, dataset_from = dataset_dicts
+    for name in parsing.data_to_tuple(map_to_names):
+        assert name in dataset_to, f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs to. " \
+                                   f"Valid Uniprot Datasets are: {', '.join(dataset_to.keys())}."
+    for name in parsing.data_to_tuple(map_from_names):
+        assert name in dataset_from, f"Dataset '{name}' is not a valid Uniprot Dataset to map gene names/IDs from. " \
+                                     f"Valid Uniprot Datasets are: {', '.join(dataset_from.keys())}."
 
 
 def validate_threshold(threshold: float = 1):

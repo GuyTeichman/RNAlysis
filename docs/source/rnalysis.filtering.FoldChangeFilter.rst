@@ -26,6 +26,7 @@
     FoldChangeFilter.filter_missing_values
     FoldChangeFilter.filter_percentile
     FoldChangeFilter.filter_top_n
+    FoldChangeFilter.from_dataframe
     FoldChangeFilter.head
     FoldChangeFilter.intersection
     FoldChangeFilter.majority_vote_intersection

@@ -1,5 +1,9 @@
 import concurrent.futures
 import functools
+import typing
+
+import yaml
+import shutil
 import json
 import os
 import queue
@@ -13,7 +17,7 @@ from itertools import chain
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any
 from urllib.parse import urlparse, parse_qs, urlencode
-
+from tqdm.auto import tqdm
 import appdirs
 import numpy as np
 import pandas as pd
@@ -21,6 +25,11 @@ import requests
 from requests.adapters import HTTPAdapter, Retry
 
 from rnalysis.utils import parsing, validation, ontology, __path__
+
+
+def get_gui_cache_dir():
+    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    return cache_dir.joinpath('rnalysis_gui')
 
 
 def get_todays_cache_dir():
@@ -46,6 +55,131 @@ def cache_file(content: str, filename: str):
     file_path = directory.joinpath(filename)
     with open(file_path, 'w') as f:
         f.write(content)
+
+
+def clear_gui_cache():
+    directory = get_gui_cache_dir()
+    if not directory.exists():
+        return
+
+    for item in directory.iterdir():
+        if item.is_file():
+            item.unlink()
+        elif item.is_dir():
+            shutil.rmtree(item, ignore_errors=True)
+
+
+def load_cached_gui_file(filename: str):
+    directory = get_gui_cache_dir()
+    file_path = directory.joinpath(filename)
+    if file_path.exists():
+        if file_path.suffix in {'.csv', '.tsv'}:
+            return load_csv(file_path, index_col=0)
+        elif file_path.suffix in {'.txt'}:
+            with open(file_path) as f:
+                return {item.strip() for item in f.readlines()}
+
+        else:
+            with open(file_path) as f:
+                return f.read()
+    else:
+        return None
+
+
+def cache_gui_file(item: Union[pd.DataFrame, set, str], filename: str):
+    directory = get_gui_cache_dir()
+    if not directory.exists():
+        directory.mkdir(parents=True)
+    file_path = directory.joinpath(filename)
+    if isinstance(item, (pd.DataFrame, pd.Series)):
+        save_csv(item, file_path, index=True)
+    elif isinstance(item, set):
+        save_gene_set(item, file_path)
+    elif isinstance(item, str):
+        with open(file_path, 'w') as f:
+            f.write(item)
+    else:
+        raise TypeError(type(item))
+
+
+def save_gui_session(session_filename: Union[str, Path], file_names: List[str], item_names: List[str], item_types: list,
+                     item_properties: list, pipeline_names: List[str], pipeline_files: List[str]):
+    session_filename = Path(session_filename)
+    session_folder = session_filename
+    if session_folder.exists():
+        if session_folder.is_dir():
+            shutil.rmtree(session_folder)
+        else:
+            session_folder.unlink()
+    session_folder.mkdir(parents=True)
+
+    session_data = dict(files=dict(), pipelines=dict(), metadata=dict())
+    for file_name, item_name, item_type, item_property in zip(file_names, item_names, item_types, item_properties):
+        Path(get_gui_cache_dir().joinpath(file_name)).replace(session_folder.joinpath(file_name))
+        session_data['files'][file_name] = (item_name, item_type.__name__, item_property)
+
+    for i, (pipeline_name, pipeline_file) in enumerate(zip(pipeline_names, pipeline_files)):
+        pipeline_filename = session_folder.joinpath(f"pipeline_{i}.yaml")
+        Path(pipeline_filename).write_text(pipeline_file)
+        session_data['pipelines'][pipeline_filename.name] = pipeline_name
+
+    session_data['metadata']['creation_time'] = get_datetime()
+    session_data['metadata']['name'] = Path(session_filename).stem
+    session_data['metadata']['n_tabs'] = len(session_data['files'])
+    session_data['metadata']['n_pipelines'] = len(session_data['pipelines'])
+    session_data['metadata']['tab_order'] = file_names
+
+    with open(session_folder.joinpath('session_data.yaml'), 'w') as f:
+        yaml.safe_dump(session_data, f)
+    shutil.make_archive(session_folder.with_suffix(''), 'zip', session_folder)
+    shutil.rmtree(session_folder)
+    session_filename.with_suffix('.zip').replace(session_filename.with_suffix('.rnal'))
+
+
+def load_gui_session(session_filename: Union[str, Path]):
+    session_filename = Path(session_filename)
+    try:
+        session_filename.with_suffix('.rnal').rename(session_filename.with_suffix('.rnal.zip'))
+        shutil.unpack_archive(session_filename.with_suffix('.rnal.zip'),
+                              get_gui_cache_dir().joinpath(session_filename.name))
+    finally:
+        session_filename.with_suffix('.rnal.zip').rename(session_filename.with_suffix('.rnal'))
+
+    session_dir = get_gui_cache_dir().joinpath(session_filename.name)
+    assert session_dir.exists()
+
+    items = []
+    item_names = []
+    item_types = []
+    item_properties = []
+    pipeline_files = []
+    pipeline_names = []
+    with open(session_dir.joinpath('session_data.yaml')) as f:
+        session_data = yaml.safe_load(f)
+    if 'tab_order' in session_data['metadata'] and len(session_data['metadata']['tab_order']) == len(
+        session_data['files']):
+        filenames = session_data['metadata']['tab_order']
+    else:
+        filenames = session_data['files'].keys()
+
+    for file_name in filenames:
+        file_path = session_dir.joinpath(file_name)
+        assert file_path.exists() and file_path.is_file()
+        item = load_cached_gui_file(Path(session_filename.name).joinpath(file_name))
+        item_name, item_type, item_property = session_data['files'][file_name]
+        items.append(item)
+        item_names.append(item_name)
+        item_types.append(item_type)
+        item_properties.append(item_property)
+
+    for pipeline_filename in session_data['pipelines'].keys():
+        pipeline_path = session_dir.joinpath(pipeline_filename)
+        assert pipeline_path.exists() and pipeline_path.is_file()
+        pipeline_files.append(pipeline_path.read_text())
+        pipeline_names.append(session_data['pipelines'][pipeline_filename])
+
+    shutil.rmtree(session_dir)
+    return items, item_names, item_types, item_properties, pipeline_names, pipeline_files
 
 
 def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
@@ -89,7 +223,6 @@ def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List
             df = df.str.strip()
     # if there remained only empty string "", change to Nan
     df = df.replace({"": np.nan})
-
     if drop_columns:
         drop_columns_lst = parsing.data_to_list(drop_columns)
         assert validation.isinstanceiter(drop_columns_lst,
@@ -104,7 +237,7 @@ def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List
     return df
 
 
-def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = True):
+def save_csv(df: pd.DataFrame, filename: Union[str, Path], suffix: str = None, index: bool = True):
     """
     save a pandas DataFrame to csv.
 
@@ -121,6 +254,131 @@ def save_csv(df: pd.DataFrame, filename: str, suffix: str = None, index: bool = 
         assert isinstance(suffix, str), "'suffix' must be either str or None!"
     new_fname = os.path.join(fname.parent.absolute(), f"{fname.stem}{suffix}{fname.suffix}")
     df.to_csv(new_fname, header=True, index=index)
+
+
+class KEGGAnnotationIterator:
+    URL = 'https://rest.kegg.jp/'
+    TAXON_MAPPING_URL = 'https://www.genome.jp/kegg-bin/download_htext?htext=br08610'
+    REQUEST_DELAY_MILLIS = 250
+    REQ_MAX_ENTRIES = 10
+    TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
+
+    def __init__(self, taxon_id: int):
+        self.pathway_names = {}
+        self.taxon_id = taxon_id
+        self.organism_code = self.get_kegg_organism_code(taxon_id)
+        self.pathway_names, self.n_annotations = self.get_pathways()
+        self.pathway_annotations = None
+
+    @staticmethod
+    def _kegg_request(operation: str, arguments: Union[str, List[str]], cached_filename: Union[str, None] = None
+                      ) -> Tuple[str, bool]:
+        if cached_filename is not None:
+            cached_file = load_cached_file(cached_filename)
+            if cached_file is not None:
+                is_cached = True
+                return cached_file, is_cached
+
+        is_cached = False
+        address = KEGGAnnotationIterator.URL + operation + '/' + '/'.join(parsing.data_to_list(arguments))
+        response = requests.get(address)
+        if not response.ok:
+            response.raise_for_status()
+        if cached_filename is not None:
+            cache_file(response.text, cached_filename)
+        return response.text, is_cached
+
+    def _generate_cached_filename(self, pathways: Tuple[str, ...]) -> str:
+        fname = f'{self.taxon_id}' + ''.join(pathways).replace('path:', '') + '.json'
+        return fname
+
+    @staticmethod
+    def _get_taxon_tree():
+        cached_filename = KEGGAnnotationIterator.TAXON_TREE_CACHED_FILENAME
+        cached_file = load_cached_file(cached_filename)
+        if cached_file is not None:
+            try:
+                taxon_tree = json.loads(cached_file)
+                return taxon_tree
+            except json.decoder.JSONDecodeError:
+                pass
+        with requests.get(KEGGAnnotationIterator.TAXON_MAPPING_URL, params=dict(format='json')) as req:
+            content = req.content.decode('utf8')
+            cache_file(content, cached_filename)
+            taxon_tree = json.loads(content)
+        return taxon_tree
+
+    @staticmethod
+    @functools.lru_cache(1024)
+    def get_kegg_organism_code(taxon_id: int) -> str:
+        taxon_tree = KEGGAnnotationIterator._get_taxon_tree()
+        q = queue.Queue()
+        q.put(taxon_tree)
+        while not q.empty():
+            this_item = q.get()
+            if f"[TAX:{taxon_id}]" in this_item['name']:
+                child = this_item['children'][0]
+                organism_code = child['name'].split(" ")[0]
+                return organism_code
+            else:
+                children = this_item.get('children', tuple())
+                for child in children:
+                    q.put(child)
+        raise ValueError(f"Could not find organism code for taxon ID {taxon_id}. ")
+
+    def get_pathways(self) -> Tuple[Dict[str, str], int]:
+        pathway_names = {}
+        data, _ = self._kegg_request('list', ['pathway', self.organism_code])
+        data = data.split('\n')
+        for line in data:
+            split = line.split('\t')
+            if len(split) == 2:
+                pathway_code, pathway_name = split
+                pathway_names[pathway_code] = pathway_name
+
+        n_annotations = len(pathway_names)
+        return pathway_names, n_annotations
+
+    def get_pathway_annotations(self):
+        if self.pathway_annotations is not None:
+            for pathway, annotations in self.pathway_annotations.items():
+                name = self.pathway_names[pathway]
+                yield pathway, name, annotations
+        else:
+            pathway_annotations = {}
+            partitioned_pathways = parsing.partition_list(list(self.pathway_names.keys()), self.REQ_MAX_ENTRIES)
+            for chunk in partitioned_pathways:
+                prev_time = time.time()
+                data, was_cached = self._kegg_request('get', '+'.join(chunk), self._generate_cached_filename(chunk))
+                entries = data.split('ENTRY')[1:]
+                assert len(entries) == len(chunk)
+                for pathway, entry in zip(chunk, entries):
+                    pathway_name = self.pathway_names[pathway]
+                    pathway_annotations[pathway] = set()
+                    entry_split = entry.split('\n')
+                    genes_startline = 0
+                    genes_endline = 0
+                    for i, line in enumerate(entry_split):
+                        if line.startswith('GENE'):
+                            genes_startline = i
+                        elif line.startswith('COMPOUND'):
+                            genes_endline = i
+                            break
+                    for line_num in range(genes_startline, genes_endline):
+                        line = entry_split[line_num]
+                        if line.startswith('GENE'):
+                            line = line.replace('GENE', '', 1)
+                        gene_id = f"{self.organism_code}:{line.strip().split(' ')[0]}"
+                        pathway_annotations[pathway].add(gene_id)
+                        yield pathway, pathway_name, pathway_annotations[pathway]
+                if not was_cached:
+                    delay = max((self.REQUEST_DELAY_MILLIS / 1000) - (time.time() - prev_time), 0)
+                    time.sleep(delay)
+
+            self.pathway_annotations = pathway_annotations
+
+    def __iter__(self):
+        return self.get_pathway_annotations()
 
 
 class GOlrAnnotationIterator:
@@ -440,7 +698,9 @@ def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
     :return:
     :rtype:
     """
-    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(gene_ids))
+    translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=None,
+                                                     map_to_options=('Ensembl', 'Ensembl Genomes'))
+    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     sources = {}
     for gene_id in output:
         if output[gene_id] is not None:
@@ -451,7 +711,7 @@ def infer_sources_from_gene_ids(gene_ids: Iterable[str]) -> Dict[str, Set[str]]:
     return sources
 
 
-def infer_taxon_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
+def infer_taxon_from_gene_ids(gene_ids: Iterable[str], gene_id_type: str = None) -> Tuple[Tuple[int, str], typing.Any]:
     """
     Infer the NCBI Taxon ID and name of a collection of gene IDs. \
     In cases where not all gene IDs map to the same taxon, the best-fitting taxon will be picked by a majority vote.
@@ -461,7 +721,11 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
     :return: a tuple of the best-matching taxon's NCBI Taxon ID and full scientific name.
     :rtype: Tuple[int ,str]
     """
-    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(gene_ids))
+    if gene_id_type is not None:
+        gene_id_type = parsing.data_to_tuple(gene_id_type)
+    translator, map_from, _ = find_best_gene_mapping(parsing.data_to_tuple(gene_ids), map_from_options=gene_id_type,
+                                                     map_to_options=('Ensembl', 'Ensembl Genomes'))
+    output = _ensmbl_lookup_post_request(parsing.data_to_tuple(translator.mapping_dict.values()))
     species = dict()
     for gene_id in output:
         if output[gene_id] is not None:
@@ -477,7 +741,7 @@ def infer_taxon_from_gene_ids(gene_ids: Iterable[str]) -> Tuple[int, str]:
             if species[s] > chosen_species_n:
                 chosen_species = s
                 chosen_species_n = species[s]
-    return map_taxon_id(chosen_species.replace('_', ' '))
+    return map_taxon_id(chosen_species.replace('_', ' ')), map_from
 
 
 @lru_cache(maxsize=32, typed=False)
@@ -507,7 +771,7 @@ def map_taxon_id(taxon_name: Union[str, int]) -> Tuple[int, str]:
     taxon_id = int(res['Taxon Id'].iloc[0])
     scientific_name = res['Scientific name'].iloc[0]
 
-    if res.shape[0] > 1 and not (taxon_name == taxon_id or taxon_name == scientific_name):
+    if res.shape[0] > 2 and not (taxon_name == taxon_id or taxon_name == scientific_name):
         warnings.warn(
             f"Found {len(res) - 1} taxons matching the search query '{taxon_name}'. "
             f"Picking the match with the highest score: {scientific_name} (taxonID {taxon_id}).")
@@ -537,6 +801,11 @@ class GeneIDTranslator:
         """
         self.mapping_dict = mapping_dict
 
+    def __len__(self):
+        if self.mapping_dict is None:
+            return 0
+        return len(self.mapping_dict)
+
     def __getitem__(self, key):
         if self.mapping_dict is None:
             return key
@@ -564,19 +833,20 @@ def get_next_link(headers):
             return match.group(1)
 
 
-def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: float):
+def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: float, verbose: bool = True):
     while True:
         r = session.get(f"{url}/idmapping/status/{job_id}")
         r.raise_for_status()
         j = r.json()
         if "jobStatus" in j:
             if j["jobStatus"] == "RUNNING":
-                print(f"Retrying in {polling_interval}s")
+                if verbose:
+                    print(f"Retrying in {polling_interval}s")
                 time.sleep(polling_interval)
             else:
-                raise Exception(r["jobStatus"])
+                raise Exception(j["jobStatus"])
         else:
-            return bool(j["results"] or j["failedIds"])
+            return bool(j.get("results", False) or j.get("failedIds", False))
 
 
 def get_batch(session, batch_response, file_format):
@@ -615,7 +885,7 @@ def decode_results(response, file_format):
     return response.text
 
 
-def get_id_mapping_results_search(session, url):
+def get_id_mapping_results_search(session, url, verbose: bool = True):
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
     query["fields"] = 'accession,annotation_score'
@@ -633,11 +903,16 @@ def get_id_mapping_results_search(session, url):
     r = session.get(url)
     r.raise_for_status()
     results = decode_results(r, file_format)
-    total = int(r.headers["x-total-results"])
-    print_progress_batches(0, size, total)
+    try:
+        total = int(r.headers["x-total-results"])
+    except KeyError:
+        return ''
+    if verbose:
+        print_progress_batches(0, size, total)
     for i, batch in enumerate(get_batch(session, r, file_format)):
         results = combine_batches(results, batch, file_format)
-        print_progress_batches(i + 1, size, total)
+        if verbose:
+            print_progress_batches(i + 1, size, total)
     return results
 
 
@@ -646,15 +921,17 @@ def print_progress_batches(batch_index, size, total):
     print(f"Fetched: {n} / {total}")
 
 
-def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float, session):
+def get_mapping_results(api_url: str, from_db: str, to_db: str, ids: List[str], polling_interval: float, session,
+                        verbose: bool = True):
     job_id = submit_id_mapping(api_url, from_db=from_db, to_db=to_db, ids=ids)
-    if check_id_mapping_results_ready(session, api_url, job_id, polling_interval):
+    if check_id_mapping_results_ready(session, api_url, job_id, polling_interval, verbose=verbose):
         link = get_id_mapping_results_link(session, api_url, job_id)
-        results = get_id_mapping_results_search(session, link)
+        results = get_id_mapping_results_search(session, link, verbose)
         return results
 
 
-def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'UniProtKB AC') -> GeneIDTranslator:
+def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'UniProtKB AC',
+                 verbose: bool = True) -> GeneIDTranslator:
     """
     Map gene IDs from one identifier type to another using the UniProt ID Mapping service. \
     If some IDs cannot be mapped uniquely, duplicate mappings will be resolved by their UniProtKB Annotation Score. \
@@ -667,16 +944,25 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     :param map_to: identifier type to map to (for example 'UniProtKB AC' or 'WormBase'). \
     can be identical to 'map_from'
     :type map_to: str
+    :param verbose: if False, verbose reports of mapping success/failure will be suppressed.
+    :type verbose: bool (default=True)
     :return:a GeneIDTranslator object that uniquely maps each given gene ID in 'map_from' identifier type \
     to its matching gene ID in 'map_to' identifier type.
     :rtype: GeneIDTranslator
     """
     UNIPROTKB_FROM = "UniProtKB_from"
     UNIPROTKB_TO = "UniProtKB_to"
+
+    if len(ids) == 0:
+        if verbose:
+            warnings.warn('No IDs were given')
+        return GeneIDTranslator({})
+
     # if map_from and map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
-    id_dict = _get_id_abbreviation_dict()
-    validation.validate_uniprot_dataset_name(id_dict, map_to, map_from)
-    if id_dict[map_to] == id_dict[map_from]:
+    id_dicts = _get_id_abbreviation_dicts()
+    validation.validate_uniprot_dataset_name(id_dicts, map_to, map_from)
+    id_dict_to, id_dict_from = id_dicts
+    if id_dict_to[map_to] == id_dict_from[map_from]:
         return GeneIDTranslator()
 
     if map_to == "UniProtKB":
@@ -690,17 +976,21 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     # since the Uniprot service can only translate to or from 'UniProtKB' identifier type,
     # if we need to map gene IDs between two other identifier types,
     # then we will map from 'map_from' to 'UniProtKB' and then from 'UniProtKB' to 'map_to'.
-    print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
+    if verbose:
+        print(f"Mapping {n_queries} entries from '{map_from}' to '{map_to}'...")
 
-    if id_dict[map_to] != id_dict[UNIPROTKB_TO] and id_dict[map_from] != id_dict[UNIPROTKB_FROM]:
-        to_uniprot = map_gene_ids(ids, map_from, UNIPROTKB_TO).mapping_dict
-        from_uniprot = map_gene_ids(to_uniprot.values(), UNIPROTKB_FROM, map_to).mapping_dict
+    if id_dict_to[map_to] != id_dict_to[UNIPROTKB_TO] and id_dict_from[map_from] != id_dict_from[UNIPROTKB_FROM]:
+        to_uniprot = map_gene_ids(ids, map_from, UNIPROTKB_TO, verbose=verbose).mapping_dict
+        if to_uniprot is None:
+            to_uniprot = {}
+        from_uniprot = map_gene_ids(to_uniprot.values(), UNIPROTKB_FROM, map_to, verbose=verbose).mapping_dict
+        if from_uniprot is None:
+            from_uniprot = {}
         output_dict = {key: from_uniprot[val] for key, val in zip(to_uniprot.keys(), to_uniprot.values()) if
                        val in from_uniprot}
 
     # make sure that 'map_from' and 'map_to' are recognized identifier types
-    elif id_dict[map_to] != 'Null' and id_dict[map_from] != 'Null':
-
+    elif id_dict_to[map_to] != 'Null' and id_dict_from[map_from] != 'Null':
         POLLING_INTERVAL = 3
         API_URL = "https://rest.uniprot.org"
 
@@ -708,11 +998,13 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=retries))
 
-        results = get_mapping_results(api_url=API_URL, from_db=id_dict[map_from], to_db=id_dict[map_to], ids=ids,
-                                      polling_interval=POLLING_INTERVAL, session=session)
+        results = get_mapping_results(api_url=API_URL, from_db=id_dict_from[map_from], to_db=id_dict_to[map_to],
+                                      ids=ids,
+                                      polling_interval=POLLING_INTERVAL, session=session, verbose=verbose)
 
-        if len(results) <= 1:
-            warnings.warn(f"No entries were mapped successfully.")
+        if results is None or len(results) <= 1:
+            if verbose:
+                warnings.warn(f"No entries were mapped successfully.")
             return GeneIDTranslator({})
 
         df = pd.DataFrame([line.split('\t') for line in results[1:]], columns=results[0].split('\t'))
@@ -745,9 +1037,9 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
             else:
                 ids_to_rev_map = parsing.flatten(parsing.data_to_list(duplicates.values()))
 
-                rev_results = get_mapping_results(api_url=API_URL, from_db=id_dict[map_to],
-                                                  to_db=id_dict[UNIPROTKB_TO], ids=ids_to_rev_map,
-                                                  polling_interval=POLLING_INTERVAL, session=session)
+                rev_results = get_mapping_results(api_url=API_URL, from_db=id_dict_to[map_to],
+                                                  to_db=id_dict_from[UNIPROTKB_TO], ids=ids_to_rev_map,
+                                                  polling_interval=POLLING_INTERVAL, session=session, verbose=verbose)
                 # TODO: if job fails?
                 rev_df = pd.DataFrame([line.split('\t') for line in rev_results[1:]],
                                       columns=rev_results[0].split('\t'))
@@ -760,13 +1052,18 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
                     if match_to_rev not in output_dict:
                         output_dict[match_to_rev] = match_from_rev
                         duplicates_chosen[match_to_rev] = match_from_rev
-
-            warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
-                          f"was chosen for them based on their annotation score: {duplicates_chosen}")
-
-    if len(output_dict) < n_queries:
+            if verbose:
+                warnings.warn(f"Duplicate mappings were found for {len(duplicates)} genes.  The following mapping "
+                              f"was chosen for them based on their annotation score: {duplicates_chosen}")
+    else:
+        output_dict = {}
+    if len(output_dict) < n_queries and verbose:
         warnings.warn(f"Failed to map {n_queries - len(output_dict)} entries from '{map_from}' to '{map_to}'. "
                       f"Returning {len(output_dict)} successfully-mapped entries.")
+
+    if map_to == 'Ensembl':
+        for key, val in output_dict.items():
+            output_dict[key] = re.sub('(\.\d+)$', '', val)
 
     return GeneIDTranslator(output_dict)
 
@@ -782,26 +1079,110 @@ def _format_ids_iter(ids: Union[str, int, list, set], chunk_size: int = 250):
             yield " ".join((str(item) for item in ids[i:i + j]))
 
 
-@functools.lru_cache(maxsize=2)
-def _get_id_abbreviation_dict(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
-    URL = 'https://rest.uniprot.org/database/search?format=json&query=%2A&size=500'
+@functools.lru_cache(maxsize=2048)
+def find_best_gene_mapping(ids: Tuple[str, ...], map_from_options: Union[Tuple[str, ...], None],
+                           map_to_options: Union[Tuple[str, ...], None]):
+    all_map_to_options, all_map_from_options = _get_id_abbreviation_dicts()
+    if map_to_options is None:
+        map_to_options = all_map_to_options
+    if map_from_options is None:
+        map_from_options = all_map_from_options
 
-    with open(dict_path) as f:
-        abbrev_dict = json.load(f)
+    def _key_func(items: Tuple[int, str, str]):
+        key = [items[0]]
+        key.append(list(map_from_options).index(items[1]))
+        key.append(list(map_to_options).index(items[2]))
+        return key
+
+    def map_gene_ids_ignore_httpexception(ids: Tuple[str], map_from: str, map_to: str):
+        try:
+            return map_gene_ids(ids, map_from, map_to, verbose=False), map_from, map_to
+        except requests.exceptions.HTTPError:
+            return GeneIDTranslator({}), map_from, map_to
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        processes = []
+        mapping_combs_from = []
+        mapping_combs_to = []
+        for map_from in map_from_options:
+            for map_to in parsing.data_to_tuple(map_to_options):
+                if map_to == map_from:
+                    continue
+                mapping_combs_from.append(map_from)
+                mapping_combs_to.append(map_to)
+                # processes.append(executor.submit(map_gene_ids_ignore_httpexception, ids, map_from, map_to))
+
+        results = list(tqdm(executor.map(functools.partial(map_gene_ids_ignore_httpexception, ids), mapping_combs_from,
+                                         mapping_combs_to),
+                            total=len(mapping_combs_from), desc='Submitting jobs...', unit='jobs'))
+    # best_result = None
+    # best_result_len = -1
+    parsed_results = {}
+    with tqdm(desc='Finding the best-matching gene ID type...', total=len(processes) + 1) as pbar:
+        pbar.update()
+        for result in results:
+            mapping_dict, map_from, map_to = result
+            result_len = len(mapping_dict)
+            parsed_results[(result_len, map_from, map_to)] = result
+            pbar.update()
+
+    sorted_keys = sorted(parsed_results.keys(), key=_key_func, reverse=True)
+    return parsed_results[sorted_keys[0]]
+
+
+@functools.lru_cache(maxsize=2)
+def get_legal_gene_id_types():
+    URL = 'https://rest.uniprot.org/configure/idmapping/fields'
+    GROUP_PRIORITIZATION = ['UniProt',
+                            'Genome annotation databases',
+                            'Organism-specific databases',
+                            'Phylogenomic databases',
+                            'Sequence databases',
+                            'Miscellaneous',
+                            'Gene expression databases',
+                            'Enzyme and pathway databases',
+                            'Proteomic databases']
+    abbrev_dict_to = {}
+    abbrev_dict_from = {}
 
     req = requests.get(URL)
     req.raise_for_status()
-    entries = json.loads(req.text)
+    entries = json.loads(req.text)['groups']
+    entries_filtered = []
+    for entry in entries:
+        if entry['groupName'] in GROUP_PRIORITIZATION:
+            entries_filtered.append(entry)
+    entries_sorted = sorted(entries_filtered, key=lambda grp: GROUP_PRIORITIZATION.index(grp['groupName']))
+    for grp in entries_sorted:
+        for entry in grp['items']:
+            name = entry['displayName']
+            abbrev = entry['name']
+            is_from = entry['from']
+            is_to = entry['to']
+            if is_to:
+                abbrev_dict_to[name] = abbrev
+            if is_from:
+                abbrev_dict_from[name] = abbrev
+    return abbrev_dict_from, abbrev_dict_to
 
-    for entry in entries['results']:
-        name = entry['name']
-        abbrev = entry['abbrev']
-        abbrev_dict[name] = abbrev
 
-    for val in parsing.data_to_list(abbrev_dict.values()):
-        abbrev_dict[val] = val
+@functools.lru_cache(maxsize=2)
+def _get_id_abbreviation_dicts(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
+    with open(dict_path) as f:
+        abbrev_dict_to = json.load(f)
+        abbrev_dict_from = abbrev_dict_to.copy()
 
-    return abbrev_dict
+    legal_from, legal_to = get_legal_gene_id_types()
+
+    abbrev_dict_from.update(legal_from)
+    abbrev_dict_to.update(legal_to)
+
+    for val in parsing.data_to_list(abbrev_dict_to.values()):
+        abbrev_dict_to[val] = val
+    for val in parsing.data_to_list(abbrev_dict_from.values()):
+        abbrev_dict_from[val] = val
+
+    return abbrev_dict_to, abbrev_dict_from
 
 
 @lru_cache(maxsize=2)
@@ -832,3 +1213,9 @@ def get_datetime():
     now = datetime.now()
     now_str = now.strftime('%H:%M:%S %Y/%m/%d')
     return now_str
+
+
+def save_gene_set(gene_set: set, path):
+    with open(path, 'w') as f:
+        f.writelines(
+            [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
