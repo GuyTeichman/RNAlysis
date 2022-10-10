@@ -29,15 +29,10 @@ Fixed
 * enrichment.venn_diagram can now be plotted with outlines when the circles are unweighted
 * Fixed bug in Pipeline.apply_to() where a Filter object would be returned even when the Pipeline was applied inplace
 
-Removed
-********
-*
-
 
 2.1.1 (2022-07-05)
 ------------------
-* This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API.
-Moreover, this version slightly improves the performance of some functions.
+* This version fixes issues with running GO enrichment that resulted from recent changes to UniProt's API.  Moreover, this version slightly improves the performance of some functions.
 
 Changed
 *******
