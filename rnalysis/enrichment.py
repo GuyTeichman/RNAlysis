@@ -511,12 +511,6 @@ class FeatureSet:
         :return: a pandas DataFrame with the indicated pathway names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  kegg_pathway_graph.png
-           :align:   center
-           :scale: 60 %
-
-           Example plot of go_enrichment(plot_pathway_graphs=True)
-
 
         .. figure::  plot_enrichment_results_kegg.png
            :align:   center
@@ -1227,14 +1221,14 @@ class RankedSet(FeatureSet):
            Example plot of single_set_kegg_enrichment(plot_pathway_graphs=True)
 
 
-        .. figure::  plot_enrichment_results_kegg_singlelist.png
+        .. figure::  plot_enrichment_results_kegg_single_set.png
            :align:   center
            :scale: 60 %
 
            Example plot of single_set_kegg_enrichment()
 
 
-        .. figure::  plot_enrichment_results_kegg_singlelist_vertical.png
+        .. figure::  plot_enrichment_results_kegg_single_set_vertical.png
            :align:   center
            :scale: 60 %
 
