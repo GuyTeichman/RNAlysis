@@ -59,9 +59,8 @@ setup(
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Scientific/Engineering :: Visualization',
     ],
-    description='RNAlysis provides a modular analysis pipeline for RNA sequencing data. '
-                'RNAlysis includes various methods for filtering, data visualisation, exploratory analyses, '
-                'enrichment anslyses and clustering.',
+    description='RNAlysis is an analysis software for RNA sequencing data. '
+                'RNAlysis can help to filter, visualize, explore, analyze, and share your data. ',
     install_requires=requirements,
     python_requires='>=3.7',
     license="MIT license",
