@@ -444,7 +444,6 @@ class FeatureSet:
                         biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                         return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                        plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
                         randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                         parallel: bool = True, gui_mode: bool = False
                         ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -493,10 +492,6 @@ class FeatureSet:
         'C:/dir/file'. No '.csv' suffix is required. If None (default), fname will be requested in a manual prompt.
         :type return_fig: bool (default=False)
         :param return_fig: if True, returns a matplotlib Figure object in addition to the results DataFrame.
-        :type plot_pathway_graphs: bool (default=True)
-        :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
-        :type pathway_graphs_format: str (default='pdf')
-        :param pathway_graphs_format: the file format the pathway graphs will be generated in.
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
@@ -543,11 +538,9 @@ class FeatureSet:
         else:
             kwargs = {}
         runner = enrichment_runner.KEGGEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
-                                                        return_nonsignificant, save_csv,
-                                                        fname, return_fig, plot_horizontal, plot_pathway_graphs,
-                                                        self.set_name, parallel, statistical_test, biotype,
-                                                        background_genes, biotype_ref_path,
-                                                        pathway_graphs_format=pathway_graphs_format, **kwargs)
+                                                        return_nonsignificant, save_csv, fname, return_fig,
+                                                        plot_horizontal, self.set_name, parallel, statistical_test,
+                                                        biotype, background_genes, biotype_ref_path, **kwargs)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1249,9 +1242,9 @@ class RankedSet(FeatureSet):
         """
         runner = enrichment_runner.KEGGEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                         return_nonsignificant, save_csv, fname, return_fig,
-                                                        plot_horizontal, plot_pathway_graphs, self.set_name,
+                                                        plot_horizontal, self.set_name,
                                                         parallel=parallel, enrichment_func_name='xlmhg',
-                                                        single_set=True, pathway_graphs_format=pathway_graphs_format)
+                                                        single_set=True)
 
         if gui_mode:
             return runner.run(plot=False), runner

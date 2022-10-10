@@ -763,9 +763,6 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                  'gene_id_type': 'the type of gene ID index that is used',
                  'return_nonsignificant': 'indicates whether to return results which were not found to be '
                                           'statistically significant after enrichment analysis',
-                 'plot_pathway_graphs': 'indicates whether to plot pathway graphs of the'
-                                        ' statistically significant pathways',
-                 'pathway_graphs_format': 'file format for the generated pathway graph',
                  'attributes_set': 'set of the attributes/KEGG Pathways for which enrichment should be calculated',
                  'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values'}
     KEGG_DF_QUERIES = {}
@@ -773,9 +770,9 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
 
     def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
-                 plot_pathway_graphs: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
+                 set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, pathway_graphs_format='pdf', **pvalue_kwargs):
+                 random_seed: int = None, **pvalue_kwargs):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
                          single_set, random_seed, **pvalue_kwargs)
@@ -783,8 +780,6 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
             return
         self.gene_id_type = gene_id_type
         self.taxon_id, self.organism = self.get_taxon_id(organism)
-        self.plot_pathway_graphs = plot_pathway_graphs
-        self.pathway_graphs_format = pathway_graphs_format
         self.pathway_names_dict: dict = {}
 
     def get_taxon_id(self, organism: str):
