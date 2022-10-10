@@ -808,6 +808,12 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         if not self.return_nonsignificant:
             self.results = self.results[self.results['significant']]
 
+    def _correct_multiple_comparisons(self):
+        significant, padj = multitest.fdrcorrection(self.results.loc[self.results['pval'].notna(), 'pval'].values,
+                                                    alpha=self.alpha, method='negcorr')
+        self.results.loc[self.results['pval'].notna(), 'padj'] = padj
+        self.results.loc[self.results['padj'].notna(), 'significant'] = significant
+
     def fetch_annotations(self):
         # check if annotations for the requested query were previously fetched and cached
         query_key = self._get_query_key()
