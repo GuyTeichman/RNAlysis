@@ -12,17 +12,18 @@ Stable release
 
 current version: |pipimage|
 
-To install RNAlysis, run this command in your terminal:
+You can install *RNAlysis* via PyPI.
+To install the basic version of *RNAlysis*, use the following command in your terminal window::
 
-.. code-block:: console
-
-    $ pip install rnalysis
-
+    pip install RNAlysis
 
 
+To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines), you should first install `GraphViz <https://graphviz.org/download/>`_, and `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater (on Windows computers only).
+Then use the following command in your terminal window::
+
+    pip install RNAlysis[all]
 
 
-This is the preferred method to install sRNA analysis pipeline, as it will always install the most recent stable release.
 
 If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
@@ -36,17 +37,12 @@ From sources
 
 The source code for RNAlysis can be downloaded from the `Github repository`_.
 
-You can either clone the public repository:
+First, clone the public repository:
 
 .. code-block:: console
 
     $ git clone git://github.com/GuyTeichman/rnalysis
 
-Or download the `tarball`_:
-
-.. code-block:: console
-
-    $ curl  -OL https://github.com/GuyTeichman/RNAlysis/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
@@ -56,4 +52,3 @@ Once you have a copy of the source, you can install it with:
 
 
 .. _Github repository: https://github.com/GuyTeichman/RNAlysis
-.. _tarball: https://github.com/GuyTeichman/RNAlysis/tarball/master
