@@ -44,6 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
@@ -53,7 +54,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#rnalysis-graphical-user-interface">RNAlysis graphical user interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-graphical-user-interface"><em>RNAlysis</em> graphical user interface</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#open-the-program">Open the program</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#load-a-table">Load a table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#examine-your-table">Examine your table</a></li>
@@ -75,7 +76,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#export-and-share-pipelines-to-make-your-analysis-more-reproducible">Export and share Pipelines to make your analysis more reproducible</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#rnalysis-filtering-module">RNAlysis filtering module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-filtering-module"><em>RNAlysis</em> filtering module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-filter-objects">Working with Filter objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-a-filter-object">Initialize a Filter object</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#view-a-filter-object">View a Filter object</a></li>
@@ -110,7 +111,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#sequentially-applying-filtering-operations-using-pipelines">Sequentially applying filtering operations using Pipelines</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module">RNAlysis enrichment module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-enrichment-module"><em>RNAlysis</em> enrichment module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-featureset-objects">Working with FeatureSet objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-an-featureset-object">Initialize an FeatureSet object</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#go-enrichment">GO Enrichment</a></li>
@@ -123,7 +124,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#working-with-rankedset-objects">Working with RankedSet objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-an-rankedset-object">Initialize an RankedSet object</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#performing-single-set-go-enrichment-analysis-without-a-background-set">Performing single-set GO Enrichment analysis without a background set</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#performing-single-set-enrichment-analysis-without-a-background-set">Performing single-set enrichment analysis without a background set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-single-set-kegg-enrichment-analysis-without-a-background-set">Performing single-set KEGG Enrichment analysis without a background set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#performing-single-set-enrichment-analysis-for-user-defined-attributes-without-a-background-set">Performing single-set enrichment analysis for user-defined attributes without a background set</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#visualizing-sets-intersections-and-enrichment">Visualizing sets, intersections, and enrichment</a><ul>
@@ -133,7 +135,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module">RNAlysis general module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-general-module"><em>RNAlysis</em> general module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#set-and-load-a-reference-table">Set and load a Reference Table</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-an-attribute-reference-table">What is an Attribute Reference Table?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#what-is-a-biotype-reference-table">What is a Biotype Reference Table?</a></li>
@@ -191,12 +193,11 @@
   <section id="user-guide">
 <h1>User guide<a class="headerlink" href="#user-guide" title="Permalink to this headline"></a></h1>
 <section id="rnalysis-graphical-user-interface">
-<h2>RNAlysis graphical user interface<a class="headerlink" href="#rnalysis-graphical-user-interface" title="Permalink to this headline"></a></h2>
+<h2><em>RNAlysis</em> graphical user interface<a class="headerlink" href="#rnalysis-graphical-user-interface" title="Permalink to this headline"></a></h2>
 <section id="open-the-program">
 <h3>Open the program<a class="headerlink" href="#open-the-program" title="Permalink to this headline"></a></h3>
-<p>If you installed <em>RNAlysis</em> from Docker, do XYZ #TODO
-If you installed <em>RNAlysis</em> from pypi, you can open the graphical user interface by either executing the command <cite>rnalysis-gui</cite> from your terminal, or by typing the following code into a Python console:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">gui</span>
+<p>If you installed <em>RNAlysis</em> from pypi, you can open the graphical user interface by either executing the command <cite>rnalysis-gui</cite> from your terminal, or by typing the following code into a Python console:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">gui</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gui</span><span class="o">.</span><span class="n">run_gui</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -293,7 +294,7 @@ If you installed <em>RNAlysis</em> from pypi, you can open the graphical user in
 </section>
 </section>
 <section id="rnalysis-filtering-module">
-<h2>RNAlysis filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this headline"></a></h2>
+<h2><em>RNAlysis</em> filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this headline"></a></h2>
 <p>RNAlysis’s filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.</p>
 <p>The filtering module is built around <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a>, which are containers for tabular sequencing data. You can use the different types of <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> to apply filtering operations to various types of tabular data. You will learn more about <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> in the next section.</p>
 <section id="working-with-filter-objects">
@@ -303,7 +304,7 @@ and share many of the same functions and features. Each of them also has specifi
 <section id="initialize-a-filter-object">
 <h4>Initialize a Filter object<a class="headerlink" href="#initialize-a-filter-object" title="Permalink to this headline"></a></h4>
 <p>We will start by importing the filtering module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 </pre></div>
 </div>
 <p>We can now, for example, create a <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> object from a DESeq2 <cite>csv</cite> output file (see more details about <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> in sections below).</p>
@@ -360,7 +361,7 @@ For example, we can the function ‘filter_percentile’ to remove all rows that
 <span class="go">(21, 6)</span>
 </pre></div>
 </div>
-<p>By default, filtering operations on <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> are performed in-place, meaning the original object is modified. However, we can save the results into a new <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> and leave the current object unaffected by passing the argument ‘inplace=False’ to any filtering function within RNAlysis. For example:</p>
+<p>By default, filtering operations on <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> are performed in-place, meaning the original object is modified. However, we can save the results into a new <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> and leave the current object unaffected by passing the argument ‘inplace=False’ to any filtering function within <em>RNAlysis</em>. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(28, 6)</span>
@@ -373,7 +374,7 @@ For example, we can the function ‘filter_percentile’ to remove all rows that
 </pre></div>
 </div>
 <p>In this case, the object ‘d’ remained unchanged, while ‘d_filtered’ became a new <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using ‘inplace=False’ to create a new object at any point.</p>
-<p>Another useful option is to perform an opposite filter. When we specify the parameter ‘opposite=True’ to any filtering function within RNAlysis, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
+<p>Another useful option is to perform an opposite filter. When we specify the parameter ‘opposite=True’ to any filtering function within <em>RNAlysis</em>, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
 For example, if we now wanted to remove the rows which are below the 25% percentile in the ‘log2FoldChange’ column, we will use the following code:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_percentile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="s1">&#39;log2FoldChange&#39;</span><span class="p">,</span><span class="n">opposite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="go">Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.</span>
@@ -497,7 +498,7 @@ Like other Filter Objects, filtering operations on <a class="reference internal"
 <section id="loading-from-a-csv-file">
 <h4>Loading from a <cite>csv</cite> file<a class="headerlink" href="#loading-from-a-csv-file" title="Permalink to this headline"></a></h4>
 <p>Any <cite>csv</cite> file that contains differential expression analysis data with log2 fold change and adjusted p-values can be used as input for <a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a>.
-By default, RNAlysis assumes that log2 fold change values will be specified under a ‘log2FoldChange’ column, and adjusted p-values will be specified under a ‘padj’ column (as is the default in differential expression tables generated by DESeq2):</p>
+By default, <em>RNAlysis</em> assumes that log2 fold change values will be specified under a ‘log2FoldChange’ column, and adjusted p-values will be specified under a ‘padj’ column (as is the default in differential expression tables generated by DESeq2):</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -603,10 +604,10 @@ By default, RNAlysis assumes that log2 fold change values will be specified unde
 <h4>Data visualization and exploratory data analysis with DESeqFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-deseqfilter" title="Permalink to this headline"></a></h4>
 <p><a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> supports methods for visualization and exploratory analysis of differential expression data.</p>
 <p>With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:</p>
-<figure class="align-center" id="id30">
+<figure class="align-center" id="id41">
 <a class="reference internal image-reference" href="_images/volcano.png"><img alt="_images/volcano.png" src="_images/volcano.png" style="width: 448.0px; height: 333.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id30" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id41" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </section>
@@ -675,7 +676,7 @@ An HTSeq-count output file would follow the following format:</p>
 </tr>
 </tbody>
 </table>
-<p>When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. RNAlysis can parse those .txt files into two <cite>csv</cite> tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
+<p>When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. <em>RNAlysis</em> can parse those .txt files into two <cite>csv</cite> tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the ‘from_folder’ function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -690,7 +691,7 @@ An HTSeq-count output file would follow the following format:</p>
 </section>
 <section id="loading-from-a-pre-made-csv-file">
 <h4>Loading from a pre-made <cite>csv</cite> file<a class="headerlink" href="#loading-from-a-pre-made-csv-file" title="Permalink to this headline"></a></h4>
-<p>If you have previously generated a <cite>csv</cite> file from HTSeq-count output files using RNAlysis, or have done so manually, you can directly load this <cite>csv</cite> file into an <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object as you would any other Filter object:</p>
+<p>If you have previously generated a <cite>csv</cite> file from HTSeq-count output files using <em>RNAlysis</em>, or have done so manually, you can directly load this <cite>csv</cite> file into an <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object as you would any other Filter object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -865,37 +866,37 @@ We would then supply the normalization function with the path to the special cou
 </section>
 <section id="data-clustering-with-countfilter">
 <h4>Data clustering with CountFilter<a class="headerlink" href="#data-clustering-with-countfilter" title="Permalink to this headline"></a></h4>
-<p>RNAlysis supports a wide variety of clustering methods, which can group genomic features into clusters according to their similarity across different samples.</p>
+<p><em>RNAlysis</em> supports a wide variety of clustering methods, which can group genomic features into clusters according to their similarity across different samples.</p>
 <p>When clustering genomic features in a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object, the called function returns a tuple of <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> objects, with each object corresponding to one cluster of genomic features.</p>
 <p>Expression plots of the resulting clusters can be generated in one of multiple styles:</p>
 <blockquote>
-<div><figure class="align-center" id="id31">
+<div><figure class="align-center" id="id42">
 <a class="reference internal image-reference" href="_images/kmeans_all.png"><img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id31" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id42" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id32">
+<figure class="align-center" id="id43">
 <a class="reference internal image-reference" href="_images/kmeans_std_area.png"><img alt="_images/kmeans_std_area.png" src="_images/kmeans_std_area.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id32" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id43" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id33">
+<figure class="align-center" id="id44">
 <a class="reference internal image-reference" href="_images/kmeans_std_bar.png"><img alt="_images/kmeans_std_bar.png" src="_images/kmeans_std_bar.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id33" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id44" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id34">
+<figure class="align-center" id="id45">
 <a class="reference internal image-reference" href="_images/clustering_PCA_clicom.png"><img alt="_images/clustering_PCA_clicom.png" src="_images/clustering_PCA_clicom.png" style="width: 380.8px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example PCA plot of clustering results</span><a class="headerlink" href="#id34" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example PCA plot of clustering results</span><a class="headerlink" href="#id45" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>The expression plots can also by split into separate graphs, one for each discovered cluster.</p>
-<p>All clustering methods in RNAlysis which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
+<p>All clustering methods in <em>RNAlysis</em> which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
 You can specify a single value:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">five_clusters</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_kmeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -924,7 +925,7 @@ You can specify a single value:</p>
 <span class="go">2</span>
 </pre></div>
 </div>
-<p>Finally, you can use a model selection method to estimate the number of clusters in your dataset. RNAlysis supports both the Silhouette method and the Gap Statistic method:</p>
+<p>Finally, you can use a model selection method to estimate the number of clusters in your dataset. <em>RNAlysis</em> supports both the Silhouette method and the Gap Statistic method:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">silhouette_clusters</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">split_kmeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="s1">&#39;silhouette&#39;</span><span class="p">)</span>
 <span class="go">Estimating the optimal number of clusters using the Silhouette method in range 2:5...</span>
@@ -944,7 +945,7 @@ You can specify a single value:</p>
 <span class="go">2</span>
 </pre></div>
 </div>
-<p>To help in evaluating the result of these model selection methods, RNAlysis will also plot a summary of their outcome:</p>
+<p>To help in evaluating the result of these model selection methods, <em>RNAlysis</em> will also plot a summary of their outcome:</p>
 <a class="reference internal image-reference" href="_images/gap_statistic.png"><img alt="_images/gap_statistic.png" src="_images/gap_statistic.png" style="width: 60%;" /></a>
 <a class="reference internal image-reference" href="_images/silhouette.png"><img alt="_images/silhouette.png" src="_images/silhouette.png" style="width: 30%;" /></a>
 <div class="line-block">
@@ -966,7 +967,7 @@ You can specify a single value:</p>
 K-medoids picks one data point as the ‘center’ (medoid) of each cluster.
 In addition, K-medoids attempts to minimize the sum of dissimilarities within each cluster, instead of minimizing squared euclidean distance.</p>
 <p>Due to these differences, the K-medoids algorithm supports the use of distance metrics other than eucliean distance through the <cite>metric</cite> parameter.</p>
-<p>K-medoids clustering in RNALysis supports the following distance metrics:</p>
+<p>K-medoids clustering in <em>RNAlysis</em> supports the following distance metrics:</p>
 <ul class="simple">
 <li><p>eucliidean</p></li>
 <li><p>cosine</p></li>
@@ -998,7 +999,7 @@ Eventually, all of the observations are connected into a hierarchical tree.</p>
 <p>We can decide to ‘cut’ the tree at any height in order to generate the final clustering solution.
 This can be done by either specifying the estimated number of clusters like in K-means,
 or by specifiying a distance threshold above which clusters will not be merged.</p>
-<p>Hierarchical clustering in RNAlysis supports the following distance metrics:</p>
+<p>Hierarchical clustering in <em>RNAlysis</em> supports the following distance metrics:</p>
 <ul class="simple">
 <li><p>euclidean</p></li>
 <li><p>cosine</p></li>
@@ -1026,7 +1027,7 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
 <li><p>HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is <em>minimum cluster size</em> (<cite>min_cluster_size</cite>), which determines the smallest “interesting” cluster size we expect to find in the data.</p></li>
 </ol>
 <p>HDBSCAN supports additional tuning parameters, which you can read more about in the <a class="reference external" href="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html">HDBSCAN documentation</a>:</p>
-<p>HDBSCAN in RNALysis supports the following distance metrics:</p>
+<p>HDBSCAN in <em>RNAlysis</em> supports the following distance metrics:</p>
 <ul class="simple">
 <li><p>eucliidean</p></li>
 <li><p>cosine</p></li>
@@ -1072,36 +1073,36 @@ CLICOM offers multiple advantages over more traditional clustering methods:</p>
 <h4>Data visualization and exploratory data analysis with CountFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-countfilter" title="Permalink to this headline"></a></h4>
 <p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> includes multiple methods for visualization and exploratory analysis of count data.</p>
 <p>With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:</p>
-<figure class="align-center" id="id35">
+<figure class="align-center" id="id46">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 540.0px; height: 387.6px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id35" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id46" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <p>With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:</p>
 <blockquote>
-<div><figure class="align-center" id="id36">
+<div><figure class="align-center" id="id47">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id36" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:</p>
 <blockquote>
-<div><figure class="align-center" id="id37">
+<div><figure class="align-center" id="id48">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 384.0px; height: 288.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id37" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:</p>
 <blockquote>
-<div><figure class="align-center" id="id38">
+<div><figure class="align-center" id="id49">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id38" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id49" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1208,34 +1209,34 @@ To perform a randomization test you need two <a class="reference internal" href=
 <p><a class="reference internal" href="glossary.html#term-Pipeline"><span class="xref std std-term">Pipeline</span></a> objects allow you to group together multiple operations from the <em>filtering</em> module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to <a class="reference internal" href="glossary.html#term-Filter-objects"><span class="xref std std-term">Filter objects</span></a> of your choice in a specific and consistent order.
 Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.</p>
 <p>To create a new empty <a class="reference internal" href="glossary.html#term-Pipeline"><span class="xref std std-term">Pipeline</span></a>, simply create a new Pipeline object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Because every <a class="reference internal" href="glossary.html#term-Filter-object"><span class="xref std std-term">Filter object</span></a> has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
 By default, a new Pipeline’s <cite>filter_type</cite> is <a class="reference internal" href="glossary.html#term-Filter"><span class="xref std std-term">Filter</span></a>, and can only contain general functions from the <em>filtering</em> module that can apply to any Filter object.
 If we wanted, for example, to create a Pipeline for DESeqFilter objects, we would have to specify the parameter <cite>filter_type</cite>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">deseq_pipe</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s1">&#39;deseqfilter&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>One we have an empty <a class="reference internal" href="glossary.html#term-Pipeline"><span class="xref std std-term">Pipeline</span></a>, we can start adding functions to it.
 We can do that either via the function’s name:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s1">&#39;DESeqFilter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s1">&#39;filter_significant&#39;</span><span class="p">)</span>
 <span class="go">Added function &#39;DESeqFilter.filter_significant()&#39; to the pipeline.</span>
 </pre></div>
 </div>
 <p>or via the function itself:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s1">&#39;DESeqFilter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="o">.</span><span class="n">filter_significant</span><span class="p">)</span>
 <span class="go">Added function &#39;DESeqFilter.filter_significant()&#39; to the pipeline.</span>
 </pre></div>
 </div>
 <p>We can also specify the function’s arguments. We can specify both non-keyworded and keyworded arguments, just as we would if we called the function normally:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">filtering</span><span class="o">.</span><span class="n">Filter</span><span class="o">.</span><span class="n">filter_biotype</span><span class="p">,</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">)</span>
 <span class="go">Added function &#39;Filter.filter_biotype(biotype=&#39;protein_coding&#39;)&#39; to the pipeline.</span>
@@ -1260,7 +1261,7 @@ We can do that either via the function’s name:</p>
 <p>Now that we have a Pipeline with multiple functions, we can apply it to our Filter objects.</p>
 <p>Just like with other functions in the <em>filtering</em> module, the functions in a <a class="reference internal" href="glossary.html#term-Pipeline"><span class="xref std std-term">Pipeline</span></a> can be applied either inplace or returned as a new object.
 You can determine that via the <cite>inplace</cite> argument of the function <cite>Pipeline.apply_to()</cite>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># create the pipeline</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s1">&#39;DESeqFilter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="o">.</span><span class="n">filter_missing_values</span><span class="p">)</span>
@@ -1286,7 +1287,7 @@ You can determine that via the <cite>inplace</cite> argument of the function <ci
 <p>Note that only functions that can be applied inplace (such as filtering/normalizing) will be applied inplace.
 If our pipeline contained other types of functions, they will not be applied inplace, and will instead be returned at the end of the Pipeline.</p>
 <p>If we apply a Pipeline with functions that return additional outputs (such as Figures, DataFrames, etc), they will be returned in a dictionary alongside the Filter object:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># create the pipeline</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="s1">&#39;DESeqFilter&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pipe</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s1">&#39;biotypes&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/test_files/test_files/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
@@ -1326,7 +1327,7 @@ We can apply the same Pipeline to as many Filter objects as we want, as long as 
 </section>
 </section>
 <section id="rnalysis-enrichment-module">
-<h2>RNAlysis enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline"></a></h2>
+<h2><em>RNAlysis</em> enrichment module<a class="headerlink" href="#rnalysis-enrichment-module" title="Permalink to this headline"></a></h2>
 <p>RNAlysis’s enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including Gene Ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.</p>
 <section id="working-with-featureset-objects">
 <h3>Working with FeatureSet objects<a class="headerlink" href="#working-with-featureset-objects" title="Permalink to this headline"></a></h3>
@@ -1334,7 +1335,7 @@ We can apply the same Pipeline to as many Filter objects as we want, as long as 
 <section id="initialize-an-featureset-object">
 <h4>Initialize an FeatureSet object<a class="headerlink" href="#initialize-an-featureset-object" title="Permalink to this headline"></a></h4>
 <p>We will start by importing the enrichment module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">enrichment</span>
 </pre></div>
 </div>
 <p>A <a class="reference internal" href="glossary.html#term-FeatureSet"><span class="xref std std-term">FeatureSet</span></a> object can now be initialized by one of three methods.
@@ -1360,7 +1361,7 @@ The first method is to specify an existing Filter object:</p>
 <section id="go-enrichment">
 <h4>GO Enrichment<a class="headerlink" href="#go-enrichment" title="Permalink to this headline"></a></h4>
 <p>Using the <em>enrichment</em> module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
-You can read more about Gene Ontology here: <a class="reference external" href="http://geneontology.org/docs/ontology-documentation/">http://geneontology.org/docs/ontology-documentation/</a></p>
+You can read more about Gene Ontology on the <a class="reference external" href="http://geneontology.org/docs/ontology-documentation/?">Gene Ontology Consortium website</a>.</p>
 <p>To perform GO Enrichment analysis, we will start by creating an FeatureSet object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
@@ -1368,18 +1369,18 @@ You can read more about Gene Ontology here: <a class="reference external" href="
 </div>
 <section id="define-the-correct-organism-and-gene-id-type-for-your-dataset">
 <h5>Define the correct <em>organism</em> and <em>gene ID type</em> for your dataset<a class="headerlink" href="#define-the-correct-organism-and-gene-id-type-for-your-dataset" title="Permalink to this headline"></a></h5>
-<p>Since GO annotations refer to specific gene products, which can differ between different species, RNAlysis needs to know which organism your dataset refers to.
+<p>Since GO annotations refer to specific gene products, which can differ between different species, <em>RNAlysis</em> needs to know which organism your dataset refers to.
 The organism can be specified as either the organism’s name, or the organism’s <em>NCBI Taxon ID</em> (for example: 6239 for <em>Caenorhabditis elegans</em>).</p>
 <p>It is recommended to manually determine your organism’s <em>NCBI Taxon ID</em> to avoid mischaracterization of annotations.
-However, if you are not sure, RNAlysis will attempt to automatically determine the correct <cite>organism</cite> by default, based on the gene IDs in your FeatureSet.</p>
-<p>Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), RNAlysis can translate gene IDs from one gene ID type to another.
+However, if you are not sure, <em>RNAlysis</em> will attempt to automatically determine the correct <cite>organism</cite> by default, based on the gene IDs in your FeatureSet.</p>
+<p>Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), <em>RNAlysis</em> can translate gene IDs from one gene ID type to another.
 In order to do that, you need to specify which gene ID type your dataset uses.</p>
 </section>
 <section id="define-the-background-set">
 <h5>Define the background set<a class="headerlink" href="#define-the-background-set" title="Permalink to this headline"></a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain <em>GO Term</em>, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
-<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that have at least one GO Annotation as a background set.
+<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, <em>RNAlysis</em> uses all of the protein-coding genes that have at least one GO Annotation as a background set.
 If you don’t want to use the default setting, there are two methods of defining the background set:</p>
 <p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">go_enrichment</span><span class="p">(</span><span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
@@ -1422,7 +1423,7 @@ If you choose to use a randomization test, you can specify the number of randomi
 </ol>
 <p>Every GO term is exclusively associated with one of these <em>GO aspects</em>.
 If you are interested in testing enrichment only for GO terms associated with a subset of these <em>GO aspects</em> you can specify which <em>GO aspects</em> to use through the <cite>aspects</cite> parameter.</p>
-<p>If you don’t specify <em>GO aspects</em> to be included, RNAlysis will test enrichment for GO Terms from all <em>GO aspects</em> by default.</p>
+<p>If you don’t specify <em>GO aspects</em> to be included, <em>RNAlysis</em> will test enrichment for GO Terms from all <em>GO aspects</em> by default.</p>
 </section>
 <section id="filter-go-annotations-by-evidence-codes-optional">
 <h5>Filter GO Annotations by Evidence Codes (optional)<a class="headerlink" href="#filter-go-annotations-by-evidence-codes-optional" title="Permalink to this headline"></a></h5>
@@ -1439,7 +1440,7 @@ Evidence codes are divided into six categories:</p>
 <p>Each evidence category contains multiple evidence codes, each with its own definition.</p>
 <p>You can choose to include only annotations with specific evidence codes, or to exclude annotations with specific annotation codes, using the <cite>evidence_types</cite> and <cite>excluded_evidence_types</cite> parameters.
 You can specify either specific evidence codes (e.g. ‘IEA’, ‘IKR’), evidence categories (‘experimental’, ‘electronic’), or any combination of those.</p>
-<p>If you don’t specify evidence types to be included/excluded, RNAlysis will use annotations with all evidence codes by default.</p>
+<p>If you don’t specify evidence types to be included/excluded, <em>RNAlysis</em> will use annotations with all evidence codes by default.</p>
 <p>You can read more about GO evidence codes here:
 <a class="reference external" href="http://geneontology.org/docs/guide-go-evidence-codes/">http://geneontology.org/docs/guide-go-evidence-codes/</a></p>
 </section>
@@ -1447,7 +1448,7 @@ You can specify either specific evidence codes (e.g. ‘IEA’, ‘IKR’), evid
 <h5>Filter GO Annotations by database (optional)<a class="headerlink" href="#filter-go-annotations-by-database-optional" title="Permalink to this headline"></a></h5>
 <p>GO annotations are curated by different databases, such as UniProt, WormBase, or The Arabidopsis Information Resource.
 You can choose to include only annotations from specific databases, or to exclude annotations from specific databases, using the <cite>databases</cite> and <cite>excluded_databases</cite> parameters.</p>
-<p>If you don’t specify databases to be included/excluded, RNAlysis will use annotations from all databases by default.</p>
+<p>If you don’t specify databases to be included/excluded, <em>RNAlysis</em> will use annotations from all databases by default.</p>
 </section>
 <section id="filter-go-annotations-by-qualifiers-optional">
 <h5>Filter GO Annotations by Qualifiers (optional)<a class="headerlink" href="#filter-go-annotations-by-qualifiers-optional" title="Permalink to this headline"></a></h5>
@@ -1457,7 +1458,7 @@ Annotations with the <em>NOT</em> qualifier are usually ignored during enrichmen
 2. the <em>contributes_to</em> qualifier - indicates that this gene product facilitates, but does not directly carry out a function of a protein complex.
 3. the <em>colocalizes_with</em> qualifier - indicates that this gene product associates with an organelle or complex.</p>
 <p>You can choose to include only annotations with specific qualifiers, or to exclude annotations with a specific qualifier, using the <cite>qualifiers</cite> and <cite>excluded_qualifiers</cite> parameters.</p>
-<p>If you don’t specify qualifiers to be included/excluded, RNAlysis will ignore annotations with the <em>NOT</em> qualifier by default, and use annotations with any other qualifiers (or no qualifiers at all).</p>
+<p>If you don’t specify qualifiers to be included/excluded, <em>RNAlysis</em> will ignore annotations with the <em>NOT</em> qualifier by default, and use annotations with any other qualifiers (or no qualifiers at all).</p>
 <p>You can read more about GO qualifiers here:
 <a class="reference external" href="http://geneontology.org/docs/go-annotations/">http://geneontology.org/docs/go-annotations/</a></p>
 </section>
@@ -1466,10 +1467,10 @@ Annotations with the <em>NOT</em> qualifier are usually ignored during enrichmen
 <p>Gene Ontology terms have a somewhat hierarchical relationship that is defined as a directed a-cyclic graph (DAG). This means that each GO term is a node in the graph, and that each node has defined parents that are less specific than itself, going up to the top of the graph.</p>
 <p>For example:</p>
 <blockquote>
-<div><figure class="align-center" id="id39">
+<div><figure class="align-center" id="id50">
 <a class="reference internal image-reference" href="http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="http://geneontology.org/assets/hexose-biosynthetic-process.png" src="http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
 <figcaption>
-<p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id39" title="Permalink to this image"></a></p>
+<p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id50" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1482,39 +1483,53 @@ Moreover, since more specific GO terms by definition have less annotations than 
 <p>To deal with this problem, several alternative propagation methods were developed to help de-correlate the GO graph structure and increase the specificity of our results without compromising accuracy.
 You can read more about some suggested methods in the following publication:
 <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/16606683/">https://pubmed.ncbi.nlm.nih.gov/16606683/</a></p>
-<p>RNAlysis implements three of these propagation methods: <em>elim</em>, <em>weight</em>, and <em>all.m</em>.
+<p><em>RNAlysis</em> implements three of these propagation methods: <em>elim</em>, <em>weight</em>, and <em>all.m</em>.
 You can decide which propagation method to use by specifying the <cite>propagation_method</cite> parameter: ‘no’ for no propagation of GO annotations, ‘classic’ for classic propagation of GO annotations, and ‘elim’/’weight’/’all.m’ for propagation using the <em>elim</em>/<em>weight</em>/<em>all.m</em> propagation algorithms.</p>
 <p>If you don’t specify which propagation method to use in enrichment analysis, the <em>elim</em> method will be used by default.</p>
 </section>
 <section id="choose-plotting-parameters-optional">
 <h5>Choose plotting parameters (optional)<a class="headerlink" href="#choose-plotting-parameters-optional" title="Permalink to this headline"></a></h5>
-<p>After RNALysis is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
-RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.</p>
+<p>After <em>RNAlysis</em> is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
+<em>RNAlysis</em> plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.</p>
 <p>You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
 <blockquote>
-<div><figure class="align-center" id="id40">
-<a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 224.0px; height: 260.8px;" /></a>
+<div><figure class="align-center" id="id51">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_go.png"><img alt="_images/plot_enrichment_results_go.png" src="_images/plot_enrichment_results_go.png" style="width: 560.0px; height: 406.0px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id9"><span class="problematic" id="id10">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id40" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id9"><span class="problematic" id="id10">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id51" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id41">
-<a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 327.6px; height: 222.4px;" /></a>
+<figure class="align-center" id="id52">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_go_vertical.png"><img alt="_images/plot_enrichment_results_go_vertical.png" src="_images/plot_enrichment_results_go_vertical.png" style="width: 769.2px; height: 224.0px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id11"><span class="problematic" id="id12">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id41" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id11"><span class="problematic" id="id12">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id52" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
 </div></blockquote>
-<p>If you want to further customize this plot, you can request RNAlysis to return a Matplotlib Figure object of the barplot, by using the <cite>return_fig</cite> parameter.</p>
-<p>If you don’t specify plotting parameters, RNALysis will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.</p>
+<p>If you want to further customize this plot, you can request <em>RNAlysis</em> to return a Matplotlib Figure object of the barplot, by using the <cite>return_fig</cite> parameter.</p>
+<p>If you don’t specify plotting parameters, <em>RNAlysis</em> will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.</p>
+<p>In addition, <em>RNAlysis</em> can generate an ontology graph, depicting all of the statistically significant GO terms and their hierarchical relationships:</p>
+<blockquote>
+<div><figure class="align-center" id="id53">
+<a class="reference internal image-reference" href="_images/ontology_graph.png"><img alt="_images/ontology_graph.png" src="_images/ontology_graph.png" style="width: 560.0px; height: 360.0px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id13"><span class="problematic" id="id14">`</span></a>plot_ontology_graph`=True</span><a class="headerlink" href="#id53" title="Permalink to this image"></a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+</div></blockquote>
+<p>If you don’t want to generate this graph, you can set the parameter <cite>plot_ontology_graph</cite> to False.</p>
+<p>Moreover, you can determine the file format of the generated graph (.pdf, .png, .svg, etc’), by setting the <cite>ontology_graph_format</cite> parameter.</p>
+<p>If you don’t specify plotting parameters, <em>RNAlysis</em> will generate an ontology graph by default in a PDF format.</p>
 </section>
 <section id="enrichment-analysis-output">
 <h5>Enrichment analysis output<a class="headerlink" href="#enrichment-analysis-output" title="Permalink to this headline"></a></h5>
-<p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
+<p>Running enrichment analysis will calculate enrichment for each of the GO terms, and return a pandas DataFrame in the following format:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 12%" />
@@ -1564,6 +1579,141 @@ RNAlysis plots the results as a bar plot, with the Y axis showing log2 fold enri
 </table>
 <p>‘samples’ is the number of features that were used in the enrichment set. ‘obs’ is the observed number of features positive for the attribute in the enrichment set.
 ‘exp’ is the expected number of features positive for the attribute in the background set. ‘log2_fold_enrichment’ is log2 of the fold change ‘obs’/’exp’.</p>
+<section id="kegg-pathways-enrichment">
+<h6>KEGG Pathways enrichment<a class="headerlink" href="#kegg-pathways-enrichment" title="Permalink to this headline"></a></h6>
+<p>Using the <em>enrichment</em> module, you can perform enrichment analysis for KEGG pathways.
+You can read more about KEGG pathways on the <a class="reference external" href="https://www.genome.jp/kegg/pathway.html">KEGG website</a>.</p>
+<p>To perform KEGG Enrichment analysis, we will start by creating an FeatureSet object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;path_to_my_file.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id15">
+<h5>Define the correct <em>organism</em> and <em>gene ID type</em> for your dataset<a class="headerlink" href="#id15" title="Permalink to this headline"></a></h5>
+<p>Since KEGG annotations refer to specific gene products, which can differ between different species, <em>RNAlysis</em> needs to know which organism your dataset refers to.
+The organism can be specified as either the organism’s name, or the organism’s <em>NCBI Taxon ID</em> (for example: 6239 for <em>Caenorhabditis elegans</em>).</p>
+<p>It is recommended to manually determine your organism’s <em>NCBI Taxon ID</em> to avoid mischaracterization of annotations.
+However, if you are not sure, <em>RNAlysis</em> will attempt to automatically determine the correct <cite>organism</cite> by default, based on the gene IDs in your FeatureSet.</p>
+<p>Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), <em>RNAlysis</em> can translate gene IDs from one gene ID type to another.
+In order to do that, you need to specify which gene ID type your dataset uses.</p>
+</section>
+<section id="id16">
+<h5>Define the background set<a class="headerlink" href="#id16" title="Permalink to this headline"></a></h5>
+<p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain KEGG pathway, in comparison to a more generalized set of genomic features that we determined as ‘background’.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
+<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, <em>RNAlysis</em> uses all of the protein-coding genes that have at least one KEGG annotation as a background set.
+If you don’t want to use the default setting, there are two methods of defining the background set:</p>
+<p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">kegg_enrichment</span><span class="p">(</span><span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
+When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.</p>
+<p>The second method of defining the background set is to define a specific set of genomic features to be used as background:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_background_set</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;feature1&#39;</span><span class="p">,</span><span class="s1">&#39;feature2&#39;</span><span class="p">,</span><span class="s1">&#39;feature3&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">en</span><span class="o">.</span><span class="n">kegg_enrichment</span><span class="p">(</span><span class="n">background_genes</span><span class="o">=</span><span class="n">my_background_set</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, our background set consists of <em>feature1</em>, <em>feature2</em> and <em>feature3</em>.</p>
+<p>It is not possible to specify both a biotype and a specific background set.</p>
+<p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
+</section>
+<section id="id17">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id17" title="Permalink to this headline"></a></h5>
+<p>Significance testing for KEGG enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
+<p>The hypergeometric test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute (‘success’) and <em>X</em> genes from the test set belonging to that attribute.
+If we were to randomly draw <em>n</em> genes from the background set (without replacement), what is the probability of drawing <em>X</em> or more (in case of enrichment)/<em>X</em> or less (in case of depletion) genes belonging to the given attribute?</p>
+<p>The Fisher’s Exact test is similar in principle to the hypergeometric test, but is two-tailed by default, as opposed to the hypergeometric test which examines enrichment and depletion separately.</p>
+<p>The randomization test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute and <em>X</em> genes from the test set belonging to that attribute.
+We performs the number of randomizations specified by the user (10,000 by default).
+In each randomization we randomly draw a set of <em>n</em> genes from the background set (without replacement), and marks the randomization as a ‘success’ if the number of genes in the random set belonging to the attribute is &gt;= <em>X</em> (in case of enrichment) or &lt;= <em>X</em> (in case of depletion).
+The p-values are calculated as <em>(number of sucesses + 1)/(number of repetitions + 1)</em>.
+This is a positive-bias estimator of the exact p-value, which avoids exactly-zero p-values.
+You can read more about the topic in the following publication: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/21044043">https://www.ncbi.nlm.nih.gov/pubmed/21044043</a></p>
+<p>If you don’t specify which statistical test you want to use, the Fisher’s Exact Test will be used by default.</p>
+<p>To choose the statistical test you want to use, utilize the <cite>statistical_test</cite> parameter, which accepts either ‘fisher’, ‘hypergeometric’, or ‘randomization’.
+If you choose to use a randomization test, you can specify the number of randomization repititions to run using the <cite>randomization_reps</cite> parameter, and set the random seed using the <cite>random_seed</cite> parameter.</p>
+</section>
+<section id="id18">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id18" title="Permalink to this headline"></a></h5>
+<p>After <em>RNAlysis</em> is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
+<em>RNAlysis</em> plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.</p>
+<p>You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
+<blockquote>
+<div><figure class="align-center" id="id54">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 224.0px; height: 260.8px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id19"><span class="problematic" id="id20">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id54" title="Permalink to this image"></a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+<figure class="align-center" id="id55">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 327.6px; height: 222.4px;" /></a>
+<figcaption>
+<p><span class="caption-text"><a href="#id21"><span class="problematic" id="id22">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id55" title="Permalink to this image"></a></p>
+<div class="legend">
+</div>
+</figcaption>
+</figure>
+</div></blockquote>
+<p>If you want to further customize this plot, you can request <em>RNAlysis</em> to return a Matplotlib Figure object of the barplot, by using the <cite>return_fig</cite> parameter.</p>
+<p>If you don’t specify plotting parameters, <em>RNAlysis</em> will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.</p>
+</section>
+<section id="id23">
+<h5>Enrichment analysis output<a class="headerlink" href="#id23" title="Permalink to this headline"></a></h5>
+<p>Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 41%" />
+<col style="width: 9%" />
+<col style="width: 3%" />
+<col style="width: 4%" />
+<col style="width: 14%" />
+<col style="width: 6%" />
+<col style="width: 6%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>KEGG ID</p></th>
+<th class="head"><p>name</p></th>
+<th class="head"><p>samples</p></th>
+<th class="head"><p>obs</p></th>
+<th class="head"><p>exp</p></th>
+<th class="head"><p>log2_fold_enrichment</p></th>
+<th class="head"><p>pval</p></th>
+<th class="head"><p>padj</p></th>
+<th class="head"><p>significant</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>cel00010</p></td>
+<td><p>Glycolysis / Gluconeogenesis - Caenorhabditis elegans (nematode)</p></td>
+<td><p>1327</p></td>
+<td><p>451</p></td>
+<td><p>319.52</p></td>
+<td><p>0.49722119558</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-odd"><td><p>cel00030</p></td>
+<td><p>Pentose phosphate pathway - Caenorhabditis elegans (nematode)</p></td>
+<td><p>1327</p></td>
+<td><p>89</p></td>
+<td><p>244.87</p></td>
+<td><p>-1.46013879322</p></td>
+<td><p>0.0000999</p></td>
+<td><p>0.0000999</p></td>
+<td><p>True</p></td>
+</tr>
+</tbody>
+</table>
+<p>‘samples’ is the number of features that were used in the enrichment set. ‘obs’ is the observed number of features positive for the attribute in the enrichment set.
+‘exp’ is the expected number of features positive for the attribute in the background set. ‘log2_fold_enrichment’ is log2 of the fold change ‘obs’/’exp’.</p>
 </section>
 </section>
 <section id="enrichment-analysis-for-user-defined-attributes">
@@ -1581,11 +1731,11 @@ Once we have a Reference Table, we can perform enrichment analysis for those att
 If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables’ path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 </section>
-<section id="id13">
-<h5>Define the background set<a class="headerlink" href="#id13" title="Permalink to this headline"></a></h5>
+<section id="id24">
+<h5>Define the background set<a class="headerlink" href="#id24" title="Permalink to this headline"></a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
-<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, <em>RNAlysis</em> uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
 If you don’t want to use the default setting, there are two methods of defining the background set:</p>
 <p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">enrich_randomization</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
@@ -1602,8 +1752,8 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 </section>
-<section id="id14">
-<h5>Choose the statistical test (optional)<a class="headerlink" href="#id14" title="Permalink to this headline"></a></h5>
+<section id="id25">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id25" title="Permalink to this headline"></a></h5>
 <p>Significance testing for enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
 <p>The hypergeometric test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute (‘success’) and <em>X</em> genes from the test set belonging to that attribute.
 If we were to randomly draw <em>n</em> genes from the background set (without replacement), what is the probability of drawing <em>X</em> or more (in case of enrichment)/<em>X</em> or less (in case of depletion) genes belonging to the given attribute?</p>
@@ -1618,33 +1768,33 @@ You can read more about the topic in the following publication: <a class="refere
 <p>To choose the statistical test you want to use, utilize the <cite>statistical_test</cite> parameter, which accepts either ‘fisher’, ‘hypergeometric’, or ‘randomization’.
 If you choose to use a randomization test, you can specify the number of randomization repititions to run using the <cite>randomization_reps</cite> parameter, and set the random seed using the <cite>random_seed</cite> parameter.</p>
 </section>
-<section id="id15">
-<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id15" title="Permalink to this headline"></a></h5>
-<p>After performing enrichment analysis, RNAlysis will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
+<section id="id26">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id26" title="Permalink to this headline"></a></h5>
+<p>After performing enrichment analysis, <em>RNAlysis</em> will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
 You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
 <blockquote>
-<div><figure class="align-center" id="id42">
+<div><figure class="align-center" id="id56">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 224.0px; height: 260.8px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id16"><span class="problematic" id="id17">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id42" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id27"><span class="problematic" id="id28">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id56" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id43">
+<figure class="align-center" id="id57">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 327.6px; height: 222.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id18"><span class="problematic" id="id19">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id43" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id29"><span class="problematic" id="id30">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id57" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the <cite>return_fig</cite> parameter.
-When it is set as ‘True’, RNALysis will return the Figure object it generated in addition to the results table.</p>
+When it is set as ‘True’, <em>RNAlysis</em> will return the Figure object it generated in addition to the results table.</p>
 </section>
-<section id="id20">
-<h5>Enrichment analysis output<a class="headerlink" href="#id20" title="Permalink to this headline"></a></h5>
+<section id="id31">
+<h5>Enrichment analysis output<a class="headerlink" href="#id31" title="Permalink to this headline"></a></h5>
 <p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -1704,11 +1854,11 @@ If your Reference Tables are set to be the default Reference Tables (as explaine
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 <p>Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every genomic feature in the background and test sets (meaning, no NaN values).</p>
 </section>
-<section id="id21">
-<h5>Define the background set<a class="headerlink" href="#id21" title="Permalink to this headline"></a></h5>
+<section id="id32">
+<h5>Define the background set<a class="headerlink" href="#id32" title="Permalink to this headline"></a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
-<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, RNAlysis uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
+<p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, <em>RNAlysis</em> uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
 If you don’t want to use the default setting, there are two methods of defining the background set:</p>
 <p>The first method is to specify a biotype (such as ‘protein_coding’, ‘miRNA’ or ‘all’) under the parameter ‘biotype’:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">en</span><span class="o">.</span><span class="n">non_categorical_enrichment</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span><span class="s1">&#39;attribute2&#39;</span><span class="p">],</span> <span class="n">biotype</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
@@ -1725,43 +1875,43 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 </section>
-<section id="id22">
-<h5>Choose the statistical test (optional)<a class="headerlink" href="#id22" title="Permalink to this headline"></a></h5>
+<section id="id33">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id33" title="Permalink to this headline"></a></h5>
 <p>When calculating enrichment for a non-categorical attribute, you can use either a parametric or non-parametric statistical test.</p>
-<p>If the <cite>parametric_test</cite> parameter is True, RNAlysis will calculate enrichment using the <em>one-sample Student’s T-test</em>, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.</p>
-<p>If the <cite>parametric_test</cite> parameter is False, RNAlysis will calculate enrichment using the non-parametric <em>one-sample Sign test</em>, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.</p>
+<p>If the <cite>parametric_test</cite> parameter is True, <em>RNAlysis</em> will calculate enrichment using the <em>one-sample Student’s T-test</em>, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.</p>
+<p>If the <cite>parametric_test</cite> parameter is False, <em>RNAlysis</em> will calculate enrichment using the non-parametric <em>one-sample Sign test</em>, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.</p>
 <p>The parametric T-test assumes that the values of your non-categorical attribute distribute normally. Therefore, if you are not sure your data meets this assumption, it is recommended to use the less-powerful non-parametric test.</p>
-<p>If you don’t specify the statistical test, RNAlysis will automatically use a non-parametric test.</p>
+<p>If you don’t specify the statistical test, <em>RNAlysis</em> will automatically use a non-parametric test.</p>
 </section>
-<section id="id23">
-<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id23" title="Permalink to this headline"></a></h5>
+<section id="id34">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id34" title="Permalink to this headline"></a></h5>
 <p>The results of non-categorical enrichment analysis will be plotted as a histogram, comparing the distribution of the non-categorical attribute within the enrichment set compared to the background set.
 If you used a parametric test, the mean of each set will be marked on the histogram. Alternatively, if you used a non-parametric test, the median of each set will be marked on the graph.
 The enrichment results of each attribute will be plotted in a different Figure.</p>
 <p>To better fit the visualization of the results to your needs, you can specify two parameters:</p>
 <p><cite>plot_log_scale</cite> can accept either <cite>True</cite> or <cite>False</cite>, and will determine whether the X-axis of the histogram will be plotting on a logarithmic or linear scale.</p>
-<p><a href="#id24"><span class="problematic" id="id25">`</span></a>plot_style’ can accept either ‘overlap’ or ‘interleaved’, and will draw the histogram in one of the following two styles:</p>
+<p><a href="#id35"><span class="problematic" id="id36">`</span></a>plot_style’ can accept either ‘overlap’ or ‘interleaved’, and will draw the histogram in one of the following two styles:</p>
 <blockquote>
-<div><figure class="align-center" id="id44">
+<div><figure class="align-center" id="id58">
 <a class="reference internal image-reference" href="_images/hist_overlap.png"><img alt="_images/hist_overlap.png" src="_images/hist_overlap.png" style="width: 480.0px; height: 238.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id26"><span class="problematic" id="id27">`</span></a>plot_style`=’overlap’</span><a class="headerlink" href="#id44" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id37"><span class="problematic" id="id38">`</span></a>plot_style`=’overlap’</span><a class="headerlink" href="#id58" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id45">
+<figure class="align-center" id="id59">
 <a class="reference internal image-reference" href="_images/hist_interleaved.png"><img alt="_images/hist_interleaved.png" src="_images/hist_interleaved.png" style="width: 480.0px; height: 238.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id28"><span class="problematic" id="id29">`</span></a>plot_style`=’interleaved’</span><a class="headerlink" href="#id45" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id39"><span class="problematic" id="id40">`</span></a>plot_style`=’interleaved’</span><a class="headerlink" href="#id59" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
 </div></blockquote>
-<p>If you don’t specify plotting parameters, RNAlysis will plot the histogram on a logarithmic scale using the ‘overlap’ style by default.</p>
+<p>If you don’t specify plotting parameters, <em>RNAlysis</em> will plot the histogram on a logarithmic scale using the ‘overlap’ style by default.</p>
 <p>If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the <cite>return_fig</cite> parameter.
-When it is set as ‘True’, RNALysis will return the Figure object it generated in addition to the results table.</p>
+When it is set as ‘True’, <em>RNAlysis</em> will return the Figure object it generated in addition to the results table.</p>
 </section>
 <section id="non-categorical-enrichment-analysis-output">
 <h5>Non-Categorical Enrichment analysis output<a class="headerlink" href="#non-categorical-enrichment-analysis-output" title="Permalink to this headline"></a></h5>
@@ -1823,19 +1973,19 @@ When it is set as ‘True’, RNALysis will return the Figure object it generate
 Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> (you can read more about attributes in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
 Venn diagrams are limited to 2-3 sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id46">
+<div><figure class="align-center" id="id60">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id46" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id60" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>While UpSet plots can include any number of sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id47">
+<div><figure class="align-center" id="id61">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id61" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1860,7 +2010,7 @@ You can read more about the <em>minimum hypergeometric test</em> and its general
 <section id="initialize-an-rankedset-object">
 <h4>Initialize an RankedSet object<a class="headerlink" href="#initialize-an-rankedset-object" title="Permalink to this headline"></a></h4>
 <p>We will start by importing the enrichment module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">enrichment</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> objects can be initialized by one of two methods.
@@ -1883,19 +2033,31 @@ The first method is to specify an existing Filter object:</p>
 <p>First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> that defines a meaningful ranking for your gene set.
 Second, you cannot specify which statistical test to use, since the <em>XL-mHG</em> test has to be used.</p>
 <p>An example for running single-set GO Enrichment would look like so:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ranked_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">RankedSet</span><span class="p">([</span><span class="s1">&#39;WBGene00000019&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000106&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000041&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000105&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">go_en_result</span> <span class="o">=</span> <span class="n">ranked_set</span><span class="o">.</span><span class="n">single_set_go_enrichment</span><span class="p">(</span><span class="n">gene_id_type</span><span class="o">=</span><span class="s1">&#39;WormBase&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="performing-single-set-enrichment-analysis-without-a-background-set">
-<h4>Performing single-set enrichment analysis without a background set<a class="headerlink" href="#performing-single-set-enrichment-analysis-without-a-background-set" title="Permalink to this headline"></a></h4>
+<section id="performing-single-set-kegg-enrichment-analysis-without-a-background-set">
+<h4>Performing single-set KEGG Enrichment analysis without a background set<a class="headerlink" href="#performing-single-set-kegg-enrichment-analysis-without-a-background-set" title="Permalink to this headline"></a></h4>
+<p>Single-set KEGG Enrichment works much the same as normal KEGG Enrichment analysis, with two key differences:</p>
+<p>First, when performing single-set KEGG Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> that defines a meaningful ranking for your gene set.
+Second, you cannot specify which statistical test to use, since the <em>XL-mHG</em> test has to be used.</p>
+<p>An example for running single-set KEGG Enrichment would look like so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">enrichment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ranked_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">RankedSet</span><span class="p">([</span><span class="s1">&#39;WBGene00000019&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000106&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000041&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000105&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">go_en_result</span> <span class="o">=</span> <span class="n">ranked_set</span><span class="o">.</span><span class="n">single_set_kegg_enrichment</span><span class="p">(</span><span class="n">gene_id_type</span><span class="o">=</span><span class="s1">&#39;WormBase&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="performing-single-set-enrichment-analysis-for-user-defined-attributes-without-a-background-set">
+<h4>Performing single-set enrichment analysis for user-defined attributes without a background set<a class="headerlink" href="#performing-single-set-enrichment-analysis-for-user-defined-attributes-without-a-background-set" title="Permalink to this headline"></a></h4>
 <p>Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:</p>
-<p>First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> that defines a meaningful ranking for your gene set.
+<p>First, when performing single-set enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a <a class="reference internal" href="glossary.html#term-RankedSet"><span class="xref std std-term">RankedSet</span></a> that defines a meaningful ranking for your gene set.
 Second, you cannot specify which statistical test to use, since the <em>XL-mHG</em> test has to be used.</p>
 <p>An example for running single-set enrichment analysis would look like so:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ranked_set</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">RankedSet</span><span class="p">([</span><span class="s1">&#39;WBGene00000019&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000106&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000041&#39;</span><span class="p">,</span> <span class="s1">&#39;WBGene00000105&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en_result</span> <span class="o">=</span> <span class="n">ranked_set</span><span class="o">.</span><span class="n">single_set_enrichment</span><span class="p">([</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span> <span class="s1">&#39;attribute3&#39;</span><span class="p">],</span> <span class="n">attr_ref_path</span><span class="o">=</span><span class="s1">&#39;tests/test_files/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
 </pre></div>
@@ -1906,7 +2068,7 @@ Second, you cannot specify which statistical test to use, since the <em>XL-mHG</
 <h3>Visualizing sets, intersections, and enrichment<a class="headerlink" href="#visualizing-sets-intersections-and-enrichment" title="Permalink to this headline"></a></h3>
 <section id="plotting-results-of-enrichment-analysis">
 <h4>Plotting results of enrichment analysis<a class="headerlink" href="#plotting-results-of-enrichment-analysis" title="Permalink to this headline"></a></h4>
-<p>If you want to plot existing enrichment results using RNAlysis, you can use the <cite>enrichment.plot_enrichment_results()</cite> function. It employs a similar API to the enrichment functions in the enrichment modules, but accepts pre-calculated DataFrames.</p>
+<p>If you want to plot existing enrichment results using <em>RNAlysis</em>, you can use the <cite>enrichment.plot_enrichment_results()</cite> function. It employs a similar API to the enrichment functions in the enrichment modules, but accepts pre-calculated DataFrames.</p>
 </section>
 <section id="plotting-venn-diagrams-and-upset-plots">
 <h4>Plotting Venn Diagrams and UpSet Plots<a class="headerlink" href="#plotting-venn-diagrams-and-upset-plots" title="Permalink to this headline"></a></h4>
@@ -1919,26 +2081,26 @@ Those sets can be represented using a python dictionary, where each key represen
 <li><p>A column name from an Attribute Reference Table</p></li>
 </ol>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">enrichment</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">enrichment</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sets_to_visualize</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;First set&#39;</span><span class="p">:{</span><span class="s1">&#39;gene1&#39;</span><span class="p">,</span> <span class="s1">&#39;gene2&#39;</span><span class="p">,</span> <span class="s1">&#39;gene3&#39;</span><span class="p">},</span> <span class="s1">&#39;Second set&#39;</span><span class="p">:</span><span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">({</span><span class="s1">&#39;gene2&#39;</span><span class="p">,</span><span class="s1">&#39;gene3&#39;</span><span class="p">,</span><span class="s1">&#39;gene4&#39;</span><span class="p">}),</span> <span class="s1">&#39;Third set&#39;</span><span class="p">:</span><span class="s1">&#39;attribute1&#39;</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>After defining the dictionary of sets, we can use it to plot set intersection via the <cite>enrichment.venn_diagram()</cite> or <cite>enrichment.upset_plot()</cite> functions.
-Venn diagrams in RNAlysis are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.</p>
+Venn diagrams in <em>RNAlysis</em> are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.</p>
 <blockquote>
-<div><figure class="align-center" id="id48">
+<div><figure class="align-center" id="id62">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id62" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>UpSet plots support the visualization of much larger groups of sets. You can read more about UpSet plots here: <a class="reference external" href="https://upset.app/">https://upset.app/</a></p>
 <blockquote>
-<div><figure class="align-center" id="id49">
+<div><figure class="align-center" id="id63">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id49" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id63" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1946,7 +2108,7 @@ Venn diagrams in RNAlysis are plotted with relatively accurate proportions and o
 </section>
 </section>
 <section id="rnalysis-general-module">
-<h2>RNAlysis general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline"></a></h2>
+<h2><em>RNAlysis</em> general module<a class="headerlink" href="#rnalysis-general-module" title="Permalink to this headline"></a></h2>
 <p>RNAlysis’s general module (rnalysis.general) contains general functions that can be useful during analysis of RNA sequencing data, including regular expression parsers and setting the Reference Table path.</p>
 <section id="set-and-load-a-reference-table">
 <span id="reference-table-ref"></span><h3>Set and load a Reference Table<a class="headerlink" href="#set-and-load-a-reference-table" title="Permalink to this headline"></a></h3>
@@ -2032,8 +2194,8 @@ User-annotated biotypes should be defined in a <a class="reference internal" hre
 </section>
 <section id="set-a-reference-table-as-default">
 <h4>Set a Reference Table as default<a class="headerlink" href="#set-a-reference-table-as-default" title="Permalink to this headline"></a></h4>
-<p>Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of RNAlysis:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<p>Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of <em>RNAlysis</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">general</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;the_new_attribute_reference_table_path&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">general</span><span class="o">.</span><span class="n">set_attr_ref_table_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 <span class="go">Attribute Reference Table path set as: the_new_attribute_reference_table_path</span>
@@ -2044,13 +2206,13 @@ User-annotated biotypes should be defined in a <a class="reference internal" hre
 </pre></div>
 </div>
 <p>This will create a file called ‘settings.yaml’, which will store the full paths of your reference tables.
-Whenever RNAlysis needs to use an Attribute/Biotype Reference Table and no other path is specified, RNAlysis will automatically use the path saved in the settings file.
+Whenever <em>RNAlysis</em> needs to use an Attribute/Biotype Reference Table and no other path is specified, <em>RNAlysis</em> will automatically use the path saved in the settings file.
 The saved path can be changed any time using the general.set_attr_ref_table_path() and general.set_biotype_ref_table_path() functions.</p>
 </section>
 <section id="load-the-default-attribute-reference-table-path">
 <h4>Load the default Attribute Reference Table path<a class="headerlink" href="#load-the-default-attribute-reference-table-path" title="Permalink to this headline"></a></h4>
 <p>You can read the saved path from the settings file using the general.read_attr_ref_table_path() and general.read_biotype_ref_table_path() functions:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">general</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attr_table_path</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">read_attr_ref_table_path</span><span class="p">()</span>
 <span class="go">Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file</span>
 
@@ -2065,7 +2227,7 @@ The saved path can be changed any time using the general.set_attr_ref_table_path
 <h3>Parse <em>C. elegans</em> gene names, WBGene indices and sequence names using regular expressions<a class="headerlink" href="#parse-c-elegans-gene-names-wbgene-indices-and-sequence-names-using-regular-expressions" title="Permalink to this headline"></a></h3>
 <p>The general module includes functions which can parse <em>C. elegans</em> gene names (like <em>daf-2</em> or <em>lin-15B</em>), WBGene indices (like WBGene00023495) and sequence names (like Y55D5A.5 or T23G5.6).
 For example, we could extract all WBGene indices from the following string:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">general</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">general</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_string</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;WBGene00000001 and WBGene00000002WBGene00000003</span>
 
 <span class="go">        WBGene00000004g</span>

@@ -44,6 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
@@ -104,23 +105,24 @@
 <section id="stable-release">
 <h2>Stable release<a class="headerlink" href="#stable-release" title="Permalink to this headline"></a></h2>
 <p>current version: <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="pipimage" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a></p>
-<p>To install RNAlysis, run this command in your terminal:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install rnalysis
+<p>You can install <em>RNAlysis</em> via PyPI.
+To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis
 </pre></div>
 </div>
-<p>This is the preferred method to install sRNA analysis pipeline, as it will always install the most recent stable release.</p>
+<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines), you should first install <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, and <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater (on Windows computers only).
+Then use the following command in your terminal window:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis<span class="o">[</span>all<span class="o">]</span>
+</pre></div>
+</div>
 <p>If you don’t have <a class="reference external" href="https://pip.pypa.io">pip</a> installed, this <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">Python installation guide</a> can guide
 you through the process.</p>
 </section>
 <section id="from-sources">
 <h2>From sources<a class="headerlink" href="#from-sources" title="Permalink to this headline"></a></h2>
 <p>The source code for RNAlysis can be downloaded from the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">Github repository</a>.</p>
-<p>You can either clone the public repository:</p>
+<p>First, clone the public repository:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone git://github.com/GuyTeichman/rnalysis
-</pre></div>
-</div>
-<p>Or download the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/tarball/master">tarball</a>:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>curl  -OL https://github.com/GuyTeichman/RNAlysis/tarball/master
 </pre></div>
 </div>
 <p>Once you have a copy of the source, you can install it with:</p>
