@@ -423,15 +423,16 @@ class AboutWindow(QtWidgets.QMessageBox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setIcon(QtWidgets.QMessageBox.Information)
+        img_path = str(Path(__file__).parent.joinpath('splash_transparent.png'))
         text = f"""<p><b><i>RNAlysis</i> version {__version__}</b>
                 </p>
                 <br>
-                <img src="splash.png" width="400"/>
+                <img src="{img_path}" width="500"/>
                 <p>
                 Development lead: Guy Teichman (<a href="mailto:guyteichman@gmail.com">guyteichman@gmail.com</a>)
                 </p>
                 <p>
-                Contributors: Or Ganon, Netta Dunsky, Shachar Shani
+                Contributors: Dror Cohen, Or Ganon, Netta Dunsky, Shachar Shani
                 </p>"""
         self.setText(text)
         self.setWindowTitle("About RNAlysis")
@@ -595,14 +596,15 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
 
 class HowToCiteWindow(gui_widgets.MinMaxDialog):
-    CITATION = f"Teichman, G. (2021) RNAlysis: RNA Sequencing analysis software (Python package version {__version__})."
+    CITATION = f"Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software (Python package version {__version__})."
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        img_path = str(Path(__file__).parent.joinpath('splash_transparent.png'))
         text = f"""<p><b><i>RNAlysis</i> version {__version__}</b>
                 </p>
                 <br>
-                <img src="../../docs/source/logo.png" width="500"/>"""
+                <img src="{img_path}" width="500"/>"""
         self.label = QtWidgets.QLabel(text)
         self.text_edit = QtWidgets.QTextEdit(self.CITATION)
         self.ok_button = QtWidgets.QPushButton('OK')
