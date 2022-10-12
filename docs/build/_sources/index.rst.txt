@@ -24,7 +24,6 @@ RNAlysis |release| documentation
 
    What is RNAlysis? <readme>
    GitHub page <https://github.com/GuyTeichman/RNAlysis>
-   authors
 
 
 .. toctree::
