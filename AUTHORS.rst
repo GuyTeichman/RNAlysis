@@ -10,6 +10,7 @@ Development Lead
 Contributors
 ------------
 
+* Dror Cohen
 * Or Ganon
 * Netta Dunsky
 * Shachar Shani
