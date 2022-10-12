@@ -2,6 +2,9 @@
 History
 =======
 
+3.0.1 (2022-10-12)
+------------------
+* This version fixes a bug with displaying the tutorial videos in the graphical user interface.
 
 
 3.0.0 (2022-10-10)
