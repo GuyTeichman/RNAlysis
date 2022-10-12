@@ -8,6 +8,16 @@ from tests import __attr_ref__, __biotype_ref__
 
 matplotlib.use('Agg')
 
+
+def is_ensembl_available():
+    req = requests.get('https://rest.ensembl.org/lookup/id')
+    if req.status_code == 200:
+        return True
+    return False
+
+
+ENSEMBL_AVAILABLE = is_ensembl_available()
+
 up_feature_set = {'WBGene00021187', 'WBGene00195184', 'WBGene00012851', 'WBGene00022486', 'WBGene00011964',
                   'WBGene00012848', 'WBGene00020817', 'WBGene00012452', 'WBGene00016635', 'WBGene00044478',
                   'WBGene00018688', 'WBGene00007489', 'WBGene00019899', 'WBGene00022039', 'WBGene00021188',
@@ -515,6 +525,7 @@ def test_enrich_single_set_api():
     plt.close('all')
 
 
+@pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.parametrize("organism,propagate_annotations", [('auto', 'classic'), ('caenorhabditis elegans', 'elim')])
 def test_go_enrichment_single_set_api(organism, propagate_annotations):
     genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
@@ -598,6 +609,7 @@ def test_fetch_sets_bad_type(objs: dict):
         _ = _fetch_sets(objs, __attr_ref__)
 
 
+@pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,kwargs",
                          [('auto', 'hypergeometric', {}),
                           (6239, 'fisher', {}),
@@ -611,6 +623,7 @@ def test_kegg_enrichment_api(organism, statistical_test, kwargs):
     plt.close('all')
 
 
+@pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 def test_kegg_enrichment_single_list_api():
     genes = ['WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195']
     en = RankedSet(genes, set_name='test_set')

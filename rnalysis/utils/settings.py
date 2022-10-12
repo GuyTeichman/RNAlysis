@@ -5,7 +5,8 @@ from typing import Union, Any
 import yaml
 
 from rnalysis import __attr_file_key__, __biotype_file_key__, __font_key__, __font_size_key__, __stylesheet_key__, \
-    __show_tutorial_key__, __path__
+    __show_tutorial_key__
+from rnalysis.utils import io
 
 DEFAULT_VALUES = {__font_key__: 'Times New Roman', __font_size_key__: 10, __stylesheet_key__: 'base',
                   __show_tutorial_key__: True}
@@ -17,8 +18,10 @@ def get_settings_file_path():
     :returns: the path of the settings.yaml file.
     :rtype: pathlib.Path
     """
-    # return Path(os.path.join(os.path.dirname(__file__), 'settings.yaml'))
-    return Path(os.path.join(__path__[0], 'settings.yaml'))
+    directory = io.get_data_dir()
+    if not directory.exists():
+        directory.mkdir(parents=True)
+    return directory.joinpath('settings.yaml')
 
 
 def reset_settings():
