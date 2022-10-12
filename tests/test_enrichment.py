@@ -543,6 +543,7 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations):
     plt.close('all')
 
 
+@pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,propagate_annotations,kwargs",
                          [('auto', 'hypergeometric', 'classic', {}),
                           ('auto', 'fisher', 'elim', {}),
