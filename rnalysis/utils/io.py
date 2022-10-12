@@ -27,7 +27,7 @@ from requests.adapters import HTTPAdapter, Retry
 from rnalysis.utils import parsing, validation, ontology, __path__
 
 
-def get_gui_cache_dir():
+def get_gui_cache_dir() -> Path:
     cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
     return cache_dir.joinpath('rnalysis_gui')
 

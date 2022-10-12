@@ -11,11 +11,6 @@ def use_temp_settings_file(request):
     request.addfinalizer(set_temp_copy_of_settings_file_as_default)
 
 
-def test_get_settings_file_path(use_temp_settings_file):
-    true_path = pathlib.Path(os.path.join(os.getcwd(), 'rnalysis', 'settings.yaml'))
-    assert true_path == get_settings_file_path()
-
-
 def test_update_attr_ref_path(use_temp_settings_file):
     update_settings_file('path/to/attr/ref/file', __attr_file_key__)
     with get_settings_file_path().open() as f:
