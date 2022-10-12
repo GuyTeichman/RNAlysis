@@ -2983,8 +2983,17 @@ def run():
     app = QtWidgets.QApplication(sys.argv)
     splash = gui_windows.splash_screen()
     app.processEvents()
-
+    base_message = f"<i>RNAlysis</i> version {__version__}:\t"
+    splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     matplotlib.use('Qt5Agg')
+
+    video_files = gui_tutorial.WelcomeWizard.VIDEO_FILES
+    for i in io.get_gui_videos(video_files):
+        splash.showMessage(
+            base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
+            QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+
+    splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     window = MainWindow()
     warnings.showwarning = customwarn
     sys.excepthook = window.excepthook
