@@ -1,9 +1,10 @@
 recursive-include . *.rst *.ico *.png
 
-recursive-include rnalysis *.png *.webp *.json *.qss *.ico
+recursive-include rnalysis *.png *.json *.qss *.ico
 
 recursive-include tests *
 recursive-exclude * __pycache__
+recursive-exclude *.webp
 recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif *.ico
