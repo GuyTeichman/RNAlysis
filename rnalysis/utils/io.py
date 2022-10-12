@@ -1,6 +1,7 @@
 import concurrent.futures
 import functools
 import typing
+from io import BytesIO
 
 import yaml
 import shutil
@@ -25,6 +26,7 @@ import requests
 from requests.adapters import HTTPAdapter, Retry
 
 from rnalysis.utils import parsing, validation, ontology, __path__
+from rnalysis import __version__
 
 
 def get_gui_cache_dir() -> Path:
@@ -32,7 +34,17 @@ def get_gui_cache_dir() -> Path:
     return cache_dir.joinpath('rnalysis_gui')
 
 
-def get_todays_cache_dir():
+def get_data_dir() -> Path:
+    data_dir = Path(appdirs.user_data_dir('RNAlysis', version=__version__, roaming=True))
+    return data_dir
+
+
+def get_tutorial_videos_dir() -> Path:
+    data_dir = get_data_dir()
+    return data_dir.joinpath('videos')
+
+
+def get_todays_cache_dir() -> Path:
     today = date.today().strftime('%Y_%m_%d')
     cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
     return cache_dir.joinpath(today)
@@ -1219,3 +1231,18 @@ def save_gene_set(gene_set: set, path):
     with open(path, 'w') as f:
         f.writelines(
             [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
+
+
+def get_gui_videos(video_paths: Tuple[str, ...]):
+    video_dir_pth = get_tutorial_videos_dir()
+    if not video_dir_pth.exists():
+        video_dir_pth.mkdir(parents=True)
+    for i, vid in enumerate(video_paths):
+        yield i
+        this_vid_pth = video_dir_pth.joinpath(vid)
+        if not this_vid_pth.exists():
+            req = requests.get('https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + vid,
+                               params=dict(raw=True))
+            content = BytesIO(req.content)
+            with open(this_vid_pth, 'wb') as file:
+                file.write(content.getbuffer())

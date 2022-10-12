@@ -1,5 +1,6 @@
 import pytest
 
+import rnalysis.utils.io
 from rnalysis.utils import io
 from rnalysis.utils.io import *
 from rnalysis.utils.io import _format_ids_iter, _ensmbl_lookup_post_request
@@ -710,3 +711,33 @@ def test_kegg_annotation_iterator_get_taxon_tree_cached(monkeypatch):
 
     monkeypatch.setattr(io, 'load_cached_file', mock_get_cached_file)
     assert KEGGAnnotationIterator._get_taxon_tree() == truth
+
+
+def test_get_gui_videos(monkeypatch):
+    mock_dir = Path('tests/.pytest_cache/video_test_cache')
+    video_files = ('first_vid.webp', 'second_vid.webp', 'third_vid.webp')
+    visited = []
+
+    def mock_get(url, params):
+        base_url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/'
+        assert url.startswith(base_url)
+        visited.append(url.split(base_url)[1])
+        return MockResponse(content='content')
+
+    monkeypatch.setattr(requests, 'get', mock_get)
+    monkeypatch.setattr(rnalysis.utils.io, 'get_tutorial_videos_dir',
+                        lambda: mock_dir)
+
+    try:
+        list(get_gui_videos(video_files))
+        assert sorted(visited) == ['first_vid.webp', 'second_vid.webp', 'third_vid.webp']
+        assert mock_dir.exists()
+        file_count = 0
+        for file in mock_dir.iterdir():
+            assert file.name in visited
+            with open(file) as f:
+                assert f.read() == 'content'
+            file_count += 1
+        assert file_count == len(video_files)
+    finally:
+        shutil.rmtree(mock_dir, ignore_errors=True)
