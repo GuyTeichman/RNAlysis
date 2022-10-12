@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from rnalysis.utils import settings
+from rnalysis.utils import settings, io
 from pathlib import Path
 
 
@@ -319,7 +319,7 @@ class TutorialPage(QtWidgets.QWizardPage):
         self.setTitle('<b>' + title + '</b>')
         self.setSubTitle(content)
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.video_path = Path.joinpath(Path(__file__).parent, f'videos/{video_name}')
+        self.video_path = Path.joinpath(Path(__file__).parent, io.get_tutorial_videos_dir().joinpath(video_name))
         self.label = QtWidgets.QLabel()
         self.movie = TutorialMovie(self.video_path)
         self.layout.addWidget(self.movie)
