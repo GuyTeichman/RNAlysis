@@ -1,21 +1,21 @@
-numpy>=1.21.4
+numpy>=1.21.4, <1.22.0
 pandas>=1.3.5
-matplotlib>=3.4.2
+matplotlib>=3.4.2,<3.6.0
 seaborn>=0.11.2
 statsmodels>=0.12.0
-scikit-learn>=1.0.2
+scikit-learn>=1.0.0, <=1.0.2
 grid_strategy==0.0.1
 pyyaml>=6.0
 UpSetPlot>=0.6.1
 matplotlib-venn>=0.11.7
-scipy>=1.7.2
+scipy==1.7.2
 scikit-learn-extra>=0.2.0
 pairwisedist>=1.2.0
 requests>=2.24.0
 graphviz>=0.19.1
-joblib>=1.2.0
+joblib>=1.1.0,<1.2.0
 tqdm>=4.64
 appdirs>=1.4.0
-typing_extensions>=4.4.0
+typing_extensions>=4.4
 PyQt5>=5.15.7
 qdarkstyle
