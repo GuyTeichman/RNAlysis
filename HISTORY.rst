@@ -2,6 +2,23 @@
 History
 =======
 
+3.1.0 (2022-10-16)
+------------------
+* This version introduces new count matrix normalization methods, as well as MA plots and minor bug fixes.
+
+Added
+******
+* Added the visualization function ma_plot() for CountFilter
+* Added functions for the normalization functions Relative Log Ratio (RLE), Trimmed Mean of M-values (TMM), Median of Ratios (MRN), Quantile normalization (quantile)
+
+Changed
+*******
+* CountFilter.normalize_to_rpm() was renamed to CountFilter.normalize_to_rpm_htseqcount(), and was supplemented by the more general function for normalizing to Reads Per Million CountFilter.normalize_to_rpm()
+
+Fixed
+******
+* Fixed a bug where some elements of the graphical user interface would not display correctly
+
 3.0.1 (2022-10-12)
 ------------------
 * This version fixes a bug with displaying the tutorial videos in the graphical user interface.
