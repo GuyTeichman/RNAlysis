@@ -415,7 +415,7 @@ Data can be imported into a CountFilter objects either from a `csv` file, or dir
 You can read more about HTSeq-count here:
 https://htseq.readthedocs.io/en/master/count.html
 
-In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some :term:`CountFilter` functions (such as 'normalize_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
+In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some :term:`CountFilter` functions (such as 'normalize_to_rpm_htseqcount') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
 .. _from-folder-ref:
 
@@ -543,7 +543,7 @@ Such a `csv` table is generated automatically when you create a :term:`CountFilt
 We would then supply the normalization function with the path to the special counter file::
 
     >>> counts = CountFilter("tests/test_files/counted.csv")
-    >>> counts.normalize_to_rpm("tests/test_files/uncounted.csv")
+    >>> counts.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
 
 The resulting :term:`CountFilter` object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 

@@ -11,7 +11,7 @@
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -21,10 +21,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Glossary" href="glossary.html" />
-    <link rel="prev" title="Installation" href="installation.html" /> 
+    <link rel="prev" title="Installation" href="installation.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -189,7 +189,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="user-guide">
 <h1>User guide<a class="headerlink" href="#user-guide" title="Permalink to this headline"></a></h1>
 <section id="rnalysis-graphical-user-interface">
@@ -618,7 +618,7 @@ By default, <em>RNAlysis</em> assumes that log2 fold change values will be speci
 Data can be imported into a CountFilter objects either from a <cite>csv</cite> file, or directly from HTSeq-count output files as explained below.</p>
 <p>You can read more about HTSeq-count here:
 <a class="reference external" href="https://htseq.readthedocs.io/en/master/count.html">https://htseq.readthedocs.io/en/master/count.html</a></p>
-<p>In principle, any <cite>csv</cite> file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> functions (such as ‘normalize_to_rpm’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
+<p>In principle, any <cite>csv</cite> file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> functions (such as ‘normalize_to_rpm_htseqcount’) will only work on HTSeq-count output files, and other unintended interactions may occur.</p>
 <section id="generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files">
 <span id="from-folder-ref"></span><h4>Generating an CountFilter object from a folder of HTSeq-count output .txt files<a class="headerlink" href="#generating-an-countfilter-object-from-a-folder-of-htseq-count-output-txt-files" title="Permalink to this headline"></a></h4>
 <p>HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren’t counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature).
@@ -859,7 +859,7 @@ An HTSeq-count output file would follow the following format:</p>
 <p>Such a <cite>csv</cite> table is generated automatically when you create a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="#from-folder-ref"><span class="std std-ref">Generating an CountFilter object from a folder of HTSeq-count output .txt files</span></a>).
 We would then supply the normalization function with the path to the special counter file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">(</span><span class="s2">&quot;tests/test_files/uncounted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize_to_rpm_htseqcount</span><span class="p">(</span><span class="s2">&quot;tests/test_files/uncounted.csv&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The resulting <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)</p>
@@ -2257,7 +2257,7 @@ For example, we could extract all WBGene indices from the following string:</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -2268,7 +2268,7 @@ For example, we could extract all WBGene indices from the following string:</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>
