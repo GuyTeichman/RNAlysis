@@ -1190,7 +1190,8 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif name in {'by', 'column'} and param.annotation == str and (not pipeline_mode):
+    elif name in {'by', 'column', 'ref_column'} and param.annotation in [str, typing.Union[str, int]] and \
+        (not pipeline_mode):
         widget = TableSingleColumnPicker()
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
