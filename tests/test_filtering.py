@@ -116,12 +116,61 @@ def test_from_string(monkeypatch):
     assert Filter._from_string("msg", delimiter=',') == ["first-word", "second word", "third. word"]
 
 
-def test_countfilter_normalize_to_rpm():
-    truth = io.load_csv(r"tests/test_files/test_norm_reads_rpm.csv", 0)
+def test_countfilter_normalize_to_rpm_htseqcount():
+    truth = io.load_csv(r"tests/test_files/test_norm_reads_rpm_htseqcount.csv", 0)
     h = CountFilter("tests/test_files/counted.csv")
-    not_inplace = h.normalize_to_rpm("tests/test_files/uncounted.csv", inplace=False)
+    not_inplace = h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv", inplace=False)
     assert np.isclose(truth, not_inplace.df).all()
-    h.normalize_to_rpm("tests/test_files/uncounted.csv")
+    h.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
+    assert np.isclose(truth, h.df).all()
+
+
+def test_countfilter_normalize_to_rpm():
+    truth = io.load_csv(r"tests/test_files/test_norm_to_rpm.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_to_rpm(inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_to_rpm()
+    assert np.isclose(truth, h.df).all()
+
+
+def test_countfilter_normalize_rle():
+    truth = io.load_csv(r"tests/test_files/test_norm_rle.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_rle(inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_rle()
+    assert np.isclose(truth, h.df).all()
+
+
+def test_countfilter_normalize_tmm():
+    truth = io.load_csv(r"tests/test_files/test_norm_tmm.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_tmm(ref_column='cond1', inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_tmm(ref_column='cond1')
+    assert np.isclose(truth, h.df).all()
+
+
+def test_countfilter_normalize_median_of_ratios():
+    truth = io.load_csv(r"tests/test_files/test_norm_mrn.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']], inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_median_of_ratios([['cond1', 'cond2'], ['cond3', 'cond4']])
+    assert np.isclose(truth, h.df).all()
+
+
+@pytest.mark.parametrize('quantile,truth_path', [
+    (0.75, "tests/test_files/test_norm_quantile_75.csv"),
+    (0.32, "tests/test_files/test_norm_quantile_32.csv"),
+])
+def test_countfilter_normalize_to_quantile(quantile, truth_path):
+    truth = io.load_csv(truth_path, 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_to_quantile(quantile, inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_to_quantile(quantile)
     assert np.isclose(truth, h.df).all()
 
 
@@ -163,6 +212,17 @@ def test_deseqfilter_volcano_plot_api():
     plt.close('all')
 
 
+@pytest.mark.parametrize('ref_column,columns,split_plots', [
+    ('auto', 'all', False),
+    ('cond2', ['cond1', 'cond2'], True),
+    ('cond1', 'cond2', False)
+])
+def test_countfilter_ma_plot_api(ref_column, columns, split_plots):
+    c = CountFilter("tests/test_files/counted.csv")
+    c.ma_plot(ref_column, columns, split_plots)
+    plt.close('all')
+
+
 def test_countfilter_pairplot_api():
     c = CountFilter("tests/test_files/counted.csv")
     c.pairplot(log2=False)
@@ -195,7 +255,7 @@ def test_countfilter_box_plot_api():
 
 def test_countfilter_plot_expression_api():
     c = CountFilter("tests/test_files/counted.csv")
-    c.plot_expression(['WBGene00007063'],'all')
+    c.plot_expression(['WBGene00007063'], 'all')
     c.plot_expression('WBGene00007063', [[0, 1], ['cond3', 'cond4']])
     c.plot_expression(['WBGene00007064', 'WBGene00044951', 'WBGene00043988', 'WBGene00007066'], ['cond1'])
     c.plot_expression(['WBGene00007064', 'WBGene00044951'], [['cond1'], [1]])

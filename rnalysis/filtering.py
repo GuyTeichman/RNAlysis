@@ -17,6 +17,7 @@ import warnings
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, Union, Callable
 
+from scipy.stats.mstats import gmean
 import yaml
 
 try:
@@ -350,7 +351,7 @@ class Filter:
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If inplace is False, returns a new and filtered instance of the Filter object.
@@ -421,7 +422,7 @@ class Filter:
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of Filter object.
@@ -837,7 +838,7 @@ class Filter:
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of the Filter object.
@@ -900,7 +901,7 @@ class Filter:
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of the Filter object.
@@ -950,7 +951,7 @@ class Filter:
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of the Filter object.
@@ -1005,7 +1006,7 @@ class Filter:
         'box-cox' for Box-Cox transform of the data + 1, 'standardize' for standardization)
         :param columns: The columns to which the transform should be applied.
         :type columns: str or list of str (default='all')
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :param function_kwargs: Any additional keyworded arguments taken by the supplied function.
@@ -1141,7 +1142,7 @@ class Filter:
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of Filter.
@@ -1615,7 +1616,7 @@ class FoldChangeFilter(Filter):
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
         the function will return a new FoldChangeFilter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of FoldChangeFilter.
@@ -1646,7 +1647,7 @@ class FoldChangeFilter(Filter):
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current FoldChangeFilter object. If False, \
         the function will return a new FoldChangeFilter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of FoldChangeFilter.
@@ -1807,7 +1808,7 @@ class DESeqFilter(Filter):
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current DESeqFilter object. If False, \
         the function will return a new DESeqFilter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of DESeqFilter.
@@ -1844,7 +1845,7 @@ class DESeqFilter(Filter):
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current DESeqFilter object. If False, \
         the function will return a new DESeqFilter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of DESeqFilter.
@@ -1877,7 +1878,7 @@ class DESeqFilter(Filter):
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current DESeqFilter object. If False, \
         the function will return a new DESeqFilter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of DESeqFilter.
@@ -2139,7 +2140,8 @@ class CountFilter(Filter):
 
         pass
 
-    def pairplot(self, samples: Union[List[str], Literal['all']] = 'all', log2: bool = True) -> sns.PairGrid:
+    def pairplot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
+                 log2: bool = True) -> sns.PairGrid:
 
         """
         Plot pairwise relationships in the dataset. \
@@ -2221,15 +2223,27 @@ class CountFilter(Filter):
         if not self.is_normalized:
             warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
 
-    def normalize_to_rpm(self, special_counter_fname: Union[str, Path], inplace: bool = True):
+    def _norm_scaling_factors(self, scaling_factors: pd.Series):
+        assert isinstance(scaling_factors,
+                          pd.Series), f"Invalid dimensions for 'scaling_factors' table: {scaling_factors.shape}"
+        new_df = self.df.copy()
+        numeric_cols = self._numeric_columns
+        for column in new_df.columns:
+            if column in numeric_cols:
+                norm_factor = scaling_factors[column]
+                new_df[column] /= norm_factor
+        return new_df
+
+    def normalize_to_rpm_htseqcount(self, special_counter_fname: Union[str, Path], inplace: bool = True):
 
         """
-        Normalizes the reads in the CountFilter to Reads Per Million (RPM). \
-        Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq's output. \
+        Normalizes the count matrix to Reads Per Million (RPM). \
+        Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq-count's output. \
         Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .
 
         :param special_counter_fname: the .csv file which contains feature information about the RNA library \
         (ambiguous, no feature, not aligned, etc).
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return: If inplace is False, returns a new instance of the Filter object.
@@ -2238,11 +2252,11 @@ class CountFilter(Filter):
         :Examples:
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
-            >>> c.normalize_to_rpm("tests/test_files/uncounted.csv")
+            >>> c.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
             Normalized the values of 22 features. Normalized inplace.
 
         """
-        suffix = '_normtorpm'
+        suffix = '_normtoRPMhtseqcount'
         new_df = self.df.copy()
         if isinstance(special_counter_fname, (str, Path)):
             features = io.load_csv(special_counter_fname, 0)
@@ -2256,6 +2270,248 @@ class CountFilter(Filter):
                 norm_factor = (new_df[column].sum() + features.loc[r'__ambiguous', column] + features.loc[
                     r'__no_feature', column] + features.loc[r'__alignment_not_unique', column]) / (10 ** 6)
                 new_df[column] /= norm_factor
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    def normalize_to_rpm(self, inplace: bool = True):
+        """
+        Normalizes the count matrix to Reads Per Million (RPM). \
+        Divides each column in the count matrix by (total reads)*10^-6 .
+
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter("tests/test_files/counted.csv")
+            >>> c.normalize_to_rpm()
+            Normalized the values of 22 features. Normalized inplace.
+
+        """
+        suffix = '_normtoRPM'
+        new_df = self.df.copy()
+        numeric_cols = self._numeric_columns
+        for column in new_df.columns:
+            if column in numeric_cols:
+                norm_factor = new_df[column].sum() / (10 ** 6)
+                new_df[column] /= norm_factor
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    def normalize_to_quantile(self, quantile: float = 0.75, inplace: bool = True):
+        """
+        Normalizes the count matrix using the percentile method, generalized from \
+        `Bullard et al 2010 <https://doi.org/10.1186/1471-2105-11-94/>`_. \
+        This is the default normalization method used by R's Limma. \
+        To calculate the Quantile Method scaling factors, you first calculate the given quantile of gene expression \
+        within each sample, excluding genes that have 0 reads in all samples. \
+        You then divide those quantile values by the total number of reads in each sample, \
+        which yields the scaling factors for each sample.
+
+        :param quantile: the quantile from which scaling factors will be calculated.
+        :type quantile: float between 0 and 1 (default=0.75)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter("tests/test_files/counted.csv")
+            >>> c.normalize_to_quantile(0.75)
+            Normalized the values of 22 features. Normalized inplace.
+        """
+        suffix = f'_normto{quantile}quantile'
+        data = self.df[self._numeric_columns]
+        expressed_genes = data[data.sum(axis=1) != 0]
+        quantiles = expressed_genes.quantile(quantile, axis=0)
+        if quantiles.min() == 0:
+            warnings.warn("One or more quantiles are zero")
+        scaling_factors = quantiles / quantiles.mean()
+
+        new_df = self._norm_scaling_factors(scaling_factors)
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    def normalize_tmm(self, log_ratio_trim: float = 0.3, sum_trim: float = 0.05,
+                      a_cutoff: Union[float, None] = -1 * 10 ** 10, ref_column: Union[Literal['auto'], str] = 'auto',
+                      inplace: bool = True):
+        """
+        Normalizes the count matrix using the 'trimmed mean of M values' (TMM) method \
+        `(Robinson and Oshlack 2010) <https://doi.org/10.1186/gb-2010-11-3-r25/>`_. \
+        This is the default normalization method used by R's edgeR. \
+        To calculate the Trimmed Mean of M Values scaling factors, you first calculate the M-values of each gene \
+        between each sample and the reference sample (log2 of each sample Minus log2 of the reference sample), \
+        and the A-values of each gene between each sample and the reference sample \
+        (log2 of each sample Added to log2 of the reference sample). \
+        You then trim out genes with extreme values that are likely to be differentially expressed or non-indicative, \
+        by trimming the top and bottom X% of M-values, the top and bottom Y% of A-values, all A-values which are \
+        smaller than the specified cutuff, and all genes with 0 reads (to avoid log2 values of inf or -inf). \
+        Next, a weighted mean is calculated on the filtered M-values, with the weights being an inverse of \
+        an approximation of variance of each gene, which gives out the scaling factors for each sample. \
+        Finally, the scaling factors are adjusted, for symmetry, so that they multiply to 1.
+
+        :param log_ratio_trim: the fraction of M-values that should be trimmed from each direction (top and bottom X%).
+        :type log_ratio_trim:  float between 0 and 0.5 (default=0.3)
+        :param sum_trim: the fraction of A-values that should be trimmed from each direction (top and bottom Y%).
+        :type sum_trim:  float between 0 and 0.5 (default=0.05)
+        :param a_cutoff: a lower bound on the A-values that should be included in the trimmed mean. \
+        If set to None, no lower bound will be used.
+        :type a_cutoff: float or None (default = -1e10)
+        :param ref_column: the column to be used as reference for normalization. If 'auto', \
+        then the reference column will be chosen automatically to be \
+        the column whose upper quartile is closest to the mean upper quartile.
+        :type ref_column: name of a column or 'auto' (default='auto')
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter("tests/test_files/counted.csv")
+            >>> c.normalize_tmm()
+            Normalized the values of 22 features. Normalized inplace.
+        """
+        assert 0 <= log_ratio_trim < 0.5, f"'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
+        assert 0 <= sum_trim < 0.5, f"'sum_trim' must be a value in the range 0 <= sum_trim < 5"
+
+        suffix = f'_normTMM'
+
+        if isinstance(ref_column, str) and ref_column.lower() == 'auto':
+            upper_quartiles = self.df[self._numeric_columns].quantile(0.75, axis=0)
+            ref_index = np.argmin(abs(upper_quartiles - upper_quartiles.mean()))
+            ref_column = self.columns[ref_index]
+
+        columns = self._numeric_columns
+        m_data, a_data = self._calculate_ma(ref_column, columns)
+        scaling_factors = {}
+        norm_data = self.df / self.df.sum(axis=0)
+        weights = (1 - norm_data).divide(self.df)
+        weights = 1 / (weights.add(weights[ref_column], axis=0))
+        for i, col in enumerate(columns):
+            a_post_cutoff = a_data[i][a_data[i] > a_cutoff] if a_cutoff is not None else a_data[i]
+            a_post_cutoff = a_post_cutoff.dropna()
+            this_m = m_data[i].dropna()
+
+            m_trim_number = int(np.ceil(log_ratio_trim * m_data[i].notna().sum()))
+            a_trim_number = int(np.ceil(sum_trim * a_post_cutoff.notna().sum()))
+            trimmed_m = this_m.sort_values().iloc[m_trim_number:this_m.shape[0] - m_trim_number]
+            trimmed_a = a_post_cutoff.sort_values().iloc[a_trim_number:a_post_cutoff.shape[0] - a_trim_number]
+
+            zero_genes = self.df[col][self.df[col] == 0].index
+            genes_post_trimming = trimmed_m.index.intersection(trimmed_a.index).difference(zero_genes)
+            tmm = np.average(trimmed_m.loc[genes_post_trimming], weights=weights.loc[genes_post_trimming, col])
+            scaling_factors[col] = tmm
+
+        scaling_factors = pd.Series(scaling_factors)
+        # adjust scaling factors to multiply, for symmetry, to 1
+        scaling_factors -= scaling_factors.mean()
+        scaling_factors = 2 ** scaling_factors
+        new_df = self._norm_scaling_factors(scaling_factors)
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    def normalize_rle(self, inplace: bool = True):
+        """
+        Normalizes the count matrix using the 'Relative Log Expression' (RLE) method \
+        `(Anders and Huber 2010) <https://doi.org/10.1186/gb-2010-11-10-r106/>`_. \
+        This is the default normalization method used by R's DESeq2. \
+        To calculate the Relative Log Expression scaling factors, you first generate a pseudo-sample by calculating \
+        the geometric mean expression of each gene across samples. You then calculate the gene-wise ratio \
+        of expression between each sample and the pseudo-sample. You then pick the median ratio within each \
+        sample as the scaling factor for that sample.
+
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter("tests/test_files/counted.csv")
+            >>> c.normalize_rle()
+            Normalized the values of 22 features. Normalized inplace.
+        """
+        suffix = f'_normRLE'
+        data = self.df[self._numeric_columns].dropna(axis=0)
+        with np.errstate(invalid='ignore', divide='ignore'):
+            pseudo_sample = pd.Series(gmean(data, axis=1), index=data.index)
+            ratios = data.divide(pseudo_sample, axis=0)
+            scaling_factors = ratios.dropna(axis=0).median(axis=0)
+
+        # TODO: implement a 'control genes' parameter that calculates ratios only for the given control genes
+
+        new_df = self._norm_scaling_factors(scaling_factors)
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    def normalize_median_of_ratios(self, sample_grouping: List[List[str]], reference_group: int = 0,
+                                   inplace: bool = True):
+        """
+        Normalizes the count matrix using the 'Median of Ratios Normalization' (MRN) method \
+        `(Maza et al 2013) <https://doi.org/10.4161%2Fcib.25849/>`_. \
+        This normalization method uses information about the experimental condition of each sample. \
+        To calculate the Median of Ratios scaling factors, you first calculate the weighted mean expression of \
+        each gene within the replicates of each experimental condition. You then calculate per gene the ratio between \
+        each weighted mean in the experimental condition and those of the reference condition. \
+        You then pick the median ratio for each experimental condition, and calculate the scaling factor for each \
+        sample by multiplying it with the sample's total number of reads. \
+        Finally, the scaling factors are adjusted, for symmetry, so that they multiply to 1.
+
+        :type sample_grouping: nested list of column names
+        :param sample_grouping: grouping of the samples into conditions. \
+        Each grouping should containg all replicates of the same condition.
+        :type reference_group: int (default=0)
+        :param reference_group: the index of the sample group to be used as the reference condition. \
+        Must be an integer between 0 and the number of sample groups -1.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+
+
+        :Examples:
+            >>> from rnalysis import filtering
+            >>> c = filtering.CountFilter("tests/test_files/counted.csv")
+            >>> c.normalize_median_of_ratios([['cond1','cond2'],['cond3','cond4']])
+            Normalized the values of 22 features. Normalized inplace.
+        """
+        flat_grouping = parsing.flatten(sample_grouping)
+        assert len(flat_grouping) >= len(self._numeric_columns), f"'sample_grouping' must include all columns. " \
+                                                                 f"Only {len(flat_grouping)} out of " \
+                                                                 f"{len(self._numeric_columns)} " \
+                                                                 f"numeric columns were included. "
+        assert isinstance(reference_group, int) and reference_group >= 0, \
+            f"Invalid value for 'reference_group': {reference_group}"
+        assert reference_group < len(sample_grouping), f"'reference_group' value {reference_group} " \
+                                                       f"is larger than the number of sample groups!"
+
+        suffix = f'_normMRN'
+        data = self.df[self._numeric_columns]
+        weighed_expression = data / data.sum(axis=0)
+        weighted_means = []
+        for grp in sample_grouping:
+            weighted_means.append(weighed_expression.loc[:, grp].mean(axis=1))
+        scaling_factors = {}
+        for i, grp in enumerate(sample_grouping):
+            ratios = weighted_means[i] / weighted_means[reference_group]
+            ratios[ratios == np.inf] = np.nan
+            median_of_ratios = ratios.median()
+            for cond in grp:
+                scaling_factors[cond] = median_of_ratios * self.df[cond].sum()
+        scaling_factors = pd.Series(scaling_factors)
+
+        # adjust scaling factors to multiply, for symmetry, to 1
+        scaling_factors = scaling_factors / gmean(scaling_factors)
+
+        new_df = self._norm_scaling_factors(scaling_factors)
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
@@ -2281,20 +2537,81 @@ class CountFilter(Filter):
 
         """
         suffix = '_normwithscalingfactors'
-        new_df = self.df.copy()
         if isinstance(scaling_factor_fname, (str, Path)):
-            size_factors = io.load_csv(scaling_factor_fname)
+            scaling_factors = io.load_csv(scaling_factor_fname).squeeze()
         elif isinstance(scaling_factor_fname, pd.DataFrame):
-            size_factors = scaling_factor_fname
+            scaling_factors = scaling_factor_fname.squeeze()
+        elif isinstance(scaling_factor_fname, pd.Series):
+            scaling_factors = scaling_factor_fname
         else:
             raise TypeError("Invalid type for 'scaling_factor_fname'!")
-        numeric_cols = self._numeric_columns
-        for column in new_df.columns:
-            if column in numeric_cols:
-                norm_factor = size_factors[column].values
-                new_df[column] /= norm_factor
+        new_df = self._norm_scaling_factors(scaling_factors)
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
+
+    def _calculate_ma(self, ref_column: str, columns: List[str]):
+        m_data = []
+        a_data = []
+        norm_data = self.df / self.df.sum(axis=0)
+        for col in columns:
+            this_m = np.log2(norm_data[col] / norm_data[ref_column])
+            this_a = 0.5 * np.log2(norm_data[col] * norm_data[ref_column])
+
+            m_data.append(this_m)
+            a_data.append(this_a)
+        return m_data, a_data
+
+    def ma_plot(self, ref_column: Union[Literal['auto'], str, int] = 'auto',
+                columns: Union[str, List[str], Literal['all']] = 'all', split_plots: bool = False):
+        if isinstance(ref_column, int):
+            assert ref_column < len(self.columns), "the index of 'ref_column' is larger than the number of columns!"
+            ref_column = self.columns[ref_column]
+        elif isinstance(ref_column, str):
+            if ref_column.lower() == 'auto':
+                upper_quartiles = self.df.quantile(0.75, axis=0)
+                ref_index = np.argmin(abs(upper_quartiles - upper_quartiles.mean()))
+                ref_column = self.columns[ref_index]
+            else:
+                assert ref_column in self._numeric_columns, "'ref_column' must be a name of a numeric column!"
+        else:
+            raise TypeError(f"Invalid type for 'ref_column': {type(ref_column)}")
+        if isinstance(columns, str) and columns.lower() == 'all':
+            columns = self._numeric_columns
+        else:
+            columns = parsing.data_to_list(columns)
+        if ref_column in columns:
+            columns.remove(ref_column)
+
+        m_data, a_data = self._calculate_ma(ref_column, columns)
+
+        if split_plots:
+            subplots = [plt.subplots(constrained_layout=True, figsize=(6.4, 5.6)) for _ in range(len(columns))]
+            label_fontsize = 14
+        else:
+            grid = strategies.SquareStrategy()
+            subplots = grid.get_grid(len(columns))
+            plt.close()
+            fig = plt.figure(figsize=(14, 9))
+            fig.suptitle('MA plots', fontsize=18)
+            label_fontsize = 10 if len(columns) > 15 else 8
+
+        for i, col in enumerate(columns):
+            if split_plots:
+                ax = subplots[i][1]
+                fig = subplots[i][0]
+                title = f'MA plot of {col} vs {ref_column}'
+            else:
+                # noinspection PyUnboundLocalVariable
+                ax = fig.add_subplot(subplots[i])
+                title = f'{col} vs {ref_column}'
+            ax.scatter(a_data[i], m_data[i], c='black', s=3, alpha=0.3)
+            ax.axhline(0, c='green')
+            ax.set_title(title)
+            ax.set_xlabel('A: \n' + r'$\log_2$ average expression)', fontsize=label_fontsize)
+            ax.set_ylabel('M: \n' + r'$\log_2$' + f'("{col}" / "{ref_column}")', fontsize=label_fontsize)
+        if not split_plots:
+            fig.tight_layout(rect=[0, 0.03, 1, 0.92])
+        plt.show()
 
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
@@ -2308,7 +2625,7 @@ class CountFilter(Filter):
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of CountFilter.
@@ -2375,7 +2692,7 @@ class CountFilter(Filter):
         :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
         (instead of filtering out X, the function will filter out anything BUT X). \
         If False (default), the function will filter as expected.
-        :type inplace: bool
+        :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
         the function will return a new CountFilter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new instance of CountFilter.
@@ -2663,7 +2980,7 @@ class CountFilter(Filter):
                      split_plots: bool = False, gui_mode: bool = False) -> Tuple['CountFilter']:
         """
         Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
-        (Mimaroglu and Yagci 2012), \
+        `(Mimaroglu and Yagci 2012) <https://doi.org/10.1016/j.eswa.2011.08.059/>`_, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
         based on the clustering result. \
         The CLICOM algorithm incorporates the results of multiple clustering solutions, \
@@ -2923,7 +3240,7 @@ class CountFilter(Filter):
         return clustergram
 
     def plot_expression(self, features: Union[List[str], str],
-                        samples: Union[List[str], Literal['all']] = 'all',
+                        samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
                         count_unit: str = 'Reads per million') -> plt.Figure:
         """
         Plot the average expression and standard error of the specified features under the specified conditions.
@@ -3000,7 +3317,7 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def pca(self, samples: Union[List[str], Literal['all']] = 'all', n_components: int = 3,
+    def pca(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all', n_components: int = 3,
             power_transform: bool = True, labels: bool = True, label_fontsize: int = 16) -> Tuple[
         PCA, List[plt.Figure]]:
         """
@@ -3174,7 +3491,7 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    def box_plot(self, samples: Union[List[List[str]], Literal['all']] = 'all', notch: bool = True,
+    def box_plot(self, samples: Union[List[List[str]], List[List[str]], Literal['all']] = 'all', notch: bool = True,
                  scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
         Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
@@ -3224,8 +3541,8 @@ class CountFilter(Filter):
         plt.show()
         return box
 
-    def enhanced_box_plot(self, samples: Union[List[str], Literal['all']] = 'all', scatter: bool = False,
-                          ylabel: str = 'log10(RPM + 1)'):
+    def enhanced_box_plot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
+                          scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
         Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -3272,7 +3589,7 @@ class CountFilter(Filter):
         plt.show()
         return boxen
 
-    def violin_plot(self, samples: Union[Literal['all'], List[str]] = 'all',
+    def violin_plot(self, samples: Union[Literal['all'], List[str], List[List[str]]] = 'all',
                     ylabel: str = '$\log_10$(normalized reads + 1)'):
         """
         Generates a violin plot of the specified samples in the CountFilter object in log10 scale. \
@@ -3388,7 +3705,7 @@ class CountFilter(Filter):
         fname = counted_fname if save_csv else os.path.join(folder.absolute(), folder.name + file_suffix)
         count_filter_obj = cls.from_dataframe(counts, Path(fname))
         if norm_to_rpm:
-            count_filter_obj.normalize_to_rpm(uncounted)
+            count_filter_obj.normalize_to_rpm_htseqcount(uncounted)
         return count_filter_obj
 
 
