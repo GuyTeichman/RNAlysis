@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.Filter.filter_missing_values &mdash; RNAlysis 3.0.1 documentation</title>
+  <title>rnalysis.filtering.Filter.filter_missing_values &mdash; RNAlysis 3.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -141,7 +141,7 @@
 <p>:param columns:name/names of the columns to check for missing values.
 :type opposite: bool
 :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.
-:type inplace: bool
+:type inplace: bool (default=True)
 :param inplace: If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.
 :return: If ‘inplace’ is False, returns a new instance of the Filter object.</p>
 <dl class="field-list">

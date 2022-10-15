@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User guide &mdash; RNAlysis 3.0.1 documentation</title>
+  <title>User guide &mdash; RNAlysis 3.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-
+  
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -21,10 +21,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Glossary" href="glossary.html" />
-    <link rel="prev" title="Installation" href="installation.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -189,7 +189,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+             
   <section id="user-guide">
 <h1>User guide<a class="headerlink" href="#user-guide" title="Permalink to this headline"></a></h1>
 <section id="rnalysis-graphical-user-interface">
@@ -776,7 +776,21 @@ An HTSeq-count output file would follow the following format:</p>
 </section>
 <section id="normalizing-reads-with-countfilter">
 <h4>Normalizing reads with CountFilter<a class="headerlink" href="#normalizing-reads-with-countfilter" title="Permalink to this headline"></a></h4>
-<p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.</p>
+<p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> offers two methods for normalizing reads: normalize with one of the pre-made normalization methods <em>RNAlysis</em> supplies, or using user-defined scaling factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter as well.</p>
+<p><em>RNAlysis</em> supplies the following normalization methods:</p>
+<ul class="simple">
+<li><p>Relative Log Expression (RLE - ‘normalize_rle’), used by default by R’s DESeq2</p></li>
+<li><p>Trimmed Mean of M-values (TMM - ‘normalize_tmm’), used by default by R’s edgeR</p></li>
+<li><p>Quantile normalization, a generalization of Upper Quantile normalization (UQ - ‘normalize_quantile’), used by default by R’s Limma</p></li>
+<li><p>Median of Ratios Normalization (MRN - ‘normalize_mrn’)</p></li>
+<li><p>Reads Per Million (RPM - ‘normalize_to_rpm’)</p></li>
+</ul>
+<p>To normalize a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> with one of these functions, simply call the function with your preferred parameters, if there are any. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize_rle</span><span class="p">()</span>
+<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+</pre></div>
+</div>
 <p>To normalize a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> with user-generated scaling factors, we need a <cite>csv</cite> table with the size factor for each sample:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -802,7 +816,8 @@ An HTSeq-count output file would follow the following format:</p>
 </table>
 <p>We would then supply the function with the path to the scaling factors file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s1">&#39;tests/test_files/counted.csv&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize</span> <span class="n">with_scaling_factors</span><span class="p">(</span><span class="s1">&#39;scaling_factors.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize_with_scaling_factors</span><span class="p">(</span><span class="s1">&#39;scaling_factors.csv&#39;</span><span class="p">)</span>
+<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 <p>The resulting <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).</p>
@@ -860,6 +875,7 @@ An HTSeq-count output file would follow the following format:</p>
 We would then supply the normalization function with the path to the special counter file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize_to_rpm_htseqcount</span><span class="p">(</span><span class="s2">&quot;tests/test_files/uncounted.csv&quot;</span><span class="p">)</span>
+<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 <p>The resulting <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)</p>
@@ -2257,7 +2273,7 @@ For example, we could extract all WBGene indices from the following string:</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+   
 
 </footer>
         </div>
@@ -2268,7 +2284,7 @@ For example, we could extract all WBGene indices from the following string:</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
+  </script> 
 
 </body>
 </html>

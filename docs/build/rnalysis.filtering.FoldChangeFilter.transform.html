@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.FoldChangeFilter.transform &mdash; RNAlysis 3.0.1 documentation</title>
+  <title>rnalysis.filtering.FoldChangeFilter.transform &mdash; RNAlysis 3.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -145,7 +145,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>function</strong> (<em>Callable</em><em> or </em><em>str</em><em> (</em><em>'logx' for base-x log of the data + 1</em><em>,         </em><em>'box-cox' for Box-Cox transform of the data + 1</em><em>, </em><em>'standardize' for standardization</em><em>)</em>) – The function or function name to be applied.</p></li>
 <li><p><strong>columns</strong> (<em>str</em><em> or </em><em>list of str</em><em> (</em><em>default='all'</em><em>)</em>) – The columns to which the transform should be applied.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current Filter object. If False,         the function will return a new Filter instance and the current instance will not be affected.</p></li>
 <li><p><strong>function_kwargs</strong> – Any additional keyworded arguments taken by the supplied function.</p></li>
 </ul>
 </dd>

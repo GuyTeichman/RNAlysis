@@ -5,17 +5,17 @@
 
 .. autoclass:: CountFilter
 
-
-
-
+   
+   
+   
     .. automethod:: __init__
+    
+    
 
-
-
-
+   
 .. autosummary::
     :toctree: .
-
+    
     CountFilter.biotypes
     CountFilter.box_plot
     CountFilter.clustergram
@@ -34,7 +34,13 @@
     CountFilter.from_folder
     CountFilter.head
     CountFilter.intersection
+    CountFilter.ma_plot
     CountFilter.majority_vote_intersection
+    CountFilter.normalize_median_of_ratios
+    CountFilter.normalize_rle
+    CountFilter.normalize_tmm
+    CountFilter.normalize_to_quantile
+    CountFilter.normalize_to_rpm
     CountFilter.normalize_to_rpm_htseqcount
     CountFilter.normalize_with_scaling_factors
     CountFilter.number_filters
@@ -59,4 +65,5 @@
     CountFilter.transform
     CountFilter.union
     CountFilter.violin_plot
-
+    
+    

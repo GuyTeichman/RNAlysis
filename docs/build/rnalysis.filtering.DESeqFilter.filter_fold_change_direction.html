@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.DESeqFilter.filter_fold_change_direction &mdash; RNAlysis 3.0.1 documentation</title>
+  <title>rnalysis.filtering.DESeqFilter.filter_fold_change_direction &mdash; RNAlysis 3.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -146,7 +146,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>direction</strong> – ‘pos’ or ‘neg’. If ‘pos’, will keep only features that have positive log2foldchange.         If ‘neg’, will keep only features that have negative log2foldchange.</p></li>
 <li><p><strong>opposite</strong> (<em>bool</em>) – If True, the output of the filtering will be the OPPOSITE of the specified         (instead of filtering out X, the function will filter out anything BUT X).         If False (default), the function will filter as expected.</p></li>
-<li><p><strong>inplace</strong> (<em>bool</em>) – If True (default), filtering will be applied to the current DESeqFilter object. If False,         the function will return a new DESeqFilter instance and the current instance will not be affected.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current DESeqFilter object. If False,         the function will return a new DESeqFilter instance and the current instance will not be affected.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

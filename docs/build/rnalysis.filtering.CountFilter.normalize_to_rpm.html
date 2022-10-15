@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount &mdash; RNAlysis 3.0.1 documentation</title>
+  <title>rnalysis.filtering.CountFilter.normalize_to_rpm &mdash; RNAlysis 3.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-
+  
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -20,11 +20,11 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.CountFilter.normalize_with_scaling_factors" href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.majority_vote_intersection" href="rnalysis.filtering.CountFilter.majority_vote_intersection.html" />
+    <link rel="next" title="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount" href="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount.html" />
+    <link rel="prev" title="rnalysis.filtering.CountFilter.normalize_to_quantile" href="rnalysis.filtering.CountFilter.normalize_to_quantile.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -82,8 +82,14 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.from_folder.html">rnalysis.filtering.CountFilter.from_folder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.head.html">rnalysis.filtering.CountFilter.head</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.intersection.html">rnalysis.filtering.CountFilter.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.ma_plot.html">rnalysis.filtering.CountFilter.ma_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.majority_vote_intersection.html">rnalysis.filtering.CountFilter.majority_vote_intersection</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_median_of_ratios.html">rnalysis.filtering.CountFilter.normalize_median_of_ratios</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_rle.html">rnalysis.filtering.CountFilter.normalize_rle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_tmm.html">rnalysis.filtering.CountFilter.normalize_tmm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_quantile.html">rnalysis.filtering.CountFilter.normalize_to_quantile</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.normalize_to_rpm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount.html">rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html">rnalysis.filtering.CountFilter.normalize_with_scaling_factors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.number_filters.html">rnalysis.filtering.CountFilter.number_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.pairplot.html">rnalysis.filtering.CountFilter.pairplot</a></li>
@@ -140,7 +146,7 @@
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="rnalysis.filtering.html">rnalysis.filtering</a> &raquo;</li>
           <li><a href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a> &raquo;</li>
-      <li>rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount</li>
+      <li>rnalysis.filtering.CountFilter.normalize_to_rpm</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/rnalysis.filtering.CountFilter.normalize_to_rpm.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -149,19 +155,16 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+             
   <section id="rnalysis-filtering-countfilter-normalize-to-rpm">
-<h1>rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount<a class="headerlink" href="#rnalysis-filtering-countfilter-normalize-to-rpm" title="Permalink to this headline"></a></h1>
+<h1>rnalysis.filtering.CountFilter.normalize_to_rpm<a class="headerlink" href="#rnalysis-filtering-countfilter-normalize-to-rpm" title="Permalink to this headline"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.CountFilter.normalize_to_rpm">
-<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">normalize_to_rpm_htseqcount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">special_counter_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.normalize_to_rpm" title="Permalink to this definition"></a></dt>
-<dd><p>Normalizes the reads in the CountFilter to Reads Per Million (RPM).         Uses a table of feature counts (ambiguous, no feature, not aligned, etc) from HTSeq’s output.         Divides each column in the CountFilter object by (total reads + ambiguous + no feature)*10^-6 .</p>
+<span class="sig-prename descclassname"><span class="pre">CountFilter.</span></span><span class="sig-name descname"><span class="pre">normalize_to_rpm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.CountFilter.normalize_to_rpm" title="Permalink to this definition"></a></dt>
+<dd><p>Normalizes the count matrix to Reads Per Million (RPM).         Divides each column in the count matrix by (total reads)*10^-6 .</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>special_counter_fname</strong> – the .csv file which contains feature information about the RNA library         (ambiguous, no feature, not aligned, etc).</p></li>
-<li><p><strong>inplace</strong> – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), filtering will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>If inplace is False, returns a new instance of the Filter object.</p>
@@ -169,7 +172,7 @@
 <dt class="field-odd">Examples</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm_htseqcount</span><span class="p">(</span><span class="s2">&quot;tests/test_files/uncounted.csv&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">()</span>
 <span class="go">Normalized the values of 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
@@ -183,8 +186,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.filtering.CountFilter.majority_vote_intersection.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.majority_vote_intersection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.filtering.CountFilter.normalize_with_scaling_factors.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.normalize_with_scaling_factors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.filtering.CountFilter.normalize_to_quantile.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.normalize_to_quantile" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -196,7 +199,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+   
 
 </footer>
         </div>
@@ -207,7 +210,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
+  </script> 
 
 </body>
 </html>
