@@ -415,7 +415,7 @@ Data can be imported into a CountFilter objects either from a `csv` file, or dir
 You can read more about HTSeq-count here:
 https://htseq.readthedocs.io/en/master/count.html
 
-In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some :term:`CountFilter` functions (such as 'normalize_to_rpm') will only work on HTSeq-count output files, and other unintended interactions may occur.
+In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some :term:`CountFilter` functions (such as 'normalize_to_rpm_htseqcount') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
 .. _from-folder-ref:
 
@@ -505,7 +505,21 @@ There are a few filtering operations unique to CountFilter. Those include 'filte
 
 Normalizing reads with CountFilter
 ------------------------------------
-:term:`CountFilter` offers two methods for normalizing reads: supply user-defined scaling factors, or normalize to reads per million (RPM). Data normalized in other methods (such as RPKM) can be used as input for CountFilter, but it cannot perform such normalization methods on its own.
+:term:`CountFilter` offers two methods for normalizing reads: normalize with one of the pre-made normalization methods *RNAlysis* supplies, or using user-defined scaling factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter as well.
+
+*RNAlysis* supplies the following normalization methods:
+
+* Relative Log Expression (RLE - 'normalize_rle'), used by default by R's DESeq2
+* Trimmed Mean of M-values (TMM - 'normalize_tmm'), used by default by R's edgeR
+* Quantile normalization, a generalization of Upper Quantile normalization (UQ - 'normalize_quantile'), used by default by R's Limma
+* Median of Ratios Normalization (MRN - 'normalize_mrn')
+* Reads Per Million (RPM - 'normalize_to_rpm')
+
+To normalize a :term:`CountFilter` with one of these functions, simply call the function with your preferred parameters, if there are any. For example::
+
+    >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
+    >>> counts.normalize_rle()
+    Normalized the values of 22 features. Normalized inplace.
 
 To normalize a :term:`CountFilter` with user-generated scaling factors, we need a `csv` table with the size factor for each sample:
 
@@ -518,7 +532,8 @@ To normalize a :term:`CountFilter` with user-generated scaling factors, we need 
 We would then supply the function with the path to the scaling factors file::
 
     >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
-    >>> counts.normalize with_scaling_factors('scaling_factors.csv')
+    >>> counts.normalize_with_scaling_factors('scaling_factors.csv')
+    Normalized the values of 22 features. Normalized inplace.
 
 The resulting :term:`CountFilter` object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
 
@@ -543,7 +558,8 @@ Such a `csv` table is generated automatically when you create a :term:`CountFilt
 We would then supply the normalization function with the path to the special counter file::
 
     >>> counts = CountFilter("tests/test_files/counted.csv")
-    >>> counts.normalize_to_rpm("tests/test_files/uncounted.csv")
+    >>> counts.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
+    Normalized the values of 22 features. Normalized inplace.
 
 The resulting :term:`CountFilter` object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
