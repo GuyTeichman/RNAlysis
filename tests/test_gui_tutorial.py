@@ -46,7 +46,7 @@ def test_TutorialMovie_start(qtbot):
 def test_TutorialMovie_restart(qtbot):
     qtbot, window = widget_setup(qtbot, TutorialMovie, Path('tests/test_files/test_video.webp'))
     window.restart()
-    assert window.video.currentFrameNumber() == 0
+    assert window.video.currentFrameNumber() in {0, 1}
     assert window.video.state() == QtGui.QMovie.Running
 
 
