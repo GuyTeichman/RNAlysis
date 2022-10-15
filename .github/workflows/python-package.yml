@@ -40,7 +40,7 @@ jobs:
                 run: |
                     coverage run --source=rnalysis/ -m pytest tests/
 
-                continue-on-error: true
+                continue-on-error: false
             -   name: Coveralls
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
