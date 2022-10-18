@@ -321,6 +321,9 @@ def test_enrichment_runner_update_ranked_genes():
     ('XLmHG', EnrichmentRunner._xlmhg_enrichment)])
 def test_enrichment_runner_get_enrichment_func(test_input, expected):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    if test_input.lower() == 'xlmhg' and not does_python_version_support_single_set():
+        assert runner._get_enrichment_func(test_input) == False
+        return
     assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.lower()).__name__ == expected.__name__
