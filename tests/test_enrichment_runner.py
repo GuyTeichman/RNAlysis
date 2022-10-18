@@ -891,6 +891,9 @@ def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pva
     runner = GOEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, 'elim', 'any', 'any', None, 'any', None, 'any',
                                 None, False, False, 'fname', False, False, False, 'set_name', False, pval_func,
                                 biotypes, background_set, biotype_ref_path, single_list, random_seed, **kwargs)
+    if pval_func.lower() == 'xlmhg' and not does_python_version_support_single_set():
+        assert runner.enrichment_func == False
+        return
     assert runner.dag_tree == 'dag_tree'
 
 
@@ -922,6 +925,10 @@ def test_go_enrichment_runner_run(monkeypatch):
 def test_go_enrichment_runner_get_enrichment_func(test_input, expected, propagate_annotations):
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.propagate_annotations = propagate_annotations
+    if test_input.lower() == 'xlmhg' and not does_python_version_support_single_set():
+        assert runner._get_enrichment_func(test_input).__name__ == False
+        return
+
     assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.upper()).__name__ == expected.__name__
     assert runner._get_enrichment_func(test_input.lower()).__name__ == expected.__name__
