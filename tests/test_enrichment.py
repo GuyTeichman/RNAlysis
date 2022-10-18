@@ -1,9 +1,10 @@
 import pytest
 import os
 import statsmodels.stats.multitest as multitest
-
+import sys
 from rnalysis.enrichment import *
 from rnalysis.enrichment import _fetch_sets
+from rnalysis.utils.enrichment_runner import does_python_version_support_single_set
 from tests import __attr_ref__, __biotype_ref__
 
 matplotlib.use('Agg')
@@ -11,9 +12,9 @@ matplotlib.use('Agg')
 
 def is_ensembl_available():
     req = requests.get('https://rest.ensembl.org/lookup/id')
-    if req.status_code == 200:
-        return True
-    return False
+    if str(req.status_code)[0] == '5':
+        return False
+    return True
 
 
 ENSEMBL_AVAILABLE = is_ensembl_available()
@@ -509,6 +510,8 @@ def test_enrich_non_categorical_nan_values():
     plt.close('all')
 
 
+@pytest.mark.skipif(not does_python_version_support_single_set(),
+                    reason=f"Package 'xlmhg' cannot run this python version ({sys.version})")
 def test_enrich_single_set_api():
     genes_ranked = ['WBGene00000019', 'WBGene00000041', 'WBGene00000105', 'WBGene00000106', 'WBGene00000137',
                     'WBGene00001436', 'WBGene00001996', 'WBGene00002074', 'WBGene00003864', 'WBGene00003865',

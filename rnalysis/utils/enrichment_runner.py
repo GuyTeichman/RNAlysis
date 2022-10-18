@@ -3,6 +3,7 @@ import io as builtin_io
 import itertools
 import logging
 import queue
+import sys
 import warnings
 from functools import lru_cache
 from pathlib import Path
@@ -37,6 +38,19 @@ except ImportError:
 
         def get_xlmhg_test_result(self):
             pass
+
+
+def does_python_version_support_single_set():
+    # currently, only python versions below 3.9 can run the xlmhg package.
+    version = sys.version_info
+    if version[0] != 3:
+        return False
+    if version[1] > 8:
+        return False
+    return True
+
+
+XLMHG_SUPPORTED = does_python_version_support_single_set()
 
 
 class EnrichmentRunner:
@@ -197,12 +211,18 @@ class EnrichmentRunner:
         elif pval_func_name == 'hypergeometric':
             return self._hypergeometric_enrichment
         elif pval_func_name == 'xlmhg':
-            if HAS_XLMHG:
+            if HAS_XLMHG and XLMHG_SUPPORTED:
                 return self._xlmhg_enrichment
             else:
-                warnings.warn(f"Package 'xlmhg' is not installed. \n"
-                              f"If you want to run single-set enrichment analysis, "
-                              f"please install package 'xlmhg' and try again. ")
+                if not HAS_XLMHG:
+                    warnings.warn(f"Package 'xlmhg' is not installed. \n"
+                                  f"If you want to run single-set enrichment analysis, "
+                                  f"please install package 'xlmhg' and try again. ")
+                if not XLMHG_SUPPORTED:
+                    python_version = sys.version_info
+                    warnings.warn(f"Your version of Python ({python_version[0]}.{python_version[1]}) "
+                                  f"does not support single-set enrichment analysis. "
+                                  f"Please install RNAlysis with a Python version below 3.9 and try again. ")
                 return False
         else:
             raise ValueError(f"Unknown enrichment function '{pval_func_name}'.")
