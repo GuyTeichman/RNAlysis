@@ -926,7 +926,7 @@ def test_go_enrichment_runner_get_enrichment_func(test_input, expected, propagat
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.propagate_annotations = propagate_annotations
     if test_input.lower() == 'xlmhg' and not does_python_version_support_single_set():
-        assert runner._get_enrichment_func(test_input).__name__ == False
+        assert runner._get_enrichment_func(test_input) == False
         return
 
     assert runner._get_enrichment_func(test_input).__name__ == expected.__name__
