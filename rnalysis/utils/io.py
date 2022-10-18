@@ -851,7 +851,7 @@ def check_id_mapping_results_ready(session, url: str, job_id, polling_interval: 
         r.raise_for_status()
         j = r.json()
         if "jobStatus" in j:
-            if j["jobStatus"] == "RUNNING":
+            if j["jobStatus"] in {"RUNNING", "NEW"}:
                 if verbose:
                     print(f"Retrying in {polling_interval}s")
                 time.sleep(polling_interval)
