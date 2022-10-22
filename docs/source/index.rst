@@ -31,6 +31,7 @@ RNAlysis |release| documentation
    :caption: Starting with RNAlysis:
 
    installation
+   tutorial
    user_guide
    glossary
 

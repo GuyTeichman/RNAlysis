@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 3.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User guide" href="user_guide.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">A-to-Z tutorial - example analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#intro">Intro</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis-1-time-series-rna-sequencing">Analysis #1 - time series RNA sequencing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-dataset">The dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-preprocessing-and-exploratory-data-analysis">Data preprocessing and exploratory data analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#filter-out-lowly-expressed-genes">Filter out lowly-expressed genes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examine-variance-in-our-data-with-principal-component-analysis">Examine variance in our data with Principal Component Analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examine-similarity-between-developmental-stages">Examine similarity between developmental stages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compare-the-expression-of-specific-genes-over-the-developmental-stages">Compare the expression of specific genes over the developmental stages</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#clustering-analysis">Clustering analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#the-simple-approach-distance-based-clustering-with-k-means">The simple approach - distance-based clustering with K-Means</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fine-tuning-our-approach-density-based-clustering-with-hdbscan">Fine-tuning our approach - density-based clustering with HDBSCAN</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-complex-approach-ensemble-based-clustering-with-clicom">The complex approach - ensemble-based clustering with CLICOM</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#enrichment-analysis">Enrichment analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#running-enrichment-analysis">Running enrichment analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis-2-differential-expression-data">Analysis #2 - differential expression data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">The dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-filtering-and-visualization-with-pipelines">Data filtering and visualization with Pipelines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#apply-the-pipeline-to-our-datasets">Apply the Pipeline to our datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#visualizing-and-extracting-gene-set-interesctions">Visualizing and extracting gene set interesctions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#create-a-venn-diagram">Create a Venn diagram</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#extract-the-subsets-we-are-interested-in">Extract the subsets we are interested in</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Enrichment analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#define-a-background-set">Define a background set</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#define-our-custom-enrichment-attributes">Define our custom enrichment attributes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Running enrichment analysis</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>A-to-Z tutorial - example analysis</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="a-to-z-tutorial-example-analysis">
+<h1>A-to-Z tutorial - example analysis<a class="headerlink" href="#a-to-z-tutorial-example-analysis" title="Permalink to this headline"></a></h1>
+<section id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline"></a></h2>
+<p>In this A-to-Z tutorial, we are going to analyze two datasets step-by-step, with each analysis covering different aspects of using <em>RNAlysis</em>.</p>
+<p>These analyses both focus on RNA sequencing data from nematodes, but the same principles can be applied to data from any organism.</p>
+</section>
+<section id="analysis-1-time-series-rna-sequencing">
+<h2>Analysis #1 - time series RNA sequencing<a class="headerlink" href="#analysis-1-time-series-rna-sequencing" title="Permalink to this headline"></a></h2>
+<section id="the-dataset">
+<h3>The dataset<a class="headerlink" href="#the-dataset" title="Permalink to this headline"></a></h3>
+<p>We will start by analyzing XYZ. This dataset describes the mean expression level of each gene over the developmental stages of <em>C. elegans</em> nematodes.</p>
+<p>Let’s start by loading the dataset:</p>
+<p>#TODO: PtrSc</p>
+</section>
+<section id="data-preprocessing-and-exploratory-data-analysis">
+<h3>Data preprocessing and exploratory data analysis<a class="headerlink" href="#data-preprocessing-and-exploratory-data-analysis" title="Permalink to this headline"></a></h3>
+<section id="filter-out-lowly-expressed-genes">
+<h4>Filter out lowly-expressed genes<a class="headerlink" href="#filter-out-lowly-expressed-genes" title="Permalink to this headline"></a></h4>
+</section>
+<section id="examine-variance-in-our-data-with-principal-component-analysis">
+<h4>Examine variance in our data with Principal Component Analysis<a class="headerlink" href="#examine-variance-in-our-data-with-principal-component-analysis" title="Permalink to this headline"></a></h4>
+</section>
+<section id="examine-similarity-between-developmental-stages">
+<h4>Examine similarity between developmental stages<a class="headerlink" href="#examine-similarity-between-developmental-stages" title="Permalink to this headline"></a></h4>
+</section>
+<section id="compare-the-expression-of-specific-genes-over-the-developmental-stages">
+<h4>Compare the expression of specific genes over the developmental stages<a class="headerlink" href="#compare-the-expression-of-specific-genes-over-the-developmental-stages" title="Permalink to this headline"></a></h4>
+</section>
+</section>
+<section id="clustering-analysis">
+<h3>Clustering analysis<a class="headerlink" href="#clustering-analysis" title="Permalink to this headline"></a></h3>
+<section id="the-simple-approach-distance-based-clustering-with-k-means">
+<h4>The simple approach - distance-based clustering with K-Means<a class="headerlink" href="#the-simple-approach-distance-based-clustering-with-k-means" title="Permalink to this headline"></a></h4>
+</section>
+<section id="fine-tuning-our-approach-density-based-clustering-with-hdbscan">
+<h4>Fine-tuning our approach - density-based clustering with HDBSCAN<a class="headerlink" href="#fine-tuning-our-approach-density-based-clustering-with-hdbscan" title="Permalink to this headline"></a></h4>
+</section>
+<section id="the-complex-approach-ensemble-based-clustering-with-clicom">
+<h4>The complex approach - ensemble-based clustering with CLICOM<a class="headerlink" href="#the-complex-approach-ensemble-based-clustering-with-clicom" title="Permalink to this headline"></a></h4>
+</section>
+</section>
+<section id="enrichment-analysis">
+<h3>Enrichment analysis<a class="headerlink" href="#enrichment-analysis" title="Permalink to this headline"></a></h3>
+<section id="running-enrichment-analysis">
+<h4>Running enrichment analysis<a class="headerlink" href="#running-enrichment-analysis" title="Permalink to this headline"></a></h4>
+</section>
+</section>
+</section>
+<section id="analysis-2-differential-expression-data">
+<h2>Analysis #2 - differential expression data<a class="headerlink" href="#analysis-2-differential-expression-data" title="Permalink to this headline"></a></h2>
+<section id="id1">
+<h3>The dataset<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h3>
+<p>We will start by analyzing XYZ. This dataset describes…</p>
+<p>Let’s start by loading the dataset:</p>
+<p>#TODO: PtrSc</p>
+</section>
+<section id="data-filtering-and-visualization-with-pipelines">
+<h3>Data filtering and visualization with Pipelines<a class="headerlink" href="#data-filtering-and-visualization-with-pipelines" title="Permalink to this headline"></a></h3>
+<p>#TODO</p>
+<section id="apply-the-pipeline-to-our-datasets">
+<h4>Apply the Pipeline to our datasets<a class="headerlink" href="#apply-the-pipeline-to-our-datasets" title="Permalink to this headline"></a></h4>
+</section>
+</section>
+<section id="visualizing-and-extracting-gene-set-interesctions">
+<h3>Visualizing and extracting gene set interesctions<a class="headerlink" href="#visualizing-and-extracting-gene-set-interesctions" title="Permalink to this headline"></a></h3>
+<section id="create-a-venn-diagram">
+<h4>Create a Venn diagram<a class="headerlink" href="#create-a-venn-diagram" title="Permalink to this headline"></a></h4>
+</section>
+<section id="extract-the-subsets-we-are-interested-in">
+<h4>Extract the subsets we are interested in<a class="headerlink" href="#extract-the-subsets-we-are-interested-in" title="Permalink to this headline"></a></h4>
+</section>
+</section>
+<section id="id2">
+<h3>Enrichment analysis<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
+<section id="define-a-background-set">
+<h4>Define a background set<a class="headerlink" href="#define-a-background-set" title="Permalink to this headline"></a></h4>
+</section>
+<section id="define-our-custom-enrichment-attributes">
+<h4>Define our custom enrichment attributes<a class="headerlink" href="#define-our-custom-enrichment-attributes" title="Permalink to this headline"></a></h4>
+</section>
+<section id="id3">
+<h4>Running enrichment analysis<a class="headerlink" href="#id3" title="Permalink to this headline"></a></h4>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="user_guide.html" class="btn btn-neutral float-right" title="User guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
