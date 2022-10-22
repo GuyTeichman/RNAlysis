@@ -1273,7 +1273,7 @@ class FilterTabPage(TabPage):
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
-    GENERAL_FUNCS = {'sort', 'transform', 'fold_change'}
+    GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change'}
     filterObjectCreated = QtCore.pyqtSignal(filtering.Filter)
     startedClustering = QtCore.pyqtSignal(object, str)
 
@@ -1871,6 +1871,7 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
         self.main_layout.addWidget(self.button_box)
 
         self.scroll.setMinimumWidth(self.scroll_widget.sizeHint().width() + 150)
+
     def change_all(self):
         for widget in self.keep_marks.values():
             widget.setChecked(self.select_all.isChecked())
