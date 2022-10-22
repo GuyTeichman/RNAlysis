@@ -1,3 +1,5 @@
+import asyncio.log
+
 import pytest
 import pandas as pd
 from collections import namedtuple
@@ -114,6 +116,22 @@ def test_from_string(monkeypatch):
     assert Filter._from_string("msg") == ["first-word", "second word", "third. word"]
     monkeypatch.setattr('builtins.input', lambda x: 'first-word,second word,third. word')
     assert Filter._from_string("msg", delimiter=',') == ["first-word", "second word", "third. word"]
+
+
+@pytest.mark.parametrize("map_to,map_from,remove_unmapped_genes,,expected", [
+    ('UniProtKB AC/ID', 'WormBase', False, 'tests/test_files/counted_translated_with_unmapped.csv'),
+    ('UniProtKB', 'auto', True, 'tests/test_files/counted_translated_remove_unmapped.csv'),
+])
+def test_filter_translate_gene_ids(map_to, map_from, remove_unmapped_genes, expected):
+    truth = io.load_csv(expected, index_col=0)
+    f = Filter('tests/test_files/counted.csv')
+
+    res = f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=False)
+    print(res.df.sort_index(), truth.sort_index())
+
+    assert res.df.sort_index().equals(truth.sort_index())
+    f.translate_gene_ids(map_to, map_from, remove_unmapped_genes, inplace=True)
+    assert f.df.sort_index().equals(truth.sort_index())
 
 
 def test_countfilter_normalize_to_rpm_htseqcount():

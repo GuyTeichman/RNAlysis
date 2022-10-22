@@ -17,8 +17,9 @@ import warnings
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, Union, Callable
 
-from scipy.stats.mstats import gmean
+import requests
 import yaml
+from scipy.stats.mstats import gmean
 
 try:
     from typing import Literal
@@ -34,7 +35,14 @@ from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
-from rnalysis.utils import clustering, io, parsing, generic, settings, validation
+from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
+
+try:
+    _GENE_ID_TYPES = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
+
+
+except requests.exceptions.ConnectionError:
+    _GENE_ID_TYPES = tuple()
 
 
 class Filter:
@@ -167,7 +175,7 @@ class Filter:
         """
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
-        assert printout_operation.lower() in ['filter', 'normalize', 'sort', 'transform'], \
+        assert printout_operation.lower() in ['filter', 'normalize', 'sort', 'transform', 'translate'], \
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
@@ -182,6 +190,12 @@ class Filter:
         if printout_operation.lower() == 'filter':
             printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
                         f"of the original {self.df.shape[0]} features. "
+        elif printout_operation.lower() == 'translate':
+            printout += f"Translated the gene IDs of {new_df.shape[0]} features. "
+            if self.shape[0] != new_df.shape[0]:
+                printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} unmapped features, " \
+                            f"leaving {new_df.shape[0]} of the original {self.df.shape[0]} features. "
+
         else:
             if printout_operation.lower() == 'normalize':
                 printout += "Normalized the values of"
@@ -189,6 +203,7 @@ class Filter:
                 printout += "Sorted"
             elif printout_operation.lower() == 'transform':
                 printout += "Transformed"
+
             printout += f" {new_df.shape[0]} features. "
         # if inplace, modify the df, fname and shape properties of self
         if inplace:
@@ -200,6 +215,8 @@ class Filter:
                 printout += 'Sorted'
             elif printout_operation.lower() == 'transform':
                 printout += 'Transformed'
+            elif printout_operation.lower() == 'translate':
+                printout += 'Translated'
             printout += ' inplace.'
             print(printout)
             self._update(df=new_df, fname=new_fname, **filter_update_kwargs)
@@ -335,6 +352,32 @@ class Filter:
 
         """
         return self.df.tail(n)
+
+    def translate_gene_ids(self, translate_to: Union[str, Literal[_GENE_ID_TYPES]],
+                           translate_from: Union[str, Literal['auto'], Literal[_GENE_ID_TYPES]] = 'auto',
+                           remove_unmapped_genes: bool = False, inplace: bool = True):
+        gene_ids = parsing.data_to_tuple(self.df.index)
+        new_df = self.df.copy(deep=True)
+        if translate_from.lower() == 'auto':
+            translator, translate_from, _ = io.find_best_gene_mapping(gene_ids, None, (translate_to,))
+        else:
+            translator = io.map_gene_ids(gene_ids, translate_from, translate_to)
+
+        new_df[translate_to] = np.nan
+        for gene_id in gene_ids:
+            if gene_id in translator:
+                new_df.loc[gene_id, translate_to] = translator[gene_id]
+
+        if remove_unmapped_genes:
+            new_df = new_df[new_df[translate_to].notna()]
+        else:
+            new_df[translate_to][new_df[translate_to].isna()] = new_df[translate_to][new_df[translate_to].isna()].index
+
+        new_df = new_df.set_index(translate_to, drop=True)
+
+        suffix = f'translateFrom{translate_from.replace(" ", "").replace("/", "")}' \
+                 f'to{translate_to.replace(" ", "").replace("/", "")}'
+        return self._inplace(new_df, False, inplace, suffix, 'translate')
 
     def filter_percentile(self, percentile: float, column: str, opposite: bool = False, inplace: bool = True):
 
@@ -2777,7 +2820,7 @@ class CountFilter(Filter):
            Example plot of split_kmeans(plot_style='all')
 
          .. figure::  clustering_PCA_kmeans.png
-           :align:   center
+            :align:   center
 
            Example plot of split_kmeans()
         """
