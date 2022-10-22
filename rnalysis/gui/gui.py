@@ -134,11 +134,11 @@ class ClicomWindow(gui_widgets.MinMaxDialog):
 
     def start_clustering(self):
         kwargs = self.get_analysis_params()
-        self.close()
+        self.showMinimized()
         try:
             self.paramsAccepted.emit(self.parameter_dicts, kwargs)
         finally:
-            self.show()
+            self.showNormal()
 
 
 class EnrichmentWindow(gui_widgets.MinMaxDialog):
@@ -468,7 +468,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         gene_set, bg_set, set_name, kwargs = self.get_analysis_params()
         kwargs['gui_mode'] = True
         print("Enrichment analysis started")
-        self.close()
+        self.showMinimized()
         try:
             is_single_set = self.is_single_set()
             if is_single_set:
@@ -486,7 +486,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             self.enrichmentStarted.emit(partial, set_name)
 
         except Exception:
-            self.show()
+            self.showNormal()
             raise Exception
 
 
