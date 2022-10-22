@@ -11,6 +11,11 @@ def is_legal_file_path(file_path: str):
     return pth.exists() and pth.is_file()
 
 
+def is_legal_dir_path(dir_path: str):
+    pth = Path(dir_path)
+    return pth.exists() and pth.is_dir()
+
+
 def check_is_df_like(inp):
     """
     checks whether an input file is a pandas DataFrame, a string that represent a path of a .csv file, a Path object \
