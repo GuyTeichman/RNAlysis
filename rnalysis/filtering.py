@@ -35,7 +35,7 @@ from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
-from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
+from rnalysis.utils import clustering, io, parsing, generic, settings, validation
 
 try:
     _GENE_ID_TYPES = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
