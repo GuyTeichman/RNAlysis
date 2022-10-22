@@ -694,10 +694,11 @@ class PathLineEdit(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
     textChanged = QtCore.pyqtSignal(bool)
 
-    def __init__(self, contents: str = 'No file chosen', button_text: str = 'Load', parent=None):
+    def __init__(self, contents: str = 'No file chosen', button_text: str = 'Load', is_file: bool = True, parent=None):
         super().__init__(parent)
         self.file_path = QtWidgets.QLineEdit('', self)
         self.open_button = QtWidgets.QPushButton(button_text, self)
+        self.is_file = is_file
         self._is_legal = False
 
         self.layout = QtWidgets.QGridLayout(self)
@@ -706,7 +707,10 @@ class PathLineEdit(QtWidgets.QWidget):
         self.layout.addWidget(self.file_path, 1, 1)
 
         self.file_path.textChanged.connect(self._check_legality)
-        self.open_button.clicked.connect(self.choose_file)
+        if self.is_file:
+            self.open_button.clicked.connect(self.choose_file)
+        else:
+            self.open_button.clicked.connect(self.choose_folder)
 
         self.file_path.setText(contents)
 
@@ -719,7 +723,8 @@ class PathLineEdit(QtWidgets.QWidget):
 
     def _check_legality(self):
         current_path = self.file_path.text()
-        if validation.is_legal_file_path(current_path):
+        if (self.is_file and validation.is_legal_file_path(current_path)) or (
+            not self.is_file and validation.is_legal_dir_path(current_path)):
             self._is_legal = True
         else:
             self._is_legal = False
@@ -750,6 +755,11 @@ class PathLineEdit(QtWidgets.QWidget):
                                                             "All Files (*)")
         if filename:
             self.file_path.setText(filename)
+
+    def choose_folder(self):
+        dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose a file", str(Path.home()))
+        if dirname:
+            self.file_path.setText(dirname)
 
     def text(self):
         return self.file_path.text()
@@ -1308,7 +1318,8 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation in (Path, typing.Union[str, Path], typing.Union[None, str, Path]):
-        widget = PathLineEdit()
+        is_file = 'folder' not in name
+        widget = PathLineEdit(is_file=is_file)
         for action in actions_to_connect:
             widget.textChanged.connect(action)
         if is_default:

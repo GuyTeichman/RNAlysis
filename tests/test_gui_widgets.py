@@ -413,6 +413,21 @@ def test_PathLineEdit_is_legal(qtbot):
     assert widget.is_legal
 
 
+@pytest.mark.parametrize('path,is_legal_expected', [
+    ('path/that/doesnt/exist', False),
+    ('tests/test_files/test_deseq.csv', False),
+    ('tests/test_files', True),
+    ('path/that/doesnt/exist.png', False)])
+def test_PathLineEdit_is_legal_dirmode(qtbot, path, is_legal_expected):
+    qtbot, widget = widget_setup(qtbot, PathLineEdit, is_file=False)
+
+    assert not widget.is_legal
+
+    widget.clear()
+    qtbot.keyClicks(widget.file_path, path)
+    assert widget.is_legal == is_legal_expected
+
+
 def test_PathLineEdit_text(qtbot):
     qtbot, widget = widget_setup(qtbot, PathLineEdit)
     widget.setText('test123')
@@ -431,6 +446,19 @@ def test_PathLineEdit_choose_file(qtbot, monkeypatch):
 
     monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileName', mock_choose_file)
     qtbot, widget = widget_setup(qtbot, PathLineEdit)
+    qtbot.mouseClick(widget.open_button, LEFT_CLICK)
+
+    assert widget.text() == pth
+
+
+def test_PathLineEdit_choose_folder(qtbot, monkeypatch):
+    pth = 'path/to/a/folder'
+
+    def mock_choose_folder(*args, **kwargs):
+        return pth
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', mock_choose_folder)
+    qtbot, widget = widget_setup(qtbot, PathLineEdit, is_file=False)
     qtbot.mouseClick(widget.open_button, LEFT_CLICK)
 
     assert widget.text() == pth
