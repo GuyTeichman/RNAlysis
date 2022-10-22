@@ -1,6 +1,6 @@
 recursive-include . *.rst *.ico *.png
 
-recursive-include rnalysis *.png *.json *.qss *.ico
+recursive-include rnalysis *.png *.json *.qss *.R *.ico
 recursive-exclude rnalysis *.webp
 
 recursive-include tests *
