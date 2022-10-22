@@ -59,18 +59,18 @@ font-size: 75pt;
 ])
 def test_get_parametric_stylesheet(monkeypatch, fontsize, fontname, truth):
     param_stylesheet = """QWidget {
-font: FONTPLACEHOLDER;
-font-size: FONTSIZEPLACEHOLDER*1;
+font: $FONTPLACEHOLDER;
+font-size: $FONTSIZEPLACEHOLDER*1;
 }
 
 MainWindow{
-font: FONTPLACEHOLDER;
-font-size: FONTSIZEPLACEHOLDER*2;
+font: $FONTPLACEHOLDER;
+font-size: $FONTSIZEPLACEHOLDER*2;
 }
 
 QToolButton {
 font: bold;
-font-size: FONTSIZEPLACEHOLDER*1.5;
+font-size: $FONTSIZEPLACEHOLDER*1.5;
 }"""
 
     class MockIO:
