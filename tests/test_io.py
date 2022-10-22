@@ -741,3 +741,41 @@ def test_get_gui_videos(monkeypatch):
         assert file_count == len(video_files)
     finally:
         shutil.rmtree(mock_dir, ignore_errors=True)
+
+
+class MockProcess:
+    def __init__(self, returncode: int):
+        self.stdout = [b'things', b'to', b'print']
+        self.returncode = returncode
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return
+
+
+@pytest.mark.parametrize('r_path,expected', [
+    ('auto', 'Rscript "tests/test_files/test_r_script.R"'),
+    ('D:/Program Files/R', '"D:/Program Files/R/bin/Rscript" "tests/test_files/test_r_script.R"')
+])
+def test_run_r_script(monkeypatch, r_path, expected):
+    script_path = 'tests/test_files/test_r_script.R'
+
+    def mock_popen(process, stdout, stderr, shell=False):
+        assert process == expected
+        return MockProcess(0)
+
+    monkeypatch.setattr(subprocess, 'Popen', mock_popen)
+    monkeypatch.setattr(subprocess, 'run', lambda *args, **kwargs: MockProcess(0))
+
+    run_r_script(script_path, r_path)
+
+
+def test_run_r_script_not_installed(monkeypatch):
+    def mock_run(process, stdout, stderr, shell=False):
+        return MockProcess(1)
+
+    monkeypatch.setattr(subprocess, 'run', mock_run)
+    with pytest.raises(FileNotFoundError):
+        run_r_script('tests/test_files/test_r_script.R')

@@ -1,30 +1,35 @@
 import concurrent.futures
 import functools
-import typing
-from io import BytesIO
-
-import yaml
-import shutil
 import json
 import os
 import queue
 import re
+import shutil
+import subprocess
+import sys
 import time
+import typing
 import warnings
 from datetime import date, datetime
 from functools import lru_cache
-from io import StringIO
+from io import BytesIO, StringIO
 from itertools import chain
 from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any
 from urllib.parse import urlparse, parse_qs, urlencode
-from tqdm.auto import tqdm
+
 import appdirs
 import numpy as np
 import pandas as pd
 import requests
+import yaml
 from requests.adapters import HTTPAdapter, Retry
+from tqdm.auto import tqdm
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 from rnalysis.utils import parsing, validation, ontology, __path__
 from rnalysis import __version__
 
@@ -977,9 +982,9 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
     if id_dict_to[map_to] == id_dict_from[map_from]:
         return GeneIDTranslator()
 
-    if map_to == "UniProtKB":
+    if map_to in ["UniProtKB", "UniProtKB AC/ID"]:
         map_to = UNIPROTKB_TO
-    if map_from == "UniProtKB":
+    if map_from in ["UniProtKB", "UniProtKB AC/ID"]:
         map_from = UNIPROTKB_FROM
 
     ids = parsing.data_to_list(ids)
@@ -1247,3 +1252,22 @@ def get_gui_videos(video_paths: Tuple[str, ...]):
             content = BytesIO(req.content)
             with open(this_vid_pth, 'wb') as file:
                 file.write(content.getbuffer())
+
+
+def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
+    if r_installation_folder == 'auto':
+        prefix = "Rscript"
+    else:
+        prefix = f'"{str(r_installation_folder)}/bin/Rscript"'
+
+    status = subprocess.run(f"{prefix} --help", shell=False, stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL).returncode
+    if status != 0:
+        raise FileNotFoundError("Failed to find R executable. Please make sure your R installation folder is correct. ")
+
+    with subprocess.Popen(f'{prefix} "{script_path}"', stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+        for line in process.stdout:
+            print(line.decode('utf8'))
+    res = process.returncode
+
+    assert not res, "R script failed to execute"
