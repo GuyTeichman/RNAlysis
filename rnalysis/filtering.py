@@ -35,7 +35,7 @@ from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
-from rnalysis.utils import clustering, io, parsing, generic, settings, validation
+from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
 
 try:
     _GENE_ID_TYPES = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
@@ -2119,6 +2119,43 @@ class CountFilter(Filter):
                           f'Appending the remaining {n_cols % multiplier} as an inncomplete triplicate.')
         return triplicate
 
+    def differential_expression_deseq2(self, design_matrix: Union[str, Path],
+                                       comparisons: Iterable[Tuple[str, str, str]],
+                                       r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'
+                                       ) -> Tuple['DESeqFilter', ...]:
+        """
+        Run differential expression analysis on the count matrix using the DESeq2 algorithm. \
+        The analysis will be based on a design matrix supplied by the user. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see User Guide for a complete example). \
+        The analysis formula will contain all the factors in the design matrix. \
+        To run this function, a version of R must be installed.
+
+        :param design_matrix: path to a csv file containing the experiment's design matrix.
+        :type design_matrix: str or Path
+        :param comparisons: specifies what comparisons to build results tables out of. \
+        each individual comparison should be a tuple with exactly three elements: \
+        the name of a factor in the design formula, the name of the numerator level for the fold change, \
+        and the name of the denominator level for the fold change.
+        :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
+        :param r_installation_folder: path to the installation folder of R. for example: \
+        'C:/Program Files/R/R-4.2.1'
+        :type r_installation_folder: str, Path, or 'auto' (default='auto')
+        :return: a tuple of DESeqFilter objects, one for each comparison
+        """
+        self._validate_is_normalized(expect_normalized=False)
+        data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
+        io.save_csv(self.df, data_path)
+        output_dir = differential_expression.run_deseq2_analysis(data_path, design_matrix, comparisons,
+                                                                 r_installation_folder)
+        outputs = []
+        for item in output_dir.iterdir():
+            if item.is_file() and item.suffix == '.csv':
+                outputs.append(DESeqFilter(item))
+
+        return parsing.data_to_tuple(outputs)
+
     def fold_change(self, numerator: Union[str, List[str]], denominator: Union[str, List[str]],
                     numer_name: str = 'default', denom_name: str = 'default') -> 'FoldChangeFilter':
 
@@ -2262,9 +2299,12 @@ class CountFilter(Filter):
 
         return averaged_df
 
-    def _validate_is_normalized(self):
-        if not self.is_normalized:
-            warnings.warn("This function is meant for normalized values, and your values may not be normalized. ")
+    def _validate_is_normalized(self, expect_normalized: bool = True):
+        if not self.is_normalized and expect_normalized:
+            warnings.warn("This function is meant for normalized values, and your count matrix may not be normalized. ")
+        elif self.is_normalized and not expect_normalized:
+            warnings.warn(
+                "This function is meant for raw, unnormalize counts, and your count matrix appears to be normalized. ")
 
     def _norm_scaling_factors(self, scaling_factors: pd.Series):
         assert isinstance(scaling_factors,
