@@ -7,6 +7,7 @@ from pathlib import Path
 from queue import Queue
 
 import matplotlib
+import pandas as pd
 import typing_extensions
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel
@@ -930,6 +931,92 @@ class OptionalDoubleSpinBox(OptionalSpinBox):
         self.spinbox.setSingleStep(step)
 
 
+class ComparisonPicker(QtWidgets.QWidget):
+    def __init__(self, design_mat: pd.DataFrame, parent=None):
+        super().__init__(parent)
+        self.design_mat = design_mat
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.factor = QtWidgets.QComboBox(self)
+        self.numerator = QtWidgets.QComboBox(self)
+        self.denominator = QtWidgets.QComboBox(self)
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.layout.addWidget(self.factor)
+        self.layout.addWidget(self.numerator)
+        self.layout.addWidget(self.denominator)
+
+        self.factor.currentTextChanged.connect(self.update_combos)
+        self.factor.addItems([str(item) for item in self.design_mat.columns])
+
+    def update_combos(self):
+        this_factor = self.factor.currentText()
+        if this_factor in self.design_mat.columns:
+            options = sorted({str(item) for item in self.design_mat[this_factor]})
+        else:
+            options = ["Select a factor..."]
+        self.numerator.clear()
+        self.denominator.clear()
+
+        self.numerator.addItems(options)
+        self.denominator.addItems(options)
+
+    def get_value(self) -> typing.Tuple[str, str, str]:
+        return self.factor.currentText(), self.numerator.currentText(), self.denominator.currentText()
+
+
+class ComparisonPickerGroup(QtWidgets.QWidget):
+    def __init__(self, design_mat: pd.DataFrame, parent=None):
+        super().__init__(parent)
+        self.design_mat = design_mat
+        self.widgets = {}
+        self.layout = QtWidgets.QGridLayout(self)
+
+        self.inputs = []
+        self.input_labels = []
+
+        self.init_ui()
+        self.add_comparison_widget()
+
+    def init_ui(self):
+        self.widgets['add_widget'] = QtWidgets.QPushButton('Add comparison')
+        self.widgets['add_widget'].clicked.connect(self.add_comparison_widget)
+        self.layout.addWidget(self.widgets['add_widget'], 0, 0, 1, 4)
+
+        self.widgets['remove_widget'] = QtWidgets.QPushButton('Remove comparison')
+        self.widgets['remove_widget'].clicked.connect(self.remove_comparison_widget)
+        self.layout.addWidget(self.widgets['remove_widget'], 1, 0, 1, 4)
+
+        self.layout.addWidget(QtWidgets.QLabel('<b>Design factor</b>', self), 2, 1)
+        self.layout.addWidget(QtWidgets.QLabel('<b>Numerator</b>', self), 2, 2)
+        self.layout.addWidget(QtWidgets.QLabel('<b>Denominator</b>', self), 2, 3)
+
+    @QtCore.pyqtSlot()
+    def add_comparison_widget(self):
+        self.inputs.append(ComparisonPicker(self.design_mat, self))
+        self.layout.addWidget(self.inputs[-1], len(self.inputs) + 2, 1, 1, 3)
+
+        self.input_labels.append(QtWidgets.QLabel(f'Comparison #{len(self.inputs)}:', self.inputs[-1]))
+        self.layout.addWidget(self.input_labels[-1], len(self.inputs) + 2, 0)
+
+        self.layout.setRowStretch(len(self.inputs) + 2, 1)
+        self.layout.setRowStretch(len(self.inputs) + 3, 2)
+
+    @QtCore.pyqtSlot()
+    def remove_comparison_widget(self):
+        if len(self.inputs) > 0:
+            self.inputs.pop(-1).deleteLater()
+            self.input_labels.pop(-1).deleteLater()
+            self.layout.setRowStretch(len(self.inputs) + 3, 2)
+
+    def get_comparison_values(self):
+        values = []
+        for widget in self.inputs:
+            values.append(widget.get_value())
+        return values
+
+
 class QMultiInput(QtWidgets.QPushButton):
     IS_MULTI_INPUT = True
     CHILD_QWIDGET = None
@@ -984,8 +1071,9 @@ class QMultiInput(QtWidgets.QPushButton):
 
     @QtCore.pyqtSlot()
     def remove_widget(self):
-        self.dialog_widgets['inputs'].pop(-1).deleteLater()
-        self.dialog_widgets['input_labels'].pop(-1).deleteLater()
+        if len(self.dialog_widgets['inputs']) > 0:
+            self.dialog_widgets['inputs'].pop(-1).deleteLater()
+            self.dialog_widgets['input_labels'].pop(-1).deleteLater()
 
     def get_values(self):
         values = []

@@ -3,6 +3,7 @@ import joblib
 from rnalysis.gui.gui_widgets import *
 import time
 from typing_extensions import Literal
+from rnalysis.utils import io
 
 LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
@@ -382,6 +383,54 @@ def test_HelpButton_desc_help(qtbot, monkeypatch):
     qtbot.mouseClick(widget, LEFT_CLICK)
 
     assert help_shown == [1]
+
+
+def test_ComparisonPicker_init(qtbot):
+    _ = widget_setup(qtbot, ComparisonPicker, io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+
+
+def test_ComparisonPicker_get_value(qtbot):
+    qtbot, widget = widget_setup(qtbot, ComparisonPicker, io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+    assert widget.get_value() == ('condition', 'cond1', 'cond1')
+
+    widget.factor.setCurrentText('replicate')
+    widget.numerator.setCurrentText('rep3')
+    widget.denominator.setCurrentText('rep2')
+
+    assert widget.get_value() == ('replicate', 'rep3', 'rep2')
+
+
+def test_ComparisonPickerGroup_init(qtbot):
+    _ = widget_setup(qtbot, ComparisonPickerGroup, io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+
+
+def test_ComparisonPickerGroup_add_widget(qtbot):
+    qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
+                                 io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+    widget.add_comparison_widget()
+    assert len(widget.inputs) == 2
+    widget.add_comparison_widget()
+    assert len(widget.inputs) == 3
+
+
+def test_ComparisonPickerGroup_remove_widget(qtbot):
+    qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
+                                 io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+    widget.remove_comparison_widget()
+    assert len(widget.inputs) == 0
+    widget.remove_comparison_widget()
+    assert len(widget.inputs) == 0
+
+
+def test_ComparisonPickerGroup_get_comparison_values(qtbot):
+    qtbot, widget = widget_setup(qtbot, ComparisonPickerGroup,
+                                 io.load_csv('tests/test_files/test_design_matrix.csv', 0))
+    widget.add_comparison_widget()
+
+    widget.inputs[0].factor.setCurrentText('replicate')
+    widget.inputs[0].numerator.setCurrentText('rep3')
+    widget.inputs[0].denominator.setCurrentText('rep2')
+    assert widget.get_comparison_values() == [('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')]
 
 
 def test_PathLineEdit_disable(qtbot):
