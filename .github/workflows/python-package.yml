@@ -1,6 +1,6 @@
 name: Build CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
     build:
@@ -9,8 +9,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-latest, windows-latest]
-                python-version: [3.7, 3.8, 3.9, '3.10']
+                os: [ ubuntu-latest, windows-latest ]
+                python-version: [ 3.7, 3.8, 3.9, '3.10' ]
 
         env:
             DISPLAY: ':99.0'
@@ -23,14 +23,14 @@ jobs:
                 uses: ts-graphviz/setup-graphviz@v1
             -   name: Install LLVM and Clang
                 uses: KyleMayes/install-llvm-action@v1
-            -   name: Install R
-                uses: r-lib/actions/setup-r@v2
-                    with:
-                        r-version: '4.2.1' # The R version to download (if necessary) and use.
-                run: Rscript -e 'print("Test R installation")'
                 with:
                     version: "9.0"
                     directory: ${{ runner.temp }}/llvm
+            -   name: Install R
+                uses: r-lib/actions/setup-r@v2
+                with:
+                    r-version: '4.2.1' # The R version to download (if necessary) and use.
+                run: Rscript -e 'print("Test R installation")'
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
                 with:
