@@ -87,7 +87,7 @@ def four_available_objects_and_empty(qtbot, red_icon, green_icon, blank_icon):
 def main_window(qtbot, monkeypatch, use_temp_settings_file):
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args, **kwargs: QtWidgets.QMessageBox.Yes)
     monkeypatch.setattr(gui_widgets.ThreadStdOutStreamTextQueueReceiver, 'run', lambda self: None)
-    monkeypatch.setattr(gui_tutorial.WelcomeWizard, '__init__', lambda *args,**kwargs: None)
+    monkeypatch.setattr(gui_tutorial.WelcomeWizard, '__init__', lambda *args, **kwargs: None)
     settings.set_show_tutorial_settings(False)
     qtbot, window = widget_setup(qtbot, MainWindow)
     warnings.showwarning = customwarn
@@ -167,6 +167,12 @@ def clicom_window(qtbot):
 
 
 @pytest.fixture
+def deseq_window(qtbot) -> DESeqWindow:
+    qtbot, window = widget_setup(qtbot, DESeqWindow)
+    return window
+
+
+@pytest.fixture
 def enrichment_window(qtbot, available_objects):
     qtbot, window = widget_setup(qtbot, EnrichmentWindow, available_objects)
     return window
@@ -228,6 +234,58 @@ def test_ApplyPipelineWindow_clear_all(qtbot, available_objects_no_tabpages):
     assert window.result() == []
 
 
+def test_DESeqWindow_init(qtbot, deseq_window):
+    _ = deseq_window
+
+
+def test_DESeqWindow_load_design_mat(qtbot, deseq_window):
+    design_mat_path = 'tests/test_files/test_design_matrix.csv'
+    design_mat_truth = io.load_csv(design_mat_path, 0)
+    deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
+    assert deseq_window.design_mat.equals(design_mat_truth)
+    assert deseq_window.comparisons_widgets['picker'].design_mat.equals(design_mat_truth)
+
+
+def test_DESeqWindow_get_analysis_params(qtbot, deseq_window):
+    design_mat_path = 'tests/test_files/test_design_matrix.csv'
+    truth = dict(r_installation_folder='auto', design_matrix=design_mat_path,
+                 comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')])
+
+    deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
+
+    deseq_window.comparisons_widgets['picker'].add_comparison_widget()
+
+    deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+    assert deseq_window.get_analysis_kwargs() == truth
+
+
+def test_DESeqWindow_start_analysis(qtbot, deseq_window):
+    design_mat_path = 'tests/test_files/test_design_matrix.csv'
+
+    truth_args = []
+    truth_kwargs = dict(r_installation_folder='auto', design_matrix=design_mat_path,
+                        comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')])
+
+    deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
+    qtbot.mouseClick(deseq_window.param_widgets['load_design'], LEFT_CLICK)
+
+    deseq_window.comparisons_widgets['picker'].add_comparison_widget()
+
+    deseq_window.comparisons_widgets['picker'].inputs[0].factor.setCurrentText('replicate')
+    deseq_window.comparisons_widgets['picker'].inputs[0].numerator.setCurrentText('rep3')
+    deseq_window.comparisons_widgets['picker'].inputs[0].denominator.setCurrentText('rep2')
+
+    with qtbot.waitSignal(deseq_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(deseq_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_args
+    assert blocker.args[1] == truth_kwargs
+
+
 def test_ClicomWindow_init(qtbot, clicom_window):
     _ = clicom_window
 
@@ -264,10 +322,10 @@ def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
 
-    assert clicom_window.get_analysis_params() == truth
+    assert clicom_window.get_analysis_kwargs() == truth
 
 
-def test_ClicomWindow_start_clustering(qtbot, clicom_window):
+def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     truth_setups = [dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
                          max_n_clusters_estimate='auto'),
                     dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',

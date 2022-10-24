@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import typing
+import subprocess
 import warnings
 from collections import OrderedDict
 from pathlib import Path
@@ -29,58 +30,45 @@ FILTER_OBJ_TYPES_INV = {val: key for key, val in FILTER_OBJ_TYPES.items()}
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 
-class ClicomWindow(gui_widgets.MinMaxDialog):
-    CLICOM_FUNC = filtering.CountFilter.split_clicom
-    CLICOM_SIGNATURE = generic.get_method_signature(CLICOM_FUNC)
-    CLICOM_DESC, CLICOM_PARAM_DESC = generic.get_method_docstring(CLICOM_FUNC)
-    EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
-    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode'}
+class FuncExternalWindow(gui_widgets.MinMaxDialog):
+    IGNORED_WIDGETS = {'help_link'}
     paramsAccepted = QtCore.pyqtSignal(list, dict)
 
-    def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
+    def __init__(self, func_name: str, func: Callable, excluded_params: set, parent=None):
         super().__init__(parent)
-        self.parameter_dicts: List[dict] = []
-        self.funcs = funcs
-        self.setups_counter = {key: 0 for key in self.funcs.keys()}
-        self.filter_obj = filter_obj
-        self.stack = FuncTypeStack(self.funcs, self.filter_obj, self,
-                                   additional_excluded_params=self.ADDITIONAL_EXCLUDED_PARAMS)
+        self.func_name = func_name
+        self.func = func
+        self.signature = generic.get_method_signature(self.func)
+        self.desc, self.param_desc = generic.get_method_docstring(self.func)
+        self.excluded_params = excluded_params
+
         self.widgets = {}
         self.layout = QtWidgets.QGridLayout(self)
 
-        self.param_group = QtWidgets.QGroupBox('Choose CLICOM parameters')
+        self.param_group = QtWidgets.QGroupBox(f"1. Set {func_name} parameters")
         self.param_grid = QtWidgets.QGridLayout(self.param_group)
         self.param_widgets = {}
 
-        self.setups_group = QtWidgets.QGroupBox("Choose clustering setups for CLICOM")
-        self.setups_grid = QtWidgets.QGridLayout(self.setups_group)
-        self.setups_widgets = {}
-
-        self.start_button = QtWidgets.QPushButton('Accept CLICOM parameters')
+        self.start_button = QtWidgets.QPushButton(f'Start {self.func_name} analysis')
         self.close_button = QtWidgets.QPushButton('Close')
 
-        self.init_ui()
-
     def init_ui(self):
-        self.setWindowTitle('CLICOM clustering setup')
         self.layout.addWidget(self.param_group, 0, 0)
-        self.layout.addWidget(self.setups_group, 0, 1)
         self.layout.addWidget(self.start_button, 1, 0, 1, 2)
         self.layout.addWidget(self.close_button, 2, 0, 1, 2)
 
-        self.start_button.clicked.connect(self.start_clustering)
+        self.start_button.clicked.connect(self.start_analysis)
         self.close_button.clicked.connect(self.close)
 
         self.init_param_ui()
-        self.init_setups_ui()
 
     def init_param_ui(self):
         i = 0
 
-        for name, param in self.CLICOM_SIGNATURE.items():
-            if name in self.EXCLUDED_PARAMS:
+        for name, param in self.signature.items():
+            if name in self.excluded_params:
                 continue
-            this_desc = self.CLICOM_PARAM_DESC.get(name, '')
+            this_desc = self.param_desc.get(name, '')
             self.param_widgets[name] = gui_widgets.param_to_widget(param, name)
             if isinstance(self.param_widgets[name], (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
                 self.param_widgets[name].add_columns(self.filter_obj.columns)
@@ -96,6 +84,106 @@ class ClicomWindow(gui_widgets.MinMaxDialog):
             help_button.connect_param_help(name, this_desc)
             i += 1
         self.param_grid.setRowStretch(i, 1)
+
+    def get_analysis_kwargs(self):
+        kwargs = {}
+        for param_name, widget in self.param_widgets.items():
+            if param_name in self.IGNORED_WIDGETS:
+                continue
+            val = gui_widgets.get_val_from_widget(widget)
+            kwargs[param_name] = val
+        return kwargs
+
+    def get_analysis_args(self):
+        args = []
+        return args
+
+    def start_analysis(self):
+        args = self.get_analysis_args()
+        kwargs = self.get_analysis_kwargs()
+        self.showMinimized()
+        try:
+            self.paramsAccepted.emit(args, kwargs)
+        finally:
+            self.showNormal()
+
+
+class DESeqWindow(FuncExternalWindow):
+    DESEQ_FUNC = filtering.CountFilter.differential_expression_deseq2
+    EXCLUDED_PARAMS = {'self', 'comparisons'}
+    IGNORED_WIDGETS = {'help_link', 'load_design'}
+    paramsAccepted = QtCore.pyqtSignal(list, dict)
+
+    def __init__(self, parent=None):
+        super().__init__('DESeq2', self.DESEQ_FUNC, self.EXCLUDED_PARAMS, parent)
+
+        self.comparisons = []
+        self.design_mat = None
+
+        self.comparisons_group = QtWidgets.QGroupBox("2. Choose pairwise comparisons for DESeq2")
+        self.comparisons_grid = QtWidgets.QGridLayout(self.comparisons_group)
+        self.comparisons_widgets = {}
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('DESeq2 differential expression setup')
+        self.layout.addWidget(self.comparisons_group, 0, 1)
+        super().init_ui()
+
+    def init_param_ui(self):
+        super().init_param_ui()
+        self.param_widgets['load_design'] = QtWidgets.QPushButton('Load design matrix')
+        self.param_widgets['load_design'].setEnabled(False)
+        self.param_widgets['load_design'].clicked.connect(self.init_comparisons_ui)
+        self.param_grid.addWidget(self.param_widgets['load_design'], self.param_grid.rowCount(), 0, 1, 2)
+        self.param_widgets['design_matrix'].textChanged.connect(self._change_accept_button_state)
+
+    def _change_accept_button_state(self, is_legal: bool):
+        self.param_widgets['load_design'].setEnabled(is_legal)
+
+    def init_comparisons_ui(self):
+        self.design_mat = io.load_csv(self.param_widgets['design_matrix'].text(), index_col=0)
+
+        if 'picker' in self.comparisons_widgets:
+            self.comparisons_grid.removeWidget(self.comparisons_widgets['picker'])
+            self.comparisons_widgets['picker'].deleteLater()
+
+        self.comparisons_widgets['picker'] = gui_widgets.ComparisonPickerGroup(self.design_mat, self)
+        self.comparisons_grid.addWidget(self.comparisons_widgets['picker'], 0, 0)
+
+    def get_analysis_kwargs(self):
+        kwargs = super().get_analysis_kwargs()
+        kwargs['comparisons'] = self.comparisons_widgets['picker'].get_comparison_values()
+        return kwargs
+
+
+class ClicomWindow(FuncExternalWindow):
+    CLICOM_FUNC = filtering.CountFilter.split_clicom
+    EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
+    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode'}
+    paramsAccepted = QtCore.pyqtSignal(list, dict)
+
+    def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
+        super().__init__('CLICOM', self.CLICOM_FUNC, self.EXCLUDED_PARAMS, parent)
+        self.parameter_dicts: List[dict] = []
+        self.funcs = funcs
+        self.setups_counter = {key: 0 for key in self.funcs.keys()}
+        self.filter_obj = filter_obj
+        self.stack = FuncTypeStack(self.funcs, self.filter_obj, self,
+                                   additional_excluded_params=self.ADDITIONAL_EXCLUDED_PARAMS)
+
+        self.setups_group = QtWidgets.QGroupBox("2. Choose clustering setups for CLICOM")
+        self.setups_grid = QtWidgets.QGridLayout(self.setups_group)
+        self.setups_widgets = {}
+
+        self.init_ui()
+
+    def init_ui(self):
+        super().init_ui()
+        self.setWindowTitle('CLICOM clustering setup')
+        self.layout.addWidget(self.setups_group, 0, 1)
+        self.init_setups_ui()
 
     def init_setups_ui(self):
         self.setups_grid.addWidget(self.stack, 1, 0)
@@ -123,22 +211,8 @@ class ClicomWindow(gui_widgets.MinMaxDialog):
         self.setups_counter[func_name] += 1
         self.setups_widgets['list'].add_item(f"{func_params['method']}_{self.setups_counter[func_name]}")
 
-    def get_analysis_params(self):
-        kwargs = {}
-        for param_name, widget in self.param_widgets.items():
-            if param_name in {'help_link'}:
-                continue
-            val = gui_widgets.get_val_from_widget(widget)
-            kwargs[param_name] = val
-        return kwargs
-
-    def start_clustering(self):
-        kwargs = self.get_analysis_params()
-        self.showMinimized()
-        try:
-            self.paramsAccepted.emit(self.parameter_dicts, kwargs)
-        finally:
-            self.showNormal()
+    def get_analysis_args(self):
+        return self.parameter_dicts
 
 
 class EnrichmentWindow(gui_widgets.MinMaxDialog):
@@ -1303,6 +1377,7 @@ class FilterTabPage(TabPage):
         self.stack_widgets = {}
 
         self.clicom_window = None
+        self.deseq_window = None
 
         self.init_basic_ui()
 
@@ -1508,6 +1583,11 @@ class FilterTabPage(TabPage):
             self.clicom_window.paramsAccepted.connect(
                 functools.partial(self._apply_function_from_params, func_name))
             self.clicom_window.show()
+        elif func_name == 'differential_expression_deseq2':
+            this_stack.deselect()
+            self.deseq_window = DESeqWindow(self)
+            self.deseq_window.paramsAccepted.connect(functools.partial(self._apply_function_from_params, func_name))
+            self.deseq_window.show()
 
     def view_full_dataframe(self):
         df_window = gui_windows.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
@@ -2179,6 +2259,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread_stdout_queue_listener = QtCore.QThread()
         self.stdout_receiver = gui_widgets.ThreadStdOutStreamTextQueueReceiver(self.queue_stdout)
         sys.stdout = gui_widgets.WriteStream(self.queue_stdout)
+        io.sys.stdout = sys.stdout
 
         # attach console text receiver to console text thread
         self.stdout_receiver.moveToThread(self.thread_stdout_queue_listener)
@@ -2904,7 +2985,7 @@ class MainWindow(QtWidgets.QMainWindow):
         runner.plot_results()
         self.display_enrichment_results(results, set_name)
 
-    def run_partial(self, partial: Callable, output_slot: Callable, *args):
+    def run_partial(self, partial: Callable, output_slot: Callable = None, *args):
         # Create a worker object
         self.worker = gui_widgets.Worker(partial, *args)
 
@@ -2947,7 +3028,8 @@ class MainWindow(QtWidgets.QMainWindow):
         #  Connect signals and slots
         self.worker.startProgBar.connect(self.start_progress_bar)
         self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(output_slot)
+        if output_slot is not None:
+            self.worker.finished.connect(output_slot)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
