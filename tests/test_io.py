@@ -756,8 +756,8 @@ class MockProcess:
 
 
 @pytest.mark.parametrize('r_path,expected', [
-    ('auto', 'Rscript "tests/test_files/test_r_script.R"'),
-    ('D:/Program Files/R', '"D:/Program Files/R/bin/Rscript" "tests/test_files/test_r_script.R"')
+    ('auto', ['Rscript', "tests/test_files/test_r_script.R"]),
+    ('D:/Program Files/R', ["D:/Program Files/R/bin/Rscript", "tests/test_files/test_r_script.R"])
 ])
 def test_run_r_script(monkeypatch, r_path, expected):
     script_path = 'tests/test_files/test_r_script.R'

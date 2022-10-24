@@ -1258,7 +1258,7 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     if r_installation_folder == 'auto':
         prefix = "Rscript"
     else:
-        prefix = f'"{Path(r_installation_folder).as_posix()}/bin/Rscript"'
+        prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
 
     status = subprocess.run([prefix, "--help"], shell=False, stdout=subprocess.DEVNULL,
