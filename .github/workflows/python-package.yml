@@ -30,11 +30,9 @@ jobs:
                 uses: r-lib/actions/setup-r@v2
                 with:
                     r-version: '4.2.1' # The R version to download (if necessary) and use.
-            - name: Install cURL on Linux
-              run: |
-                  if [ "$RUNNER_OS" == "Linux" ]; then
-                       sudo apt-get install libcurl4-openssl-dev
-                  fi
+            -   name: Install cURL on Linux
+                if: steps.main.outputs.OUTPUT == 0
+                run: sudo apt-get install libcurl4-openssl-dev
             -   name: Test R installation
                 run: Rscript -e "print('R script ran successfully')"
             -   name: Set up Python ${{ matrix.python-version }}
