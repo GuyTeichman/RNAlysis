@@ -1258,14 +1258,15 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     if r_installation_folder == 'auto':
         prefix = "Rscript"
     else:
-        prefix = f'"{str(r_installation_folder)}/bin/Rscript"'
+        prefix = f'"{Path(r_installation_folder).as_posix()}/bin/Rscript"'
+    script_path = Path(script_path).as_posix()
 
     status = subprocess.run([prefix, "--help"], shell=False, stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL).returncode
     if status != 0:
         raise FileNotFoundError("Failed to find R executable. Please make sure your R installation folder is correct. ")
 
-    with subprocess.Popen([prefix,script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+    with subprocess.Popen([prefix, script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
         for line in process.stdout:
             print(line.decode('utf8'))
     res = process.returncode
