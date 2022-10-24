@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 import rnalysis.utils.io
@@ -779,3 +781,9 @@ def test_run_r_script_not_installed(monkeypatch):
     monkeypatch.setattr(subprocess, 'run', mock_run)
     with pytest.raises(FileNotFoundError):
         run_r_script('tests/test_files/test_r_script.R')
+
+
+@pytest.mark.parametrize("stdout", [True, False])
+@pytest.mark.parametrize("stderr", [True, False])
+def test_run_subprocess(stdout, stderr):
+    run_subprocess(['python3', '--version'], stdout, stderr)

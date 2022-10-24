@@ -1261,14 +1261,34 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
         prefix = f'{Path(r_installation_folder).as_posix()}/bin/Rscript'
     script_path = Path(script_path).as_posix()
 
-    status = subprocess.run([prefix, "--help"], shell=False, stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL).returncode
-    if status != 0:
-        raise FileNotFoundError("Failed to find R executable. Please make sure your R installation folder is correct. ")
+    return_code = run_subprocess([prefix, "--help"], False, False)
+    if return_code:
+        raise FileNotFoundError(f"Failed to find R executable (return code {return_code}). "
+                                "Please make sure your R installation folder is correct. ")
 
-    with subprocess.Popen([prefix, script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
-        for line in process.stdout:
-            print(line.decode('utf8'))
-    res = process.returncode
+    return_code = run_subprocess([prefix, script_path])
 
-    assert not res, "R script failed to execute"
+    assert not return_code, f"R script failed to execute (return code {return_code}). "
+
+
+def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True):
+    if print_stdout or print_stderr:
+        if print_stdout and print_stderr:
+            stdout = subprocess.PIPE
+            stderr = subprocess.STDOUT
+        elif print_stdout:
+            stdout = subprocess.PIPE
+            stderr = subprocess.DEVNULL
+        else:
+            stdout = subprocess.DEVNULL
+            stderr = subprocess.PIPE
+
+        with subprocess.Popen(args, stdout=stdout, stderr=stderr) as process:
+            stream = process.stdout if print_stdout else process.stderr
+            for line in stream:
+                print(line.decode('utf8'))
+        return_code = process.returncode
+    else:
+        return_code = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+
+    return return_code
