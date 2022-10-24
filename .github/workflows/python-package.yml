@@ -31,7 +31,7 @@ jobs:
                 with:
                     r-version: '4.2.1' # The R version to download (if necessary) and use.
             -   name: Install cURL on Linux
-                if: steps.main.outputs.OUTPUT == 0
+                if: runner.os == 'Linux'
                 run: sudo apt-get install libcurl4-openssl-dev
             -   name: Test R installation
                 run: Rscript -e "print('R script ran successfully')"
