@@ -39,7 +39,7 @@ How do I install it?
 ---------------------
 You can install *RNAlysis* via PyPI.
 
-To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines), you should first install `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater (on Windows computers only), `GraphViz <https://graphviz.org/download/>`_, `R <https://cran.r-project.org/bin/>`_, and `kallisto <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_.
+To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines), you should first install `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater (on Windows computers only), `GraphViz <https://graphviz.org/download/>`_, `R <https://cran.r-project.org/bin/>`_, and `kallisto <https://pachterlab.github.io/kallisto/download>`_.
 Then use the following command in your terminal window::
 
     pip install RNAlysis[all]
