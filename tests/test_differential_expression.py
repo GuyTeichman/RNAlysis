@@ -50,7 +50,7 @@ def test_run_deseq2_analysis(comparisons, expected_paths):
 
     for out, truth in zip(dfs, expected_dfs):
         assert np.all(out.columns == truth.columns)
-        assert np.all(out.index == truth.index)
+        assert np.all(sorted(out.index) == sorted(truth.index))
         try:
             assert np.allclose(out, truth, equal_nan=True, atol=1 * 10 ** -4, rtol=0.25)
         except AssertionError as e:
