@@ -1265,7 +1265,7 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     if status != 0:
         raise FileNotFoundError("Failed to find R executable. Please make sure your R installation folder is correct. ")
 
-    with subprocess.Popen(f'prefix "{script_path}"', stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
+    with subprocess.Popen([prefix,script_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process:
         for line in process.stdout:
             print(line.decode('utf8'))
     res = process.returncode
