@@ -31,7 +31,7 @@ jobs:
                 with:
                     r-version: '4.2.1' # The R version to download (if necessary) and use.
             -   name: Test R installation
-                run: Rscript -e 'print("R script ran successfully")'
+                run: Rscript -e "print('R script ran successfully')"
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
                 with:
