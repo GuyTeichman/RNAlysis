@@ -9,6 +9,20 @@ class DummyClass:
         pass
 
 
+@pytest.mark.parametrize('is_input_path', [True, False])
+@pytest.mark.parametrize('path,expected_path', [
+    ('file.csv', 'file'),
+    ('path/to/file.exe', 'path/to/file'),
+    ('name.fastq.gz', 'name'),
+    ('path/to/a/filename.sam.tar.gz', 'path/to/a/filename'),
+])
+def test_remove_suffixes(path, expected_path, is_input_path):
+    if is_input_path:
+        assert remove_suffixes(Path(path)) == Path(expected_path)
+    else:
+        assert remove_suffixes(path) == expected_path
+
+
 @pytest.mark.parametrize('input_val,sort,truth',
                          [([1, 2, 'hi'], False, [1, 2, 'hi']),
                           ((1, 2, 'hi'), False, [1, 2, 'hi']),

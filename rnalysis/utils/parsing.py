@@ -7,6 +7,16 @@ from typing import Any, Dict, Union, List, Tuple
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
+
+
+def remove_suffixes(path: Union[str, Path]) -> Union[str, Path]:
+    edited_path = Path(path)
+    while edited_path.suffix:
+        edited_path = edited_path.with_suffix('')
+    if isinstance(path, Path):
+        return edited_path
+    return edited_path.as_posix()
 
 
 def from_string(msg: str = '', del_spaces: bool = False, delimiter: str = '\n'):
