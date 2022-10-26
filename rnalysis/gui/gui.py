@@ -52,7 +52,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.param_grid = QtWidgets.QGridLayout(self.param_group)
         self.param_widgets = {}
 
-        self.start_button = QtWidgets.QPushButton(f'Start {self.func_name} analysis')
+        self.start_button = QtWidgets.QPushButton(f'Start {self.func_name}')
         self.close_button = QtWidgets.QPushButton('Close')
 
     def init_ui(self):
