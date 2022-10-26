@@ -7,7 +7,6 @@ import os
 import sys
 import time
 import typing
-import subprocess
 import warnings
 from collections import OrderedDict
 from pathlib import Path
@@ -591,7 +590,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.init_ui()
 
     def create_canvas(self):
-        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
+        set_names = [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
         sets = [self.available_objects[name][0].obj() for name in set_names]
         ind = 0
         while ind < len(set_names):
@@ -668,13 +667,15 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.init_operations_ui()
 
     def init_sets_ui(self):
-        self.widgets['set_list'] = gui_widgets.MultipleChoiceList(self.available_objects,
-                                                                  [val[1] for val in self.available_objects.values()],
-                                                                  self)
+        self.widgets['set_list'] = gui_widgets.MultiChoiceListWithReorder(self.available_objects,
+                                                                          [val[1] for val in
+                                                                           self.available_objects.values()],
+                                                                          self)
 
         for func in [self.create_canvas, self._check_legal_operations, self._validate_input,
                      self._toggle_choose_primary_set]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
+            self.widgets['set_list'].itemOrderChanged.connect(func)
         self.list_grid.addWidget(self.widgets['set_list'], 0, 0)
 
     def _toggle_choose_primary_set(self):
@@ -684,7 +685,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
 
             self.widgets['choose_primary_set'].clear()
             self.widgets['choose_primary_set'].addItems(
-                [item.text() for item in self.widgets['set_list'].selectedItems()])
+                [item.text() for item in self.widgets['set_list'].get_sorted_selection()])
             self.widgets['canvas'].clear_selection()
         else:
             self.widgets['choose_primary_set'].setVisible(False)
@@ -782,7 +783,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         return self.SET_OPERATIONS[button.text()]
 
     def _check_legal_operations(self):
-        n_items = len(self.widgets['set_list'].selectedItems())
+        n_items = len(self.widgets['set_list'].get_sorted_selection())
         if self.get_current_func_name() == 'symmetric_difference' and n_items > 2:
             self.widgets['radio_button_box'].set_selection('Other')
         sym_diff_button = self.widgets['radio_button_box'].radio_buttons['Symmetric Difference']
@@ -806,7 +807,7 @@ class SetOperationWindow(gui_widgets.MinMaxDialog):
         self.widgets['radio_button_box'].set_selection('Other')
 
     def _get_function_params(self):
-        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
+        set_names = [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
         if self.get_current_func_name() in ['intersection', 'difference']:
             primary_set_name = self.widgets['choose_primary_set'].currentText()
             self.primarySetUsed.emit(primary_set_name)
@@ -890,12 +891,14 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         self.init_visualization_ui()
 
     def init_list_ui(self):
-        self.widgets['set_list'] = gui_widgets.MultipleChoiceList(self.available_objects,
-                                                                  [val[1] for val in self.available_objects.values()],
-                                                                  self)
+        self.widgets['set_list'] = gui_widgets.MultiChoiceListWithReorder(self.available_objects,
+                                                                          [val[1] for val in
+                                                                           self.available_objects.values()],
+                                                                          self)
 
         for func in [self._check_legal_operations, self._validate_input, self.create_canvas]:
             self.widgets['set_list'].itemSelectionChanged.connect(func)
+            self.widgets['set_list'].itemOrderChanged.connect(func)
 
         self.list_grid.addWidget(self.widgets['set_list'], 0, 0)
 
@@ -918,7 +921,7 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         self.create_canvas()
 
     def create_canvas(self):
-        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
+        set_names = [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
         sets = [self.available_objects[name][0].obj() for name in set_names]
         ind = 0
         while ind < len(set_names):
@@ -959,13 +962,13 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         if self.get_current_func_name() is None:
             is_legal = False
 
-        if len(self.widgets['set_list'].selectedItems()) < 2:
+        if len(self.widgets['set_list'].get_sorted_selection()) < 2:
             is_legal = False
 
         self.widgets['generate_button'].setEnabled(is_legal)
 
     def _check_legal_operations(self):
-        n_items = len(self.widgets['set_list'].selectedItems())
+        n_items = len(self.widgets['set_list'].get_sorted_selection())
         if self.get_current_func_name() == 'venn_diagram' and n_items > 3:
             self.widgets['radio_button_box'].set_selection('UpSet Plot')
         venn_button = self.widgets['radio_button_box'].radio_buttons['Venn Diagram']
@@ -1009,9 +1012,9 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
         return self.VISUALIZATION_FUNCS[button.text()]
 
     def _get_function_params(self):
-        set_names = [item.text() for item in self.widgets['set_list'].selectedItems()]
-        objs_to_plot = {key: val[0].obj() for key, val in self.available_objects.items() if
-                        key in set_names and not val[0].is_empty()}
+        set_names = [item.text() for item in self.widgets['set_list'].get_sorted_selection()]
+        objs_to_plot = {name: self.available_objects[name][0].obj() for name in set_names if
+                        not self.available_objects[name][0].is_empty()}
         kwargs = {}
         for param_name, widget in self.parameter_widgets.items():
             if param_name in {'apply_button', 'help_link'}:
@@ -2207,7 +2210,7 @@ class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
         self.layout.addWidget(self.button_box, QtCore.Qt.AlignCenter)
 
     def result(self):
-        return [item.text() for item in self.list.selectedItems()]
+        return [item.text() for item in self.list.get_sorted_selection()]
 
 
 class MainWindow(QtWidgets.QMainWindow):

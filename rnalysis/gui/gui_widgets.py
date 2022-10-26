@@ -540,6 +540,8 @@ class MultipleChoiceList(QtWidgets.QWidget):
         self.clear_all_button.clicked.connect(self.clear_all)
         self.layout.addWidget(self.clear_all_button, 6, 1)
 
+        self.current_layout_row = 6
+
         for row in range(2, 4):
             self.layout.setRowStretch(row, 2)
 
@@ -547,6 +549,10 @@ class MultipleChoiceList(QtWidgets.QWidget):
         self.selectedItems = self.list.selectedItems
 
         self.add_items(items, icons)
+
+    def get_sorted_selection(self):
+        items = self.list.selectedItems()
+        return sorted(items, key=self.list.row)
 
     def add_item(self, item, icon=None):
         self.items.append(item)
@@ -581,8 +587,9 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
         self.delete_all_button = QtWidgets.QPushButton('Delete all')
         self.delete_all_button.clicked.connect(self.delete_all)
 
-        self.layout.addWidget(self.delete_button, 7, 1)
-        self.layout.addWidget(self.delete_all_button, 8, 1)
+        self.layout.addWidget(self.delete_button, self.current_layout_row + 1, 1)
+        self.layout.addWidget(self.delete_all_button, self.current_layout_row + 2, 1)
+        self.current_layout_row += 2
 
     def delete_selected(self):
         for item in self.list.selectedItems():
@@ -602,6 +609,85 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
             self.items = []
             self.list_items = []
             self.list.clear()
+
+
+class MultiChoiceListWithReorder(MultipleChoiceList):
+    itemOrderChanged = QtCore.pyqtSignal()
+
+    def __init__(self, items: typing.Sequence, icons: typing.Sequence = None, parent=None):
+        super().__init__(items, icons, parent)
+        self.top_button = QtWidgets.QPushButton('Top')
+        self.top_button.clicked.connect(self.top_selected)
+
+        self.up_button = QtWidgets.QPushButton('Up')
+        self.up_button.clicked.connect(self.up_selected)
+
+        self.down_button = QtWidgets.QPushButton('Down')
+        self.down_button.clicked.connect(self.down_selected)
+
+        self.bottom_button = QtWidgets.QPushButton('Bottom')
+        self.bottom_button.clicked.connect(self.bottom_selected)
+
+        self.reorder_label = QtWidgets.QLabel('<b>Reorder:</b>')
+        self.reorder_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        self.layout.addWidget(self.reorder_label, self.current_layout_row + 1, 1)
+        self.layout.addWidget(self.top_button, self.current_layout_row + 2, 1)
+        self.layout.addWidget(self.up_button, self.current_layout_row + 3, 1)
+        self.layout.addWidget(self.down_button, self.current_layout_row + 4, 1)
+        self.layout.addWidget(self.bottom_button, self.current_layout_row + 5, 1)
+        self.current_layout_row += 5
+
+    def up_selected(self):
+        for item in self.get_sorted_selection():
+            row = self.list.row(item)
+            if row > 0:
+                self.items[row - 1], self.items[row] = self.items[row], self.items[row - 1]
+                self.list_items[row - 1], self.list_items[row] = self.list_items[row], self.list_items[row - 1]
+                current_item = self.list.takeItem(row)
+                self.list.insertItem(row - 1, current_item)
+                current_item.setSelected(True)
+        self.itemOrderChanged.emit()
+
+    def down_selected(self):
+        for item in reversed(self.get_sorted_selection()):
+            row = self.list.row(item)
+            end = len(self.items) - 1
+            if row < end:
+                self.items[row + 1], self.items[row] = self.items[row], self.items[row + 1]
+                self.list_items[row + 1], self.list_items[row] = self.list_items[row], self.list_items[row + 1]
+                current_item = self.list.takeItem(row)
+                self.list.insertItem(row + 1, current_item)
+                current_item.setSelected(True)
+        self.itemOrderChanged.emit()
+
+    def top_selected(self):
+        for i, item in enumerate(self.get_sorted_selection()):
+            row = self.list.row(item)
+            if row > i:
+                self.items.insert(i, self.items.pop(row))
+                self.list_items.insert(i, self.list_items.pop(row))
+                current_item = self.list.takeItem(row)
+                self.list.insertItem(i, current_item)
+                current_item.setSelected(True)
+        self.itemOrderChanged.emit()
+
+    def bottom_selected(self):
+        for i, item in enumerate(reversed(self.get_sorted_selection())):
+            row = self.list.row(item)
+            this_end = len(self.items) - 1 - i
+            if row < this_end:
+                self.items.insert(this_end, self.items.pop(row))
+                self.list_items.insert(this_end, self.list_items.pop(row))
+
+                current_item = self.list.takeItem(row)
+                self.list.insertItem(this_end, current_item)
+                current_item.setSelected(True)
+        self.itemOrderChanged.emit()
+
+
+class MultiChoiceListWithDeleteReorder(MultiChoiceListWithReorder, MultiChoiceListWithDelete):
+    def __init__(self, items: typing.Sequence, icons: typing.Sequence = None, parent=None):
+        super().__init__(items, icons, parent)
 
 
 class MandatoryComboBox(QtWidgets.QComboBox):

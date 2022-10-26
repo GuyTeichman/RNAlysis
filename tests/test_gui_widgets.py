@@ -532,7 +532,7 @@ def test_MultipleChoiceList_select_all(qtbot):
     qtbot, widget = widget_setup(qtbot, MultipleChoiceList, items)
     qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
 
-    selected_items = [item.text() for item in widget.selectedItems()]
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
     assert selected_items == items
 
 
@@ -542,11 +542,11 @@ def test_MultipleChoiceList_clear_selection(qtbot):
     for item in widget.list_items:
         item.setSelected(True)
 
-    assert len(widget.selectedItems()) == len(items)
+    assert len(widget.get_sorted_selection()) == len(items)
 
     qtbot.mouseClick(widget.clear_all_button, LEFT_CLICK)
 
-    selected_items = widget.selectedItems()
+    selected_items = widget.get_sorted_selection()
     assert len(selected_items) == 0
 
 
@@ -757,7 +757,7 @@ def test_MultiChoiceListWithDelete_delete_all(qtbot, monkeypatch):
     qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
     qtbot.mouseClick(widget.delete_all_button, LEFT_CLICK)
 
-    selected_items = [item.text() for item in widget.selectedItems()]
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
     assert selected_items == []
     assert widget.items == []
 
@@ -773,7 +773,7 @@ def test_MultiChoiceListWithDelete_delete(qtbot):
     qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
     qtbot.mouseClick(widget.delete_button, LEFT_CLICK)
 
-    selected_items = [item.text() for item in widget.selectedItems()]
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
     assert selected_items == []
     assert widget.items == []
 
@@ -783,7 +783,7 @@ def test_MultiChoiceListWithDelete_select_all(qtbot):
     qtbot, widget = widget_setup(qtbot, MultiChoiceListWithDelete, items)
     qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
 
-    selected_items = [item.text() for item in widget.selectedItems()]
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
     assert selected_items == items
 
 
@@ -793,11 +793,11 @@ def test_MultiChoiceListWithDelete_clear_selection(qtbot):
     for item in widget.list_items:
         item.setSelected(True)
 
-    assert len(widget.selectedItems()) == len(items)
+    assert len(widget.get_sorted_selection()) == len(items)
 
     qtbot.mouseClick(widget.clear_all_button, LEFT_CLICK)
 
-    selected_items = widget.selectedItems()
+    selected_items = widget.get_sorted_selection()
     assert len(selected_items) == 0
 
 
@@ -819,6 +819,116 @@ def test_MultiChoiceListWithDelete_emit(qtbot):
     assert selection_changed == [1] * len(items) * 2
     widget.list_items[0].setSelected(True)
     assert selection_changed == [1] * len(items) * 2 + [1]
+
+
+def test_MultiChoiceListWithReorder_up(qtbot):
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithReorder, items)
+
+    assert widget.items == items
+
+    widget.list_items[-1].setSelected(True)
+    qtbot.mouseClick(widget.up_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item3']
+    assert widget.items == ['item1', 'item3', 'item2']
+
+    for i in range(3):
+        qtbot.mouseClick(widget.up_button, LEFT_CLICK)
+        selected_items = [item.text() for item in widget.get_sorted_selection()]
+        assert selected_items == ['item3']
+        assert widget.items == ['item3', 'item1', 'item2']
+
+
+def test_MultiChoiceListWithReorder_up_multi(qtbot):
+    items = ['item1', 'item2', 'item3', 'item4']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithReorder, items)
+
+    assert widget.items == items
+
+    widget.list_items[1].setSelected(True)
+    widget.list_items[-1].setSelected(True)
+    qtbot.mouseClick(widget.up_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item2', 'item4']
+    assert widget.items == ['item2', 'item1', 'item4', 'item3']
+
+    qtbot.mouseClick(widget.up_button, LEFT_CLICK)
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item2', 'item4']
+    assert widget.items == ['item2', 'item4', 'item1', 'item3']
+
+
+def test_MultiChoiceListWithReorder_top(qtbot):
+    items = ['item1', 'item2', 'item3', 'item4']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithReorder, items)
+
+    assert widget.items == items
+
+    widget.list_items[1].setSelected(True)
+    widget.list_items[-1].setSelected(True)
+    qtbot.mouseClick(widget.top_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item2', 'item4']
+    assert widget.items == ['item2', 'item4', 'item1', 'item3']
+
+
+def test_MultiChoiceListWithReorder_down(qtbot):
+    items = ['item1', 'item2', 'item3']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithReorder, items)
+
+    assert widget.items == items
+
+    widget.list_items[0].setSelected(True)
+    qtbot.mouseClick(widget.down_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item1']
+    assert widget.items == ['item2', 'item1', 'item3']
+
+    for i in range(3):
+        qtbot.mouseClick(widget.down_button, LEFT_CLICK)
+        selected_items = [item.text() for item in widget.get_sorted_selection()]
+        assert selected_items == ['item1']
+        assert widget.items == ['item2', 'item3', 'item1']
+
+
+def test_MultiChoiceListWithReorder_down_multi(qtbot):
+    items = ['item1', 'item2', 'item3', 'item4']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithReorder, items)
+
+    assert widget.items == items
+
+    widget.list_items[0].setSelected(True)
+    widget.list_items[2].setSelected(True)
+    qtbot.mouseClick(widget.down_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item1', 'item3']
+    assert widget.items == ['item2', 'item1', 'item4', 'item3']
+
+    qtbot.mouseClick(widget.down_button, LEFT_CLICK)
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item1', 'item3']
+    assert widget.items == ['item2', 'item4', 'item1', 'item3']
+
+
+def test_MultiChoiceListWithReorder_bottom(qtbot):
+    items = ['item1', 'item2', 'item3', 'item4']
+    qtbot, widget = widget_setup(qtbot, MultiChoiceListWithReorder, items)
+
+    assert widget.items == items
+
+    widget.list_items[0].setSelected(True)
+    widget.list_items[2].setSelected(True)
+    qtbot.mouseClick(widget.bottom_button, LEFT_CLICK)
+
+    selected_items = [item.text() for item in widget.get_sorted_selection()]
+    assert selected_items == ['item1', 'item3']
+    assert widget.items == ['item2', 'item4', 'item1', 'item3']
 
 
 def test_TrueFalseBoth(qtbot):
