@@ -43,7 +43,7 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, outout_fold
                              five_prime_adapters, any_position_adapters, quality_trimming, trim_n,
                              minimum_read_length, maximum_read_length, discard_untrimmed_reads,
                              error_tolerance, minimum_overlap, allow_indels, parallel)
-    assert files_covered == files_to_cover
+    assert sorted(files_covered) == sorted(files_to_cover)
 
 
 @pytest.mark.parametrize(
@@ -97,4 +97,4 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, outout_
                              quality_trimming, trim_n, minimum_read_length, maximum_read_length,
                              discard_untrimmed_reads, pair_filter_if,
                              error_tolerance, minimum_overlap, allow_indels, parallel)
-    assert pairs_covered == pairs_to_cover
+    assert sorted(pairs_covered) == sorted(pairs_to_cover)
