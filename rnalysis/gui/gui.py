@@ -119,13 +119,11 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
 
 
 class DESeqWindow(FuncExternalWindow):
-    DESEQ_FUNC = filtering.CountFilter.differential_expression_deseq2
     EXCLUDED_PARAMS = {'self', 'comparisons'}
     IGNORED_WIDGETS = {'help_link', 'load_design'}
-    paramsAccepted = QtCore.pyqtSignal(list, dict)
 
     def __init__(self, parent=None):
-        super().__init__('DESeq2', self.DESEQ_FUNC, self.EXCLUDED_PARAMS, parent)
+        super().__init__('DESeq2', filtering.CountFilter.differential_expression_deseq2, self.EXCLUDED_PARAMS, parent)
 
         self.comparisons = []
         self.design_mat = None
@@ -169,13 +167,11 @@ class DESeqWindow(FuncExternalWindow):
 
 
 class ClicomWindow(FuncExternalWindow):
-    CLICOM_FUNC = filtering.CountFilter.split_clicom
     EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
     ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode'}
-    paramsAccepted = QtCore.pyqtSignal(list, dict)
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
-        super().__init__('CLICOM', self.CLICOM_FUNC, self.EXCLUDED_PARAMS, parent)
+        super().__init__('CLICOM', filtering.CountFilter.split_clicom, self.EXCLUDED_PARAMS, parent)
         self.parameter_dicts: List[dict] = []
         self.funcs = funcs
         self.setups_counter = {key: 0 for key in self.funcs.keys()}
