@@ -290,14 +290,14 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.plot_grid = QtWidgets.QGridLayout(self.plot_group)
         self.plot_widgets = {}
 
-        self.scroll_layout = QtWidgets.QVBoxLayout(self.scroll)
         self.scroll_widget = QtWidgets.QWidget(self.scroll)
         self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.scroll_layout = QtWidgets.QVBoxLayout(self.scroll_widget)
+
         self.init_basic_ui()
 
     def init_basic_ui(self):
         self.setWindowTitle('Enrichment Analysis')
-        self.setLayout(self.main_layout)
         self.main_layout.addWidget(self.scroll)
 
         self.parameter_group.setVisible(False)
@@ -307,7 +307,6 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
-        self.scroll_widget.setLayout(self.scroll_layout)
         self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
 
         self.scroll_layout.addWidget(self.list_group)
