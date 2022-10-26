@@ -42,7 +42,11 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.excluded_params = excluded_params
 
         self.widgets = {}
-        self.layout = QtWidgets.QGridLayout(self)
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        self.scroll = QtWidgets.QScrollArea()
+        self.scroll_widget = QtWidgets.QWidget(self.scroll)
+        self.layout = QtWidgets.QGridLayout(self.scroll_widget)
 
         self.param_group = QtWidgets.QGroupBox(f"1. Set {func_name} parameters")
         self.param_grid = QtWidgets.QGridLayout(self.param_group)
@@ -52,6 +56,13 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.close_button = QtWidgets.QPushButton('Close')
 
     def init_ui(self):
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.scroll_widget)
+        self.layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+
+        self.main_layout.addWidget(self.scroll)
+
         self.layout.addWidget(self.param_group, 0, 0)
         self.layout.addWidget(self.start_button, 1, 0, 1, 2)
         self.layout.addWidget(self.close_button, 2, 0, 1, 2)
@@ -181,6 +192,7 @@ class ClicomWindow(FuncExternalWindow):
     def init_ui(self):
         super().init_ui()
         self.setWindowTitle('CLICOM clustering setup')
+        self.setMinimumWidth(1500)
         self.layout.addWidget(self.setups_group, 0, 1)
         self.init_setups_ui()
 
