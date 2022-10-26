@@ -6,6 +6,7 @@ coverage
 Sphinx
 twine
 coveralls
+py
 pytest
 pytest-runner
 sphinx_rtd_theme
