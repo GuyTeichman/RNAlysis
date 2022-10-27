@@ -1,6 +1,50 @@
 import pytest
+import gzip
 from rnalysis.fastq import *
 from rnalysis.utils import io
+
+
+def test_trim_adapters_single_end():
+    in_dir = 'tests/test_files/test_fastqs/dir3'
+    out_dir = 'tests/test_files/test_fastqs/outdir'
+    out_path = 'tests/test_files/test_fastqs/outdir/test_fastq_trimmed.fastq.gz'
+    truth_path = 'tests/test_files/test_fastqs/outdir/test_fastq_trimmed_truth.fastq.gz'
+    adapter_seq = 'AACTTCTTA'
+    try:
+        trim_adapters_single_end(in_dir, out_dir, adapter_seq)
+        with gzip.open(truth_path) as truth, gzip.open(out_path) as out:
+            assert truth.read() == out.read()
+    finally:
+        Path(out_path).unlink(missing_ok=True)
+        for file in Path(out_dir).iterdir():
+            if file.is_file() and file.suffix == '.log':
+                file.unlink(missing_ok=True)
+
+
+def test_trim_adapters_paired_end():
+    in1_path = 'tests/test_files/test_fastqs/dir4/paired_1.fastq'
+    in2_path = 'tests/test_files/test_fastqs/dir4/paired_2.fastq'
+    out_dir = 'tests/test_files/test_fastqs/outdir'
+    out1_path = 'tests/test_files/test_fastqs/outdir/paired_1_trimmed.fastq.gz'
+    out2_path = 'tests/test_files/test_fastqs/outdir/paired_2_trimmed.fastq.gz'
+    truth1_path = 'tests/test_files/test_fastqs/outdir/paired_1_trimmed_truth.fastq.gz'
+    truth2_path = 'tests/test_files/test_fastqs/outdir/paired_2_trimmed_truth.fastq.gz'
+    adapter1_seq = 'TTA'
+    adapter2_seq = 'TGT'
+    try:
+        trim_adapters_paired_end([in1_path], [in2_path], out_dir, adapter1_seq, adapter2_seq, minimum_read_length=5)
+
+        with gzip.open(truth1_path) as truth, gzip.open(out1_path) as out:
+            assert truth.read() == out.read()
+        with gzip.open(truth2_path) as truth, gzip.open(out2_path) as out:
+            assert truth.read() == out.read()
+    finally:
+
+        Path(out1_path).unlink(missing_ok=True)
+        Path(out2_path).unlink(missing_ok=True)
+        for file in Path(out_dir).iterdir():
+            if file.is_file() and file.suffix == '.log':
+                file.unlink(missing_ok=True)
 
 
 @pytest.mark.parametrize('fastq_folder,outout_folder,three_prime_adapters,five_prime_adapters,any_position_adapters,'
