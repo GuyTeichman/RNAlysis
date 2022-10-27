@@ -1147,7 +1147,7 @@ def test_worker(qtbot):
 
         with qtbot.waitSignal(worker.finished, timeout=4000) as blocker:
             worker.run()
-        assert blocker.args == [5 * 6 * 7, 5 + 6 + 7, 'other input']
+        assert blocker.args == [((5 * 6 * 7, 5 + 6 + 7), 'other input')]
     finally:
         try:
             worker.deleteLater()

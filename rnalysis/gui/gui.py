@@ -19,7 +19,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib.externals.loky import get_reusable_executor
 
-from rnalysis import filtering, enrichment, __version__
+from rnalysis import fastq, filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_tutorial
 from rnalysis.utils import io, validation, generic, parsing, settings, enrichment_runner, clustering
 
@@ -116,6 +116,68 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             self.paramsAccepted.emit(args, kwargs)
         finally:
             self.showNormal()
+
+
+class CutAdaptSingleWindow(FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    IGNORED_WIDGETS = {'help_link'}
+
+    def __init__(self, parent=None):
+        super().__init__('CutAdapt (single-end reads)', fastq.trim_adapters_single_end, self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('CutAdapt single-end adapter trimming setup')
+        super().init_ui()
+
+
+class CutAdaptPairedWindow(FuncExternalWindow):
+    EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
+    IGNORED_WIDGETS = {'help_link'}
+
+    def __init__(self, parent=None):
+        super().__init__('CutAdapt (paired-end reads)', fastq.trim_adapters_paired_end, self.EXCLUDED_PARAMS, parent)
+
+        self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
+        self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
+        self.pairs_widgets = {}
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('CutAdapt paired-end adapter trimming setup')
+        self.layout.addWidget(self.pairs_group, 0, 1)
+        self.setMinimumSize(1250, 650)
+        super().init_ui()
+        self.init_pairs_ui()
+
+    def init_pairs_ui(self):
+        self.pairs_widgets['r1_list'] = gui_widgets.MultiChoiceListWithDeleteReorder([], parent=self)
+        self.pairs_widgets['r2_list'] = gui_widgets.MultiChoiceListWithDeleteReorder([], parent=self)
+        self.pairs_widgets['r1_add'] = QtWidgets.QPushButton('Add files...', self)
+        self.pairs_widgets['r2_add'] = QtWidgets.QPushButton('Add files...', self)
+
+        self.pairs_widgets['r1_add'].clicked.connect(functools.partial(self.add_files, True))
+        self.pairs_widgets['r2_add'].clicked.connect(functools.partial(self.add_files, False))
+
+        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 2, 0)
+        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 2, 1)
+        self.pairs_grid.addWidget(self.pairs_widgets['r1_add'], 1, 0)
+        self.pairs_grid.addWidget(self.pairs_widgets['r2_add'], 1, 1)
+        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
+        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
+
+    @QtCore.pyqtSlot(bool)
+    def add_files(self, is_r1: bool):
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Load fastq files")
+        if filenames:
+            lst_name = 'r1_list' if is_r1 else 'r2_list'
+            self.pairs_widgets[lst_name].add_items(filenames)
+
+    def get_analysis_kwargs(self):
+        kwargs = super().get_analysis_kwargs()
+        kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
+        kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
+        return kwargs
 
 
 class DESeqWindow(FuncExternalWindow):
@@ -1360,6 +1422,7 @@ class FilterTabPage(TabPage):
     GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change'}
     filterObjectCreated = QtCore.pyqtSignal(filtering.Filter)
     startedClustering = QtCore.pyqtSignal(object, str)
+    startedJob = QtCore.pyqtSignal(object, str)
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
@@ -1623,7 +1686,12 @@ class FilterTabPage(TabPage):
         func_name = this_stack.get_function_name()
         func_params = this_stack.get_function_params()
         if func_params.get('inplace', False):
-            command = InplaceCommand(self, func_name, args=[], kwargs=func_params, description=f'Apply "{func_name}"')
+            if func_name in self.GENERAL_FUNCS:
+                command = InplaceCachedCommand(self, func_name, args=[], kwargs=func_params,
+                                               description=f'Apply "{func_name}"')
+            else:
+                command = InplaceCommand(self, func_name, args=[], kwargs=func_params,
+                                         description=f'Apply "{func_name}"')
             self.undo_stack.push(command)
         else:
             self._apply_function_from_params(func_name, args=[], kwargs=func_params)
@@ -1637,17 +1705,24 @@ class FilterTabPage(TabPage):
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
         # since clustering functions can be computationally intensive, start it in another thread
+        print(f"running apply from params on {func_name}")
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             self.startedClustering.emit(partial, func_name)
             return
+        elif func_name in self.GENERAL_FUNCS and (not kwargs.get('inplace', False)):
+
+            partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
+            self.startedJob.emit(partial, func_name)
+            return
+
         prev_name = self.get_tab_name()
         result = getattr(self.filter_obj, func_name)(*args, **kwargs)
         self.update_tab(prev_name != self.filter_obj.fname.name)
-        self._proccess_outputs(result, func_name)
+        self.process_outputs(result, func_name)
 
-    def _proccess_outputs(self, outputs, source_name: str = ''):
+    def process_outputs(self, outputs, source_name: str = ''):
         if validation.isinstanceinh(outputs, filtering.Filter):
             self.filterObjectCreated.emit(outputs)
         elif isinstance(outputs, pd.DataFrame):
@@ -1655,7 +1730,7 @@ class FilterTabPage(TabPage):
             self.df_views[-1].show()
         elif isinstance(outputs, np.ndarray):
             df = pd.DataFrame(outputs)
-            self._proccess_outputs(df, source_name)
+            self.process_outputs(df, source_name)
 
         elif isinstance(outputs, (tuple, list)):
             if validation.isinstanceiter_inh(outputs, filtering.Filter):
@@ -1664,16 +1739,16 @@ class FilterTabPage(TabPage):
                 dialog.exec()
             else:
                 for output in outputs:
-                    self._proccess_outputs(output, source_name)
+                    self.process_outputs(output, source_name)
         elif isinstance(outputs, dict):
             tab_name = self.get_tab_name()
             for this_src_name, output in outputs.items():
-                self._proccess_outputs(output, f"{this_src_name} {tab_name}")
+                self.process_outputs(output, f"{this_src_name} {tab_name}")
 
     def _multi_keep_window_accepted(self, dialog: QtWidgets.QDialog, source_name: str):
         kept_outputs = dialog.result()
         for output in kept_outputs:
-            self._proccess_outputs(output, source_name)
+            self.process_outputs(output, source_name)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, inplace: bool):
         if inplace:
@@ -1686,7 +1761,7 @@ class FilterTabPage(TabPage):
         prev_name = self.filter_obj.fname.name
         result = pipeline.apply_to(self.filter_obj, inplace)
         self.update_tab(prev_name != self.filter_obj.fname.name)
-        self._proccess_outputs(result, f'Pipeline on {self.get_tab_name()}')
+        self.process_outputs(result, f'Pipeline on {self.get_tab_name()}')
 
     def get_index_string(self):
         return self.filter_obj.index_string
@@ -2168,6 +2243,27 @@ class InplaceCommand(QtWidgets.QUndoCommand):
         self.tab_page._apply_function_from_params(self.func_name, self.args, self.kwargs)
 
 
+class InplaceCachedCommand(InplaceCommand):
+    def __init__(self, tab_page: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
+        super().__init__(tab_page, func_name, args, kwargs, description)
+        self.first_pass = True
+        self.processed_obj = None
+
+    def redo(self):
+        if self.first_pass:
+            self.first_pass = False
+            super().redo()
+        else:
+            self.tab_page.update_obj(copy.copy(self.processed_obj))
+            self.tab_page.update_tab(is_unsaved=True)
+
+    def undo(self):
+        processed_obj = self.tab_page.obj()
+        self.processed_obj = copy.copy(processed_obj)
+        self.tab_page.update_obj(copy.copy(self.obj_copy))
+        self.tab_page.update_tab(is_unsaved=True)
+
+
 class SetOpInplacCommand(InplaceCommand):
     def redo(self):
         is_filter_obj = validation.isinstanceinh(self.tab_page.obj(), filtering.Filter)
@@ -2222,6 +2318,7 @@ class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
 
 class MainWindow(QtWidgets.QMainWindow):
     USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide.html'
+    jobQueued = QtCore.pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -2254,6 +2351,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cite_window = gui_windows.HowToCiteWindow(self)
         self.enrichment_window = None
         self.enrichment_results = []
+        self.cutadapt_window = None
 
         self.init_ui()
         self.add_new_tab()
@@ -2286,6 +2384,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.progbar_completed_items = 0
         self.worker = None
         self.thread = None
+        self.job_queue = Queue()
+        self.job_timer = QtCore.QTimer(self)
+        self.job_timer.timeout.connect(self.run_partial)
+        self.job_timer.start(3500)
+        self.jobQueued.connect(self.run_partial)
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
@@ -2441,6 +2544,7 @@ class MainWindow(QtWidgets.QMainWindow):
             tab = FilterTabPage(self.tabs, undo_stack=new_undo_stack)
             tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
             tab.startedClustering.connect(self.start_clustering)
+            tab.startedJob.connect(self.start_generic_job)
         tab.changeIcon.connect(self.set_current_tab_icon)
         tab.tabNameChange.connect(self.rename_tab)
         self.tabs.addTab(tab, name)
@@ -2689,6 +2793,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
         self.export_set_action.triggered.connect(self.export_gene_set)
 
+        self.cutadapt_single_action = QtWidgets.QAction("&Single-end adapter trimming", self)
+        self.cutadapt_single_action.triggered.connect(functools.partial(self.trim_adapters, True))
+        self.cutadapt_paired_action = QtWidgets.QAction("&Paired-end adapter trimming", self)
+        self.cutadapt_paired_action.triggered.connect(functools.partial(self.trim_adapters, False))
+
         self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
         self.tutorial_action.triggered.connect(self.tutorial_window.show)
         self.user_guide_action = QtWidgets.QAction("&User Guide", self)
@@ -2733,6 +2842,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.command_history_dock.show()
         else:
             self.command_history_dock.close()
+
+    @QtCore.pyqtSlot(bool)
+    def trim_adapters(self, single_end: bool):
+        if single_end:
+            self.cutadapt_window = CutAdaptSingleWindow(self)
+        else:
+            self.cutadapt_window = CutAdaptPairedWindow(self)
+        func_name = self.cutadapt_window.func_name
+        func = self.cutadapt_window.func
+        self.cutadapt_window.paramsAccepted.connect(
+            functools.partial(self.start_generic_job_from_params, func_name, func))
+        self.cutadapt_window.show()
 
     def save_file(self):
         self.tabs.currentWidget().save_file()
@@ -2833,6 +2954,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         view_menu = self.menu_bar.addMenu("&View")
         view_menu.addActions([self.show_history_action])
+
+        fastq_menu = self.menu_bar.addMenu("&FASTQ")
+        fastq_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
@@ -2976,25 +3100,64 @@ class MainWindow(QtWidgets.QMainWindow):
             event.ignore()
 
     @QtCore.pyqtSlot(object, str)
-    def start_clustering(self, partial: Callable, func_name: str):
-        self.run_partial(partial, self.finish_clustering, func_name)
+    def start_generic_job(self, partial: Callable, func_name: str):
+        self.queue_partial(partial, self.finish_generic_job, func_name)
 
-    @QtCore.pyqtSlot(tuple, clustering.ClusteringRunner, str, )
-    def finish_clustering(self, return_val: tuple, runner: clustering.ClusteringRunner, func_name: str):
-        runner.plot_clustering()
-        self.tabs.currentWidget()._proccess_outputs(return_val, func_name)
+    def start_generic_job_from_params(self, func_name, func, args, kwargs):
+        partial = functools.partial(func, *args, **kwargs)
+        self.start_generic_job(partial, func_name)
+
+    @QtCore.pyqtSlot(tuple)
+    def finish_generic_job(self, worker_output):
+        if len(worker_output) == 1:
+            print("Done")
+        else:
+            assert len(worker_output) == 2
+            func_name: str = worker_output[-1]
+            return_val: tuple = worker_output[0]
+            self.tabs.currentWidget().process_outputs(return_val, func_name)
+            self.tabs.currentWidget().update_tab()
+
+    @QtCore.pyqtSlot(object, str)
+    def start_clustering(self, partial: Callable, func_name: str):
+        self.queue_partial(partial, self.finish_clustering, func_name)
+
+    @QtCore.pyqtSlot(tuple)
+    def finish_clustering(self, worker_output: tuple):
+        func_name: str = worker_output[-1]
+        clustering_runner: clustering.ClusteringRunner = worker_output[0][1]
+        return_val: tuple = worker_output[0][0]
+        clustering_runner.plot_clustering()
+        self.tabs.currentWidget().process_outputs(return_val, func_name)
+        self.tabs.currentWidget().update_tab()
 
     @QtCore.pyqtSlot(object, str)
     def start_enrichment(self, partial: Callable, set_name: str):
-        self.run_partial(partial, self.finish_enrichment, set_name)
+        self.queue_partial(partial, self.finish_enrichment, set_name)
 
-    @QtCore.pyqtSlot(pd.DataFrame, enrichment_runner.EnrichmentRunner, str)
-    def finish_enrichment(self, results, runner, set_name: str):
+    @QtCore.pyqtSlot(tuple)
+    def finish_enrichment(self, worker_output: tuple):
+        set_name = worker_output[-1]
+        results, enrichment_runner = worker_output[0]
         self.show()
-        runner.plot_results()
+        enrichment_runner.plot_results()
         self.display_enrichment_results(results, set_name)
 
-    def run_partial(self, partial: Callable, output_slot: Callable = None, *args):
+    def queue_partial(self, partial: Callable, output_slot: Callable = None, *args):
+        self.job_queue.put((partial, output_slot, args))
+        self.jobQueued.emit()
+
+    def run_partial(self):
+        # if there are no jobs available, don't proceed
+        if self.job_queue.qsize() == 0:
+            return
+        # if there is a job currently running, don't proceed
+        try:
+            if (self.thread is not None) and self.thread.isRunning():
+                return
+        except RuntimeError:
+            self.thread = None
+        partial, output_slot, args = self.job_queue.get()
         # Create a worker object
         self.worker = gui_widgets.Worker(partial, *args)
 
@@ -3028,8 +3191,9 @@ class MainWindow(QtWidgets.QMainWindow):
         enrichment.enrichment_runner.io.tqdm = alt_tqdm
         enrichment.enrichment_runner.tqdm = alt_tqdm
         filtering.clustering.tqdm = alt_tqdm
+        fastq.tqdm = alt_tqdm
 
-        #  Start the thread
+        #  Create the thread
         self.thread = QtCore.QThread()
 
         #  Move worker to the thread
@@ -3039,6 +3203,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread.started.connect(self.worker.run)
         if output_slot is not None:
             self.worker.finished.connect(output_slot)
+        self.worker.finished.connect(self.run_partial)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)

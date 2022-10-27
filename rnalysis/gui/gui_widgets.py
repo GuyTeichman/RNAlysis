@@ -254,7 +254,7 @@ class PathInputDialog(QtWidgets.QDialog):
 
 
 class Worker(QtCore.QObject):
-    finished = QtCore.pyqtSignal(object, object, str)
+    finished = QtCore.pyqtSignal(tuple)
     startProgBar = QtCore.pyqtSignal(object)
 
     def __init__(self, partial, *args):
@@ -265,7 +265,7 @@ class Worker(QtCore.QObject):
     def run(self):
         result = self.partial()
         if result is not None:
-            self.finished.emit(*result, *self.args)
+            self.finished.emit((result, *self.args))
 
 
 class AltTQDM(QtCore.QObject):
@@ -546,13 +546,18 @@ class MultipleChoiceList(QtWidgets.QWidget):
             self.layout.setRowStretch(row, 2)
 
         self.itemSelectionChanged = self.list.itemSelectionChanged
-        self.selectedItems = self.list.selectedItems
 
         self.add_items(items, icons)
 
     def get_sorted_selection(self):
         items = self.list.selectedItems()
         return sorted(items, key=self.list.row)
+
+    def get_sorted_selected_names(self):
+        return [name for name in self.items if name in {item.text() for item in self.list.selectedItems()}]
+
+    def get_sorted_names(self):
+        return self.items
 
     def add_item(self, item, icon=None):
         self.items.append(item)
@@ -1118,6 +1123,10 @@ class QMultiInput(QtWidgets.QPushButton):
         self.clicked.connect(self.start_dialog)
         self.init_dialog_ui()
 
+    def clear(self):
+        while len(self.dialog_widgets['inputs']) > 0:
+            self.remove_widget()
+
     @QtCore.pyqtSlot()
     def start_dialog(self):
         self.dialog_widgets['box'].exec()
@@ -1265,6 +1274,53 @@ class QMultiBoolComboBox(QMultiComboBox):
 
     def set_widget_value(self, ind: int, val):
         self.dialog_widgets['inputs'][ind].setCurrentText(str(val))
+
+
+class OptionalMultiInput(QtWidgets.QWidget):
+    MULTI_WIDGET_TYPE = QtWidgets.QWidget
+    IS_MULTI_INPUT = True
+
+    def __init__(self, label: str, text='Set input', parent=None):
+        super().__init__(parent)
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.multi_widget = self.MULTI_WIDGET_TYPE(label, text, self)
+        self.checkbox = QtWidgets.QCheckBox('Disable input?')
+        self.checkbox.toggled.connect(self.multi_widget.setDisabled)
+        self.checkbox.toggled.connect(self.disable_value_changed)
+        self.valueChanged = self.multi_widget.valueChanged
+
+        self.layout.addWidget(self.checkbox)
+        self.layout.addWidget(self.multi_widget)
+
+    def disable_value_changed(self):
+        self.valueChanged.emit()
+
+    def clear(self):
+        self.checkbox.setChecked(False)
+        self.multi_widget.clear()
+
+    def set_defaults(self, defaults: typing.Union[typing.Iterable, None]):
+        if defaults is None:
+            self.checkbox.setChecked(True)
+        else:
+            self.multi_widget.set_defaults(defaults)
+
+    def get_values(self):
+        if self.checkbox.isChecked():
+            return None
+        return self.multi_widget.get_values()
+
+
+class OptionalMultiLineEdit(OptionalMultiInput):
+    MULTI_WIDGET_TYPE = QMultiLineEdit
+
+
+class OptionalMultiSpinBoxEdit(OptionalMultiInput):
+    MULTI_WIDGET_TYPE = QMultiSpinBox
+
+
+class OptionalMultiDoubleSpinBoxEdit(OptionalMultiInput):
+    MULTI_WIDGET_TYPE = QMultiDoubleSpinBox
 
 
 class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
@@ -1457,6 +1513,13 @@ def param_to_widget(param, name: str,
             widget.set_defaults(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+    elif param.annotation in (typing.Union[None, str, typing.List[str]], typing.Union[None, typing.List[str]]):
+        widget = OptionalMultiLineEdit(name)
+        if is_default:
+            widget.set_defaults(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
     elif param.annotation in (typing.Union[float, typing.List[float]],
                               typing.Union[float, typing.Iterable[float]]):
         widget = QMultiDoubleSpinBox(name)
