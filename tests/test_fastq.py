@@ -15,10 +15,10 @@ def test_trim_adapters_single_end():
         with gzip.open(truth_path) as truth, gzip.open(out_path) as out:
             assert truth.read() == out.read()
     finally:
-        Path(out_path).unlink(missing_ok=True)
+        Path(out_path).unlink()
         for file in Path(out_dir).iterdir():
             if file.is_file() and file.suffix == '.log':
-                file.unlink(missing_ok=True)
+                file.unlink()
 
 
 def test_trim_adapters_paired_end():
@@ -40,11 +40,11 @@ def test_trim_adapters_paired_end():
             assert truth.read() == out.read()
     finally:
 
-        Path(out1_path).unlink(missing_ok=True)
-        Path(out2_path).unlink(missing_ok=True)
+        Path(out1_path).unlink()
+        Path(out2_path).unlink()
         for file in Path(out_dir).iterdir():
             if file.is_file() and file.suffix == '.log':
-                file.unlink(missing_ok=True)
+                file.unlink()
 
 
 @pytest.mark.parametrize('fastq_folder,outout_folder,three_prime_adapters,five_prime_adapters,any_position_adapters,'
