@@ -363,15 +363,12 @@ class Filter:
         else:
             translator = io.map_gene_ids(gene_ids, translate_from, translate_to)
 
-        new_df[translate_to] = np.nan
-        for gene_id in gene_ids:
-            if gene_id in translator:
-                new_df.loc[gene_id, translate_to] = translator[gene_id]
-
+        new_df[translate_to] = pd.Series(translator.mapping_dict)
         if remove_unmapped_genes:
             new_df = new_df[new_df[translate_to].notna()]
         else:
-            new_df[translate_to][new_df[translate_to].isna()] = new_df[translate_to][new_df[translate_to].isna()].index
+            new_df.loc[new_df[translate_to].isna(), translate_to] = new_df[translate_to][
+                new_df[translate_to].isna()].index
 
         new_df = new_df.set_index(translate_to, drop=True)
 
