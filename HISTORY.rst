@@ -2,6 +2,24 @@
 History
 =======
 
+3.2 (2022-10-28)
+------------------
+* This version introduces quality-of-life changes to the graphical user interface, functions for translating gene IDs and running differential expression analysis, and extends RNAlysis to support Python versions 3.9 and 3.10.
+
+Added
+******
+* Added Filter.translate_gene_ids()
+* Added CountFilter.differential_expression_deseq2()
+* Added fastq module that contains adapter-trimming functions utilizing CutAdapt
+
+Changed
+*******
+* Improved performance of some aspects of the graphical user interface
+
+Fixed
+******
+* Users can now queue multiple computationally-intense enrichment/clustering tasks while another task is running
+
 3.1.0 (2022-10-16)
 ------------------
 * This version introduces new count matrix normalization methods, as well as MA plots and minor bug fixes.
