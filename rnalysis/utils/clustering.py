@@ -642,6 +642,8 @@ class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
         diff = gap_scores[:-1] - gap_scores[1::] + gap_error[1::]
         # Return all K values that fulfilled the condition as 'potentially good K values'
         k_candidates = n_clusters_range[:-1][diff >= 0]
+        if len(k_candidates) == 0:
+            k_candidates = [1]
         # 1 is not a viable candidate
         if k_candidates[0] == 1:
             k_candidates = k_candidates[1:]
