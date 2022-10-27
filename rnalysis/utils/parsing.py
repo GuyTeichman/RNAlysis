@@ -241,3 +241,7 @@ def generate_upset_series(objs: dict):
         group_size = len(group)
         srs.loc[ind] = group_size
     return srs
+
+def parse_version(version:str):
+    split = version.split('.')
+    return [int(i) for i in split]

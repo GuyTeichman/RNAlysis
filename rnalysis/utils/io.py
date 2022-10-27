@@ -24,6 +24,7 @@ import requests
 import yaml
 from requests.adapters import HTTPAdapter, Retry
 from tqdm.auto import tqdm
+from sys import executable
 
 try:
     from typing import Literal
@@ -1300,3 +1301,19 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
         return_code = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
 
     return return_code
+
+
+def is_rnalysis_outdated():
+    installed_version = parsing.parse_version(__version__)
+    pypi_link = 'https://pypi.python.org/pypi/RNAlysis/json'
+    req = requests.get(pypi_link)
+    if req.status_code != 200:
+        return False
+    newest_version = parsing.parse_version(json.loads(req.text)['info']['version'])
+    if installed_version < newest_version:
+        return True
+    return False
+
+
+def update_rnalysis():
+    run_subprocess([executable, '-m', 'pip', 'install', '--upgrade', 'RNAlysis'])

@@ -180,3 +180,8 @@ def test_generate_upset_series():
         {'a': {'1', '2', '3', '6'}, 'b': {'2', '3', '4', '5', '6'}, 'c': {'1', '5', '6'}}).sort_index()
     assert srs.index.sort_values().equals(multi_index_truth)
     assert srs.sort_index().equals(srs_truth.sort_index())
+
+
+@pytest.mark.parametrize('version,expected', [('3.0.0', [3, 0, 0]), ('0.1.3', [0, 1, 3]), ('2.0.5', [2, 0, 5])])
+def test_parse_version(version, expected):
+    assert parse_version(version) == expected

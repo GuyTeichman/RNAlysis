@@ -787,3 +787,15 @@ def test_run_r_script_not_installed(monkeypatch):
 @pytest.mark.parametrize("stderr", [True, False])
 def test_run_subprocess(stdout, stderr):
     run_subprocess(['python3', '--version'], stdout, stderr)
+
+
+@pytest.mark.parametrize('this_version,response,expected', [
+    ('3.0.0', MockResponse(status_code=503), False),
+    ('3.0.0', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.0"}}'), True),
+    ('3.1.1', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.0"}}'), False),
+    ('3.1.1', MockResponse(text='{"info":{"author":"Guy Teichman","version":"3.1.1"}}'), False),
+])
+def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
+    monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
+    monkeypatch.setattr(rnalysis.utils.io,'__version__',this_version)
+    assert is_rnalysis_outdated() == expected

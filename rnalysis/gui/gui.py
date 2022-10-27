@@ -2763,7 +2763,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_action = QtWidgets.QAction("&Settings...", self)
         self.settings_action.triggered.connect(self.settings)
         self.exit_action = QtWidgets.QAction("&Exit", self)
-        self.exit_action.triggered.connect(self.closeEvent)
+        self.exit_action.triggered.connect(self.close)
+        self.check_update_action = QtWidgets.QAction("Check for &updates...", self)
+        self.check_update_action.triggered.connect(self.check_for_updates)
 
         self.undo_action = self.undo_group.createUndoAction(self)
         self.redo_action = self.undo_group.createRedoAction(self)
@@ -2835,6 +2837,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
         self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
         self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
+
+    @QtCore.pyqtSlot()
+    def check_for_updates(self, confirm_updated: bool = True):
+        if io.is_rnalysis_outdated():
+            reply = QtWidgets.QMessageBox.question(self, 'A new version is available',
+                                                   f'A new version of <i>RNAlysis</i> is available! '
+                                                   f'Do you wish to update?')
+            if reply == QtWidgets.QMessageBox.Yes:
+                io.update_rnalysis()
+                QtCore.QCoreApplication.quit()
+                self.deleteLater()
+                QtCore.QProcess.startDetached(
+                    Path(sys.executable).parent.joinpath('Scripts', 'rnalysis-gui').as_posix(), sys.argv)
+
+        else:
+            if confirm_updated:
+                _ = QtWidgets.QMessageBox.information(self, 'You are using the latest version of RNAlysis',
+                                                      f'Your version of <i>RNAlysis</i> ({__version__}) is up to date!')
 
     @QtCore.pyqtSlot(bool)
     def toggle_history_window(self, state: bool):
@@ -2946,7 +2966,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
         file_menu.addActions(
             [self.save_action, self.load_session_action, self.save_session_action, self.settings_action,
-             self.exit_action])
+             self.check_update_action, self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
         edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action,
@@ -3289,5 +3309,6 @@ def run():
                       "please install package 'numba'. ")
 
     window.show()
+    window.check_for_updates(False)
     splash.finish(window)
     sys.exit(app.exec())
