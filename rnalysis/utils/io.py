@@ -1271,7 +1271,8 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
     assert not return_code, f"R script failed to execute (return code {return_code}). "
 
 
-def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True):
+def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True,
+                   log_filename: Union[str, None] = None):
     if print_stdout or print_stderr:
         if print_stdout and print_stderr:
             stdout = subprocess.PIPE
@@ -1285,8 +1286,16 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
 
         with subprocess.Popen(args, stdout=stdout, stderr=stderr) as process:
             stream = process.stdout if print_stdout else process.stderr
-            for line in stream:
-                print(line.decode('utf8'))
+            if log_filename is not None:
+                with open(log_filename, 'w') as logfile:
+                    for line in stream:
+                        text = line.decode('utf8')
+                        print(text)
+                        logfile.write(text)
+            else:
+                for line in stream:
+                    text = line.decode('utf8')
+                    print(text)
         return_code = process.returncode
     else:
         return_code = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode

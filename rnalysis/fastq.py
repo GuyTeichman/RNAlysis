@@ -57,8 +57,10 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                 calls.append(this_call)
 
     for cutadapt_call in tqdm(calls, 'Trimming adapters', unit='files'):
-        io.run_subprocess(cutadapt_call)
-        print(f"File saved successfully at {cutadapt_call[-1]}")
+        infile_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
+        log_filename = Path(output_folder).joinpath(f'cutadapt_log_{infile_stem}.log').absolute().as_posix()
+        io.run_subprocess(cutadapt_call, log_filename=log_filename)
+        print(f"File saved successfully at {cutadapt_call[-2]}")
     print("Done")
 
 
@@ -119,7 +121,11 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
         calls.append(this_call)
 
     for cutadapt_call in tqdm(calls, 'Trimming adapters', unit='file pairs'):
-        io.run_subprocess(cutadapt_call)
+        infile1_stem = parsing.remove_suffixes(Path(cutadapt_call[-2])).stem
+        infile2_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
+        log_filename = Path(output_folder).joinpath(
+            f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
+        io.run_subprocess(cutadapt_call, log_filename=log_filename)
         print(f"Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}")
     print("Done")
 
