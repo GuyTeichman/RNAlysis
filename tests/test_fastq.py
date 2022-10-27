@@ -71,7 +71,7 @@ def test_trim_adapters_single_end_command(monkeypatch, fastq_folder, outout_fold
     file_stems = ['fq1', 'fq2']
     files_covered = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename:str=None):
         for i in range(len(files_to_cover)):
             if files_to_cover[i] in args[-1]:
                 assert args == expected_command + [f'{outout_folder}/{file_stems[i]}_trimmed.fastq.gz',
@@ -121,7 +121,7 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, outout_
     pair_stems = [('fq1', 'fq4'), ('fq2', 'fq3')]
     pairs_covered = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename:str=None):
         for i in range(len(pairs_to_cover)):
             if pairs_to_cover[i][-1] in args[-1]:
                 assert args == expected_command + [f'{outout_folder}/{pair_stems[i][0]}_trimmed.fastq.gz',
