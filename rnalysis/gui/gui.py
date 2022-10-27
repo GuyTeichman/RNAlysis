@@ -2269,7 +2269,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thread_stdout_queue_listener = QtCore.QThread()
         self.stdout_receiver = gui_widgets.ThreadStdOutStreamTextQueueReceiver(self.queue_stdout)
         sys.stdout = gui_widgets.WriteStream(self.queue_stdout)
-        io.sys.stdout = sys.stdout
 
         # attach console text receiver to console text thread
         self.stdout_receiver.moveToThread(self.thread_stdout_queue_listener)
