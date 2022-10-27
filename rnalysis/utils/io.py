@@ -1288,12 +1288,12 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
             if log_filename is not None:
                 with open(log_filename, 'w') as logfile:
                     for line in stream:
-                        text = line.decode('utf8')
+                        text = line.decode('utf8', errors="ignore")
                         print(text)
                         logfile.write(text)
             else:
                 for line in stream:
-                    text = line.decode('utf8')
+                    text = line.decode('utf8', errors="ignore")
                     print(text)
         return_code = process.returncode
     else:
