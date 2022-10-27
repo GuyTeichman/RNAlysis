@@ -103,7 +103,7 @@ def data_to_list(data: Any, sort: bool = False) -> list:
         lst = data
     elif isinstance(data, (set, tuple, np.ndarray)):
         lst = list(data)
-    elif isinstance(data, (int, float, bool, str)):
+    elif isinstance(data, (int, float, bool, str, pd.DataFrame, pd.Series)):
         lst = [data]
     elif data is None:
         lst = [None]
@@ -126,7 +126,7 @@ def data_to_tuple(data: Any, sort: bool = False) -> tuple:
         tpl = data
     elif isinstance(data, (set, list, np.ndarray)):
         tpl = tuple(data)
-    elif isinstance(data, (int, float, bool, str)):
+    elif isinstance(data, (int, float, bool, str, pd.DataFrame, pd.Series)):
         tpl = data,
     elif data is None:
         tpl = None,
@@ -147,7 +147,7 @@ def data_to_set(data: Any) -> set:
         return data
     elif isinstance(data, (list, tuple, np.ndarray)):
         return set(data)
-    elif isinstance(data, (int, float, bool, str)):
+    elif isinstance(data, (int, float, bool, str, pd.DataFrame, pd.Series)):
         return {data}
     elif data is None:
         return {None}
