@@ -173,6 +173,18 @@ def deseq_window(qtbot) -> DESeqWindow:
 
 
 @pytest.fixture
+def single_end_window(qtbot) -> CutAdaptSingleWindow:
+    qtbot, window = widget_setup(qtbot, CutAdaptSingleWindow)
+    return window
+
+
+@pytest.fixture
+def paired_end_window(qtbot) -> CutAdaptPairedWindow:
+    qtbot, window = widget_setup(qtbot, CutAdaptPairedWindow)
+    return window
+
+
+@pytest.fixture
 def enrichment_window(qtbot, available_objects):
     qtbot, window = widget_setup(qtbot, EnrichmentWindow, available_objects)
     return window
@@ -232,6 +244,65 @@ def test_ApplyPipelineWindow_clear_all(qtbot, available_objects_no_tabpages):
     qtbot.mouseClick(window.list.select_all_button, LEFT_CLICK)
     qtbot.mouseClick(window.list.clear_all_button, LEFT_CLICK)
     assert window.result() == []
+
+
+def test_CutAdaptSingleWindow_init(qtbot, single_end_window):
+    _ = single_end_window
+
+
+def test_CutAdaptPairedWindow_init(qtbot, paired_end_window):
+    _ = paired_end_window
+
+
+def test_CutAdaptSingleWindow_start_analysis(qtbot, single_end_window):
+    truth_args = []
+    fq_folder = 'path/to/fq/folder'
+    out_folder = 'path/to/out/dir'
+    adapter = 'ATGGA'
+    truth_kwargs = dict(fastq_folder=fq_folder, output_folder=out_folder,
+                        three_prime_adapters=adapter,
+                        five_prime_adapters=None,
+                        any_position_adapters=None,
+                        quality_trimming=20, trim_n=True,
+                        minimum_read_length=10, maximum_read_length=None,
+                        discard_untrimmed_reads=True, error_tolerance=0.1,
+                        minimum_overlap=3, allow_indels=True, parallel=True)
+
+    single_end_window.param_widgets['fastq_folder'].setText(fq_folder)
+    single_end_window.param_widgets['output_folder'].setText(out_folder)
+    single_end_window.param_widgets['three_prime_adapters'].set_defaults(adapter)
+
+    with qtbot.waitSignal(single_end_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(single_end_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_args
+    assert blocker.args[1] == truth_kwargs
+
+
+def test_CutAdaptPairedWindow_start_analysis(qtbot, paired_end_window):
+    r1_files = ['file1.fq', 'path/file2.fq']
+    r2_files = ['file3.fq.gz', 'path/to/file4.fastq.gz']
+    out_folder = 'path/to/out/dir'
+    adapter1 = 'ATGGA'
+    adapter2 = 'CATC'
+    truth_args = []
+    truth_kwargs = dict(r1_files=r1_files, r2_files=r2_files,
+                        output_folder=out_folder,
+                        three_prime_adapters_r1=adapter1, three_prime_adapters_r2=adapter2,
+                        five_prime_adapters_r1=None, five_prime_adapters_r2=None,
+                        any_position_adapters_r1=None, any_position_adapters_r2=None,
+                        quality_trimming=20, trim_n=True, minimum_read_length=10, maximum_read_length=None,
+                        discard_untrimmed_reads=True, pair_filter_if='both',
+                        error_tolerance=0.1, minimum_overlap=3, allow_indels=True, parallel=True)
+    paired_end_window.pairs_widgets['r1_list'].add_items(r1_files)
+    paired_end_window.pairs_widgets['r2_list'].add_items(r2_files)
+    paired_end_window.param_widgets['output_folder'].setText(out_folder)
+    paired_end_window.param_widgets['three_prime_adapters_r1'].set_defaults(adapter1)
+    paired_end_window.param_widgets['three_prime_adapters_r2'].set_defaults(adapter2)
+
+    with qtbot.waitSignal(paired_end_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(paired_end_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_args
+    assert blocker.args[1] == truth_kwargs
 
 
 def test_DESeqWindow_init(qtbot, deseq_window):
