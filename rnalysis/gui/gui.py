@@ -2409,15 +2409,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.setCornerWidget(self.add_tab_button, QtCore.Qt.TopRightCorner)
         self.setCentralWidget(self.tabs)
 
-    def clear_history(self):
-        clear_msg = """Are you sure you want to clear all command history?
-        This cannot be undone!"""
-        reply = QtWidgets.QMessageBox.question(self, 'Clear history',
-                                               clear_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+    @QtCore.pyqtSlot()
+    def clear_history(self, confirm_action: bool = True):
+        if confirm_action:
+            clear_msg = """Are you sure you want to clear all command history?
+            This cannot be undone!"""
+            reply = QtWidgets.QMessageBox.question(self, 'Clear history',
+                                                   clear_msg, QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+        else:
+            reply = QtWidgets.QMessageBox.Yes
 
         if reply == QtWidgets.QMessageBox.Yes:
             for stack in self.undo_group.stacks():
                 stack.clear()
+            self.closed_tabs_stack.clear()
 
     @QtCore.pyqtSlot(int)
     def init_tab_contextmenu(self, ind: int):
@@ -2759,6 +2764,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.load_session_action.triggered.connect(self.load_session)
         self.save_session_action = QtWidgets.QAction("Sa&ve session...")
         self.save_session_action.triggered.connect(self.save_session)
+        self.clear_session_action = QtWidgets.QAction("Clea&r session...")
+        self.clear_session_action.triggered.connect(self.clear_session)
 
         self.settings_action = QtWidgets.QAction("&Settings...", self)
         self.settings_action.triggered.connect(self.settings)
@@ -2965,8 +2972,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_menu = file_menu.addMenu("&New...")
         self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
         file_menu.addActions(
-            [self.save_action, self.load_session_action, self.save_session_action, self.settings_action,
-             self.check_update_action, self.exit_action])
+            [self.save_action, self.load_session_action, self.save_session_action, self.clear_session_action,
+             self.settings_action, self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
         edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action,
@@ -2989,7 +2996,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.apply_pipeline_menu.aboutToShow.connect(self._populate_pipelines)
 
         help_menu = self.menu_bar.addMenu("&Help")
-        help_menu.addActions([self.tutorial_action, self.user_guide_action, self.about_action, self.cite_action])
+        help_menu.addActions([self.tutorial_action, self.user_guide_action, self.check_update_action, self.about_action,
+                              self.cite_action])
 
     def _populate_pipelines(self):
         # Remove the old options from the menu
@@ -3027,6 +3035,24 @@ class MainWindow(QtWidgets.QMainWindow):
                 filtered_available_objs[name][0].apply_pipeline(pipeline, name, inplace)
                 QtWidgets.QApplication.processEvents()
             self.tabs.setCurrentIndex(current_ind)
+
+    @QtCore.pyqtSlot()
+    def clear_session(self, confirm_action: bool = True):
+        if confirm_action:
+            response = QtWidgets.QMessageBox.question(self, 'Clear session?',
+                                                      'Are you sure you want to clear your session? '
+                                                      'All unsaved changes will be lost!',
+                                                      defaultButton=QtWidgets.QMessageBox.No)
+        else:
+            response = QtWidgets.QMessageBox.Yes
+
+        if response == QtWidgets.QMessageBox.Yes:
+            while self.tabs.count() > 1:
+                self.close_tab(0)
+            self.close_tab(0)
+
+            self.pipelines = {}
+            self.clear_history(confirm_action=False)
 
     def load_session(self):
         session_filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Load session",

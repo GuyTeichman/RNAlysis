@@ -2312,3 +2312,9 @@ def test_MainWindow_clear_history(qtbot, main_window_with_tabs, monkeypatch):
 
     main_window_with_tabs.clear_history()
     assert cleared == truth
+
+
+def test_MainWindow_clear_session(qtbot, main_window_with_tabs):
+    main_window_with_tabs.clear_session(confirm_action=False)
+    assert main_window_with_tabs.tabs.count() == 1
+    assert main_window_with_tabs.tabs.widget(0).is_empty()
