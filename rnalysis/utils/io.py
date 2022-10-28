@@ -1306,7 +1306,10 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
 def is_rnalysis_outdated():
     installed_version = parsing.parse_version(__version__)
     pypi_link = 'https://pypi.python.org/pypi/RNAlysis/json'
-    req = requests.get(pypi_link)
+    try:
+        req = requests.get(pypi_link)
+    except (ConnectionError, requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+        return False
     if req.status_code != 200:
         return False
     newest_version = parsing.parse_version(json.loads(req.text)['info']['version'])
