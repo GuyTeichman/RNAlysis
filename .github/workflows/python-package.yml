@@ -44,20 +44,22 @@ jobs:
                          sudo wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_linux-v0.48.0.tar.gz
                          sudo 7z x kallisto*.tar.gz
                          sudo 7z x kallisto*.tar
-                         sudo echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
-                         sudo echo $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
                          wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_windows-v0.48.0.zip
                          7z x kallisto*.zip
-                         echo "${GITHUB_WORKSPACE}/kallisto" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
                     else
                          echo "$RUNNER_OS not supported"
                          exit 1
                     fi
                 shell: bash
+            - name: add kallisto to PATH
+              shell: bash
+              run: echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
             -   name: Test kallisto installation
-                run: kallisto --help
+                run: |
+                    echo "$PATH"
+                    kallisto --help
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
                 with:
