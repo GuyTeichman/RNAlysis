@@ -44,8 +44,10 @@ jobs:
                          sudo wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_linux-v0.48.0.tar.gz
                          sudo 7z x kallisto*.tar.gz
                          sudo 7z x kallisto*.tar
-                         sudo echo " ${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
+                         sudo echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
+                         sudo echo $GITHUB_PATH
                     elif [ "$RUNNER_OS" == "Windows" ]; then
+                         choco install wget -y
                          wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_windows-v0.48.0.zip
                          7z x kallisto*.zip
                          echo "${GITHUB_WORKSPACE}/kallisto" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
