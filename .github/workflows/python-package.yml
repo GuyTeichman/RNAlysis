@@ -41,9 +41,7 @@ jobs:
             -   name: Install kallisto
                 run: |
                     if [ "$RUNNER_OS" == "Linux" ]; then
-                         sudo wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_linux-v0.48.0.tar.gz
-                         sudo 7z x kallisto*.tar.gz
-                         sudo 7z x kallisto*.tar
+                         /home/linuxbrew/.linuxbrew/bin/brew install kallisto
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
                          wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_windows-v0.48.0.zip
