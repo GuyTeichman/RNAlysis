@@ -58,8 +58,8 @@ jobs:
               run: echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
             -   name: Test kallisto installation
                 run: |
-                    echo "$PATH"
-                    kallisto --help
+                    echo ${PATH}
+                    kallisto version
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
                 with:
