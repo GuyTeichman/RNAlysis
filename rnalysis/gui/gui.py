@@ -1541,6 +1541,8 @@ class FilterTabPage(TabPage):
         self.update_tab(False)
 
     def update_filter_obj_shape(self):
+        if self.is_empty():
+            return
         shape = self.filter_obj.shape
         if len(shape) == 1:
             shape = (shape[0], 1)
@@ -1668,6 +1670,8 @@ class FilterTabPage(TabPage):
         df_window.show()
 
     def update_table_preview(self):
+        if self.is_empty():
+            return
         model = gui_windows.DataFramePreviewModel(self.filter_obj.df)
         self.overview_widgets['preview'].setModel(model)
         self.overview_widgets['preview'].resizeColumnsToContents()
@@ -1697,6 +1701,8 @@ class FilterTabPage(TabPage):
             self._apply_function_from_params(func_name, args=[], kwargs=func_params)
 
     def update_tab(self, is_unsaved: bool = True):
+        if self.is_empty():
+            return
         self.update_filter_obj_shape()
         self.update_table_preview()
         self.tabNameChange.emit(self.filter_obj.fname.stem, is_unsaved)
@@ -1764,6 +1770,8 @@ class FilterTabPage(TabPage):
         self.process_outputs(result, f'Pipeline on {self.get_tab_name()}')
 
     def get_index_string(self):
+        if self.is_empty():
+            return ''
         return self.filter_obj.index_string
 
     def get_all_actions(self):
