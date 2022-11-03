@@ -843,13 +843,12 @@ class PathLineEdit(QtWidgets.QWidget):
         super().setDisabled(to_disable)
 
     def choose_file(self):
-        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file", str(Path.home()),
-                                                            "All Files (*)")
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Choose a file")
         if filename:
             self.file_path.setText(filename)
 
     def choose_folder(self):
-        dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose a file", str(Path.home()))
+        dirname = QtWidgets.QFileDialog.getExistingDirectory(self, "Choose a folder")
         if dirname:
             self.file_path.setText(dirname)
 
