@@ -19,11 +19,15 @@ class DummyClassNotChild(dict):
 @pytest.mark.parametrize('obj,cls,expected', [
     ([2, 3], list, True),
     ([2, 3], dict, False),
+    ([2, 3], (dict, list), True),
+    ([2, 3], (dict, tuple), False),
     (DummyClass(), DummyClass, True),
     (DummyClass(), DummyClassChild, False),
     (DummyClassChild(), DummyClass, True),
+    (DummyClassChild(), (DummyClass, int), True),
     (DummyClassChild(), DummyClassChild, True),
-    (DummyClassNotChild(), DummyClass, False)])
+    (DummyClassNotChild(), DummyClass, False),
+    (DummyClassNotChild(), (DummyClass, DummyClassChild), False)])
 def test_isinstanceinh(obj, cls, expected):
     assert isinstanceinh(obj, cls) == expected
 

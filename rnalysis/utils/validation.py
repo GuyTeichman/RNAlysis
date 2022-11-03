@@ -60,11 +60,16 @@ def isinstanceinh(obj, parent_class):
 
     :param obj: object to be tested
     :type obj: Any
-    :param parent_class: class to be checked against
-    :type parent_class: type (e.g. list, tuple, int, bool)
+    :param parent_class: class to be checked against, or tuple of classes to be checked against
+    :type parent_class: type (e.g. list, tuple, int, bool), or tuple of types
     :return: True if 'obj' is an instance of 'parent_class' or one of its subclasses, and False otherwise.
     :rtype: bool
     """
+    if isinstance(parent_class, tuple):
+        for cls in parent_class:
+            if issubclass(obj.__class__, cls):
+                return True
+        return False
     return True if issubclass(obj.__class__, parent_class) else False
 
 
