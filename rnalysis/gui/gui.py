@@ -1368,7 +1368,9 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.func_combo = QtWidgets.QComboBox(self)
         self.func_help_button = gui_widgets.HelpButton(self)
         self.func_combo_layout = QtWidgets.QHBoxLayout()
-        self.funcs = funcs
+        self.funcs = {}
+        for func in funcs:
+            self.funcs[generic.get_method_readable_name(func, filter_obj)] = func
         self.filter_obj = filter_obj
         self.excluded_params = self.EXCLUDED_PARAMS
         if additional_excluded_params is not None:
@@ -1385,7 +1387,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         self._set_empty_tooltip()
         self.layout.addStretch(1)
         self.func_combo.addItem(self.NO_FUNC_CHOSEN_TEXT)
-        self.func_combo.addItems(self.funcs)
+        self.func_combo.addItems(sorted(self.funcs.keys()))
         self.func_combo.currentTextChanged.connect(self.update_parameter_ui)
 
     def _set_empty_tooltip(self):
@@ -1459,13 +1461,16 @@ class FuncTypeStack(QtWidgets.QWidget):
         return func_params
 
     def get_function_name(self):
-        name = self.func_combo.currentText()
+        readable_name = self.func_combo.currentText()
+        if readable_name == self.NO_FUNC_CHOSEN_TEXT:
+            return self.NO_FUNC_CHOSEN_TEXT
+        name = self.funcs[readable_name]
         return name
 
 
 class FilterTabPage(TabPage):
     EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference',
-                      'from_folder', 'save_txt', 'save_csv', 'from_dataframe'}
+                      'from_folder', 'save_txt', 'save_csv', 'from_dataframe', 'print_features'}
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
@@ -1762,7 +1767,6 @@ class FilterTabPage(TabPage):
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
         # since clustering functions can be computationally intensive, start it in another thread
-        print(f"running apply from params on {func_name}")
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)

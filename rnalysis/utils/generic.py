@@ -137,6 +137,21 @@ class SetWithMajorityVote(set):
         return result
 
 
+def get_method_readable_name(method: Union[str, Callable], obj: object = None):
+    try:
+        if isinstance(method, str):
+            func = getattr(obj, method)
+        else:
+            func = method
+        if hasattr(func, 'readable_name'):
+            name = func.readable_name
+        else:
+            name = func.__name__
+        return name
+    except AttributeError:
+        return 'NAME NOT FOUND'
+
+
 def get_method_signature(method: Union[str, Callable], obj: object = None):
     try:
         if isinstance(method, str):

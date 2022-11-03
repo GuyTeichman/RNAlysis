@@ -45,6 +45,14 @@ except requests.exceptions.ConnectionError:
     _GENE_ID_TYPES = tuple()
 
 
+def readable_name(name: str):
+    def decorator(func):
+        func.readable_name = name
+        return func
+
+    return decorator
+
+
 class Filter:
     """
     An all-purpose Filter object.
@@ -278,6 +286,7 @@ class Filter:
             split = split[:-1]
         return split
 
+    @readable_name('Table head')
     def head(self, n: int = 5) -> pd.DataFrame:
 
         """
@@ -312,6 +321,7 @@ class Filter:
         """
         return self.df.head(n)
 
+    @readable_name('Table tail')
     def tail(self, n: int = 5) -> pd.DataFrame:
 
         """
@@ -353,6 +363,7 @@ class Filter:
         """
         return self.df.tail(n)
 
+    @readable_name('Translate gene IDs')
     def translate_gene_ids(self, translate_to: Union[str, Literal[_GENE_ID_TYPES]],
                            translate_from: Union[str, Literal['auto'], Literal[_GENE_ID_TYPES]] = 'auto',
                            remove_unmapped_genes: bool = False, inplace: bool = True):
@@ -376,6 +387,7 @@ class Filter:
                  f'to{translate_to.replace(" ", "").replace("/", "")}'
         return self._inplace(new_df, False, inplace, suffix, 'translate')
 
+    @readable_name('Filter by percentile')
     def filter_percentile(self, percentile: float, column: str, opposite: bool = False, inplace: bool = True):
 
         """
@@ -418,6 +430,7 @@ class Filter:
         new_df = self.df[self.df[column] <= self.df[column].quantile(percentile)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Split by percentile')
     def split_by_percentile(self, percentile: float, column: str) -> tuple:
 
         """
@@ -446,6 +459,7 @@ class Filter:
                                       inplace=False), self.filter_percentile(percentile=percentile, column=column,
                                                                              opposite=True, inplace=False)
 
+    @readable_name('Filter by feature biotype')
     def filter_biotype(self, biotype: Union[str, List[str]] = 'protein_coding',
                        ref: Union[str, Path, Literal['predefined']] = 'predefined', opposite: bool = False,
                        inplace: bool = True):
@@ -503,6 +517,7 @@ class Filter:
         new_df = self.df.loc[gene_names]
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Filter by user-defined attribute')
     def filter_by_attribute(self, attributes: Union[str, List[str]] = None,
                             mode: Literal['union', 'intersection'] = 'union',
                             ref: Union[str, Path, Literal['predefined']] = 'predefined',
@@ -604,6 +619,7 @@ class Filter:
         new_df = self.df.loc[set(indices)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Split by user-defined attribute')
     def split_by_attribute(self, attributes: Union[str, List[str]],
                            ref: Union[str, Path, Literal['predefined']] = 'predefined') -> tuple:
 
@@ -636,6 +652,7 @@ class Filter:
                                           f"Attribute '{attr}' is of type {type(attr)}"
         return tuple([self.filter_by_attribute(att, mode='union', ref=ref, inplace=False) for att in attributes])
 
+    @readable_name('Table descriptive statistics')
     def describe(self, percentiles: Union[float, List[float]] = (0.01, 0.25, 0.5, 0.75, 0.99)) -> pd.DataFrame:
 
         """
@@ -802,6 +819,7 @@ class Filter:
         """
         print(self.index_string)
 
+    @readable_name('Summarize feature biotypes')
     def biotypes(self, long_format: bool = False,
                  ref: Union[str, Path, Literal['predefined']] = 'predefined') -> pd.DataFrame:
 
@@ -862,6 +880,7 @@ class Filter:
             # return just the number of genes/indices belonging to each biotype
             return ref_df.set_index('gene', drop=False).loc[self.df.index].groupby('biotype').count()
 
+    @readable_name('Filter with a number filter')
     def number_filters(self, column: str, operator: Literal['greater than', 'equals', 'lesser than'], value: float,
                        opposite: bool = False, inplace: bool = True):
 
@@ -925,6 +944,7 @@ class Filter:
         # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Filter with a text filter')
     def text_filters(self, column: str, operator: Literal['equals', 'contains', 'starts with', 'ends with'], value: str,
                      opposite: bool = False, inplace: bool = True):
 
@@ -980,6 +1000,7 @@ class Filter:
         # noinspection PyUnboundLocalVariable
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Remove rows with missing values')
     def filter_missing_values(self, columns: Union[str, List[str], Literal['all']] = 'all', opposite: bool = False,
                               inplace: bool = True):
         """
@@ -1035,6 +1056,7 @@ class Filter:
 
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Apply a transformation to the table')
     def transform(self, function: Union[Literal['Box-Cox', 'log2', 'log10', 'ln', 'Standardize'], Callable],
                   columns: Union[str, List[str], Literal['all']] = 'all',
                   inplace: bool = True, **function_kwargs):
@@ -1098,6 +1120,7 @@ class Filter:
                 new_df[columns] = self.df.applymap(function, **function_kwargs)
         return self._inplace(new_df, False, inplace, suffix, 'transform')
 
+    @readable_name('Sort table rows')
     def sort(self, by: Union[str, List[str]], ascending: Union[bool, List[bool]] = True, na_position: str = 'last',
              inplace: bool = True):
 
@@ -1163,6 +1186,7 @@ class Filter:
 
         return self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=inplace, na_position=na_position)
 
+    @readable_name('Filter all but top N values')
     def filter_top_n(self, by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True,
                      na_position: str = 'last', opposite: bool = False, inplace: bool = True, ):
 
@@ -1558,6 +1582,7 @@ class FoldChangeFilter(Filter):
         """
         return [self.df.name]
 
+    @readable_name('Perform randomization test')
     def randomization_test(self, ref, alpha: float = 0.05, reps: int = 10000, save_csv: bool = False,
                            fname: Union[str, None] = None, random_seed: Union[int, None] = None) -> pd.DataFrame:
 
@@ -1643,6 +1668,7 @@ class FoldChangeFilter(Filter):
         pval = (success + 1) / (reps + 1)
         return [[n, obs_fc, exp_fc, pval]]
 
+    @readable_name('Filter by absolute log2 fold-change magnitude')
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
 
         """
@@ -1675,6 +1701,7 @@ class FoldChangeFilter(Filter):
         new_df = self.df[np.abs(np.log2(self.df)) >= abslog2fc].dropna()
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Filter by fold-change direction')
     def filter_fold_change_direction(self, direction: Literal['pos', 'neg'] = 'pos', opposite: bool = False,
                                      inplace: bool = True):
 
@@ -1724,6 +1751,7 @@ class FoldChangeFilter(Filter):
                 "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Split by fold-change direction')
     def split_fold_change_direction(self) -> tuple:
 
         """
@@ -1838,6 +1866,7 @@ class DESeqFilter(Filter):
                            f"could not be found. Try setting a different value for the parameter 'log2fc_col' "
                            f"when creating the DESeqFilter object.")
 
+    @readable_name('Filter by statistical significance')
     def filter_significant(self, alpha: float = 0.1, opposite: bool = False, inplace: bool = True):
 
         """
@@ -1872,6 +1901,7 @@ class DESeqFilter(Filter):
         suffix = f"_sig{alpha}"
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Filter by absolute log2 fold-change magnitude')
     def filter_abs_log2_fold_change(self, abslog2fc: float = 1, opposite: bool = False, inplace: bool = True):
 
         """
@@ -1906,6 +1936,7 @@ class DESeqFilter(Filter):
         new_df = self.df[np.abs(self.df[self.log2fc_col]) >= abslog2fc]
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Filter by log2 fold-change direction')
     def filter_fold_change_direction(self, direction: Literal['pos', 'neg'] = 'pos', opposite: bool = False,
                                      inplace: bool = True):
 
@@ -1954,6 +1985,7 @@ class DESeqFilter(Filter):
                 "'direction' must be either 'pos' for positive fold-change, or 'neg' for negative fold-change. ")
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Split by log2 fold-change direction')
     def split_fold_change_direction(self) -> tuple:
 
         """
@@ -1977,6 +2009,7 @@ class DESeqFilter(Filter):
         return self.filter_fold_change_direction(direction='pos', inplace=False), self.filter_fold_change_direction(
             direction='neg', inplace=False)
 
+    @readable_name('Volcano plot')
     def volcano_plot(self, alpha: float = 0.1) -> plt.Figure:
 
         """
@@ -2116,6 +2149,7 @@ class CountFilter(Filter):
                           f'Appending the remaining {n_cols % multiplier} as an inncomplete triplicate.')
         return triplicate
 
+    @readable_name('Run DESeq2 differential expression')
     def differential_expression_deseq2(self, design_matrix: Union[str, Path],
                                        comparisons: Iterable[Tuple[str, str, str]],
                                        r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'
@@ -2153,6 +2187,7 @@ class CountFilter(Filter):
 
         return parsing.data_to_tuple(outputs)
 
+    @readable_name('Calculate fold change')
     def fold_change(self, numerator: Union[str, List[str]], denominator: Union[str, List[str]],
                     numer_name: str = 'default', denom_name: str = 'default') -> 'FoldChangeFilter':
 
@@ -2217,6 +2252,7 @@ class CountFilter(Filter):
 
         pass
 
+    @readable_name('Pair-plot')
     def pairplot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
                  log2: bool = True) -> sns.PairGrid:
 
@@ -2314,6 +2350,7 @@ class CountFilter(Filter):
                 new_df[column] /= norm_factor
         return new_df
 
+    @readable_name('Normalize to reads-per-million (RPM) - HTSeq-count output')
     def normalize_to_rpm_htseqcount(self, special_counter_fname: Union[str, Path], inplace: bool = True):
 
         """
@@ -2353,6 +2390,7 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
+    @readable_name('Normalize to reads-per-million (RPM)')
     def normalize_to_rpm(self, inplace: bool = True):
         """
         Normalizes the count matrix to Reads Per Million (RPM). \
@@ -2381,9 +2419,10 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
+    @readable_name('Normalize with the Quantile method')
     def normalize_to_quantile(self, quantile: float = 0.75, inplace: bool = True):
         """
-        Normalizes the count matrix using the percentile method, generalized from \
+        Normalizes the count matrix using the quantile method, generalized from \
         `Bullard et al 2010 <https://doi.org/10.1186/1471-2105-11-94/>`_. \
         This is the default normalization method used by R's Limma. \
         To calculate the Quantile Method scaling factors, you first calculate the given quantile of gene expression \
@@ -2417,6 +2456,7 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
+    @readable_name('Normalize with the "Trimmed Mean of M-values" (TMM) method')
     def normalize_tmm(self, log_ratio_trim: float = 0.3, sum_trim: float = 0.05,
                       a_cutoff: Union[float, None] = -1 * 10 ** 10, ref_column: Union[Literal['auto'], str] = 'auto',
                       inplace: bool = True):
@@ -2497,6 +2537,7 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
+    @readable_name('Normalize with the "Relative Log Expression" (RLE) method')
     def normalize_rle(self, inplace: bool = True):
         """
         Normalizes the count matrix using the 'Relative Log Expression' (RLE) method \
@@ -2532,6 +2573,7 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
+    @readable_name('Normalize with the "Median of Ratios" (MRN) method')
     def normalize_median_of_ratios(self, sample_grouping: List[List[str]], reference_group: int = 0,
                                    inplace: bool = True):
         """
@@ -2595,6 +2637,7 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
+    @readable_name('Normalize with pre-calculated scaling factors')
     def normalize_with_scaling_factors(self, scaling_factor_fname: Union[str, Path], inplace: bool = True):
 
         """
@@ -2641,6 +2684,7 @@ class CountFilter(Filter):
             a_data.append(this_a)
         return m_data, a_data
 
+    @readable_name('MA plot')
     def ma_plot(self, ref_column: Union[Literal['auto'], str, int] = 'auto',
                 columns: Union[str, List[str], Literal['all']] = 'all', split_plots: bool = False):
         if isinstance(ref_column, int):
@@ -2693,10 +2737,11 @@ class CountFilter(Filter):
             fig.tight_layout(rect=[0, 0.03, 1, 0.92])
         plt.show()
 
+    @readable_name('Filter genes with low expression in all columns')
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
         """
-        remove features which have less then 'threshold' reads all columns.
+        remove features which have less than 'threshold' reads all columns.
 
         :type threshold: float
         :param threshold: The minimal number of reads (counts, rpm, rpkm, tpm, etc) a feature should have \
@@ -2726,11 +2771,12 @@ class CountFilter(Filter):
         suffix = f"_filt{threshold}reads"
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Split into Higly and Lowly expressed genes')
     def split_by_reads(self, threshold: float = 5) -> tuple:
 
         """
         Splits the features in the CountFilter object into two non-overlapping CountFilter \
-        objects, based on the their maximum expression level. The first object will contain only highly-expressed \
+        objects, based on their maximum expression level. The first object will contain only highly-expressed \
          features (which have reads over the specified threshold in at least one sample). The second object will \
          contain only lowly-expressed features (which have reads below the specified threshold in all samples).
 
@@ -2761,6 +2807,7 @@ class CountFilter(Filter):
         return self._inplace(high_expr, opposite=False, inplace=False, suffix=f'_below{threshold}reads'), self._inplace(
             low_expr, opposite=False, inplace=False, suffix=f'_above{threshold}reads')
 
+    @readable_name('Filter genes with low summized expression across all conditions')
     def filter_by_row_sum(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
         """
@@ -2792,6 +2839,7 @@ class CountFilter(Filter):
         suffix = f"_filt{threshold}sum"
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('K-Means clustering')
     def split_kmeans(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                      max_iter: int = 300,
                      random_seed: Union[int, None] = None, power_transform: bool = True,
@@ -2875,6 +2923,7 @@ class CountFilter(Filter):
         return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
         return (return_val, runner) if gui_mode else return_val
 
+    @readable_name('Hierarchical clustering')
     def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1'] = 'Euclidean',
@@ -2965,6 +3014,7 @@ class CountFilter(Filter):
         return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
         return (return_val, runner) if gui_mode else return_val
 
+    @readable_name('K-Medoids clustering')
     def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
                        max_iter: int = 300,
                        random_seed: Union[int, None] = None,
@@ -3054,6 +3104,7 @@ class CountFilter(Filter):
         return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
         return (return_val, runner) if gui_mode else return_val
 
+    @readable_name('CLICOM (ensemble) clustering')
     def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
@@ -3166,6 +3217,7 @@ class CountFilter(Filter):
         return_val = filt_objs
         return (return_val, runner) if gui_mode else return_val
 
+    @readable_name('HDBSCAN (density) clustering')
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                                                  'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
@@ -3272,6 +3324,7 @@ class CountFilter(Filter):
         return_val = [filt_objs, probabilities] if return_probabilities else filt_objs
         return (return_val, runner) if gui_mode else return_val
 
+    @readable_name('Hierarchical clustergram plot')
     def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'Euclidean',
                     linkage: Literal[
                         'Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'] = 'Average'):
@@ -3319,6 +3372,7 @@ class CountFilter(Filter):
         plt.show()
         return clustergram
 
+    @readable_name('Plot expression of specific genes')
     def plot_expression(self, features: Union[List[str], str],
                         samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
                         count_unit: str = 'Reads per million') -> plt.Figure:
@@ -3397,6 +3451,7 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
+    @readable_name('Principal Component Analysis (PCA) plot')
     def pca(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all', n_components: int = 3,
             power_transform: bool = True, labels: bool = True, label_fontsize: int = 16) -> Tuple[
         PCA, List[plt.Figure]]:
@@ -3496,6 +3551,7 @@ class CountFilter(Filter):
         ax.grid(True)
         return fig
 
+    @readable_name('Scatter plot - sample VS sample')
     def scatter_sample_vs_sample(self, sample1: Union[str, List[str]], sample2: Union[str, List[str]],
                                  xlabel: Union[str, Literal['auto']] = 'auto',
                                  ylabel: Union[str, Literal['auto']] = 'auto',
@@ -3571,6 +3627,7 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
+    @readable_name('Boxplot')
     def box_plot(self, samples: Union[List[List[str]], List[List[str]], Literal['all']] = 'all', notch: bool = True,
                  scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
@@ -3621,6 +3678,7 @@ class CountFilter(Filter):
         plt.show()
         return box
 
+    @readable_name('Enhanced boxplot')
     def enhanced_box_plot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
                           scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
@@ -3669,6 +3727,7 @@ class CountFilter(Filter):
         plt.show()
         return boxen
 
+    @readable_name('Violin plot')
     def violin_plot(self, samples: Union[Literal['all'], List[str], List[List[str]]] = 'all',
                     ylabel: str = '$\log_10$(normalized reads + 1)'):
         """
