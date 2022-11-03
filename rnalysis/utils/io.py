@@ -199,8 +199,8 @@ def load_gui_session(session_filename: Union[str, Path]):
     return items, item_names, item_types, item_properties, pipeline_names, pipeline_files
 
 
-def load_csv(filename: str, index_col: int = None, drop_columns: Union[str, List[str]] = False, squeeze=False,
-             comment: str = None):
+def load_csv(filename: Union[str, Path], index_col: int = None, drop_columns: Union[str, List[str]] = False,
+             squeeze=False, comment: str = None):
     """
     loads a csv df into a pandas dataframe.
 
