@@ -27,16 +27,21 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
                           kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                           kmer_length: int = 31, make_unique: bool = False):
     """
-    Create an
+    builds a kallisto index from a FASTA formatted file of target sequences (transcriptome). \
+    The index file will be saved in the sam folder as your FASTA file, with the `.idx` suffix. \
+    Be aware that there are pre-built kallisto indices for popular model organisms. \
+    These can be downloaded from  the \
+    `kallisto transcriptome indices site <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_.
 
-    :param transcriptome_fasta:
-    :type transcriptome_fasta:
-    :param kallisto_installation_folder:
-    :type kallisto_installation_folder:
-    :param kmer_length:
-    :type kmer_length:
-    :param make_unique:
-    :type make_unique:
+    :param transcriptome_fasta: Path to the FASTA file of your desired transcriptome.
+    :type transcriptome_fasta: str or Path
+    :param kallisto_installation_folder: Path to the installation folder of kallisto. For example: \
+    'C:/Program Files/kallisto'
+    :type kallisto_installation_folder: str, Path, or 'auto' (default='auto')
+    :param kmer_length: k-mer length of the index.
+    :type kmer_length: an odd int between 1 and 31 (default=31)
+    :param make_unique: if True, replace repeated target names with unique names.
+    :type make_unique: bool (default=False)
     """
     assert isinstance(kmer_length, int), f"parameter 'kmer_length' must be an integer. Instead, got {type(kmer_length)}"
     assert 0 < kmer_length <= 31 and kmer_length % 2 == 1, f"'kmer_length' must be an odd integer between 1 and 31"
