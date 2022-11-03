@@ -49,14 +49,12 @@ jobs:
                          choco install wget -y
                          wget  https://github.com/pachterlab/kallisto/releases/download/v0.48.0/kallisto_windows-v0.48.0.zip
                          7z x kallisto*.zip
+                         echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
                     else
                          echo "$RUNNER_OS not supported"
                          exit 1
                     fi
                 shell: bash
-            - name: add kallisto to PATH
-              shell: bash
-              run: echo "${GITHUB_WORKSPACE}/kallisto" >> $GITHUB_PATH
             -   name: Test kallisto installation
                 run: |
                     echo ${PATH}
