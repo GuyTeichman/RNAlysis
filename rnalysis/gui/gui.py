@@ -216,8 +216,8 @@ class CutAdaptPairedWindow(FuncExternalWindow):
         self.init_pairs_ui()
 
     def init_pairs_ui(self):
-        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList([], parent=self)
-        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList([], parent=self)
+        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList(self)
+        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList(self)
 
         self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 1, 0)
         self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 1, 1)
