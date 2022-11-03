@@ -1,5 +1,4 @@
 if (!require("DESeq2", quietly = TRUE))
     if (!require("BiocManager", quietly = TRUE))
         install.packages("BiocManager")
-        install.packages("RCurl")
-    BiocManager::install("DESeq2",update = TRUE, ask=FALSE)
+    BiocManager::install("DESeq2",update=TRUE, ask=FALSE)
