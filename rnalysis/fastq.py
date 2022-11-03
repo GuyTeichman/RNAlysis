@@ -1,4 +1,3 @@
-import typing_extensions
 import warnings
 from pathlib import Path
 from typing import Union, List
@@ -6,7 +5,7 @@ from typing import Union, List
 import pandas as pd
 from tqdm.auto import tqdm
 
-import filtering
+from rnalysis import filtering
 from rnalysis.utils import parsing, io
 
 try:
