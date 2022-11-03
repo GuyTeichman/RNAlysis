@@ -173,14 +173,32 @@ def deseq_window(qtbot) -> DESeqWindow:
 
 
 @pytest.fixture
-def single_end_window(qtbot) -> CutAdaptSingleWindow:
+def cutadapt_single_window(qtbot) -> CutAdaptSingleWindow:
     qtbot, window = widget_setup(qtbot, CutAdaptSingleWindow)
     return window
 
 
 @pytest.fixture
-def paired_end_window(qtbot) -> CutAdaptPairedWindow:
+def cutadapt_paired_window(qtbot) -> CutAdaptPairedWindow:
     qtbot, window = widget_setup(qtbot, CutAdaptPairedWindow)
+    return window
+
+
+@pytest.fixture
+def kallisto_index_window(qtbot) -> KallistoIndexWindow:
+    qtbot, window = widget_setup(qtbot, KallistoIndexWindow)
+    return window
+
+
+@pytest.fixture
+def kallisto_single_window(qtbot) -> KallistoSingleWindow:
+    qtbot, window = widget_setup(qtbot, KallistoSingleWindow)
+    return window
+
+
+@pytest.fixture
+def kallisto_paired_window(qtbot) -> KallistoPairedWindow:
+    qtbot, window = widget_setup(qtbot, KallistoPairedWindow)
     return window
 
 
@@ -246,15 +264,104 @@ def test_ApplyPipelineWindow_clear_all(qtbot, available_objects_no_tabpages):
     assert window.result() == []
 
 
-def test_CutAdaptSingleWindow_init(qtbot, single_end_window):
-    _ = single_end_window
+def test_KallistoIndexWindow_init(qtbot, kallisto_index_window):
+    _ = kallisto_index_window
 
 
-def test_CutAdaptPairedWindow_init(qtbot, paired_end_window):
-    _ = paired_end_window
+def test_KallistoSingleWindow_init(qtbot, kallisto_single_window):
+    _ = kallisto_single_window
 
 
-def test_CutAdaptSingleWindow_start_analysis(qtbot, single_end_window):
+def test_KallistoPairedWindow_init(qtbot, kallisto_paired_window):
+    _ = kallisto_paired_window
+
+
+def test_KallistoIndexWindow_start_analysis(qtbot, kallisto_index_window):
+    truth_args = []
+    fa_file = 'path/to/fa/file'
+    truth_kwargs = dict(transcriptome_fasta=fa_file,
+                        kallisto_installation_folder='auto',
+                        kmer_length=31,
+                        make_unique=False)
+
+    kallisto_index_window.param_widgets['transcriptome_fasta'].setText(fa_file)
+
+    with qtbot.waitSignal(kallisto_index_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(kallisto_index_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_args
+    assert blocker.args[1] == truth_kwargs
+
+
+def test_KallistoSingleWindow_start_analysis(qtbot, kallisto_single_window):
+    truth_args = []
+    fq_folder = 'path/to/fq/folder'
+    out_folder = 'path/to/out/dir'
+    index_file = 'path/to/index/file.idx'
+    gtf_file = 'path/to/gtf.gtf'
+    average_fragment_length = 175
+    stdev_fragment_length = 25.5
+    truth_kwargs = dict(fastq_folder=fq_folder, output_folder=out_folder,
+                        gtf_file=gtf_file,
+                        index_file=index_file,
+                        average_fragment_length=average_fragment_length,
+                        stdev_fragment_length=stdev_fragment_length,
+                        kallisto_installation_folder='auto',
+                        new_sample_names='auto',
+                        stranded='no',
+                        learn_bias=False,
+                        bootstrap_samples=None, seek_fusion_genes=False)
+
+    kallisto_single_window.param_widgets['fastq_folder'].setText(fq_folder)
+    kallisto_single_window.param_widgets['output_folder'].setText(out_folder)
+    kallisto_single_window.param_widgets['index_file'].setText(index_file)
+    kallisto_single_window.param_widgets['gtf_file'].setText(gtf_file)
+    kallisto_single_window.param_widgets['average_fragment_length'].setValue(average_fragment_length)
+    kallisto_single_window.param_widgets['stdev_fragment_length'].setValue(stdev_fragment_length)
+
+    with qtbot.waitSignal(kallisto_single_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(kallisto_single_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_args
+    assert blocker.args[1] == truth_kwargs
+
+
+def test_KallistoPairedWindow_start_analysis(qtbot, kallisto_paired_window):
+    r1_files = ['file1.fq', 'path/file2.fq']
+    r2_files = ['file3.fq.gz', 'path/to/file4.fastq.gz']
+    out_folder = 'path/to/out/dir'
+    index_file = 'path/to/index/file.idx'
+    gtf_file = 'path/to/gtf.gtf'
+    truth_args = []
+    truth_kwargs = dict(r1_files=r1_files, r2_files=r2_files,
+                        output_folder=out_folder,
+                        gtf_file=gtf_file,
+                        index_file=index_file,
+                        kallisto_installation_folder='auto',
+                        new_sample_names='auto',
+                        stranded='no',
+                        learn_bias=False,
+                        bootstrap_samples=None, seek_fusion_genes=False)
+
+    kallisto_paired_window.pairs_widgets['r1_list'].add_items(r1_files)
+    kallisto_paired_window.pairs_widgets['r2_list'].add_items(r2_files)
+    kallisto_paired_window.param_widgets['output_folder'].setText(out_folder)
+    kallisto_paired_window.param_widgets['index_file'].setText(index_file)
+    kallisto_paired_window.param_widgets['gtf_file'].setText(gtf_file)
+
+    with qtbot.waitSignal(kallisto_paired_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(kallisto_paired_window.start_button, LEFT_CLICK)
+    assert blocker.args[0] == truth_args
+    assert blocker.args[1] == truth_kwargs
+
+
+def test_CutAdaptSingleWindow_init(qtbot, cutadapt_single_window):
+    _ = cutadapt_single_window
+
+
+def test_CutAdaptPairedWindow_init(qtbot, cutadapt_paired_window):
+    _ = cutadapt_paired_window
+
+
+def test_CutAdaptSingleWindow_start_analysis(qtbot, cutadapt_single_window):
     truth_args = []
     fq_folder = 'path/to/fq/folder'
     out_folder = 'path/to/out/dir'
@@ -268,17 +375,17 @@ def test_CutAdaptSingleWindow_start_analysis(qtbot, single_end_window):
                         discard_untrimmed_reads=True, error_tolerance=0.1,
                         minimum_overlap=3, allow_indels=True, parallel=True)
 
-    single_end_window.param_widgets['fastq_folder'].setText(fq_folder)
-    single_end_window.param_widgets['output_folder'].setText(out_folder)
-    single_end_window.param_widgets['three_prime_adapters'].set_defaults(adapter)
+    cutadapt_single_window.param_widgets['fastq_folder'].setText(fq_folder)
+    cutadapt_single_window.param_widgets['output_folder'].setText(out_folder)
+    cutadapt_single_window.param_widgets['three_prime_adapters'].set_defaults(adapter)
 
-    with qtbot.waitSignal(single_end_window.paramsAccepted) as blocker:
-        qtbot.mouseClick(single_end_window.start_button, LEFT_CLICK)
+    with qtbot.waitSignal(cutadapt_single_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(cutadapt_single_window.start_button, LEFT_CLICK)
     assert blocker.args[0] == truth_args
     assert blocker.args[1] == truth_kwargs
 
 
-def test_CutAdaptPairedWindow_start_analysis(qtbot, paired_end_window):
+def test_CutAdaptPairedWindow_start_analysis(qtbot, cutadapt_paired_window):
     r1_files = ['file1.fq', 'path/file2.fq']
     r2_files = ['file3.fq.gz', 'path/to/file4.fastq.gz']
     out_folder = 'path/to/out/dir'
@@ -293,14 +400,14 @@ def test_CutAdaptPairedWindow_start_analysis(qtbot, paired_end_window):
                         quality_trimming=20, trim_n=True, minimum_read_length=10, maximum_read_length=None,
                         discard_untrimmed_reads=True, pair_filter_if='both',
                         error_tolerance=0.1, minimum_overlap=3, allow_indels=True, parallel=True)
-    paired_end_window.pairs_widgets['r1_list'].add_items(r1_files)
-    paired_end_window.pairs_widgets['r2_list'].add_items(r2_files)
-    paired_end_window.param_widgets['output_folder'].setText(out_folder)
-    paired_end_window.param_widgets['three_prime_adapters_r1'].set_defaults(adapter1)
-    paired_end_window.param_widgets['three_prime_adapters_r2'].set_defaults(adapter2)
+    cutadapt_paired_window.pairs_widgets['r1_list'].add_items(r1_files)
+    cutadapt_paired_window.pairs_widgets['r2_list'].add_items(r2_files)
+    cutadapt_paired_window.param_widgets['output_folder'].setText(out_folder)
+    cutadapt_paired_window.param_widgets['three_prime_adapters_r1'].set_defaults(adapter1)
+    cutadapt_paired_window.param_widgets['three_prime_adapters_r2'].set_defaults(adapter2)
 
-    with qtbot.waitSignal(paired_end_window.paramsAccepted) as blocker:
-        qtbot.mouseClick(paired_end_window.start_button, LEFT_CLICK)
+    with qtbot.waitSignal(cutadapt_paired_window.paramsAccepted) as blocker:
+        qtbot.mouseClick(cutadapt_paired_window.start_button, LEFT_CLICK)
     assert blocker.args[0] == truth_args
     assert blocker.args[1] == truth_kwargs
 

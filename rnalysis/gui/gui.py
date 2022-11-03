@@ -7,6 +7,7 @@ import os
 import sys
 import time
 import typing
+import typing_extensions
 import warnings
 from collections import OrderedDict
 from pathlib import Path
@@ -25,7 +26,7 @@ from rnalysis.utils import io, validation, generic, parsing, settings, enrichmen
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
-FILTER_OBJ_TYPES_INV = {val: key for key, val in FILTER_OBJ_TYPES.items()}
+FILTER_OBJ_TYPES_INV = {val.__name__: key for key, val in FILTER_OBJ_TYPES.items()}
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 
@@ -118,6 +119,70 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             self.showNormal()
 
 
+class KallistoIndexWindow(FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    IGNORED_WIDGETS = {'help_link'}
+
+    def __init__(self, parent=None):
+        super().__init__('Kallisto create index', fastq.kallisto_create_index,
+                         self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Kallisto - create transcriptome index')
+        super().init_ui()
+
+
+class KallistoSingleWindow(FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    IGNORED_WIDGETS = {'help_link'}
+
+    def __init__(self, parent=None):
+        super().__init__('Kallisto quantify (single-end reads)', fastq.kallisto_quantify_single_end,
+                         self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Kallisto single-end quantification setup')
+        super().init_ui()
+
+
+class KallistoPairedWindow(FuncExternalWindow):
+    EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
+    IGNORED_WIDGETS = {'help_link'}
+
+    def __init__(self, parent=None):
+        super().__init__('Kallisto quantify (paired-end reads)', fastq.kallisto_quantify_paired_end,
+                         self.EXCLUDED_PARAMS, parent)
+
+        self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
+        self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
+        self.pairs_widgets = {}
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Kallisto paired-end quantification setup')
+        self.layout.addWidget(self.pairs_group, 0, 1)
+        self.setMinimumSize(1250, 650)
+        super().init_ui()
+        self.init_pairs_ui()
+
+    def init_pairs_ui(self):
+        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList(self)
+        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList(self)
+
+        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 1, 0)
+        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 1, 1)
+        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
+        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
+
+    def get_analysis_kwargs(self):
+        kwargs = super().get_analysis_kwargs()
+        kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
+        kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
+        return kwargs
+
+
 class CutAdaptSingleWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
@@ -151,27 +216,13 @@ class CutAdaptPairedWindow(FuncExternalWindow):
         self.init_pairs_ui()
 
     def init_pairs_ui(self):
-        self.pairs_widgets['r1_list'] = gui_widgets.MultiChoiceListWithDeleteReorder([], parent=self)
-        self.pairs_widgets['r2_list'] = gui_widgets.MultiChoiceListWithDeleteReorder([], parent=self)
-        self.pairs_widgets['r1_add'] = QtWidgets.QPushButton('Add files...', self)
-        self.pairs_widgets['r2_add'] = QtWidgets.QPushButton('Add files...', self)
+        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList([], parent=self)
+        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList([], parent=self)
 
-        self.pairs_widgets['r1_add'].clicked.connect(functools.partial(self.add_files, True))
-        self.pairs_widgets['r2_add'].clicked.connect(functools.partial(self.add_files, False))
-
-        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 2, 0)
-        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 2, 1)
-        self.pairs_grid.addWidget(self.pairs_widgets['r1_add'], 1, 0)
-        self.pairs_grid.addWidget(self.pairs_widgets['r2_add'], 1, 1)
+        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 1, 0)
+        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 1, 1)
         self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
         self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
-
-    @QtCore.pyqtSlot(bool)
-    def add_files(self, is_r1: bool):
-        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Load fastq files")
-        if filenames:
-            lst_name = 'r1_list' if is_r1 else 'r2_list'
-            self.pairs_widgets[lst_name].add_items(filenames)
 
     def get_analysis_kwargs(self):
         kwargs = super().get_analysis_kwargs()
@@ -1420,7 +1471,7 @@ class FilterTabPage(TabPage):
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
     GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change'}
-    filterObjectCreated = QtCore.pyqtSignal(filtering.Filter)
+    filterObjectCreated = QtCore.pyqtSignal(object)
     startedClustering = QtCore.pyqtSignal(object, str)
     startedJob = QtCore.pyqtSignal(object, str)
 
@@ -1491,7 +1542,7 @@ class FilterTabPage(TabPage):
         return self.filter_obj is None
 
     def get_table_type(self):
-        return FILTER_OBJ_TYPES_INV[type(self.filter_obj)]
+        return FILTER_OBJ_TYPES_INV[type(self.filter_obj).__name__]
 
     def update_table_name_label(self):
         self.overview_widgets['table_name_label'].setText(f"Table name: '<b>{self.get_tab_name()}</b>'")
@@ -1729,7 +1780,7 @@ class FilterTabPage(TabPage):
         self.process_outputs(result, func_name)
 
     def process_outputs(self, outputs, source_name: str = ''):
-        if validation.isinstanceinh(outputs, filtering.Filter):
+        if validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
             self.filterObjectCreated.emit(outputs)
         elif isinstance(outputs, pd.DataFrame):
             self.df_views.append(gui_windows.DataFrameView(outputs, source_name))
@@ -2360,6 +2411,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.enrichment_window = None
         self.enrichment_results = []
         self.cutadapt_window = None
+        self.kallisto_window = None
 
         self.init_ui()
         self.add_new_tab()
@@ -2810,10 +2862,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_set_action = QtWidgets.QAction("&Export Gene Set...", self)
         self.export_set_action.triggered.connect(self.export_gene_set)
 
-        self.cutadapt_single_action = QtWidgets.QAction("&Single-end adapter trimming", self)
+        self.cutadapt_single_action = QtWidgets.QAction("&Single-end adapter trimming...", self)
         self.cutadapt_single_action.triggered.connect(functools.partial(self.trim_adapters, True))
-        self.cutadapt_paired_action = QtWidgets.QAction("&Paired-end adapter trimming", self)
+        self.cutadapt_paired_action = QtWidgets.QAction("&Paired-end adapter trimming...", self)
         self.cutadapt_paired_action.triggered.connect(functools.partial(self.trim_adapters, False))
+
+        self.kallisto_index_action = QtWidgets.QAction("Create kallisto &index...", self)
+        self.kallisto_index_action.triggered.connect(functools.partial(self.kallisto, 'index'))
+        self.kallisto_single_action = QtWidgets.QAction("&Single-end RNA-seq quantification...", self)
+        self.kallisto_single_action.triggered.connect(functools.partial(self.kallisto, 'single'))
+        self.kallisto_paired_action = QtWidgets.QAction("&Paired-end RNA-seq quantification...", self)
+        self.kallisto_paired_action.triggered.connect(functools.partial(self.kallisto, 'paired'))
 
         self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
         self.tutorial_action.triggered.connect(self.tutorial_window.show)
@@ -2889,6 +2948,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cutadapt_window.paramsAccepted.connect(
             functools.partial(self.start_generic_job_from_params, func_name, func))
         self.cutadapt_window.show()
+
+    @QtCore.pyqtSlot(str)
+    def kallisto(self, mode: typing_extensions.Literal['index', 'single', 'paired']):
+        if mode == 'single':
+            self.kallisto_window = KallistoSingleWindow(self)
+        elif mode == 'paired':
+            self.kallisto_window = KallistoPairedWindow(self)
+        elif mode == 'index':
+            self.kallisto_window = KallistoIndexWindow(self)
+        else:
+            raise ValueError(f"invalid mode {mode}")
+        func_name = self.kallisto_window.func_name
+        func = self.kallisto_window.func
+        self.kallisto_window.paramsAccepted.connect(
+            functools.partial(self.start_generic_job_from_params, func_name, func))
+        self.kallisto_window.show()
 
     def save_file(self):
         self.tabs.currentWidget().save_file()
@@ -2991,7 +3066,11 @@ class MainWindow(QtWidgets.QMainWindow):
         view_menu.addActions([self.show_history_action])
 
         fastq_menu = self.menu_bar.addMenu("&FASTQ")
-        fastq_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
+        self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
+        self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
+        self.trimming_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
+        self.kallisto_menu.addActions(
+            [self.kallisto_index_action, self.kallisto_single_action, self.kallisto_paired_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
