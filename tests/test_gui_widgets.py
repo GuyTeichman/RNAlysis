@@ -931,6 +931,62 @@ def test_MultiChoiceListWithReorder_bottom(qtbot):
     assert widget.items == ['item2', 'item4', 'item1', 'item3']
 
 
+def test_OrderedFileList_init(qtbot):
+    _ = widget_setup(qtbot, OrderedFileList)
+
+
+def test_OrderedFileList_add_item(qtbot):
+    pth = Path('tests/test_files/test_deseq.csv')
+    qtbot, widget = widget_setup(qtbot, OrderedFileList)
+    widget.add_item(pth)
+    assert widget.items == [pth]
+    assert len(widget.list_items) == 1
+    assert isinstance(widget.list_items[0], FileListWidgetItem)
+    assert widget.list_items[0].file_path == pth
+    assert widget.list_items[0].display_name == pth.stem
+    assert widget.list_items[0].filePath() == pth
+    assert widget.list_items[0].text() == pth.stem
+    assert widget.list.count() == 1
+
+
+@pytest.mark.parametrize("filenames", [
+    ['tests/test_files/test_deseq.csv'],
+    [],
+    ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'],
+    ['tests/test_files/a.fa', 'tests/test_files/c.fa', 'tests/test_files/b.fa', 'aa.fa']
+])
+def test_OrderedFileList_add_files(qtbot, monkeypatch, filenames):
+    def mock_get_file_names(*args, **kwargs):
+        return filenames, None
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileNames', mock_get_file_names)
+    qtbot, widget = widget_setup(qtbot, OrderedFileList)
+    widget.add_files()
+
+    assert widget.list.count() == len(filenames)
+    assert widget.items == filenames
+
+
+@pytest.mark.parametrize("filenames", [
+    ['tests/test_files/test_deseq.csv'],
+    [],
+    ['tests/test_files/test_deseq.csv', 'tests/test_files/counted.tsv'],
+    ['tests/test_files/a.fa', 'tests/test_files/c.fa', 'tests/test_files/b.fa', 'aa.fa']
+
+])
+def test_OrderedFileList_get_sorted_selected_names(qtbot, monkeypatch, filenames):
+    def mock_get_file_names(*args, **kwargs):
+        return filenames, None
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'getOpenFileNames', mock_get_file_names)
+
+    qtbot, widget = widget_setup(qtbot, OrderedFileList)
+    widget.add_files()
+    res = widget.get_sorted_names()
+
+    assert res == filenames
+
+
 def test_TrueFalseBoth(qtbot):
     selection_changed = []
     qtbot, widget = widget_setup(qtbot, TrueFalseBoth)

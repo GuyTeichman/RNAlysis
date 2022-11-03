@@ -695,6 +695,40 @@ class MultiChoiceListWithDeleteReorder(MultiChoiceListWithReorder, MultiChoiceLi
         super().__init__(items, icons, parent)
 
 
+class FileListWidgetItem(QtWidgets.QListWidgetItem):
+    def __init__(self, file_path, parent=None):
+        self.file_path = file_path
+        self.display_name = Path(file_path).stem
+        super().__init__(self.display_name, parent)
+
+    def filePath(self):
+        return self.file_path
+
+
+class OrderedFileList(MultiChoiceListWithDeleteReorder):
+    def __init__(self, parent=None):
+        super().__init__([], None, parent)
+        self.add_files_button = QtWidgets.QPushButton('Add files...', self)
+        self.add_files_button.clicked.connect(self.add_files)
+        self.layout.addWidget(self.add_files_button, 0, 1)
+
+    def add_files(self):
+        filenames, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Load fastq files")
+        if filenames:
+            self.add_items(filenames)
+
+    def add_item(self, item, icon=None):
+        self.items.append(item)
+        list_item = FileListWidgetItem(item)
+        if icon is not None:
+            list_item.setIcon(icon)
+        self.list_items.append(list_item)
+        self.list.addItem(list_item)
+
+    def get_sorted_names(self):
+        return [name for name in self.items]
+
+
 class MandatoryComboBox(QtWidgets.QComboBox):
     def __init__(self, default_choice: str, parent=None):
         super().__init__(parent)
