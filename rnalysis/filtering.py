@@ -2136,7 +2136,7 @@ class CountFilter(Filter):
         the name of a factor in the design formula, the name of the numerator level for the fold change, \
         and the name of the denominator level for the fold change.
         :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
-        :param r_installation_folder: path to the installation folder of R. for example: \
+        :param r_installation_folder: Path to the installation folder of R. For example: \
         'C:/Program Files/R/R-4.2.1'
         :type r_installation_folder: str, Path, or 'auto' (default='auto')
         :return: a tuple of DESeqFilter objects, one for each comparison
