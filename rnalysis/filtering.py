@@ -2423,7 +2423,7 @@ class CountFilter(Filter):
     def normalize_to_quantile(self, quantile: float = 0.75, inplace: bool = True):
         """
         Normalizes the count matrix using the quantile method, generalized from \
-        `Bullard et al 2010 <https://doi.org/10.1186/1471-2105-11-94/>`_. \
+        `Bullard et al 2010 <https://doi.org/10.1186/1471-2105-11-94>`_. \
         This is the default normalization method used by R's Limma. \
         To calculate the Quantile Method scaling factors, you first calculate the given quantile of gene expression \
         within each sample, excluding genes that have 0 reads in all samples. \
@@ -2462,7 +2462,7 @@ class CountFilter(Filter):
                       inplace: bool = True):
         """
         Normalizes the count matrix using the 'trimmed mean of M values' (TMM) method \
-        `(Robinson and Oshlack 2010) <https://doi.org/10.1186/gb-2010-11-3-r25/>`_. \
+        `(Robinson and Oshlack 2010) <https://doi.org/10.1186/gb-2010-11-3-r25>`_. \
         This is the default normalization method used by R's edgeR. \
         To calculate the Trimmed Mean of M Values scaling factors, you first calculate the M-values of each gene \
         between each sample and the reference sample (log2 of each sample Minus log2 of the reference sample), \
@@ -2541,7 +2541,7 @@ class CountFilter(Filter):
     def normalize_rle(self, inplace: bool = True):
         """
         Normalizes the count matrix using the 'Relative Log Expression' (RLE) method \
-        `(Anders and Huber 2010) <https://doi.org/10.1186/gb-2010-11-10-r106/>`_. \
+        `(Anders and Huber 2010) <https://doi.org/10.1186/gb-2010-11-10-r106>`_. \
         This is the default normalization method used by R's DESeq2. \
         To calculate the Relative Log Expression scaling factors, you first generate a pseudo-sample by calculating \
         the geometric mean expression of each gene across samples. You then calculate the gene-wise ratio \
@@ -2578,7 +2578,7 @@ class CountFilter(Filter):
                                    inplace: bool = True):
         """
         Normalizes the count matrix using the 'Median of Ratios Normalization' (MRN) method \
-        `(Maza et al 2013) <https://doi.org/10.4161%2Fcib.25849/>`_. \
+        `(Maza et al 2013) <https://doi.org/10.4161%2Fcib.25849>`_. \
         This normalization method uses information about the experimental condition of each sample. \
         To calculate the Median of Ratios scaling factors, you first calculate the weighted mean expression of \
         each gene within the replicates of each experimental condition. You then calculate per gene the ratio between \
