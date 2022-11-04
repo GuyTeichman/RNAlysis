@@ -306,7 +306,7 @@ def test_MultiFileSelectionDialog_init(qtbot, use_temp_settings_file):
     _, _ = widget_setup(qtbot, MultiFileSelectionDialog)
 
 
-@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files'])
+@pytest.mark.parametrize('pth', ['tests/test_files/test_deseq.csv', 'tests/test_files/test_fastqs'])
 def test_MultiFileSelectionDialog_selection_log(qtbot, use_temp_settings_file, pth):
     qtbot, dialog = widget_setup(qtbot, MultiFileSelectionDialog)
     model = dialog.tree_mycomputer.model()

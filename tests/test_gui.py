@@ -472,7 +472,7 @@ def test_ClicomWindow_add_setup(qtbot, clicom_window):
     truth = dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
                  max_n_clusters_estimate='auto')
 
-    qtbot.keyClicks(clicom_window.stack.func_combo, 'split_kmeans')
+    qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
     assert len(clicom_window.parameter_dicts) == 1
@@ -481,7 +481,7 @@ def test_ClicomWindow_add_setup(qtbot, clicom_window):
 
 def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.Yes)
-    qtbot.keyClicks(clicom_window.stack.func_combo, 'split_kmeans')
+    qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
     assert len(clicom_window.parameter_dicts) == 1
@@ -511,11 +511,11 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     truth_params = dict(power_transform=[True, False], evidence_threshold=0.35, cluster_unclustered_features=True,
                         min_cluster_size=15, plot_style='all', split_plots=False)
 
-    qtbot.keyClicks(clicom_window.stack.func_combo, 'split_kmeans')
+    qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
 
-    clicom_window.stack.func_combo.setCurrentText('split_hierarchical')
+    clicom_window.stack.func_combo.setCurrentText(filtering.CountFilter.split_hierarchical.readable_name)
     qtbot.keyClicks(clicom_window.stack.parameter_widgets['n_clusters'].combo, 'silhouette')
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
 
@@ -1374,7 +1374,7 @@ def test_FilterTabPage_apply_function(qtbot, filtertabpage_with_undo_stack):
     orig = window.obj().__copy__()
     truth = window.obj().filter_significant(0.01, opposite=True, inplace=False)
     window.stack_buttons[0].click()
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().func_combo.setCurrentText(filtering.DESeqFilter.filter_significant.readable_name)
     window.stack.currentWidget().parameter_widgets['alpha'].clear()
     qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
@@ -1407,7 +1407,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
     truth = sorted(truth, key=lambda obj: sorted(obj.df.index)[0])
 
     window.stack_buttons[4].click()
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'split_kmeans')
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.CountFilter.split_kmeans.readable_name)
     window.stack.currentWidget().parameter_widgets['n_clusters'].other.set_defaults(3)
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['random_seed'].checkbox, LEFT_CLICK)
     with qtbot.waitSignals([window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated],
@@ -1427,7 +1427,7 @@ def test_FilterTabPage_apply_function_inplace(qtbot, filtertabpage_with_undo_sta
     window, stack = filtertabpage_with_undo_stack
     truth = window.obj().filter_significant(0.01, opposite=True, inplace=False)
     window.stack_buttons[0].click()
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().func_combo.setCurrentText(filtering.DESeqFilter.filter_significant.readable_name)
     window.stack.currentWidget().parameter_widgets['alpha'].clear()
     qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
@@ -1440,7 +1440,7 @@ def test_FilterTabPage_undo_function(qtbot, filtertabpage_with_undo_stack):
     truth = window.obj().filter_significant(0.01, opposite=True, inplace=False)
     orig = window.obj().__copy__()
     window.stack_buttons[0].click()
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().func_combo.setCurrentText(filtering.DESeqFilter.filter_significant.readable_name)
     window.stack.currentWidget().parameter_widgets['alpha'].clear()
     qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
@@ -1498,7 +1498,7 @@ def test_FilterTabPage_open_clicom(countfiltertabpage_with_undo_stack, qtbot, mo
     monkeypatch.setattr(ClicomWindow, 'show', mock_show)
 
     tabpage.stack_buttons[4].click()
-    tabpage.stack_widgets['Cluster'].func_combo.setCurrentText('split_clicom')
+    tabpage.stack_widgets['Cluster'].func_combo.setCurrentText(filtering.CountFilter.split_clicom.readable_name)
 
     assert opened == [True]
 
@@ -1687,7 +1687,8 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'split_fold_change_direction')
+    qtbot.keyClicks(window.stack.currentWidget().func_combo,
+                    filtering.DESeqFilter.split_fold_change_direction.readable_name)
     qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
 
     assert window.pipeline == pipeline_truth
@@ -1706,7 +1707,7 @@ def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'filter_significant')
+    window.stack.currentWidget().func_combo.setCurrentText(filtering.DESeqFilter.filter_significant.readable_name)
     window.stack.currentWidget().parameter_widgets['alpha'].clear()
     qtbot.keyClicks(window.stack.currentWidget().parameter_widgets['alpha'], '0.01')
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['opposite'].switch, LEFT_CLICK)
@@ -1716,7 +1717,8 @@ def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):
     # add a second function
     pipeline_truth.add_function('split_fold_change_direction')
 
-    window.stack.currentWidget().func_combo.setCurrentText('split_fold_change_direction')
+    window.stack.currentWidget().func_combo.setCurrentText(
+        filtering.DESeqFilter.split_fold_change_direction.readable_name)
     qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
     assert window.pipeline == pipeline_truth
 
@@ -1735,7 +1737,7 @@ def test_CreatePipelineWindow_save_pipeline(qtbot, monkeypatch):
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     qtbot.mouseClick(window.stack_buttons[2], LEFT_CLICK)
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'describe')
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.Filter.describe.readable_name)
     qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
 
     with qtbot.waitSignal(window.pipelineSaved) as blocker:
@@ -1758,7 +1760,7 @@ def test_CreatePipelineWindow_export_pipeline(qtbot, monkeypatch):
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     qtbot.mouseClick(window.stack_buttons[2], LEFT_CLICK)
-    qtbot.keyClicks(window.stack.currentWidget().func_combo, 'describe')
+    qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.Filter.describe.readable_name)
     qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
 
     with qtbot.waitSignal(window.pipelineExported) as blocker:
