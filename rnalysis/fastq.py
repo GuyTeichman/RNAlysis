@@ -332,7 +332,7 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
     transcript_to_gene_map = _map_transcripts_to_genes(gtf_path)
     library_sizes = counts.sum(axis=0) / (10 ** 6)
     tpm_cpy = tpm.copy()
-    tpm_cpy['Gene ID'] = transcript_to_gene_map
+    tpm_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
     tpm_by_gene = tpm_cpy.groupby('Gene ID').sum()
     scaled_tpm = tpm_by_gene.multiply(library_sizes, axis=1)
 
