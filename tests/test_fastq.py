@@ -88,7 +88,9 @@ def test_kallisto_quantify_single_end():
         assert are_dir_trees_equal(out_dir, truth_dir)
     finally:
         for item in Path(out_dir).iterdir():
-            if item.is_file() and 'gitignore' not in item.name:
+            if 'gitignore' in item.name:
+                continue
+            if item.is_file():
                 item.unlink()
             else:
                 shutil.rmtree(item)
@@ -109,7 +111,9 @@ def test_kallisto_quantify_paired_end():
 
     finally:
         for item in Path(out_dir).iterdir():
-            if item.is_file() and 'gitignore' not in item.name:
+            if 'gitignore' in item.name:
+                continue
+            if item.is_file():
                 item.unlink()
             else:
                 shutil.rmtree(item)
