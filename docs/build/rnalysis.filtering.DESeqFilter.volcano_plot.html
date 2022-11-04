@@ -15,7 +15,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -66,6 +68,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.CountFilter.html">rnalysis.filtering.CountFilter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html">rnalysis.filtering.DESeqFilter</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.html#rnalysis.filtering.DESeqFilter"><code class="docutils literal notranslate"><span class="pre">DESeqFilter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html">rnalysis.filtering.DESeqFilter.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html">rnalysis.filtering.DESeqFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html">rnalysis.filtering.DESeqFilter.difference</a></li>
@@ -92,13 +95,18 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.tail.html">rnalysis.filtering.DESeqFilter.tail</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.text_filters.html">rnalysis.filtering.DESeqFilter.text_filters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.transform.html">rnalysis.filtering.DESeqFilter.transform</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.translate_gene_ids.html">rnalysis.filtering.DESeqFilter.translate_gene_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.union.html">rnalysis.filtering.DESeqFilter.union</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.DESeqFilter.volcano_plot</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.DESeqFilter.volcano_plot</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.DESeqFilter.volcano_plot"><code class="docutils literal notranslate"><span class="pre">DESeqFilter.volcano_plot()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.readable_name.html">rnalysis.filtering.readable_name</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -137,10 +145,10 @@
            <div itemprop="articleBody">
              
   <section id="rnalysis-filtering-deseqfilter-volcano-plot">
-<h1>rnalysis.filtering.DESeqFilter.volcano_plot<a class="headerlink" href="#rnalysis-filtering-deseqfilter-volcano-plot" title="Permalink to this headline"></a></h1>
+<h1>rnalysis.filtering.DESeqFilter.volcano_plot<a class="headerlink" href="#rnalysis-filtering-deseqfilter-volcano-plot" title="Permalink to this heading"></a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.DESeqFilter.volcano_plot">
-<span class="sig-prename descclassname"><span class="pre">DESeqFilter.</span></span><span class="sig-name descname"><span class="pre">volcano_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">matplotlib.figure.Figure</span></span></span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.volcano_plot" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">DESeqFilter.</span></span><span class="sig-name descname"><span class="pre">volcano_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span><a class="headerlink" href="#rnalysis.filtering.DESeqFilter.volcano_plot" title="Permalink to this definition"></a></dt>
 <dd><p>Plots a volcano plot (log2(fold change) vs -log10(adj. p-value)) of the DESeqFilter object.         Significantly upregulated features are colored in red,         and significantly downregulated features are colored in blue.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

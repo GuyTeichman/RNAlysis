@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.FoldChangeFilter
+rnalysis.filtering.FoldChangeFilter
 ===================================
 
 .. currentmodule:: rnalysis.filtering
@@ -42,6 +42,7 @@
     FoldChangeFilter.tail
     FoldChangeFilter.text_filters
     FoldChangeFilter.transform
+    FoldChangeFilter.translate_gene_ids
     FoldChangeFilter.union
     
     

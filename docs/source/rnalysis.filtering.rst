@@ -1,4 +1,4 @@
-rnalysis.filtering
+﻿rnalysis.filtering
 ==================
 
 .. rubric:: Description
@@ -20,4 +20,13 @@ rnalysis.filtering
     Pipeline
 
 
+
+
+.. rubric:: Functions
+
+.. autosummary::
+    :toctree: .
+    
+    readable_name
+    
 

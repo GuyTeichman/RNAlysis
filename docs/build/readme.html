@@ -15,7 +15,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -108,14 +110,14 @@
 <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues">Bug reports</a> | <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="PyPI version" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a> | <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="Python versions supported" src="https://img.shields.io/pypi/pyversions/RNAlysis.svg" /></a> | <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/actions/workflows/python-package.yml"><img alt="Build status" src="https://github.com/guyteichman/RNAlysis/actions/workflows/python-package.yml/badge.svg" /></a> | <a class="reference external" href="https://coveralls.io/github/GuyTeichman/RNAlysis?branch=master"><img alt="Coverage" src="https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg?branch=master" /></a> | <a class="reference external" href="https://pepy.tech/project/rnalysis"><img alt="Downloads" src="https://pepy.tech/badge/rnalysis" /></a></p>
 <hr class="docutils" />
 <section id="what-is-rnalysis">
-<h1>What is <em>RNAlysis?</em><a class="headerlink" href="#what-is-rnalysis" title="Permalink to this headline"></a></h1>
+<h1>What is <em>RNAlysis?</em><a class="headerlink" href="#what-is-rnalysis" title="Permalink to this heading"></a></h1>
 <p><em>RNAlysis</em> is a Python-based software for analyzing RNA sequencing data.
 <em>RNAlysis</em> allows you to build customized analysis pipelines suiting your specific research questions,
 going all the way from exploratory data analysis and data visualization through clustering analysis and gene-set enrichment analysis.</p>
 </section>
 <hr class="docutils" />
 <section id="what-can-i-do-with-rnalysis">
-<h1>What can I do with <em>RNAlysis</em>?<a class="headerlink" href="#what-can-i-do-with-rnalysis" title="Permalink to this headline"></a></h1>
+<h1>What can I do with <em>RNAlysis</em>?<a class="headerlink" href="#what-can-i-do-with-rnalysis" title="Permalink to this heading"></a></h1>
 <ul class="simple">
 <li><p>Filter your gene expression matrices, differential expression tables, fold change data, and tabular data in general.</p></li>
 <li><p>Normalize your gene expression matrices</p></li>
@@ -130,21 +132,33 @@ going all the way from exploratory data analysis and data visualization through 
 </section>
 <hr class="docutils" />
 <section id="how-do-i-install-it">
-<h1>How do I install it?<a class="headerlink" href="#how-do-i-install-it" title="Permalink to this headline"></a></h1>
-<p>You can install <em>RNAlysis</em> via PyPI.
-To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span>
-</pre></div>
-</div>
-<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines), you should first install <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, and <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater (on Windows computers only).
+<h1>How do I install it?<a class="headerlink" href="#how-do-i-install-it" title="Permalink to this heading"></a></h1>
+<p>You can install <em>RNAlysis</em> via PyPI.</p>
+<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines), you should first install <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater (on Windows computers only), <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, <a class="reference external" href="https://cran.r-project.org/bin/">R</a>, and <a class="reference external" href="https://pachterlab.github.io/kallisto/download">kallisto</a>.
 Then use the following command in your terminal window:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="nb">all</span><span class="p">]</span>
 </pre></div>
 </div>
+<p>To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span>
+</pre></div>
+</div>
+<p>You can also install <em>RNAlysis</em> with only some of the following additional features:</p>
+<ul class="simple">
+<li><p><cite>fastq</cite> - adapter trimming and RNA-seq transcript quantification of Fastq files</p></li>
+<li><p><cite>hdbscan</cite> - clustering analysis using the HDBSCAN method</p></li>
+<li><p><cite>single-set</cite> - single-set enrichment analysis using the XL-mHG test</p></li>
+<li><p><cite>randomization</cite> - improved performance for randomization tests</p></li>
+</ul>
+<p>by calling the install command with one or more additional features inside the square brackets, separated by commas. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">fastq</span><span class="p">,</span><span class="n">single</span><span class="o">-</span><span class="nb">set</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>will install the basic version of <em>RNAlysis</em>, along with the <cite>fastq</cite> and <cite>single-set</cite> additional features.</p>
 </section>
 <hr class="docutils" />
 <section id="how-do-i-use-it">
-<h1>How do I use it?<a class="headerlink" href="#how-do-i-use-it" title="Permalink to this headline"></a></h1>
+<h1>How do I use it?<a class="headerlink" href="#how-do-i-use-it" title="Permalink to this heading"></a></h1>
 <p>You can launch the <em>RNAlysis</em> software by typing the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rnalysis</span><span class="o">-</span><span class="n">gui</span>
 </pre></div>
@@ -158,7 +172,7 @@ Then use the following command in your terminal window:</p>
 </section>
 <hr class="docutils" />
 <section id="dependencies">
-<h1>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline"></a></h1>
+<h1>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h1>
 <p>All of <em>RNAlysis</em>’s dependencies can be installed automatically via PyPI.</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://numpy.org/">numpy</a></p></li>
@@ -184,23 +198,24 @@ Then use the following command in your terminal window:</p>
 <li><p><a class="reference external" href="https://github.com/python/typing_extensions">typing_extensions</a></p></li>
 <li><p><a class="reference external" href="https://www.riverbankcomputing.com/software/pyqt/">PyQt5</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ColinDuquesnoy/QDarkStyleSheet">qdarkstyle</a></p></li>
+<li><p><a class="reference external" href="https://github.com/marcelm/cutadapt">cutadapt</a></p></li>
 </ul>
 </section>
 <hr class="docutils" />
 <section id="credits">
-<h1>Credits<a class="headerlink" href="#credits" title="Permalink to this headline"></a></h1>
+<h1>Credits<a class="headerlink" href="#credits" title="Permalink to this heading"></a></h1>
 <section id="how-do-i-cite-rnalysis">
-<h2>How do I cite <em>RNAlysis</em>?<a class="headerlink" href="#how-do-i-cite-rnalysis" title="Permalink to this headline"></a></h2>
+<h2>How do I cite <em>RNAlysis</em>?<a class="headerlink" href="#how-do-i-cite-rnalysis" title="Permalink to this heading"></a></h2>
 <p>Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software (Python package version 3.1.0).</p>
 </section>
 <section id="development-lead">
-<h2>Development Lead<a class="headerlink" href="#development-lead" title="Permalink to this headline"></a></h2>
+<h2>Development Lead<a class="headerlink" href="#development-lead" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>Guy Teichman: <a class="reference external" href="mailto:guyteichman&#37;&#52;&#48;gmail&#46;com">guyteichman<span>&#64;</span>gmail<span>&#46;</span>com</a></p></li>
 </ul>
 </section>
 <section id="contributors">
-<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline"></a></h2>
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p>Dror Cohen</p></li>
 <li><p>Or Ganon</p></li>

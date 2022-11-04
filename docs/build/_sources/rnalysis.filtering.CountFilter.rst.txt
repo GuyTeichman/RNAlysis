@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.CountFilter
+rnalysis.filtering.CountFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -21,6 +21,7 @@
     CountFilter.clustergram
     CountFilter.describe
     CountFilter.difference
+    CountFilter.differential_expression_deseq2
     CountFilter.enhanced_box_plot
     CountFilter.filter_biotype
     CountFilter.filter_by_attribute
@@ -63,6 +64,7 @@
     CountFilter.tail
     CountFilter.text_filters
     CountFilter.transform
+    CountFilter.translate_gene_ids
     CountFilter.union
     CountFilter.violin_plot
     

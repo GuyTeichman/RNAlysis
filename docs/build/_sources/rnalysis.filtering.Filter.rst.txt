@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.Filter
+rnalysis.filtering.Filter
 =========================
 
 .. currentmodule:: rnalysis.filtering
@@ -38,6 +38,7 @@
     Filter.tail
     Filter.text_filters
     Filter.transform
+    Filter.translate_gene_ids
     Filter.union
     
     

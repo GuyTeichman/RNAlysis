@@ -15,7 +15,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -54,7 +56,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">A-to-Z tutorial - example analysis</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#intro">Intro</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#intro-and-recommendations">Intro and recommendations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#analysis-1-time-series-rna-sequencing">Analysis #1 - time series RNA sequencing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#the-dataset">The dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#data-preprocessing-and-exploratory-data-analysis">Data preprocessing and exploratory data analysis</a><ul>
@@ -141,88 +143,88 @@
            <div itemprop="articleBody">
              
   <section id="a-to-z-tutorial-example-analysis">
-<h1>A-to-Z tutorial - example analysis<a class="headerlink" href="#a-to-z-tutorial-example-analysis" title="Permalink to this headline"></a></h1>
-<section id="intro">
-<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline"></a></h2>
+<h1>A-to-Z tutorial - example analysis<a class="headerlink" href="#a-to-z-tutorial-example-analysis" title="Permalink to this heading"></a></h1>
+<section id="intro-and-recommendations">
+<h2>Intro and recommendations<a class="headerlink" href="#intro-and-recommendations" title="Permalink to this heading"></a></h2>
 <p>In this A-to-Z tutorial, we are going to analyze two datasets step-by-step, with each analysis covering different aspects of using <em>RNAlysis</em>.</p>
 <p>These analyses both focus on RNA sequencing data from nematodes, but the same principles can be applied to data from any organism.</p>
 </section>
 <section id="analysis-1-time-series-rna-sequencing">
-<h2>Analysis #1 - time series RNA sequencing<a class="headerlink" href="#analysis-1-time-series-rna-sequencing" title="Permalink to this headline"></a></h2>
+<h2>Analysis #1 - time series RNA sequencing<a class="headerlink" href="#analysis-1-time-series-rna-sequencing" title="Permalink to this heading"></a></h2>
 <section id="the-dataset">
-<h3>The dataset<a class="headerlink" href="#the-dataset" title="Permalink to this headline"></a></h3>
+<h3>The dataset<a class="headerlink" href="#the-dataset" title="Permalink to this heading"></a></h3>
 <p>We will start by analyzing XYZ. This dataset describes the mean expression level of each gene over the developmental stages of <em>C. elegans</em> nematodes.</p>
 <p>Let’s start by loading the dataset:</p>
 <p>#TODO: PtrSc</p>
 </section>
 <section id="data-preprocessing-and-exploratory-data-analysis">
-<h3>Data preprocessing and exploratory data analysis<a class="headerlink" href="#data-preprocessing-and-exploratory-data-analysis" title="Permalink to this headline"></a></h3>
+<h3>Data preprocessing and exploratory data analysis<a class="headerlink" href="#data-preprocessing-and-exploratory-data-analysis" title="Permalink to this heading"></a></h3>
 <section id="filter-out-lowly-expressed-genes">
-<h4>Filter out lowly-expressed genes<a class="headerlink" href="#filter-out-lowly-expressed-genes" title="Permalink to this headline"></a></h4>
+<h4>Filter out lowly-expressed genes<a class="headerlink" href="#filter-out-lowly-expressed-genes" title="Permalink to this heading"></a></h4>
 </section>
 <section id="examine-variance-in-our-data-with-principal-component-analysis">
-<h4>Examine variance in our data with Principal Component Analysis<a class="headerlink" href="#examine-variance-in-our-data-with-principal-component-analysis" title="Permalink to this headline"></a></h4>
+<h4>Examine variance in our data with Principal Component Analysis<a class="headerlink" href="#examine-variance-in-our-data-with-principal-component-analysis" title="Permalink to this heading"></a></h4>
 </section>
 <section id="examine-similarity-between-developmental-stages">
-<h4>Examine similarity between developmental stages<a class="headerlink" href="#examine-similarity-between-developmental-stages" title="Permalink to this headline"></a></h4>
+<h4>Examine similarity between developmental stages<a class="headerlink" href="#examine-similarity-between-developmental-stages" title="Permalink to this heading"></a></h4>
 </section>
 <section id="compare-the-expression-of-specific-genes-over-the-developmental-stages">
-<h4>Compare the expression of specific genes over the developmental stages<a class="headerlink" href="#compare-the-expression-of-specific-genes-over-the-developmental-stages" title="Permalink to this headline"></a></h4>
+<h4>Compare the expression of specific genes over the developmental stages<a class="headerlink" href="#compare-the-expression-of-specific-genes-over-the-developmental-stages" title="Permalink to this heading"></a></h4>
 </section>
 </section>
 <section id="clustering-analysis">
-<h3>Clustering analysis<a class="headerlink" href="#clustering-analysis" title="Permalink to this headline"></a></h3>
+<h3>Clustering analysis<a class="headerlink" href="#clustering-analysis" title="Permalink to this heading"></a></h3>
 <section id="the-simple-approach-distance-based-clustering-with-k-means">
-<h4>The simple approach - distance-based clustering with K-Means<a class="headerlink" href="#the-simple-approach-distance-based-clustering-with-k-means" title="Permalink to this headline"></a></h4>
+<h4>The simple approach - distance-based clustering with K-Means<a class="headerlink" href="#the-simple-approach-distance-based-clustering-with-k-means" title="Permalink to this heading"></a></h4>
 </section>
 <section id="fine-tuning-our-approach-density-based-clustering-with-hdbscan">
-<h4>Fine-tuning our approach - density-based clustering with HDBSCAN<a class="headerlink" href="#fine-tuning-our-approach-density-based-clustering-with-hdbscan" title="Permalink to this headline"></a></h4>
+<h4>Fine-tuning our approach - density-based clustering with HDBSCAN<a class="headerlink" href="#fine-tuning-our-approach-density-based-clustering-with-hdbscan" title="Permalink to this heading"></a></h4>
 </section>
 <section id="the-complex-approach-ensemble-based-clustering-with-clicom">
-<h4>The complex approach - ensemble-based clustering with CLICOM<a class="headerlink" href="#the-complex-approach-ensemble-based-clustering-with-clicom" title="Permalink to this headline"></a></h4>
+<h4>The complex approach - ensemble-based clustering with CLICOM<a class="headerlink" href="#the-complex-approach-ensemble-based-clustering-with-clicom" title="Permalink to this heading"></a></h4>
 </section>
 </section>
 <section id="enrichment-analysis">
-<h3>Enrichment analysis<a class="headerlink" href="#enrichment-analysis" title="Permalink to this headline"></a></h3>
+<h3>Enrichment analysis<a class="headerlink" href="#enrichment-analysis" title="Permalink to this heading"></a></h3>
 <section id="running-enrichment-analysis">
-<h4>Running enrichment analysis<a class="headerlink" href="#running-enrichment-analysis" title="Permalink to this headline"></a></h4>
+<h4>Running enrichment analysis<a class="headerlink" href="#running-enrichment-analysis" title="Permalink to this heading"></a></h4>
 </section>
 </section>
 </section>
 <section id="analysis-2-differential-expression-data">
-<h2>Analysis #2 - differential expression data<a class="headerlink" href="#analysis-2-differential-expression-data" title="Permalink to this headline"></a></h2>
+<h2>Analysis #2 - differential expression data<a class="headerlink" href="#analysis-2-differential-expression-data" title="Permalink to this heading"></a></h2>
 <section id="id1">
-<h3>The dataset<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h3>
+<h3>The dataset<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
 <p>We will start by analyzing XYZ. This dataset describes…</p>
 <p>Let’s start by loading the dataset:</p>
 <p>#TODO: PtrSc</p>
 </section>
 <section id="data-filtering-and-visualization-with-pipelines">
-<h3>Data filtering and visualization with Pipelines<a class="headerlink" href="#data-filtering-and-visualization-with-pipelines" title="Permalink to this headline"></a></h3>
+<h3>Data filtering and visualization with Pipelines<a class="headerlink" href="#data-filtering-and-visualization-with-pipelines" title="Permalink to this heading"></a></h3>
 <p>#TODO</p>
 <section id="apply-the-pipeline-to-our-datasets">
-<h4>Apply the Pipeline to our datasets<a class="headerlink" href="#apply-the-pipeline-to-our-datasets" title="Permalink to this headline"></a></h4>
+<h4>Apply the Pipeline to our datasets<a class="headerlink" href="#apply-the-pipeline-to-our-datasets" title="Permalink to this heading"></a></h4>
 </section>
 </section>
 <section id="visualizing-and-extracting-gene-set-interesctions">
-<h3>Visualizing and extracting gene set interesctions<a class="headerlink" href="#visualizing-and-extracting-gene-set-interesctions" title="Permalink to this headline"></a></h3>
+<h3>Visualizing and extracting gene set interesctions<a class="headerlink" href="#visualizing-and-extracting-gene-set-interesctions" title="Permalink to this heading"></a></h3>
 <section id="create-a-venn-diagram">
-<h4>Create a Venn diagram<a class="headerlink" href="#create-a-venn-diagram" title="Permalink to this headline"></a></h4>
+<h4>Create a Venn diagram<a class="headerlink" href="#create-a-venn-diagram" title="Permalink to this heading"></a></h4>
 </section>
 <section id="extract-the-subsets-we-are-interested-in">
-<h4>Extract the subsets we are interested in<a class="headerlink" href="#extract-the-subsets-we-are-interested-in" title="Permalink to this headline"></a></h4>
+<h4>Extract the subsets we are interested in<a class="headerlink" href="#extract-the-subsets-we-are-interested-in" title="Permalink to this heading"></a></h4>
 </section>
 </section>
 <section id="id2">
-<h3>Enrichment analysis<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
+<h3>Enrichment analysis<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
 <section id="define-a-background-set">
-<h4>Define a background set<a class="headerlink" href="#define-a-background-set" title="Permalink to this headline"></a></h4>
+<h4>Define a background set<a class="headerlink" href="#define-a-background-set" title="Permalink to this heading"></a></h4>
 </section>
 <section id="define-our-custom-enrichment-attributes">
-<h4>Define our custom enrichment attributes<a class="headerlink" href="#define-our-custom-enrichment-attributes" title="Permalink to this headline"></a></h4>
+<h4>Define our custom enrichment attributes<a class="headerlink" href="#define-our-custom-enrichment-attributes" title="Permalink to this heading"></a></h4>
 </section>
 <section id="id3">
-<h4>Running enrichment analysis<a class="headerlink" href="#id3" title="Permalink to this headline"></a></h4>
+<h4>Running enrichment analysis<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h4>
 </section>
 </section>
 </section>

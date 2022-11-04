@@ -15,7 +15,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -69,6 +71,10 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.filtering.Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rnalysis.filtering.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.Pipeline.__init__"><code class="docutils literal notranslate"><span class="pre">Pipeline.__init__()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.add_function.html">rnalysis.filtering.Pipeline.add_function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.apply_to.html">rnalysis.filtering.Pipeline.apply_to</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.export_pipeline.html">rnalysis.filtering.Pipeline.export_pipeline</a></li>
@@ -76,6 +82,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Pipeline.remove_last_function.html">rnalysis.filtering.Pipeline.remove_last_function</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.readable_name.html">rnalysis.filtering.readable_name</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -113,10 +120,10 @@
            <div itemprop="articleBody">
              
   <section id="rnalysis-filtering-pipeline">
-<h1>rnalysis.filtering.Pipeline<a class="headerlink" href="#rnalysis-filtering-pipeline" title="Permalink to this headline"></a></h1>
+<h1>rnalysis.filtering.Pipeline<a class="headerlink" href="#rnalysis-filtering-pipeline" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="rnalysis.filtering.Pipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rnalysis.filtering.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_type:</span> <span class="pre">typing.Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.Filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.CountFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.DESeqFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.FoldChangeFilter]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'rnalysis.filtering.Filter'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Pipeline" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rnalysis.filtering.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_type:</span> <span class="pre">~typing.Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.Filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.CountFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.DESeqFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.FoldChangeFilter]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'rnalysis.filtering.Filter'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Pipeline" title="Permalink to this definition"></a></dt>
 <dd><p>A collection of functions to be applied sequentially to Filter objects.</p>
 <p><strong>Attributes</strong></p>
 <dl class="simple">
@@ -129,7 +136,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="rnalysis.filtering.Pipeline.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_type:</span> <span class="pre">typing.Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.Filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.CountFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.DESeqFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnalysis.filtering.FoldChangeFilter]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'rnalysis.filtering.Filter'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Pipeline.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_type:</span> <span class="pre">~typing.Union[str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.Filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.CountFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.DESeqFilter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">~rnalysis.filtering.FoldChangeFilter]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'rnalysis.filtering.Filter'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.filtering.Pipeline.__init__" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>filter_type</strong> (<em>str</em><em> or </em><em>Filter object</em><em> (</em><em>default=filtering.Filter</em><em>)</em>) – the type of Filter object the Pipeline can be applied to.</p>

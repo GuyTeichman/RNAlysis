@@ -1,4 +1,4 @@
-﻿rnalysis.filtering.DESeqFilter
+rnalysis.filtering.DESeqFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -42,6 +42,7 @@
     DESeqFilter.tail
     DESeqFilter.text_filters
     DESeqFilter.transform
+    DESeqFilter.translate_gene_ids
     DESeqFilter.union
     DESeqFilter.volcano_plot
     

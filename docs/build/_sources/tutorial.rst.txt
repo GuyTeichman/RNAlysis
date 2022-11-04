@@ -4,7 +4,7 @@ A-to-Z tutorial - example analysis
 
 
 ***********************************
-Intro
+Intro and recommendations
 ***********************************
 
 In this A-to-Z tutorial, we are going to analyze two datasets step-by-step, with each analysis covering different aspects of using *RNAlysis*.

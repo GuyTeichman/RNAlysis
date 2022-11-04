@@ -15,7 +15,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -69,6 +71,7 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Filter.html">rnalysis.filtering.Filter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.FoldChangeFilter.html">rnalysis.filtering.FoldChangeFilter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.Pipeline.html">rnalysis.filtering.Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.filtering.readable_name.html">rnalysis.filtering.readable_name</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
@@ -105,7 +108,7 @@
            <div itemprop="articleBody">
              
   <section id="rnalysis-filtering">
-<h1>rnalysis.filtering<a class="headerlink" href="#rnalysis-filtering" title="Permalink to this headline"></a></h1>
+<h1>rnalysis.filtering<a class="headerlink" href="#rnalysis-filtering" title="Permalink to this heading"></a></h1>
 <p class="rubric">Description</p>
 <span class="target" id="module-rnalysis.filtering"></span><p>This module can filter, normalize, intersect and visualize tabular data such as read counts and differential expression data.
 Any tabular data saved in a csv format can be imported. Use this module to perform various filtering operations on your data,  normalize your data, perform set operations (union, intersection, etc), run basic exploratory analyses and plots (such as PCA, clustergram, violin plots, scatter, etc), save the filtered data to your computer, and more.
@@ -131,6 +134,18 @@ When you save filtered/modified data, its new file name will include by default 
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Pipeline.html#rnalysis.filtering.Pipeline" title="rnalysis.filtering.Pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Pipeline</span></code></a>(filter_type, ...)</p></td>
 <td><p>A collection of functions to be applied sequentially to Filter objects.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.readable_name.html#rnalysis.filtering.readable_name" title="rnalysis.filtering.readable_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">readable_name</span></code></a>(name)</p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
