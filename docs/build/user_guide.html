@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User guide &mdash; RNAlysis 3.1.0 documentation</title>
+  <title>User guide &mdash; RNAlysis 3.2.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -1072,7 +1072,7 @@ HDBSCAN offers multiple advantages over more traditional clustering methods:</p>
 The CLICOM algorithm incorporates the results of multiple clustering solutions, which can come from different clustering algorithms with differing clustering parameters, and uses these clustering solutions to create a combined clustering solution.
 CLICOM offers multiple advantages over more traditional clustering methods:</p>
 <ol class="arabic simple">
-<li><p>The ensemble clustering approach</p></li>
+<li><p>The ensemble clustering approach allows you to combine the results of multiple clustering algorithms with multiple tuning parameters, potentially making up for the weaknesses of each individual clustering method, and only taking into account patterns that robustly appear in many clustering solutions.</p></li>
 <li><p>Unlike most other clustering methods, CLICOM does not have to force every data point to belong to a cluster. Instead, it can classify data points as outliers, excluding them from the final clustering solution.</p></li>
 <li><p>CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the <em>evidence threshold</em> (<cite>evidence_threshold</cite>).</p></li>
 </ol>
@@ -1080,7 +1080,7 @@ CLICOM offers multiple advantages over more traditional clustering methods:</p>
 <ul class="simple">
 <li><p><cite>evidence_threshold</cite>: a higher evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.</p></li>
 <li><p><cite>cluster_unclustered_features</cite>: if True, CLICOM will force every feature to belong to a discovered cluster. Otherwise, features can be classified as noise and remain unclustered.</p></li>
-<li><p><cite>min_cluster_size</cite>: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be filtered out and classified as noise.</p></li>
+<li><p><cite>min_cluster_size</cite>: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be classified as noise and filtered out of the final result, or merged into other clusters (depending on the value of <cite>cluster_unclustered_features</cite>).</p></li>
 </ul>
 <a class="reference internal image-reference" href="_images/clicom_all.png"><img alt="CLICOM output figure" src="_images/clicom_all.png" style="width: 450px;" /></a>
 <div class="line-block">
@@ -1487,7 +1487,7 @@ Annotations with the <em>NOT</em> qualifier are usually ignored during enrichmen
 <p>For example:</p>
 <blockquote>
 <div><figure class="align-center" id="id50">
-<a class="reference internal image-reference" href="http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="http://geneontology.org/assets/hexose-biosynthetic-process.png" src="http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
+<a class="reference internal image-reference" href="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png" src="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
 <figcaption>
 <p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id50" title="Permalink to this image"></a></p>
 </figcaption>

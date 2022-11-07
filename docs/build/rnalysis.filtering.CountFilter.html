@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter &mdash; RNAlysis 3.1.0 documentation</title>
+  <title>rnalysis.filtering.CountFilter &mdash; RNAlysis 3.2.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -242,7 +242,7 @@
 <td><p>Removes features/rows whose sum is belove 'threshold'.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_low_reads.html#rnalysis.filtering.CountFilter.filter_low_reads" title="rnalysis.filtering.CountFilter.filter_low_reads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_low_reads</span></code></a>([threshold, ...])</p></td>
-<td><p>remove features which have less than 'threshold' reads all columns.</p></td>
+<td><p>Filter out features which are lowly-expressed in all columns, keeping only features with at least 'threshold'         reads in at least one column.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_missing_values.html#rnalysis.filtering.CountFilter.filter_missing_values" title="rnalysis.filtering.CountFilter.filter_missing_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_missing_values</span></code></a>([columns, ...])</p></td>
 <td><p>Remove all rows whose values in the specified columns are missing (NaN).</p></td>

@@ -16,10 +16,12 @@ Changed
 *******
 * Improved performance of some aspects of the graphical user interface.
 * RNAlysis' basic features are now supported on Python versions 3.9 and 3.10.
+* CountFilter.pca() now generates a plot for *every* pair of Principal Components requested by the user.
 
 Fixed
 ******
 * Users can now queue multiple computationally-intense enrichment/clustering tasks while another task is running.
+* Fixed a bug where sometimes some function parameters would disappear from the graphical user interface.
 
 3.1.0 (2022-10-16)
 ------------------
