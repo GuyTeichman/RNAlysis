@@ -1721,7 +1721,7 @@ class FilterTabPage(TabPage):
             self.deseq_window.show()
 
     def view_full_dataframe(self):
-        df_window = gui_windows.DataFrameView(self.filter_obj.df, self.filter_obj.fname)
+        df_window = gui_windows.DataFrameView(self.filter_obj.df, self.name)
         self.overview_widgets['full_table_view'] = df_window
         df_window.show()
 
