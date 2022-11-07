@@ -40,7 +40,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.func = func
         self.signature = generic.get_method_signature(self.func)
         self.desc, self.param_desc = generic.get_method_docstring(self.func)
-        self.excluded_params = excluded_params
+        self.excluded_params = excluded_params.copy()
 
         self.widgets = {}
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -1372,7 +1372,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         for func in funcs:
             self.funcs[generic.get_method_readable_name(func, filter_obj)] = func
         self.filter_obj = filter_obj
-        self.excluded_params = self.EXCLUDED_PARAMS
+        self.excluded_params = self.EXCLUDED_PARAMS.copy()
         if additional_excluded_params is not None:
             self.excluded_params.update(additional_excluded_params)
         self.pipeline_mode = pipeline_mode
