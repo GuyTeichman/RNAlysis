@@ -399,7 +399,7 @@ Data visualization and exploratory data analysis with DESeqFilter
 
 With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:
 
-.. figure::  volcano.png
+.. figure:: /figures/volcano.png
            :align:   center
            :scale: 70 %
 
@@ -572,25 +572,25 @@ When clustering genomic features in a :term:`CountFilter` object, the called fun
 
 Expression plots of the resulting clusters can be generated in one of multiple styles:
 
- .. figure::  kmeans_all.png
+ .. figure:: /figures/kmeans_all.png
            :align:   center
            :scale: 40 %
 
            Example expression plot of clustering results with plot_style='all'
 
- .. figure::  kmeans_std_area.png
+ .. figure:: /figures/kmeans_std_area.png
            :align:   center
            :scale: 40 %
 
            Example expression plot of clustering results with plot_style='std_area'
 
- .. figure::  kmeans_std_bar.png
+ .. figure:: /figures/kmeans_std_bar.png
            :align:   center
            :scale: 40 %
 
            Example expression plot of clustering results with plot_style='std_bar'
 
- .. figure::  clustering_PCA_clicom.png
+ .. figure:: /figures/clustering_PCA_clicom.png
            :align:   center
            :scale: 40 %
 
@@ -649,9 +649,9 @@ Finally, you can use a model selection method to estimate the number of clusters
 
 To help in evaluating the result of these model selection methods, *RNAlysis* will also plot a summary of their outcome:
 
-.. image::  gap_statistic.png
+.. image:: /figures/ gap_statistic.png
            :width: 60 %
-.. image::  silhouette.png
+.. image:: /figures/ silhouette.png
            :width: 30 %
 
 |
@@ -664,7 +664,7 @@ The algorithm is initiated by picking a random starting point, and therefore the
 
 The main advantage of K-means clustering is its simplicity - it contains one main tuning parameter (*K*, the expected number of clusters in the data).
 
-.. image:: kmeans_all.png
+.. image:: /figures/kmeans_all.png
   :width: 450
   :alt: K-means clustering output figure
 
@@ -693,7 +693,7 @@ K-medoids clustering in *RNAlysis* supports the following distance metrics:
 * hammming
 * all other pairwise distance metrics supported by scikit-learn
 
-.. image:: kmedoids_all.png
+.. image:: /figures/kmedoids_all.png
   :width: 450
   :alt: K-medoids clustering output figure
 
@@ -728,7 +728,7 @@ Hierarchical clustering in *RNAlysis* supports the following distance metrics:
 * YR1 (see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_)
 
 
-.. image:: hierarchical_all.png
+.. image:: /figures/hierarchical_all.png
   :width: 450
   :alt: Hierarchical clustering output figure
 
@@ -760,7 +760,7 @@ HDBSCAN in *RNAlysis* supports the following distance metrics:
 * hammming
 * all other pairwise distance metrics elaborated in the `HDBSCAN documentation <https://hdbscan.readthedocs.io/en/latest/basic_hdbscan.html?#what-about-different-metrics>`_.
 
-.. image:: hdbscan_all.png
+.. image:: /figures/hdbscan_all.png
   :width: 450
   :alt: HDBSCAN output figure
 
@@ -772,7 +772,7 @@ CLICOM is an ensemble-based clustering algorithm (see https://doi.org/10.1016/j.
 The CLICOM algorithm incorporates the results of multiple clustering solutions, which can come from different clustering algorithms with differing clustering parameters, and uses these clustering solutions to create a combined clustering solution.
 CLICOM offers multiple advantages over more traditional clustering methods:
 
-1. The ensemble clustering approach
+1. The ensemble clustering approach allows you to combine the results of multiple clustering algorithms with multiple tuning parameters, potentially making up for the weaknesses of each individual clustering method, and only taking into account patterns that robustly appear in many clustering solutions.
 2. Unlike most other clustering methods, CLICOM does not have to force every data point to belong to a cluster. Instead, it can classify data points as outliers, excluding them from the final clustering solution.
 3. CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the *evidence threshold* (`evidence_threshold`).
 
@@ -780,9 +780,9 @@ CLICOM offers multiple advantages over more traditional clustering methods:
 
 * `evidence_threshold`: a higher evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.
 * `cluster_unclustered_features`: if True, CLICOM will force every feature to belong to a discovered cluster. Otherwise, features can be classified as noise and remain unclustered.
-* `min_cluster_size`: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be filtered out and classified as noise.
+* `min_cluster_size`: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be classified as noise and filtered out of the final result, or merged into other clusters (depending on the value of `cluster_unclustered_features`).
 
-.. image:: clicom_all.png
+.. image:: /figures/clicom_all.png
   :width: 450
   :alt: CLICOM output figure
 
@@ -795,7 +795,7 @@ Data visualization and exploratory data analysis with CountFilter
 
 With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
 
-.. figure::  pairplot.png
+.. figure:: /figures/pairplot.png
            :align:   center
            :scale: 40 %
 
@@ -803,7 +803,7 @@ With CountFilter.pairplot, you can get a quick overview of the distribution of c
 
 With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:
 
- .. figure::  pca.png
+ .. figure:: /figures/pca.png
            :align:   center
            :scale: 40 %
 
@@ -811,7 +811,7 @@ With CountFilter.pca, you can perform a principal component analysis and look fo
 
 With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:
 
- .. figure::  plot_expression.png
+ .. figure:: /figures/plot_expression.png
            :align:   center
            :scale: 60 %
 
@@ -819,7 +819,7 @@ With CountFilter.plot_expression, you can examine the average expression of spec
 
 With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:
 
- .. figure::  clustergram.png
+ .. figure:: /figures/clustergram.png
            :align:   center
            :scale: 40 %
 
@@ -1205,7 +1205,7 @@ Gene Ontology terms have a somewhat hierarchical relationship that is defined as
 
 For example:
 
-        .. figure::  http://geneontology.org/assets/hexose-biosynthetic-process.png
+        .. figure:: /figures/http://geneontology.org/assets/hexose-biosynthetic-process.png
            :align:   center
            :scale: 35 %
 
@@ -1236,14 +1236,14 @@ After *RNAlysis* is done calculating the results of your enrichment analysis, it
 
 You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
 
-        .. figure::  plot_enrichment_results_go.png
+        .. figure:: /figures/plot_enrichment_results_go.png
            :align:   center
            :scale: 40 %
 
            `plot_horizontal`=True
 
 
-        .. figure::  plot_enrichment_results_go_vertical.png
+        .. figure:: /figures/plot_enrichment_results_go_vertical.png
            :align:   center
            :scale: 40 %
 
@@ -1257,7 +1257,7 @@ If you don't specify plotting parameters, *RNAlysis* will generate a horizontal 
 
 In addition, *RNAlysis* can generate an ontology graph, depicting all of the statistically significant GO terms and their hierarchical relationships:
 
-        .. figure::  ontology_graph.png
+        .. figure:: /figures/ontology_graph.png
            :align:   center
            :scale: 40 %
 
@@ -1362,14 +1362,14 @@ After *RNAlysis* is done calculating the results of your enrichment analysis, it
 
 You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
 
-        .. figure::  plot_enrichment_results.png
+        .. figure:: /figures/plot_enrichment_results.png
            :align:   center
            :scale: 40 %
 
            `plot_horizontal`=True
 
 
-        .. figure::  plot_enrichment_results_vertical.png
+        .. figure:: /figures/plot_enrichment_results_vertical.png
            :align:   center
            :scale: 40 %
 
@@ -1465,14 +1465,14 @@ After performing enrichment analysis, *RNAlysis* will automatically plot a summa
 You can determine the orientation of the bar plot (horizontal or vertical) using the `plot_horizontal` parameter:
 
 
-        .. figure::  plot_enrichment_results.png
+        .. figure:: /figures/plot_enrichment_results.png
            :align:   center
            :scale: 40 %
 
            `plot_horizontal`=True
 
 
-        .. figure::  plot_enrichment_results_vertical.png
+        .. figure:: /figures/plot_enrichment_results_vertical.png
            :align:   center
            :scale: 40 %
 
@@ -1560,13 +1560,13 @@ To better fit the visualization of the results to your needs, you can specify tw
 
 `plot_style' can accept either 'overlap' or 'interleaved', and will draw the histogram in one of the following two styles:
 
-        .. figure::  hist_overlap.png
+        .. figure:: /figures/hist_overlap.png
            :align:   center
            :scale: 40 %
 
            `plot_style`='overlap'
 
-        .. figure::  hist_interleaved.png
+        .. figure:: /figures/hist_interleaved.png
            :align:   center
            :scale: 40 %
 
@@ -1609,7 +1609,7 @@ In addition, the enrichment module includes functions for visualisation of sets 
 Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the :term:`Attribute Reference Table` (you can read more about attributes in :ref:`reference-table-ref`).
 Venn diagrams are limited to 2-3 sets:
 
-       .. figure::  venn.png
+       .. figure:: /figures/venn.png
            :align:   center
            :scale: 70 %
 
@@ -1617,7 +1617,7 @@ Venn diagrams are limited to 2-3 sets:
 
 While UpSet plots can include any number of sets:
 
-        .. figure::  upsetplot.png
+        .. figure:: /figures/upsetplot.png
            :align:   center
            :scale: 70 %
 
@@ -1735,7 +1735,7 @@ For example::
 After defining the dictionary of sets, we can use it to plot set intersection via the `enrichment.venn_diagram()` or `enrichment.upset_plot()` functions.
 Venn diagrams in *RNAlysis* are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.
 
-       .. figure::  venn.png
+       .. figure:: /figures/venn.png
            :align:   center
            :scale: 70 %
 
@@ -1743,7 +1743,7 @@ Venn diagrams in *RNAlysis* are plotted with relatively accurate proportions and
 
 UpSet plots support the visualization of much larger groups of sets. You can read more about UpSet plots here: https://upset.app/
 
-        .. figure::  upsetplot.png
+        .. figure:: /figures/upsetplot.png
            :align:   center
            :scale: 70 %
 

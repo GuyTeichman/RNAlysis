@@ -395,21 +395,21 @@ class FeatureSet:
         :return: a pandas DataFrame with GO terms as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  ontology_graph.png
+        .. figure:: /figures/ontology_graph.png
            :align:   center
            :scale: 60 %
 
            Example plot of go_enrichment(plot_ontology_graph=True)
 
 
-        .. figure::  plot_enrichment_results_go.png
+        .. figure:: /figures/plot_enrichment_results_go.png
            :align:   center
            :scale: 60 %
 
            Example plot of go_enrichment()
 
 
-        .. figure::  plot_enrichment_results_go_vertical.png
+        .. figure:: /figures/plot_enrichment_results_go_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -512,14 +512,14 @@ class FeatureSet:
         and a matplotlib Figure, if 'return_figure' is set to True.
 
 
-        .. figure::  plot_enrichment_results_kegg.png
+        .. figure:: /figures/plot_enrichment_results_kegg.png
            :align:   center
            :scale: 60 %
 
            Example plot of kegg_enrichment()
 
 
-        .. figure::  plot_enrichment_results_kegg_vertical.png
+        .. figure:: /figures/plot_enrichment_results_kegg_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -615,14 +615,14 @@ class FeatureSet:
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  plot_enrichment_results.png
+        .. figure:: /figures/plot_enrichment_results.png
            :align:   center
            :scale: 60 %
 
            Example plot of enrich_randomization()
 
 
-        .. figure::  plot_enrichment_results_vertical.png
+        .. figure:: /figures/plot_enrichment_results_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -714,14 +714,14 @@ class FeatureSet:
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  plot_enrichment_results.png
+        .. figure:: /figures/plot_enrichment_results.png
            :align:   center
            :scale: 60 %
 
            Example plot of user_defined_enrichment()
 
 
-        .. figure::  plot_enrichment_results_vertical.png
+        .. figure:: /figures/plot_enrichment_results_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -813,14 +813,14 @@ class FeatureSet:
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  plot_enrichment_results.png
+        .. figure:: /figures/plot_enrichment_results.png
            :align:   center
            :scale: 60 %
 
            Example plot of enrich_hypergeometric()
 
 
-        .. figure::  plot_enrichment_results_vertical.png
+        .. figure:: /figures/plot_enrichment_results_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -901,13 +901,13 @@ class FeatureSet:
         and a matplotlib Figure, if 'return_figure' is set to True.
 
 
-        .. figure::  hist_overlap.png
+        .. figure:: /figures/hist_overlap.png
            :align:   center
            :scale: 60 %
 
            Example plot of non_categorical_enrichment(plot_style`='overlap')
 
-        .. figure::  hist_interleaved.png
+        .. figure:: /figures/hist_interleaved.png
            :align:   center
            :scale: 60 %
 
@@ -1127,21 +1127,21 @@ class RankedSet(FeatureSet):
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  ontology_graph_singlelist.png
+        .. figure:: /figures/ontology_graph_singlelist.png
            :align:   center
            :scale: 60 %
 
            Example plot of single_set_go_enrichment(plot_ontology_graph=True)
 
 
-        .. figure::  plot_enrichment_results_go_singlelist.png
+        .. figure:: /figures/plot_enrichment_results_go_singlelist.png
            :align:   center
            :scale: 60 %
 
            Example plot of single_set_go_enrichment()
 
 
-        .. figure::  plot_enrichment_results_go_singlelist_vertical.png
+        .. figure:: /figures/plot_enrichment_results_go_singlelist_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -1214,21 +1214,21 @@ class RankedSet(FeatureSet):
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  pathway_graph_singlelist.png
+        .. figure:: /figures/pathway_graph_singlelist.png
            :align:   center
            :scale: 60 %
 
            Example plot of single_set_kegg_enrichment(plot_pathway_graphs=True)
 
 
-        .. figure::  plot_enrichment_results_kegg_single_set.png
+        .. figure:: /figures/plot_enrichment_results_kegg_single_set.png
            :align:   center
            :scale: 60 %
 
            Example plot of single_set_kegg_enrichment()
 
 
-        .. figure::  plot_enrichment_results_kegg_single_set_vertical.png
+        .. figure:: /figures/plot_enrichment_results_kegg_single_set_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -1292,14 +1292,14 @@ class RankedSet(FeatureSet):
         :return: a pandas DataFrame with the indicated attribute names as rows/index; \
         and a matplotlib Figure, if 'return_figure' is set to True.
 
-        .. figure::  plot_enrichment_results_single_set.png
+        .. figure:: /figures/plot_enrichment_results_single_set.png
            :align:   center
            :scale: 60 %
 
            Example plot of single_set_enrichment()
 
 
-        .. figure::  plot_enrichment_results_single_set_vertical.png
+        .. figure:: /figures/plot_enrichment_results_single_set_vertical.png
            :align:   center
            :scale: 60 %
 
@@ -1420,7 +1420,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: It
     :returns: a dictionary of matplotlib axes, where the keys are 'matrix', 'intersections', 'totals', 'shading'.
 
 
-        .. figure::  upsetplot.png
+        .. figure:: /figures/upsetplot.png
            :align:   center
            :scale: 70 %
 
@@ -1529,7 +1529,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.
 
 
-        .. figure::  venn.png
+        .. figure:: /figures/venn.png
            :align:   center
            :scale: 70 %
 

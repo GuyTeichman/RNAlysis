@@ -273,12 +273,11 @@ class Filter:
     def _from_string(msg: str = '', delimiter: str = '\n'):
 
         """
-        Takes a manual string input from the user, and then splits it using a delimiter into a list of values. \
+        Takes a manual string input from the user, and then splits it using a delimiter into a list of values.
 
         :param msg: a promprt to be printed to the user
         :param delimiter: the delimiter used to separate the values. Default is '\n'
         :return: A list of the comma-seperated values the user inserted.
-
         """
         string = input(msg)
         split = string.split(sep=delimiter)
@@ -2020,7 +2019,7 @@ class DESeqFilter(Filter):
         :type alpha: float between 0 and 1
         :param alpha: the significance threshold to color data points as significantly up/down-regulated.
 
-        .. figure::  volcano.png
+        .. figure:: /figures/volcano.png
            :align:   center
            :scale: 70 %
 
@@ -2272,7 +2271,7 @@ class CountFilter(Filter):
         and not with the raw data. If False, the pairplot will be calculated with the raw data.
         :return: An instance of seaborn.PairGrid.
 
-        .. figure::  pairplot.png
+        .. figure:: /figures/pairplot.png
            :align:   center
            :scale: 40 %
 
@@ -2741,7 +2740,8 @@ class CountFilter(Filter):
     def filter_low_reads(self, threshold: float = 5, opposite: bool = False, inplace: bool = True):
 
         """
-        remove features which have less than 'threshold' reads all columns.
+        Filter out features which are lowly-expressed in all columns, keeping only features with at least 'threshold' \
+        reads in at least one column.
 
         :type threshold: float
         :param threshold: The minimal number of reads (counts, rpm, rpkm, tpm, etc) a feature should have \
@@ -2899,13 +2899,14 @@ class CountFilter(Filter):
             Filtered 2259 features, leaving 67 of the original 2326 features. Filtering result saved to new object.
             Filtered 2276 features, leaving 50 of the original 2326 features. Filtering result saved to new object.
 
-        .. figure::  kmeans_all.png
+
+        .. figure:: /figures/kmeans_all.png
            :align:   center
 
            Example plot of split_kmeans(plot_style='all')
 
-         .. figure::  clustering_PCA_kmeans.png
-            :align:   center
+        .. figure:: /figures/clustering_PCA_kmeans.png
+           :align:   center
 
            Example plot of split_kmeans()
         """
@@ -2989,12 +2990,12 @@ class CountFilter(Filter):
             Filtered 2252 features, leaving 74 of the original 2326 features. Filtering result saved to new object.
             Filtered 2286 features, leaving 40 of the original 2326 features. Filtering result saved to new object.
 
-        .. figure::  hierarchical_all.png
+        .. figure:: /figures/hierarchical_all.png
            :align:   center
 
            Example plot of split_hierarchical(plot_style='all')
 
-                   .. figure::  clustering_PCA_hierarchical.png
+                   .. figure:: /figures/clustering_PCA_hierarchical.png
            :align:   center
 
            Example plot of split_hierarchical()
@@ -3080,12 +3081,12 @@ class CountFilter(Filter):
             Filtered 2275 features, leaving 51 of the original 2326 features. Filtering result saved to new object.
 
 
-        .. figure::  kmedoids_all.png
+        .. figure:: /figures/kmedoids_all.png
            :align:   center
 
            Example plot of split_kmedoids(plot_style='all')
 
-        .. figure::  clustering_PCA_kmedoids.png
+        .. figure:: /figures/clustering_PCA_kmedoids.png
            :align:   center
 
            Example plot of split_kmedoids()
@@ -3187,12 +3188,13 @@ class CountFilter(Filter):
             Filtered 2263 features, leaving 63 of the original 2326 features. Filtering result saved to new object.
             Filtered 2279 features, leaving 47 of the original 2326 features. Filtering result saved to new object.
 
-        .. figure::  clicom_all.png
+
+        .. figure:: /figures/clicom_all.png
            :align:   center
 
            Example plot of split_clicom(plot_style='all')
 
-         .. figure::  clustering_PCA_clicom.png
+        .. figure:: /figures/clustering_PCA_clicom.png
            :align:   center
 
            Example plot of split_clicom()
@@ -3285,12 +3287,12 @@ class CountFilter(Filter):
             Filtered 2244 features, leaving 82 of the original 2326 features. Filtering result saved to new object.
             Filtered 2246 features, leaving 80 of the original 2326 features. Filtering result saved to new object.
 
-        .. figure::  hdbscan_all.png
+        .. figure:: /figures/hdbscan_all.png
            :align:   center
 
            Example plot of split_hdbscan(plot_style='all')
 
-        .. figure::  clustering_PCA_hdbscan.png
+        .. figure:: /figures/clustering_PCA_hdbscan.png
            :align:   center
 
            Example plot of split_hdbscan()
@@ -3346,7 +3348,7 @@ class CountFilter(Filter):
         :return: A seaborn clustermap object.
 
 
-        .. figure::  clustergram.png
+        .. figure:: /figures/clustergram.png
            :align:   center
            :scale: 40 %
 
@@ -3389,7 +3391,7 @@ class CountFilter(Filter):
         :type count_unit: str, default 'Reads per million'
         :param count_unit: The unit of the count data. Will be displayed in the y axis.
 
-        .. figure::  plot_expression.png
+        .. figure:: /figures/plot_expression.png
            :align:   center
            :scale: 40 %
 
@@ -3468,13 +3470,13 @@ class CountFilter(Filter):
         :param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
         :type power_transform: bool (default=True)
         :type n_components: positive int (default=3)
-        :param n_components: number of PCA components to return.
+        :param n_components: number of PCA components to plot return.
         :type labels: bool (default=True)
         :param labels: if True, labels the points on the PCA plot.
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
 
-        .. figure::  pca.png
+        .. figure:: /figures/pca.png
            :align:   center
            :scale: 40 %
 
@@ -3579,7 +3581,7 @@ class CountFilter(Filter):
         :type highlight: Filter object or iterable of strings
         :return: a matplotlib axis object.
 
-        .. figure::  rpm_vs_rpm.png
+        .. figure:: /figures/rpm_vs_rpm.png
            :align:   center
            :scale: 60 %
 
@@ -3651,11 +3653,11 @@ class CountFilter(Filter):
         :param ylabel: the label of the Y axis.
         :return: a seaborn boxplot object.
 
-        .. figure::  ???.png
+        .. figure:: /figures/box_plot.png
            :align:   center
            :scale: 60 %
 
-           Example plot of box_plot()
+           Example plot of box_plot(add_scatter=True)
 
 
         """
@@ -3700,11 +3702,11 @@ class CountFilter(Filter):
         :param ylabel: the label of the Y axis.
         :return: a seaborn enhanced box-plot object.
 
-        .. figure::  ???.png
+        .. figure:: /figures/enhanced_box_plot.png
            :align:   center
            :scale: 60 %
 
-           Example plot of enhanced_box_plot()
+           Example plot of enhanced_box_plot(add_scatter=True)
 
         """
         self._validate_is_normalized()
@@ -3747,7 +3749,7 @@ class CountFilter(Filter):
         :param ylabel: the label of the Y axis.
         :return: a seaborn violin object.
 
-        .. figure::  violin.png
+        .. figure:: /figures/violin.png
            :align:   center
            :scale: 60 %
 
