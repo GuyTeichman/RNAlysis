@@ -3496,13 +3496,14 @@ class CountFilter(Filter):
         final_df['lib'] = pd.Series(parsing.flatten(samples))
 
         pc_var = pca_obj.explained_variance_ratio_
-        graphs = 2 if n_components > 2 else 1
         figs = []
-        for graph in range(graphs):
-            figs.append(CountFilter._plot_pca(
-                final_df=final_df[['Principal component 1', f'Principal component {2 + graph}', 'lib']],
-                pc1_var=pc_var[0], pc2_var=pc_var[1 + graph], sample_grouping=samples, labels=labels,
-                label_fontsize=label_fontsize))
+        for first_pc in range(n_components):
+            for second_pc in range(first_pc + 1, n_components):
+                figs.append(CountFilter._plot_pca(
+                    final_df=final_df[
+                        [f'Principal component {1 + first_pc}', f'Principal component {1 + second_pc}', 'lib']],
+                    pc1_var=pc_var[first_pc], pc2_var=pc_var[second_pc], sample_grouping=samples, labels=labels,
+                    label_fontsize=label_fontsize))
 
         return pca_obj, figs
 
