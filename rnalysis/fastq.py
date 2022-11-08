@@ -67,7 +67,6 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
 
     print(f"Running command: \n{' '.join(call)}")
     io.run_subprocess(call)
-    print("Done")
 
 
 def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
@@ -79,7 +78,8 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
                                  learn_bias: bool = False, seek_fusion_genes: bool = False,
                                  bootstrap_samples: Union[int, None] = None):
     """
-    Quantify transcript abundance in single-end mRNA sequencing data using kallisto.
+    Quantify transcript abundance in single-end mRNA sequencing data using kallisto. \
+    as described in `Soneson et al 2015 <https://doi.org/10.12688/f1000research.7563.2>`_.
 
     :param fastq_folder: Path to the folder containing the FASTQ files you want to quantify
     :type fastq_folder: str or Path
@@ -263,7 +263,6 @@ def _process_kallisto_outputs(output_folder, gtf_file):
     io.save_csv(tpm, output_folder.joinpath('transcript_tpm.csv'))
     io.save_csv(genes_scaled_tpm, output_folder.joinpath('kallisto_output_scaled_per_gene.csv'))
 
-    print("Done")
     return filtering.CountFilter.from_dataframe(genes_scaled_tpm, 'kallisto_output_scaled_per_gene',
                                                 is_normalized=False)
 
@@ -329,19 +328,33 @@ def _merge_kallisto_outputs(output_folder: Union[str, Path]):
 
 
 def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path: Union[str, Path]):
-    transcript_to_gene_map = _map_transcripts_to_genes(gtf_path)
-    library_sizes = counts.sum(axis=0) / (10 ** 6)
-    tpm_cpy = tpm.copy()
-    tpm_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
-    tpm_by_gene = tpm_cpy.groupby('Gene ID').sum()
-    scaled_tpm = tpm_by_gene.multiply(library_sizes, axis=1)
+    with tqdm(desc='Parsing GTF file', total=8) as pbar:
+        for use_name in [False, True]:
+            for use_version in [True, False]:
+                for split_ids in [True, False]:
+                    transcript_to_gene_map = _map_transcripts_to_genes(gtf_path, use_name, use_version, split_ids)
+                    pbar.update(1)
+                    if len(transcript_to_gene_map) == 0:
+                        continue
 
-    return scaled_tpm
+                    library_sizes = counts.sum(axis=0) / (10 ** 6)
+                    tpm_cpy = tpm.copy()
+                    tpm_cpy['Gene ID'] = pd.Series(transcript_to_gene_map)
+                    tpm_by_gene = tpm_cpy.groupby('Gene ID').sum()
+
+                    if tpm_by_gene.shape[0] == 0:
+                        continue
+                    scaled_tpm = tpm_by_gene.multiply(library_sizes, axis=1)
+                    pbar.update(8)
+                    return scaled_tpm
+
+    raise ValueError("Failed to map transcripts to genes with the given GTF file!")
 
 
-def _map_transcripts_to_genes(gtf_file: Union[str, Path], use_name: bool = False, use_version: bool = True):
+def _map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True,
+                              split_ids: bool = True):
     mapping = {}
-    with open(gtf_file, errors="ignore") as f:
+    with open(gtf_path, errors="ignore") as f:
         for line in f.readlines():
             if len(line) == 0 or line[0] == '#':
                 continue
@@ -363,8 +376,8 @@ def _map_transcripts_to_genes(gtf_file: Union[str, Path], use_name: bool = False
                 if 'transcript_id' not in d or 'gene_id' not in d:
                     continue
 
-                transcript_id = d['transcript_id'].split(".")[0]
-                gene_id = d['gene_id'].split(".")[0]
+                transcript_id = d['transcript_id'].split(".")[0] if split_ids else d['transcript_id']
+                gene_id = d['gene_id'].split(".")[0] if split_ids else d['gene_id']
                 if use_version:
                     if 'transcript_version' in d and 'gene_version' in d:
                         transcript_id += '.' + d['transcript_version']
@@ -465,7 +478,6 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
         log_filename = Path(output_folder).joinpath(f'cutadapt_log_{infile_stem}.log').absolute().as_posix()
         io.run_subprocess(cutadapt_call, log_filename=log_filename)
         print(f"File saved successfully at {cutadapt_call[-2]}")
-    print("Done")
 
 
 def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Union[str, Path]],
@@ -593,7 +605,6 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
             f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
         io.run_subprocess(cutadapt_call, log_filename=log_filename)
         print(f"Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}")
-    print("Done")
 
 
 def _parse_cutadapt_misc_args(quality_trimming: Union[int, None], trim_n: bool,
