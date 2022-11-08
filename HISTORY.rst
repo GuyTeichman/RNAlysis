@@ -22,6 +22,8 @@ Fixed
 ******
 * Users can now queue multiple computationally-intense enrichment/clustering tasks while another task is running.
 * Fixed a bug where sometimes some function parameters would disappear from the graphical user interface.
+* Fixed a bug where exceptions during computationally-intense tasks would cause *RNAlysis* to crash.
+* Auxillary windows are now properly minimized when analysis starts, and restored when analysis ends or encounters an error.
 
 3.1.0 (2022-10-16)
 ------------------
