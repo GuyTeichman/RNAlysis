@@ -12,7 +12,7 @@ import warnings
 from collections import OrderedDict
 from pathlib import Path
 from queue import Queue
-from typing import List, Union, Callable
+from typing import List, Tuple, Union, Callable
 
 import matplotlib
 import numpy as np
@@ -32,7 +32,7 @@ INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 class FuncExternalWindow(gui_widgets.MinMaxDialog):
     IGNORED_WIDGETS = {'help_link'}
-    paramsAccepted = QtCore.pyqtSignal(list, dict)
+    paramsAccepted = QtCore.pyqtSignal(list, dict, object)
 
     def __init__(self, func_name: str, func: Callable, excluded_params: set, parent=None):
         super().__init__(parent)
@@ -114,9 +114,10 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         kwargs = self.get_analysis_kwargs()
         self.showMinimized()
         try:
-            self.paramsAccepted.emit(args, kwargs)
-        finally:
+            self.paramsAccepted.emit(args, kwargs, self.showNormal)
+        except Exception as e:
             self.showNormal()
+            raise e
 
 
 class KallistoIndexWindow(FuncExternalWindow):
@@ -374,7 +375,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                  'kegg': {'plot_horizontal', 'plot_pathway_graphs', 'pathway_graphs_format'},
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
-    enrichmentStarted = QtCore.pyqtSignal(object, str)
+    enrichmentStarted = QtCore.pyqtSignal(object, str, object)
 
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
@@ -676,11 +677,11 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             else:
                 partial = functools.partial(func, feature_set_obj, background_genes=bg_set_obj, **kwargs)
 
-            self.enrichmentStarted.emit(partial, set_name)
+            self.enrichmentStarted.emit(partial, set_name, self.showNormal)
 
-        except Exception:
+        except Exception as e:
             self.showNormal()
-            raise Exception
+            raise e
 
 
 class SetOperationWindow(gui_widgets.MinMaxDialog):
@@ -1477,8 +1478,8 @@ class FilterTabPage(TabPage):
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
     GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change'}
     filterObjectCreated = QtCore.pyqtSignal(object)
-    startedClustering = QtCore.pyqtSignal(object, str)
-    startedJob = QtCore.pyqtSignal(object, str)
+    startedClustering = QtCore.pyqtSignal(object, str, object)
+    startedJob = QtCore.pyqtSignal(object, str, object)
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
@@ -1765,17 +1766,17 @@ class FilterTabPage(TabPage):
         self.name = str(self.filter_obj.fname.stem)
         self.update_table_name_label()
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
         # since clustering functions can be computationally intensive, start it in another thread
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
-            self.startedClustering.emit(partial, func_name)
+            self.startedClustering.emit(partial, func_name, finish_slot)
             return
         elif func_name in self.GENERAL_FUNCS and (not kwargs.get('inplace', False)):
 
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
-            self.startedJob.emit(partial, func_name)
+            self.startedJob.emit(partial, func_name, finish_slot)
             return
 
         prev_name = self.get_tab_name()
@@ -2447,7 +2448,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.progbar_start_time = 0
         self.progbar_completed_items = 0
         self.worker = None
-        self.thread = None
+        self.thread = QtCore.QThread()
         self.job_queue = Queue()
         self.job_timer = QtCore.QTimer(self)
         self.job_timer.timeout.connect(self.run_partial)
@@ -3236,17 +3237,20 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
-    @QtCore.pyqtSlot(object, str)
-    def start_generic_job(self, partial: Callable, func_name: str):
-        self.queue_partial(partial, self.finish_generic_job, func_name)
+    @QtCore.pyqtSlot(object, str, object)
+    def start_generic_job(self, partial: Callable, func_name: str, finish_slot: Union[Callable, None]):
+        slots = (self.finish_generic_job, finish_slot)
+        self.queue_partial(partial, slots, func_name)
 
-    def start_generic_job_from_params(self, func_name, func, args, kwargs):
+    def start_generic_job_from_params(self, func_name, func, args, kwargs, finish_slot: Union[Callable, None]):
         partial = functools.partial(func, *args, **kwargs)
-        self.start_generic_job(partial, func_name)
+        self.start_generic_job(partial, func_name, finish_slot)
 
     @QtCore.pyqtSlot(tuple)
     def finish_generic_job(self, worker_output):
         if len(worker_output) == 1:
+            if isinstance(worker_output[0], Exception):
+                raise worker_output[0]
             print("Done")
         else:
             assert len(worker_output) == 2
@@ -3255,12 +3259,17 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabs.currentWidget().process_outputs(return_val, func_name)
             self.tabs.currentWidget().update_tab()
 
-    @QtCore.pyqtSlot(object, str)
-    def start_clustering(self, partial: Callable, func_name: str):
-        self.queue_partial(partial, self.finish_clustering, func_name)
+    @QtCore.pyqtSlot(object, str, object)
+    def start_clustering(self, partial: Callable, func_name: str, finish_slot: Union[Callable, None]):
+        slots = (self.finish_clustering, finish_slot)
+        self.queue_partial(partial, slots, func_name)
 
     @QtCore.pyqtSlot(tuple)
     def finish_clustering(self, worker_output: tuple):
+        if len(worker_output) == 1:
+            if isinstance(worker_output[0], Exception):
+                raise worker_output[0]
+            return
         func_name: str = worker_output[-1]
         clustering_runner: clustering.ClusteringRunner = worker_output[0][1]
         return_val: tuple = worker_output[0][0]
@@ -3268,20 +3277,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().process_outputs(return_val, func_name)
         self.tabs.currentWidget().update_tab()
 
-    @QtCore.pyqtSlot(object, str)
-    def start_enrichment(self, partial: Callable, set_name: str):
-        self.queue_partial(partial, self.finish_enrichment, set_name)
+    @QtCore.pyqtSlot(object, str, object)
+    def start_enrichment(self, partial: Callable, set_name: str, finish_slot: Union[Callable, None]):
+        slots = (self.finish_enrichment, finish_slot)
+        self.queue_partial(partial, slots, set_name)
 
     @QtCore.pyqtSlot(tuple)
     def finish_enrichment(self, worker_output: tuple):
+        if len(worker_output) == 1:
+            if isinstance(worker_output[0], Exception):
+                raise worker_output[0]
+            return
         set_name = worker_output[-1]
         results, enrichment_runner = worker_output[0]
         self.show()
         enrichment_runner.plot_results()
         self.display_enrichment_results(results, set_name)
 
-    def queue_partial(self, partial: Callable, output_slot: Callable = None, *args):
-        self.job_queue.put((partial, output_slot, args))
+    def queue_partial(self, partial: Callable, output_slots: Union[Callable, Tuple[Callable, ...], None] = None, *args):
+        self.job_queue.put((partial, output_slots, args))
         self.jobQueued.emit()
 
     def run_partial(self):
@@ -3294,7 +3308,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
         except RuntimeError:
             self.thread = None
-        partial, output_slot, args = self.job_queue.get()
+        partial, output_slots, args = self.job_queue.get()
         # Create a worker object
         self.worker = gui_widgets.Worker(partial, *args)
 
@@ -3330,20 +3344,17 @@ class MainWindow(QtWidgets.QMainWindow):
         filtering.clustering.tqdm = alt_tqdm
         fastq.tqdm = alt_tqdm
 
-        #  Create the thread
-        self.thread = QtCore.QThread()
-
         #  Move worker to the thread
         self.worker.moveToThread(self.thread)
         #  Connect signals and slots
         self.worker.startProgBar.connect(self.start_progress_bar)
         self.thread.started.connect(self.worker.run)
-        if output_slot is not None:
-            self.worker.finished.connect(output_slot)
+        for slot in parsing.data_to_tuple(output_slots):
+            if slot is not None:
+                self.worker.finished.connect(slot)
         self.worker.finished.connect(self.run_partial)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
 
         self.thread.start()
 

@@ -263,9 +263,16 @@ class Worker(QtCore.QObject):
         super().__init__()
 
     def run(self):
-        result = self.partial()
+        args = []
+        try:
+            result = self.partial()
+        except Exception as e:
+            self.finished.emit((e,))
+            return
+
         if result is not None:
-            self.finished.emit((result, *self.args))
+            args = self.args
+        self.finished.emit((result, *args))
 
 
 class AltTQDM(QtCore.QObject):
