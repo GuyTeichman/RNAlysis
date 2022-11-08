@@ -66,7 +66,9 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     call.append(transcriptome_fasta.as_posix())
 
     print(f"Running command: \n{' '.join(call)}")
-    io.run_subprocess(call)
+    with tqdm(total=1, desc='Building index', unit='index') as pbar:
+        io.run_subprocess(call)
+        pbar.update()
 
 
 def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
@@ -163,9 +165,11 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
         this_call.append(item.as_posix())
         calls.append(this_call)
 
-    for kallisto_call in tqdm(calls, 'quantifying transcript abundance', unit='files'):
-        io.run_subprocess(kallisto_call)
-        print(f"File saved successfully at {kallisto_call[-7]}")
+    with tqdm(total=len(calls), desc='Quantifying transcript abundance', unit='files') as pbar:
+        for kallisto_call in calls:
+            io.run_subprocess(kallisto_call)
+            print(f"File saved successfully at {kallisto_call[-7]}")
+            pbar.update(1)
 
     return _process_kallisto_outputs(output_folder, gtf_file)
 
@@ -248,9 +252,11 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
         this_call.extend([file1.as_posix(), file2.as_posix()])
         calls.append(this_call)
 
-    for kallisto_call in tqdm(calls, 'Quantifying transcript abundance', unit='file pairs'):
-        io.run_subprocess(kallisto_call)
-        print(f"Files saved successfully at {kallisto_call[-3]}")
+    with tqdm(total=len(calls), desc='Quantifying transcript abundance', unit='file pairs') as pbar:
+        for kallisto_call in calls:
+            io.run_subprocess(kallisto_call)
+            print(f"Files saved successfully at {kallisto_call[-3]}")
+            pbar.update(1)
 
     return _process_kallisto_outputs(output_folder, gtf_file)
 
@@ -473,11 +479,13 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                 this_call.extend(['--output', output_path.as_posix(), item.as_posix()])
                 calls.append(this_call)
 
-    for cutadapt_call in tqdm(calls, 'Trimming adapters', unit='files'):
-        infile_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
-        log_filename = Path(output_folder).joinpath(f'cutadapt_log_{infile_stem}.log').absolute().as_posix()
-        io.run_subprocess(cutadapt_call, log_filename=log_filename)
-        print(f"File saved successfully at {cutadapt_call[-2]}")
+    with tqdm(total=len(calls), desc='Trimming adapters', unit='files') as pbar:
+        for cutadapt_call in calls:
+            infile_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
+            log_filename = Path(output_folder).joinpath(f'cutadapt_log_{infile_stem}.log').absolute().as_posix()
+            io.run_subprocess(cutadapt_call, log_filename=log_filename)
+            print(f"File saved successfully at {cutadapt_call[-2]}")
+            pbar.update(1)
 
 
 def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Union[str, Path]],
@@ -598,13 +606,15 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
         this_call.extend([file1.as_posix(), file2.as_posix()])
         calls.append(this_call)
 
-    for cutadapt_call in tqdm(calls, 'Trimming adapters', unit='file pairs'):
-        infile1_stem = parsing.remove_suffixes(Path(cutadapt_call[-2])).stem
-        infile2_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
-        log_filename = Path(output_folder).joinpath(
-            f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
-        io.run_subprocess(cutadapt_call, log_filename=log_filename)
-        print(f"Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}")
+    with tqdm(total=len(calls), desc='Trimming adapters', unit='file pairs') as pbar:
+        for cutadapt_call in calls:
+            infile1_stem = parsing.remove_suffixes(Path(cutadapt_call[-2])).stem
+            infile2_stem = parsing.remove_suffixes(Path(cutadapt_call[-1])).stem
+            log_filename = Path(output_folder).joinpath(
+                f'cutadapt_log_{infile1_stem}_{infile2_stem}.log').absolute().as_posix()
+            io.run_subprocess(cutadapt_call, log_filename=log_filename)
+            print(f"Files saved successfully at {cutadapt_call[-2]} and  {cutadapt_call[-1]}")
+            pbar.update(1)
 
 
 def _parse_cutadapt_misc_args(quality_trimming: Union[int, None], trim_n: bool,
