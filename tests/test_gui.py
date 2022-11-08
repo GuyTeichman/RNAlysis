@@ -1189,8 +1189,8 @@ def test_SetVisualizationWindow_parameter_change_canvas(monkeypatch, qtbot, set_
 @pytest.mark.parametrize('func_name,op_name,n_sets,kwargs_truth', [
     ('venn_diagram', 'Venn Diagram', 2, {'title': 'default', 'weighted': True, 'transparency': 0.4}),
     ('venn_diagram', 'Venn Diagram', 3, {'title': 'default', 'weighted': True, 'linestyle': 'solid'}),
-    ('upset_plot', 'UpSet Plot', 2, {'title': 'my title', 'title_fontsize': 20}),
-    ('upset_plot', 'UpSet Plot', 4, {'title': 'my title', 'show_percentages': True}),
+    ('upset_plot', 'UpSet Plot', 2, {'title': 'UpSet Plot', 'title_fontsize': 20}),
+    ('upset_plot', 'UpSet Plot', 4, {'title': 'UpSet Plot', 'show_percentages': True}),
 
 ])
 def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatch, func_name, op_name, n_sets,
