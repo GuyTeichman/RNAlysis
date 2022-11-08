@@ -1177,22 +1177,18 @@ def test_SetVisualizationWindow_parameter_change_canvas(monkeypatch, qtbot, set_
     for i in range(n_sets):
         set_vis_window.widgets['set_list'].list_items[i].setSelected(True)
 
-    set_vis_window.parameter_widgets['title'].clear()
+    set_vis_window.parameter_widgets['title_fontsize'].setValue(27)
 
     assert canvas_created == [True]
 
-    qtbot.keyClicks(set_vis_window.parameter_widgets['title'], 'x')
+    qtbot.mouseClick(set_vis_window.parameter_widgets[sample_bool_param].switch, LEFT_CLICK)
 
     assert canvas_created == [True, True]
 
-    qtbot.mouseClick(set_vis_window.parameter_widgets[sample_bool_param].switch, LEFT_CLICK)
-
-    assert canvas_created == [True, True, True]
-
 
 @pytest.mark.parametrize('func_name,op_name,n_sets,kwargs_truth', [
-    ('venn_diagram', 'Venn Diagram', 2, {'title': 'my title', 'weighted': True, 'transparency': 0.4}),
-    ('venn_diagram', 'Venn Diagram', 3, {'title': 'my title', 'weighted': True, 'linestyle': 'solid'}),
+    ('venn_diagram', 'Venn Diagram', 2, {'title': 'default', 'weighted': True, 'transparency': 0.4}),
+    ('venn_diagram', 'Venn Diagram', 3, {'title': 'default', 'weighted': True, 'linestyle': 'solid'}),
     ('upset_plot', 'UpSet Plot', 2, {'title': 'my title', 'title_fontsize': 20}),
     ('upset_plot', 'UpSet Plot', 4, {'title': 'my title', 'show_percentages': True}),
 
@@ -1217,9 +1213,6 @@ def test_SetVisualizationWindow_generate_graph(qtbot, set_vis_window, monkeypatc
     set_vis_window.widgets['radio_button_box'].radio_buttons[op_name].click()
     for i in range(n_sets):
         set_vis_window.widgets['set_list'].list_items[i].setSelected(True)
-
-    set_vis_window.parameter_widgets['title'].clear()
-    qtbot.keyClicks(set_vis_window.parameter_widgets['title'], 'my title')
 
     monkeypatch.setattr(enrichment, func_name, mock_func)
 

@@ -1480,7 +1480,7 @@ def _get_tuple_patch_ids(n_sets: int) -> List[Tuple[int, ...]]:
     return sorted_ids
 
 
-def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str = 'default',
+def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union[str,Literal['default']] = 'default',
                  attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
                  set_colors: Iterable[str] = ('r', 'g', 'b'),
                  transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
@@ -1494,7 +1494,7 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: str =
     a FeatureSet, a python set of feature indices, or a name of a column in the Attribute Reference Table. \
     For example: \
     {'first set':{'gene1','gene2','gene3'}, 'second set':'name_of_attribute_from_reference_table'}
-    :type title: str
+    :type title: str or 'default' (default='default')
     :param set_colors: determines the colors of the circles in the diagram.
     :param attr_ref_table_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
     if such attributes are included in 'objs'.
