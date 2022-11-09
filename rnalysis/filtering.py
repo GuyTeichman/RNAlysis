@@ -2176,7 +2176,9 @@ class CountFilter(Filter):
         """
         self._validate_is_normalized(expect_normalized=False)
         data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
-        io.save_csv(self.df, data_path)
+        if not io.get_todays_cache_dir().exists():
+            io.get_todays_cache_dir().mkdir(parents=True)
+        io.save_csv(self.df.round(), data_path)
         output_dir = differential_expression.run_deseq2_analysis(data_path, design_matrix, comparisons,
                                                                  r_installation_folder)
         outputs = []
