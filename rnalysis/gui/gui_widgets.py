@@ -698,6 +698,7 @@ class MultiChoiceListWithReorder(MultipleChoiceList):
 
 
 class MultiChoiceListWithDeleteReorder(MultiChoiceListWithReorder, MultiChoiceListWithDelete):
+    itemDeleted = QtCore.pyqtSignal(int)
     def __init__(self, items: typing.Sequence, icons: typing.Sequence = None, parent=None):
         super().__init__(items, icons, parent)
 
