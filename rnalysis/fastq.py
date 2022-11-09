@@ -78,10 +78,19 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
                                  new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no',
                                  learn_bias: bool = False, seek_fusion_genes: bool = False,
-                                 bootstrap_samples: Union[int, None] = None):
+                                 bootstrap_samples: Union[int, None] = None) -> filtering.CountFilter:
     """
     Quantify transcript abundance in single-end mRNA sequencing data using kallisto. \
-    as described in `Soneson et al 2015 <https://doi.org/10.12688/f1000research.7563.2>`_.
+    The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder. \
+    Alongside these files, three .csv files will be saved: a per-transcript count estimate table, \
+    a per-transcript TPM estimate table, and a per-gene scaled output table. \
+    The per-gene scaled output table is generated using the *scaledTPM* method \
+    (scaling the TPM estimates up to the library size) as described by \
+    `Soneson et al 2015 <https://doi.org/10.12688/f1000research.7563.2>`_ and used in the \
+    `tximport <https://ycl6.gitbook.io/guide-to-rna-seq-analysis/differential-expression-analysis/tximport#scaling>`_ \
+    R package. This table format is considered un-normalized for library size, \
+    and can therefore be used directly by count-based statistical inference tools such as DESeq2.
+    *RNAlysis* will return this table once the analysis is finished.
 
     :param fastq_folder: Path to the folder containing the FASTQ files you want to quantify
     :type fastq_folder: str or Path
@@ -179,9 +188,20 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
                                  kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                                  new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no', learn_bias: bool = False,
-                                 seek_fusion_genes: bool = False, bootstrap_samples: Union[int, None] = None):
+                                 seek_fusion_genes: bool = False,
+                                 bootstrap_samples: Union[int, None] = None) -> filtering.CountFilter:
     """
-    Quantify transcript abundance in paired-end mRNA sequencing data using kallisto.
+    Quantify transcript abundance in paired-end mRNA sequencing data using kallisto. \
+    The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder. \
+    Alongside these files, three .csv files will be saved: a per-transcript count estimate table, \
+    a per-transcript TPM estimate table, and a per-gene scaled output table. \
+    The per-gene scaled output table is generated using the *scaledTPM* method \
+    (scaling the TPM estimates up to the library size) as described by \
+    `Soneson et al 2015 <https://doi.org/10.12688/f1000research.7563.2>`_ and used in the \
+    `tximport <https://ycl6.gitbook.io/guide-to-rna-seq-analysis/differential-expression-analysis/tximport#scaling>`_ \
+    R package. This table format is considered un-normalized for library size, \
+    and can therefore be used directly by count-based statistical inference tools such as DESeq2.
+    *RNAlysis* will return this table once the analysis is finished.
 
     :param r1_files: a list of paths to your Read#1 files. The files should be sorted in tandem with r2_files, \
     so that they line up to form pairs of R1 and R2 files.
