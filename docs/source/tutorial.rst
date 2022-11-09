@@ -25,6 +25,7 @@ You can find the table I created `here <https://raw.githubusercontent.com/GuyTei
 
 Let's start by loading the dataset - in the main window, click on the "Load" button and choose the table's file from your computer.
 We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are applicable only to count matrix-style datasets.
+
 .. image:: /tutorial_screenshots/01a01_load_table.png
   :width: 600
   :alt: Loading a table into *RNAlysis* - choose the table type
@@ -142,31 +143,46 @@ Examine similarity between developmental stages
 Let's now examine the distribution of gene expression across developmental stages with a `Pair-plot<https://pythonbasics.org/seaborn-pairplot/>`_.
 Pair-plots displays the pairwise relationships between samples, or experimental conditions, in our dataset, and also display a histogram of gene expression values within each sample/condition.
 
-#TODO: stopped here
+To generate a Pair-plot, select "Pair-plot" from the function drop-down menu.
+
+Similarly to PCA, the Pair-plot function allows you to group samples by experimental condition, and to choose whether or not to transform the data.
+
+Let's click "Apply" and check out the result:
 
 
 .. image:: /tutorial_screenshots/01e02_pairplot.png
   :width: 600
   :alt: Pair-plot
 
+We can spot some interesting trends from this plot: the embryo condition seems to be the most dissimilar from the rest of the conditions; sequential developmental stages seem to be fairly correlated with one another; and the earlier developmental stages appear to have a larger fraction of unexpressed genes compared to the later developmental stages.
+
 Compare the expression of specific genes over the developmental stages
 -----------------------------------------------------------------------
-We already have a hypothesis about the expression of some genes over the developmental stages.
-Let's go to the "Visualize" tab to plot the expression of these genes over the developmental stages:
+We already have a hypothesis about the expression of some genes over the developmental stages, which we would like to test.
+For example, the gene *oma-1* (gene ID **WBGene00003864**) should be expressed almost exclusively in the two-cell stage of embryonic development, and we expect the gene *skn-1* (gene ID **WBGene00004804**) to show a fairly consistent expression level across development.
+Let's go to the "Visualize" tab to plot the expression of these genes over the developmental stages.
+
+The `features` parameter will let us choose which genomic features we want to plot expression for. Since we can decide to add as many genes as we would like to this graph, *RNAlysis* will give us the option to choose how many genes to input.
+To start, click on the "Set input" button next to the `features` parameter:
 
 .. image:: /tutorial_screenshots/01f01_plot_expression.png
   :width: 600
   :alt: Choose genes to plot
 
+In the pop-up window that opens, you can use the "Add field" and "Remove field" buttons to choose how many genes to plot the expression of.
+Then, in each field, enter the gene ID of a gene you want to visualize. When you're done, click on the "Done" button.
 
 .. image:: /tutorial_screenshots/01f02_plot_expression.png
   :width: 600
   :alt: Choose genes to plot - part 2
 
+Let's also set the count unit to FPKM, and click "Apply" to create the plot:
 
 .. image:: /tutorial_screenshots/01f03_plot_expression.png
   :width: 600
   :alt: Expression plot
+
+Interestingly, we can see that the expression of *oma-1* is actually highest in the adult worms. This is possibly because the adult worm contains a large number of unlaid embryos, some of which are the two-cell stage.
 
 Clustering analysis
 ====================
@@ -419,37 +435,552 @@ Analysis #2 - differential expression data
 
 The dataset
 =================
-We will start by analyzing XYZ. This dataset describes...
+For the second analysis, we will use a publicly available dataset from #TODO. This dataset describes...
 
-Let's start by loading the dataset:
+Quantify FASTA files and Differential Expression Analysis
+==========================================================
+Since our input data is raw FASTQ files, we will first have to pre-process them, quantify them, and then run differential expression analysis to generate differential expression tables.
+You can do this with any tools or pipelines you prefer. However, since *RNAlysis* provides a graphical interface for *CutAdapt*, *kallisto*, and *DESeq2*, we will use those tools.
 
-#TODO: PtrSc
+Trim adapters and remove low-quality reads with *CutAdapt*
+-----------------------------------------------------------
+After doing a quality-control of our FASTQ files with `FastQC <https://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc>`_, we can see that some of our samples were not adapter-trimmed properly.
+Therefore, we will start our analysis by trimming the leftover adapters. We will also perform quality-trimming, removing bases with low quality scores from our reads.
+
+The first dataset we will trim is the osmotic stress dataset, which happens to be single-end sequencing.
+To begin, let's open the "FASTQ" menu in *RNAlysis*, and under "Adapter trimming" choose "Single-end adapter trimming":
+
+
+.. image:: /tutorial_screenshots/02a01_cutadapt.png
+  :width: 600
+  :alt: FASTQ menu - adapter trimming
+
+In the new window that opened, we can choose the folder that contains our raw FASTQ files, as well as the folder our trimmed files should be written to:
+
+
+.. image:: /tutorial_screenshots/02a02_cutadapt.png
+  :width: 600
+  :alt: adapter trimming - set input and output folders
+
+Next, let's set the adapter sequence we want to trim. The adapter used on these samples is Illumina TruSeq, with the sequence "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA".
+Let's click on the "Set input" button of the `three_prime_adapters` parameter:
+
+.. image:: /tutorial_screenshots/02a03_cutadapt.png
+  :width: 600
+  :alt: adapter trimming - set input for adapter sequence
+
+This will open a dialog box, where we can enter the sequence of our adapter:
+
+.. image:: /tutorial_screenshots/02a04_cutadapt.png
+  :width: 600
+  :alt: adapter trimming - set adapter sequence
+
+We will leave the quality-trimming parameters on their default values - trim bases below quality score 20 from the 3' end of reads, trim flanking N bases fro the reads, and filter out any read that ends up shorter than 10bp after trimming.
+
+.. image:: /tutorial_screenshots/02a05_cutadapt.png
+  :width: 600
+  :alt: adapter trimming - quality trimming parameters
+
+Let's now scroll to the bottom of the window and set the `discard_untrimmed_reads` parameter to False, so that *CutAdapt* will not discard reads that were previously trimmed properly.
+Once we are happy with the trimming parameters, we can click on the "Start CutAdapt" button at the bottom of the window.
+A loading screen will now appear, and the trimmed FASTQ files, as well as the trimming logs, will be saved to our output folder.
+
+.. image:: /tutorial_screenshots/02a06_cutadapt.png
+  :width: 600
+  :alt: adapter trimming - do not discard untrimmed reads
+
+.. image:: /tutorial_screenshots/02a07_cutadapt.png
+  :width: 600
+  :alt: adapter trimming - loading screen
+
+Let's now apply the same trimming procedure to our paired end samples.
+Open the Paired End adapter trimming from the FASTQ menu:
+
+.. image:: /tutorial_screenshots/02a08_cutadapt.png
+  :width: 600
+  :alt: paired-end adapter trimming
+
+First, we will set the output folder for our trimmed FASTQ files.
+Then, we can set the adapter sequences: for read#1 we will use the TruSeq Read 1 adapter "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA", and for read#2 we will use the TruSeq Read 2 adapter "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTG".
+We will leave the quality-trimming parameters the same as last time, and once again set the `discard_untrimmed_reads` parameter to False:
+
+.. image:: /tutorial_screenshots/02a09_cutadapt.png
+  :width: 600
+  :alt: paired-end adapter trimming - quality trimming parameters
+
+Finally, we can choose the files we want to trim. Since we are doing paired-end trimming, we have to make sure the files are properly paired.
+Therefore, we will pick the read#1 and read#2 files separately by clicking on the "Add files" buttons:
+
+.. image:: /tutorial_screenshots/02a10_cutadapt.png
+  :width: 600
+  :alt: paired-end adapter trimming - add files
+
+After adding the files, we make sure the orders of the two file lists match, so that the files are properly paired:
+
+.. image:: /tutorial_screenshots/02a11_cutadapt.png
+  :width: 600
+  :alt: paired-end adapter trimming - match-up file pairs
+
+You can use the buttons at the bottom of each list to reorder the list, or remove some of the files you added:
+
+.. image:: /tutorial_screenshots/02a12_cutadapt.png
+  :width: 600
+  :alt: paired-end adapter trimming - reorder the file lists
+
+Once we are done setting up the trimming parameters, we can scroll down and click on the "Start CutAdapt" button.
+
+Quantify gene expression with *kallisto*
+----------------------------------------
+
+Now that out data has been pre-processed, we can proceed with quantififying the expression of each gene.
+For this purpose we will use `kallisto <https://pachterlab.github.io/kallisto/about>`_ - a program for rapid quantification of transcript abundances.
+Before proceeding with this step, make sure you have `installed kallisto <https://pachterlab.github.io/kallisto/download>`_ on your computer.
+
+To run this analysis, in addition to our processed FASTQ files, we will need a transcriptome indexed by *kallisto*, and a matching GTF file describing the names of the transcripts and genes in the transcriptome.
+*kallisto* provides pre-indexed transcriptomes and their matching GTF files for most common model organisms, which can be downloaded `here <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_.
+Our data was sequenced from *Caenorhabditis elegans* nematodes, so we will download the *C. elegans* index and GTF files from the above link.
+If you experiment requires a different transcriptome that is not available above, you can index any FASTA file through *RNAlysis*, by entering the "FASTQ" menu -> "RNA sequencing quantification" -> "Create kallisto index...".
+
+As we did earlier with adapter trimming, let's begin quantification with our single-end osmotic stress samples. Open the "FASTQ" menu, and under "RNA sequencing quantification" select "Single-end RNA sequencing quantification...":
+
+.. image:: /tutorial_screenshots/02b01_kallisto.png
+  :width: 600
+  :alt: FASTQ menu - *kallisto* quantification
+
+Like before, in the new window that opened we can set the input folder containing our trimmed FASTQ files, and the output folder.
+We should also set the path to our transcriptome index file, GTF file, and the folder in which you installed *kallisto* (unless you have also added it to your system's PATH):
+
+.. image:: /tutorial_screenshots/02b02_kallisto.png
+  :width: 600
+  :alt: single-end read quantification
+
+Since our data was sequenced with single-end reads, *kallisto* cannot estimate the size of the fragments in the sequencing run, so we will have to supply an estimate of the average fragment length and the standard deviaton. Let's set them to 200 and 20 accordingly:
+
+.. image:: /tutorial_screenshots/02b03_kallisto.png
+  :width: 600
+  :alt: single-end read quantification - fragment length
+
+We can optionally use the `new_sample_names` parameter to give our samples new, more readable names. For example:
+
+.. image:: /tutorial_screenshots/02b04_kallisto.png
+  :width: 600
+  :alt: single-end read quantification - new sample names
+
+
+Once we are done setting up the quantification parameters, we can scroll down and click on the "Start kallisto quantify" button, then wait for the analysis to finish.
+In the output folder, we can find the results of kallisto quantification for each of the individual FASTQ  files, each in its own sub-folder.
+Alongside these files, we can find three .csv files: a per-transcript count estimate table, a per-transcript TPM estimate table, and a per-gene scaled output table.
+
+The per-gene scaled output table is generated using the *scaledTPM* method (scaling the TPM estimates up to the library size) as described by `Soneson et al 2015 <https://doi.org/10.12688/f1000research.7563.2>`_ and used in the `tximport <https://ycl6.gitbook.io/guide-to-rna-seq-analysis/differential-expression-analysis/tximport#scaling>`_ R package.
+This table format is considered un-normalized for library size, and can therefore be used directly by count-based statistical inference tools, such as DESeq2, for differential expression analysis later on.
+*RNAlysis* will load this table automatically once the analysis is finished, and we can see it in a new tab of the main window:
+
+.. image:: /tutorial_screenshots/02b05_kallisto.png
+  :width: 600
+  :alt: quantification output table - osmotic stress
+
+Let's now apply the same quantification procedure to our paired-end starvation samples.
+Open the Paired end quantification window from the FASTQ menu:
+
+.. image:: /tutorial_screenshots/02b06_kallisto.png
+  :width: 600
+  :alt: paired-end read quantification
+
+Like before, we will set the path to our output folder, transcriptome index file, GTF file, and the folder in which you installed *kallisto* (unless you have also added it to your system's PATH).
+In addition, since these sequencing samples are Stranded, we will the `stranded` parameter to "forward":
+
+.. image:: /tutorial_screenshots/02b07_kallisto.png
+  :width: 600
+  :alt: paired-end read quantification - set path parameters
+
+Next, we can choose the files we want to quantify.
+Like we did when trimming paired-end adapters, we will pick the read#1 and read#2 files separately by clicking on the "Add files" buttons underneath each list, and then sort the files so the pairs match up:
+
+.. image:: /tutorial_screenshots/02b08_kallisto.png
+  :width: 600
+  :alt: paired-end read quantification - add and sort files
+
+Finally, we can optionally use the `new_sample_names` parameter to give our sample pairs new, more readable names. For example:
+
+
+.. image:: /tutorial_screenshots/02b09_kallisto.png
+  :width: 600
+  :alt: paired-end read quantification - new sample names
+
+We can now scroll to the bottom of the window and click on the "Start kallisto quantify" button, and wait for the analysis to finish.
+
+Like with the single-end reads analysis, when the analysis is done, we will find the three summarized tables, as well as a subfolder with kallisto output for each pair of FASTQ files.
+
+.. image:: /tutorial_screenshots/02b10_kallisto.png
+  :width: 600
+  :alt: paired-end quantification output table - starvation
+
+Last but not least, we can quantify our paired-end heat-shock data. The procedure follows the same principle of the starvation samples, with one difference - the heat shock reads are supplied in the reverse orientation, so we should set the `stranded` parameter to 'reverse'.
+This is what our results should look like:
+
+
+.. image:: /tutorial_screenshots/02b11_kallisto.png
+  :width: 600
+  :alt: paired-end quantification output table - heat shock
+
+Let's rename the tables to reflect the names of the experiments, and proceed to differential expression analysis.
+
+Run differential expression analysis with *DESeq2*
+------------------------------------------------------
+
+#TODO
+
+.. image:: /tutorial_screenshots/02b01_deseq2.png
+  :width: 600
+  :alt: Open the differential expression window
+
+#TODO
+
+.. image:: /tutorial_screenshots/02b02_deseq2.png
+  :width: 600
+  :alt: Differential expression
+
+Next, we need to define a **sample table** for each of our count tables.
+The first column of the sample table should contain the names of the samples in the count table.
+Each other column should contain a variable to be added to the statistical design formula of the dataset. For example: experimental condition, genotype, or biological replicate/batch.
+For example, the sample table for our osmotic stress dataset would look like this:
+
++-------+------------+--------+
+| Name  | condition  | batch  |
++=======+============+========+
+| Ctrl1 | Ctrl       | A      |
++-------+------------+--------+
+| Ctrl2 | Ctrl       | B      |
++-------+------------+--------+
+| Ctrl3 | Ctrl       | C      |
++-------+------------+--------+
+| Osm1  | Osm        | A      |
++-------+------------+--------+
+| Osm2  | Osm        | B      |
++-------+------------+--------+
+| Osm3  | Osm        | C      |
++-------+------------+--------+
+
+#TODO
+
+.. image:: /tutorial_screenshots/02b03_deseq2.png
+  :width: 600
+  :alt: Differential expression - load sample table
+
+#TODO
+
+.. image:: /tutorial_screenshots/02b04_deseq2.png
+  :width: 600
+  :alt: Differential expression - choose pairwise comparisons
+
 
 Data filtering and visualization with Pipelines
 =================================================
 
-#TODO
+Since we ran the differential expression analysis through *RNAlysis*, the differential expression tables were loaded into the program automatically.
+Therefore, we can start analyzing the data straight away!
+
+For each of the differential expression tables we generated, we would like to generate a volcano plot, to filter out genes which are not differentially expressed, and then split the differentially expressed genes into an 'upregulated' group and 'downregulated' group.
+vWe could apply each of those operations to our data tables one by one, but that would take a long time, and there's a decent chance we'll make a mistake along the way.
+
+Therefore, we will instead create a Pipeline containing all of those functions and their respective parameters, and then apply this Pipeline to all three tables at once.
+
+Create a Pipeline
+-------------------
+
+To create a Pipeline, let's open the Pipelines menu and click on "New Pipeline":
+
+
+.. image:: /tutorial_screenshots/02d01_pipeline.png
+  :width: 600
+  :alt: Pipeline menu - new Pipeline
+
+In the new window that opened, we can name our Pipeline, and choose the type of table we want to apply the Pipeline to. Let's select "differential expression" from the drop-down menu:
+
+.. image:: /tutorial_screenshots/02d02_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - choose table type
+
+After choosing a name and table type, we can click on the "Start" button.
+The window will now update to show a preview of our new (empty) Pipeline:
+
+.. image:: /tutorial_screenshots/02d03_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - preview
+
+At this point, we can start adding functions to the Pipeline.
+Adding functions to a Pipeline works very similarly to applying functions to table, as we did in Analysis #1.
+First, let's click on the "Visualize" tab, and choose the "Volcano plot" function:
+
+.. image:: /tutorial_screenshots/02d04_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - Volcano plot
+
+A volcano plot can give us an overview of the results of a differential expression analysis- it will show us the distribution of p-values and log2 fold change values for our genes, and highlight the significantly up- and down-regulated genes.
+
+Let's click on the "Add to Pipeline" button:
+
+.. image:: /tutorial_screenshots/02d05_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - adding functions to Pipeline
+
+We can see that the Pipeline overview has updated to show the function we added to it, and this is displayed in the log textbox as well.
+
+Let's now add a filtering function to our Pipeline. Click on the "Filtering" tab and choose the "Filter by statistical significance" function from the drop-down menu:
+
+.. image:: /tutorial_screenshots/02d06_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - filter by statistical significance
+
+You may notice that the `inplace` parameter that is usually present for filtering functions is missing.
+This is because when we apply the Pipeline later on, we can choose whether it will be applied inplace or not.
+
+Finally, we will select the 'Split by log2 fold-change direction' function from the drop-down menu and add it to the Pipeline as well.
+We can now click on the "Save Pipeline" button to save the Pipeline we created for later use. We can also click on the "Export Pipeline" button to export the Pipeline to a file, so that we can use it in future sessions, or share it with others.
+
+.. image:: /tutorial_screenshots/02d07_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - save and export
+
+We can now close the Pipeline window and resume our analysis.
 
 Apply the Pipeline to our datasets
 -----------------------------------
 
+Now that the hard part is done, we can apply the Pipeline to our differential expression tables.
+Open the "Pipelines" menu, and then under the "Apply Pipeline" menu, choose the Pipeline we created:
+
+.. image:: /tutorial_screenshots/02d08_pipeline.png
+  :width: 600
+  :alt: Apply Pipeline
+
+Now, you will be prompted on whether you want to apply this Pipeline inplace or not. Let's choose "no", so that we keep a copy of our original tables.
+
+.. image:: /tutorial_screenshots/02d09_pipeline.png
+  :width: 600
+  :alt: Apply Pipeline - not inplace
+
+Finally, you will be prompted to choose the tables to apply your Pipeline to. Let's choose all three of our differential expression tables.
+
+.. image:: /tutorial_screenshots/02d10_pipeline.png
+  :width: 600
+  :alt: Apply Pipeline - choose tables
+
+We can now examine the output of our Pipeline - three volcano plots, and six new tables - the significantly up/down-regulated genes from each differential expression table.
+
+.. image:: /tutorial_screenshots/02d11_pipeline.png
+  :width: 600
+  :alt: Examine the Pipeline outputs
+
+.. image:: /tutorial_screenshots/02d12_pipeline.png
+  :width: 600
+  :alt: Examine the Pipeline outputs - volcano plot
+
+At this point, we could optionally rename our tables to make it easier to differentiate them later on.
+
 Visualizing and extracting gene set interesctions
 ===================================================
+
+We want to know how much do the three stress conditions have in common. One easy way to do this is to visualize the intersections between the differentially expressed genes in the three stress conditions.
 
 Create a Venn diagram
 -----------------------
 
-Extract the subsets we are interested in
------------------------------------------
+Open the "Gene sets" menu, and click on "Visualize Gene Sets...":
+
+.. image:: /tutorial_screenshots/02e01_gene_sets.png
+  :width: 600
+  :alt: Gene sets menu - Visualize Gene Sets
+
+A new window will open:
+
+.. image:: /tutorial_screenshots/02e02_gene_sets.png
+  :width: 600
+  :alt: Visualize Gene Sets window
+
+On the left side of the window, we can choose which data tables/gene sets we want to visualize.
+Let's pick the three tables that contain significantly downregulated genes:
+
+.. image:: /tutorial_screenshots/02e03_gene_sets.png
+  :width: 600
+  :alt: Visualize Gene Sets - select gene sets
+
+Next, we can choose the type of graph we want to generate. *RNAlysis* supports Venn Diagrams for 2-3 gene sets, and `UpSet plots <https://doi.org/10.1109%2FTVCG.2014.2346248>`_ for any number of gene sets.
+Let's choose a Venn Diagram.
+The window will now update and display various parameters to modify our graph, and a preview of the graph on the right:
+
+.. image:: /tutorial_screenshots/02e04_gene_sets.png
+  :width: 600
+  :alt: Visualize Gene Sets - plot preview
+
+We can change these plotting parameters to modify our graph - for example, to change the colors of the Venn circles, the title, or set whether or not our plot will be proportional to the size of the sets and their intersections.
+Once we are happy, we can click on the "Generate graph" button to create a big version of our graph that we can export and share.
+
+.. image:: /tutorial_screenshots/02e05_gene_sets.png
+  :width: 600
+  :alt: Intersection of significantly downregulated genes
+
+From the looks of it, there is a rather large overlap between the three sets.
+Let's generate a similar graph for the tables containing the significantly upregulated genes:
+
+.. image:: /tutorial_screenshots/02e06_gene_sets.png
+  :width: 600
+  :alt: Intersection of significantly upregulated genes
+
+Extract the gene subsets we are interested in
+-----------------------------------------------
+
+Now that we have seen the intersection between the three sets, we want to get the actual list of genes that are significantly downreglated under all stress conditions.
+To do that, let's open the "Gene sets" menu once again, and this time click on "Set Operations...":
+
+.. image:: /tutorial_screenshots/02f01_set_ops.png
+  :width: 600
+  :alt: Gene sets menu - Set Operations
+
+A new window will open:
+
+.. image:: /tutorial_screenshots/0fe02_set_ops.png
+  :width: 600
+  :alt: Set Operations window
+
+On the left side of the window, we can choose which data tables/gene sets we want to intersect.
+Let's pick the three tables that contain significantly downregulated genes:
+
+.. image:: /tutorial_screenshots/02f03_set_ops.png
+  :width: 600
+  :alt: Set Operations - select gene sets
+
+We will now see a simplified Venn Diagram depicting our three gene sets. We can now proceed to extract the subset we are interested in.
+We can do this by choosing the "Intersection" set operation from the multiple choice list.
+A drop-down menu will now appear, prompting us to pick the primary gene set in this operation. Our choice will only matter if we apply this set operation inplace - since *RNAlysis* needs to know which table to apply the operation inplace to.
+
+.. image:: /tutorial_screenshots/02f04_set_ops.png
+  :width: 600
+  :alt: Set Operations - intersection
+
+Once we pick a primary set, the subset representing the intersection between all three gene sets will now highlight.
+*RNAlysis* supports a large number of set operations. You could try using a different set operation on the data - for example, using 'majority-vote intersection' to select all genes that were significantly downregulated in *at least* two stress conditions.
+
+.. image:: /tutorial_screenshots/02f05_set_ops.png
+  :width: 600
+  :alt: Set Operations - operation preview
+
+Finally, let's click on the "Apply" button to extract our gene set of interest. It opens in a new tab:
+
+.. image:: /tutorial_screenshots/02f06_set_ops.png
+  :width: 600
+  :alt: Set Operations - gene set output
+
+Let's rename it so we remember what it contains:
+
+.. image:: /tutorial_screenshots/02f07_set_ops.png
+  :width: 600
+  :alt: Rename gene set
+
+Let's now open the Set Operations window once more to intersect the other set of tables, containing the significantly upregulated genes.
+This time, let's use a different method to extract our subset of interest - simply click on the middle subset in the interactive Venn Diagram!
+
+.. image:: /tutorial_screenshots/02f08_set_ops.png
+  :width: 600
+  :alt: Set Operations - select subset
+
+We can use this interactive graph to select exactly the subsets we are interested in, and click the "Apply" button to extract them.
+After renaming the set, it should look like this:
+
+.. image:: /tutorial_screenshots/02f09_set_ops.png
+  :width: 600
+  :alt: Set Operations - custom operation output
 
 Enrichment analysis
 ====================
 
+We now have two lists of genes we want to analyze - genes that are significantly downregulated in all three stress conditions, and genes that are significantly upregulated in all three stress conditions.
+Let's now proceed to enrichment analysis!
+
 Define a background set
 -------------------------
+
+In order to run enrichment analysis, we will need an appropriate background set.
+One good example would be the set of all genes that are not lowly-expressed in at least one sequencing sample.
+We can use the process we learned earlier to generate an appropriate background set:
+
+1. Create a Pipeline for count tables, that will filter out lowly-expressed genes (for example, at least 10 reads in at least one sample)
+2. Apply the Pipeline to the three count matrices we generated earlier
+3. Use the Set Operation window to calculate the Union of the three filtered count matrices
+
+To keep this tutorial short, we will not go through these individual steps. If you are not sure how to filter count tables for lowly-expressed genes, read Analysis #1 above!
+
+This is what your output should look like:
+
+.. image:: /tutorial_screenshots/02g01_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - background set
+
+Now that we have a test set, a background set, and attributes we want to measure enrichment for, we can finally start enrichment analysis.
 
 Define our custom enrichment attributes
 ----------------------------------------
 
+#TODO
+
+.. image:: /tutorial_screenshots/02g02_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - custom enrichment attributes
+
 Running enrichment analysis
 ----------------------------
+
+To open the Enrichent Analysis window, open the 'Gene sets' menu and click "Enrichment Analysis":
+
+.. image:: /tutorial_screenshots/02h01_enrichment.png
+  :width: 600
+  :alt: Pick 'Enrichment analysis' from the 'Gene sets' menu
+
+We can choose our test and background sets from the two drop-down menus in the Enrichment window:
+
+
+.. image:: /tutorial_screenshots/02h02_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - choose gene sets
+
+Next, we can choose the dataset we want to draw annotations from. In our case, we will choose Custom Dataset Categorical Attributes.
+
+.. image:: /tutorial_screenshots/02h03_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - Choose enrichment dataset
+
+After picking the dataset, the window expanded to show us all of the parameters we can modify for our analysis:
+
+.. image:: /tutorial_screenshots/02h04_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - set enrichment parameters
+
+Let's set the statistical test to 'randomization', and then set the name of our attributes and the path of our Attribute Reference Table:
+
+.. image:: /tutorial_screenshots/02h05_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - set the attributes to enrich for
+
+Scroll to the bottom of thw window and click on the "run" button to run the analysis:
+
+.. image:: /tutorial_screenshots/02h06_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - loading screen
+
+The enrichment window is going to minimize to allow you to read the log box on the main *RNAlysis* window, but you can enlarge it back if you want to look at the analysis parameters, or start a new analysis with the same parameters.
+
+Once the analysis is done, we will be able to observe our results in two formats.
+
+The first is a tabular format, showing all of the statistically significant attributes we found (or the all of the tests attributes, if we set the `return_nonsignificant` parameter to True).
+The table also includes the statistics for each attribute (number of genes in the test set, number of genes matching the attribute, expected number of genes to match the attribute, log2 fold change, p-value, and adjusted p-value).
+
+
+.. image:: /tutorial_screenshots/02h07_enrichment.png
+  :width: 600
+  :alt: Enrichment results - results table
+
+The final output format is a bar plot depicting the log2 fold change values, as well as significance, of the attributes we tested enrichment for.
+
+.. image:: /tutorial_screenshots/02h08_enrichment.png
+  :width: 600
+  :alt: Enrichment results - bat plot
