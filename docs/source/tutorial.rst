@@ -435,7 +435,35 @@ Analysis #2 - differential expression data
 
 The dataset
 =================
-For the second analysis, we will use a publicly available dataset from #TODO. This dataset describes...
+In the second analysis, we will analyze three publicly available datasets from GEO. Each individual dataset is an RNA sequencing experiment of *Caenorhabidtis elegans* nematodes, measuring the effect of a particular stress condition on gene expression.
+Our goal in this analysis will be to examine the similarities between the different stress conditions, and to answer a specific question - how are Epigenetic genes and pathways affected by exposure to stress?
+
+Unlike in the first analysis, in this analysis we will not start from a pre-made counts table.
+Instead, we are going to pre-process and quantify each dataset directly from the raw FASTQ files that are available on GEO.
+
+The datasets we will use are:
+
+1. mRNA sequencing of worms exposed to osmotic stress: `GSE107704 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE107704>`_. This is a single-end unstranded RNA sequencing experiment.
+    *  Control sample 1 - SRR6348197
+    *  Control sample 2 - SRR6348198
+    *  Control sample 3 - SRR6348199
+    *  Osmotic sample 1 - SRR6348200
+    *  Osmotic sample 2 - SRR6348201
+    *  Osmotic sample 3 - SRR6348202
+2. mRNA sequencing of worms exposed to starvation: `GSE124178 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE124178>`_. This is a paired-end stranded RNA sequencing experiment.
+    *  Control sample 1 - SRR8359132
+    *  Control sample 2 - SRR8359133
+    *  Control sample 3 - SRR8359142
+    *  Starvation sample 1 - SRR8359134
+    *  Starvation sample 2 - SRR8359135
+    *  Starvation sample 3 - SRR8359136
+3. mRNA sequencing of worms exposed to heat shock: `GSE132838 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE132838>`_. This is a paired-end stranded RNA sequencing experiment.
+    *  Control sample 1 - SRR9310678
+    *  Control sample 2 - SRR9310679
+    *  Control sample 3 - SRR9310680
+    *  Heat sample 1 - SRR9310681
+    *  Heat sample 2 - SRR9310682
+    *  Heat sample 3 - SRR9310683
 
 Quantify FASTA files and Differential Expression Analysis
 ==========================================================
@@ -628,22 +656,27 @@ Let's rename the tables to reflect the names of the experiments, and proceed to 
 Run differential expression analysis with *DESeq2*
 ------------------------------------------------------
 
-#TODO
+We can now start Differential Expression analysis.
+For this purpose we will use `DESeq2 <https://bioconductor.org/packages/release/bioc/html/DESeq2.html>`_ - an R package for differential expression analysis.
+Before proceeding with this step, make sure you have `installed R <https://cran.r-project.org/bin/>`_ on your computer.
+You don't have to install DESeq2 on your own - *RNAlysis* can install it for you, as long as you have installed the R language on your computer already.
+
+To open the Differential Expression window, choose an *RNAlysis* tab with one of the scaled count tables, click on the "General" tab, and from the drop-down menu below select "Run DESeq2 differential expression":
 
 .. image:: /tutorial_screenshots/02b01_deseq2.png
   :width: 600
   :alt: Open the differential expression window
 
-#TODO
+The Differential Expression window should now open. On the left side of the window, set the path of your R installation (or keep it on 'auto' if you have previously added R to your computer's PATH).
 
 .. image:: /tutorial_screenshots/02b02_deseq2.png
   :width: 600
   :alt: Differential expression
 
-Next, we need to define a **sample table** for each of our count tables.
-The first column of the sample table should contain the names of the samples in the count table.
-Each other column should contain a variable to be added to the statistical design formula of the dataset. For example: experimental condition, genotype, or biological replicate/batch.
-For example, the sample table for our osmotic stress dataset would look like this:
+Next, we need to define a **design matrix** for each of our count tables.
+The first column of the design matrix should contain the names of the samples in the count table.
+Each other column should contain a variable to be added to the experimental design formula of the dataset. For example: experimental condition, genotype, or biological replicate/batch.
+For example, the design matrix for our osmotic stress dataset would look like this:
 
 +-------+------------+--------+
 | Name  | condition  | batch  |
@@ -661,18 +694,36 @@ For example, the sample table for our osmotic stress dataset would look like thi
 | Osm3  | Osm        | C      |
 +-------+------------+--------+
 
-#TODO
+Once you have prepared your design matrix, choose that file from the DESeq2 window and click on the "Load design matrix" button:
 
 .. image:: /tutorial_screenshots/02b03_deseq2.png
   :width: 600
   :alt: Differential expression - load sample table
 
-#TODO
+The right side of the window will now update, allowing you to choose which pairwise comparisons you want to run, based on your design matrix.
+You can make as many pairwise comparisons and you want, each comparing two levels of one of the variables in the design matrix.
+In our case, we are only interested in one comparison - osmotic stress VS control.
+Note that the order of conditions in the comparison matters - the first condition will be the numerator in the comparison, and the second condition will be the denominator.
 
 .. image:: /tutorial_screenshots/02b04_deseq2.png
   :width: 600
   :alt: Differential expression - choose pairwise comparisons
 
+After picking the comparisons you want to run, click on the "Start DESeq2".
+
+When the analysis ends, a dialog box will pop up, prompting you to choose which differential expression tables do you want to load into *RNAlysis*:
+
+.. image:: /tutorial_screenshots/02b05_deseq2.png
+  :width: 600
+  :alt: Differential expression - choose tables to load
+
+After choosing to load the table, it will open in a new tab in *RNAlysis*:
+
+.. image:: /tutorial_screenshots/02b06_deseq2.png
+  :width: 600
+  :alt: Differential expression - output table
+
+We can now repeat the same procedure with the other two count tables, and proceed with analyzing the differential expression tables.
 
 Data filtering and visualization with Pipelines
 =================================================
@@ -921,11 +972,36 @@ Now that we have a test set, a background set, and attributes we want to measure
 Define our custom enrichment attributes
 ----------------------------------------
 
-#TODO
+For this analysis, we want to find out whether genes downregulated in all stress conditions are enriched for epigenetic genes.
+Unfortunately, the most common sources for functional gene annotation, Gene Ontology (GO) and KEGG, do not contain a single, well-annotated category of epigenetic genes in *Caenorhabditis elegans* nematodes.
+Therefore, to be able to test this hypothesis, we will have to source our own annotations.
 
-.. image:: /tutorial_screenshots/02g02_enrichment.png
-  :width: 600
-  :alt: Enrichment analysis - custom enrichment attributes
+Luckily, *RNAlysis* supports enrichment analysis with annotations for user-defined attributes. These could be anything - from general categories like "epigenetic genes" and "newly-evolved genes" to highly specific categories like "genes whose codon usage deviates from the norm".
+The annotations can be either categorial (yes/no - whether a gene belongs to the category or not), or non-categorical (any numerical value - distance to nearest paralog in base-pairs, expression level in a certain tissue, etc).
+
+A legal **Attribute Reference Table** for *RNAlysis* should follow the following format:
+Every row in the table represents a gene/genmoc feature.
+The first column of the table should contain the gene names/IDs. Every other column in the table represents a user-defined attribute/category (in our case, "epigenetic genes").
+In each cell, set the value to NaN if the gene in this row is negative for the attribute (in our example - not an epigenetic gene), and any other value if the gene in this row is positive for the attirbute.
+As en example, see this mock Attribute Reference Table:
+
++----------------+--------------------+-------------+--------=---------+
+| feature_indices| Epigenetic genes   | Has paralogs |  gut expression |
++================+====================+=============+==================+
+| WBGene0000001  |            1       |     NaN      |         13.7    |
++----------------+--------------------+--------------+-----------------+
+| WBGene0000002  |           NaN      |      1       |         241     |
++----------------+--------------------+--------------+-----------------+
+| WBGene0000003  |           NaN      |      1       |         3.6     |
++----------------+--------------------+--------------+-----------------+
+| WBGene0000004  |            1       |      1       |         NaN     |
++----------------+--------------------+--------------+-----------------+
+| WBGene0000005  |            1       |     NaN      |         21.5    |
++----------------+--------------------+--------------+-----------------+
+
+For our analysis, we curated a list of epigenetic genes based on gene lists from the following publications: `Houri et al 2014 <https://doi.org/10.1016/j.cell.2016.02.057>`_, `Dalzell et al 2011 <https://doi.org/10.1371/journal.pntd.0001176>`_, `Yigit et al 2006 <https://doi.org/10.1016/j.cell.2006.09.033>`_, and based on existing GO annotations.
+You can find the pre-made curated Attribute Reference Table `here <https://raw.githubusercontent.com/GuyTeichman/RNAlysis/development/tests/test_files/attribute_reference_table.csv>`_.
+
 
 Running enrichment analysis
 ----------------------------
