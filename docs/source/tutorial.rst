@@ -663,13 +663,13 @@ You don't have to install DESeq2 on your own - *RNAlysis* can install it for you
 
 To open the Differential Expression window, choose an *RNAlysis* tab with one of the scaled count tables, click on the "General" tab, and from the drop-down menu below select "Run DESeq2 differential expression":
 
-.. image:: /tutorial_screenshots/02b01_deseq2.png
+.. image:: /tutorial_screenshots/02c01_deseq2.png
   :width: 600
   :alt: Open the differential expression window
 
 The Differential Expression window should now open. On the left side of the window, set the path of your R installation (or keep it on 'auto' if you have previously added R to your computer's PATH).
 
-.. image:: /tutorial_screenshots/02b02_deseq2.png
+.. image:: /tutorial_screenshots/02c02_deseq2.png
   :width: 600
   :alt: Differential expression
 
@@ -696,7 +696,7 @@ For example, the design matrix for our osmotic stress dataset would look like th
 
 Once you have prepared your design matrix, choose that file from the DESeq2 window and click on the "Load design matrix" button:
 
-.. image:: /tutorial_screenshots/02b03_deseq2.png
+.. image:: /tutorial_screenshots/02c03_deseq2.png
   :width: 600
   :alt: Differential expression - load sample table
 
@@ -705,7 +705,7 @@ You can make as many pairwise comparisons and you want, each comparing two level
 In our case, we are only interested in one comparison - osmotic stress VS control.
 Note that the order of conditions in the comparison matters - the first condition will be the numerator in the comparison, and the second condition will be the denominator.
 
-.. image:: /tutorial_screenshots/02b04_deseq2.png
+.. image:: /tutorial_screenshots/02c04_deseq2.png
   :width: 600
   :alt: Differential expression - choose pairwise comparisons
 
@@ -713,13 +713,13 @@ After picking the comparisons you want to run, click on the "Start DESeq2".
 
 When the analysis ends, a dialog box will pop up, prompting you to choose which differential expression tables do you want to load into *RNAlysis*:
 
-.. image:: /tutorial_screenshots/02b05_deseq2.png
+.. image:: /tutorial_screenshots/02c05_deseq2.png
   :width: 600
   :alt: Differential expression - choose tables to load
 
 After choosing to load the table, it will open in a new tab in *RNAlysis*:
 
-.. image:: /tutorial_screenshots/02b06_deseq2.png
+.. image:: /tutorial_screenshots/02c06_deseq2.png
   :width: 600
   :alt: Differential expression - output table
 
