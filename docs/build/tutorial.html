@@ -99,7 +99,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#id6">Enrichment analysis</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#define-a-background-set">Define a background set</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#define-our-custom-enrichment-attributes">Define our custom enrichment attributes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id7">Running enrichment analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">Running enrichment analysis</a></li>
 </ul>
 </li>
 </ul>
@@ -225,7 +225,7 @@ PC2 appears to arrange the samples by their developmental stage, with embryos ap
 </section>
 <section id="examine-similarity-between-developmental-stages">
 <h4>Examine similarity between developmental stages<a class="headerlink" href="#examine-similarity-between-developmental-stages" title="Permalink to this heading"></a></h4>
-<p>Let’s now examine the distribution of gene expression across developmental stages with a <a href="#id8"><span class="problematic" id="id9">`Pair-plot&lt;https://pythonbasics.org/seaborn-pairplot/&gt;`_</span></a>.
+<p>Let’s now examine the distribution of gene expression across developmental stages with a <a href="#id9"><span class="problematic" id="id10">`Pair-plot&lt;https://pythonbasics.org/seaborn-pairplot/&gt;`_</span></a>.
 Pair-plots displays the pairwise relationships between samples, or experimental conditions, in our dataset, and also display a histogram of gene expression values within each sample/condition.</p>
 <p>To generate a Pair-plot, select “Pair-plot” from the function drop-down menu.</p>
 <p>Similarly to PCA, the Pair-plot function allows you to group samples by experimental condition, and to choose whether or not to transform the data.</p>
@@ -392,7 +392,49 @@ The color of the terms on the graph indicates their log2 fold change, and the de
 <h2>Analysis #2 - differential expression data<a class="headerlink" href="#analysis-2-differential-expression-data" title="Permalink to this heading"></a></h2>
 <section id="id4">
 <h3>The dataset<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
-<p>For the second analysis, we will use a publicly available dataset from #TODO. This dataset describes…</p>
+<p>In the second analysis, we will analyze three publicly available datasets from GEO. Each individual dataset is an RNA sequencing experiment of <em>Caenorhabidtis elegans</em> nematodes, measuring the effect of a particular stress condition on gene expression.
+Our goal in this analysis will be to examine the similarities between the different stress conditions, and to answer a specific question - how are Epigenetic genes and pathways affected by exposure to stress?</p>
+<p>Unlike in the first analysis, in this analysis we will not start from a pre-made counts table.
+Instead, we are going to pre-process and quantify each dataset directly from the raw FASTQ files that are available on GEO.</p>
+<p>The datasets we will use are:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>mRNA sequencing of worms exposed to osmotic stress: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE107704">GSE107704</a>. This is a single-end unstranded RNA sequencing experiment.</dt><dd><ul class="simple">
+<li><p>Control sample 1 - SRR6348197</p></li>
+<li><p>Control sample 2 - SRR6348198</p></li>
+<li><p>Control sample 3 - SRR6348199</p></li>
+<li><p>Osmotic sample 1 - SRR6348200</p></li>
+<li><p>Osmotic sample 2 - SRR6348201</p></li>
+<li><p>Osmotic sample 3 - SRR6348202</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>mRNA sequencing of worms exposed to starvation: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE124178">GSE124178</a>. This is a paired-end stranded RNA sequencing experiment.</dt><dd><ul class="simple">
+<li><p>Control sample 1 - SRR8359132</p></li>
+<li><p>Control sample 2 - SRR8359133</p></li>
+<li><p>Control sample 3 - SRR8359142</p></li>
+<li><p>Starvation sample 1 - SRR8359134</p></li>
+<li><p>Starvation sample 2 - SRR8359135</p></li>
+<li><p>Starvation sample 3 - SRR8359136</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>mRNA sequencing of worms exposed to heat shock: <a class="reference external" href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE132838">GSE132838</a>. This is a paired-end stranded RNA sequencing experiment.</dt><dd><ul class="simple">
+<li><p>Control sample 1 - SRR9310678</p></li>
+<li><p>Control sample 2 - SRR9310679</p></li>
+<li><p>Control sample 3 - SRR9310680</p></li>
+<li><p>Heat sample 1 - SRR9310681</p></li>
+<li><p>Heat sample 2 - SRR9310682</p></li>
+<li><p>Heat sample 3 - SRR9310683</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
 </section>
 <section id="quantify-fasta-files-and-differential-expression-analysis">
 <h3>Quantify FASTA files and Differential Expression Analysis<a class="headerlink" href="#quantify-fasta-files-and-differential-expression-analysis" title="Permalink to this heading"></a></h3>
@@ -481,14 +523,18 @@ This is what our results should look like:</p>
 </section>
 <section id="run-differential-expression-analysis-with-deseq2">
 <h4>Run differential expression analysis with <em>DESeq2</em><a class="headerlink" href="#run-differential-expression-analysis-with-deseq2" title="Permalink to this heading"></a></h4>
-<p>#TODO</p>
-<a class="reference internal image-reference" href="tutorial_screenshots/02b01_deseq2.png"><img alt="Open the differential expression window" src="tutorial_screenshots/02b01_deseq2.png" style="width: 600px;" /></a>
-<p>#TODO</p>
-<a class="reference internal image-reference" href="tutorial_screenshots/02b02_deseq2.png"><img alt="Differential expression" src="tutorial_screenshots/02b02_deseq2.png" style="width: 600px;" /></a>
-<p>Next, we need to define a <strong>sample table</strong> for each of our count tables.
-The first column of the sample table should contain the names of the samples in the count table.
-Each other column should contain a variable to be added to the statistical design formula of the dataset. For example: experimental condition, genotype, or biological replicate/batch.
-For example, the sample table for our osmotic stress dataset would look like this:</p>
+<p>We can now start Differential Expression analysis.
+For this purpose we will use <a class="reference external" href="https://bioconductor.org/packages/release/bioc/html/DESeq2.html">DESeq2</a> - an R package for differential expression analysis.
+Before proceeding with this step, make sure you have <a class="reference external" href="https://cran.r-project.org/bin/">installed R</a> on your computer.
+You don’t have to install DESeq2 on your own - <em>RNAlysis</em> can install it for you, as long as you have installed the R language on your computer already.</p>
+<p>To open the Differential Expression window, choose an <em>RNAlysis</em> tab with one of the scaled count tables, click on the “General” tab, and from the drop-down menu below select “Run DESeq2 differential expression”:</p>
+<a class="reference internal image-reference" href="_images/02c01_deseq2.png"><img alt="Open the differential expression window" src="_images/02c01_deseq2.png" style="width: 600px;" /></a>
+<p>The Differential Expression window should now open. On the left side of the window, set the path of your R installation (or keep it on ‘auto’ if you have previously added R to your computer’s PATH).</p>
+<a class="reference internal image-reference" href="_images/02c02_deseq2.png"><img alt="Differential expression" src="_images/02c02_deseq2.png" style="width: 600px;" /></a>
+<p>Next, we need to define a <strong>design matrix</strong> for each of our count tables.
+The first column of the design matrix should contain the names of the samples in the count table.
+Each other column should contain a variable to be added to the experimental design formula of the dataset. For example: experimental condition, genotype, or biological replicate/batch.
+For example, the design matrix for our osmotic stress dataset would look like this:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 26%" />
@@ -528,10 +574,19 @@ For example, the sample table for our osmotic stress dataset would look like thi
 </tr>
 </tbody>
 </table>
-<p>#TODO</p>
-<a class="reference internal image-reference" href="tutorial_screenshots/02b03_deseq2.png"><img alt="Differential expression - load sample table" src="tutorial_screenshots/02b03_deseq2.png" style="width: 600px;" /></a>
-<p>#TODO</p>
-<a class="reference internal image-reference" href="tutorial_screenshots/02b04_deseq2.png"><img alt="Differential expression - choose pairwise comparisons" src="tutorial_screenshots/02b04_deseq2.png" style="width: 600px;" /></a>
+<p>Once you have prepared your design matrix, choose that file from the DESeq2 window and click on the “Load design matrix” button:</p>
+<a class="reference internal image-reference" href="_images/02c03_deseq2.png"><img alt="Differential expression - load sample table" src="_images/02c03_deseq2.png" style="width: 600px;" /></a>
+<p>The right side of the window will now update, allowing you to choose which pairwise comparisons you want to run, based on your design matrix.
+You can make as many pairwise comparisons and you want, each comparing two levels of one of the variables in the design matrix.
+In our case, we are only interested in one comparison - osmotic stress VS control.
+Note that the order of conditions in the comparison matters - the first condition will be the numerator in the comparison, and the second condition will be the denominator.</p>
+<a class="reference internal image-reference" href="_images/02c04_deseq2.png"><img alt="Differential expression - choose pairwise comparisons" src="_images/02c04_deseq2.png" style="width: 600px;" /></a>
+<p>After picking the comparisons you want to run, click on the “Start DESeq2”.</p>
+<p>When the analysis ends, a dialog box will pop up, prompting you to choose which differential expression tables do you want to load into <em>RNAlysis</em>:</p>
+<a class="reference internal image-reference" href="_images/02c05_deseq2.png"><img alt="Differential expression - choose tables to load" src="_images/02c05_deseq2.png" style="width: 600px;" /></a>
+<p>After choosing to load the table, it will open in a new tab in <em>RNAlysis</em>:</p>
+<a class="reference internal image-reference" href="_images/02c06_deseq2.png"><img alt="Differential expression - output table" src="_images/02c06_deseq2.png" style="width: 600px;" /></a>
+<p>We can now repeat the same procedure with the other two count tables, and proceed with analyzing the differential expression tables.</p>
 </section>
 </section>
 <section id="data-filtering-and-visualization-with-pipelines">
@@ -544,7 +599,7 @@ vWe could apply each of those operations to our data tables one by one, but that
 <section id="create-a-pipeline">
 <h4>Create a Pipeline<a class="headerlink" href="#create-a-pipeline" title="Permalink to this heading"></a></h4>
 <p>To create a Pipeline, let’s open the Pipelines menu and click on “New Pipeline”:</p>
-<a class="reference internal image-reference" href="tutorial_screenshots/02d01_pipeline.png"><img alt="Pipeline menu - new Pipeline" src="tutorial_screenshots/02d01_pipeline.png" style="width: 600px;" /></a>
+<a class="reference internal image-reference" href="_images/02d01_pipeline.png"><img alt="Pipeline menu - new Pipeline" src="_images/02d01_pipeline.png" style="width: 600px;" /></a>
 <p>In the new window that opened, we can name our Pipeline, and choose the type of table we want to apply the Pipeline to. Let’s select “differential expression” from the drop-down menu:</p>
 <a class="reference internal image-reference" href="_images/02d02_pipeline.png"><img alt="Create Pipeline - choose table type" src="_images/02d02_pipeline.png" style="width: 600px;" /></a>
 <p>After choosing a name and table type, we can click on the “Start” button.
@@ -655,11 +710,34 @@ We can use the process we learned earlier to generate an appropriate background 
 </section>
 <section id="define-our-custom-enrichment-attributes">
 <h4>Define our custom enrichment attributes<a class="headerlink" href="#define-our-custom-enrichment-attributes" title="Permalink to this heading"></a></h4>
-<p>#TODO</p>
-<a class="reference internal image-reference" href="tutorial_screenshots/02g02_enrichment.png"><img alt="Enrichment analysis - custom enrichment attributes" src="tutorial_screenshots/02g02_enrichment.png" style="width: 600px;" /></a>
+<p>For this analysis, we want to find out whether genes downregulated in all stress conditions are enriched for epigenetic genes.
+Unfortunately, the most common sources for functional gene annotation, Gene Ontology (GO) and KEGG, do not contain a single, well-annotated category of epigenetic genes in <em>Caenorhabditis elegans</em> nematodes.
+Therefore, to be able to test this hypothesis, we will have to source our own annotations.</p>
+<p>Luckily, <em>RNAlysis</em> supports enrichment analysis with annotations for user-defined attributes. These could be anything - from general categories like “epigenetic genes” and “newly-evolved genes” to highly specific categories like “genes whose codon usage deviates from the norm”.
+The annotations can be either categorial (yes/no - whether a gene belongs to the category or not), or non-categorical (any numerical value - distance to nearest paralog in base-pairs, expression level in a certain tissue, etc).</p>
+<p>A legal <strong>Attribute Reference Table</strong> for <em>RNAlysis</em> should follow the following format:
+Every row in the table represents a gene/genmoc feature.
+The first column of the table should contain the gene names/IDs. Every other column in the table represents a user-defined attribute/category (in our case, “epigenetic genes”).
+In each cell, set the value to NaN if the gene in this row is negative for the attribute (in our example - not an epigenetic gene), and any other value if the gene in this row is positive for the attirbute.
+As en example, see this mock Attribute Reference Table:</p>
+<p>+—————-+——————–+————-+——–=———+
+| feature_indices| Epigenetic genes   | Has paralogs |  gut expression |
++================+====================+=============+==================+
+| WBGene0000001  |            1       |     NaN      |         13.7    |
++—————-+——————–+————–+—————–+
+| WBGene0000002  |           NaN      |      1       |         241     |
++—————-+——————–+————–+—————–+
+| WBGene0000003  |           NaN      |      1       |         3.6     |
++—————-+——————–+————–+—————–+
+| WBGene0000004  |            1       |      1       |         NaN     |
++—————-+——————–+————–+—————–+
+| WBGene0000005  |            1       |     NaN      |         21.5    |
++—————-+——————–+————–+—————–+</p>
+<p>For our analysis, we curated a list of epigenetic genes based on gene lists from the following publications: <a class="reference external" href="https://doi.org/10.1016/j.cell.2016.02.057">Houri et al 2014</a>, <a class="reference external" href="https://doi.org/10.1371/journal.pntd.0001176">Dalzell et al 2011</a>, <a class="reference external" href="https://doi.org/10.1016/j.cell.2006.09.033">Yigit et al 2006</a>, and based on existing GO annotations.
+You can find the pre-made curated Attribute Reference Table <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/development/tests/test_files/attribute_reference_table.csv">here</a>.</p>
 </section>
-<section id="id7">
-<h4>Running enrichment analysis<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h4>
+<section id="id8">
+<h4>Running enrichment analysis<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h4>
 <p>To open the Enrichent Analysis window, open the ‘Gene sets’ menu and click “Enrichment Analysis”:</p>
 <a class="reference internal image-reference" href="_images/02h01_enrichment.png"><img alt="Pick 'Enrichment analysis' from the 'Gene sets' menu" src="_images/02h01_enrichment.png" style="width: 600px;" /></a>
 <p>We can choose our test and background sets from the two drop-down menus in the Enrichment window:</p>
