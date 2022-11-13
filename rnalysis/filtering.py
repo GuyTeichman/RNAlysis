@@ -19,6 +19,7 @@ from typing import Any, Iterable, List, Tuple, Union, Callable
 
 import requests
 import yaml
+from scipy.stats import spearmanr
 from scipy.stats.mstats import gmean
 
 try:
@@ -2009,7 +2010,9 @@ class DESeqFilter(Filter):
             direction='neg', inplace=False)
 
     @readable_name('Volcano plot')
-    def volcano_plot(self, alpha: float = 0.1) -> plt.Figure:
+    def volcano_plot(self, alpha: float = 0.1, log2fc_threshold: Union[float, None] = 1,
+                     title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
+                     label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
 
         """
         Plots a volcano plot (log2(fold change) vs -log10(adj. p-value)) of the DESeqFilter object. \
@@ -2017,7 +2020,18 @@ class DESeqFilter(Filter):
         and significantly downregulated features are colored in blue.
 
         :type alpha: float between 0 and 1
-        :param alpha: the significance threshold to color data points as significantly up/down-regulated.
+        :param alpha: the significance threshold to paint data points as significantly up/down-regulated.
+        :param log2fc_threshold: the absolute log2(fold change) threshold to paint data as \
+        significantly up/down-regulated. if log2fc_threshold is None, no threshold will be used.
+        :type log2fc_threshold: non-negative float or None (default=1)
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+         :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
 
         .. figure:: /figures/volcano.png
            :align:   center
@@ -2029,17 +2043,30 @@ class DESeqFilter(Filter):
         self._assert_padj_col()
         self._assert_log2fc_col()
 
-        fig = plt.figure()
+        if log2fc_threshold is None:
+            log2fc_threshold = 0
+        else:
+            assert isinstance(log2fc_threshold, (int, float)) and log2fc_threshold >= 0, \
+                f"'log2fc_threshold' must be a non-negative number!"
+
+        fig = plt.figure(constrained_layout=True)
         ax = fig.add_subplot(111)
-        plt.style.use('seaborn-white')
         colors = pd.Series(index=self.df.index, dtype='float64')
-        colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] > 0)] = 'tab:red'
-        colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] < 0)] = 'tab:blue'
+        colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] > log2fc_threshold)] = 'tab:red'
+        colors.loc[(self.df[self.padj_col] <= alpha) & (self.df[self.log2fc_col] < -log2fc_threshold)] = 'tab:blue'
         colors.fillna('grey', inplace=True)
         ax.scatter(self.df[self.log2fc_col], -np.log10(self.df[self.padj_col]), c=colors, s=1)
-        ax.set_title(f"Volcano plot of {self.fname.stem}", fontsize=18)
-        ax.set_xlabel('Log2(fold change)', fontsize=15)
-        ax.set_ylabel('-Log10(adj. p-value)', fontsize=15)
+        if title == 'auto':
+            title = f"Volcano plot of {self.fname.stem}"
+        ax.set_title(title, fontsize=title_fontsize)
+        ax.set_xlabel('Log2(fold change)', fontsize=label_fontsize)
+        ax.set_ylabel('-Log10(adj. p-value)', fontsize=label_fontsize)
+        ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+
+        if log2fc_threshold > 0:
+            ax.axvline(log2fc_threshold, linestyle='--', color='black')
+            ax.axvline(-log2fc_threshold, linestyle='--', color='black')
+        generic.despine(ax)
         plt.show()
         return fig
 
@@ -2255,7 +2282,8 @@ class CountFilter(Filter):
 
     @readable_name('Pair-plot')
     def pairplot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
-                 log2: bool = True) -> sns.PairGrid:
+                 log2: bool = True, title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 30,
+                 label_fontsize: float = 16, tick_fontsize: float = 12) -> sns.PairGrid:
 
         """
         Plot pairwise relationships in the dataset. \
@@ -2271,6 +2299,14 @@ class CountFilter(Filter):
         :type log2: bool (default=True)
         :param log2: if True, the pairplot will be calculated with log2 of the DataFrame (pseudocount+1 added), \
         and not with the raw data. If False, the pairplot will be calculated with the raw data.
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+         :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
         :return: An instance of seaborn.PairGrid.
 
         .. figure:: /figures/pairplot.png
@@ -2293,14 +2329,28 @@ class CountFilter(Filter):
                                              s=3.5),
                                diag_kws=dict(edgecolor=(0, 0, 0), facecolor=(0.1, 0.5, 0.15)))
 
-        title = 'Pairplot' + log2 * ' (logarithmic scale)'
-        plt.suptitle(title, fontsize=26)
+        if title == 'auto':
+            title = 'Pairplot' + log2 * ' (logarithmic scale)'
+        plt.suptitle(title, fontsize=title_fontsize)
 
         for i, row in enumerate(pairplt.axes):
-            for ax in row[0:i]:
-                ax.plot(range(int(ax.get_xlim()[1])), range(int(ax.get_xlim()[1])), linestyle='--', color='k',
-                        zorder=100, linewidth=0.8)
+            for j, ax in enumerate(row[0:i + 1]):
+                ax.set_xlabel(ax.get_xlabel(), fontsize=label_fontsize)
+                ax.set_ylabel(ax.get_ylabel(), fontsize=label_fontsize)
+                ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
 
+                if i == j:
+                    continue
+                # ax.plot(range(int(ax.get_xlim()[1])), range(int(ax.get_xlim()[1])), linestyle='--', color='k',
+                #         zorder=100, linewidth=0.8)
+                spearman_corr = spearmanr(sample_df.iloc[:, [i, j]])[0]
+                ax.text(0, 0.9, f"Spearman R={spearman_corr:.2f}", transform=ax.transAxes)
+
+        pairplt.figure.set_size_inches(9, 9)
+        try:
+            pairplt.figure.set_layout_engine("compressed")
+        except AttributeError:
+            pairplt.figure.set_constrained_layout(True)
         plt.show()
         return pairplt
 
