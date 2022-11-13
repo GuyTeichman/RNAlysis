@@ -53,10 +53,10 @@ class BaseInteractiveCanvas(FigureCanvasQTAgg):
 
     manualChoice = QtCore.pyqtSignal()
 
-    def __init__(self, gene_sets: dict, parent=None, tight_layout: bool = True):
+    def __init__(self, gene_sets: dict, parent=None, constrained_layout: bool = False):
         self.parent = parent
         self.gene_sets = gene_sets
-        self.fig = plt.Figure(tight_layout=tight_layout)
+        self.fig = plt.Figure(constrained_layout=constrained_layout)
         super().__init__(self.fig)
 
         self.fig.canvas.mpl_connect('button_press_event', self.on_click)
@@ -277,7 +277,7 @@ class VennInteractiveCanvas(BaseInteractiveCanvas):
 
 class UpSetInteractiveCanvas(BaseInteractiveCanvas):
     def __init__(self, gene_sets: dict, parent=None):
-        super().__init__(gene_sets, parent, tight_layout=False)
+        super().__init__(gene_sets, parent, constrained_layout=False)
         self.upset_df = parsing.generate_upset_series(gene_sets)
         self.upset = upsetplot.UpSet(self.upset_df, sort_by='degree', sort_categories_by=None)
         self.subset_states = {i: self.DESELECTED_STATE for i in range(len(self.upset.subset_styles))}
