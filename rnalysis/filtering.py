@@ -2348,7 +2348,7 @@ class CountFilter(Filter):
                 #         zorder=100, linewidth=0.8)
                 if show_corr:
                     spearman_corr = spearmanr(sample_df.iloc[:, [i, j]])[0]
-                    ax.text(0, 0.9, f"Spearman R={spearman_corr:.2f}", transform=ax.transAxes)
+                    ax.text(0.05, 0.9, f"Spearman \u03C1={spearman_corr:.2f}", transform=ax.transAxes)
 
         pairplt.figure.set_size_inches(9, 9)
         try:
