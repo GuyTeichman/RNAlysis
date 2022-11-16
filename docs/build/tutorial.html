@@ -220,7 +220,7 @@ That way, each sub-group will be drawn with a different color on the final graph
 In our case we only have one column per condition, and we want to examine them all, so we don’t need to change this parameter.</p>
 <p>By default, <em>RNAlysis</em> will apply a power-transform (Box-Cox) to the data before standardazing it and running PCA. This is the case for many functions in <em>RNAlysis</em>, since applying power transform minimizes undesirable characteristics of counts data, such as skeweness, mean-variance dependence, and extreme values.
 However, this feature can always be disabled with the <cite>power_transform</cite> parameter.</p>
-<p>Whether we apply a power transform to our data or not, <em>RNAlysis</em> will then standardize our data, #TODO</p>
+<p>Whether we apply a power transform to our data or not, <em>RNAlysis</em> will then standardize our data to neutralize any differences in absolute gene expression level, and then applies the Principal Component Analysis</p>
 <p>Let’s apply the analysis and look at the output:</p>
 <a class="reference internal image-reference" href="_images/01d02_pca.png"><img alt="Principal Component Analysis" src="_images/01d02_pca.png" style="width: 600px;" /></a>
 <p><em>RNAlysis</em> generated three graphs, depicting all of the pair-wise combinations between Principal Components #1-3.

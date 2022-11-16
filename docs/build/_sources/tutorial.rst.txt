@@ -127,7 +127,7 @@ In our case we only have one column per condition, and we want to examine them a
 By default, *RNAlysis* will apply a power-transform (Box-Cox) to the data before standardazing it and running PCA. This is the case for many functions in *RNAlysis*, since applying power transform minimizes undesirable characteristics of counts data, such as skeweness, mean-variance dependence, and extreme values.
 However, this feature can always be disabled with the `power_transform` parameter.
 
-Whether we apply a power transform to our data or not, *RNAlysis* will then standardize our data, #TODO
+Whether we apply a power transform to our data or not, *RNAlysis* will then standardize our data to neutralize any differences in absolute gene expression level, and then applies the Principal Component Analysis
 
 Let's apply the analysis and look at the output:
 
