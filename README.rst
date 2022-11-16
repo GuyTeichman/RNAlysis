@@ -29,7 +29,7 @@ What can I do with *RNAlysis*?
 * Perform enrichment analysis with pre-determined Gene Ontology terms/KEGG pathways, or with used-defined attributes
 * Perform enrichment analysis on a single ranked list of genes, instead of a test set and a background set
 
-To get an overview of what *RNAlysis* can do, read the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
+To get an overview of what *RNAlysis* can do, read the `tutorial <https://guyteichman.github.io/RNAlysis/build/tutorial.html>`_ and the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
 
 *RNAlysis* supports gene expression matrices and differential expression tables in general, and integrates in particular with Python's *HTSeq-count* and R's *DESeq2*.
 
