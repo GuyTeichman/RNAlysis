@@ -24,7 +24,7 @@ You can find the table I created `here <https://raw.githubusercontent.com/GuyTei
 
 
 Let's start by loading the dataset - in the main window, click on the "Load" button and choose the table's file from your computer.
-We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are applicable only to count matrix-style datasets.
+We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.
 
 .. image:: /tutorial_screenshots/01a01_load_table.png
   :width: 600
@@ -37,7 +37,7 @@ This is not a mandatory step, but if we don't do it, *RNAlysis* will warn us whe
   :width: 600
   :alt: Loading a table into *RNAlysis* - set the table as pre-normalized
 
-Finally, we can click the "start" button to finish loading our dataset into *RNAlysis*.
+Finally, we can click the "start" button to actually open our table on *RNAlysis*.
 The window will now display a preview of our table, as well as a a short summary of our table's content (table name, table type, number of rows and columns).
 
 .. image:: /tutorial_screenshots/01b01_view_table.png
@@ -63,7 +63,9 @@ Filter out lowly-expressed genes
 
 We want to filter out the genes that have not been expressed or that have low expression across all samples.
 Lowly-expressed genes can negatively affect our analysis downstream, since the % error in the expression of these genes is relatively high, and these genes are likely to add noise rather than useful signal to our analysis.
-We are going to filter our table, so that we keep only genes with 50 or more normalized reads in at least 1 experimental condition.
+
+In this particular example we also want to analyze a fairly small gruop of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
+Therefore, we are going to filter our table, so that we keep only genes with 50 or more normalized reads in at least 1 experimental condition.
 
 To apply a filtering function to our table, click on the "Filter" tab, and select a function from the drop-down menu that opens:
 
@@ -71,7 +73,8 @@ To apply a filtering function to our table, click on the "Filter" tab, and selec
   :width: 600
   :alt: Choose a filtering function
 
-We are going to select "Filter genes with low expression in all columns". This function will filter our any gene whose expression level is lower than X in every single column. This means we only keep genes that are reasonably expressed in at least one experimental condition.
+*RNAlysis* contains a wide diversity of filtering functions - filtering genes by expression level, fold change direction and magnitude, statistical significance, removing rows with missing data, and many more.
+We are going to select "Filter genes with low expression in all columns". This function will filter our any gene whose expression level is lower than X in every single column. This means we only keep genes that are desirably expressed in at least one experimental condition.
 If you are not sure what a function does, you can click on the blue question mark button next to the function's name to read a short description, or go to the function's help page by clicking on the blue link at the bottom of the main window.
 
 Once we choose a function, the window will expand, and the filtering function's parameters will be displayed below. We can modify these parameters to choose exactly how to filter our table.
@@ -93,7 +96,7 @@ Once we are happy with the parameters we chose, we can scroll down and click on 
   :width: 600
   :alt: Set filtering parameters
 
-After clicking "Apply", we can see that our action has been added to the *command history* pane on the right of the window. We can undo and redo any operation we apply inplace by clicking on a specific row in this pane.
+After clicking "Apply", we can see that our action has been added to the *command history* panel on the right of the window. We can undo and redo any operation we apply inplace by clicking on a specific row in this panel.
 Moreover, we can see that a short summary of our filtering action has printed to the log box at the bottom, and that the name and size of the table have been updated.
 
 .. image:: /tutorial_screenshots/01c03_filter_low_reads.png
@@ -106,7 +109,8 @@ Examine variance in our data with Principal Component Analysis
 The first analysis we will perform is Principal Component Analysis, or PCA.
 Principal component analysis is a dimensionality-reduction method. Meaning, it can reduce the dimensionality of large data sets (e.g. the expression of thousands of genes), by transforming the expression data of these genes into a smaller dataset that still contains most of the information from the original dataset.
 
-Since our dataset contains thousands of genes, it can be difficult to see how the different conditions differ in the expression of those genes. To remedy that, PCA analysis can "rearrange" the axes of our data such that we can summarize most of the variance of our dataset in very few dimensions (~2-10 dimensions).
+Since our dataset contains thousands of genes, it can be difficult to see how the different conditions vary in the expression of those genes.
+To remedy that, PCA analysis can "rearrange" the axes of our data such that we can capture most of the variance of our dataset in very few dimensions (~2-10 dimensions).
 
 You can read more about PCA `here <https://builtin.com/data-science/step-step-explanation-principal-component-analysis>`_.
 
@@ -116,11 +120,14 @@ To run a PCA, click on the "Visualize" tab, and select "Principal Component Anal
   :width: 600
   :alt: Choose a visualization function function
 
-The 'samples' parameter allows you to choose which samples will be analyzed with PCA, and also lets you group these samples into sub-groups (for example, group replicate data by experimental condition), so that each sub-group will be drawn with a different color on the final graph.
+The 'samples' parameter allows you to choose which samples will be analyzed with PCA, and also lets you group these samples into sub-groups for the purpose of visualization (for example, group replicate data by experimental condition).
+That way, each sub-group will be drawn with a different color on the final graph.
 In our case we only have one column per condition, and we want to examine them all, so we don't need to change this parameter.
 
 By default, *RNAlysis* will apply a power-transform (Box-Cox) to the data before standardazing it and running PCA. This is the case for many functions in *RNAlysis*, since applying power transform minimizes undesirable characteristics of counts data, such as skeweness, mean-variance dependence, and extreme values.
 However, this feature can always be disabled with the `power_transform` parameter.
+
+Whether we apply a power transform to our data or not, *RNAlysis* will then standardize our data, #TODO
 
 Let's apply the analysis and look at the output:
 
@@ -132,6 +139,7 @@ Let's apply the analysis and look at the output:
 We can visualize less or more principal components by changing the value of the `n_components` parameter.
 
 Usually the most relevant graph is the one depicting the first and second PCs, since they explain the largest amount of variance in the data.
+However, when the % of variance explained by preceeding PCs is similar (perhaps PCs 2 and 3 explain about the same % of variance), some of the PCs may be more informative than others, so it's worth keeping an eye out for those.
 
 In our case, we can see that PCs 1-2 together explain ~75% of the variance in our dataset. Interestingly, the PCA shows a semi-circular pattern, ordered by the developmental stage of the worms.
 My hypothesis would be that PC1 arranges the samples by their relative "germline" content - embryos are mostly gonads, adult nematodes contain a rather large quantity of germ cells, L4 larvae is the developmental stage where germline proliferation begins, and during the L1-L3 stages the relative germline content of the worms is relatively minimal.
@@ -140,12 +148,14 @@ PC2 appears to arrange the samples by their developmental stage, with embryos ap
 Examine similarity between developmental stages
 -------------------------------------------------
 
-Let's now examine the distribution of gene expression across developmental stages with a `Pair-plot<https://pythonbasics.org/seaborn-pairplot/>`_.
+Let's now examine the distribution of gene expression across developmental stages with a `Pair-plot <https://pythonbasics.org/seaborn-pairplot/>`_.
 Pair-plots displays the pairwise relationships between samples, or experimental conditions, in our dataset, and also display a histogram of gene expression values within each sample/condition.
 
 To generate a Pair-plot, select "Pair-plot" from the function drop-down menu.
 
-Similarly to PCA, the Pair-plot function allows you to group samples by experimental condition, and to choose whether or not to transform the data.
+The Pair-plot function allows you to group samples by experimental condition in order to average them together.
+
+We also have the option, like with PCA, to choose whether or not to power transform our data.
 
 Let's click "Apply" and check out the result:
 
@@ -184,6 +194,9 @@ Let's also set the count unit to FPKM, and click "Apply" to create the plot:
 
 Interestingly, we can see that the expression of *oma-1* is actually highest in the adult worms. This is possibly because the adult worm contains a large number of unlaid embryos, some of which are the two-cell stage.
 
+Our data only has one sample per condition, so our bar plots do not convey any information about the variance in gene expression within each condition.
+However, if we had multiple sample per condition, we could have grouped the samples into subgroup (like with the PCA and Pair-plot functions), and then each bar plot will also display a scatter of the expression values in each sub-group, and the standard error of the expression value.
+
 Clustering analysis
 ====================
 We are interested in how different groups of genes change in expression level over the life cycle of the worm. We can use clustering analysis to group the genes in this dataset by their expression pattern over the developmental stages.
@@ -202,14 +215,15 @@ Fortunately, some methods were developed to suggest a good number of clusters fo
 We will use the Gap Statistic method to determine some good options for the number of clusters in our analysis.
 
 To start, let's click on the Clustering tab and choose K-Medoids clustering from the drop-down menu.
-We can then set the value of the parameter `n_clusters` to 'gap', to indicate we want to use the Gap Statistic to determine the number of clusters in this analysis:
+We can then set the value of the parameter `n_clusters` to 'gap', to indicate that we want to use the Gap Statistic to determine the number of clusters in this analysis:
 
 .. image:: /tutorial_screenshots/01g01_kmedoids.png
   :width: 600
   :alt: K-Medoids clustering setup - choose the number of clusters using the Gap Statistic
 
 Next, we can set the distance metric. Different distance metrics can be more or less effective on specific types of data.
-We will use a distance metric called YR1, that was developed especially for time-series gene expression data. You can read more about it in `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_:
+*RNAlysis* offers a large array of distance metrics, about which you can read in the *RNAlysis* user guide.
+We will use a lesser-known distance metric called YR1, that was developed especially for time-series gene expression data and implemented in *RNAlysis*. You can read more about it in `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_:
 
 .. image:: /tutorial_screenshots/01g02_kmedoids.png
   :width: 600
@@ -246,7 +260,7 @@ This type of graph can help us see the general expression pattern that character
 
 In this case, we can see that while some clusters seem very internally consistent, quite a few clusters seem to contain a significant number of 'outlier' genes.
 
-*RNAlysis* also generates a Principal Component Analysis graph of our gene expression data, marking the genes in each cluster with a different color.
+*RNAlysis* also generates a Principal Component Analysis projection of our gene expression data, marking the genes in each cluster with a different color.
 This is another useful way to look at our clustering results - we would hope to see that the first two principal components explain a large degree of the variance in gene expression, and the genes in the same clusters will be grouped together in the graph.
 
 .. image:: /tutorial_screenshots/01g06_kmedoids.png
@@ -259,18 +273,19 @@ Finally, the following window will open, prompting us to choose which output clu
   :width: 600
   :alt: K-Medoids clustering results - choose which clusters to keep
 
+For every cluster we choose to keep, *RNAlysis* will create a new copy of the original count matrix, which includes only the genes that belong to this specific cluster.
 For now, we will choose to keep none of the clusters, so that we can try out other clustering approaches. Therefore, we click either OK or Cancel without selecting any clusters.
 
 Fine-tuning our approach - density-based clustering with HDBSCAN
 -----------------------------------------------------------------
 
 The next clustering approach we will use, HDBSCAN, belongs to a different category of clustering algorithms - density-based clustering.
-HDBSCAN stands for Hierarchical Density-Based Spatial Clustering of Applications with Noise (see ` the publication <https://link.springer.com/chapter/10.1007/978-3-642-37456-2_14>`_ for more details).
+HDBSCAN stands for Hierarchical Density-Based Spatial Clustering of Applications with Noise (see `the publication <https://link.springer.com/chapter/10.1007/978-3-642-37456-2_14>`_ for more details).
 HDBSCAN offers multiple advantages over more traditional clustering methods:
 
 1. HSBSCAN makes relatively few assumptions about the data - it assumes that the data contains noise, as well as some real clusters which we hope to discover.
 2. Unlike most other clustering methods, HDBSCAN does not "force" every gene to belong to a cluster. Instead, it can classify genes as outliers, excluding them from the final clustering solution.
-3. HDBSCAN does not require you to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is *minimum cluster size* (`min_cluster_size`), which determines the smallest "interesting" cluster size we expect to find in the data.
+3. When using HDBSCAN, you don't have to guess the number of clusters in the data. The main tuning parameter in HDBSCAN is *minimum cluster size* (`min_cluster_size`), which determines the smallest "interesting" cluster size we expect to find in the data.
 
 To run HDBSCAN, we need to pick a value for `min_cluster_size`.
 Lower values of `min_cluster_size` will return a larger number of small clusters, revealing more fine-grained patterns in our gene expression data.
@@ -285,6 +300,7 @@ For our example, let's pick a value of 75:
 We will, once again, use YR1 as the distance metric.
 
 If we look at the clustering results, we can see that HDBSCAN ended up generating a much larger number of clusters than the previous method, and they look fairly internally consistent.
+
 .. image:: /tutorial_screenshots/01g12_hdbscan.png
   :width: 600
   :alt: HDBSCAN clustering results
@@ -300,18 +316,18 @@ The complex approach - ensemble-based clustering with CLICOM
 --------------------------------------------------------------
 
 The last clustering approach we will use, CLICOM, is an emsemble-based clustering algorithm.
-CLICOM (see ` the publication <https://doi.org/10.1016/j.eswa.2011.08.059>`_ ) incorporates the results of multiple clustering solutions, which can come from different clustering algorithms with differing clustering parameters, and uses these clustering solutions to create a combined "concensus" clustering solution.
+CLICOM (see `the publication <https://doi.org/10.1016/j.eswa.2011.08.059>`_ ) incorporates the results of multiple clustering solutions, which can come from different clustering algorithms with differing clustering parameters, and uses these clustering solutions to create a combined "concensus" clustering solution.
 CLICOM offers multiple advantages over more traditional clustering methods:
 
 1. The ensemble clustering approach allows you to combine the results of multiple clustering algorithms with multiple tuning parameters, potentially making up for the weaknesses of each individual clustering method, and only taking into account patterns that robustly appear in many clustering solutions.
-2. CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the *evidence threshold* (`evidence_threshold`).
+2. When using CLICOM, you don't have  to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the *evidence threshold* (`evidence_threshold`).
 
 *RNAlysis* offers a modified implementation of CLICOM. The modified version of the algorithm can, like the HDBSCAN algorithm, classify genes as outliers, excluding them from the final clustering solution.
 
 This modified version of CLICOM supports a few tuning parameters, in addition to the clustering solutions themselves:
 
 * `evidence_threshold`: how many clustering solutions (fraction between 0-1) have to agree about  two genes being clustered together in order for them to appear together in the final solution? A lower evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.
-* `cluster_unclustered_features`: if True, CLICOM will force every gene to belong to a discovered cluster. Otherwise, genes can be classified as noise and remain unclustered.
+* `cluster_unclustered_features`: if set to True, CLICOM will force every gene to belong to a discovered cluster (like in the original implementation of the algorithm). Otherwise, genes can be classified as noise and remain unclustered (the modified algorithm).
 * `min_cluster_size`: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be classified as noise and filtered out of the final result, or merged into other clusters (depending on the value of `cluster_unclustered_features`).
 
 
@@ -364,7 +380,7 @@ Let's choose a few good-looking clusters to keep, and give them a name that indi
   :width: 600
   :alt: The clusters we chose to keep
 
-For this tutorial, I chose to keep clusters #1 ("down over development"), #2 ("L4 peak"), and #9 ("Down from L1 to adult").
+For this tutorial, I chose to keep clusters #1 ("down from embryo to L4"), #2 ("L4 peak"), and #9 ("Down from L1 to adult").
 
 Enrichment analysis
 ====================
@@ -405,10 +421,11 @@ Scroll to the bottom of thw window and click on the "run" button to run the anal
   :alt: Enrichment analysis loading screen
 
 The enrichment window is going to minimize to allow you to read the log box on the main *RNAlysis* window, but you can enlarge it back if you want to look at the analysis parameters, or start a new analysis with the same parameters.
+The log will update you on the number of annotations found, whether some genes were left entirely unannotated, how many gene IDs were successfully mapped to match the annotations, etc.
 
 Once the analysis is done, we will be able to observe our results in multiple formats.
 
-The first is a tabular format, showing all of the statistically significant GO terms we found (or the all of the tests GO terms, if we set the `return_nonsignificant` parameter to True).
+The first is a tabular format, showing all of the statistically significant GO terms we found (or the all of the tested GO terms, if we set the `return_nonsignificant` parameter to True).
 The GO terms will be sorted by specificity, the most specific GO terms appearing at the top of the table.
 The table also includes the statistics for each GO term (number of genes in the cluster, number of genes matching the GO term, expected number of genes to match the GO term, log2 fold change, p-value, and adjusted p-value).
 
@@ -438,7 +455,7 @@ The dataset
 In the second analysis, we will analyze three publicly available datasets from GEO. Each individual dataset is an RNA sequencing experiment of *Caenorhabidtis elegans* nematodes, measuring the effect of a particular stress condition on gene expression.
 Our goal in this analysis will be to examine the similarities between the different stress conditions, and to answer a specific question - how are Epigenetic genes and pathways affected by exposure to stress?
 
-Unlike in the first analysis, in this analysis we will not start from a pre-made counts table.
+In this analysis, unlike the first analysis, we will not start from a pre-made counts table.
 Instead, we are going to pre-process and quantify each dataset directly from the raw FASTQ files that are available on GEO.
 
 The datasets we will use are:
@@ -465,14 +482,28 @@ The datasets we will use are:
     *  Heat sample 2 - SRR9310682
     *  Heat sample 3 - SRR9310683
 
-Quantify FASTA files and Differential Expression Analysis
+Quantify FASTQ files and Differential Expression Analysis
 ==========================================================
-Since our input data is raw FASTQ files, we will first have to pre-process them, quantify them, and then run differential expression analysis to generate differential expression tables.
-You can do this with any tools or pipelines you prefer. However, since *RNAlysis* provides a graphical interface for *CutAdapt*, *kallisto*, and *DESeq2*, we will use those tools.
+RNAlysis offers user the opportunity to start analysis right from raw FASTQ data, using XYZ tools.
+
+Since our input data is raw FASTQ files, we will first have to pre-process them, quantify them, and then detect differentially expressed genes.
+When using RNAlysis, you can start analyzing your data at any point in the analysis pipeline: raw FASTQ files, trimmed FASTQ files, quantified read counts, or differential expression tables.
+This means you can combine *RNAlysis* with any other tools or pipelines you prefer.
+
+*RNAlysis* provides a graphical interface for *CutAdapt*, *kallisto*, and *DESeq2*, and we will use those tools in this tutorial analysis.
+
+Quality control with *FastQC*
+------------------------------
+
+The first step in analyzing RNA sequencing data is uaually quality control. This can help us get a general overview of our FASTQ files, and detect any potential issues with them.
+One of the most popular tools for this purpose is `FastQC <https://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc>`_.
+FastQC is an open-source tool, and it has both a friendly graphical interface and a programmatic API.
+You can get it `here <https://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc>`_.
 
 Trim adapters and remove low-quality reads with *CutAdapt*
 -----------------------------------------------------------
-After doing a quality-control of our FASTQ files with `FastQC <https://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc>`_, we can see that some of our samples were not adapter-trimmed properly.
+
+After doing a quality-control of our FASTQ files with FastQC, we can see that some of our samples had a small portion of reads that still contain adapter sequences.
 Therefore, we will start our analysis by trimming the leftover adapters. We will also perform quality-trimming, removing bases with low quality scores from our reads.
 
 The first dataset we will trim is the osmotic stress dataset, which happens to be single-end sequencing.
@@ -490,7 +521,9 @@ In the new window that opened, we can choose the folder that contains our raw FA
   :width: 600
   :alt: adapter trimming - set input and output folders
 
-Next, let's set the adapter sequence we want to trim. The adapter used on these samples is Illumina TruSeq, with the sequence "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA".
+The input folder can contain any number of raw FASTQ files, and *RNAlysis* will trim them one by one and save the trimmed output files in the output folder.
+
+Next, let's set the adapter sequence we want to trim. The adapter used on these samples is the three-prime Illumina TruSeq adapter, with the sequence "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA".
 Let's click on the "Set input" button of the `three_prime_adapters` parameter:
 
 .. image:: /tutorial_screenshots/02a03_cutadapt.png
@@ -503,19 +536,21 @@ This will open a dialog box, where we can enter the sequence of our adapter:
   :width: 600
   :alt: adapter trimming - set adapter sequence
 
-We will leave the quality-trimming parameters on their default values - trim bases below quality score 20 from the 3' end of reads, trim flanking N bases fro the reads, and filter out any read that ends up shorter than 10bp after trimming.
+We will leave the quality-trimming parameters on their default values - trim bases below quality score 20 from the 3' end of reads, trim flanking N bases from the reads, and filter out any read that ends up shorter than 10bp after trimming:
 
 .. image:: /tutorial_screenshots/02a05_cutadapt.png
   :width: 600
   :alt: adapter trimming - quality trimming parameters
 
 Let's now scroll to the bottom of the window and set the `discard_untrimmed_reads` parameter to False, so that *CutAdapt* will not discard reads that were previously trimmed properly.
-Once we are happy with the trimming parameters, we can click on the "Start CutAdapt" button at the bottom of the window.
-A loading screen will now appear, and the trimmed FASTQ files, as well as the trimming logs, will be saved to our output folder.
+Usually we do want to discard any reads that didn't contain adapter sequences, but in our case, most of the reads were already trimmed, so we don't want to throw them away.
 
 .. image:: /tutorial_screenshots/02a06_cutadapt.png
   :width: 600
   :alt: adapter trimming - do not discard untrimmed reads
+
+Once we are happy with the trimming parameters, we can click on the "Start CutAdapt" button at the bottom of the window.
+A loading screen will now appear, and the trimmed FASTQ files, as well as the trimming logs, will be saved to our output folder.
 
 .. image:: /tutorial_screenshots/02a07_cutadapt.png
   :width: 600
@@ -560,14 +595,16 @@ Once we are done setting up the trimming parameters, we can scroll down and clic
 Quantify gene expression with *kallisto*
 ----------------------------------------
 
-Now that out data has been pre-processed, we can proceed with quantififying the expression of each gene.
+Now that out data has been pre-processed, we can proceed with quantifying the expression of each gene.
 For this purpose we will use `kallisto <https://pachterlab.github.io/kallisto/about>`_ - a program for rapid quantification of transcript abundances.
+*kallisto* uses a method called **pseudoalignment** to directly estimate the number of reads originating from each transcript in our target transcriptome, without actually aligning the reads to an exact physical position on the genome/transcriptome.
+This means that alignment with *kallisto* is extremely quick, while providing results that are as good as traditional alignment methods.
 Before proceeding with this step, make sure you have `installed kallisto <https://pachterlab.github.io/kallisto/download>`_ on your computer.
 
 To run this analysis, in addition to our processed FASTQ files, we will need a transcriptome indexed by *kallisto*, and a matching GTF file describing the names of the transcripts and genes in the transcriptome.
 *kallisto* provides pre-indexed transcriptomes and their matching GTF files for most common model organisms, which can be downloaded `here <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_.
 Our data was sequenced from *Caenorhabditis elegans* nematodes, so we will download the *C. elegans* index and GTF files from the above link.
-If you experiment requires a different transcriptome that is not available above, you can index any FASTA file through *RNAlysis*, by entering the "FASTQ" menu -> "RNA sequencing quantification" -> "Create kallisto index...".
+If your experiment requires a different transcriptome that is not available above, you can index any FASTA file through *RNAlysis*, by entering the "FASTQ" menu -> "RNA sequencing quantification" -> "Create kallisto index...".
 
 As we did earlier with adapter trimming, let's begin quantification with our single-end osmotic stress samples. Open the "FASTQ" menu, and under "RNA sequencing quantification" select "Single-end RNA sequencing quantification...":
 
@@ -582,7 +619,7 @@ We should also set the path to our transcriptome index file, GTF file, and the f
   :width: 600
   :alt: single-end read quantification
 
-Since our data was sequenced with single-end reads, *kallisto* cannot estimate the size of the fragments in the sequencing run, so we will have to supply an estimate of the average fragment length and the standard deviaton. Let's set them to 200 and 20 accordingly:
+Since our data were sequenced with single-end reads, *kallisto* cannot estimate the size of the fragments in the sequencing run, so we will have to supply an estimate of the average fragment length and the standard deviaton. Let's set them to 200 and 20 accordingly:
 
 .. image:: /tutorial_screenshots/02b03_kallisto.png
   :width: 600
@@ -597,7 +634,7 @@ We can optionally use the `new_sample_names` parameter to give our samples new, 
 
 Once we are done setting up the quantification parameters, we can scroll down and click on the "Start kallisto quantify" button, then wait for the analysis to finish.
 In the output folder, we can find the results of kallisto quantification for each of the individual FASTQ  files, each in its own sub-folder.
-Alongside these files, we can find three .csv files: a per-transcript count estimate table, a per-transcript TPM estimate table, and a per-gene scaled output table.
+Alongside these files, we can find three CSV files (comma-separated values, can be opened with Microsoft Excel or with RNAlysis): a per-transcript count estimate table, a per-transcript TPM (transcripts per million) estimate table, and a per-gene scaled output table.
 
 The per-gene scaled output table is generated using the *scaledTPM* method (scaling the TPM estimates up to the library size) as described by `Soneson et al 2015 <https://doi.org/10.12688/f1000research.7563.2>`_ and used in the `tximport <https://ycl6.gitbook.io/guide-to-rna-seq-analysis/differential-expression-analysis/tximport#scaling>`_ R package.
 This table format is considered un-normalized for library size, and can therefore be used directly by count-based statistical inference tools, such as DESeq2, for differential expression analysis later on.
@@ -607,6 +644,8 @@ This table format is considered un-normalized for library size, and can therefor
   :width: 600
   :alt: quantification output table - osmotic stress
 
+If you wanted to analyze differential expression for transcripts instead of genes, you could use the per-transcript count estimate table that is located in the output folder.
+
 Let's now apply the same quantification procedure to our paired-end starvation samples.
 Open the Paired end quantification window from the FASTQ menu:
 
@@ -615,7 +654,7 @@ Open the Paired end quantification window from the FASTQ menu:
   :alt: paired-end read quantification
 
 Like before, we will set the path to our output folder, transcriptome index file, GTF file, and the folder in which you installed *kallisto* (unless you have also added it to your system's PATH).
-In addition, since these sequencing samples are Stranded, we will the `stranded` parameter to "forward":
+In addition, since these sequencing samples are Stranded, we will set the `stranded` parameter to "forward":
 
 .. image:: /tutorial_screenshots/02b07_kallisto.png
   :width: 600
@@ -694,6 +733,8 @@ For example, the design matrix for our osmotic stress dataset would look like th
 | Osm3  | Osm        | C      |
 +-------+------------+--------+
 
+You can create your design matrix in a program like Microsoft Excel or Google Sheets, and then save it as a CSV or TSV file.
+
 Once you have prepared your design matrix, choose that file from the DESeq2 window and click on the "Load design matrix" button:
 
 .. image:: /tutorial_screenshots/02c03_deseq2.png
@@ -701,7 +742,7 @@ Once you have prepared your design matrix, choose that file from the DESeq2 wind
   :alt: Differential expression - load sample table
 
 The right side of the window will now update, allowing you to choose which pairwise comparisons you want to run, based on your design matrix.
-You can make as many pairwise comparisons and you want, each comparing two levels of one of the variables in the design matrix.
+You can make as many pairwise comparisons as you want, each comparing two levels of one of the variables in the design matrix.
 In our case, we are only interested in one comparison - osmotic stress VS control.
 Note that the order of conditions in the comparison matters - the first condition will be the numerator in the comparison, and the second condition will be the denominator.
 
@@ -725,19 +766,19 @@ After choosing to load the table, it will open in a new tab in *RNAlysis*:
 
 We can now repeat the same procedure with the other two count tables, and proceed with analyzing the differential expression tables.
 
-Data filtering and visualization with Pipelines
-=================================================
+Data filtering and visualization with customized Pipelines
+==============================================================
 
 Since we ran the differential expression analysis through *RNAlysis*, the differential expression tables were loaded into the program automatically.
 Therefore, we can start analyzing the data straight away!
 
 For each of the differential expression tables we generated, we would like to generate a volcano plot, to filter out genes which are not differentially expressed, and then split the differentially expressed genes into an 'upregulated' group and 'downregulated' group.
-vWe could apply each of those operations to our data tables one by one, but that would take a long time, and there's a decent chance we'll make a mistake along the way.
 
-Therefore, we will instead create a Pipeline containing all of those functions and their respective parameters, and then apply this Pipeline to all three tables at once.
+We could apply each of those operations to our data tables one by one, but that would take a long time, and there's a decent chance we'll make a mistake along the way.
+Therefore, we will instead create a customized Pipeline containing all of those functions and their respective parameters, and then apply this Pipeline to all three tables at once.
 
-Create a Pipeline
--------------------
+Create a customized Pipeline
+-----------------------------
 
 To create a Pipeline, let's open the Pipelines menu and click on "New Pipeline":
 
@@ -767,7 +808,7 @@ First, let's click on the "Visualize" tab, and choose the "Volcano plot" functio
   :width: 600
   :alt: Create Pipeline - Volcano plot
 
-A volcano plot can give us an overview of the results of a differential expression analysis- it will show us the distribution of p-values and log2 fold change values for our genes, and highlight the significantly up- and down-regulated genes.
+A volcano plot can give us an overview of the results of a differential expression analysis - it will show us the distribution of adjusted p-values and log2 fold change values for our genes, and highlight the significantly up- and down-regulated genes.
 
 Let's click on the "Add to Pipeline" button:
 
@@ -808,13 +849,13 @@ Open the "Pipelines" menu, and then under the "Apply Pipeline" menu, choose the 
 Now, you will be prompted on whether you want to apply this Pipeline inplace or not. Let's choose "no", so that we keep a copy of our original tables.
 
 .. image:: /tutorial_screenshots/02d09_pipeline.png
-  :width: 600
+  :width: 300
   :alt: Apply Pipeline - not inplace
 
 Finally, you will be prompted to choose the tables to apply your Pipeline to. Let's choose all three of our differential expression tables.
 
 .. image:: /tutorial_screenshots/02d10_pipeline.png
-  :width: 600
+  :width: 300
   :alt: Apply Pipeline - choose tables
 
 We can now examine the output of our Pipeline - three volcano plots, and six new tables - the significantly up/down-regulated genes from each differential expression table.
@@ -843,16 +884,11 @@ Open the "Gene sets" menu, and click on "Visualize Gene Sets...":
   :width: 600
   :alt: Gene sets menu - Visualize Gene Sets
 
-A new window will open:
-
-.. image:: /tutorial_screenshots/02e02_gene_sets.png
-  :width: 600
-  :alt: Visualize Gene Sets window
-
+A new window will open.
 On the left side of the window, we can choose which data tables/gene sets we want to visualize.
 Let's pick the three tables that contain significantly downregulated genes:
 
-.. image:: /tutorial_screenshots/02e03_gene_sets.png
+.. image:: /tutorial_screenshots/02e02_gene_sets.png
   :width: 600
   :alt: Visualize Gene Sets - select gene sets
 
@@ -860,21 +896,21 @@ Next, we can choose the type of graph we want to generate. *RNAlysis* supports V
 Let's choose a Venn Diagram.
 The window will now update and display various parameters to modify our graph, and a preview of the graph on the right:
 
-.. image:: /tutorial_screenshots/02e04_gene_sets.png
+.. image:: /tutorial_screenshots/02e03_gene_sets.png
   :width: 600
   :alt: Visualize Gene Sets - plot preview
 
 We can change these plotting parameters to modify our graph - for example, to change the colors of the Venn circles, the title, or set whether or not our plot will be proportional to the size of the sets and their intersections.
 Once we are happy, we can click on the "Generate graph" button to create a big version of our graph that we can export and share.
 
-.. image:: /tutorial_screenshots/02e05_gene_sets.png
+.. image:: /tutorial_screenshots/02e04_gene_sets.png
   :width: 600
   :alt: Intersection of significantly downregulated genes
 
 From the looks of it, there is a rather large overlap between the three sets.
 Let's generate a similar graph for the tables containing the significantly upregulated genes:
 
-.. image:: /tutorial_screenshots/02e06_gene_sets.png
+.. image:: /tutorial_screenshots/02e05_gene_sets.png
   :width: 600
   :alt: Intersection of significantly upregulated genes
 
@@ -890,7 +926,7 @@ To do that, let's open the "Gene sets" menu once again, and this time click on "
 
 A new window will open:
 
-.. image:: /tutorial_screenshots/0fe02_set_ops.png
+.. image:: /tutorial_screenshots/02f02_set_ops.png
   :width: 600
   :alt: Set Operations window
 
@@ -903,7 +939,11 @@ Let's pick the three tables that contain significantly downregulated genes:
 
 We will now see a simplified Venn Diagram depicting our three gene sets. We can now proceed to extract the subset we are interested in.
 We can do this by choosing the "Intersection" set operation from the multiple choice list.
-A drop-down menu will now appear, prompting us to pick the primary gene set in this operation. Our choice will only matter if we apply this set operation inplace - since *RNAlysis* needs to know which table to apply the operation inplace to.
+
+A drop-down menu will now appear, prompting us to pick the primary gene set in this operation.
+Like filtering operations, some set operations can be applied 'inplace', filtering down an existing table instead of returning a new copy of the filtered gene set.
+For this purpose, *RNAlysis* wants to know what is our "primary set" for this set operation - meaning, if we were to apply it inplace, which table should it be applied to?
+Our choice will only matter if we apply this set operation inplace - but for our example we won't be applying the operation inplace, so it doesn't matter what we choose.
 
 .. image:: /tutorial_screenshots/02f04_set_ops.png
   :width: 600
@@ -955,7 +995,7 @@ In order to run enrichment analysis, we will need an appropriate background set.
 One good example would be the set of all genes that are not lowly-expressed in at least one sequencing sample.
 We can use the process we learned earlier to generate an appropriate background set:
 
-1. Create a Pipeline for count tables, that will filter out lowly-expressed genes (for example, at least 10 reads in at least one sample)
+1. Create a Pipeline for count tables, that will normalize our count tables and then filter out lowly-expressed genes (for example, normalize with Relative Log Expression, and filter out genes that don't have at least 10 normalized reads in at least one sample)
 2. Apply the Pipeline to the three count matrices we generated earlier
 3. Use the Set Operation window to calculate the Union of the three filtered count matrices
 
@@ -967,27 +1007,30 @@ This is what your output should look like:
   :width: 600
   :alt: Enrichment analysis - background set
 
-Now that we have a test set, a background set, and attributes we want to measure enrichment for, we can finally start enrichment analysis.
+Now that we have a test set and a background set, we can finally approach enrichment analysis.
 
 Define our custom enrichment attributes
 ----------------------------------------
 
-For this analysis, we want to find out whether genes downregulated in all stress conditions are enriched for epigenetic genes.
+Let's assume that we want to specifically find out whether genes downregulated in all stress conditions are enriched for epigenetic genes.
 Unfortunately, the most common sources for functional gene annotation, Gene Ontology (GO) and KEGG, do not contain a single, well-annotated category of epigenetic genes in *Caenorhabditis elegans* nematodes.
 Therefore, to be able to test this hypothesis, we will have to source our own annotations.
 
-Luckily, *RNAlysis* supports enrichment analysis with annotations for user-defined attributes. These could be anything - from general categories like "epigenetic genes" and "newly-evolved genes" to highly specific categories like "genes whose codon usage deviates from the norm".
+Luckily, when using *RNAlysis*, you can define your own customized attributes and test enrichment for those attributes. These could be anything - from general categories like "epigenetic genes" and "newly-evolved genes" to highly specific categories like "genes whose codon usage deviates from the norm".
 The annotations can be either categorial (yes/no - whether a gene belongs to the category or not), or non-categorical (any numerical value - distance to nearest paralog in base-pairs, expression level in a certain tissue, etc).
 
 A legal **Attribute Reference Table** for *RNAlysis* should follow the following format:
-Every row in the table represents a gene/genmoc feature.
-The first column of the table should contain the gene names/IDs. Every other column in the table represents a user-defined attribute/category (in our case, "epigenetic genes").
-In each cell, set the value to NaN if the gene in this row is negative for the attribute (in our example - not an epigenetic gene), and any other value if the gene in this row is positive for the attirbute.
-As en example, see this mock Attribute Reference Table:
+Every row in the table represents a gene/genomic feature.
+The first column of the table should contain the gene names/IDs. These should be the same type of gene IDs you use in your data tables.
+If the gene IDs in your data tables do not match those of your Attribute Reference Table, *RNAlysis* offers a function that can convert gene IDs for your data tables. You can it under the "general" tab.
 
-+----------------+--------------------+-------------+--------=---------+
+Every other column in the Attribute Reference Table represents a user-defined attribute/category (in our case, "epigenetic genes").
+In each cell, set the value to NaN if the gene in this row is negative for the attribute (in our example - not an epigenetic gene), and any other value if the gene in this row is positive for the attirbute.
+As an example, see this mock Attribute Reference Table:
+
++----------------+--------------------+--------------+-----------------+
 | feature_indices| Epigenetic genes   | Has paralogs |  gut expression |
-+================+====================+=============+==================+
++================+====================+==============+=================+
 | WBGene0000001  |            1       |     NaN      |         13.7    |
 +----------------+--------------------+--------------+-----------------+
 | WBGene0000002  |           NaN      |      1       |         241     |
@@ -1012,7 +1055,7 @@ To open the Enrichent Analysis window, open the 'Gene sets' menu and click "Enri
   :width: 600
   :alt: Pick 'Enrichment analysis' from the 'Gene sets' menu
 
-We can choose our test and background sets from the two drop-down menus in the Enrichment window:
+We can choose our test and background sets (as explained in Analysis #1) from the two drop-down menus in the Enrichment window:
 
 
 .. image:: /tutorial_screenshots/02h02_enrichment.png
@@ -1045,18 +1088,37 @@ Scroll to the bottom of thw window and click on the "run" button to run the anal
 
 The enrichment window is going to minimize to allow you to read the log box on the main *RNAlysis* window, but you can enlarge it back if you want to look at the analysis parameters, or start a new analysis with the same parameters.
 
+if you examine the log, you will notice that *RNAlysis* issued a warning about some of the genes in our background set not being annotated.
+*RNAlysis* will automatically detect and remove from your background set any genes that have no annotations associated with them, since the presence of those genes can make your enrichment results appear inflated.
+
+If the number of genes removed from our background set was large, we may have cause for concern about the validity of your analysis.
+However, since the percentage of genes removed is very small (123 out of 18924 genes), we can proceed as usual.
+
 Once the analysis is done, we will be able to observe our results in two formats.
 
 The first is a tabular format, showing all of the statistically significant attributes we found (or the all of the tests attributes, if we set the `return_nonsignificant` parameter to True).
-The table also includes the statistics for each attribute (number of genes in the test set, number of genes matching the attribute, expected number of genes to match the attribute, log2 fold change, p-value, and adjusted p-value).
+The table also includes the statistics for each attribute (number of genes in the test set, number of genes matching the attribute, expected number of genes to match the attribute, log2 fold enrichment score, p-value, and adjusted p-value).
 
 
 .. image:: /tutorial_screenshots/02h07_enrichment.png
   :width: 600
   :alt: Enrichment results - results table
 
-The final output format is a bar plot depicting the log2 fold change values, as well as significance, of the attributes we tested enrichment for.
+The final output format is a bar plot depicting the log2 fold enrichment scores, as well as significance, of the attributes we tested enrichment for.
 
 .. image:: /tutorial_screenshots/02h08_enrichment.png
   :width: 600
   :alt: Enrichment results - bat plot
+
+
+****************************************
+Final words
+****************************************
+
+This concludes our A-to-Z tutorial of *RNAlysis*. This tutorial could not possibly encompass every single feature in *RNAlysis*, but at this point you should be familiar enough with *RNAlysis* to start analyzing your own data.
+If you want a deeper dive into all of the features available in *RNAlysis*, or want to learn how to write code with *RNAlysis*, check out the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
+If you still have questions about using *RNAlysis*, feel free to drop them in the `discussions area <https://github.com/GuyTeichman/RNAlysis/discussions>`_.
+
+*RNAlysis* keeps updating all the time, so check out the documentation from time to time to find out what's new.
+
+We hope you found this tutorial helpful, and wish you luck with your future bioinformatic endeavors!
