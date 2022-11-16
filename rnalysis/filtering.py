@@ -2282,7 +2282,8 @@ class CountFilter(Filter):
 
     @readable_name('Pair-plot')
     def pairplot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
-                 log2: bool = True, title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 30,
+                 log2: bool = True, show_corr: bool = True, title: Union[str, Literal['auto']] = 'auto',
+                 title_fontsize: float = 30,
                  label_fontsize: float = 16, tick_fontsize: float = 12) -> sns.PairGrid:
 
         """
@@ -2299,6 +2300,8 @@ class CountFilter(Filter):
         :type log2: bool (default=True)
         :param log2: if True, the pairplot will be calculated with log2 of the DataFrame (pseudocount+1 added), \
         and not with the raw data. If False, the pairplot will be calculated with the raw data.
+        :type show_corr: bool (default=True)
+        :param show_corr: if True, shows the Spearman correlation coefficient (R) between each pair of samples/groups.
         :param title: The title of the plot. If 'auto', a title will be generated automatically.
         :type title: str or 'auto' (default='auto')
         :param title_fontsize: determines the font size of the graph title.
@@ -2343,8 +2346,9 @@ class CountFilter(Filter):
                     continue
                 # ax.plot(range(int(ax.get_xlim()[1])), range(int(ax.get_xlim()[1])), linestyle='--', color='k',
                 #         zorder=100, linewidth=0.8)
-                spearman_corr = spearmanr(sample_df.iloc[:, [i, j]])[0]
-                ax.text(0, 0.9, f"Spearman R={spearman_corr:.2f}", transform=ax.transAxes)
+                if show_corr:
+                    spearman_corr = spearmanr(sample_df.iloc[:, [i, j]])[0]
+                    ax.text(0, 0.9, f"Spearman R={spearman_corr:.2f}", transform=ax.transAxes)
 
         pairplt.figure.set_size_inches(9, 9)
         try:
