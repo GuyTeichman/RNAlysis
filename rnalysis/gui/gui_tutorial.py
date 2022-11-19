@@ -187,7 +187,7 @@ class StartPage(QtWidgets.QWizardPage):
         self.dont_show_again.stateChanged.connect(self.setFinalPage)
         self.dont_show_again.stateChanged.connect(self.completeChanged.emit)
         self.registerField('dont_show_again', self.dont_show_again)
-        img_path = str(Path(__file__).parent.joinpath('splash_transparent.png'))
+        img_path = str(Path(__file__).parent.joinpath('logo_small.png'))
         text = f'<img src="{img_path}" class="center" style="vertial-align:middle"/><br><br>'
 
         self.image = QtWidgets.QLabel(text)
