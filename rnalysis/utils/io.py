@@ -40,7 +40,7 @@ def get_gui_cache_dir() -> Path:
 
 
 def get_data_dir() -> Path:
-    data_dir = Path(appdirs.user_data_dir('RNAlysis', version=__version__, roaming=True))
+    data_dir = Path(appdirs.user_data_dir('RNAlysis', roaming=True))
     return data_dir
 
 
