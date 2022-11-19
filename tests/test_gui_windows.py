@@ -95,16 +95,6 @@ def test_HowToCiteWindow(qtbot, monkeypatch):
     assert exit_calls == [1]
 
 
-def test_HowToCiteWindow_copy_to_clipboard(qtbot, monkeypatch):
-    qtbot, dialog = widget_setup(qtbot, HowToCiteWindow)
-    qtbot.mouseClick(dialog.copy_button, LEFT_CLICK)
-
-    cb = QtWidgets.QApplication.clipboard().text()
-    assert 'RNAlysis' in cb
-    assert 'version' in cb
-    assert str(__version__) in cb
-
-
 @pytest.mark.parametrize('df,shape_truth', [
     (pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]]), (3, 3)),
     (pd.DataFrame([[1, 2, 3, 0], [4, 5, 6, 0]]), (2, 4)),

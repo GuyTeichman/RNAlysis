@@ -422,9 +422,9 @@ class ErrorMessage(QtWidgets.QDialog):
 class AboutWindow(QtWidgets.QMessageBox):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setIcon(QtWidgets.QMessageBox.Information)
         img_path = str(Path(__file__).parent.joinpath('splash_transparent.png'))
-        text = f"""<p><b><i>RNAlysis</i> version {__version__}</b>
+        text = f"""<br>
+                <p align="center"><b><i><b>RNAlysis</i>/<b> version {__version__}</b>
                 </p>
                 <br>
                 <img src="{img_path}" width="500"/>
@@ -596,44 +596,107 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
 
 class HowToCiteWindow(gui_widgets.MinMaxDialog):
-    CITATION = f"Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software (Python package version {__version__})."
+    CITATION_RNALYSIS = f"""
+    Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software
+    (Python package version {__version__})."""
+    CITATION_CUTADAPT = f"""
+    Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads.
+    EMBnet.journal, 17(1), pp. 10-12.
+    <br>
+    <a href=https://doi.org/10.14806/ej.17.1.200>doi.org/10.14806/ej.17.1.200</a>
+    """
+    CITATION_KALLISTO = f"""
+    Bray, N., Pimentel, H., Melsted, P. et al.
+    Near-optimal probabilistic RNA-seq quantification.
+    Nat Biotechnol 34, 525–527 (2016).
+    <br>
+    <a href=https://doi.org/10.1038/nbt.3519>doi.org/10.1038/nbt.3519</a>
+    """
+    CITATION_DESEQ2 = f"""
+    Love MI, Huber W, Anders S (2014).
+    “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.”
+    Genome Biology, 15, 550.
+    <br>
+    <a href=https://doi.org/10.1186/s13059-014-0550-8>doi.org/10.1186/s13059-014-0550-8</a>
+    """
+    CITATION_HDBSCAN = f"""
+    L. McInnes, J. Healy, S. Astels, hdbscan:
+    Hierarchical density based clustering In:
+    Journal of Open Source Software, The Open Journal, volume 2, number 11. 2017
+    <br>
+    <a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>"""
+    CITATION_XLMHG = f"""
+    <p>
+    Eden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).
+     Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
+    <br>
+    <a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>
+    </p>
+    <p>
+    Wagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.
+    <br>
+    <a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>
+    </p>"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        img_path = str(Path(__file__).parent.joinpath('splash_transparent.png'))
-        text = f"""<p><b><i>RNAlysis</i> version {__version__}</b>
+        img_path = str(Path(__file__).parent.joinpath('logo_small.png'))
+        text = f"""<p align="center"><b><i>RNAlysis</i> version {__version__}</b>
                 </p>
                 <br>
-                <img src="{img_path}" width="500"/>"""
+                <img src="{img_path}" width="250"/>"""
         self.label = QtWidgets.QLabel(text)
-        self.text_edit = QtWidgets.QTextEdit(self.CITATION)
-        self.ok_button = QtWidgets.QPushButton('OK')
-        self.copy_button = QtWidgets.QPushButton('Copy to clipboard')
-        self.copied_label = QtWidgets.QLabel()
+        self.rnalysis_cite = gui_widgets.TextWithCopyButton(self.CITATION_RNALYSIS)
+        self.cutadapt_cite = gui_widgets.TextWithCopyButton(self.CITATION_CUTADAPT)
+        self.kallisto_cite = gui_widgets.TextWithCopyButton(self.CITATION_KALLISTO)
+        self.deseq2_cite = gui_widgets.TextWithCopyButton(self.CITATION_DESEQ2)
+        self.hdbscan_cite = gui_widgets.TextWithCopyButton(self.CITATION_HDBSCAN)
+        self.xlmhg_cite = gui_widgets.TextWithCopyButton(self.CITATION_XLMHG)
+        self.ok_button = QtWidgets.QPushButton('Close')
 
-        self.layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.scroll = QtWidgets.QScrollArea()
+        self.scroll_widget = QtWidgets.QWidget(self.scroll)
+        self.layout = QtWidgets.QVBoxLayout(self.scroll_widget)
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("How to cite RNAlysis")
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.scroll_widget)
+        self.layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
 
-        self.label.setWordWrap(True)
+        self.main_layout.addWidget(self.scroll)
+
+        self.setWindowTitle("How to cite RNAlysis")
         self.layout.addWidget(self.label)
-        self.text_edit.setReadOnly(True)
-        self.layout.addWidget(self.text_edit)
+
+        self.layout.addWidget(QtWidgets.QLabel("If you use <b>RNAlysis</b> in your research, please cite:"))
+        self.layout.addWidget(self.rnalysis_cite)
+
+        self.layout.addWidget(QtWidgets.QLabel(
+            "If you use the <b>CutAdapt</b> adapter trimming tool in your research, please cite:"))
+        self.layout.addWidget(self.cutadapt_cite)
+
+        self.layout.addWidget(QtWidgets.QLabel(
+            "If you use the <b>kallisto</b> RNA sequencing quantification tool in your research, please cite:"))
+        self.layout.addWidget(self.kallisto_cite)
+
+        self.layout.addWidget(
+            QtWidgets.QLabel(
+                "If you use the <b>DESeq2</b> differential expression tool in your research, please cite:"))
+        self.layout.addWidget(self.deseq2_cite)
+
+        self.layout.addWidget(
+            QtWidgets.QLabel("If you use the <b>HDBSCAN</b> clustering feature in your research, please cite:"))
+        self.layout.addWidget(self.hdbscan_cite)
+
+        self.layout.addWidget(QtWidgets.QLabel(
+            "If you use the <b>XL-mHG</b> single-set enrichment test in your research, please cite:"))
+        self.layout.addWidget(self.xlmhg_cite)
 
         self.ok_button.clicked.connect(self.close)
         self.layout.addWidget(self.ok_button)
-
-        self.copy_button.clicked.connect(self.copy_to_clipboard)
-        self.layout.addWidget(self.copy_button)
-        self.layout.addWidget(self.copied_label)
-
-    def copy_to_clipboard(self):
-        cb = QtWidgets.QApplication.clipboard()
-        cb.clear(mode=cb.Clipboard)
-        cb.setText(self.text_edit.toPlainText())
-        self.copied_label.setText('Copied to clipboard')
 
 
 def splash_screen():

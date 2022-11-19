@@ -1259,3 +1259,17 @@ def test_AltParallel_signals(qtbot):
         res = parallel(joblib.delayed(_power)(a, b) for a, b in zip(range(5), [2, 2, 2, 2, 2]))
     assert bar_updates == [1, 1, 1, 1, 1]
     assert res == [0, 1, 4, 9, 16]
+
+
+def test_TextWithCopyButton_copy_to_clipboard(qtbot, monkeypatch):
+    rich_text = '''<p>
+    Auther, F. (2001). The name of the paper. Journal.
+    <br>
+    <a href=www.google.com>doi.org/10.12345/journalName.496351</a>
+    </p>'''
+    truth = 'Auther, F. (2001). The name of the paper. Journal. \ndoi.org/10.12345/journalName.496351 '
+    qtbot, dialog = widget_setup(qtbot, TextWithCopyButton, rich_text)
+    qtbot.mouseClick(dialog.copy_button, LEFT_CLICK)
+
+    cb = QtWidgets.QApplication.clipboard().text()
+    assert cb == truth

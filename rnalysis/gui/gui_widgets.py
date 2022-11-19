@@ -339,6 +339,31 @@ class AltParallel(QtCore.QObject):
                 self.barFinished.emit()
 
 
+class TextWithCopyButton(QtWidgets.QWidget):
+    def __init__(self, text: str, parent=None):
+        super().__init__(parent)
+        self.text = text
+        self.text_edit = QtWidgets.QTextBrowser(self)
+        self.copy_button = QtWidgets.QPushButton('Copy to clipboard')
+        self.copied_label = QtWidgets.QLabel()
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.init_ui()
+
+    def init_ui(self):
+        self.text_edit.setHtml(self.text)
+        self.text_edit.setReadOnly(True)
+        self.layout.addWidget(self.text_edit)
+        self.copy_button.clicked.connect(self.copy_to_clipboard)
+        self.layout.addWidget(self.copy_button)
+        self.layout.addWidget(self.copied_label)
+
+    def copy_to_clipboard(self):
+        cb = QtWidgets.QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+        cb.setText(self.text_edit.toPlainText())
+        self.copied_label.setText('Copied to clipboard')
+
+
 class ToggleSwitchCore(QtWidgets.QPushButton):
     """
     Based upon a StackOverflow response by the user Heike:
@@ -699,6 +724,7 @@ class MultiChoiceListWithReorder(MultipleChoiceList):
 
 class MultiChoiceListWithDeleteReorder(MultiChoiceListWithReorder, MultiChoiceListWithDelete):
     itemDeleted = QtCore.pyqtSignal(int)
+
     def __init__(self, items: typing.Sequence, icons: typing.Sequence = None, parent=None):
         super().__init__(items, icons, parent)
 
