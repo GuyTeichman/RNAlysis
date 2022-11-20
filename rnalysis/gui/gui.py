@@ -1477,6 +1477,8 @@ class FilterTabPage(TabPage):
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
     GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change'}
+    THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
+                      'filter_by_go_annotations'}
     filterObjectCreated = QtCore.pyqtSignal(object)
     startedClustering = QtCore.pyqtSignal(object, str, object)
     startedJob = QtCore.pyqtSignal(object, str, object)
@@ -1747,7 +1749,7 @@ class FilterTabPage(TabPage):
         func_name = this_stack.get_function_name()
         func_params = this_stack.get_function_params()
         if func_params.get('inplace', False):
-            if func_name in self.GENERAL_FUNCS:
+            if func_name in self.THREADED_FUNCS:
                 command = InplaceCachedCommand(self, func_name, args=[], kwargs=func_params,
                                                description=f'Apply "{func_name}"')
             else:
@@ -1773,7 +1775,7 @@ class FilterTabPage(TabPage):
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             self.startedClustering.emit(partial, func_name, finish_slot)
             return
-        elif func_name in self.GENERAL_FUNCS and (not kwargs.get('inplace', False)):
+        elif func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
 
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             self.startedJob.emit(partial, func_name, finish_slot)
