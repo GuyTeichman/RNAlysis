@@ -7,7 +7,6 @@ from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 import matplotlib
 
-import filtering
 from rnalysis.filtering import *
 import os
 from tests import __attr_ref__, __biotype_ref__
@@ -1809,13 +1808,13 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
             ['kegg_id2', None, {'WBGene00007063', 'WBGene00044951', 'WBGene00007067', 'other3'}],
             ['kegg_id3', None, {'WBGene00007063', 'WBGene00007066', 'WBGene00043988', 'other1'}]]
         for annotation in annotations:
-            if annotation[0]  in ids:
+            if annotation[0] in ids:
                 yield annotation
 
     monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_kegg_organism_code', lambda *args, **kwargs: 'cel')
     monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_pathway_annotations', annotation_iter)
 
-    f = filtering.Filter('tests/test_files/counted.csv')
+    f = Filter('tests/test_files/counted.csv')
     res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='KEGG', inplace=False)
 
     try:
