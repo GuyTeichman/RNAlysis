@@ -552,8 +552,9 @@ def test_save_gene_set(gene_set, expected_split):
             pass
 
 
-def test_kegg_annotation_iterator_api():
-    _ = KEGGAnnotationIterator(6239)
+@pytest.mark.parametrize("args", [(6239,), (6239, 'all'), (6239, ['id1', 'id2'])])
+def test_kegg_annotation_iterator_api(args):
+    _ = KEGGAnnotationIterator(*args)
 
 
 @pytest.mark.parametrize('arguments,url_truth', [('argument', 'https://rest.kegg.jp/operation/argument'),
@@ -617,6 +618,18 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     kegg.organism_code = organism_code
     assert kegg.get_pathways() == truth
+
+
+def test_kegg_annotation_iterator_get_custom_pathways(monkeypatch):
+    truth = {'path:cel00010': None, 'path:cel00030': None, 'path:cel00051': None}
+
+    def mock_kegg_request(self, operation, arguments):
+        return 'cel', False
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+
+    kegg = KEGGAnnotationIterator(6239, [i for i in truth.keys()])
+    assert kegg.pathway_names == truth
 
 
 def test_kegg_annotation_iterator_get_pathway_annotations(monkeypatch):
@@ -797,5 +810,5 @@ def test_run_subprocess(stdout, stderr):
 ])
 def test_is_rnalysis_outdated(monkeypatch, this_version, response, expected):
     monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
-    monkeypatch.setattr(rnalysis.utils.io,'__version__',this_version)
+    monkeypatch.setattr(rnalysis.utils.io, '__version__', this_version)
     assert is_rnalysis_outdated() == expected

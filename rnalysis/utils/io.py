@@ -280,11 +280,17 @@ class KEGGAnnotationIterator:
     REQ_MAX_ENTRIES = 10
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
 
-    def __init__(self, taxon_id: int):
+    def __init__(self, taxon_id: int, pathways: Union[str, List[str], Literal['all']] = 'all'):
         self.pathway_names = {}
         self.taxon_id = taxon_id
         self.organism_code = self.get_kegg_organism_code(taxon_id)
-        self.pathway_names, self.n_annotations = self.get_pathways()
+        if pathways == 'all':
+            self.pathway_names, self.n_annotations = self.get_pathways()
+        else:
+            pathways = parsing.data_to_list(pathways)
+            assert len(pathways) > 0, f"No KEGG pathway IDs were given!"
+            self.pathway_names = {pathway: None for pathway in pathways}
+            self.n_annotations = len(self.pathway_names)
         self.pathway_annotations = None
 
     @staticmethod
