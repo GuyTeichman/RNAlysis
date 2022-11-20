@@ -1,5 +1,6 @@
 import pytest
 import os
+import requests
 import statsmodels.stats.multitest as multitest
 import sys
 from rnalysis.enrichment import *
