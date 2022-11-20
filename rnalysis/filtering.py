@@ -550,17 +550,23 @@ class Filter:
         :return: If 'inplace' is False, returns a new, filtered instance of the Filter object.
         """
         suffix = 'filtKEGG'
-        kegg_ids = parsing.data_to_list(kegg_ids)
+        kegg_ids = parsing.data_to_set(kegg_ids)
         # make sure 'mode' is legal
         assert mode in {'union', 'intersection'}, \
             f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
 
         # fetch KEGG annotations for the specified KEGG IDs
-        annotations = io.KEGGAnnotationIterator(io.map_taxon_id(organism)[0], kegg_ids)
+        annotations = io.KEGGAnnotationIterator(io.map_taxon_id(organism)[0], list(kegg_ids))
         kegg_to_genes = {}
-        for pathway_id, pathway_name, annotations in tqdm(annotations, desc='Fetching KEGG annotations',
-                                                          total=annotations.n_annotations, unit=' annotations'):
-            kegg_to_genes[pathway_id] = parsing.data_to_set(annotations)
+        for pathway_id, _, genes in tqdm(annotations, desc='Fetching KEGG annotations',
+                                         total=annotations.n_annotations, unit=' annotations'):
+            if pathway_id in kegg_ids:
+                kegg_to_genes[pathway_id] = parsing.data_to_set(genes)
+        if len(kegg_to_genes) < len(kegg_ids):
+            not_annotated = kegg_ids.difference(parsing.data_to_set(kegg_to_genes))
+            warnings.warn(f"Could not find {len(not_annotated)} KEGG IDs: {not_annotated}. \n"
+                          f"Proceeding with the other {len(kegg_to_genes)} KEGG IDs. ")
+
         genes_to_translate = set()
         for grp in kegg_to_genes.values():
             genes_to_translate.update(grp)
