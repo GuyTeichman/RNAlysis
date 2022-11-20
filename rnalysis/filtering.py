@@ -20,6 +20,7 @@ from typing import Any, Iterable, List, Tuple, Union, Callable
 import yaml
 from scipy.stats import spearmanr
 from scipy.stats.mstats import gmean
+from tqdm.auto import tqdm
 
 try:
     from typing import Literal
@@ -509,6 +510,89 @@ class Filter:
         # gene names which remain after filtering are the 'True' in the mask AND were previously in the DataFrame
         gene_names = ref_df[mask].index.intersection(self.df.index)
         new_df = self.df.loc[gene_names]
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    @readable_name('Filter by KEGG annotation')
+    def filter_by_kegg_annotations(self, kegg_ids: Union[str, List[str]],
+                                   mode: Literal['union', 'intersection'] = 'union',
+                                   organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                                   gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+                                   opposite: bool = False, inplace: bool = True):
+        """
+        Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway. \
+        When multiple KEGG IDs are given, filtering can be done in 'union' mode \
+        (where genes that belong to at least one pathway are not filtered out), or in 'intersection' mode \
+        (where only genes that belong to ALL pathways are not filtered out).
+
+        :param kegg_ids: the KEGG pathway IDs according to which the table will be filtered. \
+        An example for a legal KEGG pathway ID would be 'path:cel04020' for the C. elegans calcium signaling pathway.
+        :type kegg_ids: str or list of str
+        :type mode: 'union' or 'intersection'.
+        :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
+        of the indicated attributes. If 'intersection', \
+        filters out every genomic feature that does not belong to ALL of the indicated attributes.
+        param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :type opposite: bool (default=False)
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new, filtered instance of the Filter object.
+        """
+        suffix = 'filtKEGG'
+        kegg_ids = parsing.data_to_list(kegg_ids)
+        # make sure 'mode' is legal
+        assert mode in {'union', 'intersection'}, \
+            f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
+
+        # fetch KEGG annotations for the specified KEGG IDs
+        annotations = io.KEGGAnnotationIterator(io.map_taxon_id(organism)[0], kegg_ids)
+        kegg_to_genes = {}
+        for pathway_id, pathway_name, annotations in tqdm(annotations, desc='Fetching KEGG annotations',
+                                                          total=annotations.n_annotations, unit=' annotations'):
+            kegg_to_genes[pathway_id] = parsing.data_to_set(annotations)
+        genes_to_translate = set()
+        for grp in kegg_to_genes.values():
+            genes_to_translate.update(grp)
+
+        kegg_to_translated_genes = {}
+        if gene_id_type == 'auto':
+            translator, _, gene_id_type = io.find_best_gene_mapping(parsing.data_to_tuple(genes_to_translate),
+                                                                    ('KEGG',), None)
+        else:
+            translator = io.map_gene_ids(parsing.data_to_tuple(genes_to_translate), 'KEGG', gene_id_type)
+        for kegg_id in kegg_to_genes:
+            kegg_to_translated_genes[kegg_id] = set()
+            for gene_id in kegg_to_genes[kegg_id]:
+                if gene_id in translator:
+                    kegg_to_translated_genes[kegg_id].add(translator[gene_id])
+
+        # generate list of the indices that are positive for each attribute
+        chosen_genes = set()
+        # if in union mode, calculate union between the indices of all attributes
+        if mode == 'union':
+            suffix += 'Union'
+            for grp in kegg_to_translated_genes.values():
+                chosen_genes = chosen_genes.union(grp)
+            chosen_genes = chosen_genes.intersection(self.index_set)
+        # if in intersection mode, calculate intersection between the indices of all attributes
+        elif mode == 'intersection':
+            suffix += 'Intersection'
+            chosen_genes = self.index_set
+            for grp in kegg_to_translated_genes.values():
+                chosen_genes = chosen_genes.intersection(grp)
+
+        new_df = self.df.loc[parsing.data_to_list(chosen_genes)]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Filter by user-defined attribute')
@@ -3499,8 +3583,8 @@ class CountFilter(Filter):
 
     @readable_name('Principal Component Analysis (PCA) plot')
     def pca(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all', n_components: int = 3,
-            power_transform: bool = True, labels: bool = True, label_fontsize: int = 16) -> Tuple[
-        PCA, List[plt.Figure]]:
+            power_transform: bool = True, labels: bool = True, label_fontsize: int = 16
+            ) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
         variance between the different samples. The function will automatically plot Principal Component #1 \
@@ -3674,7 +3758,7 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
-    @readable_name('Boxplot')
+    @readable_name('Box plot')
     def box_plot(self, samples: Union[List[List[str]], List[List[str]], Literal['all']] = 'all', notch: bool = True,
                  scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
@@ -3725,7 +3809,7 @@ class CountFilter(Filter):
         plt.show()
         return box
 
-    @readable_name('Enhanced boxplot')
+    @readable_name('Enhanced box plot')
     def enhanced_box_plot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
                           scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
         """
