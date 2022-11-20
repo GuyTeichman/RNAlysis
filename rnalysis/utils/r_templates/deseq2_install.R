@@ -1,4 +1,4 @@
-if (("xtable" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2", quietly = TRUE))) {
+if (("DESeq2" %in% rownames(installed.packages()) == FALSE) || (!require("DESeq2", quietly = TRUE))) {
     if (!require("BiocManager", quietly = TRUE)) {
         install.packages("BiocManager")
         }
