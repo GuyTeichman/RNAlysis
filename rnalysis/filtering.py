@@ -17,7 +17,6 @@ import warnings
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, Union, Callable
 
-import requests
 import yaml
 from scipy.stats import spearmanr
 from scipy.stats.mstats import gmean
@@ -38,12 +37,7 @@ from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
 
-try:
-    _GENE_ID_TYPES = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
-
-
-except requests.exceptions.ConnectionError:
-    _GENE_ID_TYPES = tuple()
+from rnalysis.utils.param_typing import GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, GENE_ID_TYPES
 
 
 def readable_name(name: str):
@@ -364,8 +358,8 @@ class Filter:
         return self.df.tail(n)
 
     @readable_name('Translate gene IDs')
-    def translate_gene_ids(self, translate_to: Union[str, Literal[_GENE_ID_TYPES]],
-                           translate_from: Union[str, Literal['auto'], Literal[_GENE_ID_TYPES]] = 'auto',
+    def translate_gene_ids(self, translate_to: Union[str, Literal[GENE_ID_TYPES]],
+                           translate_from: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
                            remove_unmapped_genes: bool = False, inplace: bool = True):
         gene_ids = parsing.data_to_tuple(self.df.index)
         new_df = self.df.copy(deep=True)
@@ -2985,8 +2979,7 @@ class CountFilter(Filter):
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
-                           power_transform: bool = True,
-                           distance_threshold: Union[float, None] = None,
+                           power_transform: bool = True, distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
                            gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:

@@ -11,7 +11,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
-import requests.exceptions
+from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, GENE_ID_TYPES
 
 try:
     from typing import Literal
@@ -27,25 +27,6 @@ import upsetplot
 
 from rnalysis.filtering import Filter
 from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic
-
-_ASPECTS = ('biological_process', 'molecular function', 'cellular component')
-_EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
-_QUALIFIERS = ('not', 'contributes_to', 'colocalizes_with')
-_DEFAULT_ORGANISMS = tuple(sorted(['Caenorhabditis elegans',
-                                   'Mus musculus',
-                                   'Drosophila melanogaster',
-                                   'Homo sapiens',
-                                   'Arabodopsis thaliana',
-                                   'Danio rerio',
-                                   'Escherichia coli',
-                                   'Saccharomyces cerevisiae',
-                                   'Schizosaccharomyces pombe']))
-try:
-    _GENE_ID_TYPES = parsing.data_to_tuple(io.get_legal_gene_id_types()[0].keys())
-
-
-except requests.exceptions.ConnectionError:
-    _GENE_ID_TYPES = tuple()
 
 
 class FeatureSet:
@@ -268,21 +249,22 @@ class FeatureSet:
         """
         return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
-    def go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[_DEFAULT_ORGANISMS]] = 'auto',
-                      gene_id_type: Union[str, Literal['auto'], Literal[_GENE_ID_TYPES]] = 'auto', alpha: float = 0.05,
+    def go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                      gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto', alpha: float = 0.05,
                       statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                       biotype: Union[str, List[str], Literal['all']] = 'all',
                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                       biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                       propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
-                      aspects: Union[Literal[('any',) + _ASPECTS], Iterable[Literal[_ASPECTS]]] = 'any',
+                      aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
                       evidence_types: Union[
-                          Literal[('any',) + _EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = 'any',
-                      excluded_evidence_types: Union[Literal[_EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = (),
+                          Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = 'any',
+                      excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[
+                          GO_EVIDENCE_TYPES]]] = (),
                       databases: Union[str, Iterable[str]] = 'any',
                       excluded_databases: Union[str, Iterable[str]] = (),
-                      qualifiers: Union[Literal[('any',) + _QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'any',
-                      excluded_qualifiers: Union[Literal[_QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'not',
+                      qualifiers: Union[Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
+                      excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
                       return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                       plot_ontology_graph: bool = True, ontology_graph_format: Literal['pdf', 'svg', 'png'] = 'pdf',
@@ -435,8 +417,8 @@ class FeatureSet:
             return runner.run(plot=False), runner
         return runner.run()
 
-    def kegg_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[_DEFAULT_ORGANISMS]] = 'auto',
-                        gene_id_type: Union[str, Literal['auto'], Literal[_GENE_ID_TYPES]] = 'auto',
+    def kegg_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                        gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
                         alpha: float = 0.05,
                         statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                         biotype: Union[str, List[str], Literal['all']] = 'all',
@@ -1015,21 +997,22 @@ class RankedSet(FeatureSet):
                       "the return type will always be FeatureSet and not RankedSet.")
         return super()._set_ops(others, op)
 
-    def single_set_go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[_DEFAULT_ORGANISMS]] = 'auto',
-                                 gene_id_type: Union[str, Literal['auto'], Literal[_GENE_ID_TYPES]] = 'auto',
+    def single_set_go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                                 gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
                                  alpha: float = 0.05,
                                  propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
-                                 aspects: Union[Literal[('any',) + _ASPECTS], Iterable[Literal[_ASPECTS]]] = 'any',
+                                 aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
                                  evidence_types: Union[
-                                     Literal[('any',) + _EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = 'any',
+                                     Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[Literal[
+                                         GO_EVIDENCE_TYPES]]] = 'any',
                                  excluded_evidence_types: Union[
-                                     Literal[_EVIDENCE_TYPES], Iterable[Literal[_EVIDENCE_TYPES]]] = (),
+                                     Literal[GO_EVIDENCE_TYPES], Iterable[Literal[GO_EVIDENCE_TYPES]]] = (),
                                  databases: Union[str, Iterable[str]] = 'any',
                                  excluded_databases: Union[str, Iterable[str]] = (),
                                  qualifiers: Union[
-                                     Literal[('any',) + _QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'any',
+                                     Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
                                  excluded_qualifiers: Union[
-                                     Literal[_QUALIFIERS], Iterable[Literal[_QUALIFIERS]]] = 'not',
+                                     Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
                                  return_nonsignificant: bool = False,
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
@@ -1161,8 +1144,8 @@ class RankedSet(FeatureSet):
         return runner.run()
 
     def single_set_kegg_enrichment(self,
-                                   organism: Union[str, int, Literal['auto'], Literal[_DEFAULT_ORGANISMS]] = 'auto',
-                                   gene_id_type: Union[str, Literal['auto'], Literal[_GENE_ID_TYPES]] = 'auto',
+                                   organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                                   gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
                                    alpha: float = 0.05, return_nonsignificant: bool = False, save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
@@ -1480,7 +1463,7 @@ def _get_tuple_patch_ids(n_sets: int) -> List[Tuple[int, ...]]:
     return sorted_ids
 
 
-def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union[str,Literal['default']] = 'default',
+def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union[str, Literal['default']] = 'default',
                  attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
                  set_colors: Iterable[str] = ('r', 'g', 'b'),
                  transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
