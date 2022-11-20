@@ -132,7 +132,7 @@ def save_gui_session(session_filename: Union[str, Path], file_names: List[str], 
 
     session_data = dict(files=dict(), pipelines=dict(), metadata=dict())
     for file_name, item_name, item_type, item_property in zip(file_names, item_names, item_types, item_properties):
-        Path(get_gui_cache_dir().joinpath(file_name)).replace(session_folder.joinpath(file_name))
+        shutil.move(Path(get_gui_cache_dir().joinpath(file_name)), session_folder.joinpath(file_name))
         session_data['files'][file_name] = (item_name, item_type.__name__, item_property)
 
     for i, (pipeline_name, pipeline_file) in enumerate(zip(pipeline_names, pipeline_files)):
