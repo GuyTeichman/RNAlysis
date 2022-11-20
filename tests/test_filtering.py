@@ -6,6 +6,8 @@ from collections import namedtuple
 from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 import matplotlib
+
+import filtering
 from rnalysis.filtering import *
 import os
 from tests import __attr_ref__, __biotype_ref__
@@ -1787,3 +1789,38 @@ def test_export_pipeline():
         assert exported == truth
     finally:
         os.remove(outname)
+
+
+@pytest.mark.parametrize('ids,mode,truth_path', [
+    ('kegg_id2', 'union', 'tests/test_files/counted_filter_by_kegg_truth_1.csv'),
+    (['kegg_id2'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_1.csv'),
+    (['kegg_id3', 'kegg_id1'], 'union', 'tests/test_files/counted_filter_by_kegg_truth_2.csv'),
+    (['kegg_id1', 'kegg_id3'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_3.csv'),
+    (['kegg_id1', 'kegg_id2', 'kegg_id3'], 'union', 'tests/test_files/counted_filter_by_kegg_truth_4.csv'),
+    (['kegg_id1', 'kegg_id2', 'kegg_id3'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_5.csv'),
+
+])
+def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
+    truth = io.load_csv(truth_path, index_col=0)
+
+    def annotation_iter(self):
+        annotations = [
+            ['kegg_id1', None, {'WBGene00007063', 'WBGene00007064', 'WBGene00043988', 'other1', 'other2'}],
+            ['kegg_id2', None, {'WBGene00007063', 'WBGene00044951', 'WBGene00007067', 'other3'}],
+            ['kegg_id3', None, {'WBGene00007063', 'WBGene00007066', 'WBGene00043988', 'other1'}]]
+        for annotation in annotations:
+            if annotation[0]  in ids:
+                yield annotation
+
+    monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_kegg_organism_code', lambda *args, **kwargs: 'cel')
+    monkeypatch.setattr(io.KEGGAnnotationIterator, 'get_pathway_annotations', annotation_iter)
+
+    f = filtering.Filter('tests/test_files/counted.csv')
+    res = f.filter_by_kegg_annotations(ids, mode, gene_id_type='KEGG', inplace=False)
+
+    try:
+        assert res.df.sort_index().equals(truth.sort_index())
+    except Exception as e:
+        print(res.df)
+        print(truth)
+        raise e
