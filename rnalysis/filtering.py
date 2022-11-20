@@ -580,16 +580,11 @@ class Filter:
             attributes = self._from_string(
                 "Please insert attributes separated by newline "
                 "(for example: \n'epigenetic_related_genes\nnrde-3 targets\nALG-3/4 class small RNAs')")
-        # make sure 'attributes' is a set/list/tuple of strings
-        elif isinstance(attributes, str):
-            attributes = [attributes]
         else:
-            assert isinstance(attributes, (list, tuple, set))
+            attributes = parsing.data_to_list(attributes)
         # make sure 'mode' is legal
-        assert isinstance(mode, str), "'mode' must be a string!"
-        mode = mode.lower()
         assert mode in {'union', 'intersection'}, \
-            f"Illegal input {mode}: mode must be either 'union' or 'intersection'"
+            f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
         # load the Attribute Reference Table
         attr_ref_table = io.load_csv(settings.get_attr_ref_path(ref))
         validation.validate_attr_table(attr_ref_table)
@@ -610,7 +605,7 @@ class Filter:
             for idx in attr_indices_list:
                 indices = indices.intersection(idx)
 
-        new_df = self.df.loc[set(indices)]
+        new_df = self.df.loc[indices]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Split by user-defined attribute')
