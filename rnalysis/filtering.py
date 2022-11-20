@@ -512,6 +512,102 @@ class Filter:
         new_df = self.df.loc[gene_names]
         return self._inplace(new_df, opposite, inplace, suffix)
 
+    @readable_name('Filter by Gene Ontology (GO) annotation')
+    def filter_by_go_annotations(self, go_ids: Union[str, List[str]], mode: Literal['union', 'intersection'] = 'union',
+                                 organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                                 gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+                                 propagate_annotations: bool = True,
+                                 evidence_types: Union[Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[
+                                     Literal[GO_EVIDENCE_TYPES]]] = 'any',
+                                 excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[
+                                     GO_EVIDENCE_TYPES]]] = (),
+                                 databases: Union[str, Iterable[str]] = 'any',
+                                 excluded_databases: Union[str, Iterable[str]] = (),
+                                 qualifiers: Union[
+                                     Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
+                                 excluded_qualifiers: Union[
+                                     Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
+                                 opposite: bool = False, inplace: bool = True):
+        suffix = '_filtGO'
+        go_ids = parsing.data_to_set(go_ids)
+        # make sure 'mode' is legal
+        assert mode in {'union', 'intersection'}, \
+            f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
+
+        dag_tree = io.fetch_go_basic()
+        aspects = 'any'  # TODO: optimize this to fetch the minimal number of GO aspects required
+        annotations = io.GOlrAnnotationIterator(io.map_taxon_id(organism)[0], aspects,
+                                                evidence_types, excluded_evidence_types,
+                                                databases, excluded_databases,
+                                                qualifiers, excluded_qualifiers)
+        assert annotations.n_annotations > 0, "No GO annotations were found for the given parameters. " \
+                                              "Please try again with a different set of parameters. "
+        go_to_genes = {}
+        source_to_genes = {}
+        for annotation in tqdm(annotations, desc="Fetching GO annotations", total=annotations.n_annotations,
+                               unit=' annotations'):
+            # extract gene_id, go_id, source from the annotation. skip annotations that don't appear in the GO DAG
+
+            if annotation['annotation_class'] not in dag_tree:
+                continue
+            go_id: str = dag_tree[annotation['annotation_class']].id  # replace alt_ids with their main id
+            gene_id: str = annotation['bioentity_internal_id']
+            source: str = annotation['source']
+
+            # add annotation to annotation dictionary
+            if go_id not in go_ids and not propagate_annotations:
+                continue
+            if go_id not in go_to_genes:
+                go_to_genes[go_id] = set()
+            go_to_genes[go_id].add(gene_id)
+
+            # add gene id and source to source dict
+            if source not in source_to_genes:
+                source_to_genes[source] = set()
+            source_to_genes[source].add(gene_id)
+            # propagate annotations
+            if propagate_annotations:
+                parents = set(dag_tree.upper_induced_graph_iter(go_id))
+                for parent in parents:
+                    if parent not in go_ids:
+                        continue
+                    if parent not in go_to_genes:
+                        go_to_genes[parent] = set()
+                    go_to_genes[parent].add(gene_id)
+
+        # translate gene IDs
+        go_to_translated_genes = {go_id: set() for go_id in go_ids if go_id in go_to_genes}
+        if gene_id_type == 'auto':
+            _, gene_id_type, _ = io.find_best_gene_mapping(parsing.data_to_tuple(self.index_set), None, ('UniProtKB',))
+
+        for source in source_to_genes:
+            translator = io.map_gene_ids(parsing.data_to_tuple(source_to_genes[source]), source, gene_id_type)
+            for go_id in go_to_genes:
+                if go_id not in go_to_translated_genes:
+                    continue
+                for gene_id in go_to_genes[go_id].copy():
+                    if gene_id in translator:
+                        go_to_translated_genes[go_id].add(translator[gene_id])
+                        go_to_genes[go_id].remove(gene_id)
+
+        # generate list of the indices that are positive for each attribute
+        chosen_genes = set()
+        # if in union mode, calculate union between the indices of all attributes
+        if mode == 'union':
+            suffix += 'Union'
+            for grp in go_to_translated_genes.values():
+                chosen_genes = chosen_genes.union(grp)
+            chosen_genes = chosen_genes.intersection(self.index_set)
+        # if in intersection mode, calculate intersection between the indices of all attributes
+        elif mode == 'intersection':
+            suffix += 'Intersection'
+            chosen_genes = self.index_set
+            for grp in go_to_translated_genes.values():
+                chosen_genes = chosen_genes.intersection(grp)
+
+        new_df = self.df.loc[parsing.data_to_list(chosen_genes)]
+        return self._inplace(new_df, opposite, inplace, suffix)
+
     @readable_name('Filter by KEGG Pathways annotations')
     def filter_by_kegg_annotations(self, kegg_ids: Union[str, List[str]],
                                    mode: Literal['union', 'intersection'] = 'union',
