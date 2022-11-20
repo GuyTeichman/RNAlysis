@@ -3344,6 +3344,7 @@ class MainWindow(QtWidgets.QMainWindow):
         enrichment.enrichment_runner.io.tqdm = alt_tqdm
         enrichment.enrichment_runner.tqdm = alt_tqdm
         filtering.clustering.tqdm = alt_tqdm
+        filtering.tqdm = alt_tqdm
         fastq.tqdm = alt_tqdm
 
         #  Move worker to the thread
