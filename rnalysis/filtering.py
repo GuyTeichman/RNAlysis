@@ -549,7 +549,7 @@ class Filter:
         the function will return a new Filter instance and the current instance will not be affected.
         :return: If 'inplace' is False, returns a new, filtered instance of the Filter object.
         """
-        suffix = 'filtKEGG'
+        suffix = '_filtKEGG'
         kegg_ids = parsing.data_to_set(kegg_ids)
         # make sure 'mode' is legal
         assert mode in {'union', 'intersection'}, \
