@@ -512,7 +512,7 @@ class Filter:
         new_df = self.df.loc[gene_names]
         return self._inplace(new_df, opposite, inplace, suffix)
 
-    @readable_name('Filter by KEGG annotation')
+    @readable_name('Filter by KEGG Pathways annotations')
     def filter_by_kegg_annotations(self, kegg_ids: Union[str, List[str]],
                                    mode: Literal['union', 'intersection'] = 'union',
                                    organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
