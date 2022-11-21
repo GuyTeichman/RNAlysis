@@ -1840,6 +1840,7 @@ def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
     class MockGOTerm:
         def __init__(self, go_id: str):
             self.id = go_id
+            self.namespace = 'biological_process'
 
     class MockDAGTree:
         def __init__(self):

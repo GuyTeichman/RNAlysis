@@ -535,7 +535,20 @@ class Filter:
             f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
 
         dag_tree = io.fetch_go_basic()
-        aspects = 'any'  # TODO: optimize this to fetch the minimal number of GO aspects required
+        # make sure all GO IDs are valid
+        for go_id in go_ids.copy():
+            if go_id in dag_tree:
+                continue
+            assert isinstance(go_id, str), f"'go_ids' must all be strings!"
+            stripped_id = go_id.strip()
+            if stripped_id in dag_tree:
+                go_ids.remove(go_id)
+                go_ids.add(stripped_id)
+                continue
+            raise ValueError(f"Invalid GO ID: '{go_id}'")
+        # find the minimal set of GO aspects that need to be fetched
+        aspects = {dag_tree[go_id].namespace for go_id in go_ids}
+
         annotations = io.GOlrAnnotationIterator(io.map_taxon_id(organism)[0], aspects,
                                                 evidence_types, excluded_evidence_types,
                                                 databases, excluded_databases,
@@ -567,7 +580,7 @@ class Filter:
             source_to_genes[source].add(gene_id)
             # propagate annotations
             if propagate_annotations:
-                parents = set(dag_tree.upper_induced_graph_iter(go_id))
+                parents = dag_tree.upper_induced_graph_iter(go_id)
                 for parent in parents:
                     if parent not in go_ids:
                         continue
