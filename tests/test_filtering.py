@@ -1823,3 +1823,60 @@ def test_filter_by_kegg_annotations(monkeypatch, ids, mode, truth_path):
         print(res.df)
         print(truth)
         raise e
+
+
+@pytest.mark.parametrize('ids,mode,truth_path', [
+    ('go_id2', 'union', 'tests/test_files/counted_filter_by_kegg_truth_1.csv'),
+    (['go_id2'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_1.csv'),
+    (['go_id3', 'go_id1'], 'union', 'tests/test_files/counted_filter_by_kegg_truth_2.csv'),
+    (['go_id1', 'go_id3'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_3.csv'),
+    (['go_id1', 'go_id2', 'go_id3'], 'union', 'tests/test_files/counted_filter_by_kegg_truth_4.csv'),
+    (['go_id1', 'go_id2', 'go_id3'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_5.csv'),
+
+])
+def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
+    truth = io.load_csv(truth_path, index_col=0)
+
+    class MockGOTerm:
+        def __init__(self, go_id: str):
+            self.id = go_id
+
+    class MockDAGTree:
+        def __init__(self):
+            pass
+
+        def __getitem__(self, item):
+            if item in ['go_id1', 'go_id2', 'go_id3']:
+                return MockGOTerm(item)
+
+        def __contains__(self, item):
+            if item in ['go_id1', 'go_id2', 'go_id3']:
+                return True
+            return False
+
+        def upper_induced_graph_iter(self, item):
+            return []
+
+    def annotation_iter(self):
+        annotations = [
+            ['go_id1', {'WBGene00007063', 'WBGene00007064', 'WBGene00043988', 'other1', 'other2'}],
+            ['go_id2', {'WBGene00007063', 'WBGene00044951', 'WBGene00007067', 'other3'}],
+            ['go_id3', {'WBGene00007063', 'WBGene00007066', 'WBGene00043988', 'other1'}]]
+        for annotation in annotations:
+            for gene_id in annotation[1]:
+                annotation_dict = dict(annotation_class=annotation[0], bioentity_internal_id=gene_id, source='WB')
+                yield annotation_dict
+
+    monkeypatch.setattr(io.GOlrAnnotationIterator, '_get_n_annotations', lambda *args, **kwargs: 13)
+    monkeypatch.setattr(io.GOlrAnnotationIterator, '_annotation_generator_func', annotation_iter)
+    monkeypatch.setattr(io, 'fetch_go_basic', lambda: MockDAGTree())
+
+    f = Filter('tests/test_files/counted.csv')
+    res = f.filter_by_go_annotations(ids, mode, gene_id_type='WormBase', inplace=False)
+
+    try:
+        assert res.df.sort_index().equals(truth.sort_index())
+    except Exception as e:
+        print(res.df)
+        print(truth)
+        raise e
