@@ -3620,7 +3620,7 @@ class CountFilter(Filter):
     @readable_name('Plot expression of specific genes')
     def plot_expression(self, features: Union[List[str], str],
                         samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
-                        count_unit: str = 'Reads per million') -> plt.Figure:
+                        count_unit: str = 'Reads per million', split_plots: bool = False) -> plt.Figure:
         """
         Plot the average expression and standard error of the specified features under the specified conditions.
 
@@ -3633,6 +3633,9 @@ class CountFilter(Filter):
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :type count_unit: str, default 'Reads per million'
         :param count_unit: The unit of the count data. Will be displayed in the y axis.
+        :type split_plots: bool (default=False)
+        :param split_plots: if True, each gene will be plotted in its own Figure. \
+        Otherwise, all genes will be plotted in the same Figure.
 
         .. figure:: /figures/plot_expression.png
            :align:   center
@@ -3660,14 +3663,21 @@ class CountFilter(Filter):
                     samples[i][j] = self.columns[samples[i][j]]
         sample_names = [name.replace(',', '\n') for name in self._avg_subsamples(samples).columns]
 
-        g = strategies.SquareStrategy()
-        subplots = g.get_grid(len(features))
-        plt.close()
-        fig = plt.figure()
+        if not split_plots:
+            g = strategies.SquareStrategy()
+            subplots = list(g.get_grid(len(features)))
+            plt.close()
+            fig = plt.figure()
+            fig.tight_layout()
         axes = []
         ylims = []
-        for subplot, feature in zip(subplots, features):
-            axes.append(fig.add_subplot(subplot))
+        for i, feature in enumerate(features):
+            if split_plots:
+                fig, ax = plt.subplots()
+                fig.tight_layout()
+            else:
+                ax = fig.add_subplot(subplots[i])
+            axes.append(ax)
             mean = [self.df.loc[feature].iloc[ind].mean() if validation.isinstanceiter(ind, int) else
                     self.df.loc[feature, ind].mean() for ind in samples]
 
@@ -3681,18 +3691,18 @@ class CountFilter(Filter):
             for i, grouping in enumerate(samples):
                 for _ in grouping:
                     points_x.append(i)
-            axes[-1].bar(np.arange(len(samples)), mean, yerr=sem, edgecolor='k', width=0.5,
-                         facecolor='slateblue', capsize=6.5, error_kw=dict(capthick=2, lw=2))
-            axes[-1].scatter(points_x, points_y, edgecolor='k', facecolor=[0.90, 0.6, 0.25], linewidths=0.9)
-            axes[-1].set_xticks(np.arange(len(samples)))
-            axes[-1].set_xticklabels(list(sample_names), fontsize=12)
-            axes[-1].set_title(feature, fontsize=16)
+            ax.bar(np.arange(len(samples)), mean, yerr=sem, edgecolor='k', width=0.5,
+                   facecolor='slateblue', capsize=6.5, error_kw=dict(capthick=2, lw=2))
+            ax.scatter(points_x, points_y, edgecolor='k', facecolor=[0.90, 0.6, 0.25], linewidths=0.9)
+            ax.set_xticks(np.arange(len(samples)))
+            ax.set_xticklabels(list(sample_names), fontsize=12)
+            ax.set_title(feature, fontsize=16)
             plt.ylabel(count_unit, fontsize=14)
-            sns.despine()
-            ylims.append(axes[-1].get_ylim()[1])
-        for ax in axes:
-            ax.set_ylim((0.0, max(ylims)))
-        fig.tight_layout()
+            generic.despine(ax)
+            ylims.append(ax.get_ylim()[1])
+        if not split_plots:
+            for ax in axes:
+                ax.set_ylim((0.0, max(ylims)))
         plt.show()
         return fig
 
