@@ -17,9 +17,10 @@ Analysis #1 - time series RNA sequencing
 
 The dataset
 =================
-For the first analysis, we will use a publicly available dataset from `WormBase <https://downloads.wormbase.org/species/c_elegans/annotation/RNASeq_controls_FPKM/c_elegans.PRJNA13758.current.RNASeq_controls_FPKM.dat>`_. This dataset describes the mean expression level of each gene over the developmental stages of *C. elegans* nematodes, averaged from RNA-sequencing short-read experiments that have been identified in the literature as being 'controls'.
+For the first analysis, we will use a publicly available dataset from `WormBase <https://downloads.wormbase.org/species/c_elegans/annotation/RNASeq_controls_FPKM/c_elegans.PRJNA13758.current.RNASeq_controls_FPKM.dat>`_.
+This dataset describes the median expression level of each gene over the developmental stages of *C. elegans* nematodes, averaged from RNA-sequencing short-read experiments that have been identified in the literature as being 'controls'.
 
-The original table linked above contains the mean expression, median expression, and number of samples for each developmental stage. Since we are only interested in the means, before starting the analysis, I copied the Mean columns to a new table, and gave the columns more readable names.
+The original table linked above contains the mean expression, median expression, and number of samples for each developmental stage. Since we are only interested in the medians, before starting the analysis, I copied the Median columns to a new table, and gave the columns more readable names.
 You can find the table I created `here <https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/elegans_developmental_stages.tsv>`_.
 
 
@@ -39,6 +40,8 @@ This is not a mandatory step, but if we don't do it, *RNAlysis* will warn us whe
 
 Finally, we can click the "start" button to actually open our table on *RNAlysis*.
 The window will now display a preview of our table, as well as a a short summary of our table's content (table name, table type, number of rows and columns).
+
+At the bottom of the window we can also see a log box - this is where *RNAlysis* will display notes and warnings regarding our analysis.
 
 .. image:: /tutorial_screenshots/01b01_view_table.png
   :width: 600
@@ -201,6 +204,7 @@ Clustering analysis
 ====================
 We are interested in how different groups of genes change in expression level over the life cycle of the worm. We can use clustering analysis to group the genes in this dataset by their expression pattern over the developmental stages.
 There is an abundance of approaches when it comes to clustering analysis of gene expression. To illustrate this point, we will cluster our data using three different types of clustering algorithms, arranged from the simplest to the most complex.
+These algorithms are only a few representatives of the many clustering methods available in *RNAlysis*.
 
 The simple approach - distance-based clustering with K-Medoids
 --------------------------------------------------------------
@@ -234,6 +238,10 @@ We can now scroll all the way down, click the "Apply" button, and wait for the a
 .. image:: /tutorial_screenshots/01g03_kmedoids.png
   :width: 600
   :alt: K-Medoids clustering - loading screen
+
+Since K-Medoids is not a deterministic algorithm (it has randomized starting conditions every time you use it), the results you get will probably not be identical to those appearing in this tutorial, but they should be similar to what we observe here.
+If you want to make sure your clustering results are 100% reproducible, you can set the `random_seed` parameter when setting up your clustering setup to a specific number.
+Re-running the algorithm with an identical random seed wiil ensure that you get the exact same results every time.
 
 One the clustering anslysis is finished, a few figures will open up. Let's examine them one by one.
 The first figure will show us the results of the Gap Statistic algorithm. The graph on the left will show us, for each value of `n_clusters` tested, the natural logarithm (ln) of within-cluster dispersion.
@@ -358,6 +366,11 @@ Let's add the two clustering setups we used earlier, plus a few more:
   :width: 600
   :alt: CLICOM clustering - multiple clustering setups
 
+I chose to add, in addition to the two clustering setups from earlier, the following three clustering setups:
+* K-Medoids clustering with 7 clusters and the Spearman distance metric
+* Hierarchical clustering 8 clusters, Euclidean distance metric and Ward linkage
+* HDBSCAN clustering with the Jackknife distance metric and minimal cluster size of 150
+
 Once we are happy with the clustering solutions and tuning parameters, we can click on the "Start CLICOM" button, and see progress reports in the output box on the main window of *RNAlysis*.
 
 .. image:: /tutorial_screenshots/01g25_clicom.png
@@ -374,6 +387,7 @@ Let's look at the final result:
   :width: 600
   :alt: CLICOM clustering results - principal component analysis
 
+Once again, since two of the clustering setups we chose are non-deterministic, the clusters you end up with might end up looking a bit differently from these.
 Let's choose a few good-looking clusters to keep, and give them a name that indicates their expression pattern:
 
 .. image:: /tutorial_screenshots/01g28_clicom.png
@@ -434,6 +448,7 @@ The table also includes the statistics for each GO term (number of genes in the 
   :alt: Enrichment analysis results - tabular format
 
 The second output format is an Ontology Graph, depicting the statistically-significant GO terms in each GO aspect (biological process, cellular component, and molecular function), as well as their ancestors in the ontology graph.
+The hierarchy of GO terms in the graph matches the official Gene Ontology hierarchy.
 The color of the terms on the graph indicates their log2 fold change, and the depth in the tree indicates the specificity of the term, with more specific GO terms being at the bottom.
 
 .. image:: /tutorial_screenshots/01h05_go_enrichment.png
@@ -643,6 +658,8 @@ This table format is considered un-normalized for library size, and can therefor
 .. image:: /tutorial_screenshots/02b05_kallisto.png
   :width: 600
   :alt: quantification output table - osmotic stress
+
+At the bottom of the window we can also see a log box - this is where *RNAlysis* will display notes and warnings regarding our analysis.
 
 If you wanted to analyze differential expression for transcripts instead of genes, you could use the per-transcript count estimate table that is located in the output folder.
 
