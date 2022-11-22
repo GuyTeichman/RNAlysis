@@ -2929,7 +2929,30 @@ class CountFilter(Filter):
 
     @readable_name('MA plot')
     def ma_plot(self, ref_column: Union[Literal['auto'], str, int] = 'auto',
-                columns: Union[str, List[str], Literal['all']] = 'all', split_plots: bool = False):
+                columns: Union[str, List[str], Literal['all']] = 'all', split_plots: bool = False,
+                title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
+                label_fontsize: Union[float, Literal['auto']] = 'auto', tick_fontsize: float = 12):
+        """
+
+        :param ref_column: the column to be used as reference for MA plot. If 'auto', \
+        then the reference column will be chosen automatically to be \
+        the column whose upper quartile is closest to the mean upper quartile.
+        :type ref_column: name of a column or 'auto' (default='auto')
+        :param columns: A list of the column names to generate an MA plot for.
+        :type columns: str or list of str
+        :param split_plots: if True, each individual MA plot will be plotted in its own Figure. \
+        Otherwise, all MA plots will be plotted on the same Figure.
+        :type split_plots: bool (default=False)
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+         :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
+        :rtype: a matplotlib Axes.
+        """
         if isinstance(ref_column, int):
             assert ref_column < len(self.columns), "the index of 'ref_column' is larger than the number of columns!"
             ref_column = self.columns[ref_column]
@@ -2953,14 +2976,18 @@ class CountFilter(Filter):
 
         if split_plots:
             subplots = [plt.subplots(constrained_layout=True, figsize=(6.4, 5.6)) for _ in range(len(columns))]
-            label_fontsize = 14
+            if label_fontsize == 'auto':
+                label_fontsize = 14
         else:
             grid = strategies.SquareStrategy()
             subplots = grid.get_grid(len(columns))
             plt.close()
             fig = plt.figure(figsize=(14, 9))
-            fig.suptitle('MA plots', fontsize=18)
-            label_fontsize = 10 if len(columns) > 15 else 8
+            if title == 'auto':
+                title = 'MA plots'
+            fig.suptitle(title, fontsize=title_fontsize)
+            if label_fontsize == 'auto':
+                label_fontsize = 10 if len(columns) > 15 else 8
 
         for i, col in enumerate(columns):
             if split_plots:
@@ -2976,6 +3003,8 @@ class CountFilter(Filter):
             ax.set_title(title)
             ax.set_xlabel('A: \n' + r'$\log_2$ average expression)', fontsize=label_fontsize)
             ax.set_ylabel('M: \n' + r'$\log_2$' + f'("{col}" / "{ref_column}")', fontsize=label_fontsize)
+            ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+
         if not split_plots:
             fig.tight_layout(rect=[0, 0.03, 1, 0.92])
         plt.show()
@@ -3571,8 +3600,9 @@ class CountFilter(Filter):
 
     @readable_name('Hierarchical clustergram plot')
     def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'Euclidean',
-                    linkage: Literal[
-                        'Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'] = 'Average'):
+                    linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
+                    ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
+                    tick_fontsize: float = 12):
         """
         Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.
 
@@ -3587,8 +3617,13 @@ class CountFilter(Filter):
         :type linkage: 'single', 'average', 'complete', 'weighted', 'centroid', 'median' or 'ward'.
         :param linkage: the linkage method to use in the clustergram. \
         For all possible inputs and their meaning see scipy.cluster.hierarchy.linkage documentation online.
-
-        :return: A seaborn clustermap object.
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
+        :rtype: A seaborn clustermap object.
 
 
         .. figure:: /figures/clustergram.png
@@ -3614,6 +3649,10 @@ class CountFilter(Filter):
         plt.style.use('seaborn-whitegrid')
         clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
                                      cmap=sns.color_palette("RdBu_r", 12), yticklabels=False)
+        if title == 'auto':
+            title = f"Clustegram of {self.fname.stem}"
+        plt.title(title, fontsize=title_fontsize)
+        plt.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         plt.show()
         return clustergram
 
@@ -3708,7 +3747,8 @@ class CountFilter(Filter):
 
     @readable_name('Principal Component Analysis (PCA) plot')
     def pca(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all', n_components: int = 3,
-            power_transform: bool = True, labels: bool = True, label_fontsize: int = 16
+            power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
+            title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12
             ) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
@@ -3720,12 +3760,14 @@ class CountFilter(Filter):
         To draw multiple replicates of the same condition in the same color, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
-        :param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
-        :type power_transform: bool (default=True)
-        :type n_components: positive int (default=3)
-        :param n_components: number of PCA components to plot return.
-        :type labels: bool (default=True)
-        :param labels: if True, labels the points on the PCA plot.
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+        :param tick_fontsize: determines the font size of the X and Y tick labels, and the sample name labels. .
+        :type tick_fontsize: float (default=10)
         :return: A tuple whose first element is an sklearn.decomposition.pca object, \
         and second element is a list of matplotlib.axis objects.
 
@@ -3750,6 +3792,8 @@ class CountFilter(Filter):
         final_df = principal_df
         final_df['lib'] = pd.Series(parsing.flatten(samples))
 
+        if title == 'auto':
+            title = f'PCA plot of {self.fname.stem}'
         pc_var = pca_obj.explained_variance_ratio_
         figs = []
         for first_pc in range(n_components):
@@ -3758,13 +3802,14 @@ class CountFilter(Filter):
                     final_df=final_df[
                         [f'Principal component {1 + first_pc}', f'Principal component {1 + second_pc}', 'lib']],
                     pc1_var=pc_var[first_pc], pc2_var=pc_var[second_pc], sample_grouping=samples, labels=labels,
-                    label_fontsize=label_fontsize))
+                    label_fontsize=label_fontsize, title=title, title_fontsize=title_fontsize,
+                    tick_fontsize=tick_fontsize))
 
         return pca_obj, figs
 
     @staticmethod
     def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool,
-                  label_fontsize: int):
+                  title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float):
         """
         Internal method, used to plot the results from CountFilter.pca().
 
@@ -3779,17 +3824,12 @@ class CountFilter(Filter):
         :return: an axis object containing the PCA plot.
 
         """
-        plt.style.use('seaborn-whitegrid')
-
-        # elif sample_grouping == 'triplicate' or sample_grouping == 'triplicates':
-        #     sample_grouping = [1 + i // 3 for i in range(final_df.shape[0])]
-
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
         ax.grid(True)
-        ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=15)
-        ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=15)
-        ax.set_title('PCA', fontsize=20)
+        ax.set_xlabel(f'{final_df.columns[0]} (explained {pc1_var * 100 :.2f}%)', fontsize=label_fontsize)
+        ax.set_ylabel(f'{final_df.columns[1]} (explained {pc2_var * 100 :.2f}%)', fontsize=label_fontsize)
+        ax.set_title(title, fontsize=title_fontsize)
 
         color_generator = generic.color_generator()
         color_opts = [next(color_generator) for _ in range(len(sample_grouping))]
@@ -3799,12 +3839,11 @@ class CountFilter(Filter):
         ax.scatter(final_df.iloc[:, 0], final_df.iloc[:, 1], c=colors, s=50)
         if labels:
             for i, (_, row) in enumerate(final_df.iterrows()):
-                # row[0] += 1
-                # row[1] += 1
                 ax.annotate(row[2], (row[0], row[1]), textcoords='offset pixels',
                             xytext=(label_fontsize, label_fontsize),
                             fontsize=label_fontsize, color=colors[i])
         ax.grid(True)
+        ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
         return fig
 
     @readable_name('Scatter plot - sample VS sample')
@@ -3812,6 +3851,7 @@ class CountFilter(Filter):
                                  xlabel: Union[str, Literal['auto']] = 'auto',
                                  ylabel: Union[str, Literal['auto']] = 'auto',
                                  title: Union[str, Literal['auto']] = 'auto',
+                                 title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
                                  highlight: Union['Filter', Iterable[str]] = None) -> plt.Figure:
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
@@ -3832,6 +3872,12 @@ class CountFilter(Filter):
         :param highlight: If specified, the points in the scatter corresponding to the names/features in 'highlight' \
         will be highlighted in red.
         :type highlight: Filter object or iterable of strings
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+        :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
         :return: a matplotlib axis object.
 
         .. figure:: /figures/rpm_vs_rpm.png
@@ -3859,10 +3905,11 @@ class CountFilter(Filter):
             title = f'{sample1} vs {sample2}'
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
-        ax.set_xlabel(xlabel, fontsize=15)
-        ax.set_ylabel(ylabel, fontsize=15)
-        ax.set_title(title, fontsize=17)
+        ax.set_xlabel(xlabel, fontsize=label_fontsize)
+        ax.set_ylabel(ylabel, fontsize=label_fontsize)
+        ax.set_title(title, fontsize=title_fontsize)
         ax.scatter(xvals, yvals, s=3, c='#6d7178')
+        ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
 
         if highlight is not None:
             highlight_features = highlight.index_set if issubclass(highlight.__class__,
@@ -3885,7 +3932,9 @@ class CountFilter(Filter):
 
     @readable_name('Box plot')
     def box_plot(self, samples: Union[List[List[str]], List[List[str]], Literal['all']] = 'all', notch: bool = True,
-                 scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
+                 scatter: bool = False, ylabel: str = 'log10(Normalized reads + 1)',
+                 title: Union[str, Literal['auto']] = 'auto',
+                 title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
         """
         Generates a box plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -3902,9 +3951,17 @@ class CountFilter(Filter):
         :param notch: if True, adds a confidence-interval notch to the box-plot.
         :type scatter: bool (default=False)
         :param scatter: if True, adds a scatter-plot on top of the box-plot.
-        :type ylabel: str (default='Log10(RPM + 1)')
+        :type ylabel: str (default='Log10(Normalized reads + 1)')
         :param ylabel: the label of the Y axis.
-        :return: a seaborn boxplot object.
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+         :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
+        :rtype: a matplotlib axes.
 
         .. figure:: /figures/box_plot.png
            :align:   center
@@ -3925,18 +3982,26 @@ class CountFilter(Filter):
 
         color_gen = generic.color_generator()
         palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
-        box = sns.boxplot(data=np.log10(samples_df + 1), notch=notch, palette=palette)
+        ax = sns.boxplot(data=np.log10(samples_df + 1), notch=notch, palette=palette)
         if scatter:
             _ = sns.stripplot(data=np.log10(samples_df + 1), color=(0.25, 0.25, 0.25), size=3)
-        plt.style.use('seaborn-whitegrid')
-        plt.xlabel("Samples")
-        plt.ylabel(ylabel)
+
+        if title == 'auto':
+            title = f"Box plot of {self.fname.stem}"
+        ax.set_title(title, fontsize=title_fontsize)
+        ax.set_xlabel("Samples", fontsize=label_fontsize)
+        ax.set_ylabel(ylabel, fontsize=label_fontsize)
+        ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+
+        generic.despine(ax)
         plt.show()
-        return box
+        return ax
 
     @readable_name('Enhanced box plot')
     def enhanced_box_plot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
-                          scatter: bool = False, ylabel: str = 'log10(RPM + 1)'):
+                          scatter: bool = False, ylabel: str = 'log10(Normalized reads + 1)',
+                          title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
+                          label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
         """
         Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -3953,7 +4018,15 @@ class CountFilter(Filter):
         :param scatter: if True, adds a scatter-plot on top of the box-plot.
         :type ylabel: str (default='Log10(RPM + 1)')
         :param ylabel: the label of the Y axis.
-        :return: a seaborn enhanced box-plot object.
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+        :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
+        :rtype: matplotlib Axes.
 
         .. figure:: /figures/enhanced_box_plot.png
            :align:   center
@@ -3974,18 +4047,23 @@ class CountFilter(Filter):
         color_gen = generic.color_generator()
         palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
 
-        boxen = sns.boxenplot(data=samples_df, palette=palette)
+        ax = sns.boxenplot(data=samples_df, palette=palette)
         if scatter:
             _ = sns.stripplot(data=samples_df, color=(0.25, 0.25, 0.25), size=3)
-        plt.style.use('seaborn-whitegrid')
-        plt.xlabel("Samples")
-        plt.ylabel(ylabel)
+        if title == 'auto':
+            title = f"Enhanced Box plot of {self.fname.stem}"
+        ax.set_title(title, fontsize=title_fontsize)
+        ax.set_xlabel("Samples", fontsize=label_fontsize)
+        ax.set_ylabel(ylabel, fontsize=label_fontsize)
+        ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+        generic.despine(ax)
         plt.show()
-        return boxen
+        return ax
 
     @readable_name('Violin plot')
     def violin_plot(self, samples: Union[Literal['all'], List[str], List[List[str]]] = 'all',
-                    ylabel: str = '$\log_10$(normalized reads + 1)'):
+                    ylabel: str = '$\log_10$(normalized reads + 1)', title: Union[str, Literal['auto']] = 'auto',
+                    title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
         """
         Generates a violin plot of the specified samples in the CountFilter object in log10 scale. \
         Can plot both single samples and average multiple replicates. \
@@ -4000,7 +4078,15 @@ class CountFilter(Filter):
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
         :type ylabel: str (default='log10(normalized reads + 1)')
         :param ylabel: the label of the Y axis.
-        :return: a seaborn violin object.
+        :param title: The title of the plot. If 'auto', a title will be generated automatically.
+        :type title: str or 'auto' (default='auto')
+        :param title_fontsize: determines the font size of the graph title.
+        :type title_fontsize: float (default=30)
+        :param label_fontsize: determines the font size of the X and Y axis labels.
+        :type label_fontsize: float (default=15)
+         :param tick_fontsize: determines the font size of the X and Y tick labels.
+        :type tick_fontsize: float (default=10)
+        :rtype: a matplotlib Axes.
 
         .. figure:: /figures/violin.png
            :align:   center
@@ -4021,12 +4107,16 @@ class CountFilter(Filter):
         color_gen = generic.color_generator()
         palette = sns.color_palette([next(color_gen) for _ in range(samples_df.shape[1])], n_colors=samples_df.shape[1])
 
-        violin = sns.violinplot(data=samples_df, palette=palette)
-        plt.style.use('seaborn-whitegrid')
-        plt.xlabel("Samples")
-        plt.ylabel(ylabel)
+        ax = sns.violinplot(data=samples_df, palette=palette)
+        if title == 'auto':
+            title = f"Enhanced Box plot of {self.fname.stem}"
+        ax.set_title(title, fontsize=title_fontsize)
+        ax.set_xlabel("Samples", fontsize=label_fontsize)
+        ax.set_ylabel(ylabel, fontsize=label_fontsize)
+        ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+        generic.despine(ax)
         plt.show()
-        return violin
+        return ax
 
     # TODO: add ranksum test
     # TODO: generate new sample figure
