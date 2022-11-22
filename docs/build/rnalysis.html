@@ -128,6 +128,22 @@ When you save filtered/modified data, its new file name will include by default 
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">average_replicate_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_grouping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_column_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mean'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'median'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'geometric_mean'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a></span></span></dt>
+<dd><p>Average the expression values of gene expression for each group of replicate samples.         Each group of samples (e.g. biological/technical replicates)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_grouping</strong> (<em>nested list</em><em> of </em><em>column names</em>) – grouping of the samples into conditions.         Each grouping should containg all replicates of the same condition.         Each condition will be averaged separately.</p></li>
+<li><p><strong>new_column_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em>) – names to be given to the columns in the new count matrix.         Each new name should match a group of samples to be averaged.         If <a href="#id1"><span class="problematic" id="id2">`</span></a>new_column_names`=’auto’, names will be generated automatically.</p></li>
+<li><p><strong>function</strong> (<em>'mean'</em><em>, </em><em>'median'</em><em>, or </em><em>'geometric_mean'</em><em> (</em><em>default='mean'</em><em>)</em>) – the function which will be used to average the values within each group.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), averaging will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">biotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'predefined'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predefined'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span></dt>
 <dd><p>Returns a DataFrame of the biotypes in the Filter object and their count.
 :type long_format: ‘short’ or ‘long’ (default=’short’)
@@ -167,7 +183,7 @@ which also provides descriptive statistics of each column per biotype.
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">box_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scatter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log10(RPM</span> <span class="pre">+</span> <span class="pre">1)'</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">box_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scatter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log10(Normalized</span> <span class="pre">reads</span> <span class="pre">+</span> <span class="pre">1)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Axes</span></span></span></dt>
 <dd><p>Generates a box plot of the specified samples in the CountFilter object in log10 scale.         Can plot both single samples and average multiple replicates.         It is recommended to use this function on normalized values and not on absolute read values.         The box indicates 25% and 75% percentiles, and the white dot indicates the median.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -175,24 +191,28 @@ which also provides descriptive statistics of each column per biotype.
 <li><p><strong>samples</strong> (<em>'all'</em><em> or </em><em>list.</em>) – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
 <li><p><strong>notch</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, adds a confidence-interval notch to the box-plot.</p></li>
 <li><p><strong>scatter</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, adds a scatter-plot on top of the box-plot.</p></li>
-<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default='Log10</em><em>(</em><em>RPM + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
+<li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default='Log10</em><em>(</em><em>Normalized reads + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – The title of the plot. If ‘auto’, a title will be generated automatically.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>float</em><em> (</em><em>default=30</em><em>)</em>) – determines the font size of the graph title.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>float</em><em> (</em><em>default=15</em><em>)
+</em><em>:param tick_fontsize: determines the font size</em><em> of </em><em>the X and Y tick labels.</em>) – determines the font size of the X and Y axis labels.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a seaborn boxplot object.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>a matplotlib axes.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id11">
+<figure class="align-center" id="id15">
 <a class="reference internal image-reference" href="_images/box_plot.png"><img alt="_images/box_plot.png" src="_images/box_plot.png" style="width: 480.0px; height: 480.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of box_plot(add_scatter=True)</span><a class="headerlink" href="#id11" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of box_plot(add_scatter=True)</span><a class="headerlink" href="#id15" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">clustergram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Single'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Average'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Complete'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Ward'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Weighted'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Centroid'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Median'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Average'</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">clustergram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Single'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Average'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Complete'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Ward'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Weighted'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Centroid'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Median'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Average'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -200,16 +220,19 @@ which also provides descriptive statistics of each column per biotype.
 <li><p><strong>sample_names</strong> (<em>'all'</em><em> or </em><em>list.</em>) – the names of the relevant samples in a list.         Example input: [“condition1_rep1”, “condition1_rep2”, “condition1_rep3”,         “condition2_rep1”, “condition3_rep1”, “condition3_rep2”]</p></li>
 <li><p><strong>metric</strong> (<em>'Euclidean'</em><em>, </em><em>'hamming'</em><em>, </em><em>'correlation'</em><em>, or </em><em>any other         distance metric available in scipy.spatial.distance.pdist</em>) – the distance metric to use in the clustergram.         For all possible inputs and their meaning see scipy.spatial.distance.pdist documentation online.</p></li>
 <li><p><strong>linkage</strong> (<em>'single'</em><em>, </em><em>'average'</em><em>, </em><em>'complete'</em><em>, </em><em>'weighted'</em><em>, </em><em>'centroid'</em><em>, </em><em>'median'</em><em> or </em><em>'ward'.</em>) – the linkage method to use in the clustergram.         For all possible inputs and their meaning see scipy.cluster.hierarchy.linkage documentation online.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – The title of the plot. If ‘auto’, a title will be generated automatically.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>float</em><em> (</em><em>default=30</em><em>)</em>) – determines the font size of the graph title.</p></li>
+<li><p><strong>tick_fontsize</strong> (<em>float</em><em> (</em><em>default=10</em><em>)</em>) – determines the font size of the X and Y tick labels.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>A seaborn clustermap object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id12">
+<figure class="align-center" id="id16">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id12" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id16" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -346,7 +369,7 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">enhanced_box_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scatter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log10(RPM</span> <span class="pre">+</span> <span class="pre">1)'</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">enhanced_box_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scatter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'log10(Normalized</span> <span class="pre">reads</span> <span class="pre">+</span> <span class="pre">1)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Axes</span></span></span></dt>
 <dd><p>Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale.         Can plot both single samples and average multiple replicates.         It is recommended to use this function on normalized values and not on absolute read values.         The box indicates 25% and 75% percentiles, and the white dot indicates the median.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -354,16 +377,20 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <li><p><strong>samples</strong> (<em>'all'</em><em> or </em><em>list.</em>) – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
 <li><p><strong>scatter</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, adds a scatter-plot on top of the box-plot.</p></li>
 <li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default='Log10</em><em>(</em><em>RPM + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – The title of the plot. If ‘auto’, a title will be generated automatically.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>float</em><em> (</em><em>default=30</em><em>)</em>) – determines the font size of the graph title.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>float</em><em> (</em><em>default=15</em><em>)</em>) – determines the font size of the X and Y axis labels.</p></li>
+<li><p><strong>tick_fontsize</strong> (<em>float</em><em> (</em><em>default=10</em><em>)</em>) – determines the font size of the X and Y tick labels.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a seaborn enhanced box-plot object.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>matplotlib Axes.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id13">
+<figure class="align-center" id="id17">
 <a class="reference internal image-reference" href="_images/enhanced_box_plot.png"><img alt="_images/enhanced_box_plot.png" src="_images/enhanced_box_plot.png" style="width: 480.0px; height: 480.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enhanced_box_plot(add_scatter=True)</span><a class="headerlink" href="#id13" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of enhanced_box_plot(add_scatter=True)</span><a class="headerlink" href="#id17" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -869,8 +896,24 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">ma_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">ma_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref_column</strong> (<em>name</em><em> of </em><em>a column</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the column to be used as reference for MA plot. If ‘auto’,         then the reference column will be chosen automatically to be         the column whose upper quartile is closest to the mean upper quartile.</p></li>
+<li><p><strong>columns</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>str</em>) – A list of the column names to generate an MA plot for.</p></li>
+<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each individual MA plot will be plotted in its own Figure.         Otherwise, all MA plots will be plotted on the same Figure.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – The title of the plot. If ‘auto’, a title will be generated automatically.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>float</em><em> (</em><em>default=30</em><em>)</em>) – determines the font size of the graph title.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>float</em><em> (</em><em>default=15</em><em>)
+</em><em>:param tick_fontsize: determines the font size</em><em> of </em><em>the X and Y tick labels.</em>) – determines the font size of the X and Y axis labels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>a matplotlib Axes.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
@@ -1138,38 +1181,40 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>An instance of seaborn.PairGrid.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id14">
+<figure class="align-center" id="id18">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 540.0px; height: 387.6px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id14" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id18" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">PCA</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">PCA</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Figure</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><p>Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most        variance between the different samples. The function will automatically plot Principal Component #1         with every other Principal Components calculated.
 :type samples: ‘all’ or list.
 :param samples: A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To draw multiple replicates of the same condition in the same color, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]
-:param power_transform: if True, performs a power transform (Box-Cox) on the count data prior to PCA.
-:type power_transform: bool (default=True)
-:type n_components: positive int (default=3)
-:param n_components: number of PCA components to plot return.
-:type labels: bool (default=True)
-:param labels: if True, labels the points on the PCA plot.
+:param title: The title of the plot. If ‘auto’, a title will be generated automatically.
+:type title: str or ‘auto’ (default=’auto’)
+:param title_fontsize: determines the font size of the graph title.
+:type title_fontsize: float (default=30)
+:param label_fontsize: determines the font size of the X and Y axis labels.
+:type label_fontsize: float (default=15)
+:param tick_fontsize: determines the font size of the X and Y tick labels, and the sample name labels. .
+:type tick_fontsize: float (default=10)
 :return: A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
-<figure class="align-center" id="id15">
+<figure class="align-center" id="id19">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id15" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id19" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">plot_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Reads</span> <span class="pre">per</span> <span class="pre">million'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">plot_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Reads</span> <span class="pre">per</span> <span class="pre">million'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span></dt>
 <dd><p>Plot the average expression and standard error of the specified features under the specified conditions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1177,13 +1222,14 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>features</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>strings</em>) – the feature/features to plot expression for.</p></li>
 <li><p><strong>samples</strong> – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
 <li><p><strong>count_unit</strong> (<em>str</em><em>, </em><em>default 'Reads per million'</em>) – The unit of the count data. Will be displayed in the y axis.</p></li>
+<li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each gene will be plotted in its own Figure.         Otherwise, all genes will be plotted in the same Figure.</p></li>
 </ul>
 </dd>
 </dl>
-<figure class="align-center" id="id16">
+<figure class="align-center" id="id20">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 256.0px; height: 192.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id16" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id20" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1239,7 +1285,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">scatter_sample_vs_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span></dt>
+<span class="sig-name descname"><span class="pre">scatter_sample_vs_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.Filter.html#rnalysis.filtering.Filter" title="rnalysis.filtering.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span></dt>
 <dd><p>Generate a scatter plot where every dot is a feature, the x value is log10 of reads         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1250,16 +1296,19 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>ylabel</strong> (<em>str</em><em> or </em><em>'auto'</em>) – optional. If not specified, sample2 will be used as ylabel.</p></li>
 <li><p><strong>title</strong> (<em>str</em><em> or </em><em>'auto'</em>) – optional. If not specified, a title will be generated automatically.</p></li>
 <li><p><strong>highlight</strong> (<em>Filter object</em><em> or </em><em>iterable</em><em> of </em><em>strings</em>) – If specified, the points in the scatter corresponding to the names/features in ‘highlight’         will be highlighted in red.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>float</em><em> (</em><em>default=30</em><em>)</em>) – determines the font size of the graph title.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>float</em><em> (</em><em>default=15</em><em>)</em>) – determines the font size of the X and Y axis labels.</p></li>
+<li><p><strong>tick_fontsize</strong> (<em>float</em><em> (</em><em>default=10</em><em>)</em>) – determines the font size of the X and Y tick labels.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a matplotlib axis object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id17">
+<figure class="align-center" id="id21">
 <a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 480.0px; height: 477.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id17" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id21" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1396,11 +1445,12 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">split_clicom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parameter_dicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evidence_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6666666666666666</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_unclustered_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'std_area'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'std_bar'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a><span class="p"><span class="pre">]</span></span></span></span></dt>
+<span class="sig-name descname"><span class="pre">split_clicom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parameter_dicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replicate_grouping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ungrouped</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ungrouped'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power_transform</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evidence_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6666666666666666</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_unclustered_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'std_area'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'std_bar'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_plots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gui_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a><span class="p"><span class="pre">]</span></span></span></span></dt>
 <dd><p>Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm         <a class="reference external" href="https://doi.org/10.1016/j.eswa.2011.08.059/">(Mimaroglu and Yagci 2012)</a>,         and then splits those features into multiple non-overlapping CountFilter objects,         based on the clustering result.         The CLICOM algorithm incorporates the results of multiple clustering solutions,         which can come from different clustering algorithms with differing clustering parameters,         and uses these clustering solutions to create a combined clustering solution.         Due to the nature of CLICOM, the number of clusters the data will be divided into is determined automatically.         This modified version of the CLICOM algorithm can also classify features as noise,         which does not belong in any discovered cluster.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>replicate_grouping</strong> (<em>nested list</em><em> of </em><em>strings</em><em> or </em><em>'ungrouped'</em><em> (</em><em>default='ungrouped'</em><em>)</em>) – Allows you to group your data into replicates. Each replicate will be clustered         separately, and used as its own clustering setup. This can minimize the influence of batch effects         on the clustering results, and take advantage of repeated measures data         to improve the accuracy of your clustering. If <a href="#id3"><span class="problematic" id="id4">`</span></a>replicate_grouping`=’ungrouped’, the data will be         clustered normally as if no replicate data is available.         To read more about the theory behind this, see the following publication:         <a class="reference external" href="https://doi.org/10.1093/bib/bbs057">https://doi.org/10.1093/bib/bbs057</a></p></li>
 <li><p><strong>power_transform</strong> (<em>True</em><em>, </em><em>False</em><em>, or </em><em>(</em><em>True</em><em>, </em><em>False</em><em>) </em><em>(</em><em>default=True</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering. If both True and False are supplied,         RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.</p></li>
 <li><p><strong>evidence_threshold</strong> (<em>float between 0 and 1</em><em> (</em><em>default=2/3</em><em>)</em>) – determines whether each pair of features can be reliably clustered together.         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if         they were clustered together in at least 50% of the tested clustering solutions.</p></li>
 <li><p><strong>cluster_unclustered_features</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, RNAlysis will force every feature to be part of a cluster,         even if they were not initially determined to reliably belong to any of the discovered clusters.         Larger values will lead to fewer clusters, with more features classified as noise.</p></li>
@@ -1448,16 +1498,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id18">
+<figure class="align-center" id="id22">
 <img alt="_images/clicom_all.png" src="_images/clicom_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_clicom(plot_style=’all’)</span><a class="headerlink" href="#id18" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_clicom(plot_style=’all’)</span><a class="headerlink" href="#id22" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id19">
+<figure class="align-center" id="id23">
 <img alt="_images/clustering_PCA_clicom.png" src="_images/clustering_PCA_clicom.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_clicom()</span><a class="headerlink" href="#id19" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_clicom()</span><a class="headerlink" href="#id23" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1508,16 +1558,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id20">
+<figure class="align-center" id="id24">
 <img alt="_images/hdbscan_all.png" src="_images/hdbscan_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_hdbscan(plot_style=’all’)</span><a class="headerlink" href="#id20" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_hdbscan(plot_style=’all’)</span><a class="headerlink" href="#id24" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id21">
+<figure class="align-center" id="id25">
 <img alt="_images/clustering_PCA_hdbscan.png" src="_images/clustering_PCA_hdbscan.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_hdbscan()</span><a class="headerlink" href="#id21" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_hdbscan()</span><a class="headerlink" href="#id25" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1536,7 +1586,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>distance_threshold</strong> (<em>float</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – a distance threshold above which clusters will not be merged.         If a number is specified, <cite>n_clusters</cite> must be None.</p></li>
 <li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
 <li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id1"><span class="problematic" id="id2">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id5"><span class="problematic" id="id6">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1566,10 +1616,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id22">
+<figure class="align-center" id="id26">
 <img alt="_images/hierarchical_all.png" src="_images/hierarchical_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_hierarchical(plot_style=’all’)</span><a class="headerlink" href="#id22" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_hierarchical(plot_style=’all’)</span><a class="headerlink" href="#id26" title="Permalink to this image"></a></p>
 <div class="legend">
 <blockquote>
 <div><figure class="align-default">
@@ -1601,7 +1651,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
 <li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
 <li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id3"><span class="problematic" id="id4">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id7"><span class="problematic" id="id8">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1632,16 +1682,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id23">
+<figure class="align-center" id="id27">
 <img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmeans(plot_style=’all’)</span><a class="headerlink" href="#id23" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmeans(plot_style=’all’)</span><a class="headerlink" href="#id27" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id24">
+<figure class="align-center" id="id28">
 <img alt="_images/clustering_PCA_kmeans.png" src="_images/clustering_PCA_kmeans.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmeans()</span><a class="headerlink" href="#id24" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmeans()</span><a class="headerlink" href="#id28" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1661,7 +1711,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
 <li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
 <li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id5"><span class="problematic" id="id6">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id9"><span class="problematic" id="id10">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1691,16 +1741,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id25">
+<figure class="align-center" id="id29">
 <img alt="_images/kmedoids_all.png" src="_images/kmedoids_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmedoids(plot_style=’all’)</span><a class="headerlink" href="#id25" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmedoids(plot_style=’all’)</span><a class="headerlink" href="#id29" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id26">
+<figure class="align-center" id="id30">
 <img alt="_images/clustering_PCA_kmedoids.png" src="_images/clustering_PCA_kmedoids.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmedoids()</span><a class="headerlink" href="#id26" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmedoids()</span><a class="headerlink" href="#id30" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1898,23 +1948,27 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">violin_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$\\log_10$(normalized</span> <span class="pre">reads</span> <span class="pre">+</span> <span class="pre">1)'</span></span></em><span class="sig-paren">)</span></dt>
+<span class="sig-name descname"><span class="pre">violin_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'all'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'$\\log_10$(normalized</span> <span class="pre">reads</span> <span class="pre">+</span> <span class="pre">1)'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Axes</span></span></span></dt>
 <dd><p>Generates a violin plot of the specified samples in the CountFilter object in log10 scale.         Can plot both single samples and average multiple replicates.         It is recommended to use this function on normalized values and not on absolute read values.         Box inside the violin plot indicates 25% and 75% percentiles, and the white dot indicates the median.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>'all'</em><em> or </em><em>list.</em>) – A list of the sample names and/or grouped sample names to be plotted.         All specified samples must be present in the CountFilter object.         To average multiple replicates of the same condition, they can be grouped in an inner list.         Example input:         [[‘SAMPLE1A’, ‘SAMPLE1B’, ‘SAMPLE1C’], [‘SAMPLE2A’, ‘SAMPLE2B’, ‘SAMPLE2C’],’SAMPLE3’ , ‘SAMPLE6’]</p></li>
 <li><p><strong>ylabel</strong> (<em>str</em><em> (</em><em>default='log10</em><em>(</em><em>normalized reads + 1</em><em>)</em><em>'</em><em>)</em>) – the label of the Y axis.</p></li>
+<li><p><strong>title</strong> (<em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – The title of the plot. If ‘auto’, a title will be generated automatically.</p></li>
+<li><p><strong>title_fontsize</strong> (<em>float</em><em> (</em><em>default=30</em><em>)</em>) – determines the font size of the graph title.</p></li>
+<li><p><strong>label_fontsize</strong> (<em>float</em><em> (</em><em>default=15</em><em>)
+</em><em>:param tick_fontsize: determines the font size</em><em> of </em><em>the X and Y tick labels.</em>) – determines the font size of the X and Y axis labels.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a seaborn violin object.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>a matplotlib Axes.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id27">
+<figure class="align-center" id="id31">
 <a class="reference internal image-reference" href="_images/violin.png"><img alt="_images/violin.png" src="_images/violin.png" style="width: 1152.0px; height: 556.1999999999999px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id27" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id31" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -3021,10 +3075,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </ul>
 </dd>
 </dl>
-<figure class="align-center" id="id28">
+<figure class="align-center" id="id32">
 <a class="reference internal image-reference" href="_images/volcano.png"><img alt="_images/volcano.png" src="_images/volcano.png" style="width: 448.0px; height: 333.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id28" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id32" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5356,16 +5410,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id29">
+<figure class="align-center" id="id33">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id29" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of enrich_hypergeometric()</span><a class="headerlink" href="#id33" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id30">
+<figure class="align-center" id="id34">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id30" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of enrich_hypergeometric(plot_horizontal = False)</span><a class="headerlink" href="#id34" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5404,16 +5458,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id31">
+<figure class="align-center" id="id35">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id31" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of enrich_randomization()</span><a class="headerlink" href="#id35" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id32">
+<figure class="align-center" id="id36">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id32" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of enrich_randomization(plot_horizontal = False)</span><a class="headerlink" href="#id36" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5477,22 +5531,22 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with GO terms as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id33">
+<figure class="align-center" id="id37">
 <a class="reference internal image-reference" href="_images/ontology_graph.png"><img alt="_images/ontology_graph.png" src="_images/ontology_graph.png" style="width: 840.0px; height: 540.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id33" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id37" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id34">
+<figure class="align-center" id="id38">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go.png"><img alt="_images/plot_enrichment_results_go.png" src="_images/plot_enrichment_results_go.png" style="width: 840.0px; height: 609.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id34" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id38" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id35">
+<figure class="align-center" id="id39">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go_vertical.png"><img alt="_images/plot_enrichment_results_go_vertical.png" src="_images/plot_enrichment_results_go_vertical.png" style="width: 1153.8px; height: 336.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id35" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id39" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5556,16 +5610,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated pathway names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id36">
+<figure class="align-center" id="id40">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg.png"><img alt="_images/plot_enrichment_results_kegg.png" src="_images/plot_enrichment_results_kegg.png" style="width: 630.0px; height: 283.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of kegg_enrichment()</span><a class="headerlink" href="#id36" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of kegg_enrichment()</span><a class="headerlink" href="#id40" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id37">
+<figure class="align-center" id="id41">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg_vertical.png"><img alt="_images/plot_enrichment_results_kegg_vertical.png" src="_images/plot_enrichment_results_kegg_vertical.png" style="width: 354.0px; height: 252.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id37" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id41" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5599,16 +5653,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id38">
+<figure class="align-center" id="id42">
 <a class="reference internal image-reference" href="_images/hist_overlap.png"><img alt="_images/hist_overlap.png" src="_images/hist_overlap.png" style="width: 720.0px; height: 357.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style`=’overlap’)</span><a class="headerlink" href="#id38" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style`=’overlap’)</span><a class="headerlink" href="#id42" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id39">
+<figure class="align-center" id="id43">
 <a class="reference internal image-reference" href="_images/hist_interleaved.png"><img alt="_images/hist_interleaved.png" src="_images/hist_interleaved.png" style="width: 720.0px; height: 357.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style=’interleaved’)</span><a class="headerlink" href="#id39" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style=’interleaved’)</span><a class="headerlink" href="#id43" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5719,16 +5773,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id40">
+<figure class="align-center" id="id44">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of user_defined_enrichment()</span><a class="headerlink" href="#id40" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of user_defined_enrichment()</span><a class="headerlink" href="#id44" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id41">
+<figure class="align-center" id="id45">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of user_defined_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id41" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of user_defined_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id45" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5771,16 +5825,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id42">
+<figure class="align-center" id="id46">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set.png"><img alt="_images/plot_enrichment_results_single_set.png" src="_images/plot_enrichment_results_single_set.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id42" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id46" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id43">
+<figure class="align-center" id="id47">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set_vertical.png"><img alt="_images/plot_enrichment_results_single_set_vertical.png" src="_images/plot_enrichment_results_single_set_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id43" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5830,22 +5884,22 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id44">
+<figure class="align-center" id="id48">
 <a class="reference internal image-reference" href="_images/ontology_graph_singlelist.png"><img alt="_images/ontology_graph_singlelist.png" src="_images/ontology_graph_singlelist.png" style="width: 840.0px; height: 540.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id44" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id45">
+<figure class="align-center" id="id49">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go_singlelist.png"><img alt="_images/plot_enrichment_results_go_singlelist.png" src="_images/plot_enrichment_results_go_singlelist.png" style="width: 840.0px; height: 609.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id45" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id49" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id46">
+<figure class="align-center" id="id50">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go_singlelist_vertical.png"><img alt="_images/plot_enrichment_results_go_singlelist_vertical.png" src="_images/plot_enrichment_results_go_singlelist_vertical.png" style="width: 1153.8px; height: 336.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id46" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id50" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -5955,10 +6009,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a dictionary of matplotlib axes, where the keys are ‘matrix’, ‘intersections’, ‘totals’, ‘shading’.</p>
-<figure class="align-center" id="id47">
+<figure class="align-center" id="id51">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id51" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </p>
@@ -5995,10 +6049,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :type normalize_to: float (default=1.0)
 :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
 <blockquote>
-<div><figure class="align-center" id="id48">
+<div><figure class="align-center" id="id52">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id52" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>

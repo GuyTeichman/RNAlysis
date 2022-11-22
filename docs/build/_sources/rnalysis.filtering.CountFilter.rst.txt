@@ -16,6 +16,7 @@
 .. autosummary::
     :toctree: .
     
+    CountFilter.average_replicate_samples
     CountFilter.biotypes
     CountFilter.box_plot
     CountFilter.clustergram

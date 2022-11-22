@@ -777,10 +777,13 @@ CLICOM offers multiple advantages over more traditional clustering methods:
 3. CLICOM does not require you to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the *evidence threshold* (`evidence_threshold`).
 
 *RNAlysis* offers a modified implementation of CLICOM. This implementation of CLICOM supports a few tuning parameters, in addition to the clustering solutions themselves:
+Moreover, ths modified version of the algorithm can cluster each batch of biological/technical replicates in your data separately, which can reduce the influence of batch effect on clustering results, and increases the accuracy and robustness of your clustering results.
 
 * `evidence_threshold`: a higher evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.
 * `cluster_unclustered_features`: if True, CLICOM will force every feature to belong to a discovered cluster. Otherwise, features can be classified as noise and remain unclustered.
 * `min_cluster_size`: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be classified as noise and filtered out of the final result, or merged into other clusters (depending on the value of `cluster_unclustered_features`).
+* `replicates_grouping`: allows you to group samples into technical/biological batches. The algorithm will then cluster each batch of samples separately, and use the CLICOM algorithm to find an ensemble clustering result from all of the separate clustering results.
+
 
 .. image:: /figures/clicom_all.png
   :width: 450

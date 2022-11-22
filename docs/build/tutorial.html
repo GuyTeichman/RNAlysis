@@ -339,16 +339,19 @@ CLICOM offers multiple advantages over more traditional clustering methods:</p>
 <li><p>The ensemble clustering approach allows you to combine the results of multiple clustering algorithms with multiple tuning parameters, potentially making up for the weaknesses of each individual clustering method, and only taking into account patterns that robustly appear in many clustering solutions.</p></li>
 <li><p>When using CLICOM, you don’t have  to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the <em>evidence threshold</em> (<cite>evidence_threshold</cite>).</p></li>
 </ol>
-<p><em>RNAlysis</em> offers a modified implementation of CLICOM. The modified version of the algorithm can, like the HDBSCAN algorithm, classify genes as outliers, excluding them from the final clustering solution.</p>
+<p><em>RNAlysis</em> offers a modified implementation of CLICOM. The modified version of the algorithm can, like the HDBSCAN algorithm, classify genes as outliers, excluding them from the final clustering solution.
+Moreover, ths modified version of the algorithm can cluster each batch of biological/technical replicates in your data separately, which can reduce the influence of batch effect on clustering results, and increases the accuracy and robustness of your clustering results.</p>
 <p>This modified version of CLICOM supports a few tuning parameters, in addition to the clustering solutions themselves:</p>
 <ul class="simple">
 <li><p><cite>evidence_threshold</cite>: how many clustering solutions (fraction between 0-1) have to agree about  two genes being clustered together in order for them to appear together in the final solution? A lower evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.</p></li>
 <li><p><cite>cluster_unclustered_features</cite>: if set to True, CLICOM will force every gene to belong to a discovered cluster (like in the original implementation of the algorithm). Otherwise, genes can be classified as noise and remain unclustered (the modified algorithm).</p></li>
 <li><p><cite>min_cluster_size</cite>: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be classified as noise and filtered out of the final result, or merged into other clusters (depending on the value of <cite>cluster_unclustered_features</cite>).</p></li>
+<li><p><cite>replicates_grouping</cite>: allows you to group samples into technical/biological batches. The algorithm will then cluster each batch of samples separately, and use the CLICOM algorithm to find an ensemble clustering result from all of the separate clustering results.</p></li>
 </ul>
 <p>To start the analysis, let’s choose the CLICOM algorithm from the Clustering drop-down menu. A new window will open:</p>
 <a class="reference internal image-reference" href="_images/01g21_clicom.png"><img alt="CLICOM clustering setup" src="_images/01g21_clicom.png" style="width: 600px;" /></a>
-<p>On the left half of the window we can set the tuning parameters of the CLICOM algorithm. For our example, let’s set the evidence threshold to 0.5, and the minimum cluster size to 75.</p>
+<p>On the left half of the window we can set the tuning parameters of the CLICOM algorithm. For our example, let’s set the evidence threshold to 0.5, and the minimum cluster size to 75.
+Since our data doesn’t have replicates, we don’t need to tune the <cite>replicates_grouping</cite> parameter. If in the future you try to cluster data with biological replicates, keep this parameter in mind!</p>
 <p>On the right half of the window we can add new clustering setups to our run of CLICOM. These clustering setups can be any of the clustering algorithms available in <em>RNAlysis</em>, and we can add as many as we want - including multiple clustering setups using the same algorithm.
 To add a setup, pick an algorithm from the drop-down menu, set it’s parameters, and click the “Add Setup” button:</p>
 <a class="reference internal image-reference" href="_images/01g22_clicom.png"><img alt="CLICOM clustering - add clustering setups" src="_images/01g22_clicom.png" style="width: 600px;" /></a>
