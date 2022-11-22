@@ -2549,7 +2549,8 @@ class CountFilter(Filter):
     @readable_name('Average the expression values of replicate columns')
     def average_replicate_samples(self, sample_grouping: List[List[str]],
                                   new_column_names: Union[Literal['auto'], List[str]] = 'auto',
-                                  function: Literal['mean', 'median', 'geometric_mean'] = 'mean') -> 'CountFilter':
+                                  function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
+                                  inplace: bool = True) -> 'CountFilter':
         """
         Average the expression values of gene expression for each group of replicate samples. \
         Each group of samples (e.g. biological/technical replicates)
@@ -2564,10 +2565,13 @@ class CountFilter(Filter):
         :type new_column_names: list of str or 'auto' (default='auto'
         :param function: the function which will be used to average the values within each group.
         :type function: 'mean', 'median', or 'geometric_mean' (default='mean')
-        :return: a new count matrix, where each column is the average of multiple samples.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), averaging will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
         """
+        suffix = f'_{function}'
         avg_df = self._avg_subsamples(sample_grouping, function, new_column_names)
-        return CountFilter.from_dataframe(avg_df, self.fname.stem + f'_{function}', self.is_normalized)
+        return self._inplace(avg_df, False, inplace, suffix, 'transform')
 
     def _avg_subsamples(self, sample_grouping: list, function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
                         new_column_names: Union[Literal['auto'], List[str]] = 'auto'):
