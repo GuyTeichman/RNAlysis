@@ -1483,6 +1483,7 @@ class FilterTabPage(TabPage):
     filterObjectCreated = QtCore.pyqtSignal(object)
     startedClustering = QtCore.pyqtSignal(object, str, object)
     startedJob = QtCore.pyqtSignal(object, str, object)
+    widthChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
@@ -1511,6 +1512,8 @@ class FilterTabPage(TabPage):
 
         self.clicom_window = None
         self.deseq_window = None
+
+        self.widthChanged.connect(self.update_table_preview_width)
 
         self.init_basic_ui()
 
@@ -1734,16 +1737,25 @@ class FilterTabPage(TabPage):
             return
         model = gui_windows.DataFramePreviewModel(self.filter_obj.df)
         self.overview_widgets['preview'].setModel(model)
+        self.update_table_preview_width()
+
+    def update_table_preview_width(self):
+        if self.is_empty():
+            return
         self.overview_widgets['preview'].resizeColumnsToContents()
         self.overview_widgets['preview'].resizeRowsToContents()
 
-        self.overview_widgets['preview'].setFixedWidth(
-            self.overview_widgets['preview'].horizontalHeader().length() + self.overview_widgets[
-                'preview'].verticalHeader().width())
+        new_width = min(self.overview_widgets['preview'].horizontalHeader().length() + self.overview_widgets[
+            'preview'].verticalHeader().width(), self.width() - 100)
+        self.overview_widgets['preview'].setFixedWidth(new_width)
 
         self.overview_widgets['preview'].setFixedHeight(
             self.overview_widgets['preview'].verticalHeader().length() + self.overview_widgets[
                 'preview'].horizontalHeader().height())
+
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        if a0.size().width() != a0.oldSize().width():
+            self.widthChanged.emit()
 
     def apply_function(self):
         this_stack: FuncTypeStack = self.stack.currentWidget()
@@ -1913,6 +1925,7 @@ class FilterTabPage(TabPage):
 class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     pipelineSaved = QtCore.pyqtSignal(str, filtering.Pipeline)
     pipelineExported = QtCore.pyqtSignal(str, filtering.Pipeline)
+    widthChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1978,6 +1991,9 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
         raise NotImplementedError
+
+    def update_table_preview_width(self):
+        return
 
     def update_pipeline_preview(self):
         self.overview_widgets['preview'].setPlainText(str(self.pipeline))
