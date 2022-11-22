@@ -3433,7 +3433,9 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('CLICOM (ensemble) clustering')
-    def split_clicom(self, *parameter_dicts: dict, power_transform: Union[bool, Tuple[bool, bool]] = True,
+    def split_clicom(self, *parameter_dicts: dict,
+                     replicate_grouping: Union[List[List[str]], 'ungrouped'] = 'ungrouped',
+                     power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, gui_mode: bool = False) -> Tuple['CountFilter']:
@@ -3449,6 +3451,14 @@ class CountFilter(Filter):
         This modified version of the CLICOM algorithm can also classify features as noise, \
         which does not belong in any discovered cluster.
 
+        :param replicate_grouping: Allows you to group your data into replicates. Each replicate will be clustered \
+        separately, and used as its own clustering setup. This can minimize the influence of batch effects \
+        on the clustering results, and take advantage of repeated measures data \
+        to improve the accuracy of your clustering. If `replicate_grouping`='ungrouped', the data will be \
+        clustered normally as if no replicate data is available. \
+        To read more about the theory behind this, see the following publication: \
+        https://doi.org/10.1093/bib/bbs057
+        :type replicate_grouping: nested list of strings or 'ungrouped' (default='ungrouped')
         :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
         to the data prior to clustering. If both True and False are supplied, \
         RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.
@@ -3526,8 +3536,17 @@ class CountFilter(Filter):
 
            Example plot of split_clicom()
         """
-        runner = clustering.CLICOMRunner(self.df.loc[:, self._numeric_columns], power_transform, evidence_threshold,
-                                         cluster_unclustered_features, min_cluster_size,
+        if replicate_grouping == 'ungrouped':
+            replicate_grouping = [self.columns]
+        else:
+            assert validation.isinstanceiter(replicate_grouping,
+                                             list), f"'replicate_grouping' must contain only lists of strings!"
+            for grp in replicate_grouping:
+                for cond in grp:
+                    assert cond in self.columns, f"column '{cond}' does not exist!"
+
+        runner = clustering.CLICOMRunner(self.df.loc[:, self._numeric_columns], replicate_grouping, power_transform,
+                                         evidence_threshold, cluster_unclustered_features, min_cluster_size,
                                          *parameter_dicts, plot_style=plot_style, split_plots=split_plots)
         [clusterer] = runner.run(plot=not gui_mode)
         n_clusters = clusterer.n_clusters_

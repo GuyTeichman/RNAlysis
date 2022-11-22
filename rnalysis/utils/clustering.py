@@ -972,11 +972,11 @@ class CLICOMRunner(ClusteringRunner):
                         'hierarchical': HierarchicalRunner, 'agglomerative': HierarchicalRunner,
                         'hdbscan': HDBSCANRunner}
 
-    def __init__(self, data, power_transform: Union[bool, List[bool]], evidence_threshold: float,
-                 cluster_unclustered_features: bool, min_cluster_size: int, *parameter_dicts: dict,
-                 plot_style: str = 'none',
-                 split_plots: bool = False, ):
+    def __init__(self, data, replicate_grouping: List[List[str]], power_transform: Union[bool, List[bool]],
+                 evidence_threshold: float, cluster_unclustered_features: bool, min_cluster_size: int,
+                 *parameter_dicts: dict, plot_style: str = 'none', split_plots: bool = False, ):
         self.clustering_solutions: list = []
+        self.replicate_grouping = replicate_grouping
         self.evidence_threshold = evidence_threshold
         self.cluster_unclustered_features = cluster_unclustered_features
         self.min_cluster_size = min_cluster_size
@@ -1041,17 +1041,20 @@ class CLICOMRunner(ClusteringRunner):
                                                *[parsing.data_to_list(val) for val in params.values()])
             for setup in setups_to_test:
                 kwargs = {key: val for key, val in zip(itertools.chain(['power_transform'], params.keys()), setup)}
-                try:
-                    runner_class(self.data, **kwargs)
-                    valid_setups.append((runner_class, kwargs))
-                except AssertionError:
-                    continue
+                for replicate in self.replicate_grouping:
+                    args = (self.data[replicate],)
+                    try:
+                        runner_class(*args, **kwargs)
+                        valid_setups.append((runner_class, args, kwargs))
+                    except AssertionError:
+                        continue
 
         return valid_setups
 
-    def run_clustering_setup(self, setup) -> list:
-        runner_class, kwargs = setup
-        runner = runner_class(self.data, **kwargs)
+    @staticmethod
+    def run_clustering_setup(setup) -> list:
+        runner_class, args, kwargs = setup
+        runner = runner_class(*args, **kwargs)
         clusterers = runner.run(plot=False)
         return [clusterer.labels_ for clusterer in clusterers]
 

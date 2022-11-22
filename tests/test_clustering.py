@@ -107,73 +107,114 @@ def test_compute_dispersion():
             kmeans.inertia_)
 
 
-def test_clicomrunner_find_valid_clustering_setups():
-    truth = [(KMeansRunner, dict(power_transform=True, n_clusters=2, n_init=5)),
-             (KMeansRunner, dict(power_transform=True, n_clusters=3, n_init=5)),
-             (KMeansRunner, dict(power_transform=True, n_clusters=5, n_init=5)),
-             (KMeansRunner, dict(power_transform=False, n_clusters=2, n_init=5)),
-             (KMeansRunner, dict(power_transform=False, n_clusters=3, n_init=5)),
-             (KMeansRunner, dict(power_transform=False, n_clusters=5, n_init=5)),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=5, metric='jackknife', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=7, metric='jackknife', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=10, metric='jackknife', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=5, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=5, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=5, metric='jackknife', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=7, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=7, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=7, metric='jackknife', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=10, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=10, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=False, n_clusters=10, metric='jackknife', linkage='average')),
+def _compare_setups(setups, truth):
+    assert len(setups) == len(truth)
+    for i in range(len(setups)):
+        this_setup = setups[i]
+        this_truth = truth[i]
+        assert this_setup[0] == this_truth[0]
+        assert this_setup[2] == this_truth[2]
+        assert this_setup[1][0].equals(this_truth[1][0])
 
-             (HierarchicalRunner,
+
+def test_clicomrunner_find_valid_clustering_setups():
+    df = pd.DataFrame(np.zeros((10, 10)))
+    truth = [(KMeansRunner, (df,), dict(power_transform=True, n_clusters=2, n_init=5)),
+             (KMeansRunner, (df,), dict(power_transform=True, n_clusters=3, n_init=5)),
+             (KMeansRunner, (df,), dict(power_transform=True, n_clusters=5, n_init=5)),
+             (KMeansRunner, (df,), dict(power_transform=False, n_clusters=2, n_init=5)),
+             (KMeansRunner, (df,), dict(power_transform=False, n_clusters=3, n_init=5)),
+             (KMeansRunner, (df,), dict(power_transform=False, n_clusters=5, n_init=5)),
+             (HierarchicalRunner, (df,), dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=5, metric='jackknife', linkage='average')),
+             (HierarchicalRunner, (df,), dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=7, metric='jackknife', linkage='average')),
+             (HierarchicalRunner, (df,), dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=10, metric='jackknife', linkage='average')),
+             (HierarchicalRunner, (df,), dict(power_transform=False, n_clusters=5, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=False, n_clusters=5, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=False, n_clusters=5, metric='jackknife', linkage='average')),
+             (HierarchicalRunner, (df,), dict(power_transform=False, n_clusters=7, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=False, n_clusters=7, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=False, n_clusters=7, metric='jackknife', linkage='average')),
+             (
+                 HierarchicalRunner, (df,),
+                 dict(power_transform=False, n_clusters=10, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=False, n_clusters=10, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=False, n_clusters=10, metric='jackknife', linkage='average')),
+
+             (HierarchicalRunner, (df,),
               dict(power_transform=True, n_clusters=None, metric='euclidean', distance_threshold=0.5)),
-             (HierarchicalRunner,
+             (HierarchicalRunner, (df,),
               dict(power_transform=True, n_clusters=None, metric='euclidean', distance_threshold=1)),
-             (HierarchicalRunner,
+             (HierarchicalRunner, (df,),
               dict(power_transform=False, n_clusters=None, metric='euclidean', distance_threshold=0.5)),
-             (HierarchicalRunner,
+             (HierarchicalRunner, (df,),
               dict(power_transform=False, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [True, False], 0.5, False, 1,
+    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [list(range(10))], [True, False], 0.5,
+                          False, 1,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
                           dict(method='hierarchical', n_clusters=None, distance_threshold=[0.5, 1], metric='euclidean'))
     setups = runner.find_valid_clustering_setups()
-    assert setups == truth
+    _compare_setups(setups, truth)
 
-    truth = [(KMeansRunner, dict(power_transform=True, n_clusters=2, n_init=5)),
-             (KMeansRunner, dict(power_transform=True, n_clusters=3, n_init=5)),
-             (KMeansRunner, dict(power_transform=True, n_clusters=5, n_init=5)),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=5, metric='jackknife', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=7, metric='jackknife', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='ward')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='average')),
-             (HierarchicalRunner, dict(power_transform=True, n_clusters=10, metric='jackknife', linkage='average')),
-             (HierarchicalRunner,
+    truth = [(KMeansRunner, (df,), dict(power_transform=True, n_clusters=2, n_init=5)),
+             (KMeansRunner, (df,), dict(power_transform=True, n_clusters=3, n_init=5)),
+             (KMeansRunner, (df,), dict(power_transform=True, n_clusters=5, n_init=5)),
+             (HierarchicalRunner, (df,), dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=5, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=5, metric='jackknife', linkage='average')),
+             (HierarchicalRunner, (df,), dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=7, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=7, metric='jackknife', linkage='average')),
+             (HierarchicalRunner, (df,), dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='ward')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=10, metric='euclidean', linkage='average')),
+             (HierarchicalRunner, (df,),
+              dict(power_transform=True, n_clusters=10, metric='jackknife', linkage='average')),
+             (HierarchicalRunner, (df,),
               dict(power_transform=True, n_clusters=None, metric='euclidean', distance_threshold=0.5)),
-             (HierarchicalRunner,
+             (HierarchicalRunner, (df,),
               dict(power_transform=True, n_clusters=None, metric='euclidean', distance_threshold=1))]
 
-    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), True, 0.5, False, 15,
+    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [list(range(10))], True, 0.5, False, 15,
                           dict(method='kmeans', n_clusters=[2, 3, 5], n_init=5),
                           dict(method='hierarchical', n_clusters=[5, 7, 10], metric=['euclidean', 'jackknife'],
                                linkage=['ward', 'average', 'doesnt exist']),
                           dict(method='hierarchical', n_clusters=None, distance_threshold=[0.5, 1], metric='euclidean'))
     setups = runner.find_valid_clustering_setups()
-    assert setups == truth
+    _compare_setups(setups, truth)
+
+    truth = [(KMeansRunner, (df[[0, 1, 2, 3, 4]],), dict(power_transform=True, n_clusters=6, n_init=5)),
+             (KMeansRunner, (df[[5, 6, 7, 8, 9]],), dict(power_transform=True, n_clusters=6, n_init=5)),
+             (KMedoidsRunner, (df[[0, 1, 2, 3, 4]],), dict(power_transform=True, n_clusters=7, n_init=5)),
+             (KMedoidsRunner, (df[[5, 6, 7, 8, 9]],), dict(power_transform=True, n_clusters=7, n_init=5))]
+    runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]], True, 0.5, False, 15,
+                          dict(method='kmeans', n_clusters=6, n_init=5),dict(method='kmedoids', n_clusters=7, n_init=5))
+    setups = runner.find_valid_clustering_setups()
+    _compare_setups(setups, truth)
 
 
 def test_find_cliques(monkeypatch):

@@ -21,6 +21,7 @@ Changed
 * Improved performance of some aspects of the graphical user interface.
 * RNAlysis' basic features are now supported on Python versions 3.9 and 3.10.
 * CountFilter.pca() now generates a plot for *every* pair of Principal Components requested by the user.
+* CountFilter.split_clicom() now supports clustering each batch of replicates separately, using the 'replicates_grouping' parameter
 
 Fixed
 ******

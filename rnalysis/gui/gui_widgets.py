@@ -1487,7 +1487,7 @@ def param_to_widget(param, name: str,
             for action in actions_to_connect:
                 widget.valueChanged.connect(action)
 
-    elif name in {'samples', 'sample_grouping'} and (not pipeline_mode):
+    elif name in {'samples', 'sample_grouping','replicate_grouping'} and (not pipeline_mode):
         widget = TableColumnGroupPicker()
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
