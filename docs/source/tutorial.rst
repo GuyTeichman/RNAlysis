@@ -331,13 +331,14 @@ CLICOM offers multiple advantages over more traditional clustering methods:
 2. When using CLICOM, you don't have  to guess the final number of clusters in the data. The main tuning parameter in HDBSCAN is the *evidence threshold* (`evidence_threshold`).
 
 *RNAlysis* offers a modified implementation of CLICOM. The modified version of the algorithm can, like the HDBSCAN algorithm, classify genes as outliers, excluding them from the final clustering solution.
+Moreover, ths modified version of the algorithm can cluster each batch of biological/technical replicates in your data separately, which can reduce the influence of batch effect on clustering results, and increases the accuracy and robustness of your clustering results.
 
 This modified version of CLICOM supports a few tuning parameters, in addition to the clustering solutions themselves:
 
 * `evidence_threshold`: how many clustering solutions (fraction between 0-1) have to agree about  two genes being clustered together in order for them to appear together in the final solution? A lower evidence threshold leads to fewer, large clusters, with fewer features being classified as outliers.
 * `cluster_unclustered_features`: if set to True, CLICOM will force every gene to belong to a discovered cluster (like in the original implementation of the algorithm). Otherwise, genes can be classified as noise and remain unclustered (the modified algorithm).
 * `min_cluster_size`: determines the minimal size of a cluster you would consider meaningful. Clusters smaller than this would be classified as noise and filtered out of the final result, or merged into other clusters (depending on the value of `cluster_unclustered_features`).
-
+* `replicates_grouping`: allows you to group samples into technical/biological batches. The algorithm will then cluster each batch of samples separately, and use the CLICOM algorithm to find an ensemble clustering result from all of the separate clustering results.
 
 To start the analysis, let's choose the CLICOM algorithm from the Clustering drop-down menu. A new window will open:
 
@@ -346,6 +347,7 @@ To start the analysis, let's choose the CLICOM algorithm from the Clustering dro
   :alt: CLICOM clustering setup
 
 On the left half of the window we can set the tuning parameters of the CLICOM algorithm. For our example, let's set the evidence threshold to 0.5, and the minimum cluster size to 75.
+Since our data doesn't have replicates, we don't need to tune the `replicates_grouping` parameter. If in the future you try to cluster data with biological replicates, keep this parameter in mind!
 
 On the right half of the window we can add new clustering setups to our run of CLICOM. These clustering setups can be any of the clustering algorithms available in *RNAlysis*, and we can add as many as we want - including multiple clustering setups using the same algorithm.
 To add a setup, pick an algorithm from the drop-down menu, set it's parameters, and click the "Add Setup" button:
