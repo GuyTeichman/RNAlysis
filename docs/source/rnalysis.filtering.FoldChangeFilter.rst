@@ -1,4 +1,4 @@
-rnalysis.filtering.FoldChangeFilter
+﻿rnalysis.filtering.FoldChangeFilter
 ===================================
 
 .. currentmodule:: rnalysis.filtering
@@ -22,6 +22,8 @@ rnalysis.filtering.FoldChangeFilter
     FoldChangeFilter.filter_abs_log2_fold_change
     FoldChangeFilter.filter_biotype
     FoldChangeFilter.filter_by_attribute
+    FoldChangeFilter.filter_by_go_annotations
+    FoldChangeFilter.filter_by_kegg_annotations
     FoldChangeFilter.filter_fold_change_direction
     FoldChangeFilter.filter_missing_values
     FoldChangeFilter.filter_percentile

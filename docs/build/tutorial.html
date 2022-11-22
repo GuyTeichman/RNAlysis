@@ -162,8 +162,9 @@
 <h2>Analysis #1 - time series RNA sequencing<a class="headerlink" href="#analysis-1-time-series-rna-sequencing" title="Permalink to this heading"></a></h2>
 <section id="the-dataset">
 <h3>The dataset<a class="headerlink" href="#the-dataset" title="Permalink to this heading"></a></h3>
-<p>For the first analysis, we will use a publicly available dataset from <a class="reference external" href="https://downloads.wormbase.org/species/c_elegans/annotation/RNASeq_controls_FPKM/c_elegans.PRJNA13758.current.RNASeq_controls_FPKM.dat">WormBase</a>. This dataset describes the mean expression level of each gene over the developmental stages of <em>C. elegans</em> nematodes, averaged from RNA-sequencing short-read experiments that have been identified in the literature as being ‘controls’.</p>
-<p>The original table linked above contains the mean expression, median expression, and number of samples for each developmental stage. Since we are only interested in the means, before starting the analysis, I copied the Mean columns to a new table, and gave the columns more readable names.
+<p>For the first analysis, we will use a publicly available dataset from <a class="reference external" href="https://downloads.wormbase.org/species/c_elegans/annotation/RNASeq_controls_FPKM/c_elegans.PRJNA13758.current.RNASeq_controls_FPKM.dat">WormBase</a>.
+This dataset describes the median expression level of each gene over the developmental stages of <em>C. elegans</em> nematodes, averaged from RNA-sequencing short-read experiments that have been identified in the literature as being ‘controls’.</p>
+<p>The original table linked above contains the mean expression, median expression, and number of samples for each developmental stage. Since we are only interested in the medians, before starting the analysis, I copied the Median columns to a new table, and gave the columns more readable names.
 You can find the table I created <a class="reference external" href="https://raw.githubusercontent.com/GuyTeichman/RNAlysis/master/tests/test_files/elegans_developmental_stages.tsv">here</a>.</p>
 <p>Let’s start by loading the dataset - in the main window, click on the “Load” button and choose the table’s file from your computer.
 We will then use the drop-down menu to change our table type from “Other” to “Count matrix”. This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.</p>
@@ -173,6 +174,7 @@ This is not a mandatory step, but if we don’t do it, <em>RNAlysis</em> will wa
 <a class="reference internal image-reference" href="_images/01a02_load_table.png"><img alt="Loading a table into *RNAlysis* - set the table as pre-normalized" src="_images/01a02_load_table.png" style="width: 600px;" /></a>
 <p>Finally, we can click the “start” button to actually open our table on <em>RNAlysis</em>.
 The window will now display a preview of our table, as well as a a short summary of our table’s content (table name, table type, number of rows and columns).</p>
+<p>At the bottom of the window we can also see a log box - this is where <em>RNAlysis</em> will display notes and warnings regarding our analysis.</p>
 <a class="reference internal image-reference" href="_images/01b01_view_table.png"><img alt="Preview the loaded table" src="_images/01b01_view_table.png" style="width: 600px;" /></a>
 <p>If we want to see the entire table, we can click on the “View full table” button, and the entire table will appear in a new window:</p>
 <a class="reference internal image-reference" href="_images/01b02_view_table.png"><img alt="View the table" src="_images/01b02_view_table.png" style="width: 600px;" /></a>
@@ -263,7 +265,8 @@ However, if we had multiple sample per condition, we could have grouped the samp
 <section id="clustering-analysis">
 <h3>Clustering analysis<a class="headerlink" href="#clustering-analysis" title="Permalink to this heading"></a></h3>
 <p>We are interested in how different groups of genes change in expression level over the life cycle of the worm. We can use clustering analysis to group the genes in this dataset by their expression pattern over the developmental stages.
-There is an abundance of approaches when it comes to clustering analysis of gene expression. To illustrate this point, we will cluster our data using three different types of clustering algorithms, arranged from the simplest to the most complex.</p>
+There is an abundance of approaches when it comes to clustering analysis of gene expression. To illustrate this point, we will cluster our data using three different types of clustering algorithms, arranged from the simplest to the most complex.
+These algorithms are only a few representatives of the many clustering methods available in <em>RNAlysis</em>.</p>
 <section id="the-simple-approach-distance-based-clustering-with-k-medoids">
 <h4>The simple approach - distance-based clustering with K-Medoids<a class="headerlink" href="#the-simple-approach-distance-based-clustering-with-k-medoids" title="Permalink to this heading"></a></h4>
 <p>K-Medoids clustering is a distance-based clustering method, where the algorithm attempts to divide all of our genes into K clusters (K is the number of clusters we are looking for), with each cluster being centered around one gene (Medoid).
@@ -281,6 +284,9 @@ We will use a lesser-known distance metric called YR1, that was developed especi
 <a class="reference internal image-reference" href="_images/01g02_kmedoids.png"><img alt="K-Medoids clustering setup - choose the distance metric" src="_images/01g02_kmedoids.png" style="width: 600px;" /></a>
 <p>We can now scroll all the way down, click the “Apply” button, and wait for the analysis to finish:</p>
 <a class="reference internal image-reference" href="_images/01g03_kmedoids.png"><img alt="K-Medoids clustering - loading screen" src="_images/01g03_kmedoids.png" style="width: 600px;" /></a>
+<p>Since K-Medoids is not a deterministic algorithm (it has randomized starting conditions every time you use it), the results you get will probably not be identical to those appearing in this tutorial, but they should be similar to what we observe here.
+If you want to make sure your clustering results are 100% reproducible, you can set the <cite>random_seed</cite> parameter when setting up your clustering setup to a specific number.
+Re-running the algorithm with an identical random seed wiil ensure that you get the exact same results every time.</p>
 <p>One the clustering anslysis is finished, a few figures will open up. Let’s examine them one by one.
 The first figure will show us the results of the Gap Statistic algorithm. The graph on the left will show us, for each value of <cite>n_clusters</cite> tested, the natural logarithm (ln) of within-cluster dispersion.
 We expect this value to go down the more clusters there are (the more clusters there are, the fewer genes will be in each cluster - therefore the genes within each cluster will be more similar to each other), and therefore we show both the actual dispersion values for the clustering solutions we calculated (the blue line), and also dispersion values for clustering solutions on random data, drawn from the same distribution (the orange line).
@@ -350,12 +356,17 @@ To add a setup, pick an algorithm from the drop-down menu, set it’s parameters
 <a class="reference internal image-reference" href="_images/01g23_clicom.png"><img alt="CLICOM clustering - examine added setups" src="_images/01g23_clicom.png" style="width: 600px;" /></a>
 <p>Let’s add the two clustering setups we used earlier, plus a few more:</p>
 <a class="reference internal image-reference" href="_images/01g24_clicom.png"><img alt="CLICOM clustering - multiple clustering setups" src="_images/01g24_clicom.png" style="width: 600px;" /></a>
+<p>I chose to add, in addition to the two clustering setups from earlier, the following three clustering setups:
+* K-Medoids clustering with 7 clusters and the Spearman distance metric
+* Hierarchical clustering 8 clusters, Euclidean distance metric and Ward linkage
+* HDBSCAN clustering with the Jackknife distance metric and minimal cluster size of 150</p>
 <p>Once we are happy with the clustering solutions and tuning parameters, we can click on the “Start CLICOM” button, and see progress reports in the output box on the main window of <em>RNAlysis</em>.</p>
 <a class="reference internal image-reference" href="_images/01g25_clicom.png"><img alt="CLICOM clustering loading screen" src="_images/01g25_clicom.png" style="width: 600px;" /></a>
 <p>Let’s look at the final result:</p>
 <a class="reference internal image-reference" href="_images/01g26_clicom.png"><img alt="CLICOM clustering results" src="_images/01g26_clicom.png" style="width: 600px;" /></a>
 <a class="reference internal image-reference" href="_images/01g27_clicom.png"><img alt="CLICOM clustering results - principal component analysis" src="_images/01g27_clicom.png" style="width: 600px;" /></a>
-<p>Let’s choose a few good-looking clusters to keep, and give them a name that indicates their expression pattern:</p>
+<p>Once again, since two of the clustering setups we chose are non-deterministic, the clusters you end up with might end up looking a bit differently from these.
+Let’s choose a few good-looking clusters to keep, and give them a name that indicates their expression pattern:</p>
 <a class="reference internal image-reference" href="_images/01g28_clicom.png"><img alt="The clusters we chose to keep" src="_images/01g28_clicom.png" style="width: 600px;" /></a>
 <p>For this tutorial, I chose to keep clusters #1 (“down from embryo to L4”), #2 (“L4 peak”), and #9 (“Down from L1 to adult”).</p>
 </section>
@@ -385,6 +396,7 @@ The GO terms will be sorted by specificity, the most specific GO terms appearing
 The table also includes the statistics for each GO term (number of genes in the cluster, number of genes matching the GO term, expected number of genes to match the GO term, log2 fold change, p-value, and adjusted p-value).</p>
 <a class="reference internal image-reference" href="_images/01h06_go_enrichment.png"><img alt="Enrichment analysis results - tabular format" src="_images/01h06_go_enrichment.png" style="width: 600px;" /></a>
 <p>The second output format is an Ontology Graph, depicting the statistically-significant GO terms in each GO aspect (biological process, cellular component, and molecular function), as well as their ancestors in the ontology graph.
+The hierarchy of GO terms in the graph matches the official Gene Ontology hierarchy.
 The color of the terms on the graph indicates their log2 fold change, and the depth in the tree indicates the specificity of the term, with more specific GO terms being at the bottom.</p>
 <a class="reference internal image-reference" href="_images/01h05_go_enrichment.png"><img alt="Enrichment analysis results - ontology graph" src="_images/01h05_go_enrichment.png" style="width: 800px;" /></a>
 <p>The final output format is a bar plot depicting the log2 fold change values, as well as significance, of the 10 most specific GO terms that were found to be statistically significant in our analysis.</p>
@@ -520,6 +532,7 @@ Alongside these files, we can find three CSV files (comma-separated values, can 
 This table format is considered un-normalized for library size, and can therefore be used directly by count-based statistical inference tools, such as DESeq2, for differential expression analysis later on.
 <em>RNAlysis</em> will load this table automatically once the analysis is finished, and we can see it in a new tab of the main window:</p>
 <a class="reference internal image-reference" href="_images/02b05_kallisto.png"><img alt="quantification output table - osmotic stress" src="_images/02b05_kallisto.png" style="width: 600px;" /></a>
+<p>At the bottom of the window we can also see a log box - this is where <em>RNAlysis</em> will display notes and warnings regarding our analysis.</p>
 <p>If you wanted to analyze differential expression for transcripts instead of genes, you could use the per-transcript count estimate table that is located in the output folder.</p>
 <p>Let’s now apply the same quantification procedure to our paired-end starvation samples.
 Open the Paired end quantification window from the FASTQ menu:</p>

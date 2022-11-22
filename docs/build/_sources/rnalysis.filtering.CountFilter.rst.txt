@@ -1,4 +1,4 @@
-rnalysis.filtering.CountFilter
+﻿rnalysis.filtering.CountFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -25,6 +25,8 @@ rnalysis.filtering.CountFilter
     CountFilter.enhanced_box_plot
     CountFilter.filter_biotype
     CountFilter.filter_by_attribute
+    CountFilter.filter_by_go_annotations
+    CountFilter.filter_by_kegg_annotations
     CountFilter.filter_by_row_sum
     CountFilter.filter_low_reads
     CountFilter.filter_missing_values

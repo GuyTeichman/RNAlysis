@@ -1,4 +1,4 @@
-rnalysis.filtering.DESeqFilter
+﻿rnalysis.filtering.DESeqFilter
 ==============================
 
 .. currentmodule:: rnalysis.filtering
@@ -22,6 +22,8 @@ rnalysis.filtering.DESeqFilter
     DESeqFilter.filter_abs_log2_fold_change
     DESeqFilter.filter_biotype
     DESeqFilter.filter_by_attribute
+    DESeqFilter.filter_by_go_annotations
+    DESeqFilter.filter_by_kegg_annotations
     DESeqFilter.filter_fold_change_direction
     DESeqFilter.filter_missing_values
     DESeqFilter.filter_percentile
