@@ -1989,7 +1989,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.update_pipeline_preview()
         self.is_unsaved = True
 
-    def _apply_function_from_params(self, func_name, args: list, kwargs: dict):
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
         raise NotImplementedError
 
     def update_table_preview_width(self):
