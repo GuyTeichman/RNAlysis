@@ -2546,14 +2546,38 @@ class CountFilter(Filter):
         plt.show()
         return pairplt
 
-    def _avg_subsamples(self, sample_list: list):
+    @readable_name('Average the expression values of replicate columns')
+    def average_replicate_samples(self, sample_grouping: List[List[str]],
+                                  new_column_names: Union[Literal['auto'], List[str]] = 'auto',
+                                  function: Literal['mean', 'median', 'geometric_mean'] = 'mean') -> 'CountFilter':
+        """
+        Average the expression values of gene expression for each group of replicate samples. \
+        Each group of samples (e.g. biological/technical replicates)
+
+        :param sample_grouping: grouping of the samples into conditions. \
+        Each grouping should containg all replicates of the same condition. \
+        Each condition will be averaged separately.
+        :type sample_grouping: nested list of column names
+        :param new_column_names: names to be given to the columns in the new count matrix. \
+        Each new name should match a group of samples to be averaged. \
+        If `new_column_names`='auto', names will be generated automatically.
+        :type new_column_names: list of str or 'auto' (default='auto'
+        :param function: the function which will be used to average the values within each group.
+        :type function: 'mean', 'median', or 'geometric_mean' (default='mean')
+        :return: a new count matrix, where each column is the average of multiple samples.
+        """
+        avg_df = self._avg_subsamples(sample_grouping, function, new_column_names)
+        return CountFilter.from_dataframe(avg_df, self.fname.stem + f'_{function}', self.is_normalized)
+
+    def _avg_subsamples(self, sample_grouping: list, function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
+                        new_column_names: Union[Literal['auto'], List[str]] = 'auto'):
 
         """
         Avarages subsamples/replicates according to the specified sample list. \
         Every member in the sample list should be either a name of a single sample (str), \
         or a list of multiple sample names to be averaged (list).
 
-        :param sample_list: A list of the sample names and/or grouped sample names passed by the user. \
+        :param sample_grouping: A list of the sample names and/or grouped sample names passed by the user. \
         All specified samples must be present in the CountFilter object. \
         To average multiple replicates of the same condition, they can be grouped in an inner list. \
         Example input: \
@@ -2563,15 +2587,42 @@ class CountFilter(Filter):
         :return: a pandas DataFrame containing samples/averaged subsamples according to the specified sample_list.
 
         """
+        assert isinstance(function, str), f"'function' must be a string!"
+        function = function.lower()
+        assert function in {'mean', 'median', 'geometric_mean'}, \
+            f"'function' must be 'mean', 'median', or 'geometric_mean'!"
+
         averaged_df = pd.DataFrame(index=self.df.index)
-        for sample in sample_list:
-            if isinstance(sample, str):
-                averaged_df[sample] = self.df[sample].values
-            elif isinstance(sample, (list, tuple, set)):
-                sample = parsing.data_to_list(sample)
-                averaged_df[",".join(sample)] = self.df[sample].mean(axis=1).values
+        if new_column_names == 'auto':
+            new_column_names = []
+            for i, group in enumerate(sample_grouping):
+                if isinstance(group, str):
+                    new_column_names.append(group)
+                elif validation.isiterable(group):
+                    new_column_names.append(",".join(group))
+        else:
+            assert validation.isiterable(new_column_names) and validation.isinstanceiter(new_column_names, str), \
+                f"'new_column_names' must be either 'auto' or a list of strings!"
+            assert len(new_column_names) == len(sample_grouping), \
+                f"The number of new column names {len(new_column_names)} " \
+                f"does not match the number of sample groups {len(sample_grouping)}!"
+
+        for group, new_name in zip(sample_grouping, new_column_names):
+            if isinstance(group, str):
+                assert group in self.columns, f"Column '{group}' does not exist in the original table!"
+                averaged_df[new_name] = self.df[group].values
+            elif isinstance(group, (list, tuple, set)):
+                group = parsing.data_to_list(group)
+                for item in group:
+                    assert item in self.columns, f"Column '{item}' does not exist in the original table!"
+                    if function == 'mean':
+                        averaged_df[new_name] = self.df[group].mean(axis=1).values
+                    elif function == 'median':
+                        averaged_df[new_name] = self.df[group].median(axis=1).values
+                    else:
+                        averaged_df[new_name] = gmean(self.df[group].values, axis=1)
             else:
-                raise TypeError(f"'sample_list' cannot contain objects of type {type(sample)}.")
+                raise TypeError(f"'sample_list' cannot contain objects of type {type(group)}.")
 
         return averaged_df
 

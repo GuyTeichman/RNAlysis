@@ -1476,7 +1476,8 @@ class FilterTabPage(TabPage):
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
-    GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change'}
+    GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change',
+                     'average_replicate_samples'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
                       'filter_by_go_annotations'}
     filterObjectCreated = QtCore.pyqtSignal(object)

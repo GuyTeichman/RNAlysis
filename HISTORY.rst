@@ -12,6 +12,7 @@ Added
 * Added CountFilter.differential_expression_deseq2()
 * Added Filter.filter_by_kegg_annotations()
 * Added Filter.filter_by_go_annotations()
+* Added CountFilter.average_replicate_samples()
 * Added fastq module that contains adapter-trimming functions utilizing CutAdapt, and mRNA-sequencing quantification using kallisto.
 
 Changed
