@@ -509,7 +509,8 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
                          max_n_clusters_estimate='auto'),
                     dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
                          distance_threshold=None, max_n_clusters_estimate='auto')]
-    truth_params = dict(power_transform=[True, False], evidence_threshold=0.35, cluster_unclustered_features=True,
+    truth_params = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
+                        cluster_unclustered_features=True,
                         min_cluster_size=15, plot_style='all', split_plots=False)
 
     qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
