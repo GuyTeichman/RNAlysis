@@ -1487,6 +1487,25 @@ def param_to_widget(param, name: str,
             for action in actions_to_connect:
                 widget.valueChanged.connect(action)
 
+    elif typing_extensions.get_origin(param.annotation) == typing.Union and typing_extensions.Literal in [
+        typing_extensions.get_origin(ann) for ann in typing_extensions.get_args(param.annotation)]:
+        args = typing_extensions.get_args(param.annotation)
+        literal_ind = [typing_extensions.get_origin(ann) for ann in args].index(
+            typing_extensions.Literal)
+        literal = args[literal_ind]
+        without_literal = tuple(args[0:literal_ind] + args[literal_ind + 1:])
+        if param.default in typing_extensions.get_args(literal):
+            this_default = param.default
+            other_default = inspect._empty
+        else:
+            this_default = None
+            other_default = param.default
+        widget = ComboBoxOrOtherWidget(typing_extensions.get_args(literal),
+                                       param_to_widget(NewParam(typing.Union[without_literal], other_default), name,
+                                                       actions_to_connect, pipeline_mode), this_default)
+        for action in actions_to_connect:
+            widget.currentIndexChanged.connect(action)
+
     elif name in {'samples', 'sample_grouping','replicate_grouping'} and (not pipeline_mode):
         widget = TableColumnGroupPicker()
         for action in actions_to_connect:
@@ -1530,24 +1549,6 @@ def param_to_widget(param, name: str,
         widget = QtWidgets.QLineEdit(param.default if is_default else '')
         for action in actions_to_connect:
             widget.textChanged.connect(action)
-    elif typing_extensions.get_origin(param.annotation) == typing.Union and typing_extensions.Literal in [
-        typing_extensions.get_origin(ann) for ann in typing_extensions.get_args(param.annotation)]:
-        args = typing_extensions.get_args(param.annotation)
-        literal_ind = [typing_extensions.get_origin(ann) for ann in args].index(
-            typing_extensions.Literal)
-        literal = args[literal_ind]
-        without_literal = tuple(args[0:literal_ind] + args[literal_ind + 1:])
-        if param.default in typing_extensions.get_args(literal):
-            this_default = param.default
-            other_default = inspect._empty
-        else:
-            this_default = None
-            other_default = param.default
-        widget = ComboBoxOrOtherWidget(typing_extensions.get_args(literal),
-                                       param_to_widget(NewParam(typing.Union[without_literal], other_default), name,
-                                                       actions_to_connect, pipeline_mode), this_default)
-        for action in actions_to_connect:
-            widget.currentIndexChanged.connect(action)
     elif typing_extensions.get_origin(param.annotation) == typing_extensions.Literal:
         widget = QtWidgets.QComboBox()
         widget.addItems(typing_extensions.get_args(param.annotation))
