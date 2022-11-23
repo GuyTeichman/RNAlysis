@@ -3434,7 +3434,7 @@ class CountFilter(Filter):
 
     @readable_name('CLICOM (ensemble) clustering')
     def split_clicom(self, *parameter_dicts: dict,
-                     replicate_grouping: Union[List[List[str]], 'ungrouped'] = 'ungrouped',
+                     replicate_grouping: Union[List[List[str]], Literal['ungrouped']] = 'ungrouped',
                      power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
