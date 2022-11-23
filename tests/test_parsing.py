@@ -185,3 +185,16 @@ def test_generate_upset_series():
 @pytest.mark.parametrize('version,expected', [('3.0.0', [3, 0, 0]), ('0.1.3', [0, 1, 3]), ('2.0.5', [2, 0, 5])])
 def test_parse_version(version, expected):
     assert parse_version(version) == expected
+
+
+@pytest.mark.parametrize('attribute_str,expected', [
+    ('attr1 "Val1"; attr_2 "val_2"; ', {'attr1': 'Val1', 'attr_2': 'val_2'}),
+    ('gene_id "ENSG00000186092"; transcript_id "ENST00000335137"; '
+     'gene_name "OR4F5"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "OR4F5-001"; '
+     'transcript_source "ensembl_havana"; tag "CCDS"; ccds_id "CCDS30547";',
+     {'gene_id': 'ENSG00000186092', 'transcript_id': 'ENST00000335137', 'gene_name': 'OR4F5',
+      'gene_source': 'ensembl_havana', 'gene_biotype': 'protein_coding', 'transcript_name': 'OR4F5-001',
+      'transcript_source': 'ensembl_havana', 'tag': 'CCDS', 'ccds_id': 'CCDS30547'})
+])
+def test_parse_gtf_attributes(attribute_str, expected):
+    assert parse_gtf_attributes(attribute_str) == expected

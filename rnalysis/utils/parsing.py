@@ -245,3 +245,18 @@ def generate_upset_series(objs: dict):
 def parse_version(version:str):
     split = version.split('.')
     return [int(i) for i in split]
+
+
+def parse_gtf_attributes(attr_str: str):
+    attributes_dict = {}
+    for this_attr in attr_str.split('; '):
+        this_attr = this_attr.strip()
+        key_end = this_attr.find(' ')
+        if key_end == -1:
+            continue
+        key = this_attr[:key_end]
+        val_start = this_attr.find('"', key_end)
+        val_end = this_attr.find('"', val_start + 1)
+        val = this_attr[val_start + 1:val_end]
+        attributes_dict[key] = val
+    return attributes_dict
