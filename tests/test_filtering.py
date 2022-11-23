@@ -330,9 +330,9 @@ def test_countfilter_violin_plot_api():
     plt.close('all')
 
 
-def _filter_biotype_tester(filter_obj, truth_protein_coding, truth_pirna):
-    protein_coding = filter_obj.filter_biotype(ref=__biotype_ref__, inplace=False)
-    pirna = filter_obj.filter_biotype('piRNA', ref=__biotype_ref__, inplace=False)
+def _filter_biotype_from_table_tester(filter_obj, truth_protein_coding, truth_pirna):
+    protein_coding = filter_obj.filter_biotype_from_ref_table(ref=__biotype_ref__, inplace=False)
+    pirna = filter_obj.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, inplace=False)
     pirna.df.sort_index(inplace=True)
     protein_coding.df.sort_index(inplace=True)
     truth_protein_coding.sort_index(inplace=True)
@@ -341,17 +341,17 @@ def _filter_biotype_tester(filter_obj, truth_protein_coding, truth_pirna):
     assert np.all(truth_pirna == pirna.df)
 
 
-def test_htcount_filter_biotype():
+def test_htcount_filter_biotype_from_ref_table():
     truth_protein_coding = io.load_csv('tests/test_files/counted_biotype_protein_coding.csv', 0)
     truth_pirna = io.load_csv('tests/test_files/counted_biotype_piRNA.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
-    _filter_biotype_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
+    _filter_biotype_from_table_tester(h, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
-def test_htcount_filter_biotype_opposite():
+def test_htcount_filter_biotype_from_ref_table_opposite():
     truth_no_pirna = io.load_csv(r'tests/test_files/counted_biotype_no_piRNA.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
-    h.filter_biotype('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
+    h.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
     h.df.sort_index(inplace=True)
     truth_no_pirna.sort_index(inplace=True)
     assert np.all(h.df == truth_no_pirna)
@@ -737,59 +737,59 @@ def test_split_by_percentile():
     assert np.all(truth_above == above.df)
 
 
-def test_htcount_filter_biotype_multiple():
+def test_htcount_filter_biotype_from_ref_table_multiple():
     truth = io.load_csv('tests/test_files/counted_biotype_piRNA_protein_coding.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
-    both = h.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
-                            inplace=False)
+    both = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
+                                           inplace=False)
     both.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == both.df)
 
 
-def test_htcount_filter_biotype_multiple_opposite():
+def test_htcount_filter_biotype_from_ref_table_multiple_opposite():
     truth = io.load_csv('tests/test_files/counted_biotype_piRNA_protein_coding_opposite.csv', 0)
     h = CountFilter("tests/test_files/counted_biotype.csv")
-    neither = h.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
-                               inplace=False,
-                               opposite=True)
+    neither = h.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
+                                              inplace=False,
+                                              opposite=True)
     neither.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == neither.df)
 
 
-def test_deseq_filter_biotype():
+def test_deseq_filter_biotype_from_ref_table():
     truth_protein_coding = io.load_csv('tests/test_files/test_deseq_biotype_protein_coding.csv', 0)
     truth_pirna = io.load_csv('tests/test_files/test_deseq_biotype_piRNA.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
-    _filter_biotype_tester(d, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
+    _filter_biotype_from_table_tester(d, truth_protein_coding=truth_protein_coding, truth_pirna=truth_pirna)
 
 
-def test_deseq_filter_biotype_opposite():
+def test_deseq_filter_biotype_from_ref_table_opposite():
     truth_no_pirna = io.load_csv(r'tests/test_files/test_deseq_biotype_piRNA_opposite.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
-    d.filter_biotype('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
+    d.filter_biotype_from_ref_table('piRNA', ref=__biotype_ref__, opposite=True, inplace=True)
     d.df.sort_index(inplace=True)
     truth_no_pirna.sort_index(inplace=True)
     assert np.all(d.df == truth_no_pirna)
 
 
-def test_deseq_filter_biotype_multiple():
+def test_deseq_filter_biotype_from_ref_table_multiple():
     truth = io.load_csv('tests/test_files/test_deseq_biotype_piRNA_protein_coding.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
-    both = d.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
-                            inplace=False)
+    both = d.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
+                                           inplace=False)
     both.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == both.df)
 
 
-def test_deseq_filter_biotype_multiple_opposite():
+def test_deseq_filter_biotype_from_ref_table_multiple_opposite():
     truth = io.load_csv('tests/test_files/test_deseq_biotype_piRNA_protein_coding_opposite.csv', 0)
     d = DESeqFilter("tests/test_files/test_deseq_biotype.csv")
-    neither = d.filter_biotype(['protein_coding', 'piRNA'], ref=__biotype_ref__,
-                               inplace=False,
-                               opposite=True)
+    neither = d.filter_biotype_from_ref_table(['protein_coding', 'piRNA'], ref=__biotype_ref__,
+                                              inplace=False,
+                                              opposite=True)
     neither.df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(truth == neither.df)
@@ -1088,19 +1088,20 @@ def test_count_filter_from_folder_norm():
     assert np.all(np.isclose(counts_norm.df, truth_norm, atol=0, rtol=0.0001))
 
 
-def test_biotypes():
+def test_biotypes_from_ref_table():
     truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0).sort_index()
     c = CountFilter('tests/test_files/counted_biotype.csv')
-    df = c.biotypes(ref=__biotype_ref__).sort_index()
+    df = c.biotypes_from_ref_table(ref=__biotype_ref__).sort_index()
     print('\n')
     print(df, truth)
     assert df.equals(truth)
 
 
-def test_biotypes_long_form():
+def test_biotypes_from_ref_table_long_form():
     truth = pd.read_csv('tests/test_files/biotypes_long_format_truth.csv', index_col=0, header=[0, 1]).sort_index()
+    truth.columns = ['_'.join(col) for col in truth.columns.values]
     c = CountFilter('tests/test_files/counted_biotype.csv')
-    df = c.biotypes(long_format=True, ref=__biotype_ref__).sort_index()
+    df = c.biotypes_from_ref_table(long_format=True, ref=__biotype_ref__).sort_index()
     assert np.isclose(df, truth, equal_nan=True).all()
 
 
@@ -1214,32 +1215,32 @@ def test_pipeline_repr():
     pl = Pipeline('countfilter')
     assert repr(pl) == "Pipeline('CountFilter')"
     pl.add_function('sort')
-    pl.add_function(CountFilter.filter_biotype, 'protein_coding', opposite=True)
+    pl.add_function(CountFilter.filter_biotype_from_ref_table, 'protein_coding', opposite=True)
     assert repr(pl) == "Pipeline('CountFilter'): CountFilter.sort()-->" \
-                       "CountFilter.filter_biotype('protein_coding', opposite=True)"
+                       "CountFilter.filter_biotype_from_ref_table('protein_coding', opposite=True)"
 
 
 def test_pipeline_str():
     pl = Pipeline('countfilter')
     assert str(pl) == "Pipeline for CountFilter objects"
     pl.add_function('sort')
-    pl.add_function(CountFilter.filter_biotype, 'protein_coding', opposite=True)
+    pl.add_function(CountFilter.filter_biotype_from_ref_table, 'protein_coding', opposite=True)
     assert str(pl) == "Pipeline for CountFilter objects:\n" \
                       "\tCountFilter.sort()\n" \
-                      "\tCountFilter.filter_biotype('protein_coding', opposite=True)"
+                      "\tCountFilter.filter_biotype_from_ref_table('protein_coding', opposite=True)"
 
 
 def test_pipeline_add_function():
     pl = Pipeline()
-    pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding')
+    pl.add_function(DESeqFilter.filter_biotype_from_ref_table, biotype='protein_coding')
     assert len(pl.functions) == 1 and len(pl.params) == 1 and len(pl) == 1
-    assert pl.functions[0] == DESeqFilter.filter_biotype
+    assert pl.functions[0] == DESeqFilter.filter_biotype_from_ref_table
     assert pl.params[0] == ((), {'biotype': 'protein_coding'})
 
     pl = Pipeline()
-    pl.add_function('filter_biotype', 'piRNA')
+    pl.add_function('filter_biotype_from_ref_table', 'piRNA')
     assert len(pl.functions) == 1 and len(pl.params) == 1 and len(pl) == 1
-    assert pl.functions[0] == Filter.filter_biotype
+    assert pl.functions[0] == Filter.filter_biotype_from_ref_table
     assert pl.params[0] == (('piRNA',), {})
 
     pl_deseq = Pipeline('DEseqFilter')
@@ -1263,7 +1264,7 @@ def test_pipeline_add_multiple_functions():
 
 def test_pipeline_remove_last_function():
     pl = Pipeline()
-    pl.add_function(DESeqFilter.filter_biotype, biotype='protein_coding',
+    pl.add_function(DESeqFilter.filter_biotype_from_ref_table, biotype='protein_coding',
                     ref=__biotype_ref__)
     pl.remove_last_function()
     assert len(pl.functions) == 0 and len(pl.params) == 0 and len(pl) == 0
@@ -1297,11 +1298,11 @@ def test_pipeline_apply_to():
     assert np.all(deseq_pipelined.df == deseq_truth.df)
 
     pl2 = Pipeline('countfilter')
-    pl2.add_function(Filter.filter_biotype, biotype='protein_coding',
+    pl2.add_function(Filter.filter_biotype_from_ref_table, biotype='protein_coding',
                      ref=__biotype_ref__)
     cnt = CountFilter('tests/test_files/counted.csv')
     cnt_truth = cnt.__copy__()
-    cnt_truth.filter_biotype('protein_coding', ref=__biotype_ref__)
+    cnt_truth.filter_biotype_from_ref_table('protein_coding', ref=__biotype_ref__)
     cnt_pipelined = pl2.apply_to(cnt, inplace=False)
     pl2.apply_to(cnt, inplace=True)
     cnt.sort(cnt.columns[0])
@@ -1316,16 +1317,16 @@ def test_pipeline_apply_to_with_multiple_functions():
     d_copy = d.__copy__()
     p = Pipeline('deseqfilter')
     p.add_function('filter_missing_values')
-    p.add_function(Filter.filter_biotype, biotype='protein_coding', ref=__biotype_ref__)
+    p.add_function(Filter.filter_biotype_from_ref_table, biotype='protein_coding', ref=__biotype_ref__)
     p.add_function('number_filters', 'log2FoldChange', 'gt', 0.75)
     p.add_function('sort', 'baseMean', ascending=False)
-    p.add_function('biotypes')
+    p.add_function('biotypes_from_ref_table')
     p.remove_last_function()
 
     d_pipelined = p.apply_to(d_copy, inplace=False)
     p.apply_to(d_copy)
     d.filter_missing_values()
-    d.filter_biotype('protein_coding', __biotype_ref__)
+    d.filter_biotype_from_ref_table('protein_coding', __biotype_ref__)
     d.number_filters('log2FoldChange', 'gt', 0.75)
     d.sort('baseMean', ascending=False)
     assert d.df.equals(d_pipelined.df)
@@ -1374,7 +1375,7 @@ def test_pipeline_add_function_invalid_type():
 
 def test_pipeline_add_function_mismatch_filter_type():
     pl_deseq = Pipeline('DESeqFilter')
-    pl_deseq.add_function(CountFilter.filter_biotype, biotype='protein_coding',
+    pl_deseq.add_function(CountFilter.filter_biotype_from_ref_table, biotype='protein_coding',
                           ref=__biotype_ref__)
     with pytest.raises(AssertionError):
         pl_deseq.add_function(CountFilter.filter_low_reads, threshold=5)
@@ -1385,7 +1386,7 @@ def _get_pipeline_with_plot(inplace: bool):
     p.add_function('filter_missing_values')
     p.add_function(Filter.filter_top_n, 'baseMean', n=15)
     p.add_function(DESeqFilter.volcano_plot, alpha=0.001)
-    p.add_function('biotypes', ref=__biotype_ref__)
+    p.add_function('biotypes_from_ref_table', ref=__biotype_ref__)
     p.add_function('filter_top_n', 'log2FoldChange', 6)
     d = DESeqFilter('tests/test_files/test_deseq_with_nan.csv')
     res_truth = {}
@@ -1393,7 +1394,7 @@ def _get_pipeline_with_plot(inplace: bool):
     d.filter_missing_values()
     d.filter_top_n('baseMean', n=15)
     res_truth['volcano_plot_1'] = d.volcano_plot(alpha=0.001)
-    res_truth['biotypes_1'] = d.biotypes(ref=__biotype_ref__)
+    res_truth['biotypes_from_ref_table_1'] = d.biotypes_from_ref_table(ref=__biotype_ref__)
     d.filter_top_n('log2FoldChange', 6)
     if inplace:
         res = p.apply_to(d_copy, inplace=True)
@@ -1404,7 +1405,7 @@ def _get_pipeline_with_plot(inplace: bool):
     print(res)
     print(res_truth)
     assert res.keys() == res_truth.keys()
-    assert res['biotypes_1'].equals(res_truth['biotypes_1'])
+    assert res['biotypes_from_ref_table_1'].equals(res_truth['biotypes_from_ref_table_1'])
     assert type(res['volcano_plot_1']) == type(res_truth['volcano_plot_1'])
 
 
@@ -1501,20 +1502,20 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     scaling_factor_path = 'tests/test_files/big_scaling_factors.csv'
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
-    pl_c.add_function('biotypes', ref=__biotype_ref__)
+    pl_c.add_function('biotypes_from_ref_table', ref=__biotype_ref__)
     pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=17500, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
     pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 3, 7], random_seed=42, n_init=1)
     pl_c.add_function(CountFilter.sort, by='cond2rep3')
-    pl_c.add_function(CountFilter.biotypes, 'long', __biotype_ref__)
+    pl_c.add_function(CountFilter.biotypes_from_ref_table, 'long', __biotype_ref__)
 
     c = CountFilter('tests/test_files/big_counted.csv')
     c_pipeline_res, c_pipeline_dict = pl_c.apply_to(c, inplace=False)
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
-    c_dict['biotypes_1'] = c.biotypes(ref=__biotype_ref__)
+    c_dict['biotypes_from_ref_table_1'] = c.biotypes_from_ref_table(ref=__biotype_ref__)
     c_res = c.filter_top_n(by='cond3rep1', n=17500, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=40, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
@@ -1533,19 +1534,19 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
         obj.sort(by='cond2rep3')
     biotypes = []
     for obj in c_res_cont:
-        biotypes.append(obj.biotypes('long', __biotype_ref__))
-    c_dict['biotypes_2'] = tuple(biotypes)
+        biotypes.append(obj.biotypes_from_ref_table('long', __biotype_ref__))
+    c_dict['biotypes_from_ref_table_2'] = tuple(biotypes)
 
     assert len(c_res_cont) == len(c_pipeline_res)
     for i, j in zip(c_res_cont, c_pipeline_res):
         assert i == j
     assert np.all(c_dict.keys() == c_pipeline_dict.keys())
-    assert c_dict['biotypes_1'].equals(c_pipeline_dict['biotypes_1'])
+    assert c_dict['biotypes_from_ref_table_1'].equals(c_pipeline_dict['biotypes_from_ref_table_1'])
     assert len(c_dict['clustergram_1']) == len(c_pipeline_dict['clustergram_1'])
     for i, j in zip(c_dict['clustergram_1'], c_pipeline_dict['clustergram_1']):
         assert type(i) == type(j)
-    assert len(c_dict['biotypes_2']) == len(c_pipeline_dict['biotypes_2'])
-    for i, j in zip(c_dict['biotypes_2'], c_pipeline_dict['biotypes_2']):
+    assert len(c_dict['biotypes_from_ref_table_2']) == len(c_pipeline_dict['biotypes_from_ref_table_2'])
+    for i, j in zip(c_dict['biotypes_from_ref_table_2'], c_pipeline_dict['biotypes_from_ref_table_2']):
         assert i.equals(j)
 
 
@@ -1764,7 +1765,7 @@ def test_transform(filter_obj, columns, function, kwargs, matching_function):
 
 def test_import_pipeline():
     truth = Pipeline('countfilter')
-    truth.add_function(CountFilter.biotypes)
+    truth.add_function(CountFilter.biotypes_from_ref_table)
     truth.add_function('number_filters', 5, by='col_name')
 
     imported = Pipeline.import_pipeline('tests/test_files/test_pipeline.yaml')
@@ -1777,7 +1778,7 @@ def test_export_pipeline():
         truth = f.read()
 
     p = Pipeline('countfilter')
-    p.add_function(CountFilter.biotypes)
+    p.add_function(CountFilter.biotypes_from_ref_table)
     p.add_function('number_filters', 5, by='col_name')
     outname = 'tests/test_files/temp_exported_pipeline.yaml'
     p.export_pipeline(outname)

@@ -358,7 +358,7 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
         for use_name in [False, True]:
             for use_version in [True, False]:
                 for split_ids in [True, False]:
-                    transcript_to_gene_map = _map_transcripts_to_genes(gtf_path, use_name, use_version, split_ids)
+                    transcript_to_gene_map = io.map_transcripts_to_genes(gtf_path, use_name, use_version, split_ids)
                     pbar.update(1)
                     if len(transcript_to_gene_map) == 0:
                         continue
@@ -375,50 +375,6 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
                     return scaled_tpm
 
     raise ValueError("Failed to map transcripts to genes with the given GTF file!")
-
-
-def _map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True,
-                              split_ids: bool = True):
-    mapping = {}
-    with open(gtf_path, errors="ignore") as f:
-        for line in f.readlines():
-            if len(line) == 0 or line[0] == '#':
-                continue
-            line_split = line.strip().split('\t')
-            if line_split[2] == 'transcript':
-                info = line_split[8]
-                d = {}
-                for x in info.split('; '):
-                    x = x.strip()
-                    p = x.find(' ')
-                    if p == -1:
-                        continue
-                    k = x[:p]
-                    p = x.find('"', p)
-                    p2 = x.find('"', p + 1)
-                    v = x[p + 1:p2]
-                    d[k] = v
-
-                if 'transcript_id' not in d or 'gene_id' not in d:
-                    continue
-
-                transcript_id = d['transcript_id'].split(".")[0] if split_ids else d['transcript_id']
-                gene_id = d['gene_id'].split(".")[0] if split_ids else d['gene_id']
-                if use_version:
-                    if 'transcript_version' in d and 'gene_version' in d:
-                        transcript_id += '.' + d['transcript_version']
-                        gene_id += '.' + d['gene_version']
-                gene_name = None
-                if use_name:
-                    if 'gene_name' not in d:
-                        continue
-                    gene_name = d['gene_name']
-
-                if transcript_id in mapping:
-                    continue
-
-                mapping[transcript_id] = gene_name if use_name else gene_id
-    return mapping
 
 
 def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],

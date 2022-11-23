@@ -1,5 +1,6 @@
 import concurrent.futures
 import functools
+import inspect
 import json
 import os
 import queue
@@ -14,7 +15,7 @@ from functools import lru_cache
 from io import BytesIO, StringIO
 from itertools import chain
 from pathlib import Path
-from typing import List, Set, Union, Iterable, Tuple, Dict, Any
+from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable
 from urllib.parse import urlparse, parse_qs, urlencode
 
 import appdirs
@@ -25,6 +26,8 @@ import yaml
 from requests.adapters import HTTPAdapter, Retry
 from tqdm.auto import tqdm
 from sys import executable
+
+from utils import parsing
 
 try:
     from typing import Literal
@@ -1326,3 +1329,99 @@ def is_rnalysis_outdated():
 
 def update_rnalysis():
     run_subprocess([executable, '-m', 'pip', 'install', '--upgrade', 'RNAlysis'])
+
+
+def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool,
+                     split_ids: bool):
+    assert feature_type in {'gene', 'transcript'}, f"Invalid feature_type: '{feature_type}'"
+
+    mapping = {}
+    with open(gtf_path, errors="ignore") as f:
+        for line in f.readlines():
+            if len(line) == 0 or line[0] == '#':
+                continue
+            line_split = line.strip().split('\t')
+            attributes = line_split[8]
+            attributes_dict = parsing.parse_gtf_attributes(attributes)
+            if attribute not in attributes_dict:
+                continue
+
+            feature_name = None
+            if feature_type == 'gene':
+                feature_id = attributes_dict['gene_id'].split(".")[0] if split_ids else attributes_dict['gene_id']
+                if use_version:
+                    feature_id += '.' + attributes_dict['gene_version']
+
+                if use_name:
+                    if 'gene_name' in attributes_dict:
+                        feature_name = attributes_dict['gene_name']
+                    elif 'name' in attributes_dict:
+                        feature_name = attributes_dict['name']
+                    else:
+                        continue
+
+            else:
+                feature_id = attributes_dict['transcript_id'].split(".")[0] if split_ids else attributes_dict[
+                    'transcript_id']
+                if use_version:
+                    feature_id += '.' + attributes_dict['transcript_version']
+
+                if use_name:
+                    if 'gene_name' in attributes_dict:
+                        feature_name = attributes_dict['transcript_name']
+                    elif 'name' in attributes_dict:
+                        feature_name = attributes_dict['name']
+                    else:
+                        continue
+
+            if feature_id in mapping:
+                continue
+            mapping[feature_name if use_name else feature_id] = attributes_dict[attribute]
+
+    return mapping
+
+
+def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tuple[str, dict]:
+    try:
+        if isinstance(method, str):
+            func = getattr(obj, method)
+        else:
+            func = method
+        raw_docstring = inspect.cleandoc(inspect.getdoc(func))
+        return parsing.parse_docstring(raw_docstring)
+    except AttributeError:
+        return '', {}
+
+
+def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True,
+                             split_ids: bool = True):
+    mapping = {}
+    with open(gtf_path, errors="ignore") as f:
+        for line in f.readlines():
+            if len(line) == 0 or line[0] == '#':
+                continue
+            line_split = line.strip().split('\t')
+            if line_split[2] == 'transcript':
+                attributes = line_split[8]
+                attributes_dict = parsing.parse_gtf_attributes(attributes)
+                if 'transcript_id' not in attributes_dict or 'gene_id' not in attributes_dict:
+                    continue
+
+                transcript_id = attributes_dict['transcript_id'].split(".")[0] if split_ids else attributes_dict[
+                    'transcript_id']
+                gene_id = attributes_dict['gene_id'].split(".")[0] if split_ids else attributes_dict['gene_id']
+                if use_version:
+                    if 'transcript_version' in attributes_dict and 'gene_version' in attributes_dict:
+                        transcript_id += '.' + attributes_dict['transcript_version']
+                        gene_id += '.' + attributes_dict['gene_version']
+                gene_name = None
+                if use_name:
+                    if 'gene_name' not in attributes_dict:
+                        continue
+                    gene_name = attributes_dict['gene_name']
+
+                if transcript_id in mapping:
+                    continue
+
+                mapping[transcript_id] = gene_name if use_name else gene_id
+    return mapping

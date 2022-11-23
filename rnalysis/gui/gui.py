@@ -20,6 +20,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib.externals.loky import get_reusable_executor
 
+import utils.io
 from rnalysis import fastq, filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_tutorial
 from rnalysis.utils import io, validation, generic, parsing, settings, enrichment_runner, clustering
@@ -39,7 +40,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.func_name = func_name
         self.func = func
         self.signature = generic.get_method_signature(self.func)
-        self.desc, self.param_desc = generic.get_method_docstring(self.func)
+        self.desc, self.param_desc = utils.io.get_method_docstring(self.func)
         self.excluded_params = excluded_params.copy()
 
         self.widgets = {}
@@ -495,7 +496,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         analysis_type = self.get_current_analysis_type()
         chosen_func = self.get_current_func()
         signature = generic.get_method_signature(chosen_func)
-        func_desc, param_desc = generic.get_method_docstring(chosen_func)
+        func_desc, param_desc = utils.io.get_method_docstring(chosen_func)
         for name, param in signature.items():
             this_desc = param_desc.get(name, '')
             if name in self.EXCLUDED_PARAMS:
@@ -1412,7 +1413,7 @@ class FuncTypeStack(QtWidgets.QWidget):
             self.funcSelected.emit(False)
             return
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
-        desc, param_desc = generic.get_method_docstring(chosen_func_name, self.filter_obj)
+        desc, param_desc = utils.io.get_method_docstring(chosen_func_name, self.filter_obj)
         self.func_combo.setToolTip(desc)
         self.func_help_button.connect_param_help(chosen_func_name, desc)
 
@@ -1475,7 +1476,7 @@ class FilterTabPage(TabPage):
     CLUSTERING_FUNCS = {'split_kmeans': 'K-Means', 'split_kmedoids': 'K-Medoids',
                         'split_hierarchical': 'Hierarchical (Agglomerative)', 'split_hdbscan': 'HDBSCAN',
                         'split_clicom': 'CLICOM (Ensemble)'}
-    SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes', 'print_features'}
+    SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
     GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change',
                      'average_replicate_samples'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
@@ -1621,7 +1622,7 @@ class FilterTabPage(TabPage):
         func_name = '__init__'
         filter_obj_type = FILTER_OBJ_TYPES[self.basic_widgets['table_type_combo'].currentText()]
         signature = generic.get_method_signature(func_name, filter_obj_type)
-        desc, param_desc = generic.get_method_docstring(func_name, filter_obj_type)
+        desc, param_desc = utils.io.get_method_docstring(func_name, filter_obj_type)
         self.basic_widgets['table_type_combo'].setToolTip(desc)
         i = 1
         for name, param in signature.items():
@@ -2201,7 +2202,7 @@ class MultiOpenWindow(QtWidgets.QDialog):
         func_name = '__init__'
         filter_obj_type = FILTER_OBJ_TYPES[self.table_types[file].currentText()]
         signature = generic.get_method_signature(func_name, filter_obj_type)
-        desc, param_desc = generic.get_method_docstring(func_name, filter_obj_type)
+        desc, param_desc = utils.io.get_method_docstring(func_name, filter_obj_type)
         self.table_types[file].setToolTip(desc)
         i = 1
         for name, param in signature.items():

@@ -1645,7 +1645,7 @@ def test_SetTabPage_view_full_set(qtbot):
 @pytest.mark.parametrize('exc_params', [None, ['self', 'other']])
 @pytest.mark.parametrize('pipeline_mode', [True, False])
 def test_FuncTypeStack_init(qtbot, pipeline_mode, exc_params):
-    qtbot, stack = widget_setup(qtbot, FuncTypeStack, ['filter_biotype', 'number_filters', 'describe'],
+    qtbot, stack = widget_setup(qtbot, FuncTypeStack, ['filter_biotype_from_ref_table', 'number_filters', 'describe'],
                                 filtering.Filter('tests/test_files/test_deseq.csv'),
                                 additional_excluded_params=exc_params, pipeline_mode=pipeline_mode)
 

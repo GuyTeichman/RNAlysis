@@ -2,7 +2,7 @@
 History
 =======
 
-3.2 (2022-11-10)
+3.2 (2022-11-23)
 ------------------
 * This version introduces quality-of-life changes to the graphical user interface, functions for translating gene IDs and running differential expression analysis, and extends RNAlysis to support Python versions 3.9 and 3.10.
 
@@ -22,6 +22,9 @@ Changed
 * RNAlysis' basic features are now supported on Python versions 3.9 and 3.10.
 * CountFilter.pca() now generates a plot for *every* pair of Principal Components requested by the user.
 * CountFilter.split_clicom() now supports clustering each batch of replicates separately, using the 'replicates_grouping' parameter
+* Biotype-based filtering and summary can now be done based on GTF annotation files instead of a Biotype Reference Table.
+* Filter.biotypes() was refactored into Filter.biotypes_from_ref_table()
+* Filter.filter_biotype() was refactored into Filter.filter_biotype_from_ref_table()
 
 Fixed
 ******
@@ -160,13 +163,13 @@ Changed
 * The DataFrame returned by enrich_randomization() and enrich_randomization_parallel() now contains the additional column 'data_scale', determined by the new optional argument 'data_scale'.
 * The columns 'n obs' and 'n exp' in the DataFrame returned by enrich_randomization() and enrich_randomization_parallel() were renamed to 'obs' and 'exp' respectively.
 * FeatureSets no longer support in-place set operations (intersection, union, difference, symmetric difference). Instead, these functions return a new FeatureSet.
-* Filter.biotypes() now accepts the boolean parameter 'long_format' instead of the str parameter 'format'.
-* Filter.biotypes() and FeatureSet.biotypes() now count features which do not appear in the Biotype Reference Table as '_missing_from_biotype_reference' instead of 'not_in_biotype_reference'.
+* Filter.biotypes_from_ref_table() now accepts the boolean parameter 'long_format' instead of the str parameter 'format'.
+* Filter.biotypes_from_ref_table() and FeatureSet.biotypes_from_ref_table() now count features which do not appear in the Biotype Reference Table as '_missing_from_biotype_reference' instead of 'not_in_biotype_reference'.
 
 Fixed
 ******
 * Updated type-hinting of specific functions.
-* Filter.biotypes() and FeatureSet.biotypes() now support Biotype Reference Tables with different column names.
+* Filter.biotypes_from_ref_table() and FeatureSet.biotypes_from_ref_table() now support Biotype Reference Tables with different column names.
 * Generally improved performance of RNAlysis.
 * Fixed bug in Filter.filter_percentile() where the value at the exact percentile speficied (e.g. the median for percentile=0.5) would be removed from the Filter object.
 * Fixed bug in enrichment.FeatureSet, where creating a FeatureSet from input string would result in an empty set.
@@ -236,8 +239,8 @@ Added
 * User-defined biotype reference tables can now be used.
 * Filter operations now print out the result of the operation.
 * Enrichment randomization tests now also support non-WBGene indexing.
-* Filter.biotypes() and FeatureSet.biotypes() now report genes that don't appear in the biotype reference table.
-* Filter.biotypes() can now give a long-form report with descriptive statistics of all columns, grouped by biotype.
+* Filter.biotypes_from_ref_table() and FeatureSet.biotypes_from_ref_table() now report genes that don't appear in the biotype reference table.
+* Filter.biotypes_from_ref_table() can now give a long-form report with descriptive statistics of all columns, grouped by biotype.
 * Added code examples to the user guide and to the docstrings of most functions.
 
 

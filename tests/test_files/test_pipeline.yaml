@@ -1,6 +1,6 @@
 filter_type: countfilter
 functions:
-- biotypes
+- biotypes_from_ref_table
 - number_filters
 params:
 - - []

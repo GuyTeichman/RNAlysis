@@ -38,7 +38,8 @@ from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
 
-from rnalysis.utils.param_typing import BIOTYPES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, GENE_ID_TYPES
+from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
+    DEFAULT_ORGANISMS, GENE_ID_TYPES
 
 
 def readable_name(name: str):
@@ -454,10 +455,57 @@ class Filter:
                                       inplace=False), self.filter_percentile(percentile=percentile, column=column,
                                                                              opposite=True, inplace=False)
 
-    @readable_name('Filter by feature biotype')
-    def filter_biotype(self, biotype: Union[str, List[str]] = 'protein_coding',
-                       ref: Union[str, Path, Literal['predefined']] = 'predefined', opposite: bool = False,
-                       inplace: bool = True):
+    def _get_ref_srs_from_gtf(self, gtf_path: Union[str, Path],
+                              attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                              feature_type: Literal['gene', 'transcript'] = 'gene'):
+        with tqdm(desc='Parsing GTF file', total=8) as pbar:
+            for use_name in [False, True]:
+                for use_version in [True, False]:
+                    for split_ids in [True, False]:
+                        try:
+                            mapping = io.map_gene_to_attr(gtf_path, attribute_name, feature_type, use_name, use_version,
+                                                          split_ids)
+                        except KeyError:
+                            continue
+                        pbar.update(1)
+                        if len(mapping) == 0:
+                            continue
+                        ref_srs = pd.Series(mapping, name='biotype')
+                        if len(ref_srs.index.intersection(self.df.index)) == 0:
+                            continue
+                        return ref_srs
+            raise ValueError("Failed to map features to biotypes with the given GTF file and parameters. "
+                             "Please try again with different parameters or a different GTF file. ")
+
+    @readable_name('Filter by feature biotype (based on a GTF file)')
+    def filter_biotype_from_gtf(self, gtf_path: Union[str, Path],
+                                biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
+                                attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                                feature_type: Literal['gene', 'transcript'] = 'gene',
+                                opposite: bool = False, inplace: bool = True):
+        biotype = parsing.data_to_list(biotype, sort=True)
+        # make sure 'biotype' is a list of strings
+        assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
+        assert Path(gtf_path).exists(), f"the given gtf path does not exist!"
+        suffix = f"_{'_'.join(biotype)}"
+
+        ref_srs = self._get_ref_srs_from_gtf(gtf_path, attribute_name, feature_type)
+        # generate an empty boolean mask for filtering down the line
+        mask = pd.Series(np.zeros_like(ref_srs, dtype=bool), index=ref_srs.index, name='biotype mask')
+        # perform bitwise 'OR' between each biotype in the 'biotype' list and the mask
+        for bio in biotype:
+            mask = mask | (ref_srs == bio)
+        # gene names which remain after filtering are True in the mask AND were previously in the df
+        gene_names = ref_srs[mask].index.intersection(self.df.index)
+        new_df = self.df.loc[gene_names]
+        pbar.update(8)
+        return self._inplace(new_df, opposite, inplace, suffix)
+
+    @readable_name('Filter by feature biotype (based on a reference table)')
+    def filter_biotype_from_ref_table(self, biotype: Union[Literal[BIOTYPES], str, List[str]] = 'protein_coding',
+                                      ref: Union[str, Path, Literal['predefined']] = 'predefined',
+                                      opposite: bool = False,
+                                      inplace: bool = True):
 
         """
         Filters out all features that do not match the indicated biotype/biotypes. \
@@ -481,12 +529,12 @@ class Filter:
             >>> from rnalysis import filtering
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows whose biotype is 'protein_coding'
-            >>> counts.filter_biotype('protein_coding',ref='tests/biotype_ref_table_for_tests.csv')
+            >>> counts.filter_biotype_from_ref_table('protein_coding',ref='tests/biotype_ref_table_for_tests.csv')
             Filtered 9 features, leaving 13 of the original 22 features. Filtered inplace.
 
             >>> counts = filtering.Filter('tests/test_files/counted.csv')
             >>> # keep only rows whose biotype is 'protein_coding' or 'pseudogene'
-            >>> counts.filter_biotype(['protein_coding','pseudogene'],ref='tests/biotype_ref_table_for_tests.csv')
+            >>> counts.filter_biotype_from_ref_table(['protein_coding','pseudogene'],ref='tests/biotype_ref_table_for_tests.csv')
             Filtered 0 features, leaving 22 of the original 22 features. Filtered inplace.
 
         """
@@ -1007,12 +1055,62 @@ class Filter:
         """
         print(self.index_string)
 
-    @readable_name('Summarize feature biotypes')
-    def biotypes(self, long_format: bool = False,
-                 ref: Union[str, Path, Literal['predefined']] = 'predefined') -> pd.DataFrame:
+    @readable_name('Summarize feature biotypes (based on a GTF file)')
+    def biotypes_from_gtf(self, gtf_path: Union[str, Path],
+                          attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
+                          feature_type: Literal['gene', 'transcript'] = 'gene',
+                          long_format: bool = False) -> pd.DataFrame:
 
         """
-        Returns a DataFrame of the biotypes in the Filter object and their count.
+        Returns a DataFrame describing the biotypes in the table and their count. \
+        The data about feature biotypes is drawn from a GTF (Gene transfer format) file supplied by the user.
+
+        :param gtf_path: Path to your GTF (Gene transfer format) file. The file should match the type of \
+        gene names/IDs you use in your table, and should contain an attribute describing biotype.
+        :type gtf_path: str or Path
+        :param attribute_name: name of the attribute in your GTF file that describes feature biotype.
+        :type attribute_name: str (default='gene_biotype')
+        :param feature_type: determined whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :type long_format: 'short' or 'long' (default='short')
+        :param long_format: 'short' returns a short-form DataFrame, which states the biotypes \
+        in the Filter object and their count. 'long' returns a long-form DataFrame,
+        which also provides descriptive statistics of each column per biotype.
+        :rtype: pandas.DataFrame
+        :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
+        as well as additional descriptive statistics of format=='long'.
+        """
+        # load the Biotype Reference Table
+        ref_df = self._get_ref_srs_from_gtf(gtf_path, attribute_name, feature_type).to_frame('biotype').reset_index(
+            names=feature_type)
+        # find which genes from tne Filter object don't appear in the Biotype Reference Table
+        not_in_ref = self.df.index.difference(ref_df[feature_type])
+        if len(not_in_ref) > 0:
+            warnings.warn(
+                f'{len(not_in_ref)} of the features in the table do not appear in the Biotype Reference Table')
+            ref_df = pd.concat(
+                [ref_df, pd.DataFrame({feature_type: not_in_ref, 'biotype': '_missing_from_biotype_reference'})],
+                axis=0, join='outer')
+        if long_format:
+            # additionally return descriptive statistics for each biotype
+            self_df = self.df.__deepcopy__()
+            self_df['biotype'] = ref_df.set_index(feature_type).loc[self.df.index]
+            res = self_df.groupby('biotype').describe()
+            res.columns = ['_'.join(col) for col in res.columns.values]
+            return res
+        else:
+            # return just the number of genes/indices belonging to each biotype
+            return ref_df.set_index(feature_type, drop=False).loc[self.df.index].groupby('biotype').count()
+
+    @readable_name('Summarize feature biotypes (based on a reference table)')
+    def biotypes_from_ref_table(self, long_format: bool = False,
+                                ref: Union[str, Path, Literal['predefined']] = 'predefined') -> pd.DataFrame:
+
+        """
+        Returns a DataFrame describing the biotypes in the table and their count. \
+        The data about feature biotypes is drawn from a Biotype Reference Table supplied by the user.
+
         :type long_format: 'short' or 'long' (default='short')
         :param long_format: 'short' returns a short-form DataFrame, which states the biotypes \
         in the Filter object and their count. 'long' returns a long-form DataFrame,
@@ -1027,7 +1125,7 @@ class Filter:
             >>> from rnalysis import filtering
             >>> d = filtering.Filter("tests/test_files/test_deseq.csv")
             >>> # short-form view
-            >>> d.biotypes(ref='tests/biotype_ref_table_for_tests.csv')
+            >>> d.biotypes_from_ref_table(ref='tests/biotype_ref_table_for_tests.csv')
                             gene
             biotype
             protein_coding    26
@@ -1035,7 +1133,7 @@ class Filter:
             unknown            1
 
             >>> # long-form view
-            >>> d.biotypes(long_format=True,ref='tests/biotype_ref_table_for_tests.csv')
+            >>> d.biotypes_from_ref_table(long_format=True,ref='tests/biotype_ref_table_for_tests.csv')
                            baseMean               ...           padj
                               count         mean  ...            75%            max
             biotype                               ...
@@ -1054,7 +1152,7 @@ class Filter:
         not_in_ref = self.df.index.difference(ref_df['gene'])
         if len(not_in_ref) > 0:
             warnings.warn(
-                f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table')
+                f'{len(not_in_ref)} of the features in the table do not appear in the Biotype Reference Table')
             ref_df = pd.concat(
                 [ref_df, pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})],
                 axis=0, join='outer')
@@ -1062,7 +1160,9 @@ class Filter:
             # additionally return descriptive statistics for each biotype
             self_df = self.df.__deepcopy__()
             self_df['biotype'] = ref_df.set_index('gene').loc[self.df.index]
-            return self_df.groupby('biotype').describe()
+            res = self_df.groupby('biotype').describe()
+            res.columns = ['_'.join(col) for col in res.columns.values]
+            return res
 
         else:
             # return just the number of genes/indices belonging to each biotype
@@ -1803,7 +1903,7 @@ class FoldChangeFilter(Filter):
         :Examples:
             >>> from rnalysis import filtering
             >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv' , 'numerator' , 'denominator')
-            >>> f_background = f.filter_biotype('protein_coding', ref='tests/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
+            >>> f_background = f.filter_biotype_from_ref_table('protein_coding', ref='tests/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
             Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.
             >>> f_test = f_background.filter_by_attribute('attribute1', ref='tests/attr_ref_table_for_examples.csv', inplace=False)
             Filtered 6 features, leaving 7 of the original 13 features. Filtering result saved to new object.
