@@ -492,7 +492,8 @@ def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
 
 
 def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
-    truth = dict(power_transform=[True, False], evidence_threshold=0.35, cluster_unclustered_features=True,
+    truth = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
+                 cluster_unclustered_features=True,
                  min_cluster_size=15, plot_style='all', split_plots=False)
 
     qtbot.mouseClick(clicom_window.param_widgets['power_transform'].false_button, LEFT_CLICK)
