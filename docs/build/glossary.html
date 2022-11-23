@@ -111,7 +111,7 @@ and to perform enrichment analysis with various functions from the `enrichment</
 </dd>
 <dt id="term-Biotype-Reference-Table">Biotype Reference Table<a class="headerlink" href="#term-Biotype-Reference-Table" title="Permalink to this term"></a></dt><dd><p>A <cite>csv</cite> table that contains information about the biotype (protein coding, pseudogene, lncRNA, etc…) of genomic features.
 You can define such table to be your default Biotype Reference Table using the function <cite>general.set_biotype_ref_table_path()</cite>.
-Various functions in RNAlysis, such <cite>Filter.biotypes()</cite> and <cite>Filter.filter_biotype()</cite> will use the information in the Biotype Reference Table
+Various functions in RNAlysis, such <cite>Filter.biotypes_from_ref_table()</cite> and <cite>Filter.filter_biotype_from_ref_table()</cite> will use the information in the Biotype Reference Table
 to filter data based on biotype, or display information about the biotype of the genomic features in your Filter objects.</p>
 </dd>
 <dt id="term-CountFilter">CountFilter<a class="headerlink" href="#term-CountFilter" title="Permalink to this term"></a></dt><dd><p>A <a class="reference internal" href="#term-Filter-object"><span class="xref std std-term">Filter object</span></a> that supports count matrices, where each row represents a gene or genomic feature,

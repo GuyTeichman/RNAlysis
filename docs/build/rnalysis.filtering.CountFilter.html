@@ -72,14 +72,16 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.average_replicate_samples.html">rnalysis.filtering.CountFilter.average_replicate_samples</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes.html">rnalysis.filtering.CountFilter.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_gtf.html">rnalysis.filtering.CountFilter.biotypes_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_ref_table.html">rnalysis.filtering.CountFilter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html">rnalysis.filtering.CountFilter.box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html">rnalysis.filtering.CountFilter.clustergram</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html">rnalysis.filtering.CountFilter.differential_expression_deseq2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype.html">rnalysis.filtering.CountFilter.filter_biotype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html">rnalysis.filtering.CountFilter.filter_biotype_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_ref_table.html">rnalysis.filtering.CountFilter.filter_biotype_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html">rnalysis.filtering.CountFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_go_annotations.html">rnalysis.filtering.CountFilter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_kegg_annotations.html">rnalysis.filtering.CountFilter.filter_by_kegg_annotations</a></li>
@@ -217,29 +219,35 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.average_replicate_samples.html#rnalysis.filtering.CountFilter.average_replicate_samples" title="rnalysis.filtering.CountFilter.average_replicate_samples"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.average_replicate_samples</span></code></a>(...[, ...])</p></td>
 <td><p>Average the expression values of gene expression for each group of replicate samples.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes.html#rnalysis.filtering.CountFilter.biotypes" title="rnalysis.filtering.CountFilter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.biotypes</span></code></a>([long_format, ref])</p></td>
-<td><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_gtf.html#rnalysis.filtering.CountFilter.biotypes_from_gtf" title="rnalysis.filtering.CountFilter.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.biotypes_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
+<td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html#rnalysis.filtering.CountFilter.box_plot" title="rnalysis.filtering.CountFilter.box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.box_plot</span></code></a>([samples, notch, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.biotypes_from_ref_table.html#rnalysis.filtering.CountFilter.biotypes_from_ref_table" title="rnalysis.filtering.CountFilter.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.biotypes_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.box_plot.html#rnalysis.filtering.CountFilter.box_plot" title="rnalysis.filtering.CountFilter.box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.box_plot</span></code></a>([samples, notch, ...])</p></td>
 <td><p>Generates a box plot of the specified samples in the CountFilter object in log10 scale.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html#rnalysis.filtering.CountFilter.clustergram" title="rnalysis.filtering.CountFilter.clustergram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.clustergram</span></code></a>([sample_names, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.clustergram.html#rnalysis.filtering.CountFilter.clustergram" title="rnalysis.filtering.CountFilter.clustergram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.clustergram</span></code></a>([sample_names, ...])</p></td>
 <td><p>Performs hierarchical clustering and plots a clustergram on the base-2 log of a given set of samples.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html#rnalysis.filtering.CountFilter.describe" title="rnalysis.filtering.CountFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.describe</span></code></a>([percentiles])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html#rnalysis.filtering.CountFilter.describe" title="rnalysis.filtering.CountFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.describe</span></code></a>([percentiles])</p></td>
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html#rnalysis.filtering.CountFilter.difference" title="rnalysis.filtering.CountFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.difference</span></code></a>(*others[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html#rnalysis.filtering.CountFilter.difference" title="rnalysis.filtering.CountFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.difference</span></code></a>(*others[, ...])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html#rnalysis.filtering.CountFilter.differential_expression_deseq2" title="rnalysis.filtering.CountFilter.differential_expression_deseq2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_deseq2</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html#rnalysis.filtering.CountFilter.differential_expression_deseq2" title="rnalysis.filtering.CountFilter.differential_expression_deseq2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.differential_expression_deseq2</span></code></a>(...)</p></td>
 <td><p>Run differential expression analysis on the count matrix using the DESeq2 algorithm.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html#rnalysis.filtering.CountFilter.enhanced_box_plot" title="rnalysis.filtering.CountFilter.enhanced_box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.enhanced_box_plot</span></code></a>([samples, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html#rnalysis.filtering.CountFilter.enhanced_box_plot" title="rnalysis.filtering.CountFilter.enhanced_box_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.enhanced_box_plot</span></code></a>([samples, ...])</p></td>
 <td><p>Generates an enhanced box-plot of the specified samples in the CountFilter object in log10 scale.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype.html#rnalysis.filtering.CountFilter.filter_biotype" title="rnalysis.filtering.CountFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_biotype</span></code></a>([biotype, ref, ...])</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html#rnalysis.filtering.CountFilter.filter_biotype_from_gtf" title="rnalysis.filtering.CountFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_biotype_from_gtf</span></code></a>(gtf_path)</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.CountFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.CountFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_by_attribute.html#rnalysis.filtering.CountFilter.filter_by_attribute" title="rnalysis.filtering.CountFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CountFilter.filter_by_attribute</span></code></a>([...])</p></td>
 <td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>

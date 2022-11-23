@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.Filter.biotypes" href="rnalysis.filtering.Filter.biotypes.html" />
+    <link rel="next" title="rnalysis.filtering.Filter.biotypes_from_gtf" href="rnalysis.filtering.Filter.biotypes_from_gtf.html" />
     <link rel="prev" title="rnalysis.filtering.DESeqFilter.volcano_plot" href="rnalysis.filtering.DESeqFilter.volcano_plot.html" /> 
 </head>
 
@@ -73,10 +73,12 @@
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.Filter.__init__"><code class="docutils literal notranslate"><span class="pre">Filter.__init__()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html">rnalysis.filtering.Filter.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_gtf.html">rnalysis.filtering.Filter.biotypes_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_ref_table.html">rnalysis.filtering.Filter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.describe.html">rnalysis.filtering.Filter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.difference.html">rnalysis.filtering.Filter.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html">rnalysis.filtering.Filter.filter_biotype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_gtf.html">rnalysis.filtering.Filter.filter_biotype_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_ref_table.html">rnalysis.filtering.Filter.filter_biotype_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html">rnalysis.filtering.Filter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_go_annotations.html">rnalysis.filtering.Filter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_kegg_annotations.html">rnalysis.filtering.Filter.filter_by_kegg_annotations</a></li>
@@ -189,17 +191,23 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.biotypes.html#rnalysis.filtering.Filter.biotypes" title="rnalysis.filtering.Filter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.biotypes</span></code></a>([long_format, ref])</p></td>
-<td><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_gtf.html#rnalysis.filtering.Filter.biotypes_from_gtf" title="rnalysis.filtering.Filter.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.biotypes_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
+<td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.describe.html#rnalysis.filtering.Filter.describe" title="rnalysis.filtering.Filter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.describe</span></code></a>([percentiles])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.biotypes_from_ref_table.html#rnalysis.filtering.Filter.biotypes_from_ref_table" title="rnalysis.filtering.Filter.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.biotypes_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.describe.html#rnalysis.filtering.Filter.describe" title="rnalysis.filtering.Filter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.describe</span></code></a>([percentiles])</p></td>
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.difference.html#rnalysis.filtering.Filter.difference" title="rnalysis.filtering.Filter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.difference</span></code></a>(*others[, return_type, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.difference.html#rnalysis.filtering.Filter.difference" title="rnalysis.filtering.Filter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.difference</span></code></a>(*others[, return_type, ...])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype.html#rnalysis.filtering.Filter.filter_biotype" title="rnalysis.filtering.Filter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype</span></code></a>([biotype, ref, ...])</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_gtf.html#rnalysis.filtering.Filter.filter_biotype_from_gtf" title="rnalysis.filtering.Filter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_biotype_from_ref_table.html#rnalysis.filtering.Filter.filter_biotype_from_ref_table" title="rnalysis.filtering.Filter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.Filter.filter_by_attribute.html#rnalysis.filtering.Filter.filter_by_attribute" title="rnalysis.filtering.Filter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter.filter_by_attribute</span></code></a>([attributes, ...])</p></td>
 <td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
@@ -276,7 +284,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="rnalysis.filtering.DESeqFilter.volcano_plot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.DESeqFilter.volcano_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.filtering.Filter.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.filtering.Filter.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.filtering.Filter.biotypes_from_gtf.html" class="btn btn-neutral float-right" title="rnalysis.filtering.Filter.biotypes_from_gtf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

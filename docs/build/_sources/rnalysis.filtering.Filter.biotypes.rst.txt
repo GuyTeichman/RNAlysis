@@ -1,6 +1,6 @@
-rnalysis.filtering.Filter.biotypes
+rnalysis.filtering.Filter.biotypes_from_ref_table
 ==================================
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: Filter.biotypes
+.. automethod:: Filter.biotypes_from_ref_table

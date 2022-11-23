@@ -16,10 +16,12 @@
 .. autosummary::
     :toctree: .
     
-    Filter.biotypes
+    Filter.biotypes_from_gtf
+    Filter.biotypes_from_ref_table
     Filter.describe
     Filter.difference
-    Filter.filter_biotype
+    Filter.filter_biotype_from_gtf
+    Filter.filter_biotype_from_ref_table
     Filter.filter_by_attribute
     Filter.filter_by_go_annotations
     Filter.filter_by_kegg_annotations

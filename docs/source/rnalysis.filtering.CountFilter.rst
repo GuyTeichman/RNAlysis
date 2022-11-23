@@ -17,14 +17,16 @@
     :toctree: .
     
     CountFilter.average_replicate_samples
-    CountFilter.biotypes
+    CountFilter.biotypes_from_gtf
+    CountFilter.biotypes_from_ref_table
     CountFilter.box_plot
     CountFilter.clustergram
     CountFilter.describe
     CountFilter.difference
     CountFilter.differential_expression_deseq2
     CountFilter.enhanced_box_plot
-    CountFilter.filter_biotype
+    CountFilter.filter_biotype_from_gtf
+    CountFilter.filter_biotype_from_ref_table
     CountFilter.filter_by_attribute
     CountFilter.filter_by_go_annotations
     CountFilter.filter_by_kegg_annotations

@@ -16,11 +16,13 @@
 .. autosummary::
     :toctree: .
     
-    FoldChangeFilter.biotypes
+    FoldChangeFilter.biotypes_from_gtf
+    FoldChangeFilter.biotypes_from_ref_table
     FoldChangeFilter.describe
     FoldChangeFilter.difference
     FoldChangeFilter.filter_abs_log2_fold_change
-    FoldChangeFilter.filter_biotype
+    FoldChangeFilter.filter_biotype_from_gtf
+    FoldChangeFilter.filter_biotype_from_ref_table
     FoldChangeFilter.filter_by_attribute
     FoldChangeFilter.filter_by_go_annotations
     FoldChangeFilter.filter_by_kegg_annotations

@@ -1,6 +1,6 @@
-rnalysis.filtering.FoldChangeFilter.biotypes
+rnalysis.filtering.FoldChangeFilter.biotypes_from_ref_table
 ============================================
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: FoldChangeFilter.biotypes
+.. automethod:: FoldChangeFilter.biotypes_from_ref_table

@@ -1,6 +1,6 @@
-rnalysis.filtering.DESeqFilter.biotypes
+rnalysis.filtering.DESeqFilter.biotypes_from_ref_table
 =======================================
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: DESeqFilter.biotypes
+.. automethod:: DESeqFilter.biotypes_from_ref_table

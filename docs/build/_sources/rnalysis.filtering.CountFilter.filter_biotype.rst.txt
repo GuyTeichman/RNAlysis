@@ -3,4 +3,4 @@ rnalysis.filtering.CountFilter.filter\_biotype
 
 .. currentmodule:: rnalysis.filtering
 
-.. automethod:: CountFilter.filter_biotype
+.. automethod:: CountFilter.filter_biotype_from_ref_table

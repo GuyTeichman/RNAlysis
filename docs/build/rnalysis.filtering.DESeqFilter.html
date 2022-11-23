@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.filtering.DESeqFilter.biotypes" href="rnalysis.filtering.DESeqFilter.biotypes.html" />
+    <link rel="next" title="rnalysis.filtering.DESeqFilter.biotypes_from_gtf" href="rnalysis.filtering.DESeqFilter.biotypes_from_gtf.html" />
     <link rel="prev" title="rnalysis.filtering.CountFilter.violin_plot" href="rnalysis.filtering.CountFilter.violin_plot.html" /> 
 </head>
 
@@ -72,11 +72,13 @@
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.DESeqFilter.__init__"><code class="docutils literal notranslate"><span class="pre">DESeqFilter.__init__()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html">rnalysis.filtering.DESeqFilter.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes_from_gtf.html">rnalysis.filtering.DESeqFilter.biotypes_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes_from_ref_table.html">rnalysis.filtering.DESeqFilter.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html">rnalysis.filtering.DESeqFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html">rnalysis.filtering.DESeqFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html">rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html">rnalysis.filtering.DESeqFilter.filter_biotype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype_from_gtf.html">rnalysis.filtering.DESeqFilter.filter_biotype_from_gtf</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype_from_ref_table.html">rnalysis.filtering.DESeqFilter.filter_biotype_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_attribute.html">rnalysis.filtering.DESeqFilter.filter_by_attribute</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_go_annotations.html">rnalysis.filtering.DESeqFilter.filter_by_go_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_kegg_annotations.html">rnalysis.filtering.DESeqFilter.filter_by_kegg_annotations</a></li>
@@ -191,20 +193,26 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes.html#rnalysis.filtering.DESeqFilter.biotypes" title="rnalysis.filtering.DESeqFilter.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.biotypes</span></code></a>([long_format, ref])</p></td>
-<td><p>Returns a DataFrame of the biotypes in the Filter object and their count.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes_from_gtf.html#rnalysis.filtering.DESeqFilter.biotypes_from_gtf" title="rnalysis.filtering.DESeqFilter.biotypes_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.biotypes_from_gtf</span></code></a>(gtf_path[, ...])</p></td>
+<td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html#rnalysis.filtering.DESeqFilter.describe" title="rnalysis.filtering.DESeqFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.describe</span></code></a>([percentiles])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.biotypes_from_ref_table.html#rnalysis.filtering.DESeqFilter.biotypes_from_ref_table" title="rnalysis.filtering.DESeqFilter.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.biotypes_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Returns a DataFrame describing the biotypes in the table and their count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.describe.html#rnalysis.filtering.DESeqFilter.describe" title="rnalysis.filtering.DESeqFilter.describe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.describe</span></code></a>([percentiles])</p></td>
 <td><p>Generate descriptive statistics that summarize the central tendency, dispersion and shape         of the dataset’s distribution, excluding NaN values.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.difference</span></code></a>(*others[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.difference.html#rnalysis.filtering.DESeqFilter.difference" title="rnalysis.filtering.DESeqFilter.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.difference</span></code></a>(*others[, ...])</p></td>
 <td><p>Keep only the features that exist in the first Filter object/set but NOT in the others.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_abs_log2_fold_change</span></code></a>([...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change.html#rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change" title="rnalysis.filtering.DESeqFilter.filter_abs_log2_fold_change"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_abs_log2_fold_change</span></code></a>([...])</p></td>
 <td><p>Filters out all features whose absolute log2 fold change is below the indicated threshold.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype.html#rnalysis.filtering.DESeqFilter.filter_biotype" title="rnalysis.filtering.DESeqFilter.filter_biotype"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_biotype</span></code></a>([biotype, ref, ...])</p></td>
-<td><p>Filters out all features that do not match the indicated biotype/biotypes.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype_from_gtf.html#rnalysis.filtering.DESeqFilter.filter_biotype_from_gtf" title="rnalysis.filtering.DESeqFilter.filter_biotype_from_gtf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_biotype_from_gtf</span></code></a>(gtf_path)</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_biotype_from_ref_table.html#rnalysis.filtering.DESeqFilter.filter_biotype_from_ref_table" title="rnalysis.filtering.DESeqFilter.filter_biotype_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_biotype_from_ref_table</span></code></a>([...])</p></td>
+<td><p>Filters out all features that do not match the indicated biotype/biotypes         (for example: 'protein_coding', 'ncRNA', etc).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.filtering.DESeqFilter.filter_by_attribute.html#rnalysis.filtering.DESeqFilter.filter_by_attribute" title="rnalysis.filtering.DESeqFilter.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESeqFilter.filter_by_attribute</span></code></a>([...])</p></td>
 <td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
@@ -293,7 +301,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="rnalysis.filtering.CountFilter.violin_plot.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.violin_plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.filtering.DESeqFilter.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.filtering.DESeqFilter.biotypes_from_gtf.html" class="btn btn-neutral float-right" title="rnalysis.filtering.DESeqFilter.biotypes_from_gtf" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

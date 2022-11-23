@@ -16,11 +16,13 @@
 .. autosummary::
     :toctree: .
     
-    DESeqFilter.biotypes
+    DESeqFilter.biotypes_from_gtf
+    DESeqFilter.biotypes_from_ref_table
     DESeqFilter.describe
     DESeqFilter.difference
     DESeqFilter.filter_abs_log2_fold_change
-    DESeqFilter.filter_biotype
+    DESeqFilter.filter_biotype_from_gtf
+    DESeqFilter.filter_biotype_from_ref_table
     DESeqFilter.filter_by_attribute
     DESeqFilter.filter_by_go_annotations
     DESeqFilter.filter_by_kegg_annotations

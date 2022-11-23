@@ -46,7 +46,7 @@ Glossary
    Biotype Reference Table
       A `csv` table that contains information about the biotype (protein coding, pseudogene, lncRNA, etc...) of genomic features.
       You can define such table to be your default Biotype Reference Table using the function `general.set_biotype_ref_table_path()`.
-      Various functions in RNAlysis, such `Filter.biotypes()` and `Filter.filter_biotype()` will use the information in the Biotype Reference Table
+      Various functions in RNAlysis, such `Filter.biotypes_from_ref_table()` and `Filter.filter_biotype_from_ref_table()` will use the information in the Biotype Reference Table
       to filter data based on biotype, or display information about the biotype of the genomic features in your Filter objects.
 
    FeatureSet

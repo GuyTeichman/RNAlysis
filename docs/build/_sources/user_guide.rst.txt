@@ -308,16 +308,16 @@ Using a Biotype Reference Table for filter operations
 
 A :term:`Biotype Reference Table` contains annotations of the biotype of each genomic features ('protein_coding', 'piRNAs', 'lincRNAs', 'pseudogenes', etc).
 You can read more about the :term:`Biotype Reference Table` format and loading a :term:`Biotype Reference Table` in the :ref:`reference-table-ref` section.
-Using the function Filter.filter_biotype(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table::
+Using the function Filter.filter_biotype_from_ref_table(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table::
 
     >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> d.filter_biotype('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    >>> d.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')
     Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
 
-You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes()::
+You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes_from_ref_table()::
 
     >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> d.biotypes()
+    >>> d.biotypes_from_ref_table()
                     gene
     biotype
     protein_coding    26
@@ -326,7 +326,7 @@ You can also view the number of genomic features belonging to each biotype using
 
 Or view more elaborated descriptive statistics for eahc biotype by specifying return_format='long'::
 
-    >>> d.biotypes(return_format='long', ref='tests/test_files/biotype_ref_table_for_tests.csv')
+    >>> d.biotypes_from_ref_table(return_format='long', ref='tests/test_files/biotype_ref_table_for_tests.csv')
 
                    baseMean               ...           padj
                       count         mean  ...            75%            max
@@ -889,7 +889,7 @@ You can perform a randomization test to examine whether the fold change of a gro
 To perform a randomization test you need two :term:`FoldChangeFilter` objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example::
 
     >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv' , 'numerator' , 'denominator')
-    >>> f_background = f.filter_biotype('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
+    >>> f_background = f.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
     Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.
     >>> f_test = f_background.filter_by_attribute('attribute1', ref='tests/test_files/attr_ref_table_for_examples.csv', inplace=False)
     Filtered 6 features, leaving 7 of the original 13 features. Filtering result saved to new object.
@@ -946,8 +946,8 @@ We can also specify the function's arguments. We can specify both non-keyworded 
 
     >>> from *RNAlysis* import filtering
     >>> pipe = filtering.Pipeline()
-    >>> pipe.add_function(filtering.Filter.filter_biotype, biotype='protein_coding')
-    Added function 'Filter.filter_biotype(biotype='protein_coding')' to the pipeline.
+    >>> pipe.add_function(filtering.Filter.filter_biotype_from_ref_table, biotype='protein_coding')
+    Added function 'Filter.filter_biotype_from_ref_table(biotype='protein_coding')' to the pipeline.
     >>> pipe.add_function('number_filters', 'column1', 'gt', value=5, opposite=True)
     Added function 'Filter.number_filters('column1', 'gt', value=5, opposite=True)' to the pipeline.
 
@@ -955,10 +955,10 @@ We can also view the functions currently in the Pipeline object, their arguments
 
     >>> print(pipe)
     Pipeline for Filter objects:
-        Filter.filter_biotype(biotype='protein_coding')
+        Filter.filter_biotype_from_ref_table(biotype='protein_coding')
         Filter.number_filters('column1', 'gt', value=5, opposite=True)
     >>> print(repr(pipe))
-    Pipeline('Filter'): Filter.filter_biotype(biotype='protein_coding')-->Filter.number_filters('column1', 'gt', value=5, opposite=True)
+    Pipeline('Filter'): Filter.filter_biotype_from_ref_table(biotype='protein_coding')-->Filter.number_filters('column1', 'gt', value=5, opposite=True)
 
 
 We can also remove functions from the Pipeline::
@@ -1003,12 +1003,12 @@ If we apply a Pipeline with functions that return additional outputs (such as Fi
     >>> from *RNAlysis* import filtering
     >>> # create the pipeline
     >>> pipe = filtering.Pipeline('DESeqFilter')
-    >>> pipe.add_function('biotypes', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.biotypes(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
-    >>> pipe.add_function('filter_biotype', 'protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.filter_biotype('protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
-    >>> pipe.add_function('biotypes', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.biotypes(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('filter_biotype_from_ref_table', 'protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
+    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
+    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
     >>> # load the Filter object
     >>> d = filtering.DESeqFilter('tests/test_files/test_files/test_deseq_with_nan.csv')
     >>> # apply the Pipeline not-inplace
@@ -1034,7 +1034,7 @@ If we apply a Pipeline with functions that return additional outputs (such as Fi
     Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
     Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
 
-When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes' is under the key 'biotypes_1', and the second call to 'biotypes' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
+When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes_from_ref_table' is under the key 'biotypes_1', and the second call to 'biotypes_from_ref_table' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
 We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
 
 ****************************
