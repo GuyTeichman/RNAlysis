@@ -38,7 +38,7 @@ from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
 
-from rnalysis.utils.param_typing import GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, GENE_ID_TYPES
+from rnalysis.utils.param_typing import BIOTYPES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, GENE_ID_TYPES
 
 
 def readable_name(name: str):
