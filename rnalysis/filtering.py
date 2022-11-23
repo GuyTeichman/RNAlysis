@@ -473,6 +473,8 @@ class Filter:
                         ref_srs = pd.Series(mapping, name='biotype')
                         if len(ref_srs.index.intersection(self.df.index)) == 0:
                             continue
+
+                        pbar.update(8)
                         return ref_srs
             raise ValueError("Failed to map features to biotypes with the given GTF file and parameters. "
                              "Please try again with different parameters or a different GTF file. ")
@@ -483,6 +485,29 @@ class Filter:
                                 attribute_name: Union[Literal[BIOTYPE_ATTRIBUTE_NAMES], str] = 'gene_biotype',
                                 feature_type: Literal['gene', 'transcript'] = 'gene',
                                 opposite: bool = False, inplace: bool = True):
+        """
+        Filters out all features that do not match the indicated biotype/biotypes \
+        (for example: 'protein_coding', 'ncRNA', etc). \
+        The data about feature biotypes is drawn from a GTF (Gene transfer format) file supplied by the user.
+
+        :param gtf_path: Path to your GTF (Gene transfer format) file. The file should match the type of \
+        gene names/IDs you use in your table, and should contain an attribute describing biotype.
+        :type gtf_path: str or Path
+        :param biotype: the biotypes which will not be filtered out.
+        :type biotype: str or list of strings
+        :param attribute_name: name of the attribute in your GTF file that describes feature biotype.
+        :type attribute_name: str (default='gene_biotype')
+        :param feature_type: determined whether the features/rows in your data table describe \
+        individual genes or transcripts.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :type opposite: bool
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        """
         biotype = parsing.data_to_list(biotype, sort=True)
         # make sure 'biotype' is a list of strings
         assert validation.isinstanceiter(biotype, str), "biotype must be a string or a list of strings!"
@@ -498,7 +523,6 @@ class Filter:
         # gene names which remain after filtering are True in the mask AND were previously in the df
         gene_names = ref_srs[mask].index.intersection(self.df.index)
         new_df = self.df.loc[gene_names]
-        pbar.update(8)
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Filter by feature biotype (based on a reference table)')
@@ -508,8 +532,9 @@ class Filter:
                                       inplace: bool = True):
 
         """
-        Filters out all features that do not match the indicated biotype/biotypes. \
-        Legal inputs: 'protein_coding','pseudogene','piRNA','miRNA','ncRNA','lincRNA','rRNA','snRNA','snoRNA'.
+        Filters out all features that do not match the indicated biotype/biotypes \
+        (for example: 'protein_coding', 'ncRNA', etc). \
+        The data about feature biotypes is drawn from a Biotype Reference Table supplied by the user.
 
         :type biotype: string or list of strings
         :param biotype: the biotypes which will not be filtered out.
@@ -522,8 +547,6 @@ class Filter:
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
-        :return: If 'inplace' is False, returns a new instance of Filter object.
-
 
         :Examples:
             >>> from rnalysis import filtering
@@ -1073,9 +1096,9 @@ class Filter:
         :param feature_type: determined whether the features/rows in your data table describe \
         individual genes or transcripts.
         :type feature_type: 'gene' or 'transcript' (default='gene')
-        :type long_format: 'short' or 'long' (default='short')
-        :param long_format: 'short' returns a short-form DataFrame, which states the biotypes \
-        in the Filter object and their count. 'long' returns a long-form DataFrame,
+        :type long_format: bool (default=False)
+        :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
+        in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :rtype: pandas.DataFrame
         :returns: a pandas DataFrame showing the number of values belonging to each biotype, \
@@ -1111,9 +1134,9 @@ class Filter:
         Returns a DataFrame describing the biotypes in the table and their count. \
         The data about feature biotypes is drawn from a Biotype Reference Table supplied by the user.
 
-        :type long_format: 'short' or 'long' (default='short')
-        :param long_format: 'short' returns a short-form DataFrame, which states the biotypes \
-        in the Filter object and their count. 'long' returns a long-form DataFrame,
+        :type long_format: bool (default=False)
+        :param long_format:if True, returns a short-form DataFrame, which states the biotypes \
+        in the Filter object and their count. Otherwise, returns a long-form DataFrame,
         which also provides descriptive statistics of each column per biotype.
         :param ref: Name of the biotype reference table used to determine biotype. Default is ce11 (included in the package).
         :rtype: pandas.DataFrame
