@@ -184,8 +184,8 @@ class TableColumnGroupPicker(TableColumnPicker):
 
     def _get_groups_in_use(self):
         existing_groups = set()
-        for combo, col_name in zip(self.column_combos, self.columns):
-            if combo.isEnabled():
+        for check, combo, col_name in zip(self.column_checks,self.column_combos, self.columns):
+            if check.isChecked():
                 grp = combo.currentText()
                 existing_groups.add(grp)
         return sorted(existing_groups)
