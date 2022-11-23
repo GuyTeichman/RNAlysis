@@ -27,8 +27,6 @@ from requests.adapters import HTTPAdapter, Retry
 from tqdm.auto import tqdm
 from sys import executable
 
-from utils import parsing
-
 try:
     from typing import Literal
 except ImportError:
