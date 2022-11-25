@@ -39,7 +39,7 @@ This is not a mandatory step, but if we don't do it, *RNAlysis* will warn us whe
   :alt: Loading a table into *RNAlysis* - set the table as pre-normalized
 
 Finally, we can click the "start" button to actually open our table on *RNAlysis*.
-The window will now display a preview of our table, as well as a a short summary of our table's content (table name, table type, number of rows and columns).
+The window will now display a preview of our table, as well as a short summary of our table's content (table name, table type, number of rows and columns).
 
 At the bottom of the window we can also see a log box - this is where *RNAlysis* will display notes and warnings regarding our analysis.
 
@@ -67,7 +67,7 @@ Filter out lowly-expressed genes
 We want to filter out the genes that have not been expressed or that have low expression across all samples.
 Lowly-expressed genes can negatively affect our analysis downstream, since the % error in the expression of these genes is relatively high, and these genes are likely to add noise rather than useful signal to our analysis.
 
-In this particular example we also want to analyze a fairly small gruop of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
+In this particular example, we also want to analyze a fairly small gruop of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
 Therefore, we are going to filter our table, so that we keep only genes with 50 or more normalized reads in at least 1 experimental condition.
 
 To apply a filtering function to our table, click on the "Filter" tab, and select a function from the drop-down menu that opens:
@@ -76,7 +76,7 @@ To apply a filtering function to our table, click on the "Filter" tab, and selec
   :width: 600
   :alt: Choose a filtering function
 
-*RNAlysis* contains a wide diversity of filtering functions - filtering genes by expression level, fold change direction and magnitude, statistical significance, removing rows with missing data, and many more.
+*RNAlysis* contains a wide array of filtering functions - filtering genes by expression level, fold change direction and magnitude, statistical significance, removing rows with missing data, and many more.
 We are going to select "Filter genes with low expression in all columns". This function will filter our any gene whose expression level is lower than X in every single column. This means we only keep genes that are desirably expressed in at least one experimental condition.
 If you are not sure what a function does, you can click on the blue question mark button next to the function's name to read a short description, or go to the function's help page by clicking on the blue link at the bottom of the main window.
 
@@ -226,7 +226,7 @@ We can then set the value of the parameter `n_clusters` to 'gap', to indicate th
   :alt: K-Medoids clustering setup - choose the number of clusters using the Gap Statistic
 
 Next, we can set the distance metric. Different distance metrics can be more or less effective on specific types of data.
-*RNAlysis* offers a large array of distance metrics, about which you can read in the *RNAlysis* user guide.
+*RNAlysis* offers a large array of distance metrics, about which you can read in the *RNAlysis* `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html#data-clustering-with-countfilter>`_.
 We will use a lesser-known distance metric called YR1, that was developed especially for time-series gene expression data and implemented in *RNAlysis*. You can read more about it in `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_:
 
 .. image:: /tutorial_screenshots/01g02_kmedoids.png
@@ -241,7 +241,7 @@ We can now scroll all the way down, click the "Apply" button, and wait for the a
 
 Since K-Medoids is not a deterministic algorithm (it has randomized starting conditions every time you use it), the results you get will probably not be identical to those appearing in this tutorial, but they should be similar to what we observe here.
 If you want to make sure your clustering results are 100% reproducible, you can set the `random_seed` parameter when setting up your clustering setup to a specific number.
-Re-running the algorithm with an identical random seed wiil ensure that you get the exact same results every time.
+Re-running the algorithm with an identical random seed will ensure that you get the exact same results every time.
 
 One the clustering anslysis is finished, a few figures will open up. Let's examine them one by one.
 The first figure will show us the results of the Gap Statistic algorithm. The graph on the left will show us, for each value of `n_clusters` tested, the natural logarithm (ln) of within-cluster dispersion.
@@ -369,6 +369,7 @@ Let's add the two clustering setups we used earlier, plus a few more:
   :alt: CLICOM clustering - multiple clustering setups
 
 I chose to add, in addition to the two clustering setups from earlier, the following three clustering setups:
+
 * K-Medoids clustering with 7 clusters and the Spearman distance metric
 * Hierarchical clustering 8 clusters, Euclidean distance metric and Ward linkage
 * HDBSCAN clustering with the Jackknife distance metric and minimal cluster size of 150

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 3.2.0 documentation</title>
+  <title>A-to-Z tutorial - example analysis &mdash; RNAlysis 3.2.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -173,7 +173,7 @@ We will then use the drop-down menu to change our table type from “Other” to
 This is not a mandatory step, but if we don’t do it, <em>RNAlysis</em> will warn us whenever we run analyses that expect normalized values.</p>
 <a class="reference internal image-reference" href="_images/01a02_load_table.png"><img alt="Loading a table into *RNAlysis* - set the table as pre-normalized" src="_images/01a02_load_table.png" style="width: 600px;" /></a>
 <p>Finally, we can click the “start” button to actually open our table on <em>RNAlysis</em>.
-The window will now display a preview of our table, as well as a a short summary of our table’s content (table name, table type, number of rows and columns).</p>
+The window will now display a preview of our table, as well as a short summary of our table’s content (table name, table type, number of rows and columns).</p>
 <p>At the bottom of the window we can also see a log box - this is where <em>RNAlysis</em> will display notes and warnings regarding our analysis.</p>
 <a class="reference internal image-reference" href="_images/01b01_view_table.png"><img alt="Preview the loaded table" src="_images/01b01_view_table.png" style="width: 600px;" /></a>
 <p>If we want to see the entire table, we can click on the “View full table” button, and the entire table will appear in a new window:</p>
@@ -187,11 +187,11 @@ The window will now display a preview of our table, as well as a a short summary
 <h4>Filter out lowly-expressed genes<a class="headerlink" href="#filter-out-lowly-expressed-genes" title="Permalink to this heading"></a></h4>
 <p>We want to filter out the genes that have not been expressed or that have low expression across all samples.
 Lowly-expressed genes can negatively affect our analysis downstream, since the % error in the expression of these genes is relatively high, and these genes are likely to add noise rather than useful signal to our analysis.</p>
-<p>In this particular example we also want to analyze a fairly small gruop of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
+<p>In this particular example, we also want to analyze a fairly small gruop of genes. This is because later down the line we will take our data through clustering analysis, and trying to cluster such a large group of genes could take your computer an extremely long time to finish.
 Therefore, we are going to filter our table, so that we keep only genes with 50 or more normalized reads in at least 1 experimental condition.</p>
 <p>To apply a filtering function to our table, click on the “Filter” tab, and select a function from the drop-down menu that opens:</p>
 <a class="reference internal image-reference" href="_images/01c01_filter_low_reads.png"><img alt="Choose a filtering function" src="_images/01c01_filter_low_reads.png" style="width: 600px;" /></a>
-<p><em>RNAlysis</em> contains a wide diversity of filtering functions - filtering genes by expression level, fold change direction and magnitude, statistical significance, removing rows with missing data, and many more.
+<p><em>RNAlysis</em> contains a wide array of filtering functions - filtering genes by expression level, fold change direction and magnitude, statistical significance, removing rows with missing data, and many more.
 We are going to select “Filter genes with low expression in all columns”. This function will filter our any gene whose expression level is lower than X in every single column. This means we only keep genes that are desirably expressed in at least one experimental condition.
 If you are not sure what a function does, you can click on the blue question mark button next to the function’s name to read a short description, or go to the function’s help page by clicking on the blue link at the bottom of the main window.</p>
 <p>Once we choose a function, the window will expand, and the filtering function’s parameters will be displayed below. We can modify these parameters to choose exactly how to filter our table.</p>
@@ -279,14 +279,14 @@ We will use the Gap Statistic method to determine some good options for the numb
 We can then set the value of the parameter <cite>n_clusters</cite> to ‘gap’, to indicate that we want to use the Gap Statistic to determine the number of clusters in this analysis:</p>
 <a class="reference internal image-reference" href="_images/01g01_kmedoids.png"><img alt="K-Medoids clustering setup - choose the number of clusters using the Gap Statistic" src="_images/01g01_kmedoids.png" style="width: 600px;" /></a>
 <p>Next, we can set the distance metric. Different distance metrics can be more or less effective on specific types of data.
-<em>RNAlysis</em> offers a large array of distance metrics, about which you can read in the <em>RNAlysis</em> user guide.
+<em>RNAlysis</em> offers a large array of distance metrics, about which you can read in the <em>RNAlysis</em> <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html#data-clustering-with-countfilter">user guide</a>.
 We will use a lesser-known distance metric called YR1, that was developed especially for time-series gene expression data and implemented in <em>RNAlysis</em>. You can read more about it in <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>:</p>
 <a class="reference internal image-reference" href="_images/01g02_kmedoids.png"><img alt="K-Medoids clustering setup - choose the distance metric" src="_images/01g02_kmedoids.png" style="width: 600px;" /></a>
 <p>We can now scroll all the way down, click the “Apply” button, and wait for the analysis to finish:</p>
 <a class="reference internal image-reference" href="_images/01g03_kmedoids.png"><img alt="K-Medoids clustering - loading screen" src="_images/01g03_kmedoids.png" style="width: 600px;" /></a>
 <p>Since K-Medoids is not a deterministic algorithm (it has randomized starting conditions every time you use it), the results you get will probably not be identical to those appearing in this tutorial, but they should be similar to what we observe here.
 If you want to make sure your clustering results are 100% reproducible, you can set the <cite>random_seed</cite> parameter when setting up your clustering setup to a specific number.
-Re-running the algorithm with an identical random seed wiil ensure that you get the exact same results every time.</p>
+Re-running the algorithm with an identical random seed will ensure that you get the exact same results every time.</p>
 <p>One the clustering anslysis is finished, a few figures will open up. Let’s examine them one by one.
 The first figure will show us the results of the Gap Statistic algorithm. The graph on the left will show us, for each value of <cite>n_clusters</cite> tested, the natural logarithm (ln) of within-cluster dispersion.
 We expect this value to go down the more clusters there are (the more clusters there are, the fewer genes will be in each cluster - therefore the genes within each cluster will be more similar to each other), and therefore we show both the actual dispersion values for the clustering solutions we calculated (the blue line), and also dispersion values for clustering solutions on random data, drawn from the same distribution (the orange line).
@@ -359,10 +359,12 @@ To add a setup, pick an algorithm from the drop-down menu, set it’s parameters
 <a class="reference internal image-reference" href="_images/01g23_clicom.png"><img alt="CLICOM clustering - examine added setups" src="_images/01g23_clicom.png" style="width: 600px;" /></a>
 <p>Let’s add the two clustering setups we used earlier, plus a few more:</p>
 <a class="reference internal image-reference" href="_images/01g24_clicom.png"><img alt="CLICOM clustering - multiple clustering setups" src="_images/01g24_clicom.png" style="width: 600px;" /></a>
-<p>I chose to add, in addition to the two clustering setups from earlier, the following three clustering setups:
-* K-Medoids clustering with 7 clusters and the Spearman distance metric
-* Hierarchical clustering 8 clusters, Euclidean distance metric and Ward linkage
-* HDBSCAN clustering with the Jackknife distance metric and minimal cluster size of 150</p>
+<p>I chose to add, in addition to the two clustering setups from earlier, the following three clustering setups:</p>
+<ul class="simple">
+<li><p>K-Medoids clustering with 7 clusters and the Spearman distance metric</p></li>
+<li><p>Hierarchical clustering 8 clusters, Euclidean distance metric and Ward linkage</p></li>
+<li><p>HDBSCAN clustering with the Jackknife distance metric and minimal cluster size of 150</p></li>
+</ul>
 <p>Once we are happy with the clustering solutions and tuning parameters, we can click on the “Start CLICOM” button, and see progress reports in the output box on the main window of <em>RNAlysis</em>.</p>
 <a class="reference internal image-reference" href="_images/01g25_clicom.png"><img alt="CLICOM clustering loading screen" src="_images/01g25_clicom.png" style="width: 600px;" /></a>
 <p>Let’s look at the final result:</p>
