@@ -2,6 +2,14 @@
 History
 =======
 
+3.2.2 (2022-11-25)
+------------------
+
+
+Fixed
+******
+* Fixed bug with DESeq2 automatic installation on Windows computers.
+
 3.2.1 (2022-11-25)
 ------------------
 
