@@ -118,7 +118,47 @@ Credits
 
 How do I cite *RNAlysis*?
 **************************
-Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software (Python package version 3.2.0).
+If you use *RNAlysis* in your research, please cite::
+
+    Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software (Python package version 3.2.0).
+
+
+If you use the *CutAdapt* adapter trimming tool in your research, please cite::
+
+    Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads.
+    EMBnet.journal, 17(1), pp. 10-12.
+    https://doi.org/10.14806/ej.17.1.200
+
+If you use the *kallisto* RNA sequencing quantification tool in your research, please cite::
+
+    Bray, N., Pimentel, H., Melsted, P. et al.
+    Near-optimal probabilistic RNA-seq quantification.
+    Nat Biotechnol 34, 525–527 (2016).
+    https://doi.org/10.1038/nbt.3519
+
+If you use the *DESeq2* differential expression tool in your research, please cite::
+
+    Love MI, Huber W, Anders S (2014).
+    “Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.”
+    Genome Biology, 15, 550.
+    https://doi.org/10.1186/s13059-014-0550-8
+
+If you use the *HDBSCAN* clustering feature in your research, please cite::
+
+     L. McInnes, J. Healy, S. Astels, hdbscan:
+    Hierarchical density based clustering In:
+    Journal of Open Source Software, The Open Journal, volume 2, number 11. 2017
+    https://doi.org/10.1371/journal.pcbi.0030039
+
+If you use the *XL-mHG* single-set enrichment test in your research, please cite::
+
+    Eden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).
+     Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.
+    https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>
+
+    Wagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.
+    https://doi.org/10.48550/arXiv.1507.07905
+
 
 Development Lead
 ******************
