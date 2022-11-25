@@ -2,7 +2,18 @@
 History
 =======
 
-3.2 (2022-11-23)
+3.2.1 (2022-11-25)
+------------------
+
+Changed
+*******
+* Updated citation information for *RNAlysis*
+
+Fixed
+******
+* Fixed typos in the *RNAlysis* tutorial
+
+3.2.0 (2022-11-23)
 ------------------
 * This version introduces quality-of-life changes to the graphical user interface, functions for translating gene IDs and running differential expression analysis, and extends RNAlysis to support Python versions 3.9 and 3.10.
 

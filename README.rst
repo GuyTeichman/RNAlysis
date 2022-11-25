@@ -120,8 +120,9 @@ How do I cite *RNAlysis*?
 **************************
 If you use *RNAlysis* in your research, please cite::
 
-    Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software (Python package version 3.2.0).
-
+    Teichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).
+    RNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.
+    https://doi.org/10.1101/2022.11.25.517851
 
 If you use the *CutAdapt* adapter trimming tool in your research, please cite::
 

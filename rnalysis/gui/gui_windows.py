@@ -597,8 +597,11 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
 
 class HowToCiteWindow(gui_widgets.MinMaxDialog):
     CITATION_RNALYSIS = f"""
-    Teichman, G. (2022) RNAlysis: RNA Sequencing analysis software
-    (Python package version {__version__})."""
+    Teichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).
+    RNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.
+    <br>
+    <a href=https://doi.org/10.1101/2022.11.25.517851>doi.org/10.1101/2022.11.25.517851</a>
+    """
     CITATION_CUTADAPT = f"""
     Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads.
     EMBnet.journal, 17(1), pp. 10-12.
