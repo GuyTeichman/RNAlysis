@@ -29,7 +29,7 @@ def get_extra_requires(path, add_all=True):
     return extra_deps
 
 
-with open('README.rst') as readme_file:
+with open('README.rst', encoding='utf8') as readme_file:
     readme = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
