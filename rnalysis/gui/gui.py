@@ -3020,7 +3020,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
         self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
-        self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
+        self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+E"))
 
     @QtCore.pyqtSlot()
     def check_for_updates(self, confirm_updated: bool = True):
