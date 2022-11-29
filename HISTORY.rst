@@ -1,6 +1,15 @@
 =======
 History
 =======
+3.3.0 (2022-12-15)
+------------------
+* This version introduced quality-of-life improvements to the graphical user interface
+
+Changed
+*******
+* All open tabs are now always visible in the main menu screen. Tab names are now shortened with ellipsis if nessecary.
+* The right-click context menu of the main menu tabs now allows users to open a new tab at a specific position, or close a specific tab/tabs to the right/tabs to the left/all other tabs.
+
 
 3.2.2 (2022-11-25)
 ------------------

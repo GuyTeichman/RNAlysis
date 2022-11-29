@@ -7,7 +7,6 @@ import os
 import sys
 import time
 import typing
-import typing_extensions
 import warnings
 from collections import OrderedDict
 from pathlib import Path
@@ -17,12 +16,13 @@ from typing import List, Tuple, Union, Callable
 import matplotlib
 import numpy as np
 import pandas as pd
+import typing_extensions
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib.externals.loky import get_reusable_executor
 
 from rnalysis import fastq, filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_tutorial
-from rnalysis.utils import io, validation, generic, parsing, settings, enrichment_runner, clustering
+from rnalysis.utils import io, validation, generic, parsing, settings, clustering
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
                     'Fold change': filtering.FoldChangeFilter, 'Other': filtering.Filter}
@@ -2238,6 +2238,7 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
         self.tabBar().setDocumentMode(True)
         self.tabBar().setMovable(True)
         self.setTabsClosable(True)
+        self.setElideMode(QtCore.Qt.TextElideMode.ElideMiddle)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         if event.button() == QtCore.Qt.LeftButton:
@@ -2281,6 +2282,24 @@ class RenameCommand(QtWidgets.QUndoCommand):
 
     def redo(self):
         self.tab._rename(self.new_name)
+
+
+class CloseEmptyTabCommand(QtWidgets.QUndoCommand):
+    def __init__(self, tab_container: ReactiveTabWidget, tab_index: int, description: str):
+        super().__init__(description)
+        self.tab_container = tab_container
+        self.tab_index = tab_index
+
+    def undo(self):
+        item = io.load_cached_gui_file(self.filename)
+        if isinstance(item, pd.DataFrame):
+            item = self.obj_type.from_dataframe(item, self.tab_name, **self.kwargs)
+        self.tab_container
+        self.tab_container.new_tab_from_item(item, self.tab_name)
+        self.tab_container.setTabIcon(self.tab_container.currentIndex(), self.tab_icon)
+
+    def redo(self):
+        self.tab_container.removeTab(self.tab_index)
 
 
 class CloseTabCommand(QtWidgets.QUndoCommand):
@@ -2511,6 +2530,13 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(int)
     def init_tab_contextmenu(self, ind: int):
         self.tab_contextmenu = QtWidgets.QMenu(self)
+
+        new_to_right_action = QtWidgets.QAction("New tab to the right")
+        new_to_right_action.triggered.connect(
+            functools.partial(self.add_new_tab_at, index=ind + 1, name=None, is_set=False))
+        self.tab_contextmenu.addAction(new_to_right_action)
+        self.tab_contextmenu.addSeparator()
+
         color_menu = self.tab_contextmenu.addMenu("Change tab &color")
         actions = []
         for color in gui_graphics.COLOR_ICONS:
@@ -2522,8 +2548,8 @@ class MainWindow(QtWidgets.QMainWindow):
         reset_action = QtWidgets.QAction("Reset color")
         reset_action.triggered.connect(functools.partial(self.set_tab_icon, ind, icon_name=None))
         color_menu.addAction(reset_action)
-
-        sort_menu = self.tab_contextmenu.addMenu("Sort tabs")
+        self.tab_contextmenu.addSeparator()
+        # sort_menu = self.tab_contextmenu.addMenu("Sort tabs")
         sort_by_name = QtWidgets.QAction("Sort by tab &name")
         sort_by_name.triggered.connect(self.sort_tabs_by_name)
         sort_by_time = QtWidgets.QAction("Sort by creation &time")
@@ -2534,7 +2560,18 @@ class MainWindow(QtWidgets.QMainWindow):
         sort_by_size.triggered.connect(self.sort_tabs_by_n_features)
         reverse = QtWidgets.QAction("Reverse order")
         reverse.triggered.connect(self.sort_reverse)
-        sort_menu.addActions([sort_by_name, sort_by_time, sort_by_type, sort_by_size, reverse])
+        self.tab_contextmenu.addActions([sort_by_name, sort_by_time, sort_by_type, sort_by_size, reverse])
+        self.tab_contextmenu.addSeparator()
+
+        close_this_action = QtWidgets.QAction("Close")
+        close_this_action.triggered.connect(functools.partial(self.close_tab, ind))
+        close_others_action = QtWidgets.QAction("Close other tabs")
+        close_others_action.triggered.connect(functools.partial(self.close_other_tabs, ind))
+        close_right_action = QtWidgets.QAction("Close tabs to the right")
+        close_right_action.triggered.connect(functools.partial(self.close_tabs_to_the_right, ind))
+        close_left_action = QtWidgets.QAction("Close tabs to the left")
+        close_left_action.triggered.connect(functools.partial(self.close_tabs_to_the_left, ind))
+        self.tab_contextmenu.addActions([close_this_action, close_others_action, close_right_action, close_left_action])
 
         self.tab_contextmenu.exec(QtGui.QCursor.pos())
 
@@ -2618,6 +2655,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.tabs.tabBar().moveTab(from_ind, to_ind)
 
+    def add_new_tab_at(self, index: int, name: str = None, is_set: bool = False):
+        self.add_new_tab(name, is_set)
+        self.tabs.tabBar().moveTab(self.tabs.currentIndex(), index)
+
     def add_new_tab(self, name: str = None, is_set: bool = False):
         new_undo_stack = QtWidgets.QUndoStack()
         self.undo_group.addStack(new_undo_stack)
@@ -2646,6 +2687,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             new_name = new_name.rstrip('*')
         self.tabs.setTabText(self.tabs.currentIndex(), new_name)
+        self.tabs.setTabToolTip(self.tabs.currentIndex(), new_name)
 
     @QtCore.pyqtSlot()
     def remove_tab_asterisk(self):
@@ -2789,7 +2831,20 @@ class MainWindow(QtWidgets.QMainWindow):
         ind = self.tabs.currentIndex()
         self.close_tab(ind)
 
-    def close_tab(self, index):
+    def close_other_tabs(self, index: int):
+        self.close_tabs_to_the_right(index)
+        self.close_tabs_to_the_left(index)
+
+    def close_tabs_to_the_right(self, index: int):
+        while self.tabs.count() > index + 1:
+            self.close_tab(self.tabs.count() - 1)
+
+    def close_tabs_to_the_left(self, index: int):
+        start_count = self.tabs.count()
+        while self.tabs.count() > start_count - index:
+            self.close_tab(0)
+
+    def close_tab(self, index: int):
         if self.tabs.widget(index).is_empty():
             self.tabs.removeTab(index)
         else:

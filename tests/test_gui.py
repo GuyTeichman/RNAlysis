@@ -1,9 +1,7 @@
-import pytest
 import matplotlib
-import copy
+import pytest
 
 matplotlib.use('Agg')
-from rnalysis import filtering, enrichment
 from rnalysis.gui.gui import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
@@ -1944,12 +1942,60 @@ def test_MainWindow_add_new_tab(qtbot, main_window):
     assert main_window.tabs.count() == 2
 
 
+@pytest.mark.parametrize('ind', range(6))
+def test_MainWindow_add_new_tab_at(qtbot, main_window_with_tabs, ind):
+    main_window_with_tabs.add_new_tab_at(ind)
+    assert main_window_with_tabs.tabs.count() == 6
+    assert main_window_with_tabs.tabs.currentIndex() == ind
+    assert main_window_with_tabs.tabs.currentWidget().is_empty()
+
+
 def test_MainWindow_close_current_tab(qtbot, main_window_with_tabs):
     current_tab_name = main_window_with_tabs.tabs.currentWidget().get_tab_name()
     main_window_with_tabs.close_current_action.trigger()
     assert main_window_with_tabs.tabs.count() == 4
     assert current_tab_name not in main_window_with_tabs.get_available_objects()
     assert main_window_with_tabs.tabs.currentWidget().get_tab_name() != current_tab_name
+
+
+@pytest.mark.parametrize('ind', range(5))
+def test_MainWindow_close_tabs_to_the_right(qtbot, main_window_with_tabs, ind):
+    tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
+    all_names = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
+    main_window_with_tabs.close_tabs_to_the_right(ind)
+    assert main_window_with_tabs.tabs.count() == ind + 1
+    assert tab_name in main_window_with_tabs.get_available_objects()
+    for i in range(ind, 5):
+        if i <= ind:
+            assert all_names[i] in main_window_with_tabs.get_available_objects()
+        else:
+            assert all_names[i] not in main_window_with_tabs.get_available_objects()
+
+
+@pytest.mark.parametrize('ind', range(5))
+def test_MainWindow_close_tabs_to_the_left(qtbot, main_window_with_tabs, ind):
+    tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
+    all_names = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
+    main_window_with_tabs.close_tabs_to_the_left(ind)
+    assert main_window_with_tabs.tabs.count() == 5 - ind
+    assert tab_name in main_window_with_tabs.get_available_objects()
+    for i in range(ind, 5):
+        if i >= ind:
+            assert all_names[i] in main_window_with_tabs.get_available_objects()
+        else:
+            assert all_names[i] not in main_window_with_tabs.get_available_objects()
+
+
+@pytest.mark.parametrize('ind', range(5))
+def test_MainWindow_close_other_tabs(qtbot, main_window_with_tabs, ind):
+    tab_name = main_window_with_tabs.tabs.widget(ind).get_tab_name()
+    all_names = [main_window_with_tabs.tabs.widget(i).get_tab_name() for i in range(5)]
+    main_window_with_tabs.close_other_tabs(ind)
+    assert main_window_with_tabs.tabs.count() == 1
+    assert tab_name in main_window_with_tabs.get_available_objects()
+    for i in range(ind, 5):
+        if i != ind:
+            assert all_names[i] not in main_window_with_tabs.get_available_objects()
 
 
 @pytest.mark.parametrize('ind', range(5))
