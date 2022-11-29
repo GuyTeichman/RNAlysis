@@ -28,7 +28,7 @@ RNAlysis |release| documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Starting with *RNAlysis*:
+   :caption: Starting with RNAlysis:
 
    installation
    quick_start
