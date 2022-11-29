@@ -22,16 +22,18 @@ RNAlysis |release| documentation
    :maxdepth: 2
    :caption: About RNAlysis:
 
-   What is RNAlysis? <readme>
+   What is *RNAlysis?* <readme>
    GitHub page <https://github.com/GuyTeichman/RNAlysis>
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Starting with RNAlysis:
+   :caption: Starting with *RNAlysis*:
 
    installation
+   quick_start
    tutorial
+   user_guide_gui
    user_guide
    glossary
 
