@@ -10,6 +10,7 @@ Changed
 * All open tabs are now always visible in the main menu screen. Tab names are now shortened with ellipsis if nessecary.
 * The right-click context menu of the main menu tabs now allows users to open a new tab at a specific position, or close a specific tab/tabs to the right/tabs to the left/all other tabs.
 * *RNAlysis* documentation is now split into GUI documentation (quick-start video guide, tutorial, GUI user guide), and programmatic documentation (programmatic user guide)
+* Improved readability of *RNAlysis* logs
 
 
 3.2.2 (2022-11-25)

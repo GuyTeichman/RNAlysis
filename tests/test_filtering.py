@@ -16,19 +16,19 @@ matplotlib.use('Agg')
 
 def test_filter_api():
     f = Filter('tests/test_files/uncounted.csv')
-    assert f.__str__() == "Filter of file uncounted.csv"
+    assert f.__str__() == "Generic table named 'uncounted.csv'"
     assert f.__repr__().replace('\\', '/') == "Filter('tests/test_files/uncounted.csv')"
 
 
 def test_countfilter_api():
     h = CountFilter('tests/test_files/counted.csv')
-    assert h.__str__() == "CountFilter of file counted.csv"
+    assert h.__str__() == "Count matrix named 'counted.csv'"
     assert h.__repr__().replace('\\', '/') == "CountFilter('tests/test_files/counted.csv')"
 
 
 def test_deseqfilter_api():
     d = DESeqFilter('tests/test_files/test_deseq.csv')
-    assert d.__str__() == "DESeqFilter of file test_deseq.csv"
+    assert d.__str__() == "Differential expression table named 'test_deseq.csv'"
     assert d.__repr__().replace('\\', '/') == "DESeqFilter('tests/test_files/test_deseq.csv')"
 
 

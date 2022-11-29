@@ -43,13 +43,14 @@ from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EV
 
 
 def readable_name(name: str):
-    def decorator(func):
-        func.readable_name = name
-        return func
+    def decorator(item):
+        item.readable_name = name
+        return item
 
     return decorator
 
 
+@readable_name('Generic table')
 class Filter:
     """
     An all-purpose Filter object.
@@ -115,7 +116,7 @@ class Filter:
         return f"{type(self).__name__}('{self.fname}')"
 
     def __str__(self):
-        return f"{type(self).__name__} of file {self.fname.stem}{self.fname.suffix}"
+        return f"{self.readable_name} named '{self.fname.stem}{self.fname.suffix}'"
 
     def __len__(self):
         """
@@ -1798,6 +1799,7 @@ class Filter:
         return self._set_ops([other], return_type, set.symmetric_difference)
 
 
+@readable_name('Fold change table')
 class FoldChangeFilter(Filter):
     """
     A class that contains a single column, representing the gene-specific fold change between two conditions. \
@@ -2088,7 +2090,7 @@ class FoldChangeFilter(Filter):
         return self.filter_fold_change_direction(direction='pos', inplace=False), \
                self.filter_fold_change_direction(direction='neg', inplace=False)
 
-
+@readable_name('Differential expression table')
 class DESeqFilter(Filter):
     """
     A class that receives a DESeq output file and can filter it according to various characteristics.
@@ -2381,7 +2383,7 @@ class DESeqFilter(Filter):
         plt.show()
         return fig
 
-
+@readable_name('Count matrix')
 class CountFilter(Filter):
     """
     A class that receives a count matrix and can filter it according to various characteristics.
