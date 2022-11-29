@@ -3,7 +3,11 @@ History
 =======
 3.3.0 (2022-12-15)
 ------------------
-* This version introduced quality-of-life improvements to the graphical user interface
+* This version introduced quality-of-life improvements to the graphical user interface.
+
+Added
+******
+* Pipelines can now be edited through the Pipeline menu of the graphical interface.
 
 Changed
 *******
@@ -14,7 +18,7 @@ Changed
 
 Fixed
 ******
-* RNAlysis now warns users if they attempt to overwrite an existing Pipeline.
+* *RNAlysis* now warns users if they attempt to overwrite an existing Pipeline.
 
 3.2.2 (2022-11-25)
 ------------------

@@ -1652,6 +1652,13 @@ def test_CreatePipelineWindow_init(qtbot):
     _, _ = widget_setup(qtbot, CreatePipelineWindow)
 
 
+def test_CreatePipelineWindow_from_pipeline(qtbot):
+    name = 'my pipeline name'
+    pipeline = filtering.Pipeline.import_pipeline('tests/test_files/test_pipeline.yaml')
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow.start_from_pipeline,pipeline, name)
+    assert window.pipeline == pipeline
+    assert window._get_pipeline_name() == name
+
 def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch):
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
     pipeline_name = 'my pipeline name'

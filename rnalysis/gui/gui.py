@@ -1934,6 +1934,17 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.setGeometry(500, 200, 800, 800)
         self.pipeline = None
         self.is_unsaved = False
+    @classmethod
+    def start_from_pipeline(cls, pipeline: filtering.Pipeline, pipeline_name:str, parent=None):
+        obj = cls(parent)
+        obj.basic_widgets['pipeline_name'].setText(pipeline_name)
+        obj.pipeline = pipeline
+        obj.filter_obj = pipeline.filter_type.__new__(pipeline.filter_type)
+        obj.init_overview_ui()
+        obj.init_function_ui()
+        obj.basic_group.setVisible(False)
+        obj.is_unsaved = False
+        return obj
 
     def init_basic_ui(self):
         self.layout.insertWidget(0, self.basic_group)
@@ -2408,6 +2419,7 @@ class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
         self.init_ui()
 
     def init_ui(self):
+        self.setWindowTitle('Choose tables to apply Pipeline to')
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         self.layout.addWidget(self.label)
@@ -2880,6 +2892,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pipeline_window.exec()
         self.pipeline_window = None
 
+    @QtCore.pyqtSlot(str)
+    def edit_pipeline(self, pipeline_name: str):
+        assert pipeline_name in self.pipelines, f"Pipeline {pipeline_name} doesn't exist!"
+        pipeline = self.pipelines[pipeline_name]
+        self.pipeline_window = CreatePipelineWindow.start_from_pipeline(pipeline,pipeline_name, self)
+        self.pipeline_window.pipelineSaved.connect(self.save_pipeline)
+        self.pipeline_window.pipelineExported.connect(self._export_pipeline_from_obj)
+        self.pipeline_window.exec()
+        self.pipeline_window = None
+
     @QtCore.pyqtSlot(str, filtering.Pipeline)
     def save_pipeline(self, pipeline_name: str, pipeline: filtering.Pipeline):
         if pipeline_name in self.pipelines:
@@ -3167,30 +3189,44 @@ class MainWindow(QtWidgets.QMainWindow):
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
         pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action])
+        self.edit_pipeline_menu = pipeline_menu.addMenu("&Edit Pipeline")
+        self.edit_pipeline_menu.aboutToShow.connect(
+            functools.partial(self._populate_pipelines, self.edit_pipeline_menu, self.edit_pipeline,
+                              pipeline_arg=False))
         self.apply_pipeline_menu = pipeline_menu.addMenu("&Apply Pipeline")
-        self.apply_pipeline_menu.aboutToShow.connect(self._populate_pipelines)
+        self.apply_pipeline_menu.aboutToShow.connect(
+            functools.partial(self._populate_pipelines, self.apply_pipeline_menu, self.apply_pipeline))
 
         help_menu = self.menu_bar.addMenu("&Help")
         help_menu.addActions([self.tutorial_action, self.user_guide_action, self.check_update_action, self.about_action,
                               self.cite_action])
 
-    def _populate_pipelines(self):
+    def _populate_pipelines(self, menu: QtWidgets.QMenu, func: Callable, pipeline_arg: bool = True,
+                            name_arg: bool = True):
         # Remove the old options from the menu
-        self.apply_pipeline_menu.clear()
+        menu.clear()
         # Dynamically create the actions
         actions = []
         for name, pipeline in self.pipelines.items():
             action = QtWidgets.QAction(name, self)
-            action.triggered.connect(functools.partial(self.apply_pipeline, pipeline, name))
+            args = []
+            if pipeline_arg:
+                args.append(pipeline)
+            if name_arg:
+                args.append(name)
+            action.triggered.connect(functools.partial(func, *args))
             actions.append(action)
         # Step 3. Add the actions to the menu
-        self.apply_pipeline_menu.addActions(actions)
+        menu.addActions(actions)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str):
         apply_msg = f"Do you want to apply Pipeline '{pipeline_name}' inplace?"
         reply = QtWidgets.QMessageBox.question(self, f"Apply Pipeline '{pipeline_name}'",
-                                               apply_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-
+                                               apply_msg,
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No |
+                                               QtWidgets.QMessageBox.Cancel)
+        if reply == QtWidgets.QMessageBox.Cancel:
+            return
         inplace = reply == QtWidgets.QMessageBox.Yes
 
         available_objs = self.get_available_objects()
