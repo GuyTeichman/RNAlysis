@@ -4437,10 +4437,10 @@ class Pipeline:
         self.filter_type = filter_type
 
     def __str__(self):
-        string = f"Pipeline for {self.filter_type.__name__} objects"
+        string = f"Pipeline for {self.filter_type.readable_name}"
         if len(self) > 0:
             string += f":\n\t" + '\n\t'.join(
-                self._func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
+                self._readable_func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
         return string
 
     def __repr__(self):
@@ -4520,6 +4520,21 @@ class Pipeline:
             return args_str
         else:
             return f"{args_str}, {kwargs_str}"
+
+    def _readable_func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
+        """
+        Returns a human-readable string functions signature for the given function and arguments.
+
+        :param func: the function or method to generate signature for
+        :type func: function
+        :param args: arguments given for the function
+        :type args: tuple
+        :param kwargs: keyworded arguments given for the function
+        :type kwargs: dict
+        :return: function signature string
+        :rtype: str
+        """
+        return f"{func.readable_name}: ({self._param_string(args, kwargs)})"
 
     def _func_signature(self, func: types.FunctionType, args: tuple, kwargs: dict):
         """

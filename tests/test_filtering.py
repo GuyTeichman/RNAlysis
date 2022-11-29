@@ -1222,12 +1222,12 @@ def test_pipeline_repr():
 
 def test_pipeline_str():
     pl = Pipeline('countfilter')
-    assert str(pl) == "Pipeline for CountFilter objects"
+    assert str(pl) == "Pipeline for Count matrix"
     pl.add_function('sort')
     pl.add_function(CountFilter.filter_biotype_from_ref_table, 'protein_coding', opposite=True)
-    assert str(pl) == "Pipeline for CountFilter objects:\n" \
-                      "\tCountFilter.sort()\n" \
-                      "\tCountFilter.filter_biotype_from_ref_table('protein_coding', opposite=True)"
+    assert str(pl) == "Pipeline for Count matrix:\n" \
+                      "\tSort table rows: ()\n" \
+                      "\tFilter by feature biotype (based on a reference table): ('protein_coding', opposite=True)"
 
 
 def test_pipeline_add_function():
