@@ -12,6 +12,9 @@ Changed
 * *RNAlysis* documentation is now split into GUI documentation (quick-start video guide, tutorial, GUI user guide), and programmatic documentation (programmatic user guide)
 * Improved readability of *RNAlysis* logs
 
+Fixed
+******
+* RNAlysis now warns users if they attempt to overwrite an existing Pipeline.
 
 3.2.2 (2022-11-25)
 ------------------

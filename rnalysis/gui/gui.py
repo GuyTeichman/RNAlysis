@@ -2882,7 +2882,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(str, filtering.Pipeline)
     def save_pipeline(self, pipeline_name: str, pipeline: filtering.Pipeline):
-        self.pipelines[pipeline_name] = pipeline
+        if pipeline_name in self.pipelines:
+            response = QtWidgets.QMessageBox.question(self, 'Overwrite Pipeline?',
+                                                      'A Pipeline with this name already exists. '
+                                                      'Are you sure you want to overwrite it?',
+                                                      defaultButton=QtWidgets.QMessageBox.No)
+
+        else:
+            response = QtWidgets.QMessageBox.Yes
+        if response == QtWidgets.QMessageBox.Yes:
+            self.pipelines[pipeline_name] = pipeline
 
     def settings(self):
         self.settings_window.exec()
