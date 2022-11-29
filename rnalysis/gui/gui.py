@@ -1934,8 +1934,9 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.setGeometry(500, 200, 800, 800)
         self.pipeline = None
         self.is_unsaved = False
+
     @classmethod
-    def start_from_pipeline(cls, pipeline: filtering.Pipeline, pipeline_name:str, parent=None):
+    def start_from_pipeline(cls, pipeline: filtering.Pipeline, pipeline_name: str, parent=None):
         obj = cls(parent)
         obj.basic_widgets['pipeline_name'].setText(pipeline_name)
         obj.pipeline = pipeline
@@ -2035,20 +2036,35 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.update_pipeline_preview()
 
         self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline name: "
-                                                      f"'<b>{self._get_pipeline_name()}</b>'"), 0, 0, 1, 2)
-        self.overview_grid.addWidget(self.overview_widgets['preview'], 2, 0, 2, 4)
+                                                      f"'<b>{self._get_pipeline_name()}</b>'"), 0, 0, 1, 6)
+        self.overview_grid.addWidget(self.overview_widgets['preview'], 2, 0, 2, 6)
 
         self.overview_grid.addWidget(QtWidgets.QLabel(f"Pipeline table type: "
                                                       f"{self.basic_widgets['table_type_combo'].currentText()}"),
-                                     5, 0, 1, 2)
+                                     5, 0, 1, 3)
 
-        self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save Pipeline')
-        self.overview_widgets['save_button'].clicked.connect(self.save_file)
-        self.overview_grid.addWidget(self.overview_widgets['save_button'], 5, 3)
+        self.overview_widgets['remove_button'] = QtWidgets.QPushButton('Remove last function')
+        self.overview_widgets['remove_button'].clicked.connect(self.remove_last_function)
+        self.overview_grid.addWidget(self.overview_widgets['remove_button'], 5, 3)
 
         self.overview_widgets['export_button'] = QtWidgets.QPushButton('Export Pipeline')
         self.overview_widgets['export_button'].clicked.connect(self.export_pipeline)
-        self.overview_grid.addWidget(self.overview_widgets['export_button'], 5, 2, 1, 1)
+        self.overview_grid.addWidget(self.overview_widgets['export_button'], 5, 4)
+
+        self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save Pipeline')
+        self.overview_widgets['save_button'].clicked.connect(self.save_file)
+        self.overview_grid.addWidget(self.overview_widgets['save_button'], 5, 5)
+
+    def remove_last_function(self):
+        try:
+            self.pipeline.remove_last_function()
+            self.update_pipeline_preview()
+        except AssertionError:
+            err = QtWidgets.QMessageBox(self)
+            err.setWindowTitle('Pipeline is already empty!')
+            err.setText('Cannot remove functions from the Pipeline - it is already empty!')
+            err.setIcon(err.Warning)
+            err.exec()
 
     def _get_pipeline_name(self):
         return self.basic_widgets['pipeline_name'].text()
@@ -2772,6 +2788,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.currentWidget().update_gene_set(gene_set)
         QtWidgets.QApplication.processEvents()
 
+    def delete_pipeline(self):
+        if len(self.pipelines) == 0:
+            warnings.warn('No Pipelines to delete')
+            return
+
+        pipeline_name, status = QtWidgets.QInputDialog.getItem(
+            self, 'Delete Pipeline', 'Choose Pipeline to delete:', self.pipelines.keys())
+        if status:
+            reply = QtWidgets.QMessageBox.question(self, 'Delete Pipeline?',
+                                                   f"Are you sure you want to delete this Pipeline? "
+                                                   f"This action cannot be undone!",
+                                                   QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
+            if reply == QtWidgets.QMessageBox.Yes:
+                self.pipelines.pop(pipeline_name)
+                print(f"Pipeline '{pipeline_name}' deleted successfully")
+
     def export_pipeline(self):
         if len(self.pipelines) == 0:
             warnings.warn('No Pipelines to export')
@@ -2896,7 +2928,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def edit_pipeline(self, pipeline_name: str):
         assert pipeline_name in self.pipelines, f"Pipeline {pipeline_name} doesn't exist!"
         pipeline = self.pipelines[pipeline_name]
-        self.pipeline_window = CreatePipelineWindow.start_from_pipeline(pipeline,pipeline_name, self)
+        self.pipeline_window = CreatePipelineWindow.start_from_pipeline(pipeline, pipeline_name, self)
         self.pipeline_window.pipelineSaved.connect(self.save_pipeline)
         self.pipeline_window.pipelineExported.connect(self._export_pipeline_from_obj)
         self.pipeline_window.exec()
@@ -2999,6 +3031,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_pipeline_action.triggered.connect(self.import_pipeline)
         self.export_pipeline_action = QtWidgets.QAction("&Export Pipeline...", self)
         self.export_pipeline_action.triggered.connect(self.export_pipeline)
+        self.delete_pipeline_action = QtWidgets.QAction("&Delete Pipeline...", self)
+        self.delete_pipeline_action.triggered.connect(self.delete_pipeline)
 
     def init_shortcuts(self):
         self.copy_action.setShortcut(QtGui.QKeySequence("Ctrl+C"))
@@ -3021,6 +3055,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+N"))
         self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
         self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+E"))
+        self.delete_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+D"))
 
     @QtCore.pyqtSlot()
     def check_for_updates(self, confirm_updated: bool = True):
@@ -3188,7 +3223,8 @@ class MainWindow(QtWidgets.QMainWindow):
              self.import_multiple_sets_action, self.export_set_action])
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
-        pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action])
+        pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action,
+                                  self.delete_pipeline_action])
         self.edit_pipeline_menu = pipeline_menu.addMenu("&Edit Pipeline")
         self.edit_pipeline_menu.aboutToShow.connect(
             functools.partial(self._populate_pipelines, self.edit_pipeline_menu, self.edit_pipeline,

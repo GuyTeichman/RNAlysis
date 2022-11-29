@@ -7,7 +7,7 @@ History
 
 Added
 ******
-* Pipelines can now be edited through the Pipeline menu of the graphical interface.
+* Pipelines can now be edited and deleted through the Pipeline menu of the graphical interface.
 
 Changed
 *******
@@ -19,6 +19,7 @@ Changed
 Fixed
 ******
 * *RNAlysis* now warns users if they attempt to overwrite an existing Pipeline.
+* Fixed an incorrect keyboard shortcut for Export Pipeline action
 
 3.2.2 (2022-11-25)
 ------------------
