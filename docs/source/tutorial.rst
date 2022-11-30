@@ -226,7 +226,7 @@ We can then set the value of the parameter `n_clusters` to 'gap', to indicate th
   :alt: K-Medoids clustering setup - choose the number of clusters using the Gap Statistic
 
 Next, we can set the distance metric. Different distance metrics can be more or less effective on specific types of data.
-*RNAlysis* offers a large array of distance metrics, about which you can read in the *RNAlysis* `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html#data-clustering-with-countfilter>`_.
+*RNAlysis* offers a large array of distance metrics, about which you can read in the *RNAlysis* `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#data-clustering-with-countfilter>`_.
 We will use a lesser-known distance metric called YR1, that was developed especially for time-series gene expression data and implemented in *RNAlysis*. You can read more about it in `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_:
 
 .. image:: /tutorial_screenshots/01g02_kmedoids.png
@@ -1136,7 +1136,7 @@ Final words
 ****************************************
 
 This concludes our A-to-Z tutorial of *RNAlysis*. This tutorial could not possibly encompass every single feature in *RNAlysis*, but at this point you should be familiar enough with *RNAlysis* to start analyzing your own data.
-If you want a deeper dive into all of the features available in *RNAlysis*, or want to learn how to write code with *RNAlysis*, check out the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
+If you want a deeper dive into all of the features available in *RNAlysis*, or want to learn how to write code with *RNAlysis*, check out the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html>`_.
 If you still have questions about using *RNAlysis*, feel free to drop them in the `discussions area <https://github.com/GuyTeichman/RNAlysis/discussions>`_.
 
 *RNAlysis* keeps updating all the time, so check out the documentation from time to time to find out what's new.
