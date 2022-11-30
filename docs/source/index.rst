@@ -33,6 +33,7 @@ RNAlysis |release| documentation
    installation
    quick_start
    tutorial
+   faq
    user_guide_gui
    user_guide
    glossary

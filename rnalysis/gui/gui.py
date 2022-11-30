@@ -21,7 +21,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib.externals.loky import get_reusable_executor
 
 from rnalysis import fastq, filtering, enrichment, __version__
-from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_tutorial
+from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_quickstart
 from rnalysis.utils import io, validation, generic, parsing, settings, clustering
 
 FILTER_OBJ_TYPES = {'Count matrix': filtering.CountFilter, 'Differential expression': filtering.DESeqFilter,
@@ -2447,7 +2447,9 @@ class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide.html'
+    USER_GUIDE_URL = 'https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html'
+    TUTORIAL_URL = 'https://guyteichman.github.io/RNAlysis/build/tutorial.html'
+    FAQ_URL = 'https://guyteichman.github.io/RNAlysis/build/faq.html'
     jobQueued = QtCore.pyqtSignal()
 
     def __init__(self):
@@ -2477,7 +2479,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_window.styleSheetUpdated.connect(self.update_style_sheet)
         self.set_op_window = None
         self.set_visualization_window = None
-        self.tutorial_window = gui_tutorial.WelcomeWizard(self)
+        self.quickstart_window = gui_quickstart.QuickStartWizard(self)
         self.cite_window = gui_windows.HowToCiteWindow(self)
         self.enrichment_window = None
         self.enrichment_results = []
@@ -2491,7 +2493,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_shortcuts()
 
         if settings.get_show_tutorial_settings():
-            self.tutorial_window.show()
+            self.quickstart_window.show()
 
         self.queue_stdout = Queue()
         # create console text read thread + receiver object
@@ -3016,10 +3018,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.kallisto_paired_action = QtWidgets.QAction("&Paired-end RNA-seq quantification...", self)
         self.kallisto_paired_action.triggered.connect(functools.partial(self.kallisto, 'paired'))
 
-        self.tutorial_action = QtWidgets.QAction("&Tutorial", self)
-        self.tutorial_action.triggered.connect(self.tutorial_window.show)
-        self.user_guide_action = QtWidgets.QAction("&User Guide", self)
+        self.quick_start_action = QtWidgets.QAction("&Quick-start guide", self)
+        self.quick_start_action.triggered.connect(self.quickstart_window.show)
+        self.user_guide_action = QtWidgets.QAction("&Tutorial", self)
         self.user_guide_action.triggered.connect(self.open_user_guide)
+        self.tutorial_action = QtWidgets.QAction("&User Guide", self)
+        self.tutorial_action.triggered.connect(self.open_tutorial)
+        self.faq_action = QtWidgets.QAction("&Frequently Asked Questions", self)
+        self.faq_action.triggered.connect(self.open_faq)
         self.about_action = QtWidgets.QAction("&About", self)
         self.about_action.triggered.connect(self.about)
         self.cite_action = QtWidgets.QAction("How to &cite RNAlysis", self)
@@ -3137,6 +3143,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if not QtGui.QDesktopServices.openUrl(url):
             QtGui.QMessageBox.warning(self, 'User Guide', 'Could not open User Guide')
 
+    def open_tutorial(self):
+        url = QtCore.QUrl(self.TUTORIAL_URL)
+        if not QtGui.QDesktopServices.openUrl(url):
+            QtGui.QMessageBox.warning(self, 'Tutorial', 'Could not open Tutorial')
+
+    def open_faq(self):
+        url = QtCore.QUrl(self.FAQ_URL)
+        if not QtGui.QDesktopServices.openUrl(url):
+            QtGui.QMessageBox.warning(self, 'FAQ', 'Could not open Frequently Asked Questions')
+
     def get_gene_set_by_ind(self, ind: int):
         gene_set = self.tabs.widget(ind).filter_obj if \
             isinstance(self.tabs.currentWidget(), FilterTabPage) else self.tabs.widget(ind).gene_set.gene_set
@@ -3234,8 +3250,9 @@ class MainWindow(QtWidgets.QMainWindow):
             functools.partial(self._populate_pipelines, self.apply_pipeline_menu, self.apply_pipeline))
 
         help_menu = self.menu_bar.addMenu("&Help")
-        help_menu.addActions([self.tutorial_action, self.user_guide_action, self.check_update_action, self.about_action,
-                              self.cite_action])
+        help_menu.addActions(
+            [self.quick_start_action, self.tutorial_action, self.user_guide_action, self.faq_action,
+             self.check_update_action, self.about_action, self.cite_action])
 
     def _populate_pipelines(self, menu: QtWidgets.QMenu, func: Callable, pipeline_arg: bool = True,
                             name_arg: bool = True):
@@ -3573,7 +3590,7 @@ def run():
     splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     matplotlib.use('Qt5Agg')
 
-    video_files = gui_tutorial.WelcomeWizard.VIDEO_FILES
+    video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
     for i in io.get_gui_videos(video_files):
         splash.showMessage(
             base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',

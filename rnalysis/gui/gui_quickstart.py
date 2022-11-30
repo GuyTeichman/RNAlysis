@@ -3,7 +3,7 @@ from rnalysis.utils import settings, io
 from pathlib import Path
 
 
-class WelcomeWizard(QtWidgets.QWizard):
+class QuickStartWizard(QtWidgets.QWizard):
     TITLES = (
         "Load a table",
         "Examine your table",
@@ -107,7 +107,7 @@ class WelcomeWizard(QtWidgets.QWizard):
         self.addPage(StartPage(self))
 
         for title, content, filename in zip(self.TITLES, self.CONTENTS, self.VIDEO_FILES):
-            page = TutorialPage(title, content, filename, self)
+            page = QuickStartPage(title, content, filename, self)
             self.addPage(page)
 
         self.addPage(EndPage(self))
@@ -123,11 +123,11 @@ class WelcomeWizard(QtWidgets.QWizard):
 
     def play_tutorial(self, ind: int):
         page = self.page(ind)
-        if isinstance(page, TutorialPage):
+        if isinstance(page, QuickStartPage):
             self.currentPage().start_movie()
         try:
             prev_page = self.page(self.prev_id)
-            if isinstance(prev_page, TutorialPage):
+            if isinstance(prev_page, QuickStartPage):
                 prev_page.stop_movie()
         except IndexError:
             pass
@@ -181,7 +181,7 @@ class StartPage(QtWidgets.QWizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTitle('<b><i>Welcome to RNAlysis</i></b>')
-        self.setSubTitle('This tutorial screen will guide you through the basic usage of <i>RNAlysis</i>. ')
+        self.setSubTitle('This quick-start guide will lead you through the basic usage of <i>RNAlysis</i>. ')
         self.layout = QtWidgets.QGridLayout(self)
         self.dont_show_again = QtWidgets.QCheckBox("Do not show this window again")
         self.dont_show_again.stateChanged.connect(self.setFinalPage)
@@ -195,7 +195,7 @@ class StartPage(QtWidgets.QWizardPage):
         self.layout.addWidget(self.dont_show_again)
 
 
-class TutorialMovie(QtWidgets.QWidget):
+class QuickStartMovie(QtWidgets.QWidget):
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, video_path: Path, parent=None):
@@ -313,7 +313,7 @@ class TutorialMovie(QtWidgets.QWidget):
             self.video.setSpeed(100)
 
 
-class TutorialPage(QtWidgets.QWizardPage):
+class QuickStartPage(QtWidgets.QWizardPage):
     def __init__(self, title: str, content: str, video_name: str, parent=None):
         super().__init__(parent)
         self.setTitle('<b>' + title + '</b>')
@@ -321,7 +321,7 @@ class TutorialPage(QtWidgets.QWizardPage):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.video_path = Path.joinpath(Path(__file__).parent, io.get_tutorial_videos_dir().joinpath(video_name))
         self.label = QtWidgets.QLabel()
-        self.movie = TutorialMovie(self.video_path)
+        self.movie = QuickStartMovie(self.video_path)
         self.layout.addWidget(self.movie)
 
     def start_movie(self):

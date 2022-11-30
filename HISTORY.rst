@@ -7,6 +7,7 @@ History
 
 Added
 ******
+* Added a Frequently Asked Questions page, and linked all *RNAlysis* help material inside the graphical interface Help menu.
 * Pipelines can now be edited and deleted through the Pipeline menu of the graphical interface.
 
 Changed
