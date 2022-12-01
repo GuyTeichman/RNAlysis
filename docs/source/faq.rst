@@ -131,3 +131,35 @@ If you what to know how specific algorithms (e.g. CLICOM clustering, 'elim' meth
 You can find a link to a function's full documentation by clicking the link at the bottom of the *RNAlysis* window after you selected the function.
 If you couldn't find the information you were looking for, try looking at the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html>`_.
 
+What file formats are supported by *RNAlysis*?
+================================================
+*RNAlysis* can load tables or gene sets that arrive as comma-separated tables (CSV files - with the .csv suffix), or tab-separated tables (TSV files - with the .tsv suffix). For example::
+
+    gene,cond1,cond2,cond3
+    A,5,17,0
+    B,32,0,3
+    C,125,114,285
+
+or::
+
+    gene cond1  cond2  cond3
+    A   5   17  0
+    B   32  0   3
+    C   125 114 285
+
+In addition, *RNAlysis* can load gene sets that arrive as a text file (.txt suffix), where each line in the file is a single gene name/ID. For example::
+
+    gene1
+    gene2
+    gene3
+    gene4
+
+If your data arrives in a different file format, you will need to convert it to one of the above formats before loading it into *RNAlysis*.
+Conversion can be done fairly easily through programs such as Google Sheets, Microsoft Excel, or LibreOffice Calc - especially if your table is saved in a spreadsheet format (like .xlsx).
+First, open your folder with one of the above programs; and then click "File"->"Save As...", and save the table in the format "CSV (comma delimited) .csv".
+
+What types of tables can I analyze with *RNAlysis*?
+============================================================================================================================================================
+*RNAlysis* supports any kind of tabular data. However, *RNAlysis* offers specialized types of functions and analyses for specific types of tables.
+In particular, *RNAlysis* offers specialized functions for count matrices (raw or normalized), for differential expression tables (preferrably in the DESeq2 format, but other formats are also supported), and for single-column tables with fold-change values.
+To use those specialized functions, you need to specify the type of your table when first loading it into *RNAlysis*.

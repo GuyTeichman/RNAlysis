@@ -821,7 +821,7 @@ The window will now update to show a preview of our new (empty) Pipeline:
   :alt: Create Pipeline - preview
 
 At this point, we can start adding functions to the Pipeline.
-Adding functions to a Pipeline works very similarly to applying functions to table, as we did in Analysis #1.
+Adding functions to a Pipeline works very similarly to applying functions to tables, as we did in Analysis #1.
 First, let's click on the "Visualize" tab, and choose the "Volcano plot" function:
 
 .. image:: /tutorial_screenshots/02d04_pipeline.png
