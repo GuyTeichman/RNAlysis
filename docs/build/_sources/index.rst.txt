@@ -22,7 +22,7 @@ RNAlysis |release| documentation
    :maxdepth: 2
    :caption: About RNAlysis:
 
-   What is RNAlysis? <readme>
+   What is *RNAlysis?* <readme>
    GitHub page <https://github.com/GuyTeichman/RNAlysis>
 
 
@@ -31,7 +31,10 @@ RNAlysis |release| documentation
    :caption: Starting with RNAlysis:
 
    installation
+   quick_start
    tutorial
+   faq
+   user_guide_gui
    user_guide
    glossary
 

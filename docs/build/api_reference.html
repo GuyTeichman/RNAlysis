@@ -54,9 +54,12 @@
 <p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
 <ul>
@@ -5703,6 +5706,27 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a formatted string of arguments and keyworded argumentss</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_readable_func_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Returns a human-readable string functions signature for the given function and arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>function</em>) – the function or method to generate signature for</p></li>
+<li><p><strong>args</strong> (<em>tuple</em>) – arguments given for the function</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – keyworded arguments given for the function</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>function signature string</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>str</p>

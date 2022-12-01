@@ -1,134 +1,13 @@
-############################
-User guide
-############################
-
-
-
-***********************************
-*RNAlysis* graphical user interface
-***********************************
-
-Open the program
-=================
-If you installed *RNAlysis* from pypi, you can open the graphical user interface by either executing the command `rnalysis-gui` from your terminal, or by typing the following code into a Python console::
-
-    >>> from *RNAlysis* import gui
-    >>> gui.run_gui()
-
-Load a table
-============
-Choose a file from your computer, and click 'start' to load it into *RNAlysis*.
-
-.. image:: ../../rnalysis/gui/videos/load_table.webp
-
-Examine your table
-==================
-You will now be able to see an overview of your data, including the table's name, type, and dimensions. Click the 'View full table' button to see your table in its entirety.
-
-.. image:: ../../rnalysis/gui/videos/view_table.webp
-
-Filter your table
-=================
-Choose a filtering function, set your desired parameters, and click 'Apply' to filter your table. The changes you make will not affect your original file until you save them.
-
-.. image:: ../../rnalysis/gui/videos/filter_table.webp
-
-Undo the operations you applied to your table
-=============================================
-At any moment, you can use the 'Command history' window to undo or redo an operation you applied to your table.
-
-.. image:: ../../rnalysis/gui/videos/undo_actions.webp
-
-Apply your operations 'in-place' or apply on a new table
-========================================================
-Instead of applying operations 'in-place', you can choose to apply the operation to a copy of your table in a new tab. The table in the original tab won't be modified.
-
-.. image:: ../../rnalysis/gui/videos/apply_inplace.webp
-
-Save the changes you made to your table
-=======================================
-To save result of your filtering operations, click the 'Save table' button and choose where to save the modified table.
-
-.. image:: ../../rnalysis/gui/videos/save_table.webp
-
-Work on multiple tables at the same time
-========================================
-You can work on multiple tables at the same time by opening a new tab and loading another table.
-
-.. image:: ../../rnalysis/gui/videos/new_tab.webp
-
-Different types of tables offer different ways to filter and analyze your data
-==============================================================================
-When loading a table, you can specify its type. Different types of tables support different types of functions: for example, count matrices support clustering analysis.
-
-.. image:: ../../rnalysis/gui/videos/table_types.webp
-
-Create and save graphs
-======================
-Some functions can generate graphs of your data. You can resize those graphs, and save them to your computer in multiple file formats.
-
-.. image:: ../../rnalysis/gui/videos/generate_graphs.webp
-
-Sort your tabs and change their icons
-=====================================
-To help organize your workspace, you can sort tabs by right-clicking a tab and choosing a sorting method. You can also change specific tabs' colors, to help you differentiate them.
-
-.. image:: ../../rnalysis/gui/videos/sort_tabs.webp
-
-Restore tabs you closed
-=======================
-If you accidentally closed one of your tabs - don't worry! You can restore closed tabs through the 'Edit' menu.
-
-.. image:: ../../rnalysis/gui/videos/restore_tabs.webp
-
-Import lists of genes as Gene Sets
-==================================
-In addition to tables, *RNAlysis* can also import lists of genes as Gene Sets. We will soon review what we can do with those gene sets.
-
-.. image:: ../../rnalysis/gui/videos/import_gene_sets.webp
-
-Visualize the intersections between your tables and gene sets
-=============================================================
-In the 'Visualize Gene Sets' window you can create Venn diagrams and UpSet plots that will display the various intersections between your tables and gene sets.
-
-.. image:: ../../rnalysis/gui/videos/visualize_gene_sets.webp
-
-Apply set operations to your tables and gene sets
-=================================================
-In the 'Set Operations' window you can extract specific subsets from your data. Either use predefined set operations, or click on specific subsets in the preview pane to select them.
-
-.. image:: ../../rnalysis/gui/videos/set_operations.webp
-
-Perform enrichment analysis on your tables and gene sets
-========================================================
-In the 'Enrichment Analysis' window, you can perform various types of enrichment analysis on the tables and gene sets you filtered.
-
-.. image:: ../../rnalysis/gui/videos/enrichment_analysis.webp
-
-Create Pipelines to streamline your data analysis
-=================================================
-You can group multiple operations in a specific order and with specific parameters into a Pipeline. Just add those functions to the Pipeline in the order you choose.
-
-.. image:: ../../rnalysis/gui/videos/create_pipeline.webp
-
-Apply Pipelines to one or more of your tables
-=============================================
-You can apply a Pipeline to a group of tables through the 'Pipelines' menu. Using Pipelines to analyze multiple datasets can make your workflow faster and less error-prone.
-
-.. image:: ../../rnalysis/gui/videos/apply_pipeline.webp
-
-Export and share Pipelines to make your analysis more reproducible
-==================================================================
-Pipelines you export can be imported from any computer, and can be shared with others to help make your analysis easier to understand and more reproducible.
-
-.. image:: ../../rnalysis/gui/videos/export_pipeline.webp
+####################################
+User guide - programmatic interface
+####################################
 
 
 
 ****************************
 *RNAlysis* filtering module
 ****************************
-RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
+RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy-to-understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
 
 The filtering module is built around :term:`Filter objects`, which are containers for tabular sequencing data. You can use the different types of :term:`Filter objects` to apply filtering operations to various types of tabular data. You will learn more about :term:`Filter objects` in the next section.
 
@@ -505,7 +384,7 @@ There are a few filtering operations unique to CountFilter. Those include 'filte
 
 Normalizing reads with CountFilter
 ------------------------------------
-:term:`CountFilter` offers two methods for normalizing reads: normalize with one of the pre-made normalization methods *RNAlysis* supplies, or using user-defined scaling factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter as well.
+:term:`CountFilter` can normalize reads with either pre-made normalization methods *RNAlysis* supplies, or with user-defined scaling factors. Pre-normalized data can be used as input for CountFilter as well.
 
 *RNAlysis* supplies the following normalization methods:
 
@@ -521,7 +400,7 @@ To normalize a :term:`CountFilter` with one of these functions, simply call the 
     >>> counts.normalize_rle()
     Normalized the values of 22 features. Normalized inplace.
 
-To normalize a :term:`CountFilter` with user-generated scaling factors, we need a `csv` table with the size factor for each sample:
+To normalize a :term:`CountFilter` with user-generated scaling factors, we need a `csv` table with the scaling factor for each sample:
 
 +----------------+----------------+----------------+----------------+
 |    sample1     |    sample2     |    sample3     |    sample4     |
@@ -791,6 +670,25 @@ Moreover, ths modified version of the algorithm can cluster each batch of biolog
 
 |
 
+Specialized clustering distance metrics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In addition to the commonly-used distance metrics, such as euclidean distance and spearman correlation, *RNAlysis* offers a selection of distance metrics that were either developed especially for transcriptomics clustering, or found to work particularly well for transcriptomics clustering. 
+Those methods include:
+
+1. jackknife distance - a modified Pearson dissimilarity coefficient. 
+Instead of measuring the linear correlation between expression levels of two genes, you measure the linear correlation coefficient N times (where N is the number of samples in the data), every time excluding a single sample from the correlation, and then taking the smallest correlation coefficient found. 
+The correlation score is then converted into a dissimilarity score. 
+This distance metric can detect linear correlation, like Pearson correlation, but is less sensitive to extreme values. 
+(see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_). 
+2. YR1 distance - a distance metric developed especially for time-series gene expression data. 
+This distance metric combines the Pearson dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
+This means that the YR1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
+3. YS1 distance - a distance metric developed especially for time-series gene expression data. 
+This distance metric combines the Spearman dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
+This means that the YS1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
+
 Data visualization and exploratory data analysis with CountFilter
 ------------------------------------------------------------------------
 :term:`CountFilter` includes multiple methods for visualization and exploratory analysis of count data.
@@ -914,7 +812,7 @@ Sequentially applying filtering operations using Pipelines
 Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
 
 Creating a new Pipeline
-________________________
+-------------------------
 To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
 
     >>> from *RNAlysis* import filtering
@@ -969,7 +867,7 @@ We can also remove functions from the Pipeline::
 Now that we have a Pipeline with multiple functions, we can apply it to our Filter objects.
 
 Applying Pipelines to Filter objects
-_____________________________________
+-------------------------------------
 Just like with other functions in the *filtering* module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
 You can determine that via the `inplace` argument of the function `Pipeline.apply_to()`::
 
@@ -1036,6 +934,14 @@ If we apply a Pipeline with functions that return additional outputs (such as Fi
 
 When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes_from_ref_table' is under the key 'biotypes_1', and the second call to 'biotypes_from_ref_table' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
 We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
+
+
+Importing a Pipeline
+----------------------
+If you have previously exported a Pipeline, or you want to use a Pipeline that someone else exported, you can import Pipeline files into any *RNAlysis* session. 
+*RNAlysis* Pipelines are saved as YAML (.yaml) files. Those files contain the name of the Pipeline, the functions and parameters added to it, as well as some metadata such as the time it was exported. 
+To import a Pipeline into *RNAlysis*, use the Pipeline.import_pipeline() method.  
+
 
 ****************************
 *RNAlysis* enrichment module
@@ -1288,7 +1194,7 @@ Running enrichment analysis will calculate enrichment for each of the GO terms, 
 'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
 
 KEGG Pathways enrichment
-_________________________
+-------------------------
 Using the *enrichment* module, you can perform enrichment analysis for KEGG pathways.
 You can read more about KEGG pathways on the `KEGG website <https://www.genome.jp/kegg/pathway.html>`_.
 
@@ -1403,7 +1309,7 @@ Enrichment analysis for user-defined attributes
 --------------------------------------------------
 Using the *enrichment* module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
 
-Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
+Enrichment analysis for user-defined attributes is performed using FeatureSet.user_defined_enrichment. We will start by creating an FeatureSet object::
 
     >>> counts = filtering.CountFilter('path_to_my_file.csv')
     >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
@@ -1425,7 +1331,7 @@ If you don't want to use the default setting, there are two methods of defining 
 
 The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
 
-    >>> result = en.enrich_randomization(['attribute1','attribute2'], biotype='all')
+    >>> result = en.user_defined_enrichment(['attribute1','attribute2'], biotype='all')
 
 In this example, instead of using all of the protein-coding genes in the Attribute Reference Table as background, we use all of the genomic features in the Attribute Reference Table as background.
 When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
@@ -1433,7 +1339,7 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 The second method of defining the background set is to define a specific set of genomic features to be used as background::
 
     >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> result = en.enrich_hypergeometric(['attribute1','attribute2'], background_genes=my_background_set)
+    >>> result = en.user_defined_enrichment(['attribute1','attribute2'], background_genes=my_background_set)
 
 In this example, our background set consists of feature1, feature2 and feature3.
 
@@ -1460,7 +1366,7 @@ You can read more about the topic in the following publication: https://www.ncbi
 If you don't specify which statistical test you want to use, the Fisher's Exact Test will be used by default.
 
 To choose the statistical test you want to use, utilize the `statistical_test` parameter, which accepts either 'fisher', 'hypergeometric', or 'randomization'.
-If you choose to use a randomization test, you can specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
+If you choose to use a randomization test, you may specify the number of randomization repititions to run using the `randomization_reps` parameter, and set the random seed using the `random_seed` parameter.
 
 Choose plotting parameters (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

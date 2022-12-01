@@ -22,8 +22,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="User guide" href="user_guide.html" />
-    <link rel="prev" title="Installation" href="installation.html" /> 
+    <link rel="next" title="Frequently asked questions" href="faq.html" />
+    <link rel="prev" title="RNAlysis quick-start video guide" href="quick_start.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -55,6 +55,7 @@
 <p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">A-to-Z tutorial - example analysis</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#intro-and-recommendations">Intro and recommendations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#analysis-1-time-series-rna-sequencing">Analysis #1 - time series RNA sequencing</a><ul>
@@ -108,8 +109,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#final-words">Final words</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
 <ul>
@@ -279,7 +282,7 @@ We will use the Gap Statistic method to determine some good options for the numb
 We can then set the value of the parameter <cite>n_clusters</cite> to ‘gap’, to indicate that we want to use the Gap Statistic to determine the number of clusters in this analysis:</p>
 <a class="reference internal image-reference" href="_images/01g01_kmedoids.png"><img alt="K-Medoids clustering setup - choose the number of clusters using the Gap Statistic" src="_images/01g01_kmedoids.png" style="width: 600px;" /></a>
 <p>Next, we can set the distance metric. Different distance metrics can be more or less effective on specific types of data.
-<em>RNAlysis</em> offers a large array of distance metrics, about which you can read in the <em>RNAlysis</em> <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html#data-clustering-with-countfilter">user guide</a>.
+<em>RNAlysis</em> offers a large array of distance metrics, about which you can read in the <em>RNAlysis</em> <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html#data-clustering-with-countfilter">user guide</a>.
 We will use a lesser-known distance metric called YR1, that was developed especially for time-series gene expression data and implemented in <em>RNAlysis</em>. You can read more about it in <a class="reference external" href="https://doi.org/10.1016/j.patrec.2007.09.015">Son and Baek 2007</a>:</p>
 <a class="reference internal image-reference" href="_images/01g02_kmedoids.png"><img alt="K-Medoids clustering setup - choose the distance metric" src="_images/01g02_kmedoids.png" style="width: 600px;" /></a>
 <p>We can now scroll all the way down, click the “Apply” button, and wait for the analysis to finish:</p>
@@ -644,7 +647,7 @@ Therefore, we will instead create a customized Pipeline containing all of those 
 The window will now update to show a preview of our new (empty) Pipeline:</p>
 <a class="reference internal image-reference" href="_images/02d03_pipeline.png"><img alt="Create Pipeline - preview" src="_images/02d03_pipeline.png" style="width: 600px;" /></a>
 <p>At this point, we can start adding functions to the Pipeline.
-Adding functions to a Pipeline works very similarly to applying functions to table, as we did in Analysis #1.
+Adding functions to a Pipeline works very similarly to applying functions to tables, as we did in Analysis #1.
 First, let’s click on the “Visualize” tab, and choose the “Volcano plot” function:</p>
 <a class="reference internal image-reference" href="_images/02d04_pipeline.png"><img alt="Create Pipeline - Volcano plot" src="_images/02d04_pipeline.png" style="width: 600px;" /></a>
 <p>A volcano plot can give us an overview of the results of a differential expression analysis - it will show us the distribution of adjusted p-values and log2 fold change values for our genes, and highlight the significantly up- and down-regulated genes.</p>
@@ -838,7 +841,7 @@ The table also includes the statistics for each attribute (number of genes in th
 <section id="final-words">
 <h2>Final words<a class="headerlink" href="#final-words" title="Permalink to this heading"></a></h2>
 <p>This concludes our A-to-Z tutorial of <em>RNAlysis</em>. This tutorial could not possibly encompass every single feature in <em>RNAlysis</em>, but at this point you should be familiar enough with <em>RNAlysis</em> to start analyzing your own data.
-If you want a deeper dive into all of the features available in <em>RNAlysis</em>, or want to learn how to write code with <em>RNAlysis</em>, check out the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html">user guide</a>.
+If you want a deeper dive into all of the features available in <em>RNAlysis</em>, or want to learn how to write code with <em>RNAlysis</em>, check out the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html">user guide</a>.
 If you still have questions about using <em>RNAlysis</em>, feel free to drop them in the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/discussions">discussions area</a>.</p>
 <p><em>RNAlysis</em> keeps updating all the time, so check out the documentation from time to time to find out what’s new.</p>
 <p>We hope you found this tutorial helpful, and wish you luck with your future bioinformatic endeavors!</p>
@@ -849,8 +852,8 @@ If you still have questions about using <em>RNAlysis</em>, feel free to drop the
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="user_guide.html" class="btn btn-neutral float-right" title="User guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="quick_start.html" class="btn btn-neutral float-left" title="RNAlysis quick-start video guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="faq.html" class="btn btn-neutral float-right" title="Frequently asked questions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

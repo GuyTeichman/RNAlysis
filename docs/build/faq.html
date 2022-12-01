@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frequently asked questions &mdash; RNAlysis 3.2.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User guide - graphical interface" href="user_guide_gui.html" />
+    <link rel="prev" title="A-to-Z tutorial - example analysis" href="tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently asked questions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#i-get-an-error-message-when-i-try-to-install-rnalysis-what-can-i-do">I get an error message when I try to install <em>RNAlysis</em>. what can I do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i-get-an-error-message-when-i-try-to-install-the-rnalysis-hdbscan-feature-what-can-i-do">I get an error message when I try to install the <em>RNAlysis</em> <cite>hdbscan</cite> feature. what can I do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i-get-an-error-message-when-i-try-to-install-the-rnalysis-randomization-feature-what-can-i-do">I get an error message when I try to install the <em>RNAlysis</em> <cite>randomization</cite> feature. what can I do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i-am-trying-to-open-rnalysis-for-the-first-time-and-it-takes-a-long-time-to-load-doesn-t-load-at-all-what-should-i-do">I am trying to open <em>RNAlysis</em> for the first time and it takes a long time to load/doesn’t load at all. What should I do?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#i-am-trying-to-view-the-rnalysis-quick-start-guide-but-see-only-blank-pages-what-should-i-do">I am trying to view the <em>RNAlysis</em> quick-start guide, but see only blank pages. What should I do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i-am-trying-to-apply-a-function-to-my-data-table-how-do-i-know-what-all-the-different-functions-and-parmeters-do">I am trying to apply a function to my data table. How do I know what all the different functions and parmeters do?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i-want-to-use-a-particular-statistical-method-or-algorithm-available-in-rnalysis-how-do-i-know-exactly-what-it-does-and-how-it-works">I want to use a particular statistical method or algorithm available in <em>RNAlysis</em>. How do I know exactly what it does and how it works?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-file-formats-are-supported-by-rnalysis">What file formats are supported by <em>RNAlysis</em>?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-types-of-tables-can-i-analyze-with-rnalysis">What types of tables can I analyze with <em>RNAlysis</em>?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Frequently asked questions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/faq.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="frequently-asked-questions">
+<h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this heading"></a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<section id="i-get-an-error-message-when-i-try-to-install-rnalysis-what-can-i-do">
+<h3>I get an error message when I try to install <em>RNAlysis</em>. what can I do?<a class="headerlink" href="#i-get-an-error-message-when-i-try-to-install-rnalysis-what-can-i-do" title="Permalink to this heading"></a></h3>
+<p>Try one of the following methods to solve your problem:</p>
+<ol class="arabic">
+<li><p>Make sure that your computer has an internet connection while you are installing <em>RNAlysis</em>.</p></li>
+<li><p>Instead of installing the full version of <em>RNAlysis</em>, try installing the basic version first by using the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span>
+</pre></div>
+</div>
+<p>If that worked, your system might have trouble installing one of the extended features of <em>RNAlysis</em>.
+Now you can find out which feature is causing issues by installing them one by one, by running the following commands one after the other:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">fastq</span><span class="p">]</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">hdbscan</span><span class="p">]</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">single</span><span class="o">-</span><span class="nb">set</span><span class="p">]</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">randomization</span><span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>See the next FAQ items to solve issues with a specific extended feature.</p>
+</li>
+<li><p>Make sure your version of Python is supported by <em>RNAlysis</em>. Currently, any Python version between 3.7-3.10 should work, but 3.8 would probably work best.</p></li>
+<li><p>Try <a class="reference external" href="https://towardsdatascience.com/virtual-environments-104c62d48c54?gi=40d0a7444922">creating a new Python environment</a> for <em>RNAlysis</em>, or <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">re-installing Python</a>.</p></li>
+</ol>
+<p>If you are still having trouble installing <em>RNAlysis</em>, please submit a <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues">bug report</a> or <a class="reference external" href="mailto:guyteichman&#37;&#52;&#48;gmail&#46;com">contact me</a>.</p>
+</section>
+<section id="i-get-an-error-message-when-i-try-to-install-the-rnalysis-hdbscan-feature-what-can-i-do">
+<h3>I get an error message when I try to install the <em>RNAlysis</em> <cite>hdbscan</cite> feature. what can I do?<a class="headerlink" href="#i-get-an-error-message-when-i-try-to-install-the-rnalysis-hdbscan-feature-what-can-i-do" title="Permalink to this heading"></a></h3>
+<p>The HDBSCAN module makes heavy use of pre-compiled code for performance, but that unfortunately means that installation can cause issues, particularly on computers running Windows.
+To successfully install HDBSCAN, try one of the following solutions:</p>
+<p>1. If your computer has a Windows operating system, try installing <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a>.
+After the installation is done, restart your computer, and try to install the HDBSCAN module again.
+2. Instead of installing Python normally, try installing the <a class="reference external" href="https://www.edureka.co/blog/python-anaconda-tutorial/">Anaconda or Miniconda</a> Python distribution.
+You can then install HDBSCAN via anaconda and <em>RNAlysis</em> via pip, like so:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">hdbscan</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="nb">all</span><span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="i-get-an-error-message-when-i-try-to-install-the-rnalysis-randomization-feature-what-can-i-do">
+<h3>I get an error message when I try to install the <em>RNAlysis</em> <cite>randomization</cite> feature. what can I do?<a class="headerlink" href="#i-get-an-error-message-when-i-try-to-install-the-rnalysis-randomization-feature-what-can-i-do" title="Permalink to this heading"></a></h3>
+<p>The randomization module makes heavy use of the Python package <cite>numba</cite> for performance, but that unfortunately means that installation can cause issues, particularly on computers running Windows.
+To successfully install <cite>numba</cite>, try one of the following solutions:</p>
+<ol class="arabic simple">
+<li><p>Make sure your Python version is supported by <em>RNAlysis</em>. Currently <em>RNAlysis</em> supports Python versions 3.7-3.10, but version 3.8 usually works best.</p></li>
+<li><p>Try <a class="reference external" href="https://towardsdatascience.com/virtual-environments-104c62d48c54?gi=40d0a7444922">creating a new Python environment</a> for <em>RNAlysis</em>, or <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">re-installing Python</a>.</p></li>
+</ol>
+<p>3. Instead of installing Python normally, try installing the <a class="reference external" href="https://www.edureka.co/blog/python-anaconda-tutorial/">Anaconda or Miniconda</a> Python distribution.
+You can then install <cite>numba</cite> via anaconda and <em>RNAlysis</em> via pip, like so:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">numba</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="nb">all</span><span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="i-am-trying-to-open-rnalysis-for-the-first-time-and-it-takes-a-long-time-to-load-doesn-t-load-at-all-what-should-i-do">
+<h3>I am trying to open <em>RNAlysis</em> for the first time and it takes a long time to load/doesn’t load at all. What should I do?<a class="headerlink" href="#i-am-trying-to-open-rnalysis-for-the-first-time-and-it-takes-a-long-time-to-load-doesn-t-load-at-all-what-should-i-do" title="Permalink to this heading"></a></h3>
+<p>When you run <em>RNAlysis</em> for the first time, it will attempt to download the tutorial videos from the official <em>RNAlysis</em> repository.
+This might take a long time if you have a slow internet connection, and might not work at all if your computer is not connected to the internet.
+To solve this problem, try one of the following solutions:</p>
+<ol class="arabic">
+<li><p>Connect your computer to the internet the first time you open <em>RNAlysis</em>, to allow it to download the tutorial videos.</p></li>
+<li><p>If the automatic download of the videos doesn’t work, you can download them manually from the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/tree/master/rnalysis/gui/videos">following link</a>, and copy them to the <em>RNAlysis</em> appdata directory.
+On a Windows computer, it would look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="o">&lt;</span><span class="n">user</span><span class="o">&gt;</span>\<span class="n">AppData</span>\<span class="n">Roaming</span>\<span class="n">RNAlysis</span>\<span class="n">RNAlysis</span>\<span class="n">videos</span>
+</pre></div>
+</div>
+<p>On a Linux computer, it would look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">home</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;/.</span><span class="n">local</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">RNAlysis</span><span class="o">/</span><span class="n">videos</span>
+</pre></div>
+</div>
+<p>On a MacOS computer, it would look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Users</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;&gt;/</span><span class="n">Library</span><span class="o">/</span><span class="n">Application</span> <span class="n">Support</span><span class="o">/</span><span class="n">RNAlyisis</span><span class="o">/</span><span class="n">videos</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<section id="i-am-trying-to-view-the-rnalysis-quick-start-guide-but-see-only-blank-pages-what-should-i-do">
+<h3>I am trying to view the <em>RNAlysis</em> quick-start guide, but see only blank pages. What should I do?<a class="headerlink" href="#i-am-trying-to-view-the-rnalysis-quick-start-guide-but-see-only-blank-pages-what-should-i-do" title="Permalink to this heading"></a></h3>
+<p>When you run <em>RNAlysis</em> for the first time, it will attempt to download the tutorial videos from the official <em>RNAlysis</em> repository.
+If your computer was not connected to the internet when opening <em>RNAlysis</em> for the first time, these tutorial videos may not have downloaded properly. .
+To solve this problem, try one of the following solutions:</p>
+<ol class="arabic">
+<li><p>Connect your computer to the internet and open <em>RNAlysis</em> again, to allow it to download the tutorial videos.</p></li>
+<li><p>If the automatic download of the videos doesn’t work, you can download them manually from the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/tree/master/rnalysis/gui/videos">following link</a>, and copy them to the <em>RNAlysis</em> appdata directory.
+On a Windows computer, it would look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span><span class="p">:</span>\<span class="n">Users</span>\<span class="o">&lt;</span><span class="n">user</span><span class="o">&gt;</span>\<span class="n">AppData</span>\<span class="n">Roaming</span>\<span class="n">RNAlysis</span>\<span class="n">RNAlysis</span>\<span class="n">videos</span>
+</pre></div>
+</div>
+<p>On a Linux computer, it would look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">home</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;/.</span><span class="n">local</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">RNAlysis</span><span class="o">/</span><span class="n">videos</span>
+</pre></div>
+</div>
+<p>On a MacOS computer, it would look something like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">Users</span><span class="o">/&lt;</span><span class="n">user</span><span class="o">&gt;&gt;/</span><span class="n">Library</span><span class="o">/</span><span class="n">Application</span> <span class="n">Support</span><span class="o">/</span><span class="n">RNAlyisis</span><span class="o">/</span><span class="n">videos</span>
+</pre></div>
+</div>
+</li>
+<li><p>Try uninstalling RNAlysis, and then re-installing it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">uninstall</span> <span class="n">RNAlysis</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="nb">all</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<ol class="arabic simple" start="5">
+<li><p>If all of these approaches failed, you can always browse the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/quick_start.html">online version</a> of the quick-start guide.</p></li>
+</ol>
+</section>
+<section id="i-am-trying-to-apply-a-function-to-my-data-table-how-do-i-know-what-all-the-different-functions-and-parmeters-do">
+<h3>I am trying to apply a function to my data table. How do I know what all the different functions and parmeters do?<a class="headerlink" href="#i-am-trying-to-apply-a-function-to-my-data-table-how-do-i-know-what-all-the-different-functions-and-parmeters-do" title="Permalink to this heading"></a></h3>
+<p>Since <em>RNAlysis</em> offers a large array of functions that do many different things, it is nearly impossible to remember what each function does, or what is the meaning of each of the functions’ parameters.
+Fortunately, this information is all documented!</p>
+<ol class="arabic simple">
+<li><p>After selecting a function through the <em>RNAlysis</em> graphic interface, click on the blue question mark button near the function selection box to read a short summary of what the function does.</p></li>
+<li><p>Click on the blue question mark buttons next to the individual parameters, or hover on the parameter names, to learn what they do and what types of parameters they accept.</p></li>
+<li><p>Click on the link at the bottom of the <em>RNAlysis</em> window to go view the full online documentation of the particular function you want ot use. This page will contain a short description of what the function does, the different parameters it calls, and some usage examples and screenshots.</p></li>
+</ol>
+</section>
+<section id="i-want-to-use-a-particular-statistical-method-or-algorithm-available-in-rnalysis-how-do-i-know-exactly-what-it-does-and-how-it-works">
+<h3>I want to use a particular statistical method or algorithm available in <em>RNAlysis</em>. How do I know exactly what it does and how it works?<a class="headerlink" href="#i-want-to-use-a-particular-statistical-method-or-algorithm-available-in-rnalysis-how-do-i-know-exactly-what-it-does-and-how-it-works" title="Permalink to this heading"></a></h3>
+<p>If you what to know how specific algorithms (e.g. CLICOM clustering, ‘elim’ method of GO annotation propagation, randomization enrichment test, etc), the best place to look would be the full documentation of the specific function you’re looking it.
+You can find a link to a function’s full documentation by clicking the link at the bottom of the <em>RNAlysis</em> window after you selected the function.
+If you couldn’t find the information you were looking for, try looking at the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide_gui.html">user guide</a>.</p>
+</section>
+<section id="what-file-formats-are-supported-by-rnalysis">
+<h3>What file formats are supported by <em>RNAlysis</em>?<a class="headerlink" href="#what-file-formats-are-supported-by-rnalysis" title="Permalink to this heading"></a></h3>
+<p><em>RNAlysis</em> can load tables or gene sets that arrive as comma-separated tables (CSV files - with the .csv suffix), or tab-separated tables (TSV files - with the .tsv suffix). For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gene</span><span class="p">,</span><span class="n">cond1</span><span class="p">,</span><span class="n">cond2</span><span class="p">,</span><span class="n">cond3</span>
+<span class="n">A</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">0</span>
+<span class="n">B</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span>
+<span class="n">C</span><span class="p">,</span><span class="mi">125</span><span class="p">,</span><span class="mi">114</span><span class="p">,</span><span class="mi">285</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gene</span> <span class="n">cond1</span>  <span class="n">cond2</span>  <span class="n">cond3</span>
+<span class="n">A</span>   <span class="mi">5</span>   <span class="mi">17</span>  <span class="mi">0</span>
+<span class="n">B</span>   <span class="mi">32</span>  <span class="mi">0</span>   <span class="mi">3</span>
+<span class="n">C</span>   <span class="mi">125</span> <span class="mi">114</span> <span class="mi">285</span>
+</pre></div>
+</div>
+<p>In addition, <em>RNAlysis</em> can load gene sets that arrive as a text file (.txt suffix), where each line in the file is a single gene name/ID. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gene1</span>
+<span class="n">gene2</span>
+<span class="n">gene3</span>
+<span class="n">gene4</span>
+</pre></div>
+</div>
+<p>If your data arrives in a different file format, you will need to convert it to one of the above formats before loading it into <em>RNAlysis</em>.
+Conversion can be done fairly easily through programs such as Google Sheets, Microsoft Excel, or LibreOffice Calc - especially if your table is saved in a spreadsheet format (like .xlsx).
+First, open your folder with one of the above programs; and then click “File”-&gt;”Save As…”, and save the table in the format “CSV (comma delimited) .csv”.</p>
+</section>
+<section id="what-types-of-tables-can-i-analyze-with-rnalysis">
+<h3>What types of tables can I analyze with <em>RNAlysis</em>?<a class="headerlink" href="#what-types-of-tables-can-i-analyze-with-rnalysis" title="Permalink to this heading"></a></h3>
+<p><em>RNAlysis</em> supports any kind of tabular data. However, <em>RNAlysis</em> offers specialized types of functions and analyses for specific types of tables.
+In particular, <em>RNAlysis</em> offers specialized functions for count matrices (raw or normalized), for differential expression tables (preferrably in the DESeq2 format, but other formats are also supported), and for single-column tables with fold-change values.
+To use those specialized functions, you need to specify the type of your table when first loading it into <em>RNAlysis</em>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tutorial.html" class="btn btn-neutral float-left" title="A-to-Z tutorial - example analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="user_guide_gui.html" class="btn btn-neutral float-right" title="User guide - graphical interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="A-to-Z tutorial - example analysis" href="tutorial.html" />
+    <link rel="next" title="RNAlysis quick-start video guide" href="quick_start.html" />
     <link rel="prev" title="What is RNAlysis?" href="readme.html" /> 
 </head>
 
@@ -59,9 +59,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#from-sources">From sources</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
 <ul>
@@ -108,18 +111,30 @@
 <section id="stable-release">
 <h2>Stable release<a class="headerlink" href="#stable-release" title="Permalink to this heading"></a></h2>
 <p>current version: <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="pipimage" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a></p>
-<p>You can install <em>RNAlysis</em> via PyPI.
-To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis
-</pre></div>
-</div>
-<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines), you should first install <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, and <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater (on Windows computers only).
+<p>You can install <em>RNAlysis</em> via <a class="reference external" href="https://pip.pypa.io">pip</a>.
+If you don’t have <a class="reference external" href="https://pip.pypa.io">pip</a> installed, this <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">Python installation guide</a> can guide
+you through the process.</p>
+<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines), you should first install <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater (on Windows computers only), <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, <a class="reference external" href="https://cran.r-project.org/bin/">R</a>, and <a class="reference external" href="https://pachterlab.github.io/kallisto/download">kallisto</a>.
 Then use the following command in your terminal window:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis<span class="o">[</span>all<span class="o">]</span>
 </pre></div>
 </div>
-<p>If you don’t have <a class="reference external" href="https://pip.pypa.io">pip</a> installed, this <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">Python installation guide</a> can guide
-you through the process.</p>
+<p>To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis
+</pre></div>
+</div>
+<p>You can also install <em>RNAlysis</em> with only some of the following additional features:</p>
+<ul class="simple">
+<li><p><cite>fastq</cite> - adapter trimming and RNA-seq transcript quantification of Fastq files</p></li>
+<li><p><cite>hdbscan</cite> - clustering analysis using the HDBSCAN method</p></li>
+<li><p><cite>single-set</cite> - single-set enrichment analysis using the XL-mHG test</p></li>
+<li><p><cite>randomization</cite> - improved performance for randomization tests</p></li>
+</ul>
+<p>by calling the install command with one or more additional features inside the square brackets, separated by commas. For example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis<span class="o">[</span>fastq,single-set<span class="o">]</span>
+</pre></div>
+</div>
+<p>will install the basic version of <em>RNAlysis</em>, along with the <cite>fastq</cite> and <cite>single-set</cite> additional features.</p>
 </section>
 <section id="from-sources">
 <h2>From sources<a class="headerlink" href="#from-sources" title="Permalink to this heading"></a></h2>
@@ -140,7 +155,7 @@ you through the process.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="readme.html" class="btn btn-neutral float-left" title="What is RNAlysis?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="tutorial.html" class="btn btn-neutral float-right" title="A-to-Z tutorial - example analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="quick_start.html" class="btn btn-neutral float-right" title="RNAlysis quick-start video guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

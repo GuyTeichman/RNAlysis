@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RNAlysis quick-start video guide &mdash; RNAlysis 3.2.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="A-to-Z tutorial - example analysis" href="tutorial.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><em>RNAlysis</em> quick-start video guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#open-the-program">Open the program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#load-a-table">Load a table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examine-your-table">Examine your table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filter-your-table">Filter your table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#undo-the-operations-you-applied-to-your-table">Undo the operations you applied to your table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apply-your-operations-in-place-or-apply-on-a-new-table">Apply your operations ‘in-place’ or apply on a new table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#save-the-changes-you-made-to-your-table">Save the changes you made to your table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#work-on-multiple-tables-at-the-same-time">Work on multiple tables at the same time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#different-types-of-tables-offer-different-ways-to-filter-and-analyze-your-data">Different types of tables offer different ways to filter and analyze your data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-and-save-graphs">Create and save graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sort-your-tabs-and-change-their-icons">Sort your tabs and change their icons</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#restore-tabs-you-closed">Restore tabs you closed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#import-lists-of-genes-as-gene-sets">Import lists of genes as Gene Sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visualize-the-intersections-between-your-tables-and-gene-sets">Visualize the intersections between your tables and gene sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apply-set-operations-to-your-tables-and-gene-sets">Apply set operations to your tables and gene sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#perform-enrichment-analysis-on-your-tables-and-gene-sets">Perform enrichment analysis on your tables and gene sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-pipelines-to-streamline-your-data-analysis">Create Pipelines to streamline your data analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apply-pipelines-to-one-or-more-of-your-tables">Apply Pipelines to one or more of your tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#export-and-share-pipelines-to-make-your-analysis-more-reproducible">Export and share Pipelines to make your analysis more reproducible</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li><em>RNAlysis</em> quick-start video guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quick_start.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rnalysis-quick-start-video-guide">
+<h1><em>RNAlysis</em> quick-start video guide<a class="headerlink" href="#rnalysis-quick-start-video-guide" title="Permalink to this heading"></a></h1>
+<section id="open-the-program">
+<h2>Open the program<a class="headerlink" href="#open-the-program" title="Permalink to this heading"></a></h2>
+<p>If you installed <em>RNAlysis</em> from pypi, you can open the graphical user interface by either executing the command <cite>rnalysis-gui</cite> from your terminal, or by typing the following code into a Python console:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">gui</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gui</span><span class="o">.</span><span class="n">run_gui</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="load-a-table">
+<h2>Load a table<a class="headerlink" href="#load-a-table" title="Permalink to this heading"></a></h2>
+<p>Choose a file from your computer, and click ‘start’ to load it into <em>RNAlysis</em>.</p>
+<img alt="_images/load_table.webp" src="_images/load_table.webp" />
+</section>
+<section id="examine-your-table">
+<h2>Examine your table<a class="headerlink" href="#examine-your-table" title="Permalink to this heading"></a></h2>
+<p>You will now be able to see an overview of your data, including the table’s name, type, and dimensions. Click the ‘View full table’ button to see your table in its entirety.</p>
+<img alt="_images/view_table.webp" src="_images/view_table.webp" />
+</section>
+<section id="filter-your-table">
+<h2>Filter your table<a class="headerlink" href="#filter-your-table" title="Permalink to this heading"></a></h2>
+<p>Choose a filtering function, set your desired parameters, and click ‘Apply’ to filter your table. The changes you make will not affect your original file until you save them.</p>
+<img alt="_images/filter_table.webp" src="_images/filter_table.webp" />
+</section>
+<section id="undo-the-operations-you-applied-to-your-table">
+<h2>Undo the operations you applied to your table<a class="headerlink" href="#undo-the-operations-you-applied-to-your-table" title="Permalink to this heading"></a></h2>
+<p>At any moment, you can use the ‘Command history’ window to undo or redo an operation you applied to your table.</p>
+<img alt="_images/undo_actions.webp" src="_images/undo_actions.webp" />
+</section>
+<section id="apply-your-operations-in-place-or-apply-on-a-new-table">
+<h2>Apply your operations ‘in-place’ or apply on a new table<a class="headerlink" href="#apply-your-operations-in-place-or-apply-on-a-new-table" title="Permalink to this heading"></a></h2>
+<p>Instead of applying operations ‘in-place’, you can choose to apply the operation to a copy of your table in a new tab. The table in the original tab won’t be modified.</p>
+<img alt="_images/apply_inplace.webp" src="_images/apply_inplace.webp" />
+</section>
+<section id="save-the-changes-you-made-to-your-table">
+<h2>Save the changes you made to your table<a class="headerlink" href="#save-the-changes-you-made-to-your-table" title="Permalink to this heading"></a></h2>
+<p>To save result of your filtering operations, click the ‘Save table’ button and choose where to save the modified table.</p>
+<img alt="_images/save_table.webp" src="_images/save_table.webp" />
+</section>
+<section id="work-on-multiple-tables-at-the-same-time">
+<h2>Work on multiple tables at the same time<a class="headerlink" href="#work-on-multiple-tables-at-the-same-time" title="Permalink to this heading"></a></h2>
+<p>You can work on multiple tables at the same time by opening a new tab and loading another table.</p>
+<img alt="_images/new_tab.webp" src="_images/new_tab.webp" />
+</section>
+<section id="different-types-of-tables-offer-different-ways-to-filter-and-analyze-your-data">
+<h2>Different types of tables offer different ways to filter and analyze your data<a class="headerlink" href="#different-types-of-tables-offer-different-ways-to-filter-and-analyze-your-data" title="Permalink to this heading"></a></h2>
+<p>When loading a table, you can specify its type. Different types of tables support different types of functions: for example, count matrices support clustering analysis.</p>
+<img alt="_images/table_types.webp" src="_images/table_types.webp" />
+</section>
+<section id="create-and-save-graphs">
+<h2>Create and save graphs<a class="headerlink" href="#create-and-save-graphs" title="Permalink to this heading"></a></h2>
+<p>Some functions can generate graphs of your data. You can resize those graphs, and save them to your computer in multiple file formats.</p>
+<img alt="_images/generate_graphs.webp" src="_images/generate_graphs.webp" />
+</section>
+<section id="sort-your-tabs-and-change-their-icons">
+<h2>Sort your tabs and change their icons<a class="headerlink" href="#sort-your-tabs-and-change-their-icons" title="Permalink to this heading"></a></h2>
+<p>To help organize your workspace, you can sort tabs by right-clicking a tab and choosing a sorting method. You can also change specific tabs’ colors, to help you differentiate them.</p>
+<img alt="_images/sort_tabs.webp" src="_images/sort_tabs.webp" />
+</section>
+<section id="restore-tabs-you-closed">
+<h2>Restore tabs you closed<a class="headerlink" href="#restore-tabs-you-closed" title="Permalink to this heading"></a></h2>
+<p>If you accidentally closed one of your tabs - don’t worry! You can restore closed tabs through the ‘Edit’ menu.</p>
+<img alt="_images/restore_tabs.webp" src="_images/restore_tabs.webp" />
+</section>
+<section id="import-lists-of-genes-as-gene-sets">
+<h2>Import lists of genes as Gene Sets<a class="headerlink" href="#import-lists-of-genes-as-gene-sets" title="Permalink to this heading"></a></h2>
+<p>In addition to tables, <em>RNAlysis</em> can also import lists of genes as Gene Sets. We will soon review what we can do with those gene sets.</p>
+<img alt="_images/import_gene_sets.webp" src="_images/import_gene_sets.webp" />
+</section>
+<section id="visualize-the-intersections-between-your-tables-and-gene-sets">
+<h2>Visualize the intersections between your tables and gene sets<a class="headerlink" href="#visualize-the-intersections-between-your-tables-and-gene-sets" title="Permalink to this heading"></a></h2>
+<p>In the ‘Visualize Gene Sets’ window you can create Venn diagrams and UpSet plots that will display the various intersections between your tables and gene sets.</p>
+<img alt="_images/visualize_gene_sets.webp" src="_images/visualize_gene_sets.webp" />
+</section>
+<section id="apply-set-operations-to-your-tables-and-gene-sets">
+<h2>Apply set operations to your tables and gene sets<a class="headerlink" href="#apply-set-operations-to-your-tables-and-gene-sets" title="Permalink to this heading"></a></h2>
+<p>In the ‘Set Operations’ window you can extract specific subsets from your data. Either use predefined set operations, or click on specific subsets in the preview pane to select them.</p>
+<img alt="_images/set_operations.webp" src="_images/set_operations.webp" />
+</section>
+<section id="perform-enrichment-analysis-on-your-tables-and-gene-sets">
+<h2>Perform enrichment analysis on your tables and gene sets<a class="headerlink" href="#perform-enrichment-analysis-on-your-tables-and-gene-sets" title="Permalink to this heading"></a></h2>
+<p>In the ‘Enrichment Analysis’ window, you can perform various types of enrichment analysis on the tables and gene sets you filtered.</p>
+<img alt="_images/enrichment_analysis.webp" src="_images/enrichment_analysis.webp" />
+</section>
+<section id="create-pipelines-to-streamline-your-data-analysis">
+<h2>Create Pipelines to streamline your data analysis<a class="headerlink" href="#create-pipelines-to-streamline-your-data-analysis" title="Permalink to this heading"></a></h2>
+<p>You can group multiple operations in a specific order and with specific parameters into a Pipeline. Just add those functions to the Pipeline in the order you choose.</p>
+<img alt="_images/create_pipeline.webp" src="_images/create_pipeline.webp" />
+</section>
+<section id="apply-pipelines-to-one-or-more-of-your-tables">
+<h2>Apply Pipelines to one or more of your tables<a class="headerlink" href="#apply-pipelines-to-one-or-more-of-your-tables" title="Permalink to this heading"></a></h2>
+<p>You can apply a Pipeline to a group of tables through the ‘Pipelines’ menu. Using Pipelines to analyze multiple datasets can make your workflow faster and less error-prone.</p>
+<img alt="_images/apply_pipeline.webp" src="_images/apply_pipeline.webp" />
+</section>
+<section id="export-and-share-pipelines-to-make-your-analysis-more-reproducible">
+<h2>Export and share Pipelines to make your analysis more reproducible<a class="headerlink" href="#export-and-share-pipelines-to-make-your-analysis-more-reproducible" title="Permalink to this heading"></a></h2>
+<p>Pipelines you export can be imported from any computer, and can be shared with others to help make your analysis easier to understand and more reproducible.</p>
+<img alt="_images/export_pipeline.webp" src="_images/export_pipeline.webp" />
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="A-to-Z tutorial - example analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

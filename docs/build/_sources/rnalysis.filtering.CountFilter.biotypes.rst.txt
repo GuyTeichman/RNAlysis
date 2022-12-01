@@ -1,6 +1,0 @@
-rnalysis.filtering.CountFilter.biotypes_from_ref_table
-=======================================
-
-.. currentmodule:: rnalysis.filtering
-
-.. automethod:: CountFilter.biotypes_from_ref_table

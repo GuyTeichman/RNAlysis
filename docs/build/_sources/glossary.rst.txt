@@ -1,6 +1,6 @@
 .. _glossary:
 
-Glossary
+Glossary - programmatic interface
 ===================================
 
 .. glossary::
