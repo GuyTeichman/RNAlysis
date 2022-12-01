@@ -4,232 +4,241 @@ User guide - graphical interface
 
 
 
-****************************
-*RNAlysis* filtering module
-****************************
-RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy to understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
+**************************************
+Analyzing data tables with *RNAlysis*
+**************************************
+The *RNAlysis* main window is built to allow you to quickly and easily filter, process, analyze, and summarize data tables in general, and RNA sequencing data in particular.
 
-The filtering module is built around :term:`Filter objects`, which are containers for tabular sequencing data. You can use the different types of :term:`Filter objects` to apply filtering operations to various types of tabular data. You will learn more about :term:`Filter objects` in the next section.
+The filtering module is tab-based - each tab contains a single table or gene set. You can work on multiple gene sets and tables in parallel, switching freely between tabs as you would in an internet browser.
+*RNAlysis* supports different types of data tables. You will learn more about those table types in the next section.
 
-Working with Filter objects
+Working with tables
 ============================
 
-All :term:`Filter objects` (:term:`CountFilter`, :term:`DESeqFilter`, :term:`Filter`, :term:`FoldChangeFilter`) work on the same principles,
-and share many of the same functions and features. Each of them also has specific filtering, analysis and visualisation functions. In this section we will look into the general usage of :term:`Filter objects`.
+Analysis of all types of data tables (Count matrices, differential expression tables, fold change tables, and other generic tables) works on the same principles,
+and many of the same functions and features are relevant to all types of data tables. Each of those types also has specific filtering, analysis and visualisation functions unique to it.
+In this section we will look into the general principles of working with data tables.
 
-Initialize a Filter object
---------------------------
+Loading tables into *RNAlysis*
+--------------------------------
 
-We will start by importing the filtering module::
+We will start by opening the *RNAlysis* GUI. Type the following command into the terminal through which you installed *RNAlysis*::
 
-    >>> from *RNAlysis* import filtering
+    rnalysis-gui
 
-We can now, for example, create a :term:`DESeqFilter` object from a DESeq2 `csv` output file (see more details about :term:`DESeqFilter` in sections below).
-::
+To load a table, in the main window, click on the "Load" button and choose a table's csv file from your computer.
+We will then use the drop-down menu to change our table type from "Other" to "Count matrix". This will allow us to later on use analysis methods that are dedicated to count matrix-style datasets.
 
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
+.. image:: /tutorial_screenshots/01a01_load_table.png
+  :width: 600
+  :alt: Loading a table into *RNAlysis* - choose the table type
 
-View a Filter object
+Once we picked a table type, a new option will appear, allowing us to specify whether our table was pre-normalized.
+This is not a mandatory step, but if we don't do it, *RNAlysis* will warn us whenever we run analyses that expect normalized values.
+
+.. image:: /tutorial_screenshots/01a02_load_table.png
+  :width: 600
+  :alt: Loading a table into *RNAlysis* - set the table as pre-normalized
+
+Different types of tables offer different types of options. For example, when loading differential expression tables, you can specify the names of the columns containing log2FolcChange values and adjusted p-values;
+and for any table you can specify the names of specific columns that you want to drop from the table.
+
+.. image:: ../../rnalysis/gui/videos/table_types.webp
+
+Finally, we can click the "start" button to actually open our table on *RNAlysis*.
+The window will now display a preview of our table, as well as a short summary of our table's content (table name, table type, number of rows and columns). 
+
+
+Loading multiple tables into *RNAlysis*
+-------------------------------------------
+To save time and effort, you can load multiple tables into *RNAlysis* at once. 
+To do that, open the "File" menu, hover on "New..." and choose "Multiple new tables". 
+
+You can then pick multiple table files to load into *RNAlysis*. 
+
+When you are done picking files, click on the "OK" button. 
+You will then be prompted to set each table's type, parameters, and optionally an alternative name. 
+
+.. image:: /userguide_screenshots/user_guide_load_multi_01.png
+
+Once you are happy with those parameters, click on the "OK" buttons to load all tables into *RNAlysis*. 
+
+.. image:: /userguide_screenshots/user_guide_load_multi_02.png
+
+Working with multiple tables and organizing your workspace
+----------------------------------------------------------------
+
+The main window of *RNAlysis* works much like an internet browser - you can load multiple tables in the same session, and each table will be displayed in its own tab. 
+You can switch between tabs by clicking on a different tab's label, and you can apply (or undo) functions to each table separately and independently:
+
+.. image:: ../../rnalysis/gui/videos/new_tab.webp
+
+To see the full name of a tab, you can hover over it's label with your cursor. 
+
+Each tab will have a colored icon, showing the type of that table ('C' for count matrices, 'DE' for differential expression tables, 'FC' for fold-change tables, 'T' for other tables, and 'S' for gene sets). 
+To make it easier for you to analyze multiple tables at the same time, you can change the icon of a specific tab by right-clicking on it and choosing a new color. 
+Moreover, you can sort your tables by name, type, or creation time, by right-clicking on tab and choosing a sorting method. 
+
+.. image:: ../../rnalysis/gui/videos/sort_tabs.webp
+
+
+Examining tables
 --------------------
+Let's go through three different ways to view a glimpse of the table we just loaded. 
 
-In order to view a glimpse of the file we imported we can use the 'head' and 'tail' functions.
+First, as we saw earlier, each tab will display a small preview of the table loaded into it. We can also see the name, the shape, (how many rows and columns), and the type of the table. 
+
+Second, if you want to see the entire table, you can click on the 'View full table' button to see your table in its entirety:
+
+.. image:: ../../rnalysis/gui/videos/view_table.webp
+
+Finally, if your table is particularly big, or your system doesn't have enough memory to show it all at once, you will need to use more sophisticated methods to get a glimpse of your data
+To view a glimpse of the table we can use the 'head' and 'tail' functions.
 By default 'head' will show the first 5 rows of the file, and 'tail' will show the last 5 rows,
-but you can specify a specific number of lines to show.
-::
+but you can specify a specific number of lines to show. 
 
-    >>> d.head()
-                   baseMean  log2FoldChange  ...         pvalue           padj
-    WBGene00000002  6820.755327        7.567762  ...   0.000000e+00   0.000000e+00
-    WBGene00000003  3049.625670        9.138071  ...  4.660000e-302  4.280000e-298
-    WBGene00000004  1432.911791        8.111737  ...  6.400000e-237  3.920000e-233
-    WBGene00000005  4028.154186        6.534112  ...  1.700000e-228  7.800000e-225
-    WBGene00000006  1230.585240        7.157428  ...  2.070000e-216  7.590000e-213
-    <BLANKLINE>
-    [5 rows x 6 columns]
-    >>> d.tail(8)
-                   baseMean  log2FoldChange  ...         pvalue           padj
-    WBGene00000022   365.813048        6.101303  ...  2.740000e-97  2.400000e-94
-    WBGene00000023  3168.566714        3.906719  ...  1.600000e-93  1.340000e-90
-    WBGene00000024   221.925724        4.801676  ...  1.230000e-84  9.820000e-82
-    WBGene00000025  2236.185837        2.477374  ...  1.910000e-81  1.460000e-78
-    WBGene00000026   343.648987       -4.037191  ...  2.320000e-75  1.700000e-72
-    WBGene00000027   175.142856        6.352044  ...  1.580000e-74  1.120000e-71
-    WBGene00000028   219.163200        3.913657  ...  3.420000e-72  2.320000e-69
-    WBGene00000029  1066.242402       -2.811281  ...  1.420000e-70  9.290000e-68
-    <BLANKLINE>
-    [8 rows x 6 columns]
-
-We can also see the total number of rows and columns by accessing the 'shape' attribute::
-
-    >>> d.shape
-    (28, 6)
-
-meaning there are 28 rows and 6 columns in the file.
+Click on the 'Summarize' button near the bottom of the screen, and then choose either the 'Table Head' or the 'Table Tail' functions, and then click on the 'Apply' button at the bottom of the screen. 
+A new window will open, showing a preview of the top/bottom of the table. 
 
 Filtering operations
---------------------
+----------------------
 
-Now we can start filtering the entries in the file according to parameters of our choosing.
-Various filtering operations are applied directly to the :term:`Filter object`. Those operations do not affect the original `csv` file, but its representation within the :term:`Filter object`.
-For example, we can the function 'filter_percentile' to remove all rows that are above the specified percentile (in our example, 75% percentile) in the specified column (in our example, 'log2FoldChange')::
+Now we can start filtering the rows in the table we loaded according to parameters of our choosing.
+The filtering operations we apply are going to affect the table in the current tab. Those operations do not affect the original `csv` file we loaded, but its representation within the *RNAlysis* program. 
+If we want to save the changes we made we can do that by clicking on the "Save table" button, and choosing a name for the new, filtered table. 
 
-    >>> d.filter_percentile(0.75,'log2FoldChange')
-    Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
+*RNAlysis* contains a large variety of filtering functions. You can view them and choose one by clicking on the "Filter" button, and choosing a function from the drop-down list:
 
-If we now look at the shape of d, we will see that 5954 rows have been filtered out of the object, and we remain with 17781 rows.
-::
+.. image:: ../../rnalysis/gui/videos/filter_table.webp
 
-    >>> d.shape
-    (21, 6)
+If we now look at the shape of the table, we will see that some rows have been filtered out of the table. This information will also appear in the log textbox at the bottom of the screen. 
+*RNAlysis* will display a summary of each applied operation in this log textbox, as well as warnings and other information. 
+When you work with multiple tables at the same time, each tab will have its own log textbox, and log messages should appear in the tab that's relevant to them. 
 
-By default, filtering operations on :term:`Filter objects` are performed in-place, meaning the original object is modified. However, we can save the results into a new :term:`Filter object` and leave the current object unaffected by passing the argument 'inplace=False' to any filtering function within *RNAlysis*. For example::
+Different functions in *RNAlysis* have different parameters. Those parameters determine exactly how those functions are applied. 
+For example, the function 'Filter by statistical significance' for differential expression tables can filter out genes which are not significantly differentially expressed. 
+You can determine exactly what the threshold for statistical analysis is, by setting the 'alpha' parameter. 
 
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> d.shape
-    (28, 6)
-    >>> d_filtered = d.filter_percentile(0.75,'log2FoldChange',inplace=False)
-    Filtered 7 features, leaving 21 of the original 28 features. Filtering result saved to new object.
-    >>> d_filtered.shape
-    (21, 6)
-    >>> d.shape
-    (28, 6)
+By default, when you apply filtering operations (or other table-modifying operations) on data tables, they are performed in-place - meaning the table is modified in its original tab. 
+However, if we don't want to modify the original tab, we can choose not to apply the operation in-place, and instead open a copy of the table in a new tab, applying the operation to that copy. 
+This will leave the original table unchanged - so you can have two copies of the table and look at them side-by-side, or use both the filtered and unfiltered versions later down the line. 
+To determine whether filtering (or other table-modifying operations) will be applied in-place or not, you can set the "inplace" parameter of those functions to True (to apply in-place) or "False" (to apply in a new tab):
 
-In this case, the object 'd' remained unchanged, while 'd_filtered' became a new :term:`Filter object` which contains our filtered results. We can continue applying filters sequentially to the same Filter object, or using 'inplace=False' to create a new object at any point.
+.. image:: ../../rnalysis/gui/videos/apply_inplace.webp
 
-Another useful option is to perform an opposite filter. When we specify the parameter 'opposite=True' to any filtering function within *RNAlysis*, the filtering function will be performed in opposite. This means that all of the genomic features that were supposed to be filtered out are kept in the object, and the genomic features that were supposed to be kept in the object are filtered out.
-For example, if we now wanted to remove the rows which are below the 25% percentile in the 'log2FoldChange' column, we will use the following code::
+Another useful parameter common to all filtering operations is to perform an Opposite filter. When we specify the parameter 'opposite' as True, the filtering function will be performed in opposite. 
+This means that all of the rows that were supposed to be filtered out are kept in the table, and the rows that were supposed to be kept in the table are instead filtered out. 
+This is useful when you want to find a group of genes that **doesn't** match a specific criteria. For example - you could use the 'Filter by statistical significance' function with the `opposite` parameter set to True, 
+in order to extract the list of genes which are NOT significantly differentially expressed. 
 
-    >>> d.filter_percentile(0.25,'log2FoldChange',opposite=True)
-    Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
+Any table-modifying operation you apply in-place can be undone with a click of a button, by using the Command History pane:
 
-Calling this function without the 'opposite' parameter would have removed all values except the bottom 25% of the 'log2FoldChange' column. When specifying 'opposite', we instead throw out the bottom 25% of the 'log2FoldChange' column and keep the rest.
-
-There are many different filtering functions within the filtering module. Some of them are subtype-specific (such as 'filter_low_reads' for :term:`CountFilter` objects and 'filter_significant' for :term:`DESeqFilter` objects), while others can be applied to any :term:`Filter object`. You can read more about the different functions and their usage in the project's documentation.
+.. image:: ../../rnalysis/gui/videos/undo_actions.webp
 
 
-Performing set operations on multiple Filter objects
-----------------------------------------------------
-
-In addition to using regular filters, it is also possible to use set operations such as union, intersection, difference and symmetric difference to combine the results of multiple :term:`Filter objects`. Those set operations can be applied to any Filter object, as well as to python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of a :term:`DESeqFilter` object, an :term:`CountFilter` object and a python set::
-
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
-    >>> a_set = {'WBGene00000001','WBGene00000002','WBGene00000003'}
-    >>> d.difference(counts, a_set)
-    {'WBGene00007063', 'WBGene00007064', 'WBGene00007066', 'WBGene00007067', 'WBGene00007069', 'WBGene00007071',
-     'WBGene00007074', 'WBGene00007075', 'WBGene00007076', 'WBGene00007077', 'WBGene00007078', 'WBGene00007079',
-     'WBGene00014997', 'WBGene00043987', 'WBGene00043988', 'WBGene00043989', 'WBGene00043990', 'WBGene00044022',
-     'WBGene00044951', 'WBGene00077502', 'WBGene00077503', 'WBGene00077504'}
-
-When performing set operations, the return type can be either a python set (default) or a string. This means you can use the output of the set operation as an input for yet another set operation. However, since the returned object is a set you cannot use :term:`Filter object` functions such as 'head' and 'save_csv' on it, or apply filters to it directly. Intersection and Difference in particular can be used in-place, which applies the filtering to the first :term:`Filter object`.
-
-
-Saving Filter results
----------------------
-
-At any point we can save the current result of our filtering to a new `csv` file, by using the 'save_csv' function::
-
-    >>> d.save_csv()
-
-If no filename is specified, the file is given a name automatically based on the filtering operations performed on it, their order and their parameters.
-We can view the current automatic filename by looking at the 'fname' attribute::
-
-    >>> d.filter_percentile(0.75,'log2FoldChange')
-    Filtered 7 features, leaving 21 of the original 28 features. Filtered inplace.
-    >>> d.number_filters('baseMean','greater than',500)
-    Filtered 6 features, leaving 15 of the original 21 features. Filtered inplace.
-    >>> d.fname
-    'D:/myfolder/test_deseq_below0.75baseMeangt500.csv'
-
-Alternatively, you can specify a filename::
-
-    >>> d.save_csv('alternative_filename')
-
-Instead of directly saving the results to a file, you can also get them as a set or string of genomic feature indices::
-
-    >>> print(d.index_set)
-    {'WBGene00000005', 'WBGene00000006', 'WBGene00000008', 'WBGene00000009', 'WBGene00000010', 'WBGene00000011',
-     'WBGene00000012', 'WBGene00000014', 'WBGene00000015', 'WBGene00000017', 'WBGene00000019', 'WBGene00000021',
-     'WBGene00000023', 'WBGene00000025', 'WBGene00000029'}
-    >>> print(d.index_string)
-    WBGene00000010
-    WBGene00000012
-    WBGene00000021
-    WBGene00000023
-    WBGene00000017
-    WBGene00000015
-    WBGene00000025
-    WBGene00000008
-    WBGene00000011
-    WBGene00000014
-    WBGene00000029
-    WBGene00000006
-    WBGene00000009
-    WBGene00000005
-    WBGene00000019
-
-Sets of genomic feature indices can be used later for enrichment analysis using the enrichment module (see below).
-
-
-Using an Attribute Reference Table for filter operations
+Using an Attribute Reference Table to filter tables
 ---------------------------------------------------------
-
 An :term:`Attribute Reference Table` contains various user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes' or 'genes that have paralogs') and their value for each genomic feature.
 You can read more about the :term:`Attribute Reference Table` format and loading an :term:`Attribute Reference Table` in the :ref:`reference-table-ref` section.
-Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table::
+Using the function "Filter by user-defined attribute", you can filter your tables by one of the user-defined attributes in your Attribute Reference Table. 
 
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> d.filter_by_attribute('attribute1', ref='tests/test_files/attr_ref_table_for_examples.csv')
-    Filtered 27 features, leaving 1 of the original 28 features. Filtered inplace.
+Using a GTF file or Biotype Reference Table to filter tables or summarize tables
+---------------------------------------------------------------------------------
+If you want to filter the genes in your tables by their biotypes (protein coding gene, pseudogene, lncRNA, etc), or summarize their biotypes, you can do that using either a GTF file or a Biotype Reference Table. 
 
-Using a Biotype Reference Table for filter operations
---------------------------------------------------------
+If you use a GTF file, your GTF file must contain information about each genomic feature's biotype, and the gene ID type of your table should match that of your GTF file. 
+Alternatively, if you don't have such a GTF file, or you want to define the biotypes of your genomic features differently, you can use a custom-made :term:'Biotype Reference Table'. 
 
 A :term:`Biotype Reference Table` contains annotations of the biotype of each genomic features ('protein_coding', 'piRNAs', 'lincRNAs', 'pseudogenes', etc).
 You can read more about the :term:`Biotype Reference Table` format and loading a :term:`Biotype Reference Table` in the :ref:`reference-table-ref` section.
-Using the function Filter.filter_biotype_from_ref_table(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table::
 
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> d.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv')
-    Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
+To filter a table based on the biotypes of the genomic features in it, use either the "Filter by feature biotype (based on a GTF file)" function or the "Filter by feature biotype (based on a reference table)" function. 
 
-You can also view the number of genomic features belonging to each biotype using the function Filter.biotypes_from_ref_table()::
-
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-    >>> d.biotypes_from_ref_table()
-                    gene
-    biotype
-    protein_coding    26
-    pseudogene         1
-    unknown            1
-
-Or view more elaborated descriptive statistics for eahc biotype by specifying return_format='long'::
-
-    >>> d.biotypes_from_ref_table(return_format='long', ref='tests/test_files/biotype_ref_table_for_tests.csv')
-
-                   baseMean               ...           padj
-                      count         mean  ...            75%            max
-    biotype                               ...
-    protein_coding     26.0  1823.089609  ...   1.005060e-90   9.290000e-68
-    pseudogene          1.0  2688.043701  ...   1.800000e-94   1.800000e-94
-    unknown             1.0  2085.995094  ...  3.070000e-152  3.070000e-152
-    <BLANKLINE>
-    [3 rows x 48 columns]
+You can also view the number of genomic features belonging to each biotype using either the function "Summarize feature biotypes (based on a GTF file)" or the function "Summarize feature biotypes (based on a reference table)". 
 
 
-Filtering DESeq2 output files with filtering.DESeqFilter
-=========================================================
+Working with Differential Expression Tables
+==============================================
+Differential Expression Tables are data tables describing the results of differential expression analysis. Most importantly, these tables contain data about the log2 fold change of each gene, and the adjusted p-value for each gene (meaning, whether it is statistically significant in the DE analysis). 
+*RNAlysis* has special functions implemented for differential expression data. 
 
-:term:`DESeqFilter` objects are built to easily filter differential expression tables, such as those returned by the R package DESeq2.
-Like other Filter Objects, filtering operations on :term:`DESeqFilter` are performed in-place by default, meaning the original object is modified.
+You can either load pre-existing Differential Expression Tables into *RNAlysis*, or run differential expression analysis on a count matrix through *RNAlysis* using the built-in DESeq2 Differential Expression tool. 
 
+Differential expression analysis using DESeq2 through *RNAlysis*
+------------------------------------------------------------------ 
 You can read more about DESeq2 here:
 https://doi.org/doi:10.18129/B9.bioc.DESeq2
 
-Loading from a `csv` file
-----------------------------
+Before proceeding with this step, make sure you have `installed R <https://cran.r-project.org/bin/>`_ on your computer.
+You don't have to install DESeq2 on your own - *RNAlysis* can install it for you, as long as you have installed the R language on your computer already.
 
-Any `csv` file that contains differential expression analysis data with log2 fold change and adjusted p-values can be used as input for :term:`DESeqFilter`.
+To open the Differential Expression window, choose an *RNAlysis* tab with one of the scaled count tables, click on the "General" tab, and from the drop-down menu below select "Run DESeq2 differential expression":
+
+.. image:: /tutorial_screenshots/02c01_deseq2.png
+  :width: 600
+  :alt: Open the differential expression window
+
+The Differential Expression window should now open. On the left side of the window, set the path of your R installation (or keep it on 'auto' if you have previously added R to your computer's PATH).
+
+.. image:: /tutorial_screenshots/02c02_deseq2.png
+  :width: 600
+  :alt: Differential expression
+
+Next, you need to define a **design matrix** for each of our count tables.
+The first column of the design matrix should contain the names of the samples in the count table.
+Each other column should contain a variable to be added to the experimental design formula of the dataset. For example: experimental condition, genotype, or biological replicate/batch.
+For example, the a design matrix for an experiment with two experimental conditions and three biological replicates could look like this:
+
++-------+------------+--------+
+| Name  | condition  | batch  |
++=======+============+========+
+| Ctrl1 | Ctrl       | A      |
++-------+------------+--------+
+| Ctrl2 | Ctrl       | B      |
++-------+------------+--------+
+| Ctrl3 | Ctrl       | C      |
++-------+------------+--------+
+| Osm1  | Osm        | A      |
++-------+------------+--------+
+| Osm2  | Osm        | B      |
++-------+------------+--------+
+| Osm3  | Osm        | C      |
++-------+------------+--------+
+
+You can create your design matrix in a program like Microsoft Excel or Google Sheets, and then save it as a CSV or TSV file.
+
+Once you have prepared your design matrix, choose that file from the DESeq2 window and click on the "Load design matrix" button:
+
+.. image:: /tutorial_screenshots/02c03_deseq2.png
+  :width: 600
+  :alt: Differential expression - load sample table
+
+The right side of the window will now update, allowing you to choose which pairwise comparisons you want to run, based on your design matrix.
+You can make as many pairwise comparisons as you want, each comparing two levels of one of the variables in the design matrix.
+Note that the order of conditions in the comparison matters - the first condition will be the numerator in the comparison, and the second condition will be the denominator.
+
+.. image:: /tutorial_screenshots/02c04_deseq2.png
+  :width: 600
+  :alt: Differential expression - choose pairwise comparisons
+
+After picking the comparisons you want to run, click on the "Start DESeq2".
+
+When the analysis ends, a dialog box will pop up, prompting you to choose which differential expression tables do you want to load into *RNAlysis*:
+
+.. image:: /tutorial_screenshots/02c05_deseq2.png
+  :width: 600
+  :alt: Differential expression - choose tables to load
+
+After choosing to load the table, it will open in a new tab in *RNAlysis*:
+
+.. image:: /tutorial_screenshots/02c06_deseq2.png
+  :width: 600
+  :alt: Differential expression - output table
+
+
+Differential Expression table format
+--------------------------------------------------------
+Any `csv` file that contains differential expression analysis data with log2 fold change and adjusted p-values can be analyzed as Differential Expression Tables in *RNAlysis*.
 By default, *RNAlysis* assumes that log2 fold change values will be specified under a 'log2FoldChange' column, and adjusted p-values will be specified under a 'padj' column (as is the default in differential expression tables generated by DESeq2):
 
 +----------------+----------+----------------+----------+----------+----------+----------+
@@ -252,54 +261,51 @@ By default, *RNAlysis* assumes that log2 fold change values will be specified un
 | WBGene00000028 | 219.1632 | 3.913657       | 0.217802 | 17.96885 | 3.42E-72 | 2.32E-69 |
 +----------------+----------+----------------+----------+----------+----------+----------+
 
-Loading a file that follows this format into a :term:`DESeqFilter` works similarly to other Filter objects::
+Loading a table that follows this format as a Differential Expression Table works similarly to other table types. The only difference is that when loading the table, you need to specify the table type as 'Differential expression'. 
 
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv")
-
-
-If your differential expression table does not follow this format, you can specify the exact names of the columns in your table that contain log2 fold change values and adjusted p-values::
-
-    >>> d = filtering.DESeqFilter("tests/test_files/test_deseq.csv", log2fc_col='name of log2 fold change column', padj_col='name of adjusted p-value column')
+If your differential expression table does not follow this format, you can specify the exact names of the columns in your table that contain log2 fold change values and adjusted p-values. 
+The fields for this parameters will appear after setting the table type to 'Differential expression'. 
 
 
+ Functions unique to Differential Expression Tables (such as 'Filter by statistical significance' and 'Filter by fold change magnitude') will not work properly if the log2 fold change column and adjusted p-value column are not specified correctly. 
 
-Unique :term:`DESeqFilter` functions (such as 'filter_significant' and 'filter_abs_log2_fold_change') will not execute properly if the log2 fold change column and adjusted p-value column are not defined correctly.
-
-Filtering operations unique to DESeqFilter
-------------------------------------------
-
-There are a few filtering operations unique to DESeqFilter. Those include 'filter_significant', which removes statistically-insignificant rows according to a specified threshold; 'filter_abs_log2_fold_change', removes rows whose absolute value log2 fold change is below the specified threshold; 'filter_fold_change_direction' which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) rows; and 'split_fold_change_direction' which returns a :term:`DESeqFilter` object with only up-regulated features and a :term:`DESeqFilter` object with only down-regulated features.
-
-
-Data visualization and exploratory data analysis with DESeqFilter
-------------------------------------------------------------------------
-:term:`DESeqFilter` supports methods for visualization and exploratory analysis of differential expression data.
+Filtering operations unique to Differential Expression tables
+------------------------------------------------------------------------------------
+There are a few filtering operations unique to differential expression tables. Those include 'Filter by statistical significance', which removes statistically-insignificant genes according to a specified threshold; 
+'FIlter by log2 fold change magnitude', removes rows whose absolute value log2 fold change is below the specified threshold; 
+'Filter by fold change direction' which removes either up-regulated (positive log2 fold change) or down-regulated (negative log2 fold change) genes; 
+and 'Split table by fold change direction' which returns two new tables: one containing only up-regulated genes and one containing only down-regulated genes.
 
 
-With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:
+Data visualization and exploratory data analysis with Differential Expression Tables
+------------------------------------------------------------------------------------------------------------------
+Differential Expression Tables support methods for visualization and exploratory analysis of differential expression data.
+
+
+With 'Volcano plot', you can observe the direction, magnitude, and significance of differential expression within your data:
 
 .. figure:: /figures/volcano.png
            :align:   center
            :scale: 70 %
 
-           Example output of DESeqFilter.volcano_plot()
+           Example output of 'Volcano plot'
 
 
-Filtering count matrices with filtering.CountFilter
-===============================================================
+Working with count matrices
+=====================================
+Count matrices are a type of table that describe expression level of different genes/genomic features under different conditions/samples. 
+*RNAlysis* is capable of visualizing, filtering, normalizing, and clustering of count matrices. 
+Data can be imported into a CountFilter objects either from a `csv` file, or directly from text output files generated by *HTSeq-count* as explained below.
 
-:term:`CountFilter` objects are capable of visualizing, filtering, normalizing, and clustering of read count matrices (the output of feature-counting software such as HTSeq-count and featureCounts).
-Data can be imported into a CountFilter objects either from a `csv` file, or directly from HTSeq-count output files as explained below.
-
-You can read more about HTSeq-count here:
-https://htseq.readthedocs.io/en/master/count.html
-
-In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some :term:`CountFilter` functions (such as 'normalize_to_rpm_htseqcount') will only work on HTSeq-count output files, and other unintended interactions may occur.
+In principle, any `csv` file where the columns are different conditions/replicates and the rows include reads/normalized reads per genomic feature can be used as input for CountFilter. However, some count matrix functions (such as 'normalize_to_rpm_htseqcount') will only work on HTSeq-count output files, and other unintended interactions may occur.
 
 .. _from-folder-ref:
 
-Generating an CountFilter object from a folder of HTSeq-count output .txt files
+Generating a count matrix from a folder of HTSeq-count output .txt files
 ---------------------------------------------------------------------------------
+You can read more about HTSeq-count here:
+https://htseq.readthedocs.io/en/master/count.html
+
 HTSeq-count receives as input an aligned SAM/BAM file. The native output of HTSeq-count is a text file with feature indices and read-per-genomic-feature, as well as information about reads that weren't counted for any feature (alignment not unique, low alignment quality, ambiguous, unaligned, aligned to no feature).
 An HTSeq-count output file would follow the following format:
 
@@ -335,26 +341,23 @@ An HTSeq-count output file would follow the following format:
 | __alignment_not_unique | 100 |
 +------------------------+-----+
 
-When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files. *RNAlysis* can parse those .txt files into two `csv` tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), and in the second each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). This is done with the 'from_folder' function::
+When running HTSeq-count on multiple SAM files (which could represent different conditions or replicates), the final output would be a directory of .txt files.
+*RNAlysis* can parse those .txt files into two tables: in the first each row is a genomic feature and each column is a condition or replicate (a single .txt file), 
+and in the second table each row represents a category of reads not mapped to genomic features (alignment not unique, low alignment quality, etc). 
 
-    >>> counts = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder')
+This can be done by opening the "File" menu, entering the "New..." menu, and clicking on the "New table from folder" action:
 
-By deault, 'from_folder' does not save the generated tables as `csv` files. However, you can choose to save them by specifying 'save_csv=True', and specifying their filenames in the arguments 'counted_fname' and 'uncounted_fname'::
+.. image:: /userguide_screenshots/user_guide_count_matrix_01.png
 
-    >>> counts = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file')
+Then, select the table containing your HTSeq-count text files. 
+*RNAlysis* will then offer you to automatically normalize your data to reads-per-million. After you make your choice, *RNAlysis* will load the table it created into a new tab (normalized or raw, depending on your choice earlier). 
 
-It is also possible to automatically normalize the reads in the new :term:`CountFilter` object to reads per million (RPM) using the unmapped reads data by specifying 'norm_to_rpm=True'::
-
-        >>> counts = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True)
-
-
-Loading from a pre-made `csv` file
+Loading  a pre-made `csv` file
 ----------------------------------
-If you have previously generated a `csv` file from HTSeq-count output files using *RNAlysis*, or have done so manually, you can directly load this `csv` file into an :term:`CountFilter` object as you would any other Filter object::
+If you already have a count matrix file in `csv` or tsv format, you can directly load this table into *RNAlysis* as you would any other table. 
+If you're loading a count matrix that was already normalized, make sure to set the 'is_normalize' parameter to True. 
 
-    >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
-
-A correct input to a :term:`CountFilter` object would follow the following format:
+A valid count matrix would follow the following format:
 
 +----------------+-------+-------+-------+-------+
 |                | cond1 | cond2 | cond3 | cond4 |
@@ -378,15 +381,15 @@ A correct input to a :term:`CountFilter` object would follow the following forma
 | WBGene00077504 | 0     | 0     | 0     | 0     |
 +----------------+-------+-------+-------+-------+
 
-Filtering operations unique to CountFilter
---------------------------------------------
-There are a few filtering operations unique to CountFilter. Those include 'filter_low_reads', which removes rows that have less than n reads in all columns.
+Filtering operations unique to count matrices
+-----------------------------------------------
+There are a few filtering operations unique to count matrices. Those include two functions that can removes genes with low expression - either by removing rows with summed expression below a specified threshold, or by removing rows whose expression is below a specified threshold in all columns.
 
-Normalizing reads with CountFilter
+Normalizing count matrices
 ------------------------------------
-:term:`CountFilter` offers two methods for normalizing reads: normalize with one of the pre-made normalization methods *RNAlysis* supplies, or using user-defined scaling factors. Data normalized in other methods (such as RPKM) can be used as input for CountFilter as well.
+*RNAlysis* can normalize count matrices with either pre-existing normalization methods *RNAlysis* supplies, or with user-defined scaling factors. As mentioned earlier, you can also load pre-normalized count matrices into *RNAlysis*.
 
-*RNAlysis* supplies the following normalization methods:
+*RNAlysis* offers the following normalization methods:
 
 * Relative Log Expression (RLE - 'normalize_rle'), used by default by R's DESeq2
 * Trimmed Mean of M-values (TMM - 'normalize_tmm'), used by default by R's edgeR
@@ -394,13 +397,9 @@ Normalizing reads with CountFilter
 * Median of Ratios Normalization (MRN - 'normalize_mrn')
 * Reads Per Million (RPM - 'normalize_to_rpm')
 
-To normalize a :term:`CountFilter` with one of these functions, simply call the function with your preferred parameters, if there are any. For example::
+To normalize a count matrix with one of these functions, click on the 'Normalize' button, pick one of the normalization functions from the drop-down menu, and click 'Apply'. 
 
-    >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
-    >>> counts.normalize_rle()
-    Normalized the values of 22 features. Normalized inplace.
-
-To normalize a :term:`CountFilter` with user-generated scaling factors, we need a `csv` table with the size factor for each sample:
+To normalize a count matrix with user-generated scaling factors, you would need a separate `csv` table with the scaling factor for each sample:
 
 +----------------+----------------+----------------+----------------+
 |    sample1     |    sample2     |    sample3     |    sample4     |
@@ -408,16 +407,12 @@ To normalize a :term:`CountFilter` with user-generated scaling factors, we need 
 |      0.96      |       1        |      0.78      |      1.23      |
 +----------------+----------------+----------------+----------------+
 
-We would then supply the function with the path to the scaling factors file::
+We would then click on the 'Normalize' button, pick 'Normalize with pre-calculated scaling factors' from the drop-down list, load our scaling factor table, and click "Apply" at the bottom of the screen. 
 
-    >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
-    >>> counts.normalize_with_scaling_factors('scaling_factors.csv')
-    Normalized the values of 22 features. Normalized inplace.
-
-The resulting :term:`CountFilter` object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
+The resulting count matrix will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
 
 
-To normalize a :term:`CountFilter` that originated from HTSeq-count to reads per million, we need a `csv` table with the special counters that appear in HTSeq-count output:
+To normalize a count matrix that originated from HTSeq-count to reads per million, we need a `csv` table with the special counters that appear in HTSeq-count output:
 
 +------------------------+---------+---------+---------+---------+
 |                        | sample1 | sample2 | sample3 | sample4 |
@@ -433,22 +428,17 @@ To normalize a :term:`CountFilter` that originated from HTSeq-count to reads per
 | __not_aligned          | 109853  | 277653  | 88653   | 96012   |
 +------------------------+---------+---------+---------+---------+
 
-Such a `csv` table is generated automatically when you create a :term:`CountFilter` object from a folder of text files (CountFilter.from_folder(), see :ref:`from-folder-ref`).
-We would then supply the normalization function with the path to the special counter file::
-
-    >>> counts = CountFilter("tests/test_files/counted.csv")
-    >>> counts.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
-    Normalized the values of 22 features. Normalized inplace.
-
-The resulting :term:`CountFilter` object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
+We would then click on the 'Normalize' button, pick 'Normalize to reads-per-million (RPM) - HTseq-count output' from the drop-down list, load our special counter table, and click "Apply" at the bottom of the screen. 
+The resulting count matrix will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 
 
-Data clustering with CountFilter
+Clustering of count matrices
 ----------------------------------
-*RNAlysis* supports a wide variety of clustering methods, which can group genomic features into clusters according to their similarity across different samples.
+*RNAlysis* supports a wide variety of clustering methods, which can group genes/genomic features into clusters according to their relative expression patterns across different samples.
 
-When clustering genomic features in a :term:`CountFilter` object, the called function returns a tuple of :term:`CountFilter` objects, with each object corresponding to one cluster of genomic features.
-
+When clustering genomic features in a count matrix, *RNAlysis* will make a copy of the table and split the rows in it into different sub-tables, one new table for each cluster found in the analysis. 
+These tables will then be opened in new tabs, allowing you to save them or analyze them further. 
+*RNAlysis* will also generate an expression plot, depicting the average relative expression pattern within each cluster, as well as the variance of expression. 
 Expression plots of the resulting clusters can be generated in one of multiple styles:
 
  .. figure:: /figures/kmeans_all.png
@@ -475,58 +465,24 @@ Expression plots of the resulting clusters can be generated in one of multiple s
 
            Example PCA plot of clustering results
 
-The expression plots can also by split into separate graphs, one for each discovered cluster.
+The expression plots can also by split into separate graphs, one for each discovered cluster, or plotted all on the same graph.
 
 All clustering methods in *RNAlysis* which require you to specify the expected number of clusters (such as K in K-Means clustering) allow multiple ways of specifying the number of clusters you want to find.
-You can specify a single value::
+You can specify a single value (such as 5):
 
-    >>> counts = CountFilter("tests/test_files/counted.csv")
-    >>> five_clusters = counts.split_kmeans(n_clusters=5)
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 7 features, leaving 15 of the original 22 features. Filtering result saved to new object.
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 21 features, leaving 1 of the original 22 features. Filtering result saved to new object.
-    >>> print(len(five_clusters))
-    5
+.. image:: /userguide_screenshots/user_guide_clustering_01.png
 
-You can specify a list of values to be used, and each value will be calculated and returned separately::
+You can specify a list of values to be used, and *RNAlysis* will generate a clustering result for each of those values (for example: 5, 8, 11):
 
-    >>> counts = CountFilter("tests/test_files/counted.csv")
-    >>> five_clusters, two_clusters = counts.split_kmeans(n_clusters=[5,2])
-    Filtered 21 features, leaving 1 of the original 22 features. Filtering result saved to new object.
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 7 features, leaving 15 of the original 22 features. Filtering result saved to new object.
-    Filtered 4 features, leaving 18 of the original 22 features. Filtering result saved to new object.
-    Filtered 18 features, leaving 4 of the original 22 features. Filtering result saved to new object.
-    >>> print(len(five_clusters))
-    5
-    >>> print(len(two_clusters))
-    2
+.. image:: /userguide_screenshots/user_guide_clustering_02.png
 
-Finally, you can use a model selection method to estimate the number of clusters in your dataset. *RNAlysis* supports both the Silhouette method and the Gap Statistic method::
+Finally, you can use a selection algorithm to estimate a good number of clusters for your dataset. *RNAlysis* supports both the Silhouette method and the Gap Statistic method:
 
-    >>> counts = CountFilter("tests/test_files/counted.csv")
-    >>> silhouette_clusters = counts.split_kmeans(n_clusters='silhouette')
-    Estimating the optimal number of clusters using the Silhouette method in range 2:5...
-    Using the Silhouette method, 4 was chosen as the best number of clusters (k).
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 6 features, leaving 16 of the original 22 features. Filtering result saved to new object.
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    Filtered 20 features, leaving 2 of the original 22 features. Filtering result saved to new object.
-    >>> print(len(silhouette_clusters))
-    4
-    >>> gap_stat_clusters = counts.split_kmeans(n_clusters='gap')
-    Estimating the optimal number of clusters using the Gap Statistic method in range 2:5...
-    Using the Gap Statistic method, 2 was chosen as the best number of clusters (K).
-    Filtered 4 features, leaving 18 of the original 22 features. Filtering result saved to new object.
-    Filtered 18 features, leaving 4 of the original 22 features. Filtering result saved to new object.
-    >>> print(len(gap_stat_clusters))
-    2
+.. image:: /tutorial_screenshots/01g01_kmedoids.png
+  :width: 600
+  :alt: K-Medoids clustering setup - choose the number of clusters using the Gap Statistic
 
-To help in evaluating the result of these model selection methods, *RNAlysis* will also plot a summary of their outcome:
+To help in evaluating the result of these selection algorithms, *RNAlysis* will also plot a summary of their outcome:
 
 .. image:: /figures/ gap_statistic.png
            :width: 60 %
@@ -670,299 +626,346 @@ Moreover, ths modified version of the algorithm can cluster each batch of biolog
 
 |
 
-Data visualization and exploratory data analysis with CountFilter
+Specialized clustering distance metrics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In addition to the commonly-used distance metrics, such as euclidean distance and spearman correlation, *RNAlysis* offers a selection of distance metrics that were either developed especially for transcriptomics clustering, or found to work particularly well for transcriptomics clustering. 
+Those methods include:
+
+1. jackknife distance - a modified Pearson dissimilarity coefficient. 
+Instead of measuring the linear correlation between expression levels of two genes, you measure the linear correlation coefficient N times (where N is the number of samples in the data), every time excluding a single sample from the correlation, and then taking the smallest correlation coefficient found. 
+The correlation score is then converted into a dissimilarity score. 
+This distance metric can detect linear correlation, like Pearson correlation, but is less sensitive to extreme values. 
+(see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_). 
+2. YR1 distance - a distance metric developed especially for time-series gene expression data. 
+This distance metric combines the Pearson dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
+This means that the YR1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
+3. YS1 distance - a distance metric developed especially for time-series gene expression data. 
+This distance metric combines the Spearman dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
+This means that the YS1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
+
+Data visualization and exploratory data analysis of count matrices
 ------------------------------------------------------------------------
-:term:`CountFilter` includes multiple methods for visualization and exploratory analysis of count data.
+*RNAlysis* offers multiple methods for visualization and exploratory analysis of count data.
 
 
-With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
+With Pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:
 
 .. figure:: /figures/pairplot.png
            :align:   center
            :scale: 40 %
 
-           Example output of CountFilter.pairplot()
+           Example output of Pairplot
 
-With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:
+With Principal Component Analysis, you can perform a principal component analysis and look for strong patterns in your dataset:
 
  .. figure:: /figures/pca.png
            :align:   center
            :scale: 40 %
 
-           Example plot of CountFilter.pca()
+           Example plot of Principal Component Analysis
 
-With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:
+With 'Plot expression of specific genes', you can examine the average expression of specific genes under specific conditions:
 
  .. figure:: /figures/plot_expression.png
            :align:   center
            :scale: 60 %
 
-           Example plot of CountFilter.plot_expression()
+           Example plot the expression of specific genes
 
-With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:
+With Clustergram, you can cluster your samples with hierarchical clustering according to specified distance and linkage metrics:
 
  .. figure:: /figures/clustergram.png
            :align:   center
            :scale: 40 %
 
-           Example plot of CountFilter.clustergram()
+           Example plot of Clustergram
 
-Filtering fold-change data of features using filtering.FoldChangeFilter
-=======================================================================
-
-:term:`FoldChangeFilter` objects can perform filtering operations and randomization tests on fold change values between two conditions.
-
-A :term:`FoldChangeFilter` object can be calculated from a :term:`CountFilter` object (you can read more about it in the :ref:`fold-change-from-count-ref`), or imported from a `csv` file like other :term:`Filter objects`.
-
-.. warning:: by default, :term:`FoldChangeFilter` assumes that fold change is calculated as (numerator_reads+1)/(denominator_reads+1), and does not support 0 and inf values. If you load a `csv` file which contains 0 and/or inf values into a :term:`FoldChangeFilter` object, unintended results and interactions may occur.
-
-Unlike other Filter object, the underlying data structure storing the values is a pandas Series and not a pandas DataFrame, and lacks the Columns attribute.
-
-Loading fold change data from a `csv` file
-------------------------------------------------
-
-Like with other objects from the Filter family, you can simply load a pre-existing or pre-calculated `csv` file into a :term:`FoldChangeFilter` object. However, in addition to the file path you will also have to enter the name of the numerator condition and the name of the denominator condition::
-
-    >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv','name of numerator condition', 'name of denominator condition')
-
-The names of the conditions are saved in the object attributes 'numerator' and 'denominator'::
-
-    >>> f.numerator
-    'name of numerator condition'
-    >>> f.denominator
-    'name of denominator condition'
-
-.. warning:: by default, :term:`FoldChangeFilter` assumes that fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1), and does not support 0 and inf values. If you load a `csv` file which contains 0 and/or inf values into a :term:`FoldChangeFilter` object, unintended results and interactions may occur.
-
-.. _fold-change-from-count-ref:
-
-Generating fold change data from an existing CountFilter object
------------------------------------------------------------------
-
-Alternatively, you can generate a :term:`FoldChangeFilter` object from count data in a :term:`CountFilter` object. We will start by loading a :term:`CountFilter` object::
-
-    >>> counts = filtering.CountFilter('tests/test_files/counted_fold_change.csv')
-
-The :term:`CountFilter` has the following columns::
-
-    >>> counts.columns
-    ['cond1_rep1', 'cond1_rep2', 'cond2_rep1', 'cond2_rep2', 'cond3_rep1', 'cond3_rep2']
-
-We will now calculate the fold change between the mean of condition1 and condition2. Fold change is calculated as (mean_numerator_reads+1)/(mean_denominator_reads+1). We will need to specify the numerator columns, the denominator columns, and the names of the numerator and denominator. Specifying names is optional - if no names are specified, they will be generator automatically from columns used as numerator and denominator. Since we have multiple replicates of each condition, we will specify all of them in a list::
-
-    >>> f = counts.fold_change(['cond1_rep1','cond1_rep2'],['cond2_rep1','cond2_rep2'])
-
-In this example we did not specify names for the numerator and denominator, and therefore they were generated automatically::
-
-    >>> f.numerator
-    "Mean of ['cond1_rep1', 'cond1_rep2']"
-    >>> f.denominator
-    "Mean of ['cond2_rep1', 'cond2_rep2']"
-
-We now have a :term:`FoldChangeFilter` object that we can perform further filtering operations on.
-
-Performing randomization tests on a FoldChangeFilter object
-------------------------------------------------------------
-
-You can perform a randomization test to examine whether the fold change of a group of specific genomic features (for example, genes with a specific biological function) is significantly different than the fold change of a background set of genomic features.
-To perform a randomization test you need two :term:`FoldChangeFilter` objects: one which contains the fold change values of all background genes, and another which contains the fold change values of your specific group of interest. For example::
-
-    >>> f = filtering.FoldChangeFilter('tests/test_files/fc_1.csv' , 'numerator' , 'denominator')
-    >>> f_background = f.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/biotype_ref_table_for_tests.csv', inplace=False) #keep only protein-coding genes as reference
-    Filtered 9 features, leaving 13 of the original 22 features. Filtering result saved to new object.
-    >>> f_test = f_background.filter_by_attribute('attribute1', ref='tests/test_files/attr_ref_table_for_examples.csv', inplace=False)
-    Filtered 6 features, leaving 7 of the original 13 features. Filtering result saved to new object.
-    >>> rand_test_res = f_test.randomization_test(f_background)
-    Calculating...
-       group size  observed fold change  ...      pval  significant
-    0           7              2.806873  ...  0.360264        False
-    <BLANKLINE>
-    [1 rows x 5 columns]
-
-The output table would look like this:
-
-+------------+----------------------+----------------------+--------+-------------+
-| group size | observed fold change | expected fold change | pval   | significant |
-+============+======================+======================+========+=============+
-|   7        |       2.806873       |  2.51828             |0.36026 | False       |
-+------------+----------------------+----------------------+--------+-------------+
-
-Sequentially applying filtering operations using Pipelines
+Sequentially applying functions using Pipelines
 ============================================================
-:term:`Pipeline` objects allow you to group together multiple operations from the *filtering* module (such as filtering, splitting, normalizing, plotting or describing your data), and apply this group of operations to :term:`Filter objects` of your choice in a specific and consistent order.
-Pipelines make your workflow easier to read and understand, help you avoid repetitive code, and makes your analyses more reproducible and less error-prone.
+A :term:`Pipeline` allows you to group together multiple functions from the main *RNAlysis* module (such as filtering, splitting, normalizing, visualizing, summarizing, or transforming your data), and apply this group of functions to tables of your choice in a specific and consistent order. 
+Pipelines make your workflow easier to read and understand, help you avoid repetitive actions, and makes your analyses more reproducible and less error-prone.
 
 Creating a new Pipeline
-________________________
-To create a new empty :term:`Pipeline`, simply create a new Pipeline object::
+-------------------------
 
-    >>> from *RNAlysis* import filtering
-    >>> pipe = Pipeline()
+.. image:: ../../rnalysis/gui/videos/create_pipeline.webp
 
-Because every :term:`Filter object` has its own unique functions, a particular Pipeline can only contain functions of a specific Filter object type, and can only be applied to objects of that type.
-By default, a new Pipeline's `filter_type` is :term:`Filter`, and can only contain general functions from the *filtering* module that can apply to any Filter object.
-If we wanted, for example, to create a Pipeline for DESeqFilter objects, we would have to specify the parameter `filter_type`::
-
-    >>> from *RNAlysis* import filtering
-    >>> deseq_pipe = filtering.Pipeline('deseqfilter')
-
-One we have an empty :term:`Pipeline`, we can start adding functions to it.
-We can do that either via the function's name::
-
-    >>> from *RNAlysis* import filtering
-    >>> pipe = filtering.Pipeline('DESeqFilter')
-    >>> pipe.add_function('filter_significant')
-    Added function 'DESeqFilter.filter_significant()' to the pipeline.
-
-or via the function itself::
-
-    >>> from *RNAlysis* import filtering
-    >>> pipe = filtering.Pipeline('DESeqFilter')
-    >>> pipe.add_function(filtering.DESeqFilter.filter_significant)
-    Added function 'DESeqFilter.filter_significant()' to the pipeline.
-
-We can also specify the function's arguments. We can specify both non-keyworded and keyworded arguments, just as we would if we called the function normally::
-
-    >>> from *RNAlysis* import filtering
-    >>> pipe = filtering.Pipeline()
-    >>> pipe.add_function(filtering.Filter.filter_biotype_from_ref_table, biotype='protein_coding')
-    Added function 'Filter.filter_biotype_from_ref_table(biotype='protein_coding')' to the pipeline.
-    >>> pipe.add_function('number_filters', 'column1', 'gt', value=5, opposite=True)
-    Added function 'Filter.number_filters('column1', 'gt', value=5, opposite=True)' to the pipeline.
-
-We can also view the functions currently in the Pipeline object, their arguments, and their order::
-
-    >>> print(pipe)
-    Pipeline for Filter objects:
-        Filter.filter_biotype_from_ref_table(biotype='protein_coding')
-        Filter.number_filters('column1', 'gt', value=5, opposite=True)
-    >>> print(repr(pipe))
-    Pipeline('Filter'): Filter.filter_biotype_from_ref_table(biotype='protein_coding')-->Filter.number_filters('column1', 'gt', value=5, opposite=True)
+To create a new empty :term:`Pipeline` open the Pipelines menu and click on "New Pipeline":
 
 
-We can also remove functions from the Pipeline::
+.. image:: /tutorial_screenshots/02d01_pipeline.png
+  :width: 600
+  :alt: Pipeline menu - new Pipeline
 
-    >>> pipe.remove_last_function()
-    Removed function number_filters with parameters ['column1', 'gt', value=5, opposite=True] from the pipeline.
+In the new window that opened, you can name the Pipeline, and choose the type of table you want to apply the Pipeline to:
 
-Now that we have a Pipeline with multiple functions, we can apply it to our Filter objects.
+.. image:: /tutorial_screenshots/02d02_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - choose table type
 
-Applying Pipelines to Filter objects
-_____________________________________
-Just like with other functions in the *filtering* module, the functions in a :term:`Pipeline` can be applied either inplace or returned as a new object.
-You can determine that via the `inplace` argument of the function `Pipeline.apply_to()`::
+Pipelines for specific types of tables will allow you to use functions specific to that table type. 
+If you're not sure what type of table to apply your Pipeline to, just choose "Other" - your Pipeline will then be applicable to any table type. 
+After choosing a name and table type, click on the "Start" button to create the Pipeline.
+The window will now update to show a preview of the new (empty) Pipeline:
 
-    >>> from *RNAlysis* import filtering
-    >>> # create the pipeline
-    >>> pipe = filtering.Pipeline('DESeqFilter')
-    >>> pipe.add_function(filtering.DESeqFilter.filter_missing_values)
-    Added function 'DESeqFilter.filter_missing_values()' to the pipeline.
-    >>> pipe.add_function(filtering.DESeqFilter.filter_top_n, by='padj', n=3)
-    Added function 'DESeqFilter.filter_top_n(by='padj', n=3)' to the pipeline.
-    >>> pipe.add_function('sort', by='baseMean')
-    Added function 'DESeqFilter.sort(by='baseMean')' to the pipeline.
-    >>> # load the Filter object
-    >>> d = filtering.DESeqFilter('tests/test_files/test_files/test_deseq_with_nan.csv')
-    >>> # apply the Pipeline not-inplace
-    >>> d_filtered = pipe.apply_to(d, inplace=False)
-    Filtered 3 features, leaving 25 of the original 28 features. Filtering result saved to new object.
-    Filtered 22 features, leaving 3 of the original 25 features. Filtering result saved to new object.
-    Sorted 3 features. Sorting result saved to a new object.
-    >>> # apply the Pipeline inplace
-    >>> pipe.apply_to(d)
-    Filtered 3 features, leaving 25 of the original 28 features. Filtered inplace.
-    Filtered 22 features, leaving 3 of the original 25 features. Filtered inplace.
-    Sorted 3 features. Sorted inplace.
+.. image:: /tutorial_screenshots/02d03_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - preview
 
-Note that only functions that can be applied inplace (such as filtering/normalizing) will be applied inplace.
-If our pipeline contained other types of functions, they will not be applied inplace, and will instead be returned at the end of the Pipeline.
+At this point, you can start adding functions to the Pipeline. 
+Adding functions to a Pipeline works very similarly to applying functions to tables. 
+Click on one of the 5 function categories (such as "Visualization"), pick a function, set its parameters, and click on the "Add to Pipeline" button at the bottom of the screen:
 
-If we apply a Pipeline with functions that return additional outputs (such as Figures, DataFrames, etc), they will be returned in a dictionary alongside the Filter object::
+.. image:: /tutorial_screenshots/02d04_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - Volcano plot
 
-    >>> from *RNAlysis* import filtering
-    >>> # create the pipeline
-    >>> pipe = filtering.Pipeline('DESeqFilter')
-    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
-    >>> pipe.add_function('filter_biotype_from_ref_table', 'protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.filter_biotype_from_ref_table('protein_coding', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
-    >>> pipe.add_function('biotypes_from_ref_table', ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')
-    Added function 'DESeqFilter.biotypes_from_ref_table(ref='tests/test_files/test_files/biotype_ref_table_for_tests.csv')' to the pipeline.
-    >>> # load the Filter object
-    >>> d = filtering.DESeqFilter('tests/test_files/test_files/test_deseq_with_nan.csv')
-    >>> # apply the Pipeline not-inplace
-    >>> d_filtered, output_dict = pipe.apply_to(d, inplace=False)
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
-    Filtered 2 features, leaving 26 of the original 28 features. Filtering result saved to new object.
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
-    >>> print(output_dict['biotypes_1'])
-                    gene
-    biotype
-    protein_coding    26
-    pseudogene         1
-    unknown            1
-    >>> print(output_dict['biotypes_2'])
-                    gene
-    biotype
-    protein_coding    26
-    >>> # apply the Pipeline inplace
-    >>> output_dict_inplace = pipe.apply_to(d)
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
-    Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.
-    Biotype Reference Table used: tests/test_files/test_files/biotype_ref_table_for_tests.csv
+.. image:: /tutorial_screenshots/02d05_pipeline.png
+  :width: 600
+  :alt: Create Pipeline - adding functions to Pipeline
 
-When an output dictionary is returned, the keys in the dictionary will be the name of the function appended to the number of call made to this function in the Pipeline (in the example above, the first call to 'biotypes_from_ref_table' is under the key 'biotypes_1', and the second call to 'biotypes_from_ref_table' is under the key 'biotypes_2'); and the values in the dictionary will be the returned values from those functions.
-We can apply the same Pipeline to as many Filter objects as we want, as long as the type of the Filter object matches the Pipeline's `filter_type`.
+After adding a function to the Pipeline, the Pipeline overview will update to show the function added to it, and this is displayed in the log textbox as well. 
+
+The order in which you add functions to the Pipeline is the order in which they will be applied. 
+If a function at some point in the Pipeline generated multiple new tables (for example - a clustering function returning multiple clusters, or a function splitting your data table into 2 separate tables), 
+each downstream function will be applied to each new table separately. 
+
+Note that the "inplace" parameter will be missing from all functions you add to the Pipeline. This is done on purpose - whenever you apply a Pipeline to a table, you can decide whether you want to apply it in-place or not. 
+
+If you want to remove functions from a Pipeline, you can click on the "Remove last function" button, which will remove the last function added to the Pipeline. 
+
+When you are happy with your Pipeline, you can click on the "save Pipeline" button to save it in the current *RNAlysis* session, and on the "Export Pipeline" button to export the Pipeline to your computer, allowing you to load it into any *RNAlysis* session and share it with others. 
+
+You can always edit or delete a previously-saved Pipeline via the Pipelines menu. 
+
+Importing a Pipeline
+----------------------
+If you have previously exported a Pipeline, or you want to use a Pipeline that someone else exported, you can import Pipeline files into any *RNAlysis* session. 
+*RNAlysis* Pipelines are saved as YAML (.yaml) files. Those files contain the name of the Pipeline, the functions and parameters added to it, as well as some metadata such as the time it was exported. 
+To import a Pipeline into *RNAlysis*, open the Pipelines menu, click on "Import Pipeline...", and select your Pipeline file. 
+
+Applying Pipelines to tables
+------------------------------
+Once you have created or imported a Pipeline, you can apply it to any number of data tables in your *RNAlysis* session. 
+To apply a Pipeline, open the "Pipelines" menu, hover on the "Apply Pipeline" sub-menu, and pick the Pipeline you want to apply:
+
+
+.. image:: /tutorial_screenshots/02d08_pipeline.png
+  :width: 600
+  :alt: Apply Pipeline
+
+Now, you will be prompted on whether you want to apply this Pipeline inplace or not. 
+Note that if your Pipeline contains splitting functions (functions that always return new tables, and cannot be applied inplace - e.g. clustering functions), you will not be able to apply your Pipeline inplace. 
+
+.. image:: /tutorial_screenshots/02d09_pipeline.png
+  :width: 300
+  :alt: Apply Pipeline - not inplace
+
+Finally, you will be prompted to choose the tables to apply your Pipeline to. 
+You can apply your Pipeline to a single data table, or to multiple data tables. 
+Note that a Pipeline can only be applied to tables matching it's type (unless the Pipeline table type is "Other", in which case it can be applied to any table). 
+
+.. image:: /tutorial_screenshots/02d10_pipeline.png
+  :width: 300
+  :alt: Apply Pipeline - choose tables
+
+The Pipeline will be applied to all tables you selected one-by-one. 
+Note that Pipelines applied in-place can be undone through the "Command History" pane, just like any of the table-modifying function in *RNAlysis*. 
 
 ****************************
-*RNAlysis* enrichment module
+*RNAlysis* Gene Sets module
 ****************************
-RNAlysis's enrichment module (rnalysis.enrichment) can be used to perform various enrichment analyses including Gene Ontology (GO) enrichment and enrichment for user-defined attributes. The module also includes basic set operations (union, intersection, difference, symmetric difference) between different sets of genomic features.
+The *RNAlysis* Gene Sets module can be used to run various types of enrichment analyses, including Gene Ontology (GO), KEGG pathways, and enrichment for user-defined attributes. The module also lets you apply set operations (union, intersection, etc) to your gene sets and tables.
 
 
-Working with FeatureSet objects
+Working with gene sets
 =========================================
-The enrichment module is built around :term:`FeatureSet` objects. A Featureset is a container for a set of gene/genomic feature IDs, and the set's name (for example, 'genes that are upregulated under hyperosmotic conditions'). All further anslyses of the set of features is done through the :term:`FeatureSet` object.
+In addition to loading and analyzing data tables, *RNAlysis* can load and process gene sets. 
+A gene set is essentially a list of gene names/IDs with a specific name. 
+
+Importing gene sets into *RNAlysis*
+------------------------------------
+To import a gene set into *RNAlysis*, open the Gene Sets menu, and click on "Import Gene Set...":
+
+.. image:: /userguide_screenshots/user_guide_gene_sets_01.png
+
+You can then pick either a text file containing gene names/IDs (one gene ID per line), or a data table where the first column contains gene names/IDs. 
+*RNAlysis* will then load this gene set into *RNAlysis*:
+
+.. image:: /userguide_screenshots/user_guide_gene_sets_02.png
+
+Similarly to data tables, *RNAlysis* will show you the number of features in the gene set, show you a preview of the gene set, and allow you to view the full gene set or rename it. 
+
+If you want to load multiple gene sets at once, you can use the "Import Multiple Gene Sets..." action instead of "Import Gene Set...". 
+
+Copying gene sets from *RNAlysis*
+------------------------------------
+Many online data-mining and data-analysis services require you to supply a list of gene names/IDs. 
+You make it easier to integrate those tools into analyses you perform with *RNAlysis*, you can easily copy a list of gene IDs from any *RNAlysis* table or gene set. 
+
+To copy a list of gene IDs from an existing table/gene set in *RNAlysis*, go to that table/gene set's tab, open the "Gene Sets" menu, and click on "Copy Gene Set":
+
+.. image:: /userguide_screenshots/user_guide_gene_sets_03.png
+
+Alternatively, you can use the "Ctrl+C" shortcut to copy a list of gene names/IDs from the currently selected table/gene set. 
+
+Exporting gene sets from *RNAlysis*
+------------------------------------
+To export a gene set from *RNAlysis*, you can use the "Save gene set" button.
+
+Alternatively, if you want to export the gene IDs of any table as a gene-set text file, open the "Gene Sets" menu and click on "Export Gene Set...". 
 
 
-Initialize an FeatureSet object
-------------------------------------------
-We will start by importing the enrichment module::
+Visualizing gene set and table intersections
+=============================================
+*RNAlysis* allows you to visualize the intersections between your gene sets and tables using Venn Diagrams and UpSet Plots. 
+To do that, open the "Gene sets" menu, and click on "Visualize Gene Sets...":
 
-    >>> from *RNAlysis* import enrichment
+.. image:: /tutorial_screenshots/02e01_gene_sets.png
+  :width: 600
+  :alt: Gene sets menu - Visualize Gene Sets
 
-A :term:`FeatureSet` object can now be initialized by one of three methods.
-The first method is to specify an existing Filter object::
+A new window will open.
+On the left side of the window, you can choose which data tables/gene sets you want to visualize. 
+You can pick two or more items to visualize. 
 
-    >>> my_filter_obj = filtering.CountFilter('tests/test_files/counted.csv') # create a Filter object
-    >>> my_set = enrichment.FeatureSet(my_filter_obj, 'a name for my set')
+.. image:: /tutorial_screenshots/02e02_gene_sets.png
+  :width: 600
+  :alt: Visualize Gene Sets - select gene sets
 
-The second method is to directly specify a python set of genomic feature indices, or a python set generated from an existing :term:`Filter object` (see above for more information about :term:`Filter objects` and the filtering module) using the function 'index_set'::
+Next, choose the type of graph you want to generate. 
+RNAlysis* supports Venn Diagrams for 2-3 gene sets, and `UpSet plots <https://doi.org/10.1109%2FTVCG.2014.2346248>`_ for any number of gene sets.
 
-    >>> my_python_set = {'WBGene00000001','WBGene0245200',' WBGene00402029'}
-    >>> my_set = enrichment.FeatureSet(my_python_set, 'a name for my set')
-    # alternatively, using 'index_set' on an existing Filter object:
-    >>> my_other_set = enrichment.FeatureSet(my_filter_obj.index_set,' a name for my set')
+After choosing a type of graph, the window will now update and display various parameters to modify your graph, and a preview of the graph on the right:
 
-The third method is not to specify a gene set at all::
+.. image:: /tutorial_screenshots/02e03_gene_sets.png
+  :width: 600
+  :alt: Visualize Gene Sets - plot preview
 
-    >>> en = enrichment.FeatureSet(set_name = 'a name for my set')
+You can change these plotting parameters to modify the graph - for example, to change the colors of the Venn circles, the title, or set whether or not our plot will be proportional to the size of the sets and their intersections.
+Once you are happy with the plot preview, click on the "Generate graph" button to create a large version of the graph that you can export and share.
 
-At this point, you will be prompted to enter a string of feature indices seperated by newline. They will be automatically paresd into a python set.
+.. image:: /tutorial_screenshots/02e04_gene_sets.png
+  :width: 600
+  :alt: Intersection of significantly downregulated genes
 
-FeatureSet objects have two attributes: gene_set, a python set containing genomic feature indices; and set_name, a string that describes the feature set (optional).
+
+Performing set operations on multiple tables and gene sets
+================================================================
+*RNAlysis* can use set operations such as union, intersection, difference and symmetric difference to combine the gene IDs from multiple data tables and gene sets. 
+Those set operations can be applied to any type and number of tables, and can combine tables/gene sets of different types. 
+You can, for example, look at the intersection of gene IDs in a differential expression table, a count matrix, and a gene set. 
+
+To apply set operations, open the "Gene sets" menu and click on "Set Operations...":
+
+.. image:: /tutorial_screenshots/02f01_set_ops.png
+  :width: 600
+  :alt: Gene sets menu - Set Operations
+
+A new window will open:
+
+.. image:: /tutorial_screenshots/02f02_set_ops.png
+  :width: 600
+  :alt: Set Operations window
+
+On the left side of the window, you can choose which data tables/gene sets we want to intersect.
+You can choose any two or more items from this list:
+
+.. image:: /tutorial_screenshots/02f03_set_ops.png
+  :width: 600
+  :alt: Set Operations - select gene sets
+
+You will now see a simplified Venn Diagram depicting the gene sets/tables you chose. 
+If you chose more than three gene sets, *RNAlysis* will instead draw an *UpSet Plot*, to make it easier to read. 
+You can now proceed to extract the subset you are interested in.
+You can do this in one of two different ways, which we will examine now. 
+
+Firstly, you can choose a set operation from the multiple choice list: union, intersection, majority-vote intersection, difference, or symmetric difference. 
+
+Like filtering operations, some set operations (such as intersection and difference) can be applied 'inplace', filtering down an existing table instead of returning a new gene set.
+If you pick one of those operations, a drop-down menu will now appear, prompting us to pick the primary gene set in this operation. 
+*RNAlysis* wants to know what is your "primary set" for this set operation - meaning, if you were to apply it inplace, which table should it be applied to?
+your choice will only matter if we apply this set operation inplace. 
+
+Notably, the set operation "difference" is a directional operation - meaning, difference between sets A and B is not the same is the difference between sets B and A. 
+In the case of this set operation in particular, your choice of primary set will also affect the results of the set operation itself, whether or not you apply it inplace. 
+
+.. image:: /tutorial_screenshots/02f04_set_ops.png
+  :width: 600
+  :alt: Set Operations - intersection
+
+Once you pick a set operation and optionally a primary set, the subset representing the result of the set operation between your gene sets/tables will now highlight.
+
+.. image:: /tutorial_screenshots/02f05_set_ops.png
+  :width: 600
+  :alt: Set Operations - operation preview
+
+At this point, you can also modify optional parameters that appear on the window. 
+Once you are happy with your choice, click on the "Apply" button to extract your gene set of interest. It will open in a new tab:
+
+.. image:: /tutorial_screenshots/02f06_set_ops.png
+  :width: 600
+  :alt: Set Operations - gene set output
+
+The second method to extract gene sets of interest is by directly picking them from the simplified Venn Diagram manually. 
+To do that, simply click on the subsets you are interested in on the interactive Venn Diagram:
+
+.. image:: /tutorial_screenshots/02f08_set_ops.png
+  :width: 600
+  :alt: Set Operations - select subset
+
+Click on a subset to select it, and click on it a second time to de-select it. 
+Once you have selected all of the relevant subsets, click the "Apply" button to extract them. 
+
+Enrichment analysis
+===========================
+To begin enrichment analysis, open the "Gene Sets" menu, and click on "Enrichment Analysis...". 
+
+
+.. image:: /tutorial_screenshots/02h01_enrichment.png
+  :width: 600
+  :alt: Pick 'Enrichment analysis' from the 'Gene sets' menu
+
+First, you can define the test set for your enrichment analysis. To do that, simply select a gene set or table from the drop-down menu:
+
+.. image:: /tutorial_screenshots/02h02_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - choose gene sets
+
+The gene IDs/names in the gene set/table you chose will be the test set of your enrichment analysis. 
+
+Next, you can define the background set for your enrichment analysis. 
+In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
+This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+
+Defining a background set is required for classical enrichment analysis. However, if you do not want to compare your gene set of interest to a background set, you can use a single-set (background-free) enrichment test. 
+You can read more about these in the :ref:`single-set-ref` section of the user guide. 
+
+To define the background set, simply choose an existing table or gene set from the drop-down menu. All of the genes/genomic features in that table will be used as the background set. 
+If some of the features in the background set or the enrichment set do not have any annotations associated with them, they will be ignored when calculating enrichment.
+
+
+.. image:: /tutorial_screenshots/02h02_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - choose gene sets
+
+Enrichment analysis can be done using different types and sources of annotations: Gene Ontology (GO), Kyoto Encyclopedia of Genes and Genomes (KEGG) pathways, user-defined categorical attributes, or user-defined non-categorical attributes. 
+You can select the annotation source from the top of the enrichment window:
+
+.. image:: /tutorial_screenshots/02h03_enrichment.png
+  :width: 600
+  :alt: Enrichment analysis - Choose enrichment dataset
+
+Once you choose an annotation source for enrichment, new options and parameters will appear. 
+We will now go over these four different annotation sources, and how enrichment analysis works for each of them. 
 
 GO Enrichment
 ---------------
-Using the *enrichment* module, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
+Using the *enrichment* window, you can perform enrichment analysis for Gene Ontology terms (GO enrichment).
 You can read more about Gene Ontology on the `Gene Ontology Consortium website <http://geneontology.org/docs/ontology-documentation/?>`_.
 
-To perform GO Enrichment analysis, we will start by creating an FeatureSet object::
-
-    >>> counts = filtering.CountFilter('path_to_my_file.csv')
-    >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
 
 Define the correct *organism* and *gene ID type* for your dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -972,35 +975,11 @@ The organism can be specified as either the organism's name, or the organism's *
 It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid mischaracterization of annotations.
 However, if you are not sure, *RNAlysis* will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
 
-
 Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), *RNAlysis* can translate gene IDs from one gene ID type to another.
-In order to do that, you need to specify which gene ID type your dataset uses.
+In order to do that, you need to specify which gene ID type your dataset uses. It is recommended to manually determine which gene ID type your data set uses, but if you are not sure, *RNAlysis* will attempt to automatically determine the correct `gene_id_type` by default. 
 
-Define the background set
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain *GO Term*, in comparison to a more generalized set of genomic features that we determined as 'background'.
-This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+Note that if you set both `organism` and `gene_id_type` to 'auto', finding a good value for both may take a particularly long time. 
 
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that have at least one GO Annotation as a background set.
-If you don't want to use the default setting, there are two methods of defining the background set:
-
-The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
-
-    >>> en.go_enrichment(biotype='all')
-
-In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
-When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
-
-The second method of defining the background set is to define a specific set of genomic features to be used as background::
-
-    >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> en.go_enrichment(background_genes=my_background_set)
-
-In this example, our background set consists of *feature1*, *feature2* and *feature3*.
-
-It is not possible to specify both a biotype and a specific background set.
-
-If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
 
 Choose the statistical test (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1167,15 +1146,10 @@ Running enrichment analysis will calculate enrichment for each of the GO terms, 
 'exp' is the expected number of features positive for the attribute in the background set. 'log2_fold_enrichment' is log2 of the fold change 'obs'/'exp'.
 
 KEGG Pathways enrichment
-_________________________
-Using the *enrichment* module, you can perform enrichment analysis for KEGG pathways.
+-------------------------
+Using the *enrichment* window, you can perform enrichment analysis for KEGG pathways.
 You can read more about KEGG pathways on the `KEGG website <https://www.genome.jp/kegg/pathway.html>`_.
 
-
-To perform KEGG Enrichment analysis, we will start by creating an FeatureSet object::
-
-    >>> counts = filtering.CountFilter('path_to_my_file.csv')
-    >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
 
 Define the correct *organism* and *gene ID type* for your dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1185,35 +1159,11 @@ The organism can be specified as either the organism's name, or the organism's *
 It is recommended to manually determine your organism's *NCBI Taxon ID* to avoid mischaracterization of annotations.
 However, if you are not sure, *RNAlysis* will attempt to automatically determine the correct `organism` by default, based on the gene IDs in your FeatureSet.
 
-
 Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), *RNAlysis* can translate gene IDs from one gene ID type to another.
-In order to do that, you need to specify which gene ID type your dataset uses.
+In order to do that, you need to specify which gene ID type your dataset uses. It is recommended to manually determine which gene ID type your data set uses, but if you are not sure, *RNAlysis* will attempt to automatically determine the correct `gene_id_type` by default. 
 
-Define the background set
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain KEGG pathway, in comparison to a more generalized set of genomic features that we determined as 'background'.
-This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+Note that if you set both `organism` and `gene_id_type` to 'auto', finding a good value for both may take a particularly long time. 
 
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that have at least one KEGG annotation as a background set.
-If you don't want to use the default setting, there are two methods of defining the background set:
-
-The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
-
-    >>> en.kegg_enrichment(biotype='all')
-
-In this example, instead of using all of the protein-coding genes that have GO Annotations as background, we use every genomic feature with GO Annotations as background.
-When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
-
-The second method of defining the background set is to define a specific set of genomic features to be used as background::
-
-    >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> en.kegg_enrichment(background_genes=my_background_set)
-
-In this example, our background set consists of *feature1*, *feature2* and *feature3*.
-
-It is not possible to specify both a biotype and a specific background set.
-
-If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
 
 Choose the statistical test (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1280,45 +1230,17 @@ Running enrichment analysis will calculate enrichment for each of the KEGG pathw
 
 Enrichment analysis for user-defined attributes
 --------------------------------------------------
-Using the *enrichment* module, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). The enrichment analysis can be performed using either the hypergeometric test or a randomization test.
-
-Enrichment analysis for user-defined attributes is performed using either FeatureSet.enrich_hypergeometric, FeatureSet.enrich_randomization or FeatureSet.enrich_randomization_parallel. We will start by creating an FeatureSet object::
-
-    >>> counts = filtering.CountFilter('path_to_my_file.csv')
-    >>> en = enrichment.FeatureSet(counts.index_set, 'my set')
+Using the *enrichment* window, you can perform enrichment analysis for user-defined attributes (such as 'genes expressed in intestine', 'epigenetic genes', 'genes that have paralogs'). 
+To do that, you will first need to define those attributes in an `Attribute Reference Table`. You can read about those in the :ref:`reference-table-ref` section below. 
 
 Choose which user-defined attributes to calculate enrichment for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Our attributes should be defined in a Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
-Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
-If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables' path.
-The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
+Once we have a Reference Table, we can perform enrichment analysis for those attributes using *RNAlysis*. 
+If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you can just set the attribute reference table parameter to 'predefined'. Otherwise, you need to specify your Reference Table's path.
 
-Define the background set
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
-This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
-
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
-If you don't want to use the default setting, there are two methods of defining the background set:
-
-The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
-
-    >>> result = en.enrich_randomization(['attribute1','attribute2'], biotype='all')
-
-In this example, instead of using all of the protein-coding genes in the Attribute Reference Table as background, we use all of the genomic features in the Attribute Reference Table as background.
-When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
-
-The second method of defining the background set is to define a specific set of genomic features to be used as background::
-
-    >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> result = en.enrich_hypergeometric(['attribute1','attribute2'], background_genes=my_background_set)
-
-In this example, our background set consists of feature1, feature2 and feature3.
-
-It is not possible to specify both a biotype and a specific background set.
-
-If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']). 
+Alternatively, you can test enrichment for all of the attributes in your table by setting the attributes parameter to 'all'. 
 
 Choose the statistical test (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1381,42 +1303,19 @@ Running enrichment analysis will calculate enrichment for each of the specified 
 
 Performing enrichment analysis for non-categorical user-defined attributes
 ---------------------------------------------------------------------------
-Instead of peforming enrichment analysis for categorical attributes ("genes which are expressed exclusively in neurons", "genes enriched in males", "epigenetic gene-products", etc), you can test whether your FeatureSet is enriched for a non-categorical attribute ("number of paralogs", "gene length", or any other numeric attribute) using the function `FeatureSet.non_categorical_enrichment()`.
+Instead of peforming enrichment analysis for categorical attributes ("genes which are expressed exclusively in neurons", "genes enriched in males", "epigenetic gene-products", etc), you can test whether your gene set is enriched for a non-categorical attribute ("number of paralogs", "gene length", "expression level in gut", or any other numeric attribute) using *RNAlysis*. 
 
 Choose which user-defined non-categorical attributes to calculate enrichment for
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The attributes should be defined in an Attribute Reference Table `csv` file. You can read more about Reference Tables and their format in the section :ref:`reference-table-ref`.
-Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using the function `FeatureSet.non_categorical_enrichment`.
-If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you do not need to specify them when calling non_categorical_enrichment. Otherwise, you need to specify your Reference Tables' path.
-The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']).
+Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using *RNAlysis*. 
 
-Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every genomic feature in the background and test sets (meaning, no NaN values).
+If your Reference Tables are set to be the default Reference Tables (as explained in :ref:`reference-table-ref`) you can just set the attribute reference table parameter to 'predefined'. Otherwise, you need to specify your Reference Table's path.
 
-Define the background set
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as 'background'.
-This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.
+The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, ['attribute1', 'attribute2']). 
+Alternatively, you can test enrichment for all of the attributes in your table by setting the attributes parameter to 'all'. 
 
-Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, *RNAlysis* uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
-If you don't want to use the default setting, there are two methods of defining the background set:
-
-The first method is to specify a biotype (such as 'protein_coding', 'miRNA' or 'all') under the parameter 'biotype'::
-
-    >>> result = en.non_categorical_enrichment(['attribute1','attribute2'], biotype='all')
-
-In this example, instead of using all of the protein-coding genes in the Attribute Reference Table as background, we use all of the genomic features in the Attribute Reference Table as background.
-When specifying a biotype, the Biotype Reference Table that you specified is used to determine the biotype of each genomic feature.
-
-The second method of defining the background set is to define a specific set of genomic features to be used as background::
-
-    >>> my_background_set = {'feature1','feature2','feature3'}
-    >>> result = en.non_categorical_enrichment(['attribute1','attribute2'], background_genes=my_background_set)
-
-In this example, our background set consists of feature1, feature2 and feature3.
-
-It is not possible to specify both a biotype and a specific background set.
-
-If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.
+Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every gene/genomic feature in the background and test sets (meaning, no NaN values).
 
 Choose the statistical test (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1474,167 +1373,30 @@ Running non-categorical enrichment analysis will calculate enrichment for each o
 'samples' is the number of features that were used in the enrichment set. 'obs' is the observed mean/median (depending if the statistical test was parametric or not) value of the non-categorical attribute in the enrichment set.
 'exp' is the expected mean/median value of the non-categorical attribute in the background set.
 
+.. _single-set-ref:
 
-Performing set operations and visualisation on multiple FeatureSet objects
--------------------------------------------------------------------------------
+Performing single-set enrichment analysis (enrichment without a background set)
+---------------------------------------------------------------------------------
+Single-set enrichment analysis works much the same as normal enrichment analysis, with one key difference:
+when performing single-set enrichment you do not define a background set to comapre your enrichment gene set against. 
+Instead, you choose a data table as your test set. The genes/rows in the table should be sorted in an order that defines a meaningful ranking for your gene set. 
+*RNAlysis* then tests whether the top/bottom of the ranked gene table is enriched for specific attributes compared to the rest of the list (enrichment/depletion respectively). 
 
-Similarly to Filter objects, it is possible to use set operations such as union, intersection, difference and symmetric difference to combine the feature sets of multiple FeatureSet objects. Those set operations can be applied to both FeatureSet objects and python sets. The objects don't have to be of the same subtype - you can, for example, look at the union of an FeatureSet object and a python set::
-
-    >>> en = enrichment.FeatureSet({'WBGene00003002','WBGene00004201','WBGene00300139'})
-
-    >>> s = {'WBGene00000001','WBGene00000002','WBGene00000003'}
-    >>> union_result = en.union(s)
-
-When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.
-
-In addition, the enrichment module includes functions for visualisation of sets and overlap, such as enrichment.venn_diagram() and enrichment.upset_plot().
-Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the :term:`Attribute Reference Table` (you can read more about attributes in :ref:`reference-table-ref`).
-Venn diagrams are limited to 2-3 sets:
-
-       .. figure:: /figures/venn.png
-           :align:   center
-           :scale: 70 %
-
-           Example plot of venn_diagram()
-
-While UpSet plots can include any number of sets:
-
-        .. figure:: /figures/upsetplot.png
-           :align:   center
-           :scale: 70 %
-
-           Example plot of upset_plot()
-
-
-Saving indices from FeatureSet to a .txt file
---------------------------------------------------------
-
-It is possible to save the feature indices from an FeatureSet object to a .txt file, for use in online enrichment tools or simply to share the list of genomic features. This is done with the 'save_txt' function::
-
-    >>> en.save_txt('D:\path\filename')
-
-The feature indices will be saved to the text file in the specified path, separated by newline ('\n').
-
-Working with RankedSet objects
-=========================================
-The :term:`RankedSet` class represents a set of genomic features which are ranked by an inherent order. For example, genes could be ranked based on their mean expression level, their fold change between a pair of conditions, etc.
-:term:`RankedSet` objects behave similarly to :term:`FeatureSet` objects, but in addition they support *single-set enrichment analysis* - enrichment analysis without a background set.
-
-The statistical test used to test significance in *single-set enrichment analysis* is the *generalized minimum hypergeometric test (XL-mHG)*, which measures the enrichment of the genomic features at the top and bottom of your ranked gene set compared to the rest of the gene set.
-You can read more about the *minimum hypergeometric test* and its generalized version the *XL-mHG test* in the following publications:
-https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.0030039
-https://arxiv.org/abs/1507.07905
-
-Initialize an RankedSet object
-------------------------------------------
-We will start by importing the enrichment module::
-
-    >>> from *RNAlysis* import enrichment
-
-:term:`RankedSet` objects can be initialized by one of two methods.
-The first method is to specify an existing Filter object::
-
-    >>> my_filter_obj = filtering.CountFilter('tests/test_files/counted.csv') # create a Filter object
-    >>> my_ranked_set = enrichment.RankedSet(my_filter_obj, 'a name for my set')
-
-When using this method, the ranking of the genomic features will be determined by their current order within the :term:`Filter` object. You can use the 'sort' method of your Filter object to modify the current order of genomic features within the Filter object.
-
-The second method is to directly specify a list, tuple, or numpy array of genomic feature names::
-
-    >>> my_list = ['WBGene00000001','WBGene0245200',' WBGene00402029']
-    >>> my_ranked_set = enrichment.RankedSet(my_list, 'a name for my set')
-
-
-RankedSet objects have three attributes: ranked_genes, a numpy array containing the ranked genomic features; gene_set, a python set containing the genomic features; and set_name, a string that describes the feature set (optional).
-
-
-Performing single-set GO Enrichment analysis without a background set
------------------------------------------------------------------------
-Single-set GO Enrichment works much the same as normal Go Enrichment analysis, with two key differences:
-
-First, when performing single-set GO Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
-Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
-
-An example for running single-set GO Enrichment would look like so::
-
-    >>> from *RNAlysis* import enrichment
-    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
-    >>> go_en_result = ranked_set.single_set_go_enrichment(gene_id_type='WormBase')
-
-
-Performing single-set KEGG Enrichment analysis without a background set
--------------------------------------------------------------------------
-Single-set KEGG Enrichment works much the same as normal KEGG Enrichment analysis, with two key differences:
-
-First, when performing single-set KEGG Enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
-Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
-
-An example for running single-set KEGG Enrichment would look like so::
-
-    >>> from *RNAlysis* import enrichment
-    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
-    >>> go_en_result = ranked_set.single_set_kegg_enrichment(gene_id_type='WormBase')
-
-Performing single-set enrichment analysis for user-defined attributes without a background set
-------------------------------------------------------------------------------------------------
-Single-set enrichment analysis for user-defined attributes works much the same as normal enrichment analysis, with two key differences:
-
-First, when performing single-set enrichment you do not define a background set to comapre your enrichment gene set against. Instead, you supply a :term:`RankedSet` that defines a meaningful ranking for your gene set.
-Second, you cannot specify which statistical test to use, since the *XL-mHG* test has to be used.
-
-An example for running single-set enrichment analysis would look like so::
-
-    >>> from *RNAlysis* import enrichment
-    >>> ranked_set = enrichment.RankedSet(['WBGene00000019', 'WBGene00000106', 'WBGene00000041', 'WBGene00000105'])
-    >>> en_result = ranked_set.single_set_enrichment(['attribute1', 'attribute3'], attr_ref_path='tests/test_files/attr_ref_table_for_examples.csv')
-
-
-
-Visualizing sets, intersections, and enrichment
-================================================
-
-Plotting results of enrichment analysis
------------------------------------------
-If you want to plot existing enrichment results using *RNAlysis*, you can use the `enrichment.plot_enrichment_results()` function. It employs a similar API to the enrichment functions in the enrichment modules, but accepts pre-calculated DataFrames.
-
-Plotting Venn Diagrams and UpSet Plots
----------------------------------------
-
-To visualize set intersection using a Venn Diagram or UpSet plot, you first need to define the sets you want to visualize.
-Those sets can be represented using a python dictionary, where each key represents the name of the set, and the corresponding value represents the set's content (the genomic features that are part of the set).
-
-There are three ways of specifying a set's content:
-
-1. A python set containing the names of the genomic features
-2. A `FeatureSet` or `RankedSet` object containing the names of the genomic features
-3. A column name from an Attribute Reference Table
-
-For example::
-
-    >>> from *RNAlysis* import enrichment
-    >>> sets_to_visualize = {'First set':{'gene1', 'gene2', 'gene3'}, 'Second set':enrichment.FeatureSet({'gene2','gene3','gene4'}), 'Third set':'attribute1'}
-
-After defining the dictionary of sets, we can use it to plot set intersection via the `enrichment.venn_diagram()` or `enrichment.upset_plot()` functions.
-Venn diagrams in *RNAlysis* are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.
-
-       .. figure:: /figures/venn.png
-           :align:   center
-           :scale: 70 %
-
-           Example plot of venn_diagram()
-
-UpSet plots support the visualization of much larger groups of sets. You can read more about UpSet plots here: https://upset.app/
-
-        .. figure:: /figures/upsetplot.png
-           :align:   center
-           :scale: 70 %
-
-           Example plot of upset_plot()
+The most common use case for single-set enrichment analysis is following differential expression analysis - using an unfiltered differential expression table as the ranked gene list, 
+and sorting (ranking) the table by either the DE test statistic, or by log2 fold change. 
 
 ****************************
-*RNAlysis* general module
+*RNAlysis* settings
 ****************************
-RNAlysis's general module (rnalysis.general) contains general functions that can be useful during analysis of RNA sequencing data, including regular expression parsers and setting the Reference Table path.
+The *RNAlysis* settings window allows you to modify the appearance of the graphical interface, and to set a default path for your Reference Tables (see more information below).
+You can access the settings window through the "File" menu:
+
+.. image:: /userguide_screenshots/user_guide_settings_01.png
+
+.. image:: /userguide_screenshots/user_guide_settings_02.png
+
+The settings you set from here wil be saved for all future *RNAlysis* sessions. 
+You can always reset the settings back to their default values by clicking on the "Reset settings" button. 
 
 .. _reference-table-ref:
 
@@ -1653,7 +1415,7 @@ User-defined attributes should be defined in an :term:`Attribute Reference Table
 +----------------+--------------+-------------+-------------+
 | WBGene0000002  |     NaN      |      1      |     241     |
 +----------------+--------------+-------------+-------------+
-| WBGene0000003  |     NaN      |      1      |     3.6     |
+| WBGene0000003  |     NaN      |      1      |     0       |
 +----------------+--------------+-------------+-------------+
 | WBGene0000004  |      1       |      1      |     NaN     |
 +----------------+--------------+-------------+-------------+
@@ -1662,7 +1424,8 @@ User-defined attributes should be defined in an :term:`Attribute Reference Table
 
 What is a Biotype Reference Table?
 ---------------------------------------
-You can perform filtering operations or generate background-sets for enrichment analysis based on user-annotated biotypes (such as 'protein_coding', 'pseudogene', 'piRNA', etc).
+If you don't have access to your organism-specific GTF file, or want to use a different definition of biotypes for your dataset, 
+you can perform filtering operations or generate background-sets for enrichment analysis based on user-annotated biotypes (such as 'protein_coding', 'pseudogene', 'piRNA', etc).
 User-annotated biotypes should be defined in a :term:`Biotype Reference Table` `csv` file. The format of the :term:`Biotype Reference Table` is one row for each gene/genomic feature, and a column titled 'biotype' (case insensitive). See example for a Biotype Reference Table below:
 
 +----------------+----------------+
@@ -1679,49 +1442,6 @@ User-annotated biotypes should be defined in a :term:`Biotype Reference Table` `
 | WBGene0000005  |    lincRNA     |
 +----------------+----------------+
 
-
-
 Set a Reference Table as default
 ----------------------------------
-Once we have an Attribute and/or Biotype Reference Table, we can set it to be the default reference table for all future uses of *RNAlysis*::
-
-    >>> from *RNAlysis* import general
-    >>> path="the_new_attribute_reference_table_path"
-    >>> general.set_attr_ref_table_path(path)
-    Attribute Reference Table path set as: the_new_attribute_reference_table_path
-
-    >>> path="the_new_biotype_reference_table_path"
-    >>> general.set_biotype_ref_table_path(path)
-    Attribute Reference Table path set as: the_new_biotype_reference_table_path
-
-This will create a file called 'settings.yaml', which will store the full paths of your reference tables.
-Whenever *RNAlysis* needs to use an Attribute/Biotype Reference Table and no other path is specified, *RNAlysis* will automatically use the path saved in the settings file.
-The saved path can be changed any time using the general.set_attr_ref_table_path() and general.set_biotype_ref_table_path() functions.
-
-Load the default Attribute Reference Table path
--------------------------------------------------
-You can read the saved path from the settings file using the general.read_attr_ref_table_path() and general.read_biotype_ref_table_path() functions::
-
-    >>> from *RNAlysis* import general
-    >>> attr_table_path = general.read_attr_ref_table_path()
-    Attribute Reference Table used: the_attribute_reference_table_path_that_was_saved_in_the_settings_file
-
-    >>> biotype_table_path = general.read_biotype_ref_table_path()
-    Biotype Reference Table used: the_biotype_reference_table_path_that_was_saved_in_the_settings_file
-
-If an :term:`Attribute Reference Table` path was not previously defined, you will be requested to define it when you run this function.
-
-Parse *C. elegans* gene names, WBGene indices and sequence names using regular expressions
-===========================================================================================
-
-The general module includes functions which can parse *C. elegans* gene names (like *daf-2* or *lin-15B*), WBGene indices (like WBGene00023495) and sequence names (like Y55D5A.5 or T23G5.6).
-For example, we could extract all WBGene indices from the following string::
-
-    >>> from *RNAlysis* import general
-    >>> my_string='''WBGene00000001 and WBGene00000002WBGene00000003
-
-            WBGene00000004g
-            '''
-    >>> general.parse_wbgene_string(my_string)
-    {'WBGene00000001','WBGene000000002','WBGene00000003','WBGene00000004'}
-
+Once you have an Attribute and/or Biotype Reference Table, you can set it to be the default reference table for all future uses of *RNAlysis* through the settings window. 
