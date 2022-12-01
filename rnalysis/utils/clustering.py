@@ -508,7 +508,7 @@ class ClusteringRunner:
             fig = plt.figure(figsize=(14, 9))
             fig.suptitle(title, fontsize=18)
             ylabel_fontsize = 10 if n_clusters > 15 else 8
-            ticklabels_fontsize = 5
+            ticklabels_fontsize = 6
         axes = []
         min_y, max_y = 0, 0
         color_generator = generic.color_generator()
