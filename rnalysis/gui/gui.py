@@ -2588,7 +2588,7 @@ class MainWindow(QtWidgets.QMainWindow):
         sort_by_type.triggered.connect(self.sort_tabs_by_type)
         sort_by_size = QtWidgets.QAction("Sort by number of features")
         sort_by_size.triggered.connect(self.sort_tabs_by_n_features)
-        reverse = QtWidgets.QAction("Reverse order")
+        reverse = QtWidgets.QAction("Reverse tab order")
         reverse.triggered.connect(self.sort_reverse)
         self.tab_contextmenu.addActions([sort_by_name, sort_by_time, sort_by_type, sort_by_size, reverse])
         self.tab_contextmenu.addSeparator()
