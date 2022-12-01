@@ -1,4 +1,7 @@
 filter_type: countfilter
+metadata:
+   export_time: 2022/12/01, 16:47:40
+   rnalysis_version: 3.2.2
 functions:
 - biotypes_from_ref_table
 - number_filters

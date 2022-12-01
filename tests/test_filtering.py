@@ -1,14 +1,8 @@
-import asyncio.log
-
-import pytest
-import pandas as pd
-from collections import namedtuple
-from sklearn.preprocessing import PowerTransformer, StandardScaler
-
 import matplotlib
+import pytest
 
+from rnalysis import filtering
 from rnalysis.filtering import *
-import os
 from tests import __attr_ref__, __biotype_ref__
 
 matplotlib.use('Agg')
@@ -1775,7 +1769,7 @@ def test_import_pipeline():
 
 def test_export_pipeline():
     with open('tests/test_files/test_pipeline.yaml') as f:
-        truth = f.read()
+        truth = yaml.safe_load(f)
 
     p = Pipeline('countfilter')
     p.add_function(CountFilter.biotypes_from_ref_table)
@@ -1785,8 +1779,18 @@ def test_export_pipeline():
 
     try:
         with open(outname) as f:
-            exported = f.read()
-        assert exported == truth
+            exported = yaml.safe_load(f)
+        assert set(exported.keys()) == set(truth.keys())
+        for key in exported.keys():
+            if key == 'metadata':
+                assert set(exported[key].keys()) == set(truth[key].keys())
+                for internal_key in exported[key]:
+                    if internal_key == 'export_time':
+                        continue
+                    elif internal_key == 'rnalysis_version':
+                        assert exported[key][internal_key] == filtering.__version__
+            else:
+                assert exported[key] == truth[key]
     finally:
         os.remove(outname)
 

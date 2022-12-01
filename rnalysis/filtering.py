@@ -35,7 +35,9 @@ import seaborn as sns
 from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
+from datetime import datetime
 
+from rnalysis import __version__
 from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
@@ -4466,7 +4468,9 @@ class Pipeline:
         :type filename: str, pathlib.Path, or None
         :return: if filename is None, returns the Pipeline YAML-like string.
         """
-        pipeline_dict = dict(filter_type=self.FILTER_TYPES_REV[self.filter_type], functions=[], params=[])
+        pipeline_dict = dict(filter_type=self.FILTER_TYPES_REV[self.filter_type], functions=[], params=[],
+                             metadata={'rnalysis_version': f'{__version__}',
+                                       'export_time':datetime.today().strftime('%Y/%m/%d, %H:%M:%S')})
         for func, params in zip(self.functions, self.params):
             pipeline_dict['functions'].append(func.__name__)
             pipeline_dict['params'].append(params)
