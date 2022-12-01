@@ -17,6 +17,9 @@ jobs:
         steps:
             -   name: Get repository
                 uses: actions/checkout@v2
+            -   name: apt-get update (Linux)
+                if: runner.os == 'Linux'
+                run: sudo apt-get update
             -   name: Setup Qt requirements for Linux
                 uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
