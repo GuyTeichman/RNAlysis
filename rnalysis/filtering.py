@@ -3953,14 +3953,23 @@ class CountFilter(Filter):
             ) -> Tuple[PCA, List[plt.Figure]]:
         """
         Performs Principal Component Analysis (PCA), visualizing the principal components that explain the most\
-        variance between the different samples. The function will automatically plot Principal Component #1 \
-        with every other Principal Components calculated.
+        variance between the different samples. The function will standardize the data prior to PCA, and then plot \
+        the requested number of pairwise PCA projections.
+
         :type samples: 'all' or list.
         :param samples: A list of the sample names and/or grouped sample names to be plotted. \
         All specified samples must be present in the CountFilter object. \
         To draw multiple replicates of the same condition in the same color, they can be grouped in an inner list. \
         Example input: \
         [['SAMPLE1A', 'SAMPLE1B', 'SAMPLE1C'], ['SAMPLE2A', 'SAMPLE2B', 'SAMPLE2C'],'SAMPLE3' , 'SAMPLE6']
+        :param n_components: number of Principal Components to plot (minimum is 2). *RNAlysis* will generate a \
+        pair-wise scatter plot between every pair of Principal Components.
+        :type n_components: int >=2 (default=3)
+        :param labels: if True, *RNAlysis* will display labels with the sample names next to each sample on the graph.
+        :type labels: bool (default=True)
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to standartization and principal component analysis.
+        :type power_transform: bool (default=True)
         :param title: The title of the plot. If 'auto', a title will be generated automatically.
         :type title: str or 'auto' (default='auto')
         :param title_fontsize: determines the font size of the graph title.
