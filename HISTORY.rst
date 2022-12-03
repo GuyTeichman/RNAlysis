@@ -1,7 +1,7 @@
 =======
 History
 =======
-3.3.0 (2022-12-01)
+3.3.0 (2022-12-02)
 ------------------
 * This version introduced quality-of-life improvements to the graphical user interface.
 
