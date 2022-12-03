@@ -2092,6 +2092,7 @@ class FoldChangeFilter(Filter):
         return self.filter_fold_change_direction(direction='pos', inplace=False), \
                self.filter_fold_change_direction(direction='neg', inplace=False)
 
+
 @readable_name('Differential expression table')
 class DESeqFilter(Filter):
     """
@@ -2384,6 +2385,7 @@ class DESeqFilter(Filter):
         generic.despine(ax)
         plt.show()
         return fig
+
 
 @readable_name('Count matrix')
 class CountFilter(Filter):
@@ -3995,10 +3997,10 @@ class CountFilter(Filter):
         data = self.df[parsing.flatten(samples)].transpose()
         data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
 
-        pca_obj = PCA(n_components=n_components)
+        pca_obj = PCA()
         pcomps = pca_obj.fit_transform(data_standardized)
         columns = [f'Principal component {i + 1}' for i in range(n_components)]
-        principal_df = pd.DataFrame(data=pcomps, columns=columns)
+        principal_df = pd.DataFrame(data=pcomps[:, 0:n_components], columns=columns)
         final_df = principal_df
         final_df['lib'] = pd.Series(parsing.flatten(samples))
 
@@ -4006,9 +4008,10 @@ class CountFilter(Filter):
             title = f'PCA plot of {self.fname.stem}'
         pc_var = pca_obj.explained_variance_ratio_
         figs = []
+        self._scree_plot(pc_var, label_fontsize, title_fontsize, tick_fontsize)
         for first_pc in range(n_components):
             for second_pc in range(first_pc + 1, n_components):
-                figs.append(CountFilter._plot_pca(
+                figs.append(CountFilter._pca_plot(
                     final_df=final_df[
                         [f'Principal component {1 + first_pc}', f'Principal component {1 + second_pc}', 'lib']],
                     pc1_var=pc_var[first_pc], pc2_var=pc_var[second_pc], sample_grouping=samples, labels=labels,
@@ -4018,7 +4021,27 @@ class CountFilter(Filter):
         return pca_obj, figs
 
     @staticmethod
-    def _plot_pca(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool,
+    def _scree_plot(pc_var: List[float], label_fontsize: float, title_fontsize: float, tick_fontsize: float):
+        pc_var_percent = [var * 100 for var in pc_var]
+        pc_var_cumsum = np.cumsum(pc_var_percent)
+        pc_indices = list(range(len(pc_var)))
+        pc_names = [f'PC{i + 1}' for i in pc_indices]
+
+        fig = plt.figure(figsize=(9, 9), constrained_layout=True)
+        ax = fig.add_subplot(1, 1, 1)
+        ax.bar(pc_names, pc_var_percent, edgecolor='black')
+        ax.plot(pc_names, pc_var_cumsum,'-o', color='black')
+        ax.set_title('Principal Component Analysis - Variance Explained', fontsize=title_fontsize)
+        ax.set_ylabel('% Variance explained', fontsize=label_fontsize)
+        ax.set_xlabel('Principal Components', fontsize=label_fontsize)
+        ax.set_ylim([0, 105])
+        ax.tick_params(axis='both', which='both', labelsize=tick_fontsize)
+        ax.yaxis.set_major_formatter('{x}%')
+        generic.despine(ax)
+
+
+    @staticmethod
+    def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool,
                   title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float):
         """
         Internal method, used to plot the results from CountFilter.pca().
@@ -4451,7 +4474,8 @@ class Pipeline:
         string = f"Pipeline for {self.filter_type.readable_name}"
         if len(self) > 0:
             string += f":\n\t" + '\n\t'.join(
-                self._readable_func_signature(func, params[0], params[1]) for func, params in zip(self.functions, self.params))
+                self._readable_func_signature(func, params[0], params[1]) for func, params in
+                zip(self.functions, self.params))
         return string
 
     def __repr__(self):
@@ -4479,7 +4503,7 @@ class Pipeline:
         """
         pipeline_dict = dict(filter_type=self.FILTER_TYPES_REV[self.filter_type], functions=[], params=[],
                              metadata={'rnalysis_version': f'{__version__}',
-                                       'export_time':datetime.today().strftime('%Y/%m/%d, %H:%M:%S')})
+                                       'export_time': datetime.today().strftime('%Y/%m/%d, %H:%M:%S')})
         for func, params in zip(self.functions, self.params):
             pipeline_dict['functions'].append(func.__name__)
             pipeline_dict['params'].append(params)

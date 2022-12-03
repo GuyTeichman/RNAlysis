@@ -1,6 +1,14 @@
 =======
 History
 =======
+
+3.4.0 (2022-12-??)
+------------------
+
+Added
+******
+* Added a Scree Plot (explained variance per PC) to Principle Component Analysis
+
 3.3.0 (2022-12-02)
 ------------------
 * This version introduced quality-of-life improvements to the graphical user interface.
