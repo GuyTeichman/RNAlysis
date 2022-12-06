@@ -262,3 +262,17 @@ def test_is_legal_file_path(path, is_legal_truth):
 ])
 def test_is_legal_dir_path(path, is_legal_truth):
     assert is_legal_dir_path(path) == is_legal_truth
+
+
+@pytest.mark.parametrize('path,err_exp,truth', [
+    ('tests/test_files/counted.csv', True, None),
+    ('tests/test_files/kallisto_tests/transcripts.gtf', False, 'gtf'),
+    ('tests/test_files/doesnt_exist.gtf', True, None),
+    ('tests/test_files/test_gff_wormbase.gff3', False, 'gff3'), ])
+def test_validate_genome_annotation_file(path, err_exp, truth):
+    if err_exp:
+        with pytest.raises((AssertionError, ValueError)):
+            validate_genome_annotation_file(path)
+    else:
+        res = validate_genome_annotation_file(path)
+        assert res == truth
