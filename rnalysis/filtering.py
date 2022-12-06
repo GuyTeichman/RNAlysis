@@ -404,7 +404,7 @@ class Filter:
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
-        :return: If inplace is False, returns a new and filtered instance of the Filter object.
+        :return: If inplace is False, returns a new and translated instance of the Filter object.
         """
         gene_ids = parsing.data_to_tuple(self.df.index)
         new_df = self.df.copy(deep=True)
@@ -1355,8 +1355,8 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Remove rows with missing values')
-    def filter_missing_values(self, columns: Union[param_typing.ColumnNames, Literal['all']] = 'all', opposite: bool = False,
-                              inplace: bool = True):
+    def filter_missing_values(self, columns: Union[param_typing.ColumnNames, Literal['all']] = 'all',
+                              opposite: bool = False, inplace: bool = True):
         """
         Remove all rows whose values in the specified columns are missing (NaN).
 
@@ -1421,7 +1421,7 @@ class Filter:
         :type function: Callable or str ('logx' for base-x log of the data + 1, \
         'box-cox' for Box-Cox transform of the data + 1, 'standardize' for standardization)
         :param columns: The columns to which the transform should be applied.
-        :type columns: str or list of str (default='all')
+        :type columns: str, list of str, or 'all' (default='all')
         :type inplace: bool (default=True)
         :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
         the function will return a new Filter instance and the current instance will not be affected.
@@ -2926,7 +2926,8 @@ class CountFilter(Filter):
 
     @readable_name('Normalize with the "Trimmed Mean of M-values" (TMM) method')
     def normalize_tmm(self, log_ratio_trim: float = 0.3, sum_trim: float = 0.05,
-                      a_cutoff: Union[float, None] = -1 * 10 ** 10, ref_column: Union[Literal['auto'], param_typing.ColumnName] = 'auto',
+                      a_cutoff: Union[float, None] = -1 * 10 ** 10,
+                      ref_column: Union[Literal['auto'], param_typing.ColumnName] = 'auto',
                       inplace: bool = True):
         """
         Normalizes the count matrix using the 'trimmed mean of M values' (TMM) method \
@@ -3843,7 +3844,8 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('Hierarchical clustergram plot')
-    def clustergram(self, sample_names: Union[param_typing.ColumnNames, Literal['all']] = 'all', metric: str = 'Euclidean',
+    def clustergram(self, sample_names: Union[param_typing.ColumnNames, Literal['all']] = 'all',
+                    metric: str = 'Euclidean',
                     linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                     tick_fontsize: float = 12):
