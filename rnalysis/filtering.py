@@ -3898,8 +3898,7 @@ class CountFilter(Filter):
             samples = samples.copy()
 
         for i in range(len(samples)):
-            if not isinstance(samples[i], list):
-                samples[i] = parsing.data_to_list(samples[i])
+            samples[i] = parsing.data_to_list(samples[i])
             if not validation.isinstanceiter(samples[i], str):
                 for j in range(len(samples[i])):
                     samples[i][j] = self.columns[samples[i][j]]
@@ -3925,6 +3924,7 @@ class CountFilter(Filter):
 
             sem = [self.df.loc[feature].iloc[ind].sem() if validation.isinstanceiter(ind, int) else
                    self.df.loc[feature, ind].sem() for ind in samples]
+            sem = [0 if np.isnan(this_sem) else this_sem for this_sem in sem]
 
             points_y = parsing.flatten(
                 [[self.df.loc[feature].iloc[i] for i in ind] if validation.isinstanceiter(ind, int) else
