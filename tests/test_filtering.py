@@ -1886,3 +1886,14 @@ def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
         print(res.df)
         print(truth)
         raise e
+
+
+@pytest.mark.parametrize("pth,cols,truth_pth", [
+    ('tests/test_files/counted.csv', 'cond2', 'tests/test_files/counted_drop_columns_truth_1.csv'),
+    ('tests/test_files/counted.csv', ['cond4', 'cond2'], 'tests/test_files/counted_drop_columns_truth_2.csv'),
+])
+def test_drop_columns(pth, cols, truth_pth):
+    obj = Filter(pth)
+    truth = Filter(truth_pth)
+    obj.drop_columns(cols)
+    assert obj.df.sort_index().equals(truth.df.sort_index())
