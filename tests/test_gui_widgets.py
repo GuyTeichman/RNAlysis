@@ -1091,8 +1091,8 @@ def test_param_to_widget_native_types(qtbot, param_type, default, expected_widge
 
 @pytest.mark.parametrize('param_type,default,name,expected_widget', [
     (bool, True, 'status', ToggleSwitch),
-    (str, '#000000', 'linecolor', ColorPicker),
-    (typing.List[str], ['#000000', '#aabbcc'], 'colors', MultiColorPicker),
+    (param_typing.Color, '#000000', 'linecolor', ColorPicker),
+    (param_typing.ColorList, ['#000000', '#aabbcc'], 'colors', MultiColorPicker),
     (typing.Union[str, None], None, 'name', OptionalLineEdit),
     (typing.Union[str, None], 'text', 'name', OptionalLineEdit),
     (typing.Union[int, None], None, 'name', OptionalSpinBox),
@@ -1124,14 +1124,14 @@ def test_param_to_widget_nonnative_types(qtbot, param_type, default, name, expec
 
 
 @pytest.mark.parametrize('param_type,name,expected_widget,expected_widget_pipeline', [
-    (typing.Union[str, typing.List[str]], 'samples', TableColumnGroupPicker, QMultiLineEdit),
-    (typing.Iterable[str], 'sample_grouping', TableColumnGroupPicker, QMultiLineEdit),
-    (typing.Union[str, typing.List[str]], 'sample_names', TableColumnPicker, QMultiLineEdit),
-    (typing.List[str], 'sample1', TableColumnPicker, QMultiLineEdit),
-    (typing.List[str], 'sample2', TableColumnPicker, QMultiLineEdit),
-    (typing.List[str], 'columns', TableColumnPicker, QMultiLineEdit),
-    (str, 'by', TableSingleColumnPicker, QtWidgets.QLineEdit),
-    (str, 'column', TableSingleColumnPicker, QtWidgets.QLineEdit),
+    (param_typing.GroupedColumns, 'samples', TableColumnGroupPicker, TwoLayerMultiLineEdit),
+    (param_typing.GroupedColumns, 'sample_grouping', TableColumnGroupPicker, TwoLayerMultiLineEdit),
+    (param_typing.ColumnNames, 'sample_names', TableColumnPicker, QMultiLineEdit),
+    (param_typing.ColumnNames, 'sample1', TableColumnPicker, QMultiLineEdit),
+    (param_typing.ColumnNames, 'sample2', TableColumnPicker, QMultiLineEdit),
+    (param_typing.ColumnNames, 'columns', TableColumnPicker, QMultiLineEdit),
+    (param_typing.ColumnName, 'by', TableSingleColumnPicker, QtWidgets.QLineEdit),
+    (param_typing.ColumnName, 'column', TableSingleColumnPicker, QtWidgets.QLineEdit),
 
 ])
 def test_param_to_widget_pipeline_mode_types(qtbot, param_type, name, expected_widget, expected_widget_pipeline):

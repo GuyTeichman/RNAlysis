@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel
 from tqdm.auto import tqdm
 
-from rnalysis.utils import parsing, validation, generic
+from rnalysis.utils import parsing, validation, generic, param_typing
 
 
 class TableColumnPicker(QtWidgets.QPushButton):
@@ -184,7 +184,7 @@ class TableColumnGroupPicker(TableColumnPicker):
 
     def _get_groups_in_use(self):
         existing_groups = set()
-        for check, combo, col_name in zip(self.column_checks,self.column_combos, self.columns):
+        for check, combo, col_name in zip(self.column_checks, self.column_combos, self.columns):
             if check.isChecked():
                 grp = combo.currentText()
                 existing_groups.add(grp)
@@ -1477,26 +1477,18 @@ class NewParam:
 def param_to_widget(param, name: str,
                     actions_to_connect: typing.Union[typing.Iterable[typing.Callable], typing.Callable] = tuple(),
                     pipeline_mode: bool = False):
+    column_annotations = {param_typing.GroupedColumns: TableColumnGroupPicker,
+                          param_typing.ColumnNames: TableColumnPicker,
+                          param_typing.ColumnName: TableSingleColumnPicker}
     actions_to_connect = parsing.data_to_tuple(actions_to_connect)
 
     if param.default == inspect._empty:
         is_default = False
     else:
         is_default = True
-
-    if 'color' in name:
-        if param.annotation == str:
-            widget = ColorPicker(param.default if is_default else '')
-            for action in actions_to_connect:
-                widget.textChanged.connect(action)
-
-        elif param.annotation in (typing.Tuple[str], typing.Iterable[str], typing.List[str]):
-            widget = MultiColorPicker(name)
-            widget.set_defaults(param.default if is_default else '')
-            for action in actions_to_connect:
-                widget.valueChanged.connect(action)
-
-    elif typing_extensions.get_origin(param.annotation) == typing.Union and typing_extensions.Literal in [
+    # if the annotation is a Union that contains Literals, turn the Literals into a combobox,
+    # and the rest of the annotation into an 'other...' option in the combo box (AKA ComboBoxOrOther widget)
+    if typing_extensions.get_origin(param.annotation) == typing.Union and typing_extensions.Literal in [
         typing_extensions.get_origin(ann) for ann in typing_extensions.get_args(param.annotation)]:
         args = typing_extensions.get_args(param.annotation)
         literal_ind = [typing_extensions.get_origin(ann) for ann in args].index(
@@ -1515,19 +1507,24 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
 
-    elif name in {'samples', 'sample_grouping','replicate_grouping'} and (not pipeline_mode):
-        widget = TableColumnGroupPicker()
+    elif param.annotation == param_typing.Color:
+        widget = ColorPicker(param.default if is_default else '')
+        for action in actions_to_connect:
+            widget.textChanged.connect(action)
+
+    elif param.annotation == param_typing.ColorList:
+        widget = MultiColorPicker(name)
+        widget.set_defaults(param.default if is_default else '')
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-    elif name in {'sample_names', 'sample1', 'sample2', 'columns'} and (not pipeline_mode):
-        widget = TableColumnPicker()
-        for action in actions_to_connect:
-            widget.valueChanged.connect(action)
-
-    elif name in {'by', 'column', 'ref_column'} and param.annotation in [str, typing.Union[str, int]] and \
-        (not pipeline_mode):
-        widget = TableSingleColumnPicker()
+    elif param.annotation in column_annotations:
+        if pipeline_mode:
+            param.annotation = param_typing.type_to_supertype(param.annotation)
+            widget = param_to_widget(param, name, actions_to_connect, pipeline_mode)
+        else:
+            cls = column_annotations[param.annotation]
+            widget = cls()
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
@@ -1586,6 +1583,12 @@ def param_to_widget(param, name: str,
         typing.Union[str, typing.List[str]], typing.Union[str, typing.Iterable[str]], typing.List[str],
         typing.Iterable[str]):
         widget = QMultiLineEdit(name)
+        if is_default:
+            widget.set_defaults(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+    elif param.annotation == typing.List[typing.Iterable[str]]:
+        widget = TwoLayerMultiLineEdit(name)
         if is_default:
             widget.set_defaults(param.default)
         for action in actions_to_connect:

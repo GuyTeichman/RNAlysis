@@ -11,7 +11,8 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union
 
-from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, GENE_ID_TYPES
+from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
+    get_gene_id_types
 
 try:
     from typing import Literal
@@ -26,7 +27,7 @@ import pandas as pd
 import upsetplot
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic
+from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic, param_typing
 
 
 class FeatureSet:
@@ -250,7 +251,8 @@ class FeatureSet:
         return FeatureSet(self._set_ops((other,), set.symmetric_difference))
 
     def go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                      gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto', alpha: float = 0.05,
+                      gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                      alpha: float = 0.05,
                       statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                       biotype: Union[str, List[str], Literal['all']] = 'all',
                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
@@ -418,7 +420,7 @@ class FeatureSet:
         return runner.run()
 
     def kegg_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                        gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+                        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                         alpha: float = 0.05,
                         statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                         biotype: Union[str, List[str], Literal['all']] = 'all',
@@ -998,7 +1000,7 @@ class RankedSet(FeatureSet):
         return super()._set_ops(others, op)
 
     def single_set_go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                 gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+                                 gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                                  alpha: float = 0.05,
                                  propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
                                  aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
@@ -1145,7 +1147,7 @@ class RankedSet(FeatureSet):
 
     def single_set_kegg_enrichment(self,
                                    organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                   gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+                                   gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                                    alpha: float = 0.05, return_nonsignificant: bool = False, save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
@@ -1373,7 +1375,7 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
     return fetched_sets
 
 
-def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: Iterable[str] = ('black',),
+def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: param_typing.ColorList = ('black',),
                title: str = 'UpSet Plot', title_fontsize: int = 20, show_percentages: bool = True,
                attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None):
     """
@@ -1465,8 +1467,9 @@ def _get_tuple_patch_ids(n_sets: int) -> List[Tuple[int, ...]]:
 
 def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union[str, Literal['default']] = 'default',
                  attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                 set_colors: Iterable[str] = ('r', 'g', 'b'),
-                 transparency: float = 0.4, weighted: bool = True, add_outline: bool = True, linecolor: str = 'black',
+                 set_colors: param_typing.ColorList = ('r', 'g', 'b'),
+                 transparency: float = 0.4, weighted: bool = True, add_outline: bool = True,
+                 linecolor: param_typing.Color = 'black',
                  linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0, title_fontsize: int = 14,
                  set_fontsize: int = 12, subset_fontsize: int = 10, normalize_to: float = 1.0, fig: plt.Figure = None):
     """

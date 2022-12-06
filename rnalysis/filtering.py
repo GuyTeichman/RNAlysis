@@ -38,10 +38,10 @@ from sklearn.preprocessing import PowerTransformer, StandardScaler
 from datetime import datetime
 
 from rnalysis import __version__
-from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression
+from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression, param_typing
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
-    DEFAULT_ORGANISMS, GENE_ID_TYPES
+    DEFAULT_ORGANISMS, get_gene_id_types
 
 
 def readable_name(name: str):
@@ -363,8 +363,8 @@ class Filter:
         return self.df.tail(n)
 
     @readable_name('Translate gene IDs')
-    def translate_gene_ids(self, translate_to: Union[str, Literal[GENE_ID_TYPES]],
-                           translate_from: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+    def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
+                           translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                            remove_unmapped_genes: bool = False, inplace: bool = True):
         gene_ids = parsing.data_to_tuple(self.df.index)
         new_df = self.df.copy(deep=True)
@@ -589,7 +589,7 @@ class Filter:
     @readable_name('Filter by Gene Ontology (GO) annotation')
     def filter_by_go_annotations(self, go_ids: Union[str, List[str]], mode: Literal['union', 'intersection'] = 'union',
                                  organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                 gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+                                 gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                                  propagate_annotations: bool = True,
                                  evidence_types: Union[Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[
                                      Literal[GO_EVIDENCE_TYPES]]] = 'any',
@@ -699,7 +699,7 @@ class Filter:
     def filter_by_kegg_annotations(self, kegg_ids: Union[str, List[str]],
                                    mode: Literal['union', 'intersection'] = 'union',
                                    organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
-                                   gene_id_type: Union[str, Literal['auto'], Literal[GENE_ID_TYPES]] = 'auto',
+                                   gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                                    opposite: bool = False, inplace: bool = True):
         """
         Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway. \
@@ -1315,7 +1315,7 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Remove rows with missing values')
-    def filter_missing_values(self, columns: Union[str, List[str], Literal['all']] = 'all', opposite: bool = False,
+    def filter_missing_values(self, columns: Union[param_typing.ColumnNames, Literal['all']] = 'all', opposite: bool = False,
                               inplace: bool = True):
         """
         Remove all rows whose values in the specified columns are missing (NaN).
@@ -1372,7 +1372,7 @@ class Filter:
 
     @readable_name('Apply a transformation to the table')
     def transform(self, function: Union[Literal['Box-Cox', 'log2', 'log10', 'ln', 'Standardize'], Callable],
-                  columns: Union[str, List[str], Literal['all']] = 'all',
+                  columns: Union[param_typing.ColumnNames, Literal['all']] = 'all',
                   inplace: bool = True, **function_kwargs):
         """
         Transform the values in the Filter object with the specified function.
@@ -2598,7 +2598,7 @@ class CountFilter(Filter):
         pass
 
     @readable_name('Pair-plot')
-    def pairplot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
+    def pairplot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                  log2: bool = True, show_corr: bool = True, title: Union[str, Literal['auto']] = 'auto',
                  title_fontsize: float = 30,
                  label_fontsize: float = 16, tick_fontsize: float = 12) -> sns.PairGrid:
@@ -2676,7 +2676,7 @@ class CountFilter(Filter):
         return pairplt
 
     @readable_name('Average the expression values of replicate columns')
-    def average_replicate_samples(self, sample_grouping: List[List[str]],
+    def average_replicate_samples(self, sample_grouping: param_typing.GroupedColumns,
                                   new_column_names: Union[Literal['auto'], List[str]] = 'auto',
                                   function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
                                   inplace: bool = True) -> 'CountFilter':
@@ -2702,7 +2702,8 @@ class CountFilter(Filter):
         avg_df = self._avg_subsamples(sample_grouping, function, new_column_names)
         return self._inplace(avg_df, False, inplace, suffix, 'transform')
 
-    def _avg_subsamples(self, sample_grouping: list, function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
+    def _avg_subsamples(self, sample_grouping: param_typing.GroupedColumns,
+                        function: Literal['mean', 'median', 'geometric_mean'] = 'mean',
                         new_column_names: Union[Literal['auto'], List[str]] = 'auto'):
 
         """
@@ -2885,7 +2886,7 @@ class CountFilter(Filter):
 
     @readable_name('Normalize with the "Trimmed Mean of M-values" (TMM) method')
     def normalize_tmm(self, log_ratio_trim: float = 0.3, sum_trim: float = 0.05,
-                      a_cutoff: Union[float, None] = -1 * 10 ** 10, ref_column: Union[Literal['auto'], str] = 'auto',
+                      a_cutoff: Union[float, None] = -1 * 10 ** 10, ref_column: Union[Literal['auto'], param_typing.ColumnName] = 'auto',
                       inplace: bool = True):
         """
         Normalizes the count matrix using the 'trimmed mean of M values' (TMM) method \
@@ -3001,7 +3002,7 @@ class CountFilter(Filter):
                              _is_normalized=True)
 
     @readable_name('Normalize with the "Median of Ratios" (MRN) method')
-    def normalize_median_of_ratios(self, sample_grouping: List[List[str]], reference_group: int = 0,
+    def normalize_median_of_ratios(self, sample_grouping: param_typing.GroupedColumns, reference_group: int = 0,
                                    inplace: bool = True):
         """
         Normalizes the count matrix using the 'Median of Ratios Normalization' (MRN) method \
@@ -3099,7 +3100,7 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
-    def _calculate_ma(self, ref_column: str, columns: List[str]):
+    def _calculate_ma(self, ref_column: param_typing.ColumnName, columns: List[str]):
         m_data = []
         a_data = []
         norm_data = self.df / self.df.sum(axis=0)
@@ -3112,8 +3113,8 @@ class CountFilter(Filter):
         return m_data, a_data
 
     @readable_name('MA plot')
-    def ma_plot(self, ref_column: Union[Literal['auto'], str, int] = 'auto',
-                columns: Union[str, List[str], Literal['all']] = 'all', split_plots: bool = False,
+    def ma_plot(self, ref_column: Union[Literal['auto'], param_typing.ColumnName] = 'auto',
+                columns: Union[param_typing.ColumnNames, Literal['all']] = 'all', split_plots: bool = False,
                 title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                 label_fontsize: Union[float, Literal['auto']] = 'auto', tick_fontsize: float = 12):
         """
@@ -3563,7 +3564,7 @@ class CountFilter(Filter):
 
     @readable_name('CLICOM (ensemble) clustering')
     def split_clicom(self, *parameter_dicts: dict,
-                     replicate_grouping: Union[List[List[str]], Literal['ungrouped']] = 'ungrouped',
+                     replicate_grouping: Union[param_typing.GroupedColumns, Literal['ungrouped']] = 'ungrouped',
                      power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
@@ -3802,7 +3803,7 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('Hierarchical clustergram plot')
-    def clustergram(self, sample_names: Union[List[str], Literal['all']] = 'all', metric: str = 'Euclidean',
+    def clustergram(self, sample_names: Union[param_typing.ColumnNames, Literal['all']] = 'all', metric: str = 'Euclidean',
                     linkage: Literal['Single', 'Average', 'Complete', 'Ward', 'Weighted', 'Centroid', 'Median'
                     ] = 'Average', title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                     tick_fontsize: float = 12):
@@ -3861,8 +3862,8 @@ class CountFilter(Filter):
 
     @readable_name('Plot expression of specific genes')
     def plot_expression(self, features: Union[List[str], str],
-                        samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
-                        count_unit: str = 'Reads per million', split_plots: bool = False) -> plt.Figure:
+                        samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
+                        count_unit: str = 'Normalized reads', split_plots: bool = False) -> plt.Figure:
         """
         Plot the average expression and standard error of the specified features under the specified conditions.
 
@@ -3886,7 +3887,6 @@ class CountFilter(Filter):
            Example plot of plot_expression()
 
         """
-        plt.style.use('seaborn-white')
         features = parsing.data_to_list(features)
         assert validation.isinstanceiter(features, str), "'features' must be a string or list of strings!"
         for feature in features:
@@ -3949,7 +3949,7 @@ class CountFilter(Filter):
         return fig
 
     @readable_name('Principal Component Analysis (PCA) plot')
-    def pca(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all', n_components: int = 3,
+    def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: int = 3,
             power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12
             ) -> Tuple[PCA, List[plt.Figure]]:
@@ -4030,7 +4030,7 @@ class CountFilter(Filter):
         fig = plt.figure(figsize=(9, 9), constrained_layout=True)
         ax = fig.add_subplot(1, 1, 1)
         ax.bar(pc_names, pc_var_percent, edgecolor='black')
-        ax.plot(pc_names, pc_var_cumsum,'-o', color='black')
+        ax.plot(pc_names, pc_var_cumsum, '-o', color='black')
         ax.set_title('Principal Component Analysis - Variance Explained', fontsize=title_fontsize)
         ax.set_ylabel('% Variance explained', fontsize=label_fontsize)
         ax.set_xlabel('Principal Components', fontsize=label_fontsize)
@@ -4039,9 +4039,9 @@ class CountFilter(Filter):
         ax.yaxis.set_major_formatter('{x}%')
         generic.despine(ax)
 
-
     @staticmethod
-    def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: list, labels: bool,
+    def _pca_plot(final_df: pd.DataFrame, pc1_var: float, pc2_var: float, sample_grouping: param_typing.GroupedColumns,
+                  labels: bool,
                   title: str, title_fontsize: float, label_fontsize: float, tick_fontsize: float):
         """
         Internal method, used to plot the results from CountFilter.pca().
@@ -4080,7 +4080,7 @@ class CountFilter(Filter):
         return fig
 
     @readable_name('Scatter plot - sample VS sample')
-    def scatter_sample_vs_sample(self, sample1: Union[str, List[str]], sample2: Union[str, List[str]],
+    def scatter_sample_vs_sample(self, sample1: param_typing.ColumnNames, sample2: param_typing.ColumnNames,
                                  xlabel: Union[str, Literal['auto']] = 'auto',
                                  ylabel: Union[str, Literal['auto']] = 'auto',
                                  title: Union[str, Literal['auto']] = 'auto',
@@ -4164,7 +4164,7 @@ class CountFilter(Filter):
         return fig
 
     @readable_name('Box plot')
-    def box_plot(self, samples: Union[List[List[str]], List[List[str]], Literal['all']] = 'all', notch: bool = True,
+    def box_plot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', notch: bool = True,
                  scatter: bool = False, ylabel: str = 'log10(Normalized reads + 1)',
                  title: Union[str, Literal['auto']] = 'auto',
                  title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
@@ -4231,7 +4231,7 @@ class CountFilter(Filter):
         return ax
 
     @readable_name('Enhanced box plot')
-    def enhanced_box_plot(self, samples: Union[List[str], List[List[str]], Literal['all']] = 'all',
+    def enhanced_box_plot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                           scatter: bool = False, ylabel: str = 'log10(Normalized reads + 1)',
                           title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                           label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
@@ -4294,7 +4294,7 @@ class CountFilter(Filter):
         return ax
 
     @readable_name('Violin plot')
-    def violin_plot(self, samples: Union[Literal['all'], List[str], List[List[str]]] = 'all',
+    def violin_plot(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all',
                     ylabel: str = '$\log_10$(normalized reads + 1)', title: Union[str, Literal['auto']] = 'auto',
                     title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Axes:
         """
