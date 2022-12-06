@@ -37,7 +37,8 @@ def type_to_supertype(this_type):
     args = typing_extensions.get_args(this_type)
     if isinstance(args, tuple) and len(args) > 0:
         origin_map = {list: typing.List, set: typing.Set, dict: typing.Dict, collections.abc.Iterable: typing.Iterable,
-                      frozenset: typing.FrozenSet, typing.Union: typing.Union, typing.Literal: typing.Literal}
+                      frozenset: typing.FrozenSet, typing.Union: typing.Union,
+                      typing_extensions.Literal: typing_extensions.Literal}
         components = []
         for component in args:
             components.append(type_to_supertype(component))
