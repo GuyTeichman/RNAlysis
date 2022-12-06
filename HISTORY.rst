@@ -8,6 +8,7 @@ History
 Added
 ******
 * Added a Scree Plot (explained variance per PC) to Principle Component Analysis
+* Added Filter.drop_columns
 
 3.3.0 (2022-12-02)
 ------------------

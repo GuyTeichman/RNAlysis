@@ -362,6 +362,25 @@ class Filter:
         """
         return self.df.tail(n)
 
+    @readable_name('Drop columns from the table')
+    def drop_columns(self, columns: param_typing.ColumnNames, inplace: bool = True):
+        """
+        Drop specific columns from the table.
+
+        :param columns: The names of the column/columns to be dropped fro mthe table.
+        :type columns: str or list of str
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new and filtered instance of the Filter object.
+        """
+        suffix = '_dropcolumns'
+        columns = parsing.data_to_list(columns)
+        for col in columns:
+            assert col in self.columns, f"column '{col}' does not exist!"
+        new_df = self.df.drop(columns, axis=1)
+        return self._inplace(new_df, False, inplace, suffix, 'transform')
+
     @readable_name('Translate gene IDs')
     def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
                            translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
