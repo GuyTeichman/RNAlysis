@@ -1,8 +1,8 @@
 .. highlight:: shell
 
-============
-Contributing
-============
+====================================
+How can I contribute to *RNAlysis*?
+====================================
 
 Contributions are welcome, and they are greatly appreciated! Every little bit
 helps, and credit will always be given.
@@ -29,17 +29,11 @@ Fix Bugs
 Look through the GitHub issues for bugs. Anything tagged with "bug" and "help
 wanted" is open to whoever wants to implement it.
 
-Implement Features
-~~~~~~~~~~~~~~~~~~
-
-Look through the GitHub issues for features. Anything tagged with "enhancement"
-and "help wanted" is open to whoever wants to implement it.
-
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-RNAlysis could always use more documentation, whether as part of the
-official RNAlysis docs, in docstrings, or even on the web in blog posts,
+*RNAlysis* could always use more documentation, whether as part of the
+official *RNAlysis* docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
@@ -53,6 +47,48 @@ If you are proposing a feature:
 * Keep the scope as narrow as possible, to make it easier to implement.
 * Remember that this is a volunteer-driven project, and that contributions
   are welcome :)
+
+
+Implement Features
+~~~~~~~~~~~~~~~~~~
+
+You are welcome to implement new features that you think would be useful!
+If you are looking for ideas, check out the Ideas/To-Do list below:
+
+Ideas/To-Do
+~~~~~~~~~~~~~~~~~~
+
+This is a rather unsorted list of features that would be nice to have,
+of things that could be improved in the source code, and of possible algorithmic improvements:
+
+* Interactive scatter plots (for example - click on a point to show/hide it's gene/sample name)
+* Right-click on a gene name in a table on the GUI to copy the gene name
+* Draw KEGG pathways following KEGG enrichment
+* Implement the GSEA single-list enrichment algorithm
+* Accept per-gene scaling factors in addition to per-sample scaling factors
+* Distplot for count matrices
+* Implement the Calinsky Criterion for selecting a good number of clusters
+* Batch correction function for count matrices
+* Implement API for Bowtie2
+* Implement API for Subread
+* Support for single-cell transcriptomics analysis
+* Support for ATAC-seq analysis
+* Generate sashimi plots
+* Generate genome browser-like plots
+* Merge tables row/column-wise
+* Support for additional formats of customized annotations
+* Correlation plots
+* Rank-sum test comparing data from two different columns/tables
+* Toggle option allowing users not to remove un-annotated genes from the background/enrichment sets in Enrichment Analysis
+
+*RNAlysis* Design Philosophy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As a guiding priniple for future development of *RNAlysis*, see this short list of the general design principle *RNAlysis* should follow:
+
+* **Universality** - *RNAlysis* should be usable on most computers. This means new features should be supported by commonly-used operating systems (Windows, Linux, MacOS) and currently supported Python versions. In the best case scenario, users who open *RNAlysis* should never ask themselves "which of these functions/modules are supported by my operating system?"
+* **Graphical and Programmatic support** - The majority of *RNAlysis* features should be usable both in the Graphical User Interface, and in Python scripts.
+* **Customization and clarity** - Functions and algorithms implemented in *RNAlysis* should give user a high degree of control over the function/algorithm parameters. This serves two purposes: firstly, it allows more advanced users to modify analysis parameters to suit their needs. Second, and perhaps most importantly, specifying and documenting all possible analysis parameters provides a high degree of transparency. Knowing exactly what parameters can be changed, and what are the default values, makes accurate and transparent reporting of analysis much easier. For example, when running GO enrichment, users can know and report exactly how the GO annotations are fetched, filtered, and annotated, which statistical test is used for analysis, etc.
 
 Get Started!
 ------------
@@ -102,7 +138,7 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 3.7, 3.8, and for PyPy. Check
+3. The pull request should work for Python versions 3.7 - 3.10, and for PyPy. Check
    https://coveralls.io/github/GuyTeichman/RNAlysis
    and make sure that the tests pass for all supported Python versions.
 

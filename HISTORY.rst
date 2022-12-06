@@ -18,6 +18,7 @@ Added
 ******
 * Added a Frequently Asked Questions page, and linked all *RNAlysis* help material inside the graphical interface Help menu.
 * Pipelines can now be edited and deleted through the Pipeline menu of the graphical interface.
+* Added Contributing page to the documentation, with basic guidelines on how you can contribute to the *RNAlysis* project!
 
 Changed
 *******
