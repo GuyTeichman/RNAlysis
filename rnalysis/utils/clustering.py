@@ -522,6 +522,7 @@ class ClusteringRunner:
                 axes.append(fig.add_subplot(subplot))
             mean = centers[i, :]
             stdev = data.loc[labels == i, :].T.std(axis=1, ddof=1)
+            stdev[stdev.isna()] = 0
             x = np.arange(data.shape[1]) + 0.5
             color = next(color_generator)
             max_y = max(max_y, np.max(stdev + mean))
@@ -531,7 +532,7 @@ class ClusteringRunner:
                 axes[-1].plot(x, mean, marker='o', linewidth=2, color=color, markeredgecolor='black')
                 axes[-1].fill_between(x, mean + stdev, mean - stdev, alpha=0.2, color=color)
             else:
-                axes[-1].errorbar(x, mean, marker='o', linewidth=2, color=color, yerr=stdev, markeredgecolor='black')
+                axes[-1].errorbar(x, mean, yerr=stdev, marker='o', linewidth=2, color=color, markeredgecolor='black')
                 if self.plot_style.lower() == 'all':
                     vals = data.loc[labels == i, :].T.values
                     axes[-1].plot(x, vals, color=color, alpha=0.05, linewidth=0.35)
