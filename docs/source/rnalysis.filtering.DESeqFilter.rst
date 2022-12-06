@@ -20,6 +20,7 @@
     DESeqFilter.biotypes_from_ref_table
     DESeqFilter.describe
     DESeqFilter.difference
+    DESeqFilter.drop_columns
     DESeqFilter.filter_abs_log2_fold_change
     DESeqFilter.filter_biotype_from_gtf
     DESeqFilter.filter_biotype_from_ref_table

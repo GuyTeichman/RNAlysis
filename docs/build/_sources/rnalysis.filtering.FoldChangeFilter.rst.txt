@@ -20,6 +20,7 @@
     FoldChangeFilter.biotypes_from_ref_table
     FoldChangeFilter.describe
     FoldChangeFilter.difference
+    FoldChangeFilter.drop_columns
     FoldChangeFilter.filter_abs_log2_fold_change
     FoldChangeFilter.filter_biotype_from_gtf
     FoldChangeFilter.filter_biotype_from_ref_table

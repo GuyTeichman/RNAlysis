@@ -24,6 +24,7 @@
     CountFilter.describe
     CountFilter.difference
     CountFilter.differential_expression_deseq2
+    CountFilter.drop_columns
     CountFilter.enhanced_box_plot
     CountFilter.filter_biotype_from_gtf
     CountFilter.filter_biotype_from_ref_table
@@ -46,8 +47,10 @@
     CountFilter.normalize_rle
     CountFilter.normalize_tmm
     CountFilter.normalize_to_quantile
+    CountFilter.normalize_to_rpkm
     CountFilter.normalize_to_rpm
     CountFilter.normalize_to_rpm_htseqcount
+    CountFilter.normalize_to_tpm
     CountFilter.normalize_with_scaling_factors
     CountFilter.number_filters
     CountFilter.pairplot

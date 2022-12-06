@@ -20,6 +20,7 @@
     Filter.biotypes_from_ref_table
     Filter.describe
     Filter.difference
+    Filter.drop_columns
     Filter.filter_biotype_from_gtf
     Filter.filter_biotype_from_ref_table
     Filter.filter_by_attribute

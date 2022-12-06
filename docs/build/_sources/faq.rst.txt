@@ -84,6 +84,15 @@ To solve this problem, try one of the following solutions:
         /Users/<user>>/Library/Application Support/RNAlyisis/videos
 
 
+Can I install a previous version of *RNAlysis*?
+=================================================
+Yes. To install a specific version of *RNAlysis* (for example version X.Y.Z), use the following code:
+   ::
+
+        pip install RNAlysis[all]==X.Y.Z
+
+
+
 *************
 Usage
 *************
