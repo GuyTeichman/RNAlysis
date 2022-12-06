@@ -1180,7 +1180,7 @@ class QMultiInput(QtWidgets.QPushButton):
     CHILD_QWIDGET = None
     valueChanged = QtCore.pyqtSignal()
 
-    def __init__(self, label: str, text='Set input', parent=None):
+    def __init__(self, label: str = '', text='Set input', parent=None):
         super().__init__(text, parent)
         self.label = label
         self.dialog_widgets = {}
@@ -1308,6 +1308,15 @@ class QMultiLineEdit(QMultiInput):
         if res == '':
             return []
         return res
+
+class TwoLayerMultiLineEdit(QMultiInput):
+    CHILD_QWIDGET = QMultiLineEdit
+
+    def get_widget_value(self, widget: type(CHILD_QWIDGET)):
+        return widget.get_values()
+
+    def set_widget_value(self, ind: int, val):
+        self.dialog_widgets['inputs'][ind].set_defaults(val)
 
 
 class QMultiStrIntLineEdit(QMultiLineEdit):
