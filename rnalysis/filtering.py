@@ -366,6 +366,27 @@ class Filter:
     def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
                            translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                            remove_unmapped_genes: bool = False, inplace: bool = True):
+        """
+        Translates gene names/IDs from one type to another. \
+        Mapping is done using the UniProtKB Gene ID Mapping service. \
+        You can choose to optionally drop from the table all rows that failed to be translated.
+
+        :param translate_to: the gene ID type to translate gene names/IDs to. \
+        For example: UniProtKB, Ensembl, Wormbase.
+        :type translate_to: str
+        :param translate_from: the gene ID type to translate gene names/IDs from. \
+        For example: UniProtKB, Ensembl, Wormbase. If translate_from='auto', \
+        *RNAlysis* will attempt to automatically determine the gene ID type of the features in the table.
+        :type translate_from: str or 'auto' (default='auto')
+        :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be translated \
+        will be dropped from the table. \
+        Otherwise, they will remain in the table with their original gene name/ID.
+        :type remove_unmapped_genes: bool (default=False)
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new and filtered instance of the Filter object.
+        """
         gene_ids = parsing.data_to_tuple(self.df.index)
         new_df = self.df.copy(deep=True)
         if translate_from.lower() == 'auto':
