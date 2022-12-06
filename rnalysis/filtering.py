@@ -4393,9 +4393,6 @@ class CountFilter(Filter):
         plt.show()
         return ax
 
-    # TODO: add ranksum test
-    # TODO: generate new sample figure
-
     @classmethod
     def from_folder(cls, folder_path: str, norm_to_rpm: bool = False, save_csv: bool = False, counted_fname: str = None,
                     uncounted_fname: str = None, input_format: str = '.txt') -> 'CountFilter':
@@ -4895,8 +4892,3 @@ class Pipeline:
         args, kwargs = self.params.pop(-1)
         print(
             f"Removed function {func.__name__} with parameters [{self._param_string(args, kwargs)}] from the pipeline.")
-
-# TODO: a function that receives a dataframe, and can plot correlation with the ref. table instead of just enrichment
-# TODO: add option for mask in clustergram
-# TODO: heat map plot of multiple DESEQ files
-# TODO: join split_heirarchical and clustergram
