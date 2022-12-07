@@ -252,7 +252,7 @@ class FeatureSet:
 
     def go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                       gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                      alpha: float = 0.05,
+                      alpha: param_typing.Fraction = 0.05,
                       statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                       biotype: Union[str, List[str], Literal['all']] = 'all',
                       background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
@@ -421,7 +421,7 @@ class FeatureSet:
 
     def kegg_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                         gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                        alpha: float = 0.05,
+                        alpha: param_typing.Fraction = 0.05,
                         statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
                         biotype: Union[str, List[str], Literal['all']] = 'all',
                         background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
@@ -525,7 +525,7 @@ class FeatureSet:
         return runner.run()
 
     def enrich_randomization(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                             alpha: float = 0.05, reps: int = 10000,
+                             alpha: param_typing.Fraction = 0.05, reps: int = 10000,
                              biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
                              background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                              attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
@@ -626,7 +626,8 @@ class FeatureSet:
 
     def user_defined_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                                 statistical_test: Literal['fisher', 'hypergeometric', 'randomization'] = 'fisher',
-                                alpha: float = 0.05, biotype: Union[str, List[str], Literal['all']] = 'all',
+                                alpha: param_typing.Fraction = 0.05,
+                                biotype: Union[str, List[str], Literal['all']] = 'all',
                                 background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                 attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
@@ -728,7 +729,8 @@ class FeatureSet:
         return runner.run()
 
     def enrich_hypergeometric(self, attributes: Union[Iterable[str], str, Iterable[int], int] = None,
-                              alpha: float = 0.05, biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
+                              alpha: param_typing.Fraction = 0.05,
+                              biotype: Union[str, List[str], Literal['all']] = 'protein_coding',
                               background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
@@ -822,7 +824,7 @@ class FeatureSet:
         return runner.run()
 
     def non_categorical_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']] = None,
-                                   alpha: float = 0.05, parametric_test: bool = False,
+                                   alpha: param_typing.Fraction = 0.05, parametric_test: bool = False,
                                    biotype: Union[str, List[str], Literal['all']] = 'all',
                                    background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                    attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
@@ -1001,7 +1003,7 @@ class RankedSet(FeatureSet):
 
     def single_set_go_enrichment(self, organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                                  gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                 alpha: float = 0.05,
+                                 alpha: param_typing.Fraction = 0.05,
                                  propagate_annotations: Literal['classic', 'elim', 'weight', 'all.m', 'no'] = 'elim',
                                  aspects: Union[Literal[('any',) + GO_ASPECTS], Iterable[Literal[GO_ASPECTS]]] = 'any',
                                  evidence_types: Union[
@@ -1148,7 +1150,8 @@ class RankedSet(FeatureSet):
     def single_set_kegg_enrichment(self,
                                    organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                                    gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                   alpha: float = 0.05, return_nonsignificant: bool = False, save_csv: bool = False,
+                                   alpha: param_typing.Fraction = 0.05, return_nonsignificant: bool = False,
+                                   save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
                                    parallel: bool = True, gui_mode: bool = False
@@ -1230,7 +1233,7 @@ class RankedSet(FeatureSet):
         return runner.run()
 
     def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
-                              alpha: float = 0.05,
+                              alpha: param_typing.Fraction = 0.05,
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
@@ -1468,7 +1471,7 @@ def _get_tuple_patch_ids(n_sets: int) -> List[Tuple[int, ...]]:
 def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union[str, Literal['default']] = 'default',
                  attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
                  set_colors: param_typing.ColorList = ('r', 'g', 'b'),
-                 transparency: float = 0.4, weighted: bool = True, add_outline: bool = True,
+                 transparency: param_typing.Fraction = 0.4, weighted: bool = True, add_outline: bool = True,
                  linecolor: param_typing.Color = 'black',
                  linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0, title_fontsize: int = 14,
                  set_fontsize: int = 12, subset_fontsize: int = 10, normalize_to: float = 1.0, fig: plt.Figure = None):

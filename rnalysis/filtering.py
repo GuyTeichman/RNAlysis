@@ -1939,7 +1939,7 @@ class FoldChangeFilter(Filter):
         return [self.df.name]
 
     @readable_name('Perform randomization test')
-    def randomization_test(self, ref, alpha: float = 0.05, reps: int = 10000, save_csv: bool = False,
+    def randomization_test(self, ref, alpha: param_typing.Fraction = 0.05, reps: int = 10000, save_csv: bool = False,
                            fname: Union[str, None] = None, random_seed: Union[int, None] = None) -> pd.DataFrame:
 
         """
@@ -2224,7 +2224,7 @@ class DESeqFilter(Filter):
                            f"when creating the DESeqFilter object.")
 
     @readable_name('Filter by statistical significance')
-    def filter_significant(self, alpha: float = 0.1, opposite: bool = False, inplace: bool = True):
+    def filter_significant(self, alpha: param_typing.Fraction = 0.1, opposite: bool = False, inplace: bool = True):
 
         """
         Removes all features which did not change significantly, according to the provided alpha.
@@ -2367,7 +2367,7 @@ class DESeqFilter(Filter):
             direction='neg', inplace=False)
 
     @readable_name('Volcano plot')
-    def volcano_plot(self, alpha: float = 0.1, log2fc_threshold: Union[float, None] = 1,
+    def volcano_plot(self, alpha: param_typing.Fraction = 0.1, log2fc_threshold: Union[float, None] = 1,
                      title: Union[str, Literal['auto']] = 'auto', title_fontsize: float = 20,
                      label_fontsize: float = 16, tick_fontsize: float = 12) -> plt.Figure:
 
@@ -2889,7 +2889,7 @@ class CountFilter(Filter):
                              _is_normalized=True)
 
     @readable_name('Normalize with the Quantile method')
-    def normalize_to_quantile(self, quantile: float = 0.75, inplace: bool = True):
+    def normalize_to_quantile(self, quantile: param_typing.Fraction = 0.75, inplace: bool = True):
         """
         Normalizes the count matrix using the quantile method, generalized from \
         `Bullard et al 2010 <https://doi.org/10.1186/1471-2105-11-94>`_. \
