@@ -1309,6 +1309,7 @@ class QMultiLineEdit(QMultiInput):
             return []
         return res
 
+
 class TwoLayerMultiLineEdit(QMultiInput):
     CHILD_QWIDGET = QMultiLineEdit
 
@@ -1551,6 +1552,17 @@ def param_to_widget(param, name: str,
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+
+    elif param.annotation == param_typing.Fraction:
+        widget = QtWidgets.QDoubleSpinBox()
+        widget.setMinimum(0.0)
+        widget.setMaximum(1.0)
+        widget.setSingleStep(0.05)
+        default = param.default if is_default else 0.0
+        widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
     elif param.annotation == str:
         widget = QtWidgets.QLineEdit(param.default if is_default else '')
         for action in actions_to_connect:

@@ -427,7 +427,8 @@ class Filter:
         return self._inplace(new_df, False, inplace, suffix, 'translate')
 
     @readable_name('Filter by percentile')
-    def filter_percentile(self, percentile: float, column: str, opposite: bool = False, inplace: bool = True):
+    def filter_percentile(self, percentile: param_typing.Fraction, column: str, opposite: bool = False,
+                          inplace: bool = True):
 
         """
         Removes all entries above the specified percentile in the specified column. \
@@ -470,7 +471,7 @@ class Filter:
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Split by percentile')
-    def split_by_percentile(self, percentile: float, column: str) -> tuple:
+    def split_by_percentile(self, percentile: param_typing.Fraction, column: str) -> tuple:
 
         """
         Splits the features in the Filter object into two non-overlapping Filter objects: \
@@ -3607,7 +3608,7 @@ class CountFilter(Filter):
     def split_clicom(self, *parameter_dicts: dict,
                      replicate_grouping: Union[param_typing.GroupedColumns, Literal['ungrouped']] = 'ungrouped',
                      power_transform: Union[bool, Tuple[bool, bool]] = True,
-                     evidence_threshold: float = 2 / 3, cluster_unclustered_features: bool = False,
+                     evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, gui_mode: bool = False) -> Tuple['CountFilter']:
         """
