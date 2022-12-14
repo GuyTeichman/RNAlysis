@@ -3991,6 +3991,59 @@ class CountFilter(Filter):
         plt.show()
         return fig
 
+    @readable_name('Split table by contribution to Principal Components (PCA)')
+    def split_by_principal_components(self, components: Union[int, List[int]],
+                                      gene_fraction: param_typing.Fraction = 0.1, power_transform: bool = True
+                                      ) -> Union[
+        Tuple['CountFilter', 'CountFilter'], Tuple[Tuple['CountFilter', 'CountFilter'], ...]]:
+        """
+         Performs Principal Component Analysis (PCA), and split the table base on the contribution (loadings) \
+         of genes to specific Principal Components. For each Principal Component specified, *RNAlysis* will find the \
+         X% most influential genes on the Principal Component based on their loadings (where X is gene_fraction), \
+         (X/2)% from the top and (X/2)% from the bottom. This type of analysis can help you understand which genes \
+         contribute the most to each principal component.
+
+        :param components: the Principal Components the table should be filtered by. \
+        Each Principal Component will be analyzed separately.
+        :type components: int or list of integers
+        :param gene_fraction: the total fraction of top influential genes that will be returned. \
+        For example, if gene_fraction=0.1, *RNAlysis* will return the top and bottom 5% of genes \
+        based on their loadings for any principal component.
+        :type gene_fraction: float between 0 and 1 (default=0.1)
+        :param power_transform: if True, RNAlysis will apply a power transform (Box-Cox) \
+        to the data prior to standartization and principal component analysis.
+        :type power_transform: bool (default=True)
+        """
+        components = parsing.data_to_list(components)
+        assert validation.isinstanceiter(components, int), f"'components' must be a list of integers!"
+        assert all([0 < component <= self.shape[0] for component in components]), \
+            f"'components' must be larger than 0 and equal or lower than the number of genes in the table!"
+        assert isinstance(gene_fraction, float) and 0 <= gene_fraction <= 1, \
+            f"'gene_fraction' must be a number between 0 and 1!"
+
+        n_components = max(components)
+        n_genes = int(np.floor(gene_fraction * self.shape[0] * 0.5))
+        print(f'Extracting the top {n_genes} and bottom {n_genes} genes '
+              f'contributing to each specified Principal Component...')
+
+        data = self.df[self._numeric_columns].transpose()
+        data_standardized = generic.standard_box_cox(data) if power_transform else generic.standardize(data)
+
+        pca_obj = PCA(n_components)
+        pca_obj.fit(data_standardized)
+        loadings = pd.DataFrame(pca_obj.components_.T, columns=[i + 1 for i in range(n_components)],
+                                index=self.df.index)
+        filt_obj_tuples = []
+        for component in components:
+            loading = loadings[component].sort_values()
+            top = self._inplace(self.df.loc[loading.tail(n_genes).index], opposite=False, inplace=False,
+                                suffix=f'_top{gene_fraction}PC{component}')
+            bottom = self._inplace(self.df.loc[loading.head(n_genes).index], opposite=False, inplace=False,
+                                   suffix=f'_bottom{gene_fraction}PC{component}')
+            filt_obj_tuples.append((top, bottom))
+
+        return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else tuple(filt_obj_tuples)
+
     @readable_name('Principal Component Analysis (PCA) plot')
     def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: int = 3,
             power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',

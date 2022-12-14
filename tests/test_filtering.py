@@ -1795,6 +1795,19 @@ def test_export_pipeline():
         os.remove(outname)
 
 
+@pytest.mark.parametrize('components,gene_fraction,truth_paths', [
+    (1, 0.32, ['tests/test_files/counted_pc1_0.32_top.csv', 'tests/test_files/counted_pc1_0.32_bottom.csv'])
+])
+def test_filter_by_principal_components(components, gene_fraction, truth_paths):
+    truth = [CountFilter(pth) for pth in truth_paths]
+    c = CountFilter('tests/test_files/counted.csv')
+    c.filter_low_reads(1)
+    res = c.split_by_principal_components(components, gene_fraction)
+    assert len(res) == len(truth)
+    for i in range(len(truth)):
+        assert res[i].df.sort_index().equals(truth[i].df.sort_index())
+
+
 @pytest.mark.parametrize('ids,mode,truth_path', [
     ('kegg_id2', 'union', 'tests/test_files/counted_filter_by_kegg_truth_1.csv'),
     (['kegg_id2'], 'intersection', 'tests/test_files/counted_filter_by_kegg_truth_1.csv'),
