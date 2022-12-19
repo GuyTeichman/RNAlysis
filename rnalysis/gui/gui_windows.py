@@ -333,7 +333,7 @@ class GeneSetView(DataView):
         super().__init__(data, name, parent)
         self.label = QtWidgets.QLabel(f"Gene set '{name}': {len(self.data)} features")
 
-        self.data_view = QtWidgets.QListWidget()
+        self.data_view = gui_widgets.ReactiveListWidget()
         self.save_button = QtWidgets.QPushButton('Save gene set', self)
 
         self.init_ui()
@@ -361,7 +361,7 @@ class DataFrameView(DataView):
             shape = (shape[0], 1)
         self.label = QtWidgets.QLabel(f"Table '{name}': {shape[0]} rows, {shape[1]} columns")
 
-        self.data_view = QtWidgets.QTableView()
+        self.data_view = gui_widgets.ReactiveTableView()
         self.save_button = QtWidgets.QPushButton('Save table', self)
 
         self.init_ui()

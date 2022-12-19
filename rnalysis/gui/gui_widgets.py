@@ -1705,3 +1705,121 @@ def clear_layout(layout, exceptions: set = frozenset()):
         child = layout.takeAt(0)
         if child.widget() and child.widget() not in exceptions:
             child.widget().deleteLater()
+
+
+class ReactiveHeaderView(QtWidgets.QHeaderView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSectionsClickable(True)
+        self.context_menu = None
+
+    def contextMenu(self, value: str):
+        self.context_menu = QtWidgets.QMenu(self)
+        copy_action = QtWidgets.QAction(f'Copy "{value}"')
+        copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
+        self.context_menu.addAction(copy_action)
+
+        google_action = QtWidgets.QAction(f'Search "{value}" on Google')
+        google_action.triggered.connect(
+            functools.partial(QtGui.QDesktopServices.openUrl, QtCore.QUrl(f'https://www.google.com/search?q={value}')))
+        self.context_menu.addAction(google_action)
+
+        uniprot_action = QtWidgets.QAction(f'Search "{value}" on UniProt')
+        uniprot_action.triggered.connect(
+            functools.partial(QtGui.QDesktopServices.openUrl,
+                              QtCore.QUrl(f'https://www.uniprot.org/uniprotkb?query={value}')))
+        self.context_menu.addAction(uniprot_action)
+
+        ncbi_action = QtWidgets.QAction(f'Search "{value}" on NCBI Genes')
+        ncbi_action.triggered.connect(
+            functools.partial(QtGui.QDesktopServices.openUrl,
+                              QtCore.QUrl(f'https://www.ncbi.nlm.nih.gov/gene/?term={value}')))
+        self.context_menu.addAction(ncbi_action)
+
+        self.context_menu.exec(QtGui.QCursor.pos())
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        if event.button() == QtCore.Qt.RightButton:
+            point = event.pos()
+            if point.isNull():
+                return
+            ind = self.logicalIndexAt(point)
+            if ind == -1:
+                return
+            self.contextMenu(str(self.model().headerData(ind, self.orientation())))
+
+        else:
+            super().mousePressEvent(event)
+
+
+class ReactiveListWidget(QtWidgets.QListWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.context_menu = None
+
+    def contextMenu(self, value: str):
+        self.context_menu = QtWidgets.QMenu(self)
+        copy_action = QtWidgets.QAction(f'Copy "{value}"')
+        copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
+        self.context_menu.addAction(copy_action)
+
+        google_action = QtWidgets.QAction(f'Search "{value}" on Google')
+        google_action.triggered.connect(
+            functools.partial(QtGui.QDesktopServices.openUrl, QtCore.QUrl(f'https://www.google.com/search?q={value}')))
+        self.context_menu.addAction(google_action)
+
+        uniprot_action = QtWidgets.QAction(f'Search "{value}" on UniProt')
+        uniprot_action.triggered.connect(
+            functools.partial(QtGui.QDesktopServices.openUrl,
+                              QtCore.QUrl(f'https://www.uniprot.org/uniprotkb?query={value}')))
+        self.context_menu.addAction(uniprot_action)
+
+        ncbi_action = QtWidgets.QAction(f'Search "{value}" on NCBI Genes')
+        ncbi_action.triggered.connect(
+            functools.partial(QtGui.QDesktopServices.openUrl,
+                              QtCore.QUrl(f'https://www.ncbi.nlm.nih.gov/gene/?term={value}')))
+        self.context_menu.addAction(ncbi_action)
+
+        self.context_menu.exec(QtGui.QCursor.pos())
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        if event.button() == QtCore.Qt.RightButton:
+            point = event.pos()
+            if point.isNull():
+                return
+            item = self.itemAt(point)
+            if item == -1:
+                return
+            self.contextMenu(item.text())
+
+        else:
+            super().mousePressEvent(event)
+
+
+class ReactiveTableView(QtWidgets.QTableView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setHorizontalHeader(ReactiveHeaderView(QtCore.Qt.Orientation.Horizontal))
+        self.setVerticalHeader(ReactiveHeaderView(QtCore.Qt.Orientation.Vertical))
+        self.context_menu = None
+
+    def contextMenu(self, value: str):
+        self.context_menu = QtWidgets.QMenu(self)
+        copy_action = QtWidgets.QAction(f'Copy "{value}"')
+        copy_action.triggered.connect(functools.partial(QtWidgets.QApplication.clipboard().setText, value))
+        self.context_menu.addAction(copy_action)
+
+        self.context_menu.exec(QtGui.QCursor.pos())
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        if event.button() == QtCore.Qt.RightButton:
+            point = event.pos()
+            if point.isNull():
+                return
+            ind = self.indexAt(point)
+            if ind == -1:
+                return
+            self.contextMenu(str(self.model().data(ind)))
+
+        else:
+            super().mousePressEvent(event)

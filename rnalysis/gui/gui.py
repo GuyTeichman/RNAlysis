@@ -1271,7 +1271,7 @@ class SetTabPage(TabPage):
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel(f"Gene set name: '<b>{set_name}</b>'")
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
-        self.overview_widgets['preview'] = QtWidgets.QListWidget()
+        self.overview_widgets['preview'] = gui_widgets.ReactiveListWidget()
         self.update_set_preview()
         self.overview_grid.addWidget(self.overview_widgets['table_name_label'], this_row, 0, 1, 4)
         this_row += 1
@@ -1568,7 +1568,7 @@ class FilterTabPage(TabPage):
         self.overview_widgets['table_name_label'] = QtWidgets.QLabel()
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
-        self.overview_widgets['preview'] = QtWidgets.QTableView()
+        self.overview_widgets['preview'] = gui_widgets.ReactiveTableView()
         self.overview_widgets['preview'].setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.overview_widgets['preview'].setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
