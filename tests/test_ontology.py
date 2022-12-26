@@ -2,6 +2,101 @@ import pytest
 from rnalysis.utils.ontology import *
 
 
+def test_kegg_pathway_parser_construction():
+    empty_rel = {'activation': set(), 'binding/association': set(), 'compound': set(), 'dephosphorylation': set(),
+                 'dissociation': set(), 'expression': set(), 'glycosylation': set(), 'indirect effect': set(),
+                 'inhibition': set(), 'irreversible reaction': set(), 'methylation': set(),
+                 'missing interaction': set(),
+                 'phosphorylation': set(), 'repression': set(), 'reversible reaction': set(), 'state change': set(),
+                 'ubiquitination': set(), 'unknown': set()}
+    truth_attrs = {1: dict(id=1, name='hsa:1029', display_name='CDKN2A', type='gene',
+                           children_relationships=empty_rel,
+                           relationships={'activation': set(), 'binding/association': set(), 'compound': set(),
+                                          'dephosphorylation': set(), 'dissociation': set(), 'expression': {(2, 'A')},
+                                          'glycosylation': set(), 'indirect effect': set(), 'inhibition': {(3, 'B')},
+                                          'irreversible reaction': set(), 'methylation': set(),
+                                          'missing interaction': set(), 'phosphorylation': {(3, 'C')},
+                                          'repression': set(), 'reversible reaction': set(), 'state change': set(),
+                                          'ubiquitination': set(), 'unknown': set()}),
+                   2: dict(id=2, name='hsa:1030', display_name='ARF', type='gene', relationships=empty_rel,
+                           children_relationships={'activation': set(), 'binding/association': set(),
+                                                   'compound': {(4, '->')}, 'dephosphorylation': set(),
+                                                   'dissociation': set(), 'expression': {(1, 'A')},
+                                                   'glycosylation': set(), 'indirect effect': set(),
+                                                   'inhibition': set(), 'irreversible reaction': set(),
+                                                   'methylation': set(), 'missing interaction': set(),
+                                                   'phosphorylation': set(), 'repression': set(),
+                                                   'reversible reaction': set(), 'state change': set(),
+                                                   'ubiquitination': set(), 'unknown': set()}),
+                   3: dict(id=3, name='hsa:51343', display_name='FZR1', type='gene', relationships=empty_rel,
+                           children_relationships={'activation': set(), 'binding/association': set(),
+                                                   'compound': set(), 'dephosphorylation': set(),
+                                                   'dissociation': set(), 'expression': set(),
+                                                   'glycosylation': set(), 'indirect effect': set(),
+                                                   'inhibition': {(1, 'B')}, 'irreversible reaction': set(),
+                                                   'methylation': set(), 'missing interaction': set(),
+                                                   'phosphorylation': {(1, 'C')}, 'repression': set(),
+                                                   'reversible reaction': set(), 'state change': set(),
+                                                   'ubiquitination': set(), 'unknown': set()}),
+                   4: dict(id=4, name='hsa:4171 hsa:4172 hsa:4173 hsa:4174 hsa:4175 hsa:4176', display_name='MCM2',
+                           type='gene', children_relationships=empty_rel,
+                           relationships={'activation': set(), 'binding/association': set(), 'compound': {(2, '->')},
+                                          'dephosphorylation': set(), 'dissociation': set(), 'expression': set(),
+                                          'glycosylation': set(), 'indirect effect': set(), 'inhibition': set(),
+                                          'irreversible reaction': set(), 'methylation': set(),
+                                          'missing interaction': set(), 'phosphorylation': set(), 'repression': set(),
+                                          'reversible reaction': set(), 'state change': set(), 'ubiquitination': set(),
+                                          'unknown': set()}),
+                   5: dict(id=5, name='undefined', display_name=['3', '4'], type='group', relationships=empty_rel,
+                           children_relationships=empty_rel, )}
+    with open('tests/test_files/test_kgml.xml') as f:
+        tree = ElementTree.parse(f)
+
+    pathway = KEGGPathway(tree, {})
+    assert len(pathway.entries) == 5
+    assert 'GO:0003840' not in pathway
+    for this_id, attrs in truth_attrs.items():
+        for attr, val in attrs.items():
+            assert getattr(pathway[this_id], attr) == val
+
+
+def test_kegg_entry_with_properties():
+    entry = KEGGEntry.with_properties(32, 'name', 'type', 'display_name')
+    assert isinstance(entry, KEGGEntry)
+    assert entry.id == 32
+    assert entry.name == 'name'
+    assert entry.type == 'type'
+    assert entry.display_name == 'display_name'
+
+
+def test_kegg_entry_set_get_id():
+    entry = KEGGEntry()
+    assert entry.id is None
+    entry.set_id(12)
+    assert entry.id == 12
+
+
+def test_kegg_entry_set_get_name():
+    entry = KEGGEntry()
+    assert entry.name is None
+    entry.set_name('name')
+    assert entry.name == 'name'
+
+
+def test_kegg_entry_set_get_type():
+    entry = KEGGEntry()
+    assert entry.type is None
+    entry.set_type('type')
+    assert entry.type == 'type'
+
+
+def test_kegg_entry_set_get_display_name():
+    entry = KEGGEntry()
+    assert entry.display_name is None
+    entry.set_display_name('disp')
+    assert entry.display_name == 'disp'
+
+
 def test_parse_go_id():
     line = "is_a: 123456 GO1234567 GO:123456 GO:7654321! primary alcohol metabolic process"
     truth = "GO:7654321"
