@@ -8,7 +8,7 @@ import warnings
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
-
+from typing_extensions import Literal
 import graphviz
 import joblib
 import matplotlib.image as mpimg
@@ -932,7 +932,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
                  plot_ontology_graph: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, ontology_graph_format='pdf', **pvalue_kwargs):
+                 random_seed: int = None, ontology_graph_format: Literal['pdf', 'png', 'svg']='pdf', **pvalue_kwargs):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
@@ -1121,7 +1121,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
 
         while not node_queue.empty():
             this_node = node_queue.get()
-            kwargs = dict(shape='box', style='rounded')
+            kwargs = dict(shape='box', style='rounded', fontname='Arial')
 
             if this_node in processed:
                 continue
@@ -1147,7 +1147,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                 for parent in self.dag_tree[this_node].get_parents(relationship_type):
                     if self.dag_tree[parent].namespace == namespace:
                         node_queue.put(parent)
-                        graph.edge(parent[3::], this_node[3::], label=relationship_label)
+                        graph.edge(parent[3::], this_node[3::], fontname='Arial', label=relationship_label)
 
         # save and display graph
         savepath = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}.{self.ontology_graph_format}')
