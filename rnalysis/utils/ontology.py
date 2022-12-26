@@ -4,7 +4,7 @@ import queue
 import re
 import warnings
 from typing import Dict, List, Union, Tuple, Iterable, Set
-
+from pathlib import Path
 import graphviz
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -14,6 +14,16 @@ from matplotlib.cm import ScalarMappable
 from typing_extensions import Literal
 
 from rnalysis.utils import parsing
+
+
+def render_graphviz_plot(graph: graphviz.Digraph, save_path: str, file_format: str):
+    try:
+        graph.render(Path(save_path).with_suffix(''), view=True, format=file_format)
+        return True
+    except graphviz.backend.execute.ExecutableNotFound:
+        warnings.warn("You must install 'GraphViz' and add it to PATH in order to generate Ontology Graphs. \n"
+                      "Please see https://graphviz.org/download/ for more information. ")
+        return False
 
 
 class KEGGEntry:
@@ -233,6 +243,132 @@ class KEGGPathway:
         self.entries[pred].relationships[rel_type].add((succ, rel_symbol))
         self.entries[succ].children_relationships[rel_type].add((pred, rel_symbol))
 
+    def plot_pathway(self, save_path: str, significant: Union[set, dict, None] = None, ylabel: str = '', dpi: int = 300,
+                     graph_format: Literal['pdf', 'png', 'svg'] = 'pdf'):
+        if significant is None:
+            significant = {}
+        elif isinstance(significant, dict):
+            # colormap
+            scores_no_inf = [i for i in significant.values() if i != np.inf and i != -np.inf and i < 0]
+            if len(scores_no_inf) == 0:
+                scores_no_inf.append(-1)
+            max_score = max(np.max(scores_no_inf), 2)
+            my_cmap = plt.cm.get_cmap('coolwarm')
+
+        # generate graph
+        main_graph = graphviz.Digraph()
+        main_graph.attr(dpi=str(dpi), fontname='Arial', rankdir='LR', newrank='true', compound='true')
+
+        kegg_graph = graphviz.Digraph('cluster_kegg',
+                                      graph_attr=dict(dpi=str(dpi), fontname='Arial', color='white', rankdir='LR'),
+                                      node_attr=dict(fontname='Arial'), edge_attr=dict(fontname='Arial'))
+
+        for entry in self.entries:
+            this_type = self.entries[entry].type
+            if entry in self.id_to_group or (self.entries[entry].degree() == 0 and this_type != 'group'):
+                continue
+            if this_type == 'gene':
+                kwargs = dict(shape='box', style='rounded')
+            elif this_type == 'compound':
+                kwargs = dict(shape='circle')
+            elif this_type == 'map':
+                kwargs = dict(shape='hexagon')
+            elif this_type == 'group':
+                kwargs = dict(shape='none')
+            else:
+                kwargs = dict(shape='oval')
+
+            # color significant nodes according to their enrichment score
+            if this_type == 'group':
+                label = '<<table rows="*" cellspacing="0" cellborder="0" border="2">'
+                for child in self.entries[entry].display_name:
+                    child = int(child)
+                    label += '<tr><td '
+                    if self.entries[child].name in significant:
+                        if isinstance(significant, set):
+                            label += 'bgcolor="green" '
+                        elif isinstance(significant, dict):
+                            this_score = significant[self.entries[child].name]
+                            color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
+                            color_norm_8bit = int(
+                                color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
+                                color_norm) * max(np.abs(scores_no_inf))
+                            color = tuple([int(i * 255) for i in my_cmap(color_norm_8bit)[:-1]])
+                            color_str = '#%02x%02x%02x' % color
+                            label += f'bgcolor="{color_str}" '
+                            if int(np.mean(color)) < 128:
+                                label += 'color="#ffffff" '
+                    label += f'port="loc{child}">{self.entries[child].display_name}</td></tr>'
+                label += '</table>>'
+            else:
+                label = self[entry].display_name
+
+            if self.entries[entry].name in significant:
+                kwargs['style'] = 'rounded, filled'
+                if isinstance(significant, set):
+                    kwargs['fillcolor'] = 'green'
+                elif isinstance(significant, dict):
+                    this_score = significant[self.entries[entry].name]
+                    color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
+                    color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
+                        color_norm) * max(np.abs(scores_no_inf))
+                    color = tuple([int(i * 255) for i in my_cmap(color_norm_8bit)[:-1]])
+                    kwargs['fillcolor'] = '#%02x%02x%02x' % color
+                    if int(np.mean(color)) < 128:
+                        kwargs['fontcolor'] = '#ffffff'
+
+            kegg_graph.node(str(entry), label=label, **kwargs)
+
+        # add edges from relationships
+        for entry in self.entries:
+            for relationship_type in self[entry].relationships:
+                for child, _ in self[entry].relationships[relationship_type]:
+                    if entry in self.id_to_group:
+                        first_id = f"{self.id_to_group[entry]}:loc{entry}"
+                    else:
+                        first_id = str(entry)
+
+                    if child in self.id_to_group:
+                        second_id = f"{self.id_to_group[child]}:loc{child}"
+                    else:
+                        second_id = str(child)
+
+                    kegg_graph.edge(first_id, second_id, **KEGGEntry.RELATIONSHIP_SUBTYPES[relationship_type])
+
+        main_graph.subgraph(kegg_graph)
+        main_graph.subgraph(self.LEGEND_GRAPH)
+        # show graph in a matplotlib window
+        res = render_graphviz_plot(main_graph, save_path, graph_format)
+        if not res:
+            return False
+        fig, axes = plt.subplots(1, 2, figsize=(14, 9), constrained_layout=True, width_ratios=[3, 1])
+        fig.suptitle(f'KEGG Pathway: {self.pathway_name}', fontsize=24)
+
+        kegg_png_str = kegg_graph.pipe(format='png')
+        for ax, png_str in zip(axes, [kegg_png_str, self.LEGEND_GRAPH_STR]):
+            sio = builtin_io.BytesIO()
+            sio.write(png_str)
+            sio.seek(0)
+            img = mpimg.imread(sio)
+            ax.imshow(img, aspect='equal')
+            ax.set_xticks([])
+            ax.set_yticks([])
+        axes[0].axis('off')
+        axes[1].set_title('Legend', fontsize=14)
+
+        # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
+        if isinstance(significant, dict) and len(significant) > 0:
+            # add colorbar
+            bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
+            sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
+            sm.set_array(np.array([]))
+            cbar_label_kwargs = dict(label=ylabel, fontsize=12, labelpad=4)
+            cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), location='bottom')
+            cbar.set_label(**cbar_label_kwargs)
+            cbar.ax.tick_params(labelsize=10, pad=2)
+
+        plt.show()
+        return True
 
 
 class GOTerm:

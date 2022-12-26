@@ -1,5 +1,10 @@
+import os
+import matplotlib
+import matplotlib.pyplot as plt
 import pytest
 from rnalysis.utils.ontology import *
+
+matplotlib.use('Agg')
 
 
 def test_kegg_pathway_parser_construction():
@@ -58,6 +63,20 @@ def test_kegg_pathway_parser_construction():
     for this_id, attrs in truth_attrs.items():
         for attr, val in attrs.items():
             assert getattr(pathway[this_id], attr) == val
+
+
+def test_plot_kegg_pathway_api():
+    save_pth = 'tests/test_files/test_pathway.pdf'
+    try:
+        with open('tests/test_files/test_kgml.xml') as f:
+            tree = ElementTree.parse(f)
+
+        pathway = KEGGPathway(tree, {})
+        pathway.plot_pathway(save_pth)
+        plt.close('all')
+        assert os.path.exists(save_pth)
+    finally:
+        os.unlink(save_pth)
 
 
 def test_kegg_entry_with_properties():
