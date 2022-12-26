@@ -1,0 +1,12 @@
+cpd:C00001	H2O; Water
+cpd:C00002	ATP; Adenosine 5'-triphosphate
+cpd:C00003	NAD+; NAD; Nicotinamide adenine dinucleotide; DPN; Diphosphopyridine nucleotide; Nadide; beta-NAD+
+cpd:C00004	NADH; DPNH; Reduced nicotinamide adenine dinucleotide
+cpd:C00005	NADPH; TPNH; Reduced nicotinamide adenine dinucleotide phosphate
+cpd:C00006	NADP+; NADP; Nicotinamide adenine dinucleotide phosphate; beta-Nicotinamide adenine dinucleotide phosphate; TPN; Triphosphopyridine nucleotide; beta-NADP+
+cpd:C00007	Oxygen; O2
+cpd:C00008	ADP; Adenosine 5'-diphosphate
+cpd:C00009	Orthophosphate; Phosphate; Phosphoric acid; Orthophosphoric acid
+cpd:C00010	CoA; Coenzyme A; CoA-SH
+cpd:C00011	CO2; Carbon dioxide
+cpd:C00012	Peptide
