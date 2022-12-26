@@ -109,6 +109,7 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `typing_extensions <https://github.com/python/typing_extensions>`_
 * `PyQt5 <https://www.riverbankcomputing.com/software/pyqt/>`_
 * `qdarkstyle <https://github.com/ColinDuquesnoy/QDarkStyleSheet>`_
+* `defusedxml <https://https://github.com/tiran/defusedxml>`_
 * `cutadapt <https://github.com/marcelm/cutadapt>`_
 
 ----
