@@ -78,7 +78,7 @@ def parse_go_id(sequence: str) -> str:
 class DAGTree:
     __slots__ = {'data_version': 'version of the go-basic.obo file',
                  'go_terms': 'dictionary of GO Terms in the DAG Tree',
-                 'alt_ids': 'mapping of alternagive GO IDs to their main GO ID',
+                 'alt_ids': 'mapping of alternative GO IDs to their main GO ID',
                  'namespaces': "namespaces included in the DAGTree",
                  'levels': 'list of levels in the DAG Tree',
                  'parent_relationship_types': 'the types of relationships that constitute parenthood in the DAG Tree',
