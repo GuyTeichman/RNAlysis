@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable
 from urllib.parse import urlparse, parse_qs, urlencode
 
+from defusedxml import ElementTree
+
 import appdirs
 import numpy as np
 import pandas as pd
@@ -379,6 +381,13 @@ class KEGGAnnotationIterator:
 
         n_annotations = len(pathway_names)
         return pathway_names, n_annotations
+
+    @staticmethod
+    def get_pathway_kgml(pathway_id: str) -> ElementTree:
+        cached_filename = f'kgml_{pathway_id}.xml'
+        data, _ = KEGGAnnotationIterator._kegg_request('get', [pathway_id, 'kgml'], cached_filename)
+        cache_file(data, cached_filename)
+        return ElementTree.parse(StringIO(data))
 
     def get_pathway_annotations(self):
         if self.pathway_annotations is not None:

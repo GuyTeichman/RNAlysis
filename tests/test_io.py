@@ -646,6 +646,31 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     assert kegg.get_compounds() == truth
 
+def are_xml_elements_equal(e1, e2):
+    if e1.tag != e2.tag: return False
+    if e1.text != e2.text: return False
+    if e1.tail != e2.tail: return False
+    if e1.attrib != e2.attrib: return False
+    if len(e1) != len(e2): return False
+    return all(are_xml_elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
+@pytest.mark.parametrize('pathway_id,expected_fname', [('hsa:00001', 'kgml_hsa:00001.xml')])
+def test_kegg_annotation_iterator_get_pathway_kgml(monkeypatch, pathway_id, expected_fname):
+    pth = 'tests/test_files/test_kgml.xml'
+    with open(pth) as f:
+        truth = ElementTree.parse(f)
+
+    def mock_kegg_request(operation, arguments, cached_filename=None):
+        assert operation == 'get'
+        assert arguments == [pathway_id, 'kgml']
+        assert cached_filename == expected_fname
+        with open(pth) as f:
+            return f.read(), True
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    assert are_xml_elements_equal(kegg.get_pathway_kgml(pathway_id).getroot(), truth.getroot())
+
 
 def test_kegg_annotation_iterator_get_custom_pathways(monkeypatch):
     truth = {'path:cel00010': None, 'path:cel00030': None, 'path:cel00051': None}

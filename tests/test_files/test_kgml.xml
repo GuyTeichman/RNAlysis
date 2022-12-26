@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.kegg.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- Creation date: Aug 20, 2021 16:15:34 +0900 (GMT+9) -->
+<pathway name="path:hsa04110" org="hsa" number="04110"
+         title="Cell cycle"
+         image="https://www.kegg.jp/kegg/pathway/hsa/hsa04110.png"
+         link="https://www.kegg.jp/kegg-bin/show_pathway?hsa04110">
+    <entry id="4" name="hsa:1029" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?hsa:1029">
+        <graphics name="CDKN2A, ARF, CDK4I, CDKN2, CMM2, INK4, INK4A, MLM, MTS-1, MTS1, P14, P14ARF, P16, P16-INK4A, P16INK4, P16INK4A, P19, P19ARF, TP16" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="532" y="124" width="46" height="17"/>
+    </entry>
+    <entry id="5" name="hsa:51343" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?hsa:51343">
+        <graphics name="FZR1, CDC20C, CDH1, FZR, FZR2, HCDH, HCDH1" fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="919" y="536" width="46" height="17"/>
+    </entry>
+    <entry id="6" name="hsa:4171 hsa:4172 hsa:4173 hsa:4174 hsa:4175 hsa:4176" type="gene"
+        link="https://www.kegg.jp/dbget-bin/www_bget?hsa:4171+hsa:4172+hsa:4173+hsa:4174+hsa:4175+hsa:4176">
+        <graphics name="MCM2, BM28, CCNL1, CDCL1, D3S3194, DFNA70, MITOTIN, cdc19..." fgcolor="#000000" bgcolor="#BFFFBF"
+             type="rectangle" x="553" y="556" width="46" height="17"/>
+    </entry>
+    <entry id="219" name="undefined" type="group">
+        <graphics fgcolor="#000000" bgcolor="#FFFFFF"
+             type="rectangle" x="327" y="155" width="46" height="34"/>
+        <component id="56"/>
+        <component id="57"/>
+    </entry>
+     <relation entry1="219" entry2="54" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+    <relation entry1="65" entry2="76" type="PPrel">
+        <subtype name="inhibition" value="--|"/>
+        <subtype name="phosphorylation" value="+p"/>
+    </relation>
+    <relation entry1="52" entry2="37" type="GErel">
+        <subtype name="expression" value="--&gt;"/>
+    </relation>
+        <relation entry1="176" entry2="228" type="PCrel">
+    </relation>
+    </pathway>
