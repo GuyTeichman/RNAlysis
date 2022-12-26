@@ -280,6 +280,8 @@ class KEGGAnnotationIterator:
     REQUEST_DELAY_MILLIS = 250
     REQ_MAX_ENTRIES = 10
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
+    PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
+    COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
 
     def __init__(self, taxon_id: int, pathways: Union[str, List[str], Literal['all']] = 'all'):
         self.pathway_names = {}
@@ -352,7 +354,7 @@ class KEGGAnnotationIterator:
 
     def get_pathways(self) -> Tuple[Dict[str, str], int]:
         pathway_names = {}
-        data, _ = self._kegg_request('list', ['pathway', self.organism_code])
+        data, _ = self._kegg_request('list', ['pathway', self.organism_code], self.PATHWAY_NAMES_CACHED_FILENAME)
         data = data.split('\n')
         for line in data:
             split = line.split('\t')
