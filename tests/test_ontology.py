@@ -77,6 +77,7 @@ def test_plot_kegg_pathway_api():
         assert os.path.exists(save_pth)
     finally:
         os.unlink(save_pth)
+        os.unlink(save_pth[:-3])
 
 
 def test_kegg_entry_with_properties():
