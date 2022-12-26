@@ -605,17 +605,46 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
     truth = (PATHWAY_NAMES_TRUTH, 6)
     organism_code = 'cel'
 
-    def mock_kegg_request(self, operation, arguments):
+    def mock_kegg_request(self, operation, arguments, cached_filename=None):
         assert operation == 'list'
         assert arguments == ['pathway', organism_code]
+        assert cached_filename == KEGGAnnotationIterator.PATHWAY_NAMES_CACHED_FILENAME
+
         with open('tests/test_files/kegg_pathways.txt') as f:
-            return f.read(), False
+            return f.read(), True
 
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
     kegg.organism_code = organism_code
     assert kegg.get_pathways() == truth
+
+
+def test_kegg_annotation_iterator_get_compounds(monkeypatch):
+    truth = {'cpd:C00001': 'H2O',
+             'cpd:C00002': 'ATP',
+             'cpd:C00003': 'NAD+',
+             'cpd:C00004': 'NADH',
+             'cpd:C00005': 'NADPH',
+             'cpd:C00006': 'NADP+',
+             'cpd:C00007': 'Oxygen',
+             'cpd:C00008': 'ADP',
+             'cpd:C00009': 'Orthophosphate',
+             'cpd:C00010': 'CoA',
+             'cpd:C00011': 'CO2',
+             'cpd:C00012': 'Peptide', }
+
+    def mock_kegg_request(operation, arguments, cached_filename=None):
+        assert operation == 'list'
+        assert arguments == ['compound']
+        assert cached_filename == KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME
+        with open('tests/test_files/kegg_compounds.txt') as f:
+            return f.read(), True
+
+    monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
+
+    kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
+    assert kegg.get_compounds() == truth
 
 
 def test_kegg_annotation_iterator_get_custom_pathways(monkeypatch):

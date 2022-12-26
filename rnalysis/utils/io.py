@@ -335,6 +335,21 @@ class KEGGAnnotationIterator:
         return taxon_tree
 
     @staticmethod
+    def get_compounds() -> Dict[str, str]:
+        cached_filename = KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME
+        compounds = {}
+        data, _ = KEGGAnnotationIterator._kegg_request('list', ['compound'], cached_filename)
+        data = data.split('\n')
+        for line in data:
+            split = line.split('\t')
+            if len(split) == 2:
+                pathway_code, compound_names = split
+                main_name = compound_names.split(';')[0]
+                compounds[pathway_code] = main_name
+
+        return compounds
+
+    @staticmethod
     @functools.lru_cache(1024)
     def get_kegg_organism_code(taxon_id: int) -> str:
         taxon_tree = KEGGAnnotationIterator._get_taxon_tree()
