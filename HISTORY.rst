@@ -10,6 +10,7 @@ Added
 * Added a Scree Plot (explained variance per PC) to Principle Component Analysis
 * Added CountFilter.split_by_principal_component(), allowing users to filter genes based on their contributions (loadings) to PCA Principal Components.
 * Added Filter.drop_columns
+* Added support for the Sharpened Cosine distance metric
 
 3.3.0 (2022-12-02)
 ------------------

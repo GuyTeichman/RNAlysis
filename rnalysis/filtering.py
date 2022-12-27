@@ -2131,7 +2131,7 @@ class FoldChangeFilter(Filter):
 
         """
         return self.filter_fold_change_direction(direction='pos', inplace=False), \
-               self.filter_fold_change_direction(direction='neg', inplace=False)
+            self.filter_fold_change_direction(direction='neg', inplace=False)
 
 
 @readable_name('Differential expression table')
@@ -2456,9 +2456,7 @@ class CountFilter(Filter):
         counts.triplicates will be  [['A_rep1','A_rep2','A_rep3'],['B_rep1','B_rep2',_B_rep3']]
 
     """
-    _precomputed_metrics = {'spearman': pwdist.spearman_distance, 'pearson': pwdist.pearson_distance,
-                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
-                            'jackknife': pwdist.jackknife_distance}
+    _precomputed_metrics = clustering.ClusteringRunner.precomputed_metrics
     _transforms = {True: generic.standard_box_cox, False: generic.standardize}
     _numeric_dtypes = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     __slots__ = {'_is_normalized': 'indicates whether the values in this CountFilter were normalized'}
@@ -3427,7 +3425,7 @@ class CountFilter(Filter):
     @readable_name('Hierarchical clustering')
     def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
-                                           'L1', 'L2', 'Jackknife', 'YS1', 'YR1'] = 'Euclidean',
+                           'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
                            power_transform: bool = True, distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
@@ -3519,7 +3517,7 @@ class CountFilter(Filter):
                        max_iter: int = 300,
                        random_seed: Union[int, None] = None,
                        metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
-                                                  'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
+                       'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                        power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
@@ -3740,7 +3738,7 @@ class CountFilter(Filter):
     @readable_name('HDBSCAN (density) clustering')
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
-                                                 'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Hamming']] = 'Euclidean',
+                      'L1', 'L2', 'Jackknife', 'YS1', 'YR1','Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
                       power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False, gui_mode: bool = False

@@ -398,7 +398,7 @@ class KMedoidsIter:
 class ClusteringRunner:
     precomputed_metrics = {'spearman': pwdist.spearman_distance, 'pearson': pwdist.pearson_distance,
                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
-                           'jackknife': pwdist.jackknife_distance}
+                           'jackknife': pwdist.jackknife_distance, 'sharpened_cosine':pwdist.sharpened_cosine_distance}
 
     def __init__(self, data: pd.DataFrame, power_transform: bool, metric: Tuple[str, str] = None,
                  plot_style: str = 'none', split_plots: bool = False):
