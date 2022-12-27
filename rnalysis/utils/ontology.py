@@ -341,7 +341,7 @@ class KEGGPathway:
         res = render_graphviz_plot(main_graph, save_path, graph_format)
         if not res:
             return False
-        fig, axes = plt.subplots(1, 2, figsize=(14, 9), constrained_layout=True, width_ratios=[3, 1])
+        fig, axes = plt.subplots(1, 2, figsize=(14, 9), constrained_layout=True, gridspec_kw=dict(width_ratios=[3, 1]))
         fig.suptitle(f'KEGG Pathway: {self.pathway_name}', fontsize=24)
 
         kegg_png_str = kegg_graph.pipe(format='png')
