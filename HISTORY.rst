@@ -12,6 +12,14 @@ Added
 * Added Filter.drop_columns
 * Added support for the Sharpened Cosine distance metric
 
+Fixed
+******
+* In CountFilter.differential_expression_deseq2(), fixed a bug where design matrix files with non-comma delimiters would cause an error (thanks to `Mintxoklet <https://github.com/Mintxoklet>`_ in `#7 <https://github.com/GuyTeichman/RNAlysis/issues/7>`_)
+
+New Contributors
+*****************
+* `Mintxoklet`_ in `#7`_
+
 3.3.0 (2022-12-02)
 ------------------
 * This version introduced quality-of-life improvements to the graphical user interface.

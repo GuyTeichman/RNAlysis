@@ -174,6 +174,7 @@ Contributors
 * Or Ganon
 * Netta Dunsky
 * Shachar Shani
+* `Mintxoklet <https://github.com/Mintxoklet>`_
 
 ----
 

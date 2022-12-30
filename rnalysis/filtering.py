@@ -2559,10 +2559,19 @@ class CountFilter(Filter):
         """
         self._validate_is_normalized(expect_normalized=False)
         data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
+        design_mat_path = None
+        i = 0
+        while design_mat_path is None or design_mat_path.exists():
+            design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
+            i += 1
+
         if not io.get_todays_cache_dir().exists():
             io.get_todays_cache_dir().mkdir(parents=True)
         io.save_csv(self.df.round(), data_path)
-        output_dir = differential_expression.run_deseq2_analysis(data_path, design_matrix, comparisons,
+        # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
+        io.save_csv(io.load_csv(design_matrix, index_col=0), design_mat_path)
+
+        output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,
                                                                  r_installation_folder)
         outputs = []
         for item in output_dir.iterdir():
