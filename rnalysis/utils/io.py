@@ -284,6 +284,7 @@ class KEGGAnnotationIterator:
     TAXON_TREE_CACHED_FILENAME = 'kegg_taxon_tree.json'
     PATHWAY_NAMES_CACHED_FILENAME = 'kegg_pathway_list.txt'
     COMPOUND_LIST_CACHED_FILENAME = 'kegg_compound_list.txt'
+    GLYCAN_LIST_CACHED_FILENAME = 'kegg_glycan_list.txt'
 
     def __init__(self, taxon_id: int, pathways: Union[str, List[str], Literal['all']] = 'all'):
         self.pathway_names = {}
@@ -338,9 +339,11 @@ class KEGGAnnotationIterator:
 
     @staticmethod
     def get_compounds() -> Dict[str, str]:
-        cached_filename = KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME
         compounds = {}
-        data, _ = KEGGAnnotationIterator._kegg_request('list', ['compound'], cached_filename)
+        data = KEGGAnnotationIterator._kegg_request('list', ['compound'],
+                                                    KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME)[0] + '\n' + \
+               KEGGAnnotationIterator._kegg_request('list', ['glycan'],
+                                                    KEGGAnnotationIterator.GLYCAN_LIST_CACHED_FILENAME)[0]
         data = data.split('\n')
         for line in data:
             split = line.split('\t')

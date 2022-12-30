@@ -621,6 +621,7 @@ def test_kegg_annotation_iterator_get_pathways(monkeypatch):
 
 
 def test_kegg_annotation_iterator_get_compounds(monkeypatch):
+    reqs_made = []
     truth = {'cpd:C00001': 'H2O',
              'cpd:C00002': 'ATP',
              'cpd:C00003': 'NAD+',
@@ -636,15 +637,22 @@ def test_kegg_annotation_iterator_get_compounds(monkeypatch):
 
     def mock_kegg_request(operation, arguments, cached_filename=None):
         assert operation == 'list'
-        assert arguments == ['compound']
-        assert cached_filename == KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME
+        assert len(arguments) == 1
+        if arguments[0] == 'compound':
+            assert cached_filename == KEGGAnnotationIterator.COMPOUND_LIST_CACHED_FILENAME
+        else:
+            assert cached_filename == KEGGAnnotationIterator.GLYCAN_LIST_CACHED_FILENAME
+        reqs_made.append(arguments[0])
         with open('tests/test_files/kegg_compounds.txt') as f:
             return f.read(), True
 
     monkeypatch.setattr(KEGGAnnotationIterator, '_kegg_request', mock_kegg_request)
 
     kegg = KEGGAnnotationIterator.__new__(KEGGAnnotationIterator)
-    assert kegg.get_compounds() == truth
+    res = kegg.get_compounds()
+    assert res == truth
+    assert sorted(reqs_made) == ['compound', 'glycan']
+
 
 def are_xml_elements_equal(e1, e2):
     if e1.tag != e2.tag: return False
