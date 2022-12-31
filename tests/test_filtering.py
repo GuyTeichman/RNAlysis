@@ -1888,7 +1888,7 @@ def test_filter_by_go_annotations(monkeypatch, ids, mode, truth_path):
 
     monkeypatch.setattr(io.GOlrAnnotationIterator, '_get_n_annotations', lambda *args, **kwargs: 13)
     monkeypatch.setattr(io.GOlrAnnotationIterator, '_annotation_generator_func', annotation_iter)
-    monkeypatch.setattr(io, 'fetch_go_basic', lambda: MockDAGTree())
+    monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: MockDAGTree())
 
     f = Filter('tests/test_files/counted.csv')
     res = f.filter_by_go_annotations(ids, mode, gene_id_type='WormBase', inplace=False)

@@ -9,14 +9,15 @@ import graphviz
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from defusedxml import ElementTree
 from matplotlib.cm import ScalarMappable
 from typing_extensions import Literal
+from functools import lru_cache
+from rnalysis.utils import parsing, io
 
-from rnalysis.utils import parsing
 
-
-def render_graphviz_plot(graph: graphviz.Digraph, save_path: str, file_format: str):
+def render_graphviz_plot(graph: graphviz.Digraph, save_path: Union[str, Path], file_format: str):
     try:
         graph.render(Path(save_path).with_suffix(''), view=True, format=file_format)
         return True
@@ -124,7 +125,9 @@ class KEGGPathway:
                  'name_to_id': 'dict mapping entry names to entry IDs',
                  'id_to_group': 'dict mapping sub-component entry IDs to group IDs',
                  'pathway_id': 'KEGG ID of the pathway',
-                 'pathway_name': 'Display name of the pathway'}
+                 'pathway_name': 'Display name of the pathway',
+                 'organism_code': 'KEGG organism code of the pathway',
+                 'gene_id_translator': 'mapping from KEGG gene IDs to a different type'}
     LEGEND_GRAPH = graphviz.Digraph(name='cluster_legend', edge_attr=dict(fontname='Arial'),
                                     node_attr=dict(fontname='Arial', shape='plaintext'),
                                     graph_attr=dict(fontname='Arial', fontsize='20', rankdir='LR'))
@@ -150,14 +153,18 @@ class KEGGPathway:
 
     del node, attrs, i, rel
 
-    def __init__(self, kgml_tree: ElementTree, compounds: Dict[str, str]):
+    def __init__(self, kgml_tree: ElementTree, compounds: Dict[str, str], gene_id_translator=None):
         self.compounds = compounds
         self.entries: Dict[int, KEGGEntry] = {}
         self.name_to_id: Dict[str, int] = {}
         self.id_to_group: Dict[int, int] = {}
+        if gene_id_translator is None:
+            gene_id_translator = {}
+        self.gene_id_translator = gene_id_translator
         root = kgml_tree.getroot()
         self.pathway_id = root.get('name')
         self.pathway_name = root.get('title')
+        self.organism_code = root.get('org')
         self.parse_pathway(kgml_tree)
 
     def __getitem__(self, key) -> 'KEGGEntry':
@@ -178,8 +185,21 @@ class KEGGPathway:
         for element in kgml_tree.getroot():
             if element.tag == 'entry':
                 elem_id = int(element.get('id'))
-                elem_name = element.get('name')
                 elem_type = element.get('type')
+                if elem_type == 'compound':
+                    elem_name = re.findall('(?:cpd|gl):[0-9a-zA-Z_]+', element.get('name'))[0]
+                elif elem_type == 'ortholog':
+                    elem_name = re.findall('ko:[0-9a-zA-Z_]+', element.get('name'))[0]
+                elif elem_type == 'gene':
+                    elem_name = re.findall(f'{self.organism_code}:[0-9a-zA-Z_\.]+', element.get('name'))[0]
+                elif elem_type == 'enzyme':
+                    elem_name = re.findall('ec:[0-9a-zA-Z_\.]+', element.get('name'))[0]
+                elif elem_type == 'map':
+                    elem_name = re.findall('path:[0-9a-zA-Z_]+', element.get('name'))[0]
+                else:
+                    elem_name = element.get('name')
+                if elem_name in self.gene_id_translator:
+                    elem_name = self.gene_id_translator[elem_name]
 
                 if elem_type == 'group':
                     ids = []
@@ -243,8 +263,8 @@ class KEGGPathway:
         self.entries[pred].relationships[rel_type].add((succ, rel_symbol))
         self.entries[succ].children_relationships[rel_type].add((pred, rel_symbol))
 
-    def plot_pathway(self, save_path: str, significant: Union[set, dict, None] = None, ylabel: str = '', dpi: int = 300,
-                     graph_format: Literal['pdf', 'png', 'svg'] = 'pdf'):
+    def plot_pathway(self, significant: Union[set, dict, None] = None, ylabel: str = '',
+                     graph_format: Literal['pdf', 'png', 'svg'] = 'pdf', dpi: int = 300):
         if significant is None:
             significant = {}
         elif isinstance(significant, dict):
@@ -253,7 +273,8 @@ class KEGGPathway:
             if len(scores_no_inf) == 0:
                 scores_no_inf.append(-1)
             max_score = max(np.max(scores_no_inf), 2)
-            my_cmap = plt.cm.get_cmap('coolwarm')
+            max_abs_score = max(np.abs(scores_no_inf))
+            colormap = plt.cm.get_cmap('coolwarm')
 
         # generate graph
         main_graph = graphviz.Digraph()
@@ -292,8 +313,8 @@ class KEGGPathway:
                             color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
                             color_norm_8bit = int(
                                 color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
-                                color_norm) * max(np.abs(scores_no_inf))
-                            color = tuple([int(i * 255) for i in my_cmap(color_norm_8bit)[:-1]])
+                                color_norm) * max_abs_score
+                            color = tuple([int(i * 255) for i in colormap(color_norm_8bit)[:-1]])
                             color_str = '#%02x%02x%02x' % color
                             label += f'bgcolor="{color_str}" '
                             if int(np.mean(color)) < 128:
@@ -312,7 +333,7 @@ class KEGGPathway:
                     color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
                     color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
                         color_norm) * max(np.abs(scores_no_inf))
-                    color = tuple([int(i * 255) for i in my_cmap(color_norm_8bit)[:-1]])
+                    color = tuple([int(i * 255) for i in colormap(color_norm_8bit)[:-1]])
                     kwargs['fillcolor'] = '#%02x%02x%02x' % color
                     if int(np.mean(color)) < 128:
                         kwargs['fontcolor'] = '#ffffff'
@@ -337,13 +358,20 @@ class KEGGPathway:
 
         main_graph.subgraph(kegg_graph)
         main_graph.subgraph(self.LEGEND_GRAPH)
-        # show graph in a matplotlib window
+        # save and display graph
+        save_path = None
+        i = 0
+        while save_path is None or save_path.exists():
+            save_path = io.get_todays_cache_dir().joinpath(
+                f'KEGG_pathway_{self.pathway_id.replace(":", "")}_{i}.{graph_format}')
+            i += 1
         res = render_graphviz_plot(main_graph, save_path, graph_format)
         if not res:
             return False
         fig, axes = plt.subplots(1, 2, figsize=(14, 9), constrained_layout=True, gridspec_kw=dict(width_ratios=[3, 1]))
         fig.suptitle(f'KEGG Pathway: {self.pathway_name}', fontsize=24)
 
+        # show graph in a matplotlib window
         kegg_png_str = kegg_graph.pipe(format='png')
         for ax, png_str in zip(axes, [kegg_png_str, self.LEGEND_GRAPH_STR]):
             sio = builtin_io.BytesIO()
@@ -360,7 +388,7 @@ class KEGGPathway:
         if isinstance(significant, dict) and len(significant) > 0:
             # add colorbar
             bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
-            sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
+            sm = ScalarMappable(cmap=colormap, norm=plt.Normalize(*bounds))
             sm.set_array(np.array([]))
             cbar_label_kwargs = dict(label=ylabel, fontsize=12, labelpad=4)
             cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), location='bottom')
@@ -590,3 +618,115 @@ class DAGTree:
                     processed_nodes.update(parents)
             # memoize the function's output for go_id
             self._upper_induced_graphs[go_id] = processed_nodes
+
+    def plot_ontology(self, namespace: str, results_df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment',
+                      title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
+                      graph_format: Literal['pdf', 'png', 'svg'] = 'pdf', dpi: int = 300) -> bool:
+        # colormap
+        scores_no_inf = [i for i in results_df[en_score_col] if i != np.inf and i != -np.inf and i < 0]
+        if len(scores_no_inf) == 0:
+            scores_no_inf.append(-1)
+        max_score = max(np.max(scores_no_inf), 2)
+        colormap = plt.cm.get_cmap('coolwarm')
+
+        # generate graph
+        graph = graphviz.Digraph()
+        graph.attr(dpi=str(dpi))
+        node_queue = queue.SimpleQueue()
+        processed = set()
+        significant = set(results_df[results_df['significant']].index)
+        for sig_node in significant:
+            node_queue.put(sig_node)
+
+        while not node_queue.empty():
+            this_node = node_queue.get()
+            kwargs = dict(shape='box', style='rounded', fontname='Arial')
+
+            if this_node in processed:
+                continue
+            if self[this_node].namespace != namespace:
+                continue
+            # color significant nodes according to their enrichment score
+            if this_node in significant:
+                this_score = results_df[en_score_col].loc[this_node]
+                color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
+                color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
+                    color_norm) * max(np.abs(scores_no_inf))
+                color = tuple([int(i * 255) for i in colormap(color_norm_8bit)[:-1]])
+                kwargs['fillcolor'] = '#%02x%02x%02x' % color
+                kwargs['style'] = 'rounded, filled'
+                if int(np.mean(color)) < 128:
+                    kwargs['fontcolor'] = '#ffffff'
+
+            graph.node(this_node[3::], label=self[this_node].name, **kwargs)
+            processed.add(this_node)
+            #  add relationships to all parent nodes, and add parent nodes to queue
+            for relationship_type in ('is_a', 'part_of'):
+                relationship_label = relationship_type.replace('_', ' ') + ':'
+                for parent in self[this_node].get_parents(relationship_type):
+                    if self[parent].namespace == namespace:
+                        node_queue.put(parent)
+                        graph.edge(parent[3::], this_node[3::], fontname='Arial', label=relationship_label)
+
+        # save and display graph
+        save_path = None
+        i = 0
+        while save_path is None or save_path.exists():
+            save_path = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}_{i}.{graph_format}')
+            i += 1
+        res = render_graphviz_plot(graph, save_path, graph_format)
+        if not res:
+            return False
+        # show graph in a matplotlib window
+        png_str = graph.pipe(format='png')
+        sio = builtin_io.BytesIO()
+        sio.write(png_str)
+        sio.seek(0)
+        img = mpimg.imread(sio)
+        fig, ax = plt.subplots(figsize=(14, 9))
+        ax.imshow(img, aspect='equal')
+        ax.axis('off')
+        if title == 'auto':
+            title = namespace.replace('_', ' ').title()
+        ax.set_title(title, fontsize=24)
+
+        # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
+        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
+        # add colorbar
+        sm = ScalarMappable(cmap=colormap, norm=plt.Normalize(*bounds))
+        sm.set_array(np.array([]))
+        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15)
+        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), location='bottom')
+        cbar.set_label(**cbar_label_kwargs)
+        cbar.ax.tick_params(labelsize=14, pad=6)
+
+        plt.show()
+        return True
+
+
+@lru_cache(maxsize=128)
+def fetch_kegg_pathway(pathway_id: str, gene_id_translator: Union[io.GeneIDTranslator, None] = None) -> KEGGPathway:
+    kgml_tree = io.KEGGAnnotationIterator.get_pathway_kgml(pathway_id)
+    compounds = io.KEGGAnnotationIterator.get_compounds()
+    return KEGGPathway(kgml_tree, compounds, gene_id_translator)
+
+
+@lru_cache(maxsize=2)
+def fetch_go_basic() -> DAGTree:
+    """
+    Fetches the basic Gene Ontology OBO file from the geneontology.org website ('go-basic.obo') and parses it into a \
+    DAGTree data structure.
+    :return: a parsed DAGTree for gene ontology propagation and visualization.
+    :rtype: utils.ontology.DAGTree
+    """
+    cached_filename = 'go-basic.obo'
+    cached_file = io.load_cached_file(cached_filename)
+    if cached_file is not None:
+        lines = cached_file.split('\n')
+        try:
+            return DAGTree(lines)
+        except (ValueError, IndexError):
+            pass
+    content = io.get_obo_basic_stream()
+    io.cache_file(content, cached_filename)
+    return DAGTree(content.split('\n'))

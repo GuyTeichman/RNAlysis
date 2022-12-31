@@ -218,8 +218,8 @@ def test_clicomrunner_find_valid_clustering_setups():
 
 
 def test_find_cliques(monkeypatch):
-    binary_adj_mat = pd.read_csv('tests/test_files/clicom_binary_adj_matrix.csv', index_col=0).values
     truth = {frozenset({2, 4, 7, 8}), frozenset({1, 7}), frozenset({1, 3, 6}), frozenset({0, 3, 5, 6})}
+    binary_adj_mat = pd.read_csv('tests/test_files/clicom_binary_adj_matrix.csv', index_col=0).values
     monkeypatch.setattr(CLICOM, "get_cluster_similarity_matrix", lambda self: binary_adj_mat)
     clicom = CLICOM(BinaryFormatClusters([np.array([[0, 1]])]), 1)
     clicom.find_cliques()

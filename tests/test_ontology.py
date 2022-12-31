@@ -43,7 +43,7 @@ def test_kegg_pathway_parser_construction():
                                                    'phosphorylation': {(1, 'C')}, 'repression': set(),
                                                    'reversible reaction': set(), 'state change': set(),
                                                    'ubiquitination': set(), 'unknown': set()}),
-                   4: dict(id=4, name='hsa:4171 hsa:4172 hsa:4173 hsa:4174 hsa:4175 hsa:4176', display_name='MCM2',
+                   4: dict(id=4, name='hsa:4171', display_name='MCM2',
                            type='gene', children_relationships=empty_rel,
                            relationships={'activation': set(), 'binding/association': set(), 'compound': {(2, '->')},
                                           'dephosphorylation': set(), 'dissociation': set(), 'expression': set(),
@@ -66,18 +66,12 @@ def test_kegg_pathway_parser_construction():
 
 
 def test_plot_kegg_pathway_api():
-    save_pth = 'tests/test_files/test_pathway.pdf'
-    try:
-        with open('tests/test_files/test_kgml.xml') as f:
-            tree = ElementTree.parse(f)
+    with open('tests/test_files/test_kgml.xml') as f:
+        tree = ElementTree.parse(f)
 
-        pathway = KEGGPathway(tree, {})
-        pathway.plot_pathway(save_pth)
-        plt.close('all')
-        assert os.path.exists(save_pth)
-    finally:
-        os.unlink(save_pth)
-        os.unlink(save_pth[:-4])
+    pathway = KEGGPathway(tree, {})
+    pathway.plot_pathway()
+    plt.close('all')
 
 
 def test_kegg_entry_with_properties():
@@ -285,3 +279,11 @@ def test_dag_tree_parser_upper_induced_tree_iterator():
         ui_tree = list(dag_tree.upper_induced_graph_iter(node))
         ui_tree.sort()
         assert ui_tree == parents_truth_file_2[node]
+
+
+def test_dag_plot_ontology():
+    results = io.load_csv('tests/test_files/go_enrichment_runner_sample_results.csv', index_col=0)
+    dag_tree = fetch_go_basic()
+    en_score_col = 'colName'
+    ontology_graph_format = 'png'
+    dag_tree.plot_ontology('biological_process', results, en_score_col, 'title', 'ylabel', ontology_graph_format)

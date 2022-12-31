@@ -54,6 +54,9 @@ XLMHG_SUPPORTED = does_python_version_support_single_set()
 
 
 class EnrichmentRunner:
+    ENRICHMENT_SCORE_YLABEL = r"$\log_2$(Fold Enrichment)"
+    SINGLE_SET_ENRICHMENT_SCORE_YLABEL = r"$\log_2$(XL-mHG enrichment score)"
+
     __slots__ = {'results': 'DataFrame containing enrichment analysis results',
                  'annotation_df': 'DataFrame containing all annotation data per gene',
                  'gene_set': 'the set of genes/genomic features whose enrichment to calculate',
@@ -491,9 +494,9 @@ class EnrichmentRunner:
 
     def plot_results(self) -> plt.Figure:
         if self.single_set:
-            return self.enrichment_bar_plot(ylabel=r"$\log_2$(XL-mHG enrichment score)",
+            return self.enrichment_bar_plot(ylabel=self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL,
                                             title=f"Single-list enrichment for {self.set_name}")
-        return self.enrichment_bar_plot(title=f"Enrichment for {self.set_name}")
+        return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL, title=f"Enrichment for {self.set_name}")
 
     def enrichment_bar_plot(self, n_bars: int = 'all', name_col: str = None, center_bars: bool = True,
                             ylabel: str = r"$\log_2$(Fold Enrichment)",
@@ -784,15 +787,19 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                  'return_nonsignificant': 'indicates whether to return results which were not found to be '
                                           'statistically significant after enrichment analysis',
                  'attributes_set': 'set of the attributes/KEGG Pathways for which enrichment should be calculated',
-                 'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values'}
+                 'pathway_names_dict': 'a dict with KEGG Pathway IDs as keys and their names as values',
+                 'plot_pathway_graphs': 'indicates whether to plot pathway graphs of the statistically significant KEGG pathways',
+                 'pathway_graphs_format': 'file format for the generated pathway graphs',
+                 'gene_id_translator': 'gene ID translator from KEGG into a user-defined gene ID type'
+                 }
     KEGG_DF_QUERIES = {}
     printout_params = "have any KEGG Annotations asocciated with them"
 
     def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
-                 set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
+                 plot_pathway_graphs: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, **pvalue_kwargs):
+                 random_seed: int = None, pathway_graphs_format: Literal['pdf', 'png', 'svg'] = 'pdf', **pvalue_kwargs):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
                          single_set, random_seed, **pvalue_kwargs)
@@ -801,6 +808,9 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
         self.gene_id_type = gene_id_type
         self.taxon_id, self.organism = self.get_taxon_id(organism)
         self.pathway_names_dict: dict = {}
+        self.plot_pathway_graphs = plot_pathway_graphs
+        self.pathway_graphs_format = pathway_graphs_format
+        self.gene_id_translator = None
 
     def get_taxon_id(self, organism: str):
         if isinstance(organism, str) and organism.lower() == 'auto':
@@ -888,6 +898,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                 parsing.data_to_tuple(sparse_annotation_dict.keys()), (source,), None)
         else:
             translator = io.map_gene_ids(parsing.data_to_list(sparse_annotation_dict.keys()), source, self.gene_id_type)
+        self.gene_id_translator = translator
         for gene_id in sparse_annotation_dict:
             if gene_id in translator:
                 translated_sparse_annotation_dict[translator[gene_id]] = sparse_dict_cp.pop(gene_id)
@@ -899,6 +910,28 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
     def fetch_attributes(self):
         self.attributes = parsing.data_to_list(self.annotation_df.columns)
         self.attributes_set = parsing.data_to_set(self.attributes)
+
+    def plot_results(self) -> plt.Figure:
+        fig = super().plot_results()
+
+        if self.plot_pathway_graphs:
+            for pathway in self.pathway_names_dict:
+                if pathway in self.results.index and self.results.loc[pathway, 'significant']:
+                    status = self.pathway_plot(pathway)
+                    if not status:
+                        break
+
+        return fig
+
+    def pathway_plot(self, pathway_id: str) -> bool:
+        ylabel = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL if self.single_set else self.ENRICHMENT_SCORE_YLABEL
+        pathway_tree = ontology.fetch_kegg_pathway(pathway_id, self.gene_id_translator)
+        if self.single_set:
+            highlight_genes = self.gene_set
+            # TODO: color by rank/ranking metric?
+        else:
+            highlight_genes = self.gene_set
+        return pathway_tree.plot_pathway(highlight_genes, ylabel, self.pathway_graphs_format)
 
 
 class GOEnrichmentRunner(EnrichmentRunner):
@@ -932,7 +965,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
                  plot_ontology_graph: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, ontology_graph_format: Literal['pdf', 'png', 'svg']='pdf', **pvalue_kwargs):
+                 random_seed: int = None, ontology_graph_format: Literal['pdf', 'png', 'svg'] = 'pdf', **pvalue_kwargs):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
@@ -941,7 +974,7 @@ class GOEnrichmentRunner(EnrichmentRunner):
                          **pvalue_kwargs)
         if not self.enrichment_func:
             return
-        self.dag_tree: ontology.DAGTree = io.fetch_go_basic()
+        self.dag_tree: ontology.DAGTree = ontology.fetch_go_basic()
         self.mod_annotation_dfs: Tuple[pd.DataFrame, ...] = tuple()
         self.gene_id_type = gene_id_type
         self.taxon_id, self.organism = self.get_taxon_id(organism)
@@ -1081,9 +1114,10 @@ class GOEnrichmentRunner(EnrichmentRunner):
         n_bars = min(10, len(self.results))
         kwargs = dict()
         if self.single_set:
-            kwargs['ylabel'] = r"$\log_2$(XL-mHG enrichment score)"
+            kwargs['ylabel'] = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL
             kwargs['title'] = f"Single-list GO enrichment for {self.set_name}\ntop {n_bars} most specific GO terms"
         else:
+            kwargs['ylabel'] = self.ENRICHMENT_SCORE_YLABEL
             kwargs['title'] = f"GO enrichment for {self.set_name}\ntop {n_bars} most specific GO terms"
 
         bar_plot = self.enrichment_bar_plot(n_bars=n_bars, **kwargs)
@@ -1098,92 +1132,11 @@ class GOEnrichmentRunner(EnrichmentRunner):
         aspects = ('biological_process', 'cellular_component',
                    'molecular_function') if self.aspects == 'any' else parsing.data_to_tuple(self.aspects)
         for go_aspect in aspects:
-            status = self._dag_plot_for_namespace(go_aspect, title, ylabel, dpi=dpi)
+            this_title = title + f'\n{go_aspect}'.replace('_', ' ').title()
+            status = self.dag_tree.plot_ontology(go_aspect, self.results, self.en_score_col, this_title, ylabel,
+                                                 self.ontology_graph_format, dpi)
             if not status:
                 return
-
-    def _dag_plot_for_namespace(self, namespace: str, title: str, ylabel: str, dpi: int = 300) -> bool:
-        # colormap
-        scores_no_inf = [i for i in self.results[self.en_score_col] if i != np.inf and i != -np.inf and i < 0]
-        if len(scores_no_inf) == 0:
-            scores_no_inf.append(-1)
-        max_score = max(np.max(scores_no_inf), 2)
-        my_cmap = plt.cm.get_cmap('coolwarm')
-
-        # generate graph
-        graph = graphviz.Digraph()
-        graph.attr(dpi=str(dpi))
-        node_queue = queue.SimpleQueue()
-        processed = set()
-        significant = set(self.results[self.results['significant']].index)
-        for sig_node in significant:
-            node_queue.put(sig_node)
-
-        while not node_queue.empty():
-            this_node = node_queue.get()
-            kwargs = dict(shape='box', style='rounded', fontname='Arial')
-
-            if this_node in processed:
-                continue
-            if self.dag_tree[this_node].namespace != namespace:
-                continue
-            # color significant nodes according to their enrichment score
-            if this_node in significant:
-                this_score = self.results[self.en_score_col].loc[this_node]
-                color_norm = 0.5 * (1 + this_score / (np.floor(max_score) + 1)) * 255
-                color_norm_8bit = int(color_norm) if color_norm != np.inf and color_norm != -np.inf else np.sign(
-                    color_norm) * max(np.abs(scores_no_inf))
-                color = tuple([int(i * 255) for i in my_cmap(color_norm_8bit)[:-1]])
-                kwargs['fillcolor'] = '#%02x%02x%02x' % color
-                kwargs['style'] = 'rounded, filled'
-                if int(np.mean(color)) < 128:
-                    kwargs['fontcolor'] = '#ffffff'
-
-            graph.node(this_node[3::], label=self.dag_tree[this_node].name, **kwargs)
-            processed.add(this_node)
-            #  add relationships to all parent nodes, and add parent nodes to queue
-            for relationship_type in ('is_a', 'part_of'):
-                relationship_label = relationship_type.replace('_', ' ') + ':'
-                for parent in self.dag_tree[this_node].get_parents(relationship_type):
-                    if self.dag_tree[parent].namespace == namespace:
-                        node_queue.put(parent)
-                        graph.edge(parent[3::], this_node[3::], fontname='Arial', label=relationship_label)
-
-        # save and display graph
-        savepath = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}.{self.ontology_graph_format}')
-        i = 0
-        while savepath.exists():
-            i += 1
-            savepath = io.get_todays_cache_dir().joinpath(f'dag_tree_{namespace}_{i}.{self.ontology_graph_format}')
-        try:
-            graph.render(savepath, view=True, format=self.ontology_graph_format)
-        except graphviz.backend.execute.ExecutableNotFound:
-            warnings.warn("You must install 'GraphViz' and add it to PATH in order to generate Ontology Graphs. \n"
-                          "Please see https://graphviz.org/download/ for more information. ")
-            return False
-        # show graph in a matplotlib window
-        png_str = graph.pipe(format='png')
-        sio = builtin_io.BytesIO()
-        sio.write(png_str)
-        sio.seek(0)
-        img = mpimg.imread(sio)
-        fig, ax = plt.subplots(figsize=(14, 9))
-        ax.imshow(img, aspect='equal')
-        ax.axis('off')
-        ax.set_title(title + f'\n{namespace}'.replace('_', ' ').title(), fontsize=24)
-
-        # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
-        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
-        # add colorbar
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
-        sm.set_array(np.array([]))
-        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15)
-        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), location='bottom')
-        cbar.set_label(**cbar_label_kwargs)
-        cbar.ax.tick_params(labelsize=14, pad=6)
-
-        plt.show()
-        return True
 
     def format_results(self, unformatted_results_dict: dict):
         if self.single_set:

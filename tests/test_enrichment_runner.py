@@ -227,7 +227,7 @@ def test_classic_pvals(monkeypatch):
         def __getitem__(self, item):
             return self.dummy_node
 
-    monkeypatch.setattr(io, 'fetch_go_basic', lambda: DummyDAGTree())
+    monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: DummyDAGTree())
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
                            False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
@@ -247,7 +247,7 @@ def test_elim_pvals(monkeypatch):
     truth = pd.read_csv('tests/test_files/go_pvalues_elim_truth.csv', index_col=0).sort_index()
     with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
         dag_tree = ontology.DAGTree(f, ['is_a'])
-    monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
+    monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
                            None, False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
@@ -269,7 +269,7 @@ def test_weight_pvals(monkeypatch):
     with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
         dag_tree = ontology.DAGTree(f, ['is_a'])
 
-    monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
+    monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', 0.05, 'classic', 'any', 'any', None, 'any', None, 'any', None,
                            False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
@@ -290,7 +290,7 @@ def test_allm_pvals(monkeypatch):
     truth = pd.read_csv('tests/test_files/go_pvalues_allm_truth.csv', index_col=0).sort_index()
     with open('tests/test_files/obo_for_go_tests.obo', 'r') as f:
         dag_tree = ontology.DAGTree(f, ['is_a'])
-    monkeypatch.setattr(io, 'fetch_go_basic', lambda: dag_tree)
+    monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: dag_tree)
 
     e = GOEnrichmentRunner(gene_set, 'elegans', 'WBGene', threshold, 'classic', 'any', 'any', None, 'any', None, 'any',
                            None, False, False, '', False, False, False, '', False, 'hypergeometric', 'all')
@@ -890,7 +890,7 @@ def test_noncategorical_enrichment_runner_enrichment_histogram(plot_style, plot_
                            'path/to/biotype/ref', 42, {'reps': 10000})])
 def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
                                   biotype_ref_path, random_seed, kwargs):
-    monkeypatch.setattr(io, 'fetch_go_basic', lambda: 'dag_tree')
+    monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: 'dag_tree')
     runner = GOEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, 'elim', 'any', 'any', None, 'any', None, 'any',
                                 None, False, False, 'fname', False, False, False, 'set_name', False, pval_func,
                                 biotypes, background_set, biotype_ref_path, single_list, random_seed, **kwargs)
@@ -1737,7 +1737,7 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
 def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
                                     biotype_ref_path, random_seed, kwargs):
     monkeypatch.setattr(KEGGEnrichmentRunner, 'get_taxon_id', lambda *args: ('a', 'b'))
-    runner = KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False,
+    runner = KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True,
                                   'set_name', False, pval_func,
                                   biotypes, background_set, biotype_ref_path, single_list, random_seed, **kwargs)
 
@@ -1904,12 +1904,3 @@ def test_kegg_enrichment_runner_fetch_attributes():
     runner.fetch_attributes()
     assert runner.attributes == truth_attributes
     assert runner.attributes_set == truth_attributes_set
-
-
-def test_dag_plot_for_namespace():
-    runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
-    runner.results = io.load_csv('tests/test_files/go_enrichment_runner_sample_results.csv', index_col=0)
-    runner.dag_tree = io.fetch_go_basic()
-    runner.en_score_col = 'colName'
-    runner.ontology_graph_format = 'png'
-    runner._dag_plot_for_namespace('biological_process', 'title', 'ylabel', 50)

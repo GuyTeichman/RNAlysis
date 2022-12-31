@@ -33,7 +33,7 @@ try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
-from rnalysis.utils import parsing, validation, ontology, __path__
+from rnalysis.utils import parsing, validation, __path__
 from rnalysis import __version__
 
 
@@ -710,6 +710,13 @@ class GOlrAnnotationIterator:
         return self._annotation_generator_func()
 
 
+def get_obo_basic_stream():
+    url = 'http://current.geneontology.org/ontology/go-basic.obo'
+    with requests.get(url, stream=True) as obo_stream:
+        content = obo_stream.content.decode('utf8')
+        return content
+
+
 # TODO: cache this! save and load gene IDs individually
 @lru_cache(maxsize=32, typed=False)
 def _ensmbl_lookup_post_request(gene_ids: Tuple[str]) -> Dict[str, Dict[str, Any]]:
@@ -1237,30 +1244,6 @@ def _get_id_abbreviation_dicts(dict_path: str = os.path.join(__path__[0], 'unipr
         abbrev_dict_from[val] = val
 
     return abbrev_dict_to, abbrev_dict_from
-
-
-@lru_cache(maxsize=2)
-def fetch_go_basic() -> ontology.DAGTree:
-    """
-    Fetches the basic Gene Ontology OBO file from the geneontology.org website ('go-basic.obo') and parses it into a \
-    DAGTree data structure.
-    :return: a parsed DAGTree for gene ontology propagation and visualization.
-    :rtype: utils.ontology.DAGTree
-    """
-    url = 'http://current.geneontology.org/ontology/go-basic.obo'
-    cached_filename = 'go-basic.obo'
-    cached_file = load_cached_file(cached_filename)
-    if cached_file is not None:
-        lines = cached_file.split('\n')
-        try:
-            return ontology.DAGTree(lines)
-        except (ValueError, IndexError):
-            pass
-
-    with requests.get(url, stream=True) as obo_stream:
-        content = obo_stream.content.decode('utf8')
-        cache_file(content, cached_filename)
-        return ontology.DAGTree(content.split('\n'))
 
 
 def get_datetime():

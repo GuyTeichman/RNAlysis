@@ -38,7 +38,8 @@ from sklearn.preprocessing import PowerTransformer, StandardScaler
 from datetime import datetime
 
 from rnalysis import __version__
-from rnalysis.utils import clustering, io, parsing, generic, settings, validation, differential_expression, param_typing
+from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
+    param_typing
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
     DEFAULT_ORGANISMS, get_gene_id_types
@@ -649,7 +650,7 @@ class Filter:
         assert mode in {'union', 'intersection'}, \
             f"Illegal mode '{mode}': mode must be either 'union' or 'intersection'"
 
-        dag_tree = io.fetch_go_basic()
+        dag_tree = ontology.fetch_go_basic()
         # make sure all GO IDs are valid
         for go_id in go_ids.copy():
             if go_id in dag_tree:
@@ -3747,7 +3748,7 @@ class CountFilter(Filter):
     @readable_name('HDBSCAN (density) clustering')
     def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
-                      'L1', 'L2', 'Jackknife', 'YS1', 'YR1','Sharpened_Cosine', 'Hamming']] = 'Euclidean',
+                      'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
                       power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False, gui_mode: bool = False

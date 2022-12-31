@@ -81,8 +81,8 @@ def test_save_csv():
             pass
 
 
-def test_fetch_go_basic_connectivity():
-    _ = fetch_go_basic()
+def test_obo_basic_stream_connectivity():
+    _ = get_obo_basic_stream()
 
 
 def test_format_ids_iter():
@@ -661,6 +661,8 @@ def are_xml_elements_equal(e1, e2):
     if e1.attrib != e2.attrib: return False
     if len(e1) != len(e2): return False
     return all(are_xml_elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
+
+
 @pytest.mark.parametrize('pathway_id,expected_fname', [('hsa:00001', 'kgml_hsa:00001.xml')])
 def test_kegg_annotation_iterator_get_pathway_kgml(monkeypatch, pathway_id, expected_fname):
     pth = 'tests/test_files/test_kgml.xml'
