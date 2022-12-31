@@ -799,7 +799,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
                  plot_pathway_graphs: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, pathway_graphs_format: Literal['pdf', 'png', 'svg'] = 'pdf', **pvalue_kwargs):
+                 random_seed: int = None, pathway_graphs_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                 **pvalue_kwargs):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
                          single_set, random_seed, **pvalue_kwargs)
@@ -965,7 +966,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
                  plot_ontology_graph: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, ontology_graph_format: Literal['pdf', 'png', 'svg'] = 'pdf', **pvalue_kwargs):
+                 random_seed: int = None, ontology_graph_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                 **pvalue_kwargs):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,

@@ -269,7 +269,8 @@ class FeatureSet:
                       excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
                       return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                      plot_ontology_graph: bool = True, ontology_graph_format: Literal['pdf', 'svg', 'png'] = 'pdf',
+                      plot_ontology_graph: bool = True,
+                      ontology_graph_format: Literal['pdf', 'png', 'svg','none'] = 'none',
                       randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                       parallel: bool = True, gui_mode: bool = False
                       ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -358,8 +359,9 @@ class FeatureSet:
         :type plot_ontology_graph: bool (default=True)
         :param plot_ontology_graph: if True, will generate an ontology graph depicting the \
         significant GO terms and their parent nodes.
-        :type ontology_graph_format: str (default='pdf')
-        :param ontology_graph_format: the file format the ontology graph will be generated in.
+        :type ontology_graph_format: 'pdf', 'png', 'svg', or None (default=None)
+        :param ontology_graph_format: if ontology_graph_format is not 'none', the ontology graph will additonally be \
+        generated in the specified file format.
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
@@ -429,6 +431,7 @@ class FeatureSet:
                         return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         plot_pathway_graphs: bool = True,
+                        pathway_graphs_format: Literal['pdf', 'png', 'svg','none'] = 'none',
                         randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                         parallel: bool = True, gui_mode: bool = False
                         ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -480,6 +483,11 @@ class FeatureSet:
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
+        :type plot_pathway_graphs: bool (default=True)
+        :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
+        :type pathway_graphs_format: 'pdf', 'png', 'svg', or None (default=None)
+        :param pathway_graphs_format: if pathway_graphs_format is not 'none', the pathway graphs will additonally be \
+        generated in the specified file format.
         :type random_seed: non-negative integer (default=None)
         :type random_seed: if using a randomization test, determine the random seed used to initialize \
         the pseudorandom generator for the randomization test. \
@@ -520,7 +528,7 @@ class FeatureSet:
                                                         return_nonsignificant, save_csv, fname, return_fig,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name, parallel,
                                                         statistical_test, biotype, background_genes, biotype_ref_path,
-                                                        **kwargs)
+                                                        pathway_graphs_format=pathway_graphs_format, **kwargs)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -1022,7 +1030,8 @@ class RankedSet(FeatureSet):
                                  return_nonsignificant: bool = False,
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
-                                 plot_ontology_graph: bool = True, ontology_graph_format: str = 'pdf',
+                                 plot_ontology_graph: bool = True,
+                                 ontology_graph_format: Literal['pdf', 'png', 'svg','none'] = 'none',
                                  parallel: bool = True, gui_mode: bool = False
                                  ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
@@ -1106,8 +1115,9 @@ class RankedSet(FeatureSet):
         :type plot_ontology_graph: bool (default=True)
         :param plot_ontology_graph: if True, will generate an ontology graph depicting the \
         significant GO terms and their parent nodes.
-        :type ontology_graph_format: str (default='pdf')
-        :param ontology_graph_format: the file format the ontology graph will be generated in.
+        :type ontology_graph_format: 'pdf', 'png', 'svg', or None (default=None)
+        :param ontology_graph_format: if ontology_graph_format is not 'none', the ontology graph will additonally be \
+        generated in the specified file format.
         :type parallel: bool (default=True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
@@ -1155,7 +1165,8 @@ class RankedSet(FeatureSet):
                                    alpha: param_typing.Fraction = 0.05, return_nonsignificant: bool = False,
                                    save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
-                                   plot_pathway_graphs: bool = True, pathway_graphs_format: str = 'pdf',
+                                   plot_pathway_graphs: bool = True,
+                                   pathway_graphs_format: Literal['pdf', 'png', 'svg','none'] = 'none',
                                    parallel: bool = True, gui_mode: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
@@ -1192,10 +1203,11 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
         Otherwise, results will be plotted with a vertical plot.
-       :type plot_pathway_graphs: bool (default=True)
+        :type plot_pathway_graphs: bool (default=True)
         :param plot_pathway_graphs: if True, will generate pathway graphs depicting the significant KEGG pathways.
-        :type pathway_graphs_format: str (default='pdf')
-        :param pathway_graphs_format: the file format the pathway graphs will be generated in.
+        :type pathway_graphs_format: 'pdf', 'png', 'svg', or None (default=None)
+        :param pathway_graphs_format: if pathway_graphs_format is not 'none', the pathway graphs will additonally be \
+        generated in the specified file format.
         :type parallel: bool (default=True)
         :param parallel: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
@@ -1226,9 +1238,9 @@ class RankedSet(FeatureSet):
         """
         runner = enrichment_runner.KEGGEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                         return_nonsignificant, save_csv, fname, return_fig,
-                                                        plot_horizontal,plot_pathway_graphs, self.set_name,
+                                                        plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel=parallel, enrichment_func_name='xlmhg',
-                                                        single_set=True)
+                                                        single_set=True, pathway_graphs_format=pathway_graphs_format)
 
         if gui_mode:
             return runner.run(plot=False), runner

@@ -10,7 +10,12 @@ Added
 * Added a Scree Plot (explained variance per PC) to Principle Component Analysis
 * Added CountFilter.split_by_principal_component(), allowing users to filter genes based on their contributions (loadings) to PCA Principal Components.
 * Added Filter.drop_columns
-* Added support for the Sharpened Cosine distance metric
+* Added support for the Sharpened Cosine distance metric in clustering analyses
+* KEGG enrichment can now generate KEGG pathway graphs for pathways that were found to be statistically significant
+
+Changed
+********
+* When generating Gene Ontology/KEGG Pathway graphs, users can choose whether or not to generate the figure in an additional separate file.
 
 Fixed
 ******

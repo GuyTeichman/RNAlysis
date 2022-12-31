@@ -19,9 +19,11 @@ from rnalysis.utils import parsing, io
 
 def render_graphviz_plot(graph: graphviz.Digraph, save_path: Union[str, Path], file_format: str):
     try:
-        graph.render(Path(save_path).with_suffix(''), view=True, format=file_format)
+        graphviz.version()  # test if graphviz is properly installed
+        if file_format.lower() != 'none':
+            graph.render(Path(save_path).with_suffix(''), view=True, format=file_format)
         return True
-    except graphviz.backend.execute.ExecutableNotFound:
+    except graphviz.ExecutableNotFound:
         warnings.warn("You must install 'GraphViz' and add it to PATH in order to generate Ontology Graphs. \n"
                       "Please see https://graphviz.org/download/ for more information. ")
         return False
@@ -186,20 +188,23 @@ class KEGGPathway:
             if element.tag == 'entry':
                 elem_id = int(element.get('id'))
                 elem_type = element.get('type')
+                # parse element name (KEGG ID)
                 if elem_type == 'compound':
-                    elem_name = re.findall('(?:cpd|gl):[0-9a-zA-Z_]+', element.get('name'))[0]
+                    elem_names = re.findall('(?:cpd|gl):[0-9a-zA-Z_]+', element.get('name'))
                 elif elem_type == 'ortholog':
-                    elem_name = re.findall('ko:[0-9a-zA-Z_]+', element.get('name'))[0]
+                    elem_names = re.findall('ko:[0-9a-zA-Z_]+', element.get('name'))
                 elif elem_type == 'gene':
-                    elem_name = re.findall(f'{self.organism_code}:[0-9a-zA-Z_\.]+', element.get('name'))[0]
+                    elem_names = re.findall(f'{self.organism_code}:[0-9a-zA-Z_\.]+', element.get('name'))
                 elif elem_type == 'enzyme':
-                    elem_name = re.findall('ec:[0-9a-zA-Z_\.]+', element.get('name'))[0]
+                    elem_names = re.findall('ec:[0-9a-zA-Z_\.]+', element.get('name'))
                 elif elem_type == 'map':
-                    elem_name = re.findall('path:[0-9a-zA-Z_]+', element.get('name'))[0]
+                    elem_names = re.findall('path:[0-9a-zA-Z_]+', element.get('name'))
                 else:
-                    elem_name = element.get('name')
-                if elem_name in self.gene_id_translator:
-                    elem_name = self.gene_id_translator[elem_name]
+                    elem_names = [element.get('name')]
+                for i in range(len(elem_names)):
+                    if elem_names[i] in self.gene_id_translator:
+                        elem_names[i] = self.gene_id_translator[elem_names[i]]
+                elem_name = elem_names[0]
 
                 if elem_type == 'group':
                     ids = []
@@ -214,7 +219,8 @@ class KEGGPathway:
                     display_name = element[0].get('name').split(',')[0]
                 entry = KEGGEntry.with_properties(elem_id, elem_name, elem_type, display_name)
                 self.entries[entry.id] = entry
-                self.name_to_id[entry.name] = entry.id
+                for this_name in elem_names:
+                    self.name_to_id[this_name] = entry.id
 
         for element in kgml_tree.getroot():
             if element.tag == 'relation':
@@ -264,7 +270,7 @@ class KEGGPathway:
         self.entries[succ].children_relationships[rel_type].add((pred, rel_symbol))
 
     def plot_pathway(self, significant: Union[set, dict, None] = None, ylabel: str = '',
-                     graph_format: Literal['pdf', 'png', 'svg'] = 'pdf', dpi: int = 300):
+                     graph_format: Literal['pdf', 'png', 'svg', 'none'] = 'none', dpi: int = 300):
         if significant is None:
             significant = {}
         elif isinstance(significant, dict):
@@ -621,7 +627,7 @@ class DAGTree:
 
     def plot_ontology(self, namespace: str, results_df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment',
                       title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                      graph_format: Literal['pdf', 'png', 'svg'] = 'pdf', dpi: int = 300) -> bool:
+                      graph_format: Literal['pdf', 'png', 'svg', 'none'] = 'none', dpi: int = 300) -> bool:
         # colormap
         scores_no_inf = [i for i in results_df[en_score_col] if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
