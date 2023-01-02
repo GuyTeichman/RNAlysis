@@ -1582,3 +1582,4 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
         title = 'Venn diagram of ' + ''.join([name + ' ' for name in objs.keys()])
     ax.set_title(title, fontsize=title_fontsize)
     return plot_obj, circle_obj
+

@@ -1729,17 +1729,18 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
     assert log2escore == log2escore_truth
 
 
-@pytest.mark.parametrize('single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,kwargs',
-                         [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, {}),
-                          (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
-                           {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
-                           'path/to/biotype/ref', 42, {'reps': 10000})])
+@pytest.mark.parametrize(
+    'single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,graph_format,kwargs',
+    [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, 'none', {}),
+     (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
+      {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
+      'path/to/biotype/ref', 42, 'pdf', {'reps': 10000})])
 def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
-                                    biotype_ref_path, random_seed, kwargs):
+                                    biotype_ref_path, random_seed, graph_format, kwargs):
     monkeypatch.setattr(KEGGEnrichmentRunner, 'get_taxon_id', lambda *args: ('a', 'b'))
     runner = KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True,
-                                  'set_name', False, pval_func,
-                                  biotypes, background_set, biotype_ref_path, single_list, random_seed, **kwargs)
+                                  'set_name', False, pval_func, biotypes, background_set, biotype_ref_path, single_list,
+                                  random_seed, graph_format, **kwargs)
 
 
 @pytest.mark.parametrize('got_gene_id_type', (True, False))
@@ -1904,3 +1905,33 @@ def test_kegg_enrichment_runner_fetch_attributes():
     runner.fetch_attributes()
     assert runner.attributes == truth_attributes
     assert runner.attributes_set == truth_attributes_set
+
+
+@pytest.mark.parametrize('single_set,graph_format', [(True, 'png'), (False, 'none')])
+def test_kegg_enrichment_runner_pathway_plot(single_set, graph_format, monkeypatch):
+    pathway_id_truth = 'pth_id'
+    translator_truth = 'translator obj'
+    plotted = []
+
+    class MockPathway:
+        def __init__(self, pathway_id, translator):
+            assert pathway_id == pathway_id_truth
+            assert translator == translator_truth
+
+        def plot_pathway(self, significant, ylabel, pathway_graph_format):
+            assert significant == runner.gene_set
+            if single_set:
+                assert ylabel == KEGGEnrichmentRunner.SINGLE_SET_ENRICHMENT_SCORE_YLABEL
+            else:
+                assert ylabel == KEGGEnrichmentRunner.ENRICHMENT_SCORE_YLABEL
+            assert pathway_graph_format == graph_format
+            plotted.append(True)
+
+    monkeypatch.setattr(ontology, 'fetch_kegg_pathway', lambda *args, **kwargs: MockPathway(*args, **kwargs))
+
+    runner = KEGGEnrichmentRunner.__new__(KEGGEnrichmentRunner)
+    runner.gene_set = {'a', 'b', 'c'}
+    runner.single_set = single_set
+    runner.pathway_graphs_format = graph_format
+    runner.gene_id_translator = translator_truth
+    runner.pathway_plot(pathway_id_truth)

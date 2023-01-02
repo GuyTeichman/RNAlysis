@@ -632,5 +632,5 @@ def test_kegg_enrichment_api(organism, statistical_test, kwargs):
 def test_kegg_enrichment_single_list_api():
     genes = ['WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195']
     en = RankedSet(genes, set_name='test_set')
-    _ = en.single_set_kegg_enrichment(6239, 'WormBase')
+    _ = en.single_set_kegg_enrichment(6239, 'WormBase',pathway_graphs_format='pdf')
     plt.close('all')
