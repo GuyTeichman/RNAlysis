@@ -1334,6 +1334,13 @@ def test_FilterTabPage_undo_rename(qtbot, filtertabpage_with_undo_stack):
     assert window.name == new_name
 
 
+@pytest.mark.parametrize('tab_type,args', [(FilterTabPage, [])])
+def test_save_table_empty_tab(qtbot, tab_type, args):
+    qtbot, window = widget_setup(qtbot, tab_type, *args)
+    with qtbot.assertNotEmitted(window.tabSaved):
+        window.save_file()
+
+
 def test_FilterTabPage_save_table(qtbot, monkeypatch):
     fname = 'my filename.tsv'
     saved = []
@@ -1492,6 +1499,22 @@ def test_FilterTabPage_open_clicom(countfiltertabpage_with_undo_stack, qtbot, mo
 
     tabpage.stack_buttons[4].click()
     tabpage.stack_widgets['Cluster'].func_combo.setCurrentText(filtering.CountFilter.split_clicom.readable_name)
+
+    assert opened == [True]
+
+
+def test_FilterTabPage_open_deseq(countfiltertabpage_with_undo_stack, qtbot, monkeypatch):
+    tabpage = countfiltertabpage_with_undo_stack[0]
+    opened = []
+
+    def mock_show(*args, **kwargs):
+        opened.append(True)
+
+    monkeypatch.setattr(DESeqWindow, 'show', mock_show)
+
+    tabpage.stack_buttons[5].click()
+    tabpage.stack_widgets['General'].func_combo.setCurrentText(
+        filtering.CountFilter.differential_expression_deseq2.readable_name)
 
     assert opened == [True]
 
@@ -1655,9 +1678,10 @@ def test_CreatePipelineWindow_init(qtbot):
 def test_CreatePipelineWindow_from_pipeline(qtbot):
     name = 'my pipeline name'
     pipeline = filtering.Pipeline.import_pipeline('tests/test_files/test_pipeline.yaml')
-    qtbot, window = widget_setup(qtbot, CreatePipelineWindow.start_from_pipeline,pipeline, name)
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow.start_from_pipeline, pipeline, name)
     assert window.pipeline == pipeline
     assert window._get_pipeline_name() == name
+
 
 def test_CreatePipelineWindow_create_pipeline(qtbot, monkeypatch):
     monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
@@ -1692,6 +1716,33 @@ def test_CreatePipelineWindow_add_function(qtbot, monkeypatch):
     qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
 
     assert window.pipeline == pipeline_truth
+
+
+def test_CreatePipelineWindow_remove_function(qtbot, monkeypatch):
+    warned = []
+    monkeypatch.setattr(QtWidgets.QMessageBox, "question", lambda *args: QtWidgets.QMessageBox.Yes)
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'exec', lambda *args, **kwargs: warned.append(True))
+
+    qtbot, window = widget_setup(qtbot, CreatePipelineWindow)
+    window.basic_widgets['pipeline_name'].clear()
+    qtbot.keyClicks(window.basic_widgets['pipeline_name'], 'pipeline_name')
+    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Differential expression')
+    qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
+
+    qtbot.mouseClick(window.stack_buttons[0], LEFT_CLICK)
+    qtbot.keyClicks(window.stack.currentWidget().func_combo,
+                    filtering.DESeqFilter.split_fold_change_direction.readable_name)
+    qtbot.mouseClick(window.basic_widgets['apply_button'], LEFT_CLICK)
+
+    assert len(window.pipeline) == 1
+
+    qtbot.mouseClick(window.overview_widgets['remove_button'], LEFT_CLICK)
+    assert len(window.pipeline) == 0
+    assert warned == []
+
+    qtbot.mouseClick(window.overview_widgets['remove_button'], LEFT_CLICK)
+    assert len(window.pipeline) == 0
+    assert warned == [True]
 
 
 def test_CreatePipelineWindow_add_function_with_args(qtbot, monkeypatch):

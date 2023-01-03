@@ -2311,24 +2311,6 @@ class RenameCommand(QtWidgets.QUndoCommand):
         self.tab._rename(self.new_name)
 
 
-class CloseEmptyTabCommand(QtWidgets.QUndoCommand):
-    def __init__(self, tab_container: ReactiveTabWidget, tab_index: int, description: str):
-        super().__init__(description)
-        self.tab_container = tab_container
-        self.tab_index = tab_index
-
-    def undo(self):
-        item = io.load_cached_gui_file(self.filename)
-        if isinstance(item, pd.DataFrame):
-            item = self.obj_type.from_dataframe(item, self.tab_name, **self.kwargs)
-        self.tab_container
-        self.tab_container.new_tab_from_item(item, self.tab_name)
-        self.tab_container.setTabIcon(self.tab_container.currentIndex(), self.tab_icon)
-
-    def redo(self):
-        self.tab_container.removeTab(self.tab_index)
-
-
 class CloseTabCommand(QtWidgets.QUndoCommand):
     def __init__(self, tab_container: ReactiveTabWidget, tab_index: int, description: str):
         super().__init__(description)
