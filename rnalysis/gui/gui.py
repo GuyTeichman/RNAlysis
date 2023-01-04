@@ -81,11 +81,6 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                 continue
             this_desc = self.param_desc.get(name, '')
             self.param_widgets[name] = gui_widgets.param_to_widget(param, name)
-            if isinstance(self.param_widgets[name], (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
-                self.param_widgets[name].add_columns(self.filter_obj.columns)
-            elif isinstance(self.param_widgets[name], gui_widgets.ComboBoxOrOtherWidget) and isinstance(
-                self.param_widgets[name].other, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
-                self.param_widgets[name].other.add_columns(self.filter_obj.columns)
             label = QtWidgets.QLabel(f'{name}:', self.param_widgets[name])
             label.setToolTip(this_desc)
             help_button = gui_widgets.HelpButton()
@@ -298,6 +293,16 @@ class ClicomWindow(FuncExternalWindow):
         self.setups_widgets = {}
 
         self.init_ui()
+
+    def init_param_ui(self):
+        super().init_param_ui()
+
+        for name, param in self.param_widgets.items():
+            if isinstance(param, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
+                param.add_columns(self.filter_obj.columns)
+            elif isinstance(param, gui_widgets.ComboBoxOrOtherWidget) and isinstance(param.other, (
+            gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
+                param.other.add_columns(self.filter_obj.columns)
 
     def init_ui(self):
         super().init_ui()
