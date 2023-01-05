@@ -1082,8 +1082,8 @@ def test_RadioButtonBox_emit(qtbot):
     (int, 15, QtWidgets.QSpinBox),
     (float, 3.14, QtWidgets.QDoubleSpinBox),
     (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
-    (typing.Union[str, float, None, bool], True, QtWidgets.QTextEdit),
-    (typing.Union[str, float, None, bool], 17, QtWidgets.QTextEdit)
+    (Union[str, float, None, bool], True, QtWidgets.QTextEdit),
+    (Union[str, float, None, bool], 17, QtWidgets.QTextEdit)
 ])
 def test_param_to_widget_native_types(qtbot, param_type, default, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, 'param_name', expected_widget)
@@ -1093,30 +1093,30 @@ def test_param_to_widget_native_types(qtbot, param_type, default, expected_widge
     (bool, True, 'status', ToggleSwitch),
     (param_typing.Color, '#000000', 'linecolor', ColorPicker),
     (param_typing.ColorList, ['#000000', '#aabbcc'], 'colors', MultiColorPicker),
-    (typing.Union[str, None], None, 'name', OptionalLineEdit),
-    (typing.Union[str, None], 'text', 'name', OptionalLineEdit),
-    (typing.Union[int, None], None, 'name', OptionalSpinBox),
-    (typing.Union[int, None], 5, 'name', OptionalSpinBox),
-    (typing.Union[float, None], None, 'name', OptionalDoubleSpinBox),
-    (typing.Union[float, None], -0.5, 'name', OptionalDoubleSpinBox),
-    (typing.Union[str, typing.List[str]], ['a', 'b'], 'name', QMultiLineEdit),
-    (typing.Union[str, typing.Iterable[str]], None, 'name', QMultiLineEdit),
-    (typing.Union[int, typing.List[int]], [2, 7], 'name', QMultiSpinBox),
-    (typing.Union[int, typing.Iterable[int]], None, 'name', QMultiSpinBox),
-    (typing.Union[float, typing.List[float]], [2.5, -0.72], 'name', QMultiDoubleSpinBox),
-    (typing.Union[float, typing.Iterable[float]], None, 'name', QMultiDoubleSpinBox),
-    (typing.Union[bool, typing.List[bool]], [True, False, True], 'name', QMultiBoolComboBox),
-    (typing.Union[bool, typing.Iterable[bool]], None, 'name', QMultiBoolComboBox),
-    (typing.List[Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
-    (typing.Set[Literal['a', 'b', 'c']], 'c', 'name', QMultiComboBox),
-    (typing.Iterable[Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
-    (typing.Union[str, int], 5, 'name', StrIntLineEdit),
-    (typing.Union[str, int], 'text', 'name', StrIntLineEdit),
-    (typing.Union[str, Path], str(Path('tests/test_files/test_deseq.csv').absolute()), 'name', PathLineEdit),
-    (typing.Union[bool, typing.Tuple[bool, bool]], True, 'name', TrueFalseBoth),
-    (typing.Union[bool, typing.Tuple[bool, bool]], [True, False], 'name', TrueFalseBoth),
-    (typing.Union[str, int, typing.List[str], typing.List[int]], [3, 5, -2], 'name', QMultiStrIntLineEdit),
-    (typing.Union[str, int, typing.Iterable[str], typing.Iterable[int]], ['a', 'b', 'c'], 'name', QMultiStrIntLineEdit)
+    (Union[str, None], None, 'name', OptionalLineEdit),
+    (Union[str, None], 'text', 'name', OptionalLineEdit),
+    (Union[int, None], None, 'name', OptionalSpinBox),
+    (Union[int, None], 5, 'name', OptionalSpinBox),
+    (Union[float, None], None, 'name', OptionalDoubleSpinBox),
+    (Union[float, None], -0.5, 'name', OptionalDoubleSpinBox),
+    (Union[str, List[str]], ['a', 'b'], 'name', QMultiLineEdit),
+    (Union[str, Iterable[str]], None, 'name', QMultiLineEdit),
+    (Union[int, List[int]], [2, 7], 'name', QMultiSpinBox),
+    (Union[int, Iterable[int]], None, 'name', QMultiSpinBox),
+    (Union[float, List[float]], [2.5, -0.72], 'name', QMultiDoubleSpinBox),
+    (Union[float, Iterable[float]], None, 'name', QMultiDoubleSpinBox),
+    (Union[bool, List[bool]], [True, False, True], 'name', QMultiBoolComboBox),
+    (Union[bool, Iterable[bool]], None, 'name', QMultiBoolComboBox),
+    (List[Literal['a', 'b', 'c']], ['a', 'b', 'a'], 'name', QMultiComboBox),
+    (Set[Literal['a', 'b', 'c']], 'c', 'name', QMultiComboBox),
+    (Iterable[Literal['a', 'b', 'c']], None, 'name', QMultiComboBox),
+    (Union[str, int], 5, 'name', StrIntLineEdit),
+    (Union[str, int], 'text', 'name', StrIntLineEdit),
+    (Union[str, Path], str(Path('tests/test_files/test_deseq.csv').absolute()), 'name', PathLineEdit),
+    (Union[bool, Tuple[bool, bool]], True, 'name', TrueFalseBoth),
+    (Union[bool, Tuple[bool, bool]], [True, False], 'name', TrueFalseBoth),
+    (Union[str, int, List[str], List[int]], [3, 5, -2], 'name', QMultiStrIntLineEdit),
+    (Union[str, int, Iterable[str], Iterable[int]], ['a', 'b', 'c'], 'name', QMultiStrIntLineEdit)
 
 ])
 def test_param_to_widget_nonnative_types(qtbot, param_type, default, name, expected_widget):
@@ -1140,9 +1140,9 @@ def test_param_to_widget_pipeline_mode_types(qtbot, param_type, name, expected_w
 
 
 @pytest.mark.parametrize('param_type,default,literal_default,expected_sub_widget', [
-    (typing.Union[Literal['all'], str], 'text', 'all', QtWidgets.QLineEdit),
-    (typing.Union[Literal['any'], typing.Union[str, None]], None, 'any', OptionalLineEdit),
-    (typing.Union[Literal['any', 'none'], typing.Union[int, typing.List[int]]], [15, 16], 'any', QMultiSpinBox),
+    (Union[Literal['all'], str], 'text', 'all', QtWidgets.QLineEdit),
+    (Union[Literal['any'], Union[str, None]], None, 'any', OptionalLineEdit),
+    (Union[Literal['any', 'none'], Union[int, List[int]]], [15, 16], 'any', QMultiSpinBox),
 
 ])
 def test_param_to_widget_with_literals(qtbot, param_type, default, literal_default, expected_sub_widget):
