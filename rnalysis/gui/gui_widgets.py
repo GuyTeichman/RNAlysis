@@ -799,6 +799,30 @@ class MandatoryComboBox(QtWidgets.QComboBox):
         super().setDisabled(to_disable)
 
 
+class GeneSetComboBox(MandatoryComboBox):
+    boxOpened = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__('Choose gene set...', parent)
+        self.available_objects = None
+
+    def showPopup(self) -> None:
+        self.boxOpened.emit()
+        super().showPopup()
+
+    def update_gene_sets(self, available_objects: Dict[str, Tuple[QtWidgets.QWidget, QtGui.QIcon]]):
+        self.available_objects = available_objects
+        for obj_name in self.available_objects:
+            self.addItem(self.available_objects[obj_name][1], obj_name)
+
+    def value(self):
+        set_name = self.currentText()
+        if set_name == self.default_choice:
+            return set()
+        assert set_name in self.available_objects, f"Tab '{set_name}' does not exist!"
+        return self.available_objects[set_name][0].obj()
+
+
 class MinMaxDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1529,6 +1553,11 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
+    elif param.annotation == Sequence[str]:
+        widget = GeneSetComboBox()
+        for action in actions_to_connect:
+            widget.currentTextChanged.connect(action)
+
     elif param.annotation == bool:
         widget = ToggleSwitch()
         default = param.default if is_default else False
@@ -1696,7 +1725,10 @@ def get_val_from_widget(widget):
     elif hasattr(widget, 'IS_MULTI_INPUT'):
         val = widget.get_values()
     else:
-        raise TypeError(f"Invalid QtWidget type {type(widget)}.")
+        try:
+            val = widget.value()
+        except AttributeError:
+            raise TypeError(f"Invalid QtWidget type {type(widget)}.")
     return val
 
 
