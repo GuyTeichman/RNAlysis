@@ -115,6 +115,32 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             raise e
 
 
+class OntologyGraphWindow(FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    IGNORED_WIDGETS = {'help_link'}
+
+    def __init__(self, parent=None):
+        super().__init__('Gene Ontology graph', enrichment.gene_ontology_graph, self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Plot Gene Ontology Graph')
+        super().init_ui()
+
+
+class PathwayGraphWindow(FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    IGNORED_WIDGETS = {'help_link'}
+
+    def __init__(self, parent=None):
+        super().__init__('KEGG Pathway graph', enrichment.kegg_pathway_graph, self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Plot KEGG Pathway Graph')
+        super().init_ui()
+
+
 class KallistoIndexWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
