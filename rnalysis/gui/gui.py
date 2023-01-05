@@ -409,11 +409,10 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                  'non_categorical': {'plot_log_scale', 'plot_style', 'n_bins'}}
 
     enrichmentStarted = QtCore.pyqtSignal(object, str, object)
+    geneSetsRequested = QtCore.pyqtSignal(object)
 
-    def __init__(self, available_objects: dict, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.available_objects = available_objects
 
         self.parameters_signature = {}
         self.stats_signature = {}
@@ -469,9 +468,8 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         self.scroll_layout.addStretch(1)
 
         for lst in ['enrichment_list', 'bg_list']:
-            self.widgets[lst] = gui_widgets.MandatoryComboBox('Choose gene set...', self)
-            for obj_name in self.available_objects:
-                self.widgets[lst].addItem(self.available_objects[obj_name][1], obj_name)
+            self.widgets[lst] = gui_widgets.GeneSetComboBox(self)
+            self.widgets[lst].boxOpened.connect(functools.partial(self.geneSetsRequested.emit, self.widgets[lst]))
             self.widgets[lst].currentTextChanged.connect(self._verify_inputs)
 
         self.widgets['dataset_radiobox'] = gui_widgets.RadioButtonBox('Choose enrichment dataset',
@@ -672,8 +670,8 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
                 kwargs['statistical_test'] = stat_test
             else:
                 kwargs['parametric_test'] = stat_test
+        gene_set = self.widgets['enrichment_list'].value()
         gene_set_name = self.widgets['enrichment_list'].currentText()
-        gene_set = self.available_objects[gene_set_name][0].obj()
 
         for param_name, widget in itertools.chain(self.parameter_widgets.items(), self.plot_widgets.items(),
                                                   self.stats_widgets.items()):
@@ -683,8 +681,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
             kwargs[param_name] = val
 
         if not self.is_single_set():
-            bg_set_name = self.widgets['bg_list'].currentText()
-            bg_set = self.available_objects[bg_set_name][0].obj()
+            bg_set = self.widgets['bg_list'].value()
         else:
             bg_set = None
         return gene_set, bg_set, gene_set_name.rstrip('*'), kwargs
@@ -3223,7 +3220,8 @@ class MainWindow(QtWidgets.QMainWindow):
         df_window.show()
 
     def open_enrichment_analysis(self):
-        self.enrichment_window = EnrichmentWindow(self.get_available_objects(), self)
+        self.enrichment_window = EnrichmentWindow(self)
+        self.enrichment_window.geneSetsRequested.connect(self.update_gene_sets_widget)
         self.enrichment_window.enrichmentStarted.connect(self.start_enrichment)
         self.enrichment_window.show()
 

@@ -200,9 +200,14 @@ def kallisto_paired_window(qtbot) -> KallistoPairedWindow:
     return window
 
 
+def update_gene_sets_widget(widget: gui_widgets.GeneSetComboBox, objs):
+    widget.update_gene_sets(objs)
+
+
 @pytest.fixture
 def enrichment_window(qtbot, available_objects):
-    qtbot, window = widget_setup(qtbot, EnrichmentWindow, available_objects)
+    qtbot, window = widget_setup(qtbot, EnrichmentWindow)
+    window.geneSetsRequested.connect(functools.partial(update_gene_sets_widget, objs = available_objects))
     return window
 
 
@@ -637,6 +642,7 @@ def test_EnrichmentWindow_get_analysis_params(qtbot, enrichment_window, button_n
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
 
+    enrichment_window.widgets['enrichment_list'].showPopup()
     qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
 
     enrichment_window.stats_widgets['alpha'].clear()
@@ -654,6 +660,7 @@ def test_EnrichmentWindow_get_analysis_params(qtbot, enrichment_window, button_n
                 enrichment_window.plot_widgets[key].switch.click()
 
     if not is_single_set:
+        enrichment_window.widgets['bg_list'].showPopup()
         qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
 
     gene_set, bg_set, gene_set_name, kwargs = enrichment_window.get_analysis_params()
@@ -695,6 +702,7 @@ def test_EnrichmentWindow_get_analysis_params_single_set(qtbot, enrichment_windo
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
 
+    enrichment_window.widgets['enrichment_list'].showPopup()
     qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
 
     enrichment_window.stats_widgets['alpha'].clear()
@@ -711,6 +719,7 @@ def test_EnrichmentWindow_get_analysis_params_single_set(qtbot, enrichment_windo
             if not dataset_kwargs[key]:
                 enrichment_window.plot_widgets[key].switch.click()
 
+    enrichment_window.widgets['bg_list'].showPopup()
     qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
 
     gene_set, bg_set, gene_set_name, kwargs = enrichment_window.get_analysis_params()
@@ -767,6 +776,7 @@ def test_EnrichmentWindow_run_analysis(qtbot, enrichment_window, button_name, te
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
 
+    enrichment_window.widgets['enrichment_list'].showPopup()
     qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
 
     enrichment_window.stats_widgets['alpha'].clear()
@@ -784,6 +794,7 @@ def test_EnrichmentWindow_run_analysis(qtbot, enrichment_window, button_name, te
                 enrichment_window.plot_widgets[key].switch.click()
 
     if not is_single_set:
+        enrichment_window.widgets['bg_list'].showPopup()
         qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
 
     with qtbot.waitSignal(enrichment_window.enrichmentStarted) as blocker:
@@ -834,6 +845,7 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
     enrichment_window.widgets['dataset_radiobox'].radio_buttons[button_name].click()
     enrichment_window.stats_widgets['stats_radiobox'].radio_buttons[test_name].click()
 
+    enrichment_window.widgets['enrichment_list'].showPopup()
     qtbot.keyClicks(enrichment_window.widgets['enrichment_list'], en_set)
 
     enrichment_window.stats_widgets['alpha'].clear()
@@ -850,6 +862,7 @@ def test_EnrichmentWindow_run_analysis_non_categorical(qtbot, enrichment_window,
             if not dataset_kwargs[key]:
                 enrichment_window.plot_widgets[key].switch.click()
 
+    enrichment_window.widgets['bg_list'].showPopup()
     qtbot.keyClicks(enrichment_window.widgets['bg_list'], bg_set)
 
     with qtbot.waitSignal(enrichment_window.enrichmentStarted) as blocker:
