@@ -11,12 +11,11 @@ import warnings
 from collections import OrderedDict
 from pathlib import Path
 from queue import Queue
-from typing import List, Tuple, Union, Callable
+from typing import List, Tuple, Union, Callable, Type
 
 import matplotlib
 import numpy as np
 import pandas as pd
-import typing_extensions
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib.externals.loky import get_reusable_executor
 
@@ -33,6 +32,7 @@ INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 class FuncExternalWindow(gui_widgets.MinMaxDialog):
     IGNORED_WIDGETS = {'help_link'}
     paramsAccepted = QtCore.pyqtSignal(list, dict, object)
+    geneSetsRequested = QtCore.pyqtSignal(object)
 
     def __init__(self, func_name: str, func: Callable, excluded_params: set, parent=None):
         super().__init__(parent)
@@ -81,6 +81,8 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                 continue
             this_desc = self.param_desc.get(name, '')
             self.param_widgets[name] = gui_widgets.param_to_widget(param, name)
+            self.connect_widget(self.param_widgets[name])
+
             label = QtWidgets.QLabel(f'{name}:', self.param_widgets[name])
             label.setToolTip(this_desc)
             help_button = gui_widgets.HelpButton()
@@ -90,6 +92,12 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             help_button.connect_param_help(name, this_desc)
             i += 1
         self.param_grid.setRowStretch(i, 1)
+
+    def connect_widget(self, widget: QtWidgets.QWidget):
+        if isinstance(widget, gui_widgets.ComboBoxOrOtherWidget):
+            self.connect_widget(widget.other)
+        elif isinstance(widget, gui_widgets.GeneSetComboBox):
+            widget.boxOpened.connect(functools.partial(self.geneSetsRequested.emit, widget))
 
     def get_analysis_kwargs(self):
         kwargs = {}
@@ -146,8 +154,7 @@ class KallistoIndexWindow(FuncExternalWindow):
     IGNORED_WIDGETS = {'help_link'}
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto create index', fastq.kallisto_create_index,
-                         self.EXCLUDED_PARAMS, parent)
+        super().__init__('Kallisto create index', fastq.kallisto_create_index, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -320,15 +327,10 @@ class ClicomWindow(FuncExternalWindow):
 
         self.init_ui()
 
-    def init_param_ui(self):
-        super().init_param_ui()
-
-        for name, param in self.param_widgets.items():
-            if isinstance(param, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
-                param.add_columns(self.filter_obj.columns)
-            elif isinstance(param, gui_widgets.ComboBoxOrOtherWidget) and isinstance(param.other, (
-            gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
-                param.other.add_columns(self.filter_obj.columns)
+    def connect_widget(self, widget: QtWidgets.QWidget):
+        super().connect_widget(widget)
+        if isinstance(widget, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
+            widget.add_columns(self.filter_obj.columns)
 
     def init_ui(self):
         super().init_ui()
@@ -1187,6 +1189,7 @@ class TabPage(QtWidgets.QWidget):
     tabNameChange = QtCore.pyqtSignal(str, bool)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
+    geneSetsRequested = QtCore.pyqtSignal(object)
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent)
@@ -1390,6 +1393,7 @@ class FuncTypeStack(QtWidgets.QWidget):
     EXCLUDED_PARAMS = {'self', 'gui_mode'}
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
+    geneSetsRequested = QtCore.pyqtSignal(object)
 
     def __init__(self, funcs: typing.Iterable, filter_obj: filtering.Filter, parent=None,
                  additional_excluded_params: set = None, pipeline_mode: bool = False):
@@ -1452,13 +1456,7 @@ class FuncTypeStack(QtWidgets.QWidget):
             if name in self.excluded_params:
                 continue
             self.parameter_widgets[name] = gui_widgets.param_to_widget(param, name, pipeline_mode=self.pipeline_mode)
-            if not self.pipeline_mode:
-                if isinstance(self.parameter_widgets[name],
-                              (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
-                    self.parameter_widgets[name].add_columns(self.filter_obj.columns)
-                elif isinstance(self.parameter_widgets[name], gui_widgets.ComboBoxOrOtherWidget) and isinstance(
-                    self.parameter_widgets[name].other, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
-                    self.parameter_widgets[name].other.add_columns(self.filter_obj.columns)
+            self.connect_widget(self.parameter_widgets[name])
 
             label = QtWidgets.QLabel(f'{name}:', self.parameter_widgets[name])
             if name in param_desc:
@@ -1481,6 +1479,17 @@ class FuncTypeStack(QtWidgets.QWidget):
         self.parameter_grid.addWidget(self.parameter_widgets['help_link'], i + 1, 0, 1, 2)
         self.parameter_grid.setColumnStretch(1, 1)
         self.funcSelected.emit(True)
+
+    def connect_widget(self, widget: QtWidgets.QWidget):
+        if self.pipeline_mode:
+            return
+
+        if isinstance(widget, gui_widgets.ComboBoxOrOtherWidget):
+            self.connect_widget(widget.other)
+        elif isinstance(widget, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
+            widget.add_columns(self.filter_obj.columns)
+        elif isinstance(widget, gui_widgets.GeneSetComboBox):
+            widget.boxOpened.connect(functools.partial(self.geneSetsRequested.emit, widget))
 
     def get_function_params(self):
         func_params = {}
@@ -1729,6 +1738,7 @@ class FilterTabPage(TabPage):
             self.stack_widgets[action_type] = FuncTypeStack(sorted_actions[action_type], self.filter_obj)
             self.stack_widgets[action_type].funcSelected.connect(self.basic_widgets['apply_button'].setVisible)
             self.stack_widgets[action_type].funcSelected.connect(self._check_for_special_functions)
+            self.stack_widgets[action_type].geneSetsRequested.connect(self.geneSetsRequested)
             self.stack.addWidget(self.stack_widgets[action_type])
             bttn.clicked.connect(functools.partial(self.stack.setCurrentIndex, i + 1))
             self.button_box.addButton(bttn)
@@ -2496,8 +2506,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cite_window = gui_windows.HowToCiteWindow(self)
         self.enrichment_window = None
         self.enrichment_results = []
-        self.cutadapt_window = None
-        self.kallisto_window = None
+        self.external_windows = {}
 
         self.init_ui()
         self.add_new_tab()
@@ -2720,8 +2729,13 @@ class MainWindow(QtWidgets.QMainWindow):
             tab.startedJob.connect(self.start_generic_job)
         tab.changeIcon.connect(self.set_current_tab_icon)
         tab.tabNameChange.connect(self.rename_tab)
+        tab.geneSetsRequested.connect(self.update_gene_sets_widget)
         self.tabs.addTab(tab, name)
         self.tabs.setCurrentIndex(self.tabs.count() - 1)
+
+    @QtCore.pyqtSlot(object)
+    def update_gene_sets_widget(self, widget: gui_widgets.GeneSetComboBox):
+        widget.update_gene_sets(self.get_available_objects())
 
     @QtCore.pyqtSlot(str, bool)
     def rename_tab(self, new_name: str, is_unsaved: bool):
@@ -3020,16 +3034,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_set_action.triggered.connect(self.export_gene_set)
 
         self.cutadapt_single_action = QtWidgets.QAction("&Single-end adapter trimming...", self)
-        self.cutadapt_single_action.triggered.connect(functools.partial(self.trim_adapters, True))
+        self.cutadapt_single_action.triggered.connect(
+            functools.partial(self.start_external_window, CutAdaptSingleWindow))
         self.cutadapt_paired_action = QtWidgets.QAction("&Paired-end adapter trimming...", self)
-        self.cutadapt_paired_action.triggered.connect(functools.partial(self.trim_adapters, False))
+        self.cutadapt_paired_action.triggered.connect(
+            functools.partial(self.start_external_window, CutAdaptPairedWindow))
 
         self.kallisto_index_action = QtWidgets.QAction("Create kallisto &index...", self)
-        self.kallisto_index_action.triggered.connect(functools.partial(self.kallisto, 'index'))
+        self.kallisto_index_action.triggered.connect(functools.partial(self.start_external_window, KallistoIndexWindow))
         self.kallisto_single_action = QtWidgets.QAction("&Single-end RNA-seq quantification...", self)
-        self.kallisto_single_action.triggered.connect(functools.partial(self.kallisto, 'single'))
+        self.kallisto_single_action.triggered.connect(
+            functools.partial(self.start_external_window, KallistoSingleWindow))
         self.kallisto_paired_action = QtWidgets.QAction("&Paired-end RNA-seq quantification...", self)
-        self.kallisto_paired_action.triggered.connect(functools.partial(self.kallisto, 'paired'))
+        self.kallisto_paired_action.triggered.connect(
+            functools.partial(self.start_external_window, KallistoPairedWindow))
+
+        self.ontology_graph_action = QtWidgets.QAction("Visualize &Gene Ontology...")
+        self.ontology_graph_action.triggered.connect(functools.partial(self.start_external_window, OntologyGraphWindow))
+        self.pathway_graph_action = QtWidgets.QAction("Visualize &KEGG Pathway...")
+        self.pathway_graph_action.triggered.connect(functools.partial(self.start_external_window, PathwayGraphWindow))
 
         self.quick_start_action = QtWidgets.QAction("&Quick-start guide", self)
         self.quick_start_action.triggered.connect(self.quickstart_window.show)
@@ -3101,33 +3124,16 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.command_history_dock.close()
 
-    @QtCore.pyqtSlot(bool)
-    def trim_adapters(self, single_end: bool):
-        if single_end:
-            self.cutadapt_window = CutAdaptSingleWindow(self)
-        else:
-            self.cutadapt_window = CutAdaptPairedWindow(self)
-        func_name = self.cutadapt_window.func_name
-        func = self.cutadapt_window.func
-        self.cutadapt_window.paramsAccepted.connect(
-            functools.partial(self.start_generic_job_from_params, func_name, func))
-        self.cutadapt_window.show()
+    def start_external_window(self, window_type: Type):
+        self.external_windows[window_type] = window_type(self)
 
-    @QtCore.pyqtSlot(str)
-    def kallisto(self, mode: typing_extensions.Literal['index', 'single', 'paired']):
-        if mode == 'single':
-            self.kallisto_window = KallistoSingleWindow(self)
-        elif mode == 'paired':
-            self.kallisto_window = KallistoPairedWindow(self)
-        elif mode == 'index':
-            self.kallisto_window = KallistoIndexWindow(self)
-        else:
-            raise ValueError(f"invalid mode {mode}")
-        func_name = self.kallisto_window.func_name
-        func = self.kallisto_window.func
-        self.kallisto_window.paramsAccepted.connect(
+        func_name = self.external_windows[window_type].func_name
+        func = self.external_windows[window_type].func
+        self.external_windows[window_type].paramsAccepted.connect(
             functools.partial(self.start_generic_job_from_params, func_name, func))
-        self.kallisto_window.show()
+        self.external_windows[window_type].geneSetsRequested.connect(self.update_gene_sets_widget)
+
+        self.external_windows[window_type].show()
 
     def save_file(self):
         self.tabs.currentWidget().save_file()
@@ -3248,8 +3254,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
-            [self.copy_action, self.set_op_action, self.enrichment_action, self.set_vis_action, self.import_set_action,
-             self.import_multiple_sets_action, self.export_set_action])
+            [self.copy_action, self.import_set_action, self.import_multiple_sets_action,
+             self.export_set_action, self.set_op_action, self.set_vis_action, self.enrichment_action,
+             self.ontology_graph_action, self.pathway_graph_action])
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
         pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action,
