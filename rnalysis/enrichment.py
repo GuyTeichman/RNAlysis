@@ -9,7 +9,7 @@ import itertools
 import types
 import warnings
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple, Union
+from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
     get_gene_id_types
@@ -27,7 +27,7 @@ import pandas as pd
 import upsetplot
 
 from rnalysis.filtering import Filter
-from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic, param_typing
+from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic, param_typing, ontology
 
 
 class FeatureSet:
@@ -270,7 +270,7 @@ class FeatureSet:
                       return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                       plot_ontology_graph: bool = True,
-                      ontology_graph_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                      ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                       randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                       parallel: bool = True, gui_mode: bool = False
                       ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -431,7 +431,7 @@ class FeatureSet:
                         return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         plot_pathway_graphs: bool = True,
-                        pathway_graphs_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                        pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                         randomization_reps: int = 10000, random_seed: Union[int, None] = None,
                         parallel: bool = True, gui_mode: bool = False
                         ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -1031,7 +1031,7 @@ class RankedSet(FeatureSet):
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
                                  plot_ontology_graph: bool = True,
-                                 ontology_graph_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                                 ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                  parallel: bool = True, gui_mode: bool = False
                                  ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
@@ -1166,7 +1166,7 @@ class RankedSet(FeatureSet):
                                    save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    plot_pathway_graphs: bool = True,
-                                   pathway_graphs_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                                   pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                                    parallel: bool = True, gui_mode: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
