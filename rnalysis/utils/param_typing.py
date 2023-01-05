@@ -10,7 +10,7 @@ from rnalysis.utils import io, parsing
 GRAPHVIZ_FORMATS = ('pdf', 'png', 'svg', 'none')
 BIOTYPES = ('protein_coding', 'pseudogene', 'lincRNA', 'miRNA', 'ncRNA', 'piRNA', 'rRNA', 'snoRNA', 'snRNA', 'tRNA')
 BIOTYPE_ATTRIBUTE_NAMES = ('biotype', 'gene_biotype', 'transcript_biotype', 'gene_type', 'transcript_type')
-GO_ASPECTS = ('biological_process', 'molecular function', 'cellular component')
+GO_ASPECTS = ('biological_process', 'cellular_component', 'molecular_function')
 GO_EVIDENCE_TYPES = ('experimental', 'phylogenetic', 'computational', 'author', 'curator', 'electronic')
 GO_QUALIFIERS = ('not', 'contributes_to', 'colocalizes_with')
 DEFAULT_ORGANISMS = tuple(sorted(['Caenorhabditis elegans',
