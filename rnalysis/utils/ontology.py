@@ -14,7 +14,7 @@ from defusedxml import ElementTree
 from matplotlib.cm import ScalarMappable
 from typing_extensions import Literal
 from functools import lru_cache
-from rnalysis.utils import parsing, io
+from rnalysis.utils import parsing, io, param_typing
 
 
 def render_graphviz_plot(graph: graphviz.Digraph, save_path: Union[str, Path], file_format: str):
@@ -269,8 +269,8 @@ class KEGGPathway:
         self.entries[pred].relationships[rel_type].add((succ, rel_symbol))
         self.entries[succ].children_relationships[rel_type].add((pred, rel_symbol))
 
-    def plot_pathway(self, significant: Union[set, dict, None] = None, ylabel: str = '',
-                     graph_format: Literal['pdf', 'png', 'svg', 'none'] = 'none', dpi: int = 300):
+    def plot_pathway(self, significant: Union[set, dict, None] = None, title: Union[str, Literal['auto']] = 'auto',
+                     ylabel: str = '', graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300):
         if significant is None:
             significant = {}
         elif isinstance(significant, dict):
@@ -375,7 +375,9 @@ class KEGGPathway:
         if not res:
             return False
         fig, axes = plt.subplots(1, 2, figsize=(14, 9), constrained_layout=True, gridspec_kw=dict(width_ratios=[3, 1]))
-        fig.suptitle(f'KEGG Pathway: {self.pathway_name}', fontsize=24)
+        if title == 'auto':
+            title = f'KEGG Pathway: {self.pathway_name}'
+        fig.suptitle(title, fontsize=24)
 
         # show graph in a matplotlib window
         kegg_png_str = kegg_graph.pipe(format='png')
@@ -415,13 +417,13 @@ class GOTerm:
     def __init__(self):
         self._id: str = None
         self._name: str = None
-        self._namespace: str = None
+        self._namespace: Literal[param_typing.GO_ASPECTS] = None
         self._level: int = None
         self.relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
         self.children_relationships: Dict[str, List[str]] = {'is_a': [], 'part_of': []}
 
     @classmethod
-    def with_properties(cls, go_id: str, name: str, namespace: str, level: int):
+    def with_properties(cls, go_id: str, name: str, namespace: Literal[param_typing.GO_ASPECTS], level: int):
         go_term = cls()
         go_term.set_id(go_id)
         go_term.set_name(name)
@@ -438,7 +440,7 @@ class GOTerm:
         return self._name
 
     @property
-    def namespace(self) -> str:
+    def namespace(self) -> Literal[param_typing.GO_ASPECTS]:
         return self._namespace
 
     @property
@@ -451,7 +453,7 @@ class GOTerm:
     def set_name(self, name: str):
         self._name = name
 
-    def set_namespace(self, namespace: str):
+    def set_namespace(self, namespace: Literal[param_typing.GO_ASPECTS]):
         self._namespace = namespace
 
     def set_level(self, level: int):
@@ -488,7 +490,7 @@ class DAGTree:
         self.data_version = None
         self.go_terms: Dict[str, GOTerm] = {}
         self.alt_ids: Dict[str, str] = {}
-        self.namespaces: Set[str] = set()
+        self.namespaces: Set[Literal[param_typing.GO_ASPECTS]] = set()
         self.levels: List[dict] = []
         self.parent_relationship_types: tuple = parsing.data_to_tuple(parent_relationship_types)
 
@@ -625,9 +627,10 @@ class DAGTree:
             # memoize the function's output for go_id
             self._upper_induced_graphs[go_id] = processed_nodes
 
-    def plot_ontology(self, namespace: str, results_df: pd.DataFrame, en_score_col: str = 'log2_fold_enrichment',
+    def plot_ontology(self, namespace: Literal[param_typing.GO_ASPECTS], results_df: pd.DataFrame,
+                      en_score_col: str = 'log2_fold_enrichment',
                       title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                      graph_format: Literal['pdf', 'png', 'svg', 'none'] = 'none', dpi: int = 300) -> bool:
+                      graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300) -> bool:
         # colormap
         scores_no_inf = [i for i in results_df[en_score_col] if i != np.inf and i != -np.inf and i < 0]
         if len(scores_no_inf) == 0:
