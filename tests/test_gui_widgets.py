@@ -339,7 +339,7 @@ def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, exce
     assert get_val_from_widget(widget) == expected_val
 
 
-@pytest.mark.parametrize("widget_class", (QtWidgets.QWidget, QtWidgets.QDial))
+@pytest.mark.parametrize("widget_class", (QtWidgets.QWidget, QtWidgets.QDateTimeEdit))
 def test_get_val_from_widget_bad_widget(qtbot, widget_class):
     qtbot, widget = widget_setup(qtbot, widget_class)
     with pytest.raises(TypeError):

@@ -1967,6 +1967,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     pipelineSaved = QtCore.pyqtSignal(str, filtering.Pipeline)
     pipelineExported = QtCore.pyqtSignal(str, filtering.Pipeline)
     widthChanged = QtCore.pyqtSignal()
+    geneSetsRequested = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)

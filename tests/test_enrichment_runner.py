@@ -1918,13 +1918,13 @@ def test_kegg_enrichment_runner_pathway_plot(single_set, graph_format, monkeypat
             assert pathway_id == pathway_id_truth
             assert translator == translator_truth
 
-        def plot_pathway(self, significant, ylabel, pathway_graph_format):
+        def plot_pathway(self, significant, ylabel, graph_format):
             assert significant == runner.gene_set
             if single_set:
                 assert ylabel == KEGGEnrichmentRunner.SINGLE_SET_ENRICHMENT_SCORE_YLABEL
             else:
                 assert ylabel == KEGGEnrichmentRunner.ENRICHMENT_SCORE_YLABEL
-            assert pathway_graph_format == graph_format
+            assert graph_format == graph_format
             plotted.append(True)
 
     monkeypatch.setattr(ontology, 'fetch_kegg_pathway', lambda *args, **kwargs: MockPathway(*args, **kwargs))
