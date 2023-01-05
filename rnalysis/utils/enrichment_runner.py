@@ -898,7 +898,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
             translator, _, self.gene_id_type = io.find_best_gene_mapping(
                 parsing.data_to_tuple(sparse_annotation_dict.keys()), (source,), None)
         else:
-            translator = io.map_gene_ids(parsing.data_to_list(sparse_annotation_dict.keys()), source, self.gene_id_type)
+            translator = io.map_gene_ids(parsing.data_to_tuple(sparse_annotation_dict.keys()), source, self.gene_id_type)
         self.gene_id_translator = translator
         for gene_id in sparse_annotation_dict:
             if gene_id in translator:
@@ -932,7 +932,7 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
             # TODO: color by rank/ranking metric?
         else:
             highlight_genes = self.gene_set
-        return pathway_tree.plot_pathway(highlight_genes, ylabel, self.pathway_graphs_format)
+        return pathway_tree.plot_pathway(highlight_genes, ylabel=ylabel, graph_format=self.pathway_graphs_format)
 
 
 class GOEnrichmentRunner(EnrichmentRunner):
