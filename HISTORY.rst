@@ -12,6 +12,7 @@ Added
 * Added Filter.drop_columns
 * Added support for the Sharpened Cosine distance metric in clustering analyses
 * KEGG enrichment can now generate KEGG pathway graphs for pathways that were found to be statistically significant
+* Added functions to the enrichment module that can generate KEGG Pathway or Gene Ontology plots based on previously-generated enrichment results
 
 Changed
 ********

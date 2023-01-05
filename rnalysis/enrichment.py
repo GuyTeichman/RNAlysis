@@ -1583,3 +1583,29 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     ax.set_title(title, fontsize=title_fontsize)
     return plot_obj, circle_obj
 
+
+def gene_ontology_graph(namespace: Literal[param_typing.GO_ASPECTS], enrichment_results_path: Union[str, Path],
+                        enrichment_score_col: Union[
+                            str, Literal['log2_enrichment_score', 'log2_fold_enrichment']] = 'log2_fold_enrichment',
+                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
+                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300):
+    results_df = io.load_csv(enrichment_results_path, index_col=0)
+    assert enrichment_score_col in results_df, f"Invalid enrichment_score_col '{enrichment_score_col}'"
+    dag_tree = ontology.fetch_go_basic()
+    dag_tree.plot_ontology(namespace, results_df, enrichment_score_col, title, ylabel, graph_format, dpi)
+
+
+def kegg_pathway_graph(pathway_id: str, marked_genes: Sequence[str],
+                       gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                       title: Union[str, Literal['auto']] = 'auto', ylabel: str = '',
+                       graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300):
+    if marked_genes is None:
+        translator = None
+    else:
+        if gene_id_type.lower() == 'auto':
+            translator, _, _ = io.find_best_gene_mapping(parsing.data_to_tuple(marked_genes), ('KEGG',), None)
+        else:
+            translator = io.map_gene_ids(parsing.data_to_tuple(marked_genes), 'KEGG', gene_id_type)
+
+    pathway = ontology.fetch_kegg_pathway(pathway_id, translator)
+    pathway.plot_pathway(marked_genes, title, ylabel, graph_format, dpi)
