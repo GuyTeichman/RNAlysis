@@ -804,13 +804,19 @@ class GeneSetComboBox(MandatoryComboBox):
 
     def __init__(self, parent=None):
         super().__init__('Choose gene set...', parent)
-        self.available_objects = None
+        self.available_objects = dict()
 
     def showPopup(self) -> None:
         self.boxOpened.emit()
         super().showPopup()
 
     def update_gene_sets(self, available_objects: Dict[str, Tuple[QtWidgets.QWidget, QtGui.QIcon]]):
+        # if the gene sets didn't change, don't do anything
+        if available_objects.keys() == self.available_objects.keys() and [item[0] for item in available_objects] == [
+            item[0] for item in self.available_objects]:
+            return
+        # clear the previous list of gene sets, and add the current available gene sets to the list
+        self.clear()
         self.available_objects = available_objects
         for obj_name in self.available_objects:
             self.addItem(self.available_objects[obj_name][1], obj_name)
