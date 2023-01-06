@@ -33,6 +33,20 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
     IGNORED_WIDGETS = {'help_link'}
     paramsAccepted = QtCore.pyqtSignal(list, dict, object)
     geneSetsRequested = QtCore.pyqtSignal(object)
+    __slots__ = {'func_name': 'name of the function to be applied',
+                 'func': 'function to be applied',
+                 'signature': 'signature of the function',
+                 'desc': 'description of the function',
+                 'param_desc': 'description of the function parameters',
+                 'exluded_params': 'parameters to be excluded from the window',
+                 'scroll': 'scroll area',
+                 'scroll_widget': 'widget containing the scroll area',
+                 'scroll_layout': 'layout for the scroll widget',
+                 'param_group': 'widget group for the parameter widgets',
+                 'param_grid': 'layout for the parameter widgets',
+                 'param_widgets': 'parameter widgets',
+                 'start_button': 'start button',
+                 'close_button': 'close button'}
 
     def __init__(self, func_name: str, func: Callable, excluded_params: set, parent=None):
         super().__init__(parent)
@@ -47,7 +61,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
 
         self.scroll = QtWidgets.QScrollArea()
         self.scroll_widget = QtWidgets.QWidget(self.scroll)
-        self.layout = QtWidgets.QGridLayout(self.scroll_widget)
+        self.scroll_layout = QtWidgets.QGridLayout(self.scroll_widget)
 
         self.param_group = QtWidgets.QGroupBox(f"1. Set {func_name} parameters")
         self.param_grid = QtWidgets.QGridLayout(self.param_group)
@@ -60,13 +74,13 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(self.scroll_widget)
-        self.layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
+        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
 
         self.main_layout.addWidget(self.scroll)
 
-        self.layout.addWidget(self.param_group, 0, 0)
-        self.layout.addWidget(self.start_button, 1, 0, 1, 2)
-        self.layout.addWidget(self.close_button, 2, 0, 1, 2)
+        self.scroll_layout.addWidget(self.param_group, 0, 0)
+        self.scroll_layout.addWidget(self.start_button, 1, 0, 1, 2)
+        self.scroll_layout.addWidget(self.close_button, 2, 0, 1, 2)
 
         self.start_button.clicked.connect(self.start_analysis)
         self.close_button.clicked.connect(self.close)
@@ -126,6 +140,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
 class OntologyGraphWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
+    __slots__ = {}
 
     def __init__(self, parent=None):
         super().__init__('Gene Ontology graph', enrichment.gene_ontology_graph, self.EXCLUDED_PARAMS, parent)
@@ -139,6 +154,7 @@ class OntologyGraphWindow(FuncExternalWindow):
 class PathwayGraphWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
+    __slots__ = {}
 
     def __init__(self, parent=None):
         super().__init__('KEGG Pathway graph', enrichment.kegg_pathway_graph, self.EXCLUDED_PARAMS, parent)
@@ -152,6 +168,7 @@ class PathwayGraphWindow(FuncExternalWindow):
 class KallistoIndexWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
+    __slots__ = {}
 
     def __init__(self, parent=None):
         super().__init__('Kallisto create index', fastq.kallisto_create_index, self.EXCLUDED_PARAMS, parent)
@@ -165,6 +182,7 @@ class KallistoIndexWindow(FuncExternalWindow):
 class KallistoSingleWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
+    __slots__ = {}
 
     def __init__(self, parent=None):
         super().__init__('Kallisto quantify (single-end reads)', fastq.kallisto_quantify_single_end,
@@ -179,6 +197,9 @@ class KallistoSingleWindow(FuncExternalWindow):
 class KallistoPairedWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
     IGNORED_WIDGETS = {'help_link'}
+    __slots__ = {'pairs_group': 'widget group for picking file pairs',
+                 'pairs_grid': 'layout for widget group',
+                 'pairs_widgets': 'widgets for picking file pairs'}
 
     def __init__(self, parent=None):
         super().__init__('Kallisto quantify (paired-end reads)', fastq.kallisto_quantify_paired_end,
@@ -191,7 +212,7 @@ class KallistoPairedWindow(FuncExternalWindow):
 
     def init_ui(self):
         self.setWindowTitle('Kallisto paired-end quantification setup')
-        self.layout.addWidget(self.pairs_group, 0, 1)
+        self.scroll_layout.addWidget(self.pairs_group, 0, 1)
         self.setMinimumSize(1250, 650)
         super().init_ui()
         self.init_pairs_ui()
@@ -215,6 +236,7 @@ class KallistoPairedWindow(FuncExternalWindow):
 class CutAdaptSingleWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
+    __slots__ = {}
 
     def __init__(self, parent=None):
         super().__init__('CutAdapt (single-end reads)', fastq.trim_adapters_single_end, self.EXCLUDED_PARAMS, parent)
@@ -228,6 +250,9 @@ class CutAdaptSingleWindow(FuncExternalWindow):
 class CutAdaptPairedWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
     IGNORED_WIDGETS = {'help_link'}
+    __slots__ = {'pairs_group': 'widget group for picking file pairs',
+                 'pairs_grid': 'layout for widget group',
+                 'pairs_widgets': 'widgets for picking file pairs'}
 
     def __init__(self, parent=None):
         super().__init__('CutAdapt (paired-end reads)', fastq.trim_adapters_paired_end, self.EXCLUDED_PARAMS, parent)
@@ -239,7 +264,7 @@ class CutAdaptPairedWindow(FuncExternalWindow):
 
     def init_ui(self):
         self.setWindowTitle('CutAdapt paired-end adapter trimming setup')
-        self.layout.addWidget(self.pairs_group, 0, 1)
+        self.scroll_layout.addWidget(self.pairs_group, 0, 1)
         self.setMinimumSize(1250, 650)
         super().init_ui()
         self.init_pairs_ui()
@@ -263,6 +288,11 @@ class CutAdaptPairedWindow(FuncExternalWindow):
 class DESeqWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'comparisons'}
     IGNORED_WIDGETS = {'help_link', 'load_design'}
+    __slots__ = {'comparisons': 'list of comparisons to make',
+                 'design_mat': 'design matrix',
+                 'comparisons_group': 'widget group for choosing comparisons',
+                 'comparisons_grid': 'layout for choosing comparisons',
+                 'comparisons_widgets': 'widgets for choosing comparisons'}
 
     def __init__(self, parent=None):
         super().__init__('DESeq2', filtering.CountFilter.differential_expression_deseq2, self.EXCLUDED_PARAMS, parent)
@@ -278,7 +308,7 @@ class DESeqWindow(FuncExternalWindow):
 
     def init_ui(self):
         self.setWindowTitle('DESeq2 differential expression setup')
-        self.layout.addWidget(self.comparisons_group, 0, 1)
+        self.scroll_layout.addWidget(self.comparisons_group, 0, 1)
         super().init_ui()
 
     def init_param_ui(self):
@@ -336,7 +366,7 @@ class ClicomWindow(FuncExternalWindow):
         super().init_ui()
         self.setWindowTitle('CLICOM clustering setup')
         self.setMinimumWidth(1500)
-        self.layout.addWidget(self.setups_group, 0, 1)
+        self.scroll_layout.addWidget(self.setups_group, 0, 1)
         self.init_setups_ui()
 
     def init_setups_ui(self):
@@ -1187,6 +1217,17 @@ class TabPage(QtWidgets.QWidget):
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
     geneSetsRequested = QtCore.pyqtSignal(object)
+    __slots__ = {'undo_stack': 'undo stack',
+                 'sup_layout': '',
+                 'container': 'container widget for scrollbar',
+                 'layout': 'layout for container',
+                 'scroll': 'scroll area widget',
+                 'name': 'tab name',
+                 'creation_time': 'tab creation time',
+                 'stdout_group': 'widget group for stdout area',
+                 'splitter': 'vertical splitter beetween stdout group and the rest of the widget',
+                 'stdout_grid': 'stdout layout',
+                 'stdout_widgets': 'widgets for stdout area'}
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent)
@@ -1269,6 +1310,11 @@ class TabPage(QtWidgets.QWidget):
 
 
 class SetTabPage(TabPage):
+    __slots__ = {'gene_set': 'FeatureSet object with gene set',
+                 'overview_group': 'widget group of overview area',
+                 'overview_grid': 'layout for overview area',
+                 'overview_widgets': 'widgets for overview area'}
+
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
                  undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
@@ -1391,6 +1437,16 @@ class FuncTypeStack(QtWidgets.QWidget):
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
     geneSetsRequested = QtCore.pyqtSignal(object)
+    __slots__ = {'parameter_widgets': 'widgets for function parameters',
+                 'layout': 'layout',
+                 'parameter_grid': 'layout for function parameters',
+                 'func_combo': 'combo box for choosing functions',
+                 'func_help_button': 'help button for function combo box',
+                 'func_combo_layout': 'layout for function combo box',
+                 'func': 'dict of functions',
+                 'filter_obj': 'filtering.Filter object to apply functions to',
+                 'excluded_params': 'parameters to be excluded from functions',
+                 'pipeline_mode': 'indicating if in the function selector is in Pipeline mode'}
 
     def __init__(self, funcs: typing.Iterable, filter_obj: filtering.Filter, parent=None,
                  additional_excluded_params: set = None, pipeline_mode: bool = False):
@@ -1521,6 +1577,10 @@ class FilterTabPage(TabPage):
     startedClustering = QtCore.pyqtSignal(object, str, object)
     startedJob = QtCore.pyqtSignal(object, str, object)
     widthChanged = QtCore.pyqtSignal()
+    __slots__ = ('basic_group', 'basic_grid', 'basic_widgets', 'basic_param_container', 'basic_param_widgets',
+                 'basic_param_grid', 'overview_group', 'overview_grid', 'overview_widgets', 'function_group',
+                 'function_grid', 'function_widgets', 'stack', 'button_box', 'stack_buttons', 'stack_widgets',
+                 'clicom_window', 'deseq_window')
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
@@ -1965,6 +2025,8 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
     pipelineExported = QtCore.pyqtSignal(str, filtering.Pipeline)
     widthChanged = QtCore.pyqtSignal()
     geneSetsRequested = QtCore.pyqtSignal()
+    __slots__ = {'pipeline': 'Pipeline object',
+                 'is_unsaved': 'indicates whether the Pipeline was saved since changes were last made'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -2137,6 +2199,18 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
 
 
 class MultiKeepWindow(gui_widgets.MinMaxDialog):
+    __slots__ = {'objs': 'objects to keep or discard',
+                 'files': 'filenames of the objects to keep',
+                 'button_box': 'button box for selecting objects to keep',
+                 'labels': 'labels for the objects',
+                 'keep_marks': 'check boxes for the objects',
+                 'names': 'potential new names for the objects',
+                 'select_all': 'select all checkbox',
+                 'scroll': 'scroll area widget',
+                 'scroll_layout': 'layout for scroll area',
+                 'scroll_widget': 'widget containing scroll area',
+                 'main_layout': 'main layout for the window'}
+
     def __init__(self, objs: List[filtering.Filter], parent=None):
         super().__init__(parent)
         self.objs = {str(obj.fname.stem): obj for obj in objs}
@@ -2204,6 +2278,18 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
 
 
 class MultiOpenWindow(QtWidgets.QDialog):
+    __slots__ = {'files': 'filenames of the objects to open',
+                 'button_box': 'button box for selecting objects to open',
+                 'paths': 'paths for the objects to open',
+                 'table_types': 'table types for the objects',
+                 'names': 'potential new names for the objects',
+                 'kwargs': 'kwargs for the objects to open',
+                 'kwargs_widgets': 'widgets representing kwargs for the objects',
+                 'scroll': 'scroll area widget',
+                 'scroll_layout': 'layout for scroll area',
+                 'scroll_widget': 'widget containing scroll area',
+                 'main_layout': 'main layout for the window'}
+
     def __init__(self, files: List[str], parent=None):
         super().__init__(parent)
         self.files = files
@@ -2337,6 +2423,10 @@ class ReactiveTabWidget(QtWidgets.QTabWidget):
 
 
 class RenameCommand(QtWidgets.QUndoCommand):
+    __slots__ = {'prev_name': 'previous name of the tab',
+                 'new_name': 'new name of the tab',
+                 'tab': 'tab widget'}
+
     def __init__(self, prev_name: str, new_name: str, tab: TabPage, description: str):
         super().__init__(description)
         self.prev_name = prev_name
@@ -2351,6 +2441,14 @@ class RenameCommand(QtWidgets.QUndoCommand):
 
 
 class CloseTabCommand(QtWidgets.QUndoCommand):
+    __slots__ = {'tab_container': 'ReactiveTabWidget containing the tabs',
+                 'tab_index': 'index of the tab to be closed',
+                 'tab_icon': 'icon of the tab',
+                 'tab_name': 'name of the tab',
+                 'obj_type': "object type of the tab's underlying object",
+                 'filename': "filename to cache the tab's underlying object under",
+                 'kwargs': 'kwargs for the underlying object'}
+
     def __init__(self, tab_container: ReactiveTabWidget, tab_index: int, description: str):
         super().__init__(description)
         self.tab_container = tab_container
@@ -2375,27 +2473,36 @@ class CloseTabCommand(QtWidgets.QUndoCommand):
 
 
 class InplaceCommand(QtWidgets.QUndoCommand):
-    def __init__(self, tab_page: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
+    __slots__ = {'tab': 'tab object',
+                 'func_name': 'name of the function to apply/undo',
+                 'args': 'function args',
+                 'kwargs': 'function kwargs',
+                 'obj_copy': 'copy of the original object'}
+
+    def __init__(self, tab: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
         super().__init__(description)
-        self.tab_page = tab_page
+        self.tab = tab
         self.func_name = func_name
         self.args = args
         self.kwargs = kwargs
-        self.obj_copy = copy.copy(self.tab_page.obj())
+        self.obj_copy = copy.copy(self.tab.obj())
 
     def undo(self):
-        obj = self.tab_page.obj()
+        obj = self.tab.obj()
         del obj
-        self.tab_page.update_obj(copy.copy(self.obj_copy))
-        self.tab_page.update_tab(is_unsaved=True)
+        self.tab.update_obj(copy.copy(self.obj_copy))
+        self.tab.update_tab(is_unsaved=True)
 
     def redo(self):
-        self.tab_page._apply_function_from_params(self.func_name, self.args, self.kwargs)
+        self.tab._apply_function_from_params(self.func_name, self.args, self.kwargs)
 
 
 class InplaceCachedCommand(InplaceCommand):
-    def __init__(self, tab_page: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
-        super().__init__(tab_page, func_name, args, kwargs, description)
+    __slots__ = {'first_pass': 'indicates whether the command was already applied once',
+                 'processed_obj': 'object after application of the function'}
+
+    def __init__(self, tab: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
+        super().__init__(tab, func_name, args, kwargs, description)
         self.first_pass = True
         self.processed_obj = None
 
@@ -2404,45 +2511,55 @@ class InplaceCachedCommand(InplaceCommand):
             self.first_pass = False
             super().redo()
         else:
-            self.tab_page.update_obj(copy.copy(self.processed_obj))
-            self.tab_page.update_tab(is_unsaved=True)
+            self.tab.update_obj(copy.copy(self.processed_obj))
+            self.tab.update_tab(is_unsaved=True)
 
     def undo(self):
-        processed_obj = self.tab_page.obj()
+        processed_obj = self.tab.obj()
         self.processed_obj = copy.copy(processed_obj)
-        self.tab_page.update_obj(copy.copy(self.obj_copy))
-        self.tab_page.update_tab(is_unsaved=True)
+        self.tab.update_obj(copy.copy(self.obj_copy))
+        self.tab.update_tab(is_unsaved=True)
 
 
 class SetOpInplacCommand(InplaceCommand):
     def redo(self):
-        is_filter_obj = validation.isinstanceinh(self.tab_page.obj(), filtering.Filter)
-        first_obj = self.tab_page.obj()
+        is_filter_obj = validation.isinstanceinh(self.tab.obj(), filtering.Filter)
+        first_obj = self.tab.obj()
         if not is_filter_obj:
             first_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=first_obj), 'placeholder')
         getattr(first_obj, self.func_name)(*self.args, **self.kwargs)
         if not is_filter_obj:
-            self.tab_page.update_obj(first_obj.index_set)
-        self.tab_page.update_tab()
+            self.tab.update_obj(first_obj.index_set)
+        self.tab.update_tab()
 
 
 class PipelineInplaceCommand(QtWidgets.QUndoCommand):
-    def __init__(self, tab_page: FilterTabPage, pipeline: filtering.Pipeline, description: str):
+    __slots__ = {'tab': 'tab object',
+                 'pipeline': 'Pipeline to apply',
+                 'obj_copy': 'copy of the original Filter object of the tab'}
+
+    def __init__(self, tab: FilterTabPage, pipeline: filtering.Pipeline, description: str):
         super().__init__(description)
-        self.tab_page = tab_page
+        self.tab = tab
         self.pipeline = pipeline
-        self.obj_copy = copy.copy(self.tab_page.filter_obj)
+        self.obj_copy = copy.copy(self.tab.filter_obj)
 
     def undo(self):
-        del self.tab_page.filter_obj
-        self.tab_page.filter_obj = copy.copy(self.obj_copy)
-        self.tab_page.update_tab(is_unsaved=True)
+        del self.tab.filter_obj
+        self.tab.filter_obj = copy.copy(self.obj_copy)
+        self.tab.update_tab(is_unsaved=True)
 
     def redo(self):
-        self.tab_page._apply_pipeline(self.pipeline, inplace=True)
+        self.tab._apply_pipeline(self.pipeline, inplace=True)
 
 
 class ApplyPipelineWindow(gui_widgets.MinMaxDialog):
+    __slots__ = {'available_objects': 'available objects',
+                 'layout': 'layout',
+                 'label': 'main label of the window',
+                 'button_box': 'button box for accept/cancel buttons',
+                 'list': 'multiple choice list for choosing objects to apply to'}
+
     def __init__(self, available_objects: dict, parent=None):
         super().__init__(parent)
         self.available_objects = available_objects
