@@ -601,6 +601,13 @@ class ColorPicker(QtWidgets.QWidget):
 
 
 class MultipleChoiceList(QtWidgets.QWidget):
+    __slots__ = {'layout': 'layout',
+                 'items': 'list items',
+                 'list': 'list widget',
+                 'select_all_button': 'select all button',
+                 'clear_all_button': 'clear all button',
+                 'current_layout_row': 'current bottom-most row in the layout'}
+
     def __init__(self, items: Sequence, icons: Sequence = None, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QGridLayout(self)
@@ -698,6 +705,11 @@ class MultiChoiceListWithDelete(MultipleChoiceList):
 
 class MultiChoiceListWithReorder(MultipleChoiceList):
     itemOrderChanged = QtCore.pyqtSignal()
+    __slots__ = {'top_button': 'send to top',
+                 'up_button': 'send up',
+                 'down_button': 'send down',
+                 'bottm_button': 'send to bottom',
+                 'reorder_label': 'label'}
 
     def __init__(self, items: Sequence, icons: Sequence = None, parent=None):
         super().__init__(items, icons, parent)
@@ -778,6 +790,9 @@ class MultiChoiceListWithDeleteReorder(MultiChoiceListWithReorder, MultiChoiceLi
 
 
 class FileListWidgetItem(QtWidgets.QListWidgetItem):
+    __slots__ = {'file_path': 'path of the file',
+                 'display_name': 'display name of the file path'}
+
     def __init__(self, file_path, parent=None):
         self.file_path = file_path
         self.display_name = Path(file_path).stem
@@ -788,6 +803,8 @@ class FileListWidgetItem(QtWidgets.QListWidgetItem):
 
 
 class OrderedFileList(MultiChoiceListWithDeleteReorder):
+    __slots__ = {'add_files_button': 'add files button'}
+
     def __init__(self, parent=None):
         super().__init__([], None, parent)
         self.add_files_button = QtWidgets.QPushButton('Add files...', self)
@@ -812,6 +829,8 @@ class OrderedFileList(MultiChoiceListWithDeleteReorder):
 
 
 class MandatoryComboBox(QtWidgets.QComboBox):
+    __slots__ = {'default_choice': 'default choice'}
+
     def __init__(self, default_choice: str, parent=None):
         super().__init__(parent)
         self.default_choice = default_choice
@@ -848,6 +867,7 @@ class MandatoryComboBox(QtWidgets.QComboBox):
 
 class GeneSetComboBox(MandatoryComboBox):
     boxOpened = QtCore.pyqtSignal()
+    __slots__ = {'available_objects': 'available gene sets and tables'}
 
     def __init__(self, parent=None):
         super().__init__('Choose gene set...', parent)
@@ -877,6 +897,7 @@ class GeneSetComboBox(MandatoryComboBox):
 
 
 class MinMaxDialog(QtWidgets.QDialog):
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowFlag(QtCore.Qt.WindowMinMaxButtonsHint)
@@ -889,6 +910,9 @@ class TrueFalseBoth(QtWidgets.QWidget):
             border: 1px solid #32ba32;
             border-radius: 4px;}'''
     selectionChanged = QtCore.pyqtSignal()
+    __slots__ = {'layout': 'layout',
+                 'true_button': 'True button',
+                 'false_button': 'False button'}
 
     def __init__(self, default=None, parent=None):
         super().__init__(parent)
@@ -931,6 +955,11 @@ class TrueFalseBoth(QtWidgets.QWidget):
 class PathLineEdit(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
     textChanged = QtCore.pyqtSignal(bool)
+    __slots__ = {'file_path': 'line edit',
+                 'open_button': 'open button',
+                 'is_file': 'is the current text pointing to an exisintg file',
+                 '_is_legal': 'is the current path legal',
+                 'layout': 'layout'}
 
     def __init__(self, contents: str = 'No file chosen', button_text: str = 'Load', is_file: bool = True, parent=None):
         super().__init__(parent)
@@ -1023,6 +1052,9 @@ class StrIntLineEdit(QtWidgets.QLineEdit):
 
 class RadioButtonBox(QtWidgets.QGroupBox):
     selectionChanged = QtCore.pyqtSignal()
+    __slots__ = {'button_box': 'button group',
+                 'radio_layout': 'radio button layout',
+                 'radio_buttons': 'radio buttons'}
 
     def __init__(self, title: str, actions, is_flat=False, parent=None):
         super().__init__(title, parent)
@@ -1066,21 +1098,11 @@ class RadioButtonBox(QtWidgets.QGroupBox):
         self.selectionChanged.emit()
 
 
-class SpinBoxWithDisable(QtWidgets.QSpinBox):
-    def changeEvent(self, e):
-        if e.type() == QtCore.QEvent.EnabledChange:
-            self.lineEdit().setVisible(self.isEnabled())
-        return super().changeEvent(e)
-
-
-class DoubleSpinBoxWithDisable(QtWidgets.QDoubleSpinBox):
-    def changeEvent(self, e):
-        if e.type() == QtCore.QEvent.EnabledChange:
-            self.lineEdit().setVisible(self.isEnabled())
-        return super().changeEvent(e)
-
-
 class OptionalWidget(QtWidgets.QWidget):
+    __slots__ = {'layout': 'layout',
+                 'other': 'other widget',
+                 'default': 'default value',
+                 'checkbox': 'disable checkbox'}
 
     def __init__(self, other: QtWidgets.QWidget, default=EMPTY, parent=None):
         super().__init__(parent)
@@ -1126,6 +1148,12 @@ class OptionalWidget(QtWidgets.QWidget):
 
 
 class ComparisonPicker(QtWidgets.QWidget):
+    __slots__ = {'design_mat': 'design matrix',
+                 'layout': 'layout',
+                 'factor': 'factor combo box',
+                 'numerator': 'numerator combo box',
+                 'denominator': 'denominator combo box'}
+
     def __init__(self, design_mat: pd.DataFrame, parent=None):
         super().__init__(parent)
         self.design_mat = design_mat
@@ -1161,6 +1189,12 @@ class ComparisonPicker(QtWidgets.QWidget):
 
 
 class ComparisonPickerGroup(QtWidgets.QWidget):
+    __slots__ = {'design_mat': 'design matrix',
+                 'widgets': 'widgets',
+                 'layout': 'layouts',
+                 'inputs': 'inputs',
+                 'input_labels': 'labels for inputs'}
+
     def __init__(self, design_mat: pd.DataFrame, parent=None):
         super().__init__(parent)
         self.design_mat = design_mat
@@ -1366,6 +1400,7 @@ class QMultiStrIntLineEdit(QMultiLineEdit):
 
 class QMultiComboBox(QMultiInput):
     CHILD_QWIDGET = QtWidgets.QComboBox
+    __slots__ = {'items': 'combo box items'}
 
     def __init__(self, label: str, text: str = 'Set Input', parent=None, items=()):
         self.items = items
@@ -1395,6 +1430,7 @@ class QMultiBoolComboBox(QMultiComboBox):
 
 class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
     queue_stdout_element_received_signal = QtCore.pyqtSignal(str)
+    __slots__ = {'queue': 'queue'}
 
     def __init__(self, q: Queue, *args, **kwargs):
         QtCore.QObject.__init__(self, *args, **kwargs)
@@ -1409,6 +1445,9 @@ class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
 
 
 class StdOutTextEdit(QtWidgets.QTextEdit):
+    __slots__ = {'carriage': 'carriage',
+                 'prev_coord': 'previous coordinate'}
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
@@ -1449,6 +1488,7 @@ class StdOutTextEdit(QtWidgets.QTextEdit):
 
 class WriteStream(QtCore.QObject):
     message = QtCore.pyqtSignal(str)
+    __slots__ = {'queue': 'queue'}
 
     def __init__(self, q: Queue, parent=None):
         super(WriteStream, self).__init__(parent)
@@ -1463,6 +1503,9 @@ class WriteStream(QtCore.QObject):
 
 
 class NewParam:
+    __slots__ = {'annotation': 'annotation',
+                 'default': 'default'}
+
     def __init__(self, annotation, default=EMPTY):
         self.annotation = annotation
         self.default = default
@@ -1699,6 +1742,8 @@ def clear_layout(layout, exceptions: set = frozenset()):
 
 
 class ReactiveHeaderView(QtWidgets.QHeaderView):
+    __slots__ = {'context_menu': 'context menu'}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSectionsClickable(True)
@@ -1744,6 +1789,8 @@ class ReactiveHeaderView(QtWidgets.QHeaderView):
 
 
 class ReactiveListWidget(QtWidgets.QListWidget):
+    __slots__ = {'context_menu': 'context menu'}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.context_menu = None
@@ -1788,6 +1835,8 @@ class ReactiveListWidget(QtWidgets.QListWidget):
 
 
 class ReactiveTableView(QtWidgets.QTableView):
+    __slots__ = {'context_menu': 'context menu'}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setHorizontalHeader(ReactiveHeaderView(QtCore.Qt.Orientation.Horizontal))
