@@ -8,13 +8,14 @@ from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable
 
 import matplotlib
 import pandas as pd
-import typing_extensions
 from PyQt5 import QtCore, QtWidgets, QtGui
 from joblib import Parallel
 from tqdm.auto import tqdm
-from typing_extensions import Literal
+from typing_extensions import Literal, get_origin, get_args
 
 from rnalysis.utils import parsing, validation, generic, param_typing
+
+EMPTY = inspect._empty
 
 
 class TableColumnPicker(QtWidgets.QPushButton):
@@ -1035,7 +1036,7 @@ class DoubleSpinBoxWithDisable(QtWidgets.QDoubleSpinBox):
 
 class OptionalWidget(QtWidgets.QWidget):
 
-    def __init__(self, other: QtWidgets.QWidget, default=inspect._empty, parent=None):
+    def __init__(self, other: QtWidgets.QWidget, default=EMPTY, parent=None):
         super().__init__(parent)
         self.layout = QtWidgets.QHBoxLayout(self)
         self.other = other
@@ -1342,7 +1343,6 @@ class QMultiBoolComboBox(QMultiComboBox):
         self.dialog_widgets['inputs'][ind].setCurrentText(str(val))
 
 
-
 class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
     queue_stdout_element_received_signal = QtCore.pyqtSignal(str)
 
@@ -1413,56 +1413,54 @@ class WriteStream(QtCore.QObject):
 
 
 class NewParam:
-    def __init__(self, annotation, default=inspect._empty):
+    def __init__(self, annotation, default=EMPTY):
         self.annotation = annotation
         self.default = default
 
 
 def param_to_widget(param, name: str,
-                    actions_to_connect: Union[Iterable[Callable], Callable] = tuple(),
-                    pipeline_mode: bool = False):
+                    actions_to_connect: Union[Iterable[Callable], Callable] = tuple(), pipeline_mode: bool = False):
     column_annotations = {param_typing.GroupedColumns: TableColumnGroupPicker,
                           param_typing.ColumnNames: TableColumnPicker,
                           param_typing.ColumnName: TableSingleColumnPicker}
     actions_to_connect = parsing.data_to_tuple(actions_to_connect)
 
-    if param.default == inspect._empty:
+    if param.default == EMPTY:
         is_default = False
     else:
         is_default = True
     # if the annotation is a Union that contains None, turn the None into a checkbox,
     # and the rest of the annotation into an optional widget (AKA OptionalWidget widget)
-    if typing_extensions.get_origin(param.annotation) == Union and type(None) in \
-        typing_extensions.get_args(param.annotation):
-        args = typing_extensions.get_args(param.annotation)
+    if get_origin(param.annotation) == Union and type(None) in get_args(param.annotation):
+        args = get_args(param.annotation)
         none_ind = args.index(type(None))
         without_none = tuple(args[0:none_ind] + args[none_ind + 1:])
         if param.default is None:
             this_default = None
-            other_default = inspect._empty
+            other_default = EMPTY
         else:
-            this_default = inspect._empty
+            this_default = EMPTY
             other_default = param.default
-        widget = OptionalWidget(param_to_widget(NewParam(Union[without_none], other_default), name,
-                                                actions_to_connect, pipeline_mode), this_default)
+        widget = OptionalWidget(
+            param_to_widget(NewParam(Union[without_none], other_default), name, actions_to_connect, pipeline_mode),
+            this_default)
         for action in actions_to_connect:
             widget.toggled.connect(action)
 
     # if the annotation is a Union that contains Literals, turn the Literals into a combobox,
     # and the rest of the annotation into an 'other...' option in the combo box (AKA ComboBoxOrOther widget)
-    elif typing_extensions.get_origin(param.annotation) == Union and Literal in [
-        typing_extensions.get_origin(ann) for ann in typing_extensions.get_args(param.annotation)]:
-        args = typing_extensions.get_args(param.annotation)
-        literal_ind = [typing_extensions.get_origin(ann) for ann in args].index(Literal)
+    elif get_origin(param.annotation) == Union and Literal in [get_origin(ann) for ann in get_args(param.annotation)]:
+        args = get_args(param.annotation)
+        literal_ind = [get_origin(ann) for ann in args].index(Literal)
         literal = args[literal_ind]
         without_literal = tuple(args[0:literal_ind] + args[literal_ind + 1:])
-        if param.default in typing_extensions.get_args(literal):
+        if param.default in get_args(literal):
             this_default = param.default
-            other_default = inspect._empty
+            other_default = EMPTY
         else:
             this_default = None
             other_default = param.default
-        widget = ComboBoxOrOtherWidget(typing_extensions.get_args(literal),
+        widget = ComboBoxOrOtherWidget(get_args(literal),
                                        param_to_widget(NewParam(Union[without_literal], other_default), name,
                                                        actions_to_connect, pipeline_mode), this_default)
         for action in actions_to_connect:
@@ -1500,6 +1498,7 @@ def param_to_widget(param, name: str,
         widget.setChecked(default)
         for action in actions_to_connect:
             widget.stateChanged.connect(action)
+
     elif param.annotation == int:
         widget = QtWidgets.QSpinBox()
         widget.setMinimum(-2147483648)
@@ -1508,6 +1507,7 @@ def param_to_widget(param, name: str,
         widget.setValue(default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+
     elif param.annotation == float:
         widget = QtWidgets.QDoubleSpinBox()
         widget.setMinimum(float("-inf"))
@@ -1532,61 +1532,62 @@ def param_to_widget(param, name: str,
         widget = QtWidgets.QLineEdit(param.default if is_default else '')
         for action in actions_to_connect:
             widget.textChanged.connect(action)
-    elif typing_extensions.get_origin(param.annotation) == Literal:
+
+    elif get_origin(param.annotation) == Literal:
         widget = QtWidgets.QComboBox()
-        widget.addItems(typing_extensions.get_args(param.annotation))
+        widget.addItems(get_args(param.annotation))
         for action in actions_to_connect:
             widget.currentIndexChanged.connect(action)
         if is_default:
             widget.setCurrentText(str(param.default))
-    elif param.annotation in (
-        Union[str, List[str]], Union[str, Iterable[str]], List[str],
-        Iterable[str]):
+
+    elif param.annotation in (Union[str, List[str]], Union[str, Iterable[str]], List[str], Iterable[str]):
         widget = QMultiLineEdit(name)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+
     elif param.annotation == List[Iterable[str]]:
         widget = TwoLayerMultiLineEdit(name)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
-    elif param.annotation in (Union[float, List[float]],
-                              Union[float, Iterable[float]]):
+
+    elif param.annotation in (Union[float, List[float]], Union[float, Iterable[float]]):
         widget = QMultiDoubleSpinBox(name)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
-    elif param.annotation in (
-        Union[int, List[int]], Union[int, Iterable[int]], List[int],
-        Iterable[int]):
+
+    elif param.annotation in (Union[int, List[int]], Union[int, Iterable[int]], List[int], Iterable[int]):
         widget = QMultiSpinBox(name)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
-    elif param.annotation in (
-        Union[bool, List[bool]], Union[bool, Iterable[bool]], List[bool],
-        Iterable[bool]):
+
+    elif param.annotation in (Union[bool, List[bool]], Union[bool, Iterable[bool]], List[bool], Iterable[bool]):
         widget = QMultiBoolComboBox(name)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+
     elif param.annotation == Union[str, int]:
         widget = StrIntLineEdit(param.default if is_default else '')
         for action in actions_to_connect:
             widget.textChanged.connect(action)
-    elif param.annotation in (Union[str, int, Iterable[str], Iterable[int]],
-                              Union[str, int, List[str], List[int]],
+
+    elif param.annotation in (Union[str, int, Iterable[str], Iterable[int]], Union[str, int, List[str], List[int]],
                               Union[List[int], List[str]]):
         widget = QMultiStrIntLineEdit(name)
         widget.setValue(param.default if is_default else '')
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+
     elif param.annotation in (Path, Union[str, Path], Union[None, str, Path]):
         is_file = 'folder' not in name
         widget = PathLineEdit(is_file=is_file)
@@ -1594,18 +1595,20 @@ def param_to_widget(param, name: str,
             widget.textChanged.connect(action)
         if is_default:
             widget.setText(str(param.default))
-    elif typing_extensions.get_origin(param.annotation) in (
-        collections.abc.Iterable, list, tuple, set) and typing_extensions.get_origin(
-        typing_extensions.get_args(param.annotation)[0]) == Literal:
-        widget = QMultiComboBox(name, items=typing_extensions.get_args(typing_extensions.get_args(param.annotation)[0]))
+
+    elif get_origin(param.annotation) in (collections.abc.Iterable, list, tuple, set) and get_origin(
+        get_args(param.annotation)[0]) == Literal:
+        widget = QMultiComboBox(name, items=get_args(get_args(param.annotation)[0]))
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
+
     elif param.annotation == Union[bool, Tuple[bool, bool]]:
         widget = TrueFalseBoth(param.default)
         for action in actions_to_connect:
             widget.selectionChanged.connect(action)
+
     else:
         widget = QtWidgets.QTextEdit()
         default = param.default if is_default else ''
