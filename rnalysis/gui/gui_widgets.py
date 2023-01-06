@@ -71,7 +71,7 @@ class TableColumnPicker(QtWidgets.QPushButton):
     def open_dialog(self):
         self.dialog.exec()
 
-    def get_values(self):
+    def value(self):
         picked_cols = []
         for checkbox, col_name in zip(self.column_checks, self.columns):
             if checkbox.isChecked():
@@ -138,8 +138,8 @@ class TableSingleColumnPicker(TableColumnPicker):
             checkbox = self.column_checks[i]
             self.button_group.addButton(checkbox.switch)
 
-    def get_values(self):
-        picked_cols = super().get_values()
+    def value(self):
+        picked_cols = super().value()
         assert len(picked_cols) > 0, "Not enough columns were picked!"
         assert len(picked_cols) < 2, "Too many columns were picked!"
         return picked_cols[0]
@@ -191,7 +191,7 @@ class TableColumnGroupPicker(TableColumnPicker):
                 existing_groups.add(grp)
         return sorted(existing_groups)
 
-    def get_values(self):
+    def value(self):
         existing_groups = {}
         for combo, col_name in zip(self.column_combos, self.columns):
             if combo.isEnabled():
@@ -863,16 +863,16 @@ class TrueFalseBoth(QtWidgets.QWidget):
         self.layout.addWidget(self.false_button)
         self.layout.addStretch(1)
 
-        self.set_defaults(default)
+        self.setValue(default)
 
-    def set_defaults(self, default):
+    def setValue(self, default):
         default = parsing.data_to_list(default)
         if True in default:
             self.true_button.click()
         if False in default:
             self.false_button.click()
 
-    def get_values(self):
+    def value(self):
         checked = []
         if self.true_button.isChecked():
             checked.append(True)
@@ -1033,91 +1033,49 @@ class DoubleSpinBoxWithDisable(QtWidgets.QDoubleSpinBox):
         return super().changeEvent(e)
 
 
-class OptionalLineEdit(QtWidgets.QWidget):
-    IS_LINE_EDIT_LIKE = True
+class OptionalWidget(QtWidgets.QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, other: QtWidgets.QWidget, default=inspect._empty, parent=None):
         super().__init__(parent)
-        self.layout = QtWidgets.QGridLayout(self)
-        self.line = QtWidgets.QLineEdit()
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.other = other
+        self.default = default
         self.checkbox = QtWidgets.QCheckBox('Disable input?')
-        self.checkbox.toggled.connect(self.line.setDisabled)
+        self.toggled = self.checkbox.toggled
 
-        self.layout.addWidget(self.checkbox, 0, 0)
-        self.layout.addWidget(self.line, 0, 1)
-
-        self.textChanged = self.line.textChanged
+        self.init_ui()
 
     def clear(self):
         self.checkbox.setChecked(False)
-        self.line.clear()
+        try:
+            self.other.clear()
+        except AttributeError:
+            pass
 
-    def setText(self, val):
-        if val is None:
+    def init_ui(self):
+        self.toggled.connect(self.other.setDisabled)
+        self.layout.addWidget(self.checkbox)
+        self.layout.addWidget(self.other)
+        if self.default is None:
             self.checkbox.setChecked(True)
-        else:
-            self.checkbox.setChecked(False)
-            self.line.setText(val)
 
-    def text(self):
+    def check_other(self):
+        self.other.setDisabled(self.checkbox.isChecked())
+
+    def value(self):
         if self.checkbox.isChecked():
             return None
-        return self.line.text()
-
-
-class OptionalSpinBox(QtWidgets.QWidget):
-    IS_SPIN_BOX_LIKE = True
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.layout = QtWidgets.QGridLayout()
-        self.spinbox = SpinBoxWithDisable(self)
-        self.checkbox = QtWidgets.QCheckBox('Disable input?')
-        self.checkbox.toggled.connect(self.spinbox.setDisabled)
-
-        self.layout.addWidget(self.checkbox, 0, 0)
-        self.layout.addWidget(self.spinbox, 0, 1)
-        self.setLayout(self.layout)
-
-        self.valueChanged = self.spinbox.valueChanged
-
-    def clear(self):
-        self.checkbox.setChecked(False)
-        self.spinbox.clear()
+        return get_val_from_widget(self.other)
 
     def setValue(self, val):
         if val is None:
             self.checkbox.setChecked(True)
         else:
-            self.checkbox.setChecked(False)
-            self.spinbox.setValue(val)
-
-    def value(self):
-        if self.checkbox.isChecked():
-            return None
-        return self.spinbox.value()
-
-    def setMinimum(self, min_val: int):
-        self.spinbox.setMinimum(min_val)
-
-    def setMaximum(self, max_val: int):
-        self.spinbox.setMaximum(max_val)
-
-
-class OptionalDoubleSpinBox(OptionalSpinBox):
-    IS_SPIN_BOX_LIKE = True
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.checkbox.disconnect()
-        self.layout.removeWidget(self.spinbox)
-        self.spinbox = DoubleSpinBoxWithDisable(self)
-        self.checkbox.toggled.connect(self.spinbox.setDisabled)
-        self.valueChanged = self.spinbox.valueChanged
-        self.layout.addWidget(self.spinbox, 0, 1)
-
-    def setSingleStep(self, step: float):
-        self.spinbox.setSingleStep(step)
+            try:
+                self.checkbox.setChecked(False)
+                self.other.setValue(val)
+            except AttributeError:
+                raise ValueError(f'Unable to set default value of {type(self.other)} to {val}')
 
 
 class ComparisonPicker(QtWidgets.QWidget):
@@ -1151,7 +1109,7 @@ class ComparisonPicker(QtWidgets.QWidget):
         self.numerator.addItems(options)
         self.denominator.addItems(options)
 
-    def get_value(self) -> Tuple[str, str, str]:
+    def value(self) -> Tuple[str, str, str]:
         return self.factor.currentText(), self.numerator.currentText(), self.denominator.currentText()
 
 
@@ -1202,7 +1160,7 @@ class ComparisonPickerGroup(QtWidgets.QWidget):
     def get_comparison_values(self):
         values = []
         for widget in self.inputs:
-            values.append(widget.get_value())
+            values.append(widget.value())
         return values
 
 
@@ -1268,7 +1226,7 @@ class QMultiInput(QtWidgets.QPushButton):
             self.dialog_widgets['inputs'].pop(-1).deleteLater()
             self.dialog_widgets['input_labels'].pop(-1).deleteLater()
 
-    def get_values(self):
+    def value(self):
         values = []
         for widget in self.dialog_widgets['inputs']:
             values.append(self.get_widget_value(widget))
@@ -1280,11 +1238,11 @@ class QMultiInput(QtWidgets.QPushButton):
     def set_widget_value(self, ind: int, val):
         raise NotImplementedError
 
-    def set_defaults(self, defaults: Iterable):
-        defaults = parsing.data_to_list(defaults)
+    def setValue(self, value: Iterable):
+        values = parsing.data_to_list(value)
         while len(self.dialog_widgets['inputs']) > 0:
             self.remove_widget()
-        for item in defaults:
+        for item in values:
             if item is None:
                 continue
             self.add_widget()
@@ -1334,8 +1292,8 @@ class QMultiLineEdit(QMultiInput):
     def set_widget_value(self, ind: int, val):
         self.dialog_widgets['inputs'][ind].setText(str(val))
 
-    def get_values(self):
-        res = super().get_values()
+    def value(self):
+        res = super().value()
         if res == '':
             return []
         return res
@@ -1345,10 +1303,10 @@ class TwoLayerMultiLineEdit(QMultiInput):
     CHILD_QWIDGET = QMultiLineEdit
 
     def get_widget_value(self, widget: type(CHILD_QWIDGET)):
-        return widget.get_values()
+        return widget.value()
 
     def set_widget_value(self, ind: int, val):
-        self.dialog_widgets['inputs'][ind].set_defaults(val)
+        self.dialog_widgets['inputs'][ind].setValue(val)
 
 
 class QMultiStrIntLineEdit(QMultiLineEdit):
@@ -1383,52 +1341,6 @@ class QMultiBoolComboBox(QMultiComboBox):
     def set_widget_value(self, ind: int, val):
         self.dialog_widgets['inputs'][ind].setCurrentText(str(val))
 
-
-class OptionalMultiInput(QtWidgets.QWidget):
-    MULTI_WIDGET_TYPE = QtWidgets.QWidget
-    IS_MULTI_INPUT = True
-
-    def __init__(self, label: str, text='Set input', parent=None):
-        super().__init__(parent)
-        self.layout = QtWidgets.QHBoxLayout(self)
-        self.multi_widget = self.MULTI_WIDGET_TYPE(label, text, self)
-        self.checkbox = QtWidgets.QCheckBox('Disable input?')
-        self.checkbox.toggled.connect(self.multi_widget.setDisabled)
-        self.checkbox.toggled.connect(self.disable_value_changed)
-        self.valueChanged = self.multi_widget.valueChanged
-
-        self.layout.addWidget(self.checkbox)
-        self.layout.addWidget(self.multi_widget)
-
-    def disable_value_changed(self):
-        self.valueChanged.emit()
-
-    def clear(self):
-        self.checkbox.setChecked(False)
-        self.multi_widget.clear()
-
-    def set_defaults(self, defaults: Union[Iterable, None]):
-        if defaults is None:
-            self.checkbox.setChecked(True)
-        else:
-            self.multi_widget.set_defaults(defaults)
-
-    def get_values(self):
-        if self.checkbox.isChecked():
-            return None
-        return self.multi_widget.get_values()
-
-
-class OptionalMultiLineEdit(OptionalMultiInput):
-    MULTI_WIDGET_TYPE = QMultiLineEdit
-
-
-class OptionalMultiSpinBoxEdit(OptionalMultiInput):
-    MULTI_WIDGET_TYPE = QMultiSpinBox
-
-
-class OptionalMultiDoubleSpinBoxEdit(OptionalMultiInput):
-    MULTI_WIDGET_TYPE = QMultiDoubleSpinBox
 
 
 class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
@@ -1518,9 +1430,27 @@ def param_to_widget(param, name: str,
         is_default = False
     else:
         is_default = True
+    # if the annotation is a Union that contains None, turn the None into a checkbox,
+    # and the rest of the annotation into an optional widget (AKA OptionalWidget widget)
+    if typing_extensions.get_origin(param.annotation) == Union and type(None) in \
+        typing_extensions.get_args(param.annotation):
+        args = typing_extensions.get_args(param.annotation)
+        none_ind = args.index(type(None))
+        without_none = tuple(args[0:none_ind] + args[none_ind + 1:])
+        if param.default is None:
+            this_default = None
+            other_default = inspect._empty
+        else:
+            this_default = inspect._empty
+            other_default = param.default
+        widget = OptionalWidget(param_to_widget(NewParam(Union[without_none], other_default), name,
+                                                actions_to_connect, pipeline_mode), this_default)
+        for action in actions_to_connect:
+            widget.toggled.connect(action)
+
     # if the annotation is a Union that contains Literals, turn the Literals into a combobox,
     # and the rest of the annotation into an 'other...' option in the combo box (AKA ComboBoxOrOther widget)
-    if typing_extensions.get_origin(param.annotation) == Union and Literal in [
+    elif typing_extensions.get_origin(param.annotation) == Union and Literal in [
         typing_extensions.get_origin(ann) for ann in typing_extensions.get_args(param.annotation)]:
         args = typing_extensions.get_args(param.annotation)
         literal_ind = [typing_extensions.get_origin(ann) for ann in args].index(Literal)
@@ -1545,7 +1475,7 @@ def param_to_widget(param, name: str,
 
     elif param.annotation == param_typing.ColorList:
         widget = MultiColorPicker(name)
-        widget.set_defaults(param.default if is_default else '')
+        widget.setValue(param.default if is_default else '')
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
@@ -1609,49 +1539,25 @@ def param_to_widget(param, name: str,
             widget.currentIndexChanged.connect(action)
         if is_default:
             widget.setCurrentText(str(param.default))
-    elif param.annotation == Union[int, None]:
-        widget = OptionalSpinBox()
-        widget.setMinimum(-2147483648)
-        widget.setMaximum(2147483647)
-        default = param.default if is_default else 0
-        widget.setValue(default)
-        for action in actions_to_connect:
-            widget.valueChanged.connect(action)
-    elif param.annotation == Union[float, None]:
-        widget = OptionalDoubleSpinBox()
-        widget.setMinimum(float("-inf"))
-        widget.setMaximum(float("inf"))
-        widget.setSingleStep(0.05)
-        default = param.default if is_default else 0.0
-        widget.setValue(default)
-        for action in actions_to_connect:
-            widget.valueChanged.connect(action)
     elif param.annotation in (
         Union[str, List[str]], Union[str, Iterable[str]], List[str],
         Iterable[str]):
         widget = QMultiLineEdit(name)
         if is_default:
-            widget.set_defaults(param.default)
+            widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation == List[Iterable[str]]:
         widget = TwoLayerMultiLineEdit(name)
         if is_default:
-            widget.set_defaults(param.default)
+            widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
-    elif param.annotation in (Union[None, str, List[str]], Union[None, List[str]]):
-        widget = OptionalMultiLineEdit(name)
-        if is_default:
-            widget.set_defaults(param.default)
-        for action in actions_to_connect:
-            widget.valueChanged.connect(action)
-
     elif param.annotation in (Union[float, List[float]],
                               Union[float, Iterable[float]]):
         widget = QMultiDoubleSpinBox(name)
         if is_default:
-            widget.set_defaults(param.default)
+            widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation in (
@@ -1659,7 +1565,7 @@ def param_to_widget(param, name: str,
         Iterable[int]):
         widget = QMultiSpinBox(name)
         if is_default:
-            widget.set_defaults(param.default)
+            widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation in (
@@ -1667,7 +1573,7 @@ def param_to_widget(param, name: str,
         Iterable[bool]):
         widget = QMultiBoolComboBox(name)
         if is_default:
-            widget.set_defaults(param.default)
+            widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation == Union[str, int]:
@@ -1678,7 +1584,7 @@ def param_to_widget(param, name: str,
                               Union[str, int, List[str], List[int]],
                               Union[List[int], List[str]]):
         widget = QMultiStrIntLineEdit(name)
-        widget.set_defaults(param.default if is_default else '')
+        widget.setValue(param.default if is_default else '')
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation in (Path, Union[str, Path], Union[None, str, Path]):
@@ -1688,18 +1594,12 @@ def param_to_widget(param, name: str,
             widget.textChanged.connect(action)
         if is_default:
             widget.setText(str(param.default))
-    elif param.annotation == Union[str, None]:
-        widget = OptionalLineEdit()
-        for action in actions_to_connect:
-            widget.textChanged.connect(action)
-        if is_default:
-            widget.setText(param.default)
     elif typing_extensions.get_origin(param.annotation) in (
         collections.abc.Iterable, list, tuple, set) and typing_extensions.get_origin(
         typing_extensions.get_args(param.annotation)[0]) == Literal:
         widget = QMultiComboBox(name, items=typing_extensions.get_args(typing_extensions.get_args(param.annotation)[0]))
         if is_default:
-            widget.set_defaults(param.default)
+            widget.setValue(param.default)
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
     elif param.annotation == Union[bool, Tuple[bool, bool]]:
@@ -1729,7 +1629,7 @@ def get_val_from_widget(widget):
     elif isinstance(widget, QtWidgets.QComboBox) or hasattr(widget, 'IS_COMBO_BOX_LIKE'):
         val = widget.currentText()
     elif hasattr(widget, 'IS_MULTI_INPUT'):
-        val = widget.get_values()
+        val = widget.value()
     else:
         try:
             val = widget.value()

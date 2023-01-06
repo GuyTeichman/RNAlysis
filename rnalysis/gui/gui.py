@@ -94,7 +94,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.param_grid.setRowStretch(i, 1)
 
     def connect_widget(self, widget: QtWidgets.QWidget):
-        if isinstance(widget, gui_widgets.ComboBoxOrOtherWidget):
+        if isinstance(widget, (gui_widgets.ComboBoxOrOtherWidget, gui_widgets.OptionalWidget)):
             self.connect_widget(widget.other)
         elif isinstance(widget, gui_widgets.GeneSetComboBox):
             widget.boxOpened.connect(functools.partial(self.geneSetsRequested.emit, widget))
@@ -1481,7 +1481,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         if self.pipeline_mode:
             return
 
-        if isinstance(widget, gui_widgets.ComboBoxOrOtherWidget):
+        if isinstance(widget, (gui_widgets.ComboBoxOrOtherWidget, gui_widgets.OptionalWidget)):
             self.connect_widget(widget.other)
         elif isinstance(widget, (gui_widgets.TableColumnPicker, gui_widgets.TableColumnPicker)):
             widget.add_columns(self.filter_obj.columns)

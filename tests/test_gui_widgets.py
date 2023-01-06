@@ -32,145 +32,6 @@ def test_StrIntLineEdit(qtbot, item, expected):
 
 
 @pytest.mark.parametrize("item,expected", [
-    ('hello', 'hello'),
-    ('57', '57'),
-    ('', '')
-])
-def test_OptionalLineEdit(qtbot, item, expected):
-    qtbot, widget = widget_setup(qtbot, OptionalLineEdit)
-    qtbot.keyClicks(widget.line, item)
-
-    assert widget.line.isEnabled()
-    assert widget.text() == item
-
-    qtbot.mouseClick(widget.checkbox, LEFT_CLICK)
-
-    assert widget.text() is None
-    assert not widget.line.isEnabled()
-
-    qtbot.mouseClick(widget.checkbox, LEFT_CLICK)
-
-    assert widget.line.isEnabled()
-    assert widget.text() == item
-
-
-@pytest.mark.parametrize("item,expected", [
-    ('hello', 'hello'),
-    (None, None),
-    ('57', '57'),
-    ('', '')
-])
-def test_OptionalLineEdit_setText(qtbot, item, expected):
-    qtbot, widget = widget_setup(qtbot, OptionalLineEdit)
-    widget.setText(item)
-    assert widget.text() == expected
-
-    if item is None:
-        assert not widget.line.isEnabled()
-    else:
-        assert widget.line.isEnabled()
-
-
-@pytest.mark.parametrize("item,expected", [
-    ('57', 57),
-    ('-32', -32),
-    ('0', 0),
-])
-def test_OptionalSpinBox(qtbot, item, expected):
-    qtbot, widget = widget_setup(qtbot, OptionalSpinBox)
-    widget.setMinimum(-100)
-    widget.setMaximum(100)
-    widget.spinbox.clear()
-    qtbot.keyClicks(widget.spinbox, item)
-
-    path = qtbot.screenshot(widget)
-    assert widget.spinbox.isEnabled()
-    assert widget.value() == expected
-
-    qtbot.mouseClick(widget.checkbox, LEFT_CLICK)
-
-    assert widget.value() is None
-    assert not widget.spinbox.isEnabled()
-
-    qtbot.mouseClick(widget.checkbox, LEFT_CLICK)
-
-    assert widget.spinbox.isEnabled()
-    assert widget.value() == expected
-
-
-@pytest.mark.parametrize("item,expected", [
-    (57, 57),
-    (-32, -32),
-    (0, 0),
-    (None, None)
-])
-def test_OptionalSpinBox_setValue(qtbot, item, expected):
-    qtbot, widget = widget_setup(qtbot, OptionalSpinBox)
-    widget.setMinimum(-100)
-    widget.setMaximum(100)
-
-    widget.setValue(item)
-    assert widget.value() == expected
-
-    if item is None:
-        assert not widget.spinbox.isEnabled()
-    else:
-        assert widget.spinbox.isEnabled()
-
-
-@pytest.mark.parametrize("item,expected", [
-    ('57', 57),
-    ('-32', -32),
-    ('0', 0),
-    ('3.14', 3.14),
-    ('-0.75', -0.75)
-])
-def test_OptionalDoubleSpinBox(qtbot, item, expected):
-    qtbot, widget = widget_setup(qtbot, OptionalDoubleSpinBox)
-    widget.setMinimum(-100)
-    widget.setMaximum(100)
-    widget.setSingleStep(0.01)
-    widget.spinbox.clear()
-    qtbot.keyClicks(widget.spinbox, item)
-
-    path = qtbot.screenshot(widget)
-    assert widget.spinbox.isEnabled()
-    assert widget.value() == expected
-
-    qtbot.mouseClick(widget.checkbox, LEFT_CLICK)
-
-    assert widget.value() is None
-    assert not widget.spinbox.isEnabled()
-
-    qtbot.mouseClick(widget.checkbox, LEFT_CLICK)
-
-    assert widget.spinbox.isEnabled()
-    assert widget.value() == expected
-
-
-@pytest.mark.parametrize("item,expected", [
-    (57, 57),
-    (-32, -32),
-    (0, 0),
-    (3.14, 3.14),
-    (-0.75, -0.75),
-    (None, None)
-])
-def test_OptionalDoubleSpinBox_setValue(qtbot, item, expected):
-    qtbot, widget = widget_setup(qtbot, OptionalDoubleSpinBox)
-    widget.setMinimum(-100)
-    widget.setMaximum(100)
-
-    widget.setValue(item)
-    assert widget.value() == expected
-
-    if item is None:
-        assert not widget.spinbox.isEnabled()
-    else:
-        assert widget.spinbox.isEnabled()
-
-
-@pytest.mark.parametrize("item,expected", [
     ('black', '#000000'),
     ('#123456', '#123456'),
     ('r', '#FF0000')
@@ -292,11 +153,10 @@ def test_get_val_from_widget_native_types(qtbot, widget_class, keyboard_interact
 
 
 @pytest.mark.parametrize("widget_class,keyboard_interact,attr,expected_val,kwargs", [
-    (OptionalSpinBox, True, 'spinbox', 12, {}),
-    (OptionalDoubleSpinBox, True, 'spinbox', 12, {}),
     (PathLineEdit, True, 'file_path', '12', {}),
     (StrIntLineEdit, True, None, 12, {}),
-    (OptionalLineEdit, True, 'line', '12', {}),
+    (OptionalWidget, False, 'checkbox', None, {}),
+    (OptionalWidget, False, 'other', True, {}),
     (ComboBoxOrOtherWidget, True, 'combo', '12',
      {'items': ['opt1', 'opt2', '12'], 'default': 'opt1'}),
     (ComboBoxOrOtherWidget, True, 'other', '12',
@@ -307,6 +167,9 @@ def test_get_val_from_widget_nonnative_types(qtbot, widget_class, keyboard_inter
     if widget_class == ComboBoxOrOtherWidget:
         kwargs['other'] = QtWidgets.QLineEdit()
         kwargs['other'].setText('12')
+    elif widget_class == OptionalWidget:
+        kwargs['other'] = ToggleSwitch()
+        kwargs['other'].setChecked(True)
     qtbot, widget = widget_setup(qtbot, widget_class, **kwargs)
     interact_with = widget if attr is None else getattr(widget, attr)
     if keyboard_interact:
@@ -335,7 +198,7 @@ def test_get_val_from_widget_multiinput_types(qtbot, widget_class, default, exce
         qtbot, widget = widget_setup(qtbot, widget_class, label='label', **kwargs)
     assert get_val_from_widget(widget) == excepted_val_empty
 
-    widget.set_defaults(default)
+    widget.setValue(default)
     assert get_val_from_widget(widget) == expected_val
 
 
@@ -392,13 +255,13 @@ def test_ComparisonPicker_init(qtbot):
 
 def test_ComparisonPicker_get_value(qtbot):
     qtbot, widget = widget_setup(qtbot, ComparisonPicker, io.load_csv('tests/test_files/test_design_matrix.csv', 0))
-    assert widget.get_value() == ('condition', 'cond1', 'cond1')
+    assert widget.value() == ('condition', 'cond1', 'cond1')
 
     widget.factor.setCurrentText('replicate')
     widget.numerator.setCurrentText('rep3')
     widget.denominator.setCurrentText('rep2')
 
-    assert widget.get_value() == ('replicate', 'rep3', 'rep2')
+    assert widget.value() == ('replicate', 'rep3', 'rep2')
 
 
 def test_ComparisonPickerGroup_init(qtbot):
@@ -599,7 +462,7 @@ def test_TableColumnPicker_select_all(qtbot):
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == cols
+    assert widget.value() == cols
     assert len(changed) == 1
 
 
@@ -613,7 +476,7 @@ def test_TableColumnPicker_clear_selection(qtbot):
 
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == []
+    assert widget.value() == []
     assert len(changed) == 1
 
 
@@ -631,7 +494,7 @@ def test_TableColumnPicker_custom_selection(qtbot, selections):
         ind = cols.index(selection)
         qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == selections
+    assert widget.value() == selections
     assert len(changed) == 1
 
 
@@ -648,7 +511,7 @@ def test_TableSingleColumnPicker_custom_selection(qtbot, selections):
         ind = cols.index(selection)
         qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == selections[-1]
+    assert widget.value() == selections[-1]
     assert len(changed) == 1
 
 
@@ -664,7 +527,7 @@ def test_TableColumnGroupPicker_select_all(qtbot):
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     qtbot.mouseClick(widget.select_all_button, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == truth
+    assert widget.value() == truth
     assert len(changed) == 1
 
 
@@ -678,7 +541,7 @@ def test_TableColumnGroupPicker_clear_selection(qtbot):
 
     qtbot.mouseClick(widget.clear_button, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == []
+    assert widget.value() == []
     assert len(changed) == 1
 
 
@@ -697,7 +560,7 @@ def test_TableColumnGroupPicker_custom_selection(qtbot, selections):
         ind = cols.index(selection)
         qtbot.mouseClick(widget.column_checks[ind].switch, LEFT_CLICK)
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == truth
+    assert widget.value() == truth
     assert len(changed) == 1
 
 
@@ -718,12 +581,12 @@ def test_TableColumnGroupPicker_custom_selection_grouped(qtbot, selections):
             qtbot.keyClicks(widget.column_combos[ind], str(i + 1))
 
     qtbot.mouseClick(widget.done_button, LEFT_CLICK)
-    assert widget.get_values() == selections
+    assert widget.value() == selections
     assert len(changed) == 1
 
     widget.reset()
 
-    assert widget.get_values() == [[item] for item in cols]
+    assert widget.value() == [[item] for item in cols]
 
 
 def test_PathInputDialog(qtbot):
@@ -992,19 +855,19 @@ def test_TrueFalseBoth(qtbot):
     selection_changed = []
     qtbot, widget = widget_setup(qtbot, TrueFalseBoth)
     widget.selectionChanged.connect(functools.partial(selection_changed.append, True))
-    assert widget.get_values() == []
+    assert widget.value() == []
     assert selection_changed == []
 
     qtbot.mouseClick(widget.true_button, LEFT_CLICK)
-    assert widget.get_values() == [True]
+    assert widget.value() == [True]
     assert selection_changed == [True]
 
     qtbot.mouseClick(widget.false_button, LEFT_CLICK)
-    assert widget.get_values() == [True, False]
+    assert widget.value() == [True, False]
     assert selection_changed == [True, True]
 
     qtbot.mouseClick(widget.true_button, LEFT_CLICK)
-    assert widget.get_values() == [False]
+    assert widget.value() == [False]
     assert selection_changed == [True, True, True]
 
 
@@ -1083,8 +946,8 @@ def test_RadioButtonBox_emit(qtbot):
     (int, 15, QtWidgets.QSpinBox),
     (float, 3.14, QtWidgets.QDoubleSpinBox),
     (Literal['a1', 'b1', 'c1'], 'b1', QtWidgets.QComboBox),
-    (Union[str, float, None, bool], True, QtWidgets.QTextEdit),
-    (Union[str, float, None, bool], 17, QtWidgets.QTextEdit)
+    (Union[str, float, None, bool], True, OptionalWidget),
+    (Union[str, float, bool], 17, QtWidgets.QTextEdit)
 ])
 def test_param_to_widget_native_types(qtbot, param_type, default, expected_widget):
     _run_param_to_widget(qtbot, param_type, default, 'param_name', expected_widget)
@@ -1094,12 +957,12 @@ def test_param_to_widget_native_types(qtbot, param_type, default, expected_widge
     (bool, True, 'status', ToggleSwitch),
     (param_typing.Color, '#000000', 'linecolor', ColorPicker),
     (param_typing.ColorList, ['#000000', '#aabbcc'], 'colors', MultiColorPicker),
-    (Union[str, None], None, 'name', OptionalLineEdit),
-    (Union[str, None], 'text', 'name', OptionalLineEdit),
-    (Union[int, None], None, 'name', OptionalSpinBox),
-    (Union[int, None], 5, 'name', OptionalSpinBox),
-    (Union[float, None], None, 'name', OptionalDoubleSpinBox),
-    (Union[float, None], -0.5, 'name', OptionalDoubleSpinBox),
+    (Union[str, None], None, 'name', OptionalWidget),
+    (Union[str, None], 'text', 'name', OptionalWidget),
+    (Union[int, None], None, 'name', OptionalWidget),
+    (Union[int, None], 5, 'name', OptionalWidget),
+    (Union[float, None], None, 'name', OptionalWidget),
+    (Union[float, None], -0.5, 'name', OptionalWidget),
     (Union[str, List[str]], ['a', 'b'], 'name', QMultiLineEdit),
     (Union[str, Iterable[str]], None, 'name', QMultiLineEdit),
     (Union[int, List[int]], [2, 7], 'name', QMultiSpinBox),
@@ -1142,7 +1005,7 @@ def test_param_to_widget_pipeline_mode_types(qtbot, param_type, name, expected_w
 
 @pytest.mark.parametrize('param_type,default,literal_default,expected_sub_widget', [
     (Union[Literal['all'], str], 'text', 'all', QtWidgets.QLineEdit),
-    (Union[Literal['any'], Union[str, None]], None, 'any', OptionalLineEdit),
+    (Union[Literal['any'], str, None], None, 'any', ComboBoxOrOtherWidget),
     (Union[Literal['any', 'none'], Union[int, List[int]]], [15, 16], 'any', QMultiSpinBox),
 
 ])

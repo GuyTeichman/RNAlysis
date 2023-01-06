@@ -207,7 +207,7 @@ def update_gene_sets_widget(widget: gui_widgets.GeneSetComboBox, objs):
 @pytest.fixture
 def enrichment_window(qtbot, available_objects):
     qtbot, window = widget_setup(qtbot, EnrichmentWindow)
-    window.geneSetsRequested.connect(functools.partial(update_gene_sets_widget, objs = available_objects))
+    window.geneSetsRequested.connect(functools.partial(update_gene_sets_widget, objs=available_objects))
     return window
 
 
@@ -380,7 +380,7 @@ def test_CutAdaptSingleWindow_start_analysis(qtbot, cutadapt_single_window):
 
     cutadapt_single_window.param_widgets['fastq_folder'].setText(fq_folder)
     cutadapt_single_window.param_widgets['output_folder'].setText(out_folder)
-    cutadapt_single_window.param_widgets['three_prime_adapters'].set_defaults(adapter)
+    cutadapt_single_window.param_widgets['three_prime_adapters'].setValue(adapter)
 
     with qtbot.waitSignal(cutadapt_single_window.paramsAccepted) as blocker:
         qtbot.mouseClick(cutadapt_single_window.start_button, LEFT_CLICK)
@@ -406,8 +406,8 @@ def test_CutAdaptPairedWindow_start_analysis(qtbot, cutadapt_paired_window):
     cutadapt_paired_window.pairs_widgets['r1_list'].add_items(r1_files)
     cutadapt_paired_window.pairs_widgets['r2_list'].add_items(r2_files)
     cutadapt_paired_window.param_widgets['output_folder'].setText(out_folder)
-    cutadapt_paired_window.param_widgets['three_prime_adapters_r1'].set_defaults(adapter1)
-    cutadapt_paired_window.param_widgets['three_prime_adapters_r2'].set_defaults(adapter2)
+    cutadapt_paired_window.param_widgets['three_prime_adapters_r1'].setValue(adapter1)
+    cutadapt_paired_window.param_widgets['three_prime_adapters_r2'].setValue(adapter2)
 
     with qtbot.waitSignal(cutadapt_paired_window.paramsAccepted) as blocker:
         qtbot.mouseClick(cutadapt_paired_window.start_button, LEFT_CLICK)
@@ -476,7 +476,7 @@ def test_ClicomWindow_add_setup(qtbot, clicom_window):
                  max_n_clusters_estimate='auto')
 
     qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
-    clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
+    clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
     assert len(clicom_window.parameter_dicts) == 1
     assert clicom_window.parameter_dicts[0] == truth
@@ -485,7 +485,7 @@ def test_ClicomWindow_add_setup(qtbot, clicom_window):
 def test_ClicomWindow_remove_setup(qtbot, monkeypatch, clicom_window):
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *args: QtWidgets.QMessageBox.Yes)
     qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
-    clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
+    clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
     assert len(clicom_window.parameter_dicts) == 1
 
@@ -517,7 +517,7 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
                         min_cluster_size=15, plot_style='all', split_plots=False)
 
     qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
-    clicom_window.stack.parameter_widgets['n_clusters'].other.set_defaults(3)
+    clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
 
     clicom_window.stack.func_combo.setCurrentText(filtering.CountFilter.split_hierarchical.readable_name)
@@ -1421,7 +1421,7 @@ def test_FilterTabPage_apply_split_clustering_function(qtbot, monkeypatch, count
 
     window.stack_buttons[4].click()
     qtbot.keyClicks(window.stack.currentWidget().func_combo, filtering.CountFilter.split_kmeans.readable_name)
-    window.stack.currentWidget().parameter_widgets['n_clusters'].other.set_defaults(3)
+    window.stack.currentWidget().parameter_widgets['n_clusters'].other.setValue(3)
     qtbot.mouseClick(window.stack.currentWidget().parameter_widgets['random_seed'].checkbox, LEFT_CLICK)
     with qtbot.waitSignals([window.filterObjectCreated, window.filterObjectCreated, window.filterObjectCreated],
                            timeout=15000) as blocker:
@@ -2347,7 +2347,7 @@ def test_MainWindow_get_available_objects(qtbot, use_temp_settings_file, main_wi
 
 
 def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window, monkeypatch):
-    def mock_init(self, available_objs, parent):
+    def mock_init(self, available_objs, parent=None):
         assert available_objs == 'my available objects'
         QtWidgets.QWidget.__init__(self)
 
@@ -2361,7 +2361,7 @@ def test_MainWindow_choose_set_op(qtbot, use_temp_settings_file, main_window, mo
 
 
 def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_window, monkeypatch):
-    def mock_init(self, available_objs, parent):
+    def mock_init(self, available_objs, parent=None):
         assert available_objs == 'my available objects'
         QtWidgets.QWidget.__init__(self)
 
@@ -2375,13 +2375,7 @@ def test_MainWindow_visualize_gene_sets(qtbot, use_temp_settings_file, main_wind
 
 
 def test_MainWindow_open_enrichment_analysis(qtbot, main_window, monkeypatch):
-    def mock_init(self, available_objs, parent):
-        assert available_objs == 'my available objects'
-        QtWidgets.QWidget.__init__(self)
-
-    monkeypatch.setattr(main_window, 'get_available_objects', lambda: 'my available objects')
     window_opened = []
-    monkeypatch.setattr(EnrichmentWindow, '__init__', mock_init)
     monkeypatch.setattr(EnrichmentWindow, 'show', functools.partial(window_opened.append, True))
 
     main_window.enrichment_action.trigger()
