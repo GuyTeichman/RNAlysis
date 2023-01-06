@@ -1595,7 +1595,7 @@ def gene_ontology_graph(namespace: Literal[param_typing.GO_ASPECTS], enrichment_
     dag_tree.plot_ontology(namespace, results_df, enrichment_score_col, title, ylabel, graph_format, dpi)
 
 
-def kegg_pathway_graph(pathway_id: str, marked_genes: Sequence[str],
+def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None],
                        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = '',
                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300):

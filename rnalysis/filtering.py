@@ -4189,7 +4189,7 @@ class CountFilter(Filter):
                                  ylabel: Union[str, Literal['auto']] = 'auto',
                                  title: Union[str, Literal['auto']] = 'auto',
                                  title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12,
-                                 highlight: Sequence[str] = None) -> plt.Figure:
+                                 highlight: Union[Sequence[str], None] = None) -> plt.Figure:
         """
         Generate a scatter plot where every dot is a feature, the x value is log10 of reads \
         (counts, RPM, RPKM, TPM, etc) in sample1, the y value is log10 of reads in sample2.
