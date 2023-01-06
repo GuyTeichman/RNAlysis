@@ -1417,15 +1417,14 @@ class QMultiComboBox(QMultiInput):
         self.dialog_widgets['inputs'][ind].setCurrentText(val)
 
 
-class QMultiBoolComboBox(QMultiComboBox):
-    def __init__(self, label: str, text: str = 'Set Input', parent=None):
-        super().__init__(label, text, parent, items=['True', 'False'])
+class QMultiToggleSwitch(QMultiInput):
+    CHILD_QWIDGET = ToggleSwitch
 
-    def get_widget_value(self, widget: QtWidgets.QComboBox):
-        return ast.literal_eval(widget.currentText())
+    def get_widget_value(self, widget: type(CHILD_QWIDGET)):
+        return widget.isChecked()
 
-    def set_widget_value(self, ind: int, val):
-        self.dialog_widgets['inputs'][ind].setCurrentText(str(val))
+    def set_widget_value(self, ind: int, val: bool):
+        self.dialog_widgets['inputs'][ind].setChecked(val)
 
 
 class ThreadStdOutStreamTextQueueReceiver(QtCore.QObject):
@@ -1663,7 +1662,7 @@ def param_to_widget(param, name: str,
             widget.valueChanged.connect(action)
 
     elif param.annotation in (Union[bool, List[bool]], Union[bool, Iterable[bool]], List[bool], Iterable[bool]):
-        widget = QMultiBoolComboBox(name)
+        widget = QMultiToggleSwitch(name)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:

@@ -17,6 +17,7 @@ Added
 Changed
 ********
 * When generating Gene Ontology/KEGG Pathway graphs, users can choose whether or not to generate the figure in an additional separate file.
+* Slight improvements in GUI performance, stability, and looks.
 
 Fixed
 ******
