@@ -21,6 +21,13 @@ EMPTY = inspect._empty
 class TableColumnPicker(QtWidgets.QPushButton):
     valueChanged = QtCore.pyqtSignal()
     IS_MULTI_INPUT = True
+    __slots__ = {'dialog': 'dialog window of the widget',
+                 'dialog_table': 'table containing widgets inside the dialog window',
+                 'done_button': 'done button',
+                 'select_all_button': 'select all button',
+                 'clear_button': 'clear button',
+                 'column_labels': 'labels of the differenet columns',
+                 'column_checks': 'toggle switches of the different columns'}
 
     def __init__(self, text: str = 'Choose columns', parent=None):
         super().__init__(text, parent)
@@ -115,6 +122,8 @@ class TableColumnPicker(QtWidgets.QPushButton):
 
 
 class TableSingleColumnPicker(TableColumnPicker):
+    __slots__ = {'button_group': 'group of all of the toggle switches, making sure exactly one is selected'}
+
     def __init__(self, text: str = 'Choose a column', parent=None):
         super().__init__(text, parent)
         self.button_group = QtWidgets.QButtonGroup(self)
@@ -147,6 +156,10 @@ class TableSingleColumnPicker(TableColumnPicker):
 
 
 class TableColumnGroupPicker(TableColumnPicker):
+    __slots__ = {'column_combos': 'combo boxes for choosing column groups',
+                 'colors': 'list of colors for each row',
+                 'reset_button': 'button for resetting the selections',
+                 '_color_gen': 'generator for choosing row colors'}
 
     def __init__(self, text: str = 'Choose columns', parent=None):
         self.column_combos: List[QtWidgets.QComboBox] = []
@@ -234,6 +247,11 @@ class TableColumnGroupPicker(TableColumnPicker):
 
 
 class PathInputDialog(QtWidgets.QDialog):
+    __slots__ = {'message': 'default message to display',
+                 'layout': 'layout of the widget',
+                 'button_box': 'button box for accept/reject buttons',
+                 'path': 'path line edit widget'}
+
     def __init__(self, message: str = "No prompt available", parent=None):
         super().__init__(parent)
         self.message = message
@@ -258,6 +276,8 @@ class PathInputDialog(QtWidgets.QDialog):
 class Worker(QtCore.QObject):
     finished = QtCore.pyqtSignal(tuple)
     startProgBar = QtCore.pyqtSignal(object)
+    __slots__ = {'partial': 'partial function to run in the Worker',
+                 'args': "arguments to emit alongside the partial function's output"}
 
     def __init__(self, partial, *args):
         self.partial = partial
@@ -280,6 +300,7 @@ class Worker(QtCore.QObject):
 class AltTQDM(QtCore.QObject):
     barUpdate = QtCore.pyqtSignal(int)
     barFinished = QtCore.pyqtSignal()
+    __slots__ = {'tqdm': 'underlying tqdm object/progress bar'}
 
     def __init__(self, iter_obj: Iterable = None, desc: str = '', unit: str = '',
                  bar_format: str = '', total: int = None):
@@ -306,6 +327,11 @@ class AltParallel(QtCore.QObject):
     barUpdate = QtCore.pyqtSignal(int)
     barTotalUpdate = QtCore.pyqtSignal(int)
     barFinished = QtCore.pyqtSignal()
+    __slots__ = {'parallel': 'underlying Parallel object',
+                 'desc': 'progress bar description',
+                 'total': 'progreess bar total',
+                 'prev_total': 'previous bar total',
+                 'prev_report': 'last sent update of bar progress'}
 
     def __init__(self, n_jobs: int = -1, total=None, desc: str = '', unit: str = 'it',
                  bar_format: str = '', *args, **kwargs):
@@ -342,6 +368,11 @@ class AltParallel(QtCore.QObject):
 
 
 class TextWithCopyButton(QtWidgets.QWidget):
+    __slots__ = {'text': 'text',
+                 'copy_button': 'copy button',
+                 'copied_label': 'label indicating when copy button was pressed',
+                 'layout': 'widget layout'}
+
     def __init__(self, text: str, parent=None):
         super().__init__(parent)
         self.text = text
@@ -375,6 +406,7 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
     RADIUS = 11
     WIDTH = 42
     BORDER = 2
+    __slots__ = {}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -418,6 +450,8 @@ class ToggleSwitchCore(QtWidgets.QPushButton):
 
 class ToggleSwitch(QtWidgets.QWidget):
     IS_CHECK_BOX_LIKE = True
+    __slots__ = {'switch': 'toggle switch core',
+                 'layout': 'widget layout'}
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -435,6 +469,11 @@ class ToggleSwitch(QtWidgets.QWidget):
 class ComboBoxOrOtherWidget(QtWidgets.QWidget):
     IS_COMBO_BOX_LIKE = True
     OTHER_TEXT = 'Other...'
+    __slots__ = {'layout': 'layout',
+                 'combo': 'Literals combo box',
+                 'items': 'combo box items',
+                 'other': 'other widget',
+                 'default': 'default_value'}
 
     def __init__(self, items: Tuple[str, ...], other: QtWidgets.QWidget, default: str = None, parent=None):
         super().__init__(parent)
@@ -475,6 +514,9 @@ class ComboBoxOrOtherWidget(QtWidgets.QWidget):
 
 
 class HelpButton(QtWidgets.QToolButton):
+    __slots__ = {'param_name': 'name of the parameter',
+                 'desc': 'description of the parameter'}
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxQuestion))
@@ -507,6 +549,10 @@ class HelpButton(QtWidgets.QToolButton):
 
 class ColorPicker(QtWidgets.QWidget):
     IS_LINE_EDIT_LIKE = True
+    __slots__ = {'picker_window': 'color picker dialog',
+                 'layout': 'widget layout',
+                 'pick_button': 'button for opening dialog',
+                 'color_line': 'text edit containing the color name/hex code'}
 
     def __init__(self, default: Union[str, None] = None, parent=None):
         super().__init__(parent)
@@ -1169,6 +1215,10 @@ class QMultiInput(QtWidgets.QPushButton):
     IS_MULTI_INPUT = True
     CHILD_QWIDGET = None
     valueChanged = QtCore.pyqtSignal()
+    __slots__ = {'label': 'multi widget label',
+                 'dialog_widgets': 'dict of the dialog widgets',
+                 'dialog_started': 'stores whether the dialog was already started >=1 times',
+                 'dialog_layout': 'layout of the dialog window'}
 
     def __init__(self, label: str = '', text='Set input', parent=None):
         super().__init__(text, parent)
