@@ -1006,11 +1006,15 @@ def test_param_to_widget_pipeline_mode_types(qtbot, param_type, name, expected_w
 @pytest.mark.parametrize('param_type,default,literal_default,expected_sub_widget', [
     (Union[Literal['all'], str], 'text', 'all', QtWidgets.QLineEdit),
     (Union[Literal['any'], str, None], None, 'any', ComboBoxOrOtherWidget),
+    (Union[Literal['any'], str, int], 5, 'any', StrIntLineEdit),
     (Union[Literal['any', 'none'], Union[int, List[int]]], [15, 16], 'any', QMultiSpinBox),
 
 ])
 def test_param_to_widget_with_literals(qtbot, param_type, default, literal_default, expected_sub_widget):
-    expected_widget = ComboBoxOrOtherWidget
+    if expected_sub_widget == ComboBoxOrOtherWidget:
+        expected_widget = OptionalWidget
+    else:
+        expected_widget = ComboBoxOrOtherWidget
     _run_param_to_widget(qtbot, param_type, default, 'name', expected_widget)
     _run_param_to_widget(qtbot, param_type, literal_default, 'name', expected_widget)
 
