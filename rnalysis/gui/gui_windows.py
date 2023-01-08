@@ -1,8 +1,8 @@
 import functools
 import itertools
 import traceback
-from pathlib import Path
 import warnings
+from pathlib import Path
 from queue import Queue
 from typing import Callable
 
@@ -11,8 +11,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from rnalysis import __version__
 from rnalysis.gui import gui_style, gui_widgets
-from rnalysis.utils import settings, io
-from utils import generic, io
+from rnalysis.utils import settings, io, generic
 
 
 class CheckableFileSystemModel(QtWidgets.QFileSystemModel):
