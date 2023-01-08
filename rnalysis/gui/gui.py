@@ -29,115 +29,7 @@ FILTER_OBJ_TYPES_INV = {val.__name__: key for key, val in FILTER_OBJ_TYPES.items
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 
-class FuncExternalWindow(gui_widgets.MinMaxDialog):
-    IGNORED_WIDGETS = {'help_link'}
-    paramsAccepted = QtCore.pyqtSignal(list, dict, object)
-    geneSetsRequested = QtCore.pyqtSignal(object)
-    __slots__ = {'func_name': 'name of the function to be applied',
-                 'func': 'function to be applied',
-                 'signature': 'signature of the function',
-                 'desc': 'description of the function',
-                 'param_desc': 'description of the function parameters',
-                 'exluded_params': 'parameters to be excluded from the window',
-                 'scroll': 'scroll area',
-                 'scroll_widget': 'widget containing the scroll area',
-                 'scroll_layout': 'layout for the scroll widget',
-                 'param_group': 'widget group for the parameter widgets',
-                 'param_grid': 'layout for the parameter widgets',
-                 'param_widgets': 'parameter widgets',
-                 'start_button': 'start button',
-                 'close_button': 'close button'}
-
-    def __init__(self, func_name: str, func: Callable, excluded_params: set, parent=None):
-        super().__init__(parent)
-        self.func_name = func_name
-        self.func = func
-        self.signature = generic.get_method_signature(self.func)
-        self.desc, self.param_desc = io.get_method_docstring(self.func)
-        self.excluded_params = excluded_params.copy()
-
-        self.widgets = {}
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-
-        self.scroll = QtWidgets.QScrollArea()
-        self.scroll_widget = QtWidgets.QWidget(self.scroll)
-        self.scroll_layout = QtWidgets.QGridLayout(self.scroll_widget)
-
-        self.param_group = QtWidgets.QGroupBox(f"1. Set {func_name} parameters")
-        self.param_grid = QtWidgets.QGridLayout(self.param_group)
-        self.param_widgets = {}
-
-        self.start_button = QtWidgets.QPushButton(f'Start {self.func_name}')
-        self.close_button = QtWidgets.QPushButton('Close')
-
-    def init_ui(self):
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setWidget(self.scroll_widget)
-        self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
-
-        self.main_layout.addWidget(self.scroll)
-
-        self.scroll_layout.addWidget(self.param_group, 0, 0)
-        self.scroll_layout.addWidget(self.start_button, 1, 0, 1, 2)
-        self.scroll_layout.addWidget(self.close_button, 2, 0, 1, 2)
-
-        self.start_button.clicked.connect(self.start_analysis)
-        self.close_button.clicked.connect(self.close)
-
-        self.init_param_ui()
-
-    def init_param_ui(self):
-        i = 0
-
-        for name, param in self.signature.items():
-            if name in self.excluded_params:
-                continue
-            this_desc = self.param_desc.get(name, '')
-            self.param_widgets[name] = gui_widgets.param_to_widget(param, name)
-            self.connect_widget(self.param_widgets[name])
-
-            label = QtWidgets.QLabel(f'{name}:', self.param_widgets[name])
-            label.setToolTip(this_desc)
-            help_button = gui_widgets.HelpButton()
-            self.param_grid.addWidget(help_button, i, 2)
-            self.param_grid.addWidget(label, i, 0)
-            self.param_grid.addWidget(self.param_widgets[name], i, 1)
-            help_button.connect_param_help(name, this_desc)
-            i += 1
-        self.param_grid.setRowStretch(i, 1)
-
-    def connect_widget(self, widget: QtWidgets.QWidget):
-        if isinstance(widget, (gui_widgets.ComboBoxOrOtherWidget, gui_widgets.OptionalWidget)):
-            self.connect_widget(widget.other)
-        elif isinstance(widget, gui_widgets.GeneSetComboBox):
-            widget.boxOpened.connect(functools.partial(self.geneSetsRequested.emit, widget))
-
-    def get_analysis_kwargs(self):
-        kwargs = {}
-        for param_name, widget in self.param_widgets.items():
-            if param_name in self.IGNORED_WIDGETS:
-                continue
-            val = gui_widgets.get_val_from_widget(widget)
-            kwargs[param_name] = val
-        return kwargs
-
-    def get_analysis_args(self):
-        args = []
-        return args
-
-    def start_analysis(self):
-        args = self.get_analysis_args()
-        kwargs = self.get_analysis_kwargs()
-        self.showMinimized()
-        try:
-            self.paramsAccepted.emit(args, kwargs, self.showNormal)
-        except Exception as e:
-            self.showNormal()
-            raise e
-
-
-class OntologyGraphWindow(FuncExternalWindow):
+class OntologyGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
     __slots__ = {}
@@ -151,7 +43,7 @@ class OntologyGraphWindow(FuncExternalWindow):
         super().init_ui()
 
 
-class PathwayGraphWindow(FuncExternalWindow):
+class PathwayGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
     __slots__ = {}
@@ -165,7 +57,7 @@ class PathwayGraphWindow(FuncExternalWindow):
         super().init_ui()
 
 
-class KallistoIndexWindow(FuncExternalWindow):
+class KallistoIndexWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
     __slots__ = {}
@@ -179,7 +71,7 @@ class KallistoIndexWindow(FuncExternalWindow):
         super().init_ui()
 
 
-class KallistoSingleWindow(FuncExternalWindow):
+class KallistoSingleWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
     __slots__ = {}
@@ -194,7 +86,7 @@ class KallistoSingleWindow(FuncExternalWindow):
         super().init_ui()
 
 
-class KallistoPairedWindow(FuncExternalWindow):
+class KallistoPairedWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
     IGNORED_WIDGETS = {'help_link'}
     __slots__ = {'pairs_group': 'widget group for picking file pairs',
@@ -233,7 +125,7 @@ class KallistoPairedWindow(FuncExternalWindow):
         return kwargs
 
 
-class CutAdaptSingleWindow(FuncExternalWindow):
+class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     IGNORED_WIDGETS = {'help_link'}
     __slots__ = {}
@@ -247,7 +139,7 @@ class CutAdaptSingleWindow(FuncExternalWindow):
         super().init_ui()
 
 
-class CutAdaptPairedWindow(FuncExternalWindow):
+class CutAdaptPairedWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
     IGNORED_WIDGETS = {'help_link'}
     __slots__ = {'pairs_group': 'widget group for picking file pairs',
@@ -285,7 +177,7 @@ class CutAdaptPairedWindow(FuncExternalWindow):
         return kwargs
 
 
-class DESeqWindow(FuncExternalWindow):
+class DESeqWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'comparisons'}
     IGNORED_WIDGETS = {'help_link', 'load_design'}
     __slots__ = {'comparisons': 'list of comparisons to make',
@@ -338,7 +230,7 @@ class DESeqWindow(FuncExternalWindow):
         return kwargs
 
 
-class ClicomWindow(FuncExternalWindow):
+class ClicomWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
     ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode'}
 
