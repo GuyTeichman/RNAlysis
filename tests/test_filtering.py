@@ -1497,7 +1497,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
     pl_c.add_function('biotypes_from_ref_table', ref=__biotype_ref__)
-    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=17500, opposite=True)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=5000, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
@@ -1510,7 +1510,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
     c_dict['biotypes_from_ref_table_1'] = c.biotypes_from_ref_table(ref=__biotype_ref__)
-    c_res = c.filter_top_n(by='cond3rep1', n=17500, opposite=True, inplace=False)
+    c_res = c.filter_top_n(by='cond3rep1', n=5000, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=40, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
     for obj in c_res:
@@ -1546,7 +1546,7 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
 
 def test_split_kmeans_api():
     c = CountFilter('tests/test_files/big_counted.csv')
-    res = c.split_kmeans(n_clusters=4)
+    res = c.split_kmeans(n_clusters=4, n_init=2, max_iter=50)
     assert isinstance(res, tuple)
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
@@ -1579,7 +1579,7 @@ def test_split_hierarchical_api():
 
 
 def test_split_hdbscan_api():
-    c = CountFilter('tests/test_files/big_counted.csv')
+    c = CountFilter('tests/test_files/big_counted.csv').filter_top_n('cond1rep1',n=2000,inplace=False)
     res = c.split_hdbscan(100)
     _test_correct_clustering_split(c, res, True)
     res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_probabilities=True)

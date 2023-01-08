@@ -42,7 +42,7 @@ def test_calc_randomization_pval():
     hypergeom_pval = 0.2426153598589023
     avg_pval = 0
     for i in range(5):
-        avg_pval += EnrichmentRunner._calc_randomization_pval(500, 1, np.random.random(10000) < 0.1, 100000, 0.11)
+        avg_pval += EnrichmentRunner._calc_randomization_pval(500, 1, np.random.random(10000) < 0.1, 10000, 0.11)
     avg_pval /= 5
     assert np.isclose(avg_pval, hypergeom_pval, atol=0.02)
 

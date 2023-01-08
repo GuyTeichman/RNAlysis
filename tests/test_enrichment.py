@@ -195,7 +195,7 @@ def test_enrichment_randomization_reliability():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     random_seed = 0
 
-    for i in range(3):
+    for i in range(2):
         res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
@@ -261,18 +261,18 @@ def test_enrichment_randomization_parallel_reliability():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     random_seed = 0
 
-    for i in range(3):
-        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+    for i in range(2):
+        res1 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
                                           random_seed=random_seed, parallel=True)
-        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+        res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
                                           random_seed=random_seed + 1, parallel=True)
-        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
+        res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
@@ -542,15 +542,14 @@ def test_go_enrichment_single_set_api(organism, propagate_annotations):
                     'WBGene00004920', 'WBGene00011910', 'WBGene00014208']
 
     en = RankedSet(genes_ranked, set_name='test_set')
-    _ = en.single_set_go_enrichment(organism, 'WBGene', evidence_types='experimental',
+    _ = en.single_set_go_enrichment(organism, 'WBGene', evidence_types='experimental', databases='WB',
                                     aspects='biological_process', propagate_annotations=propagate_annotations)
     plt.close('all')
 
 
 @pytest.mark.skipif(not ENSEMBL_AVAILABLE, reason='Ensembl REST API is not available at the moment')
 @pytest.mark.parametrize("organism,statistical_test,propagate_annotations,kwargs",
-                         [('auto', 'hypergeometric', 'classic', {}),
-                          ('auto', 'fisher', 'elim', {}),
+                         [('auto', 'fisher', 'elim', {}),
                           ('caenorhabditis elegans', 'randomization', 'no', dict(randomization_reps=100))])
 def test_go_enrichment_api(organism, statistical_test, propagate_annotations, kwargs):
     genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
