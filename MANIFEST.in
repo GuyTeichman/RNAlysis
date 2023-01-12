@@ -1,4 +1,5 @@
 recursive-include . *.rst *.ico *.png
+recursive-include . requirements*.txt
 
 recursive-include rnalysis *.png *.json *.qss *.R *.ico
 recursive-exclude rnalysis *.webp
