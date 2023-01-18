@@ -1,6 +1,5 @@
 import filecmp
 import gzip
-import os.path
 import shutil
 
 import pytest
@@ -26,10 +25,13 @@ def are_dir_trees_equal(dir1, dir2):
     dirs_cmp = filecmp.dircmp(dir1, dir2)
     if len(dirs_cmp.left_only) > 0 or len(dirs_cmp.right_only) > 0 or \
         len(dirs_cmp.funny_files) > 0:
+        print(f"mismatch between {dir1} and {dir2} with left_only={dirs_cmp.left_only}, "
+              f"right_only={dirs_cmp.right_only}, funny={dirs_cmp.funny_files}")
         return False
     (_, mismatch, errors) = filecmp.cmpfiles(
         dir1, dir2, dirs_cmp.common_files, shallow=False)
     if len(mismatch) > 0 or len(errors) > 0:
+        print(f"mismatch between {dir1} and {dir2} in the files {mismatch} with errors {errors}")
         return False
     for common_dir in dirs_cmp.common_dirs:
         new_dir1 = Path(dir1).joinpath(common_dir).as_posix()
