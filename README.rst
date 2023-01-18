@@ -39,7 +39,8 @@ How do I install it?
 ---------------------
 You can install *RNAlysis* via PyPI.
 
-To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines), you should first install `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater (on Windows computers only), `GraphViz <https://graphviz.org/download/>`_, `R <https://cran.r-project.org/bin/>`_, and `kallisto <https://pachterlab.github.io/kallisto/download>`_.
+To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines),
+you should first install `GraphViz <https://graphviz.org/download/>`_, `R <https://cran.r-project.org/bin/>`_, `kallisto <https://pachterlab.github.io/kallisto/download>`_, and `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater (on Windows computers only.
 Then use the following command in your terminal window::
 
     pip install RNAlysis[all]
@@ -63,6 +64,15 @@ by calling the install command with one or more additional features inside the s
 
 
 will install the basic version of *RNAlysis*, along with the `fastq` and `single-set` additional features.
+
+If you install *RNAlysis* on a Linux system, you may need to install **Qt 5 Image Formats** to view tutorial videos from within *RNAlysis*.
+To do so on Debian/ubuntu systems::
+
+    $ sudo apt install qt5-image-formats-plugins
+
+or on Red Hat-based distros such as Fedora::
+
+    $ dnf install qt5-qtimageformats
 
 ----
 
