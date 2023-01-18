@@ -1,8 +1,9 @@
-from rnalysis.utils import parsing, io
-from typing import Union, Iterable, Tuple
-from pathlib import Path
-import time
 import hashlib
+import time
+from pathlib import Path
+from typing import Union, Iterable, Tuple
+
+from rnalysis.utils import io
 
 try:
     from typing import Literal
@@ -12,7 +13,12 @@ except ImportError:
 
 def install_deseq2(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
     script_path = Path.joinpath(Path(__file__).parent, 'r_templates/deseq2_install.R')
-    io.run_r_script(script_path, r_installation_folder)
+    try:
+        io.run_r_script(script_path, r_installation_folder)
+    except AssertionError:
+        raise AssertionError("Failed to install DESeq2. "
+                             "Please make sure you have write premission to R's library folder, "
+                             "or try to install DESeq2 manually.")
 
 
 def create_deseq2_script(data: Union[str, Path], design_matrix: Union[str, Path],
