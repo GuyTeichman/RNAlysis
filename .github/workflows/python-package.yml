@@ -20,6 +20,9 @@ jobs:
             -   name: apt-get update (Linux)
                 if: runner.os == 'Linux'
                 run: sudo apt-get update
+            -   name: brew update (MacOS)
+                if: runner.os == 'MacOS'
+                run: brew update
             -   name: Setup Qt requirements for Linux
                 uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
@@ -47,6 +50,8 @@ jobs:
             -   name: Install kallisto
                 run: |
                     if [ "$RUNNER_OS" == "Linux" ]; then
+                         brew install kallisto
+                    elif [ "$RUNNER_OS" == "MacOS" ]; then
                          brew install kallisto
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
