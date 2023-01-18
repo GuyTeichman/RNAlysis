@@ -29,7 +29,6 @@ except ImportError:
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pairwisedist as pwdist
 import pandas as pd
 import seaborn as sns
 from grid_strategy import strategies
@@ -2570,7 +2569,16 @@ class CountFilter(Filter):
             io.get_todays_cache_dir().mkdir(parents=True)
         io.save_csv(self.df.round(), data_path)
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
-        io.save_csv(io.load_csv(design_matrix, index_col=0), design_mat_path)
+        design_mat_df = io.load_csv(design_matrix, index_col=0)
+        assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
+                                                        f"{design_mat_df.shape[0]} does not match the number of " \
+                                                        f"columns in the count matrix {self.shape[1]}."
+        assert sorted(design_mat_df.index) == sorted(self.columns), f"The sample names in the design matrix do not " \
+                                                                    f"match the sample names in the count matrix: " \
+                                                                    f"{sorted(design_mat_df.index)} != " \
+                                                                    f"{sorted(self.columns)}"
+
+        io.save_csv(design_mat_df, design_mat_path)
 
         output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,
                                                                  r_installation_folder)
