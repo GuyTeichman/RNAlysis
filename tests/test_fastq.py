@@ -32,6 +32,13 @@ def are_dir_trees_equal(dir1, dir2):
         dir1, dir2, dirs_cmp.common_files, shallow=False)
     if len(mismatch) > 0 or len(errors) > 0:
         print(f"mismatch between {dir1} and {dir2} in the files {mismatch} with errors {errors}")
+        for item in mismatch:
+            for this_dir in [dir1, dir2]:
+                pth = Path(this_dir).joinpath(item)
+                print(f'{pth} contents:')
+                with open(this_dir) as f:
+                    print(f.read())
+                    print('---------------------------')
         return False
     for common_dir in dirs_cmp.common_dirs:
         new_dir1 = Path(dir1).joinpath(common_dir).as_posix()
