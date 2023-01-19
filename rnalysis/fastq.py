@@ -153,7 +153,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     call.extend(["-l", str(average_fragment_length)])
 
     legal_samples = []
-    for item in Path(fastq_folder).iterdir():
+    for item in sorted(Path(fastq_folder).iterdir()):
         if item.is_file():
             name = item.name
             if any([name.endswith(suffix) for suffix in LEGAL_FASTQ_SUFFIXES]):
