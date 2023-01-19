@@ -2554,8 +2554,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
-        icon_pth = str(Path(__file__).parent.parent.joinpath('favicon.ico').absolute())
-        self.setWindowIcon(QtGui.QIcon(icon_pth))
         self.setGeometry(600, 50, 1050, 800)
         self.update_style_sheet()
 
@@ -3612,6 +3610,10 @@ def customwarn(message, category, filename, lineno, file=None, line=None):
 
 def run():
     app = QtWidgets.QApplication(sys.argv)
+    app.setDesktopFileName('RNAlysis')
+    icon_pth = str(Path(__file__).parent.parent.joinpath('favicon.ico').absolute())
+    app.setWindowIcon(QtGui.QIcon(icon_pth))
+
     splash = gui_windows.splash_screen()
     app.processEvents()
     base_message = f"<i>RNAlysis</i> version {__version__}:\t"
