@@ -36,7 +36,7 @@ def are_dir_trees_equal(dir1, dir2):
             for this_dir in [dir1, dir2]:
                 pth = Path(this_dir).joinpath(item)
                 print(f'{pth} contents:')
-                with open(this_dir) as f:
+                with open(pth) as f:
                     print(f.read())
                     print('---------------------------')
         return False
