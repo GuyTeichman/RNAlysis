@@ -342,7 +342,7 @@ def _merge_kallisto_outputs(output_folder: Union[str, Path]):
     """
     counts = pd.DataFrame()
     tpm = pd.DataFrame()
-    for item in Path(output_folder).iterdir():
+    for item in sorted(Path(output_folder).iterdir()):
         if item.is_dir():
             abundance_path = item.joinpath('abundance.tsv')
             if abundance_path.exists():
