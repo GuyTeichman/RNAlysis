@@ -23,7 +23,7 @@ jobs:
             -   name: apt-get update (Linux)
                 if: runner.os == 'Linux'
                 run: sudo apt-get update
-            -   name: brew update (MacOS)
+            -   name: brew update (macOS)
                 if: runner.os == 'MacOS'
                 run: brew update
             -   name: Setup Qt requirements for Linux
@@ -54,7 +54,7 @@ jobs:
                 run: |
                     if [ "$RUNNER_OS" == "Linux" ]; then
                          brew install kallisto
-                    elif [ "$RUNNER_OS" == "MacOS" ]; then
+                    elif [ "$RUNNER_OS" == "macOS" ]; then
                          brew install kallisto
                     elif [ "$RUNNER_OS" == "Windows" ]; then
                          choco install wget -y
