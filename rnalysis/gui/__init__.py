@@ -1,8 +1,8 @@
 """
 This module contains code related to the graphical user interface.
 """
-from .gui import run
+from .main import main
 
 
 def run_gui():
-    run()
+    main()
