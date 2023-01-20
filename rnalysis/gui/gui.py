@@ -17,7 +17,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
-from joblib.externals.loky import get_reusable_executor
+from joblib import parallel_backend
 
 from rnalysis import fastq, filtering, enrichment, __version__
 from rnalysis.gui import gui_style, gui_widgets, gui_windows, gui_graphics, gui_quickstart
@@ -231,8 +231,9 @@ class DESeqWindow(gui_windows.FuncExternalWindow):
 
 
 class ClicomWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode'}
-    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode'}
+    EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode', 'parallel_backend'}
+    ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode',
+                                  'parallel_backend'}
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
         super().__init__('CLICOM', filtering.CountFilter.split_clicom, self.EXCLUDED_PARAMS, parent)
@@ -293,7 +294,7 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
 
 class EnrichmentWindow(gui_widgets.MinMaxDialog):
     EXCLUDED_PARAMS = {'self', 'save_csv', 'fname', 'return_fig', 'biotype', 'background_genes',
-                       'statistical_test', 'parametric_test', 'biotype_ref_path', 'gui_mode'}
+                       'statistical_test', 'parametric_test', 'biotype_ref_path', 'gui_mode', 'parallel_backend'}
 
     ANALYSIS_TYPES = {'Gene Ontology (GO)': 'go',
                       'Kyoto Encyclopedia of Genes and Genomes (KEGG)': 'kegg',
@@ -584,7 +585,7 @@ class EnrichmentWindow(gui_widgets.MinMaxDialog):
         return analysis_type != 'non_categorical'
 
     def get_analysis_params(self):
-        kwargs = {}
+        kwargs = dict()
         stat_test = self._get_statistical_test()
 
         if not self.is_single_set():
@@ -1325,7 +1326,7 @@ class SetTabPage(TabPage):
 
 
 class FuncTypeStack(QtWidgets.QWidget):
-    EXCLUDED_PARAMS = {'self', 'gui_mode'}
+    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode'}
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
     geneSetsRequested = QtCore.pyqtSignal(object)
@@ -1386,11 +1387,13 @@ class FuncTypeStack(QtWidgets.QWidget):
         # delete previous widgets
         gui_widgets.clear_layout(self.parameter_grid)
         self.parameter_widgets = {}
+
         chosen_func_name = self.get_function_name()
         if chosen_func_name == self.NO_FUNC_CHOSEN_TEXT:
             self._set_empty_tooltip()
             self.funcSelected.emit(False)
             return
+
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = io.get_method_docstring(chosen_func_name, self.filter_obj)
         self.func_combo.setToolTip(desc)
@@ -1772,9 +1775,12 @@ class FilterTabPage(TabPage):
         self.update_table_name_label()
 
     def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
-        # since clustering functions can be computationally intensive, start it in another thread
+        # since clustering functions can be computationally intensive, start them in another thread.
+        # furthermode, make sure they use the 'multiprocessing' backend instead of the 'loky' backend -
+        # otherwise this could cause issues in Pyinstaller-frozen versions of RNAlysis
         if func_name in self.CLUSTERING_FUNCS:
             kwargs['gui_mode'] = True
+            kwargs['parallel_backend'] = 'multiprocessing'
             partial = functools.partial(getattr(self.filter_obj, func_name), *args, **kwargs)
             self.startedClustering.emit(partial, func_name, finish_slot)
             return
@@ -2521,9 +2527,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_menu_ui()
         self.init_shortcuts()
 
-        if settings.get_show_tutorial_settings():
-            self.quickstart_window.show()
-
         self.queue_stdout = Queue()
         # create console text read thread + receiver object
         self.thread_stdout_queue_listener = QtCore.QThread()
@@ -2551,6 +2554,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.job_timer.timeout.connect(self.run_partial)
         self.job_timer.start(3500)
         self.jobQueued.connect(self.run_partial)
+
+    def show_tutorial(self):
+        if settings.get_show_tutorial_settings():
+            self.quickstart_window.show()
 
     def init_ui(self):
         self.setWindowTitle(f'RNAlysis {__version__}')
@@ -3427,10 +3434,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if reply == QtWidgets.QMessageBox.Yes:
             self.thread_stdout_queue_listener.exit()
-
             io.clear_gui_cache()
-            get_reusable_executor().shutdown(wait=True)
-
             event.accept()
         else:
             event.ignore()
@@ -3609,24 +3613,33 @@ def customwarn(message, category, filename, lineno, file=None, line=None):
 
 
 def run():
-    app = QtWidgets.QApplication(sys.argv)
+    parallel_backend('multiprocessing')
+    lockfile = QtCore.QLockFile(QtCore.QDir.tempPath() + '/RNAlysis.lock')
+    if lockfile.tryLock(100):
+        show_app=True
+    else:
+        show_app = False
+
+    app = QtWidgets.QApplication([])
     app.setDesktopFileName('RNAlysis')
     icon_pth = str(Path(__file__).parent.parent.joinpath('favicon.ico').absolute())
     app.setWindowIcon(QtGui.QIcon(icon_pth))
 
-    splash = gui_windows.splash_screen()
-    app.processEvents()
-    base_message = f"<i>RNAlysis</i> version {__version__}:\t"
-    splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+    if show_app:
+        splash = gui_windows.splash_screen()
+        app.processEvents()
+        base_message = f"<i>RNAlysis</i> version {__version__}:\t"
+        splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+
+
+        video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
+        for i in io.get_gui_videos(video_files):
+            splash.showMessage(
+                base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
+                QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+
+        splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     matplotlib.use('Qt5Agg')
-
-    video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
-    for i in io.get_gui_videos(video_files):
-        splash.showMessage(
-            base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
-            QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
-
-    splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     window = MainWindow()
     warnings.showwarning = customwarn
     sys.excepthook = window.excepthook
@@ -3639,7 +3652,9 @@ def run():
                       "If you want to improve the performance of slow operations on RNAlysis, "
                       "please install package 'numba'. ")
 
-    window.show()
-    window.check_for_updates(False)
-    splash.finish(window)
+    if show_app:
+        window.show()
+        window.check_for_updates(False)
+        window.show_tutorial()
+        splash.finish(window)
     sys.exit(app.exec())

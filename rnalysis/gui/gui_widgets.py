@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple, Sequence, Iterable, Union, Callable
 import matplotlib
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets, QtGui
-from joblib import Parallel
+from joblib import Parallel, parallel_backend
 from tqdm.auto import tqdm
 from typing_extensions import Literal, get_origin, get_args
 
@@ -335,6 +335,7 @@ class AltParallel(QtCore.QObject):
 
     def __init__(self, n_jobs: int = -1, total=None, desc: str = '', unit: str = 'it',
                  bar_format: str = '', *args, **kwargs):
+        kwargs['backend'] = 'multiprocessing'
         self.parallel = Parallel(*args, n_jobs=n_jobs, **kwargs)
         self.desc = desc
         self.total = total
@@ -344,7 +345,7 @@ class AltParallel(QtCore.QObject):
         self.barUpdate.emit(1)
 
     def __call__(self, *args, **kwargs):
-
+        parallel_backend('multiprocessing')
         self.parallel.print_progress = functools.partial(self.print_progress)
         return self.parallel.__call__(*args, **kwargs)
 
