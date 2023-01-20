@@ -1,5 +1,6 @@
 import matplotlib
 import pytest
+from joblib import parallel_backend
 
 matplotlib.use('Agg')
 from rnalysis.gui.gui import *
@@ -529,7 +530,8 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
 
     with qtbot.waitSignal(clicom_window.paramsAccepted) as blocker:
-        qtbot.mouseClick(clicom_window.start_button, LEFT_CLICK)
+        with parallel_backend('multiprocessing'):
+            qtbot.mouseClick(clicom_window.start_button, LEFT_CLICK)
     assert blocker.args[0] == truth_setups
     assert blocker.args[1] == truth_params
 
