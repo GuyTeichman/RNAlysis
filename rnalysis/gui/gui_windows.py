@@ -815,9 +815,9 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
     def start_analysis(self):
         args = self.get_analysis_args()
         kwargs = self.get_analysis_kwargs()
-        self.showMinimized()
         try:
             self.paramsAccepted.emit(args, kwargs, self.showNormal)
+            self.showMinimized()
         except Exception as e:
             self.showNormal()
             raise e
