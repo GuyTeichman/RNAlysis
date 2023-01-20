@@ -16,6 +16,8 @@ Added
 
 Changed
 ********
+* Replaced the 'parallel' parameter in enrichment functions with the 'parallel_backend' parameter, allowing users to choose which parallel backend (if any) will be used in the function.
+* Added 'parallel_backend' parameter to all clustering functions under the filtering module.
 * When generating Gene Ontology/KEGG Pathway graphs, users can choose whether or not to generate the figure in an additional separate file.
 * Slight improvements in GUI performance, stability, and looks.
 
