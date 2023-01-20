@@ -529,8 +529,8 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
 
-    with qtbot.waitSignal(clicom_window.paramsAccepted) as blocker:
-        with parallel_backend('multiprocessing'):
+    with parallel_backend('multiprocessing'):
+        with qtbot.waitSignal(clicom_window.paramsAccepted) as blocker:
             qtbot.mouseClick(clicom_window.start_button, LEFT_CLICK)
     assert blocker.args[0] == truth_setups
     assert blocker.args[1] == truth_params
