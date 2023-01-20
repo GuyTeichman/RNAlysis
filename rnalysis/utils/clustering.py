@@ -15,6 +15,7 @@ from grid_strategy import strategies
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics import pairwise_distances, silhouette_score
+from sklearn.utils import parallel_backend as sklearn_parallel_backend
 from sklearn_extra.cluster import KMedoids
 from tqdm.auto import tqdm
 
@@ -117,12 +118,13 @@ class ArbitraryClusterer:
 
 class CLICOM:
     def __init__(self, clustering_solutions: BinaryFormatClusters, threshold: float, cluster_wise_cliques: bool = True,
-                 cluster_unclustered_features: bool = True, min_cluster_size: int = 15):
+                 cluster_unclustered_features: bool = True, min_cluster_size: int = 15, parallel_backend='loky'):
         self.clustering_solutions: BinaryFormatClusters = clustering_solutions
         self.threshold: float = threshold
         self.cluster_wise_cliques: bool = cluster_wise_cliques
         self.cluster_unclustered_features = cluster_unclustered_features
         self.min_cluster_size = min_cluster_size
+        self.parallel_backend = parallel_backend
 
         self.n_features: int = self.clustering_solutions.n_features
 
@@ -287,8 +289,8 @@ class CLICOM:
 
         n_calculations = (n_clusters ** 2) // 2
         batch_size = 1 + n_calculations // joblib.cpu_count()
-        similarities = generic.ProgressParallel(n_jobs=-1, batch_size=batch_size,
-                                                desc='Generating cluster similarity matrix')(
+        similarities = generic.ProgressParallel(desc='Generating cluster similarity matrix', n_jobs=-1,
+                                                batch_size=batch_size, backend=self.parallel_backend)(
             joblib.delayed(CLICOM.inter_cluster_similarity)(*ind, self.clustering_solutions.cluster_sets,
                                                             self.n_features, len(self.clustering_solutions)) for ind in
             indices)
@@ -398,10 +400,10 @@ class KMedoidsIter:
 class ClusteringRunner:
     precomputed_metrics = {'spearman': pwdist.spearman_distance, 'pearson': pwdist.pearson_distance,
                            'ys1': pwdist.ys1_distance, 'yr1': pwdist.yr1_distance,
-                           'jackknife': pwdist.jackknife_distance, 'sharpened_cosine':pwdist.sharpened_cosine_distance}
+                           'jackknife': pwdist.jackknife_distance, 'sharpened_cosine': pwdist.sharpened_cosine_distance}
 
     def __init__(self, data: pd.DataFrame, power_transform: bool, metric: Tuple[str, str] = None,
-                 plot_style: str = 'none', split_plots: bool = False):
+                 plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         assert plot_style.lower() in {'all', 'std_bar', 'std_area', 'none'}, \
             f"Invalid value for 'plot_style': '{plot_style}'. " \
             f"'plot_style' must be 'all', 'std_bar', 'std_area' or 'none'. "
@@ -441,8 +443,13 @@ class ClusteringRunner:
 
         self.plot_style: str = plot_style.lower()
         self.split_plots: bool = split_plots
+        self.parallel_backend = parallel_backend
 
-    def run(self):
+    def run(self, plot: bool = True):
+        with sklearn_parallel_backend(self.parallel_backend):
+            return self._run(plot)
+
+    def _run(self, plot: bool = True):
         raise NotImplementedError
 
     @staticmethod
@@ -565,8 +572,8 @@ class ClusteringRunner:
 class ClusteringRunnerWithNClusters(ClusteringRunner, ABC):
     def __init__(self, data: pd.DataFrame, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', plot_style: str = 'none',
-                 split_plots: bool = False, metric: Tuple[str, str] = None):
-        super().__init__(data, power_transform, metric, plot_style, split_plots)
+                 split_plots: bool = False, metric: Tuple[str, str] = None, parallel_backend='loky'):
+        super().__init__(data, power_transform, metric, plot_style, split_plots, parallel_backend)
         self.max_n_clusters_estimate = min(20, data.shape[
             0] // 4) if max_n_clusters_estimate == 'auto' else max_n_clusters_estimate
         self.n_clusters: list = self.parse_n_clusters(n_clusters)
@@ -743,7 +750,7 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
 
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', random_seed: int = None, n_init: int = 3,
-                 max_iter: int = 300, plot_style: str = 'none', split_plots: bool = False):
+                 max_iter: int = 300, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         assert isinstance(random_seed, int) or random_seed is None
         assert isinstance(n_init, int) and n_init >= 1
         assert isinstance(max_iter, int) and max_iter >= 1
@@ -753,9 +760,9 @@ class KMeansRunner(ClusteringRunnerWithNClusters):
         self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_seed)
 
         super(KMeansRunner, self).__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style,
-                                           split_plots)
+                                           split_plots, parallel_backend=parallel_backend)
 
-    def run(self, plot: bool = True) -> List[ArbitraryClusterer]:
+    def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
         self.clusterers = []
         # generate standardized data for plots
         data_for_plot = generic.standard_box_cox(self.data) if self.power_transform else generic.standardize(self.data)
@@ -785,7 +792,7 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  random_seed: int = None, n_init: int = 3, max_iter: int = 300, plot_style: str = 'none',
-                 split_plots: bool = False):
+                 split_plots: bool = False, parallel_backend='loky'):
         assert isinstance(random_seed, int) or random_seed is None
         assert isinstance(n_init, int) and n_init >= 1
         assert isinstance(max_iter, int) and max_iter >= 1
@@ -796,9 +803,9 @@ class KMedoidsRunner(ClusteringRunnerWithNClusters):
         self.max_iter = max_iter
         self.clusterer_kwargs = dict(n_init=self.n_init, max_iter=self.max_iter, random_state=self.random_seed)
         super(KMedoidsRunner, self).__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style,
-                                             split_plots, ('metric', metric))
+                                             split_plots, ('metric', metric), parallel_backend)
 
-    def run(self, plot: bool = True) -> List[ArbitraryClusterer]:
+    def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
         self.clusterers = []
         # generate standardized data for plots
         data_for_plot = generic.standard_box_cox(self.data) if self.power_transform else generic.standardize(self.data)
@@ -829,7 +836,7 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
     def __init__(self, data, power_transform: bool, n_clusters: Union[int, List[int], str],
                  max_n_clusters_estimate: Union[int, str] = 'auto', metric: str = 'euclidean',
                  linkage: str = 'average', distance_threshold: float = None, plot_style: str = 'none',
-                 split_plots: bool = False):
+                 split_plots: bool = False, parallel_backend='loky'):
         assert isinstance(linkage, str), f"'linkage' must be of type str, instead got {type(linkage)}."
         assert isinstance(metric, str), f"'metric' must be of type str, instead got {type(metric)}."
         assert linkage.lower() in {'ward', 'complete', 'average',
@@ -846,7 +853,7 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
             self.clusterer_kwargs = dict(n_clusters=None, linkage=self.linkage,
                                          distance_threshold=self.distance_threshold)
             super(ClusteringRunnerWithNClusters, self).__init__(data, power_transform, ('affinity', metric), plot_style,
-                                                                split_plots)
+                                                                split_plots, parallel_backend)
         else:
             if distance_threshold is not None:
                 raise ValueError('Both n_clusters and distance_threshold were provided.')
@@ -854,7 +861,7 @@ class HierarchicalRunner(ClusteringRunnerWithNClusters):
             super().__init__(data, power_transform, n_clusters, max_n_clusters_estimate, plot_style, split_plots,
                              ('affinity', metric))
 
-    def run(self, plot: bool = True) -> List[ArbitraryClusterer]:
+    def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
         self.clusterers = []
         # generate standardized data for plots
         data_for_plot = generic.standard_box_cox(self.data) if self.power_transform else generic.standardize(self.data)
@@ -901,7 +908,8 @@ class HDBSCANRunner(ClusteringRunner):
 
     def __init__(self, data, power_transform: bool, min_cluster_size: int = 5, min_samples: int = 1,
                  metric: str = 'euclidean', cluster_selection_epsilon: float = 0, cluster_selection_method: str = 'eom',
-                 return_probabilities: bool = False, plot_style: str = 'none', split_plots: bool = False):
+                 return_probabilities: bool = False, plot_style: str = 'none', split_plots: bool = False,
+                 parallel_backend='loky'):
         self.return_probabilities = return_probabilities
         if not HAS_HDBSCAN:
             return
@@ -918,14 +926,14 @@ class HDBSCANRunner(ClusteringRunner):
         self.clusterer_kwargs = dict(min_cluster_size=self.min_cluster_size, min_samples=self.min_samples,
                                      cluster_selection_epsilon=self.cluster_selection_epsilon,
                                      cluster_selection_method=self.cluster_selection_method)
-        super().__init__(data, power_transform, ('metric', metric), plot_style, split_plots)
+        super().__init__(data, power_transform, ('metric', metric), plot_style, split_plots, parallel_backend)
 
     @staticmethod
     def _missing_dependency_warning():
         warnings.warn(f"Package 'hdbscan' is not installed. \n"
                       f"If you want to use HDBSCAN clustering, please install package 'hdbscan' and try again. ")
 
-    def run(self, plot: bool = True) -> Union[
+    def _run(self, plot: bool = True) -> Union[
         List[ArbitraryClusterer], Tuple[List[ArbitraryClusterer], np.ndarray], List[None]]:
         if not HAS_HDBSCAN:
             self._missing_dependency_warning()
@@ -975,7 +983,7 @@ class CLICOMRunner(ClusteringRunner):
 
     def __init__(self, data, replicate_grouping: List[List[str]], power_transform: Union[bool, List[bool]],
                  evidence_threshold: float, cluster_unclustered_features: bool, min_cluster_size: int,
-                 *parameter_dicts: dict, plot_style: str = 'none', split_plots: bool = False, ):
+                 *parameter_dicts: dict, plot_style: str = 'none', split_plots: bool = False, parallel_backend='loky'):
         self.clustering_solutions: list = []
         self.replicate_grouping = replicate_grouping
         self.evidence_threshold = evidence_threshold
@@ -983,9 +991,10 @@ class CLICOMRunner(ClusteringRunner):
         self.min_cluster_size = min_cluster_size
         self.parameter_dicts = parameter_dicts
         self.clusterers = []
-        super(CLICOMRunner, self).__init__(data, power_transform, plot_style=plot_style, split_plots=split_plots)
+        super(CLICOMRunner, self).__init__(data, power_transform, plot_style=plot_style, split_plots=split_plots,
+                                           parallel_backend=parallel_backend)
 
-    def run(self, plot: bool = True) -> List[ArbitraryClusterer]:
+    def _run(self, plot: bool = True) -> List[ArbitraryClusterer]:
         valid_setups = self.find_valid_clustering_setups()
         n_setups = len(valid_setups)
         print(f"Found {n_setups} legal clustering setups.")
@@ -1003,7 +1012,8 @@ class CLICOMRunner(ClusteringRunner):
         clusterer = self.clusterer_class(solutions_binary_format, self.evidence_threshold,
                                          cluster_unclustered_features=self.cluster_unclustered_features,
                                          min_cluster_size=self.min_cluster_size,
-                                         cluster_wise_cliques=cluster_wise_cliques)
+                                         cluster_wise_cliques=cluster_wise_cliques,
+                                         parallel_backend=self.parallel_backend)
 
         print("Calculating CLICOM clustering...", end='\t')
         clusterer.run()
@@ -1052,10 +1062,9 @@ class CLICOMRunner(ClusteringRunner):
 
         return valid_setups
 
-    @staticmethod
-    def run_clustering_setup(setup) -> list:
+    def run_clustering_setup(self, setup) -> list:
         runner_class, args, kwargs = setup
-        runner = runner_class(*args, **kwargs)
+        runner = runner_class(*args, **kwargs, parallel_backend=self.parallel_backend)
         clusterers = runner.run(plot=False)
         return [clusterer.labels_ for clusterer in clusterers]
 

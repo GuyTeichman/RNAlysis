@@ -34,6 +34,7 @@ import seaborn as sns
 from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
+from sklearn.utils import parallel_backend as sklearn_parallel_backend
 from datetime import datetime
 
 from rnalysis import __version__
@@ -41,7 +42,7 @@ from rnalysis.utils import clustering, io, parsing, generic, ontology, settings,
     param_typing
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
-    DEFAULT_ORGANISMS, get_gene_id_types
+    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, get_gene_id_types
 
 
 def readable_name(name: str):
@@ -3361,6 +3362,7 @@ class CountFilter(Filter):
                      random_seed: Union[int, None] = None, power_transform: bool = True,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                     parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                      gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-means clustering algorithm, \
@@ -3428,7 +3430,7 @@ class CountFilter(Filter):
         """
         runner = clustering.KMeansRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                          max_n_clusters_estimate, random_seed, n_init, max_iter, plot_style,
-                                         split_plots)
+                                         split_plots, parallel_backend)
         clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
@@ -3448,6 +3450,7 @@ class CountFilter(Filter):
                            power_transform: bool = True, distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                           parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                            gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
@@ -3517,7 +3520,7 @@ class CountFilter(Filter):
         """
         runner = clustering.HierarchicalRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                                max_n_clusters_estimate, metric, linkage, distance_threshold, plot_style,
-                                               split_plots)
+                                               split_plots, parallel_backend)
         clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
@@ -3539,6 +3542,7 @@ class CountFilter(Filter):
                        power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                        gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
         Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
@@ -3608,7 +3612,7 @@ class CountFilter(Filter):
         """
         runner = clustering.KMedoidsRunner(self.df.loc[:, self._numeric_columns], power_transform, n_clusters,
                                            max_n_clusters_estimate, metric, random_seed, n_init, max_iter, plot_style,
-                                           split_plots)
+                                           split_plots, parallel_backend)
         clusterers = runner.run(plot=not gui_mode)
         filt_obj_tuples = []
         for clusterer in clusterers:
@@ -3626,7 +3630,8 @@ class CountFilter(Filter):
                      power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                     split_plots: bool = False, gui_mode: bool = False) -> Tuple['CountFilter']:
+                     split_plots: bool = False, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                     gui_mode: bool = False) -> Tuple['CountFilter']:
         """
         Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
         `(Mimaroglu and Yagci 2012) <https://doi.org/10.1016/j.eswa.2011.08.059/>`_, \
@@ -3735,7 +3740,8 @@ class CountFilter(Filter):
 
         runner = clustering.CLICOMRunner(self.df.loc[:, self._numeric_columns], replicate_grouping, power_transform,
                                          evidence_threshold, cluster_unclustered_features, min_cluster_size,
-                                         *parameter_dicts, plot_style=plot_style, split_plots=split_plots)
+                                         *parameter_dicts, plot_style=plot_style, split_plots=split_plots,
+                                         parallel_backend=parallel_backend)
         [clusterer] = runner.run(plot=not gui_mode)
         n_clusters = clusterer.n_clusters_
         if n_clusters == 0:
@@ -3759,7 +3765,8 @@ class CountFilter(Filter):
                       'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
                       power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                      split_plots: bool = False, return_probabilities: bool = False, gui_mode: bool = False
+                      split_plots: bool = False, return_probabilities: bool = False,
+                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
                       ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]], None]:
         """
         Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
@@ -3835,7 +3842,7 @@ class CountFilter(Filter):
 
         runner = clustering.HDBSCANRunner(self.df.loc[:, self._numeric_columns], power_transform, min_cluster_size,
                                           min_samples, metric, cluster_selection_epsilon, cluster_selection_method,
-                                          return_probabilities, plot_style, split_plots)
+                                          return_probabilities, plot_style, split_plots,parallel_backend)
         if return_probabilities:
             [clusterer], probabilities = runner.run(plot=not gui_mode)
         else:

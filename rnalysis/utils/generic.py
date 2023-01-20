@@ -33,13 +33,13 @@ class ProgressParallel(joblib.Parallel):
     # tqdm progress bar for parallel tasks based on:
     # https://stackoverflow.com/questions/37804279/how-can-we-use-tqdm-in-a-parallel-execution-with-joblib/50925708
     # answer by 'user394430'
-    def __init__(self, use_tqdm=True, total=None, desc: str = '', unit: str = 'it', *args, **kwargs):
+    def __init__(self, use_tqdm=True, total=None, desc: str = '', unit: str = 'it', backend='loky', *args, **kwargs):
         self._use_tqdm = use_tqdm
         self._total = total
         self._desc = desc
         self._unit = unit
         kwargs['n_jobs'] = -2
-        super().__init__(*args, **kwargs, verbose=100)
+        super().__init__(*args, backend=backend, **kwargs, verbose=100)
 
     def __call__(self, *args, **kwargs):
         fmt = '{desc}: {percentage:3.0f}%|{bar}| [{elapsed}<{remaining}, {rate_fmt}{postfix}]'

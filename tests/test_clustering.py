@@ -1,8 +1,9 @@
+from collections import namedtuple
+
 import pytest
-import numpy as np
+
 from rnalysis.utils.clustering import *
 from rnalysis.utils.io import load_csv
-from collections import namedtuple
 
 
 @pytest.fixture
@@ -212,7 +213,8 @@ def test_clicomrunner_find_valid_clustering_setups():
              (KMedoidsRunner, (df[[0, 1, 2, 3, 4]],), dict(power_transform=True, n_clusters=7, n_init=5)),
              (KMedoidsRunner, (df[[5, 6, 7, 8, 9]],), dict(power_transform=True, n_clusters=7, n_init=5))]
     runner = CLICOMRunner(pd.DataFrame(np.zeros((10, 10))), [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]], True, 0.5, False, 15,
-                          dict(method='kmeans', n_clusters=6, n_init=5),dict(method='kmedoids', n_clusters=7, n_init=5))
+                          dict(method='kmeans', n_clusters=6, n_init=5),
+                          dict(method='kmedoids', n_clusters=7, n_init=5))
     setups = runner.find_valid_clustering_setups()
     _compare_setups(setups, truth)
 
@@ -390,6 +392,7 @@ def test_clicom_get_cluster_similarity_matrix(valid_clustering_solutions):
         [0, 24, 192, 0, 162, 0, 0, 108, 0], ]) / 216
 
     clusterer = CLICOM.__new__(CLICOM)
+    clusterer.parallel_backend = 'loky'
     clusterer.clustering_solutions = BinaryFormatClusters(valid_clustering_solutions)
     clusterer.n_features = 8
 

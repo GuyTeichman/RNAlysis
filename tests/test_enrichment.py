@@ -191,17 +191,17 @@ def test_enrichment_randomization_reliability():
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed, parallel=False)
+                                          random_seed=random_seed, parallel_backend='sequential')
         res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 1, parallel=False)
+                                          random_seed=random_seed + 1, parallel_backend='sequential')
         res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=10000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 2, parallel=False)
+                                          random_seed=random_seed + 2, parallel_backend='sequential')
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -240,7 +240,7 @@ def test_enrichment_randomization_validity():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     res = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=100000, biotype='all',
                                      attr_ref_path=__attr_ref__,
-                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel=False)
+                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel_backend='sequential')
     plt.close('all')
     _enrichment_validity(res, truth)
 
@@ -257,17 +257,17 @@ def test_enrichment_randomization_parallel_reliability():
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed, parallel=True)
+                                          random_seed=random_seed, parallel_backend='loky')
         res2 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 1, parallel=True)
+                                          random_seed=random_seed + 1, parallel_backend='multiprocessing')
         res3 = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=5000,
                                           biotype='all',
                                           attr_ref_path=__attr_ref__,
                                           biotype_ref_path=__biotype_ref__,
-                                          random_seed=random_seed + 2, parallel=True)
+                                          random_seed=random_seed + 2, parallel_backend='threading')
         random_seed += 3
         plt.close('all')
         for col in ['samples', 'obs', 'exp', 'log2_fold_enrichment']:
@@ -288,7 +288,7 @@ def test_enrichment_parallel_validity():
     en = FeatureSet(gene_set=genes, set_name='test_set')
     res = en.user_defined_enrichment(attrs, statistical_test='randomization', randomization_reps=100000, biotype='all',
                                      attr_ref_path=__attr_ref__,
-                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel=True)
+                                     biotype_ref_path=__biotype_ref__, random_seed=0, parallel_backend="loky")
     plt.close('all')
     _enrichment_validity(res, truth)
 

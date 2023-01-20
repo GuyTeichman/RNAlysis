@@ -640,12 +640,14 @@ def test_enrichment_runner_calculate_enrichment(monkeypatch):
     monkeypatch.setattr(EnrichmentRunner, '_calculate_enrichment_serial', lambda self: 'serial')
 
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
-    runner.parallel = True
-    assert runner.calculate_enrichment() == 'parallel'
-    assert random_seed_status[0]
+
+    for backend in ['loky','threading','multiprocessing']:
+        runner.parallel_backend = backend
+        assert runner.calculate_enrichment() == 'parallel'
+        assert random_seed_status[0]
 
     random_seed_status[0] = False
-    runner.parallel = False
+    runner.parallel_backend = 'sequential'
     assert runner.calculate_enrichment() == 'serial'
     assert random_seed_status[0]
 
@@ -672,6 +674,7 @@ def test_enrichment_runner_set_random_seed(seed, is_legal):
 
 def _test_enrichment_runner_calculate_enrichment_get_constants():
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    runner.parallel_backend = 'loky'
     runner.attributes = ['attribute1', 'attribute2', 'attribute4']
     runner.pvalue_kwargs = {'arg1': 'val1', 'arg2': 'val2'}
 
@@ -1448,6 +1451,7 @@ def test_go_enrichment_runner_go_elim_pvalues_parallel(monkeypatch, aspects):
 
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.dag_tree = FakeDAG(aspects)
+    runner.parallel_backend = 'sequential'
     assert runner._go_elim_pvalues_parallel() == {aspect: 'success' for aspect in aspects}
 
 
@@ -1486,6 +1490,7 @@ def test_go_enrichment_runner_go_weight_pvalues_parallel(monkeypatch, aspects):
 
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
     runner.dag_tree = FakeDAG(aspects)
+    runner.parallel_backend = 'sequential'
     assert runner._go_weight_pvalues_parallel() == {aspect: 'success' for aspect in aspects}
 
 
@@ -1708,6 +1713,7 @@ def test_go_enrichment_runner_parallel_over_grouping(monkeypatch, grouping, inds
         return {obj: ind for obj in group}
 
     runner = GOEnrichmentRunner.__new__(GOEnrichmentRunner)
+    runner.parallel_backend = 'loky'
     res = runner._parallel_over_grouping(my_func, grouping, inds)
     assert res == truth
 

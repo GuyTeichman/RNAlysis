@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
-    get_gene_id_types
+    PARALLEL_BACKENDS, get_gene_id_types
 
 try:
     from typing import Literal
@@ -272,8 +272,8 @@ class FeatureSet:
                       plot_ontology_graph: bool = True,
                       ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                       randomization_reps: int = 10000, random_seed: Union[int, None] = None,
-                      parallel: bool = True, gui_mode: bool = False
-                      ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
+                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                      gui_mode: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set. \
         The GO terms and annotations are drawn via the GO Solr search engine GOlr, \
@@ -373,8 +373,8 @@ class FeatureSet:
         :param randomization_reps: if using a randomization test, determine how many randomization repititions to run. \
         Otherwise, this parameter will not affect the analysis.
         :type randomization_reps: int larger than 0 (default=10000)
-        :type parallel: bool (default=False)
-        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: if not 'none', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -413,7 +413,7 @@ class FeatureSet:
                                                       excluded_evidence_types, databases, excluded_databases,
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
-                                                      self.set_name, parallel, statistical_test, biotype,
+                                                      self.set_name, parallel_backend, statistical_test, biotype,
                                                       background_genes, biotype_ref_path,
                                                       ontology_graph_format=ontology_graph_format, **kwargs)
 
@@ -433,7 +433,8 @@ class FeatureSet:
                         plot_pathway_graphs: bool = True,
                         pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
                         randomization_reps: int = 10000, random_seed: Union[int, None] = None,
-                        parallel: bool = True, gui_mode: bool = False
+                        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                        gui_mode: bool = False
                         ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
@@ -496,8 +497,8 @@ class FeatureSet:
         :param randomization_reps: if using a randomization test, determine how many randomization repititions to run. \
         Otherwise, this parameter will not affect the analysis.
         :type randomization_reps: int larger than 0 (default=10000)
-        :type parallel: bool (default=False)
-        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -526,7 +527,8 @@ class FeatureSet:
             kwargs = {}
         runner = enrichment_runner.KEGGEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
                                                         return_nonsignificant, save_csv, fname, return_fig,
-                                                        plot_horizontal, plot_pathway_graphs, self.set_name, parallel,
+                                                        plot_horizontal, plot_pathway_graphs, self.set_name,
+                                                        parallel_backend,
                                                         statistical_test, biotype, background_genes, biotype_ref_path,
                                                         pathway_graphs_format=pathway_graphs_format, **kwargs)
 
@@ -544,7 +546,9 @@ class FeatureSet:
                                 return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
                                 plot_horizontal: bool = True, randomization_reps: int = 10000,
-                                random_seed: Union[int, None] = None, parallel: bool = True, gui_mode: bool = False
+                                random_seed: Union[int, None] = None,
+                                parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                                gui_mode: bool = False
                                 ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.\
@@ -601,8 +605,8 @@ class FeatureSet:
         :param randomization_reps: if using a randomization test, determine how many randomization repititions to run. \
         Otherwise, this parameter will not affect the analysis.
         :type randomization_reps: int larger than 0 (default=10000)
-        :type parallel: bool (default=True)
-        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -631,7 +635,7 @@ class FeatureSet:
             kwargs = dict()
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
                                                     return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                                                    self.set_name, parallel, statistical_test, biotype,
+                                                    self.set_name, parallel_backend, statistical_test, biotype,
                                                     background_genes, biotype_ref_path, single_set=False,
                                                     random_seed=random_seed, **kwargs)
         if gui_mode:
@@ -721,7 +725,7 @@ class FeatureSet:
                                                                   background_genes, attr_ref_path,
                                                                   biotype_ref_path, save_csv, fname,
                                                                   return_fig, plot_log_scale, plot_style,
-                                                                  n_bins, self.set_name, parallel=False,
+                                                                  n_bins, self.set_name, parallel_backend='sequential',
                                                                   parametric_test=parametric_test)
         if gui_mode:
             return runner.run(plot=False), runner
@@ -837,7 +841,8 @@ class RankedSet(FeatureSet):
                                  return_fig: bool = False, plot_horizontal: bool = True,
                                  plot_ontology_graph: bool = True,
                                  ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                                 parallel: bool = True, gui_mode: bool = False
+                                 parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                                 gui_mode: bool = False
                                  ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms \
@@ -923,8 +928,8 @@ class RankedSet(FeatureSet):
         :type ontology_graph_format: 'pdf', 'png', 'svg', or None (default=None)
         :param ontology_graph_format: if ontology_graph_format is not 'none', the ontology graph will additonally be \
         generated in the specified file format.
-        :type parallel: bool (default=True)
-        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -957,7 +962,8 @@ class RankedSet(FeatureSet):
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
                                                       self.set_name,
-                                                      parallel=parallel, enrichment_func_name='xlmhg', single_set=True,
+                                                      parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
+                                                      single_set=True,
                                                       ontology_graph_format=ontology_graph_format)
 
         if gui_mode:
@@ -972,7 +978,8 @@ class RankedSet(FeatureSet):
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    plot_pathway_graphs: bool = True,
                                    pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                                   parallel: bool = True, gui_mode: bool = False
+                                   parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                                   gui_mode: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
@@ -1013,8 +1020,8 @@ class RankedSet(FeatureSet):
         :type pathway_graphs_format: 'pdf', 'png', 'svg', or None (default=None)
         :param pathway_graphs_format: if pathway_graphs_format is not 'none', the pathway graphs will additonally be \
         generated in the specified file format.
-        :type parallel: bool (default=True)
-        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -1044,7 +1051,7 @@ class RankedSet(FeatureSet):
         runner = enrichment_runner.KEGGEnrichmentRunner(self.ranked_genes, organism, gene_id_type, alpha,
                                                         return_nonsignificant, save_csv, fname, return_fig,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
-                                                        parallel=parallel, enrichment_func_name='xlmhg',
+                                                        parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
                                                         single_set=True, pathway_graphs_format=pathway_graphs_format)
 
         if gui_mode:
@@ -1056,7 +1063,9 @@ class RankedSet(FeatureSet):
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                               return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
-                              plot_horizontal: bool = True, parallel: bool = True, gui_mode: bool = False):
+                              plot_horizontal: bool = True,
+                              parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                              gui_mode: bool = False):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by  \
@@ -1091,8 +1100,8 @@ class RankedSet(FeatureSet):
         :type plot_horizontal: bool (default=True)
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
-        :type parallel: bool (default=True)
-        :param parallel: if True, will calculate the statistical tests using parallel processing. \
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -1116,7 +1125,8 @@ class RankedSet(FeatureSet):
         runner = enrichment_runner.EnrichmentRunner(self.ranked_genes, attributes, alpha, attr_ref_path,
                                                     return_nonsignificant, save_csv,
                                                     fname, return_fig, plot_horizontal, self.set_name,
-                                                    parallel=parallel, enrichment_func_name='xlmhg', single_set=True)
+                                                    parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
+                                                    single_set=True)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()

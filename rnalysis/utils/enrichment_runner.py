@@ -1,17 +1,13 @@
 import collections
-import io as builtin_io
 import itertools
 import logging
-import queue
 import sys
 import warnings
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, List, Tuple, Union, Collection, Set, Dict
-from typing_extensions import Literal
-import graphviz
+
 import joblib
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -20,8 +16,10 @@ from matplotlib.cm import ScalarMappable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
+from typing_extensions import Literal
 
 from rnalysis.utils import ontology, io, parsing, settings, validation, generic
+from rnalysis.utils.param_typing import PARALLEL_BACKENDS, GRAPHVIZ_FORMATS
 
 try:
     import xlmhg
@@ -70,7 +68,7 @@ class EnrichmentRunner:
                  'return_fig': 'indicates whether to return a matplotlib Figure after plotting the results',
                  'plot_horizontal': 'indicates whether to plot the results horizontally or vertically',
                  'set_name': 'name of the set of genes/genomic features whose enrichment is calculated',
-                 'parallel': 'indicates whether to calculate the enrichment using parallel processing',
+                 'parallel_backend': 'indicates whether to use parallel processing, and with which backend',
                  'enrichment_func': 'the function to be used to calculate enrichment p-values',
                  'pvalue_kwargs': 'key-worded arguments for the function which calculates enrichment p-values',
                  'single_set': 'indicates whether enrichment is calculated on a single set of genes '
@@ -86,9 +84,10 @@ class EnrichmentRunner:
 
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int], alpha: float,
                  attr_ref_path: str, return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool,
-                 plot_horizontal: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
-                 background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, **pvalue_kwargs):
+                 plot_horizontal: bool, set_name: str,
+                 parallel_backend: Literal[PARALLEL_BACKENDS],
+                 enrichment_func_name: str, biotypes=None, background_set: set = None, biotype_ref_path: str = None,
+                 single_set: bool = False, random_seed: int = None, **pvalue_kwargs):
         self.results: pd.DataFrame = pd.DataFrame()
         self.annotation_df: pd.DataFrame = pd.DataFrame()
         self.gene_set = parsing.data_to_set(genes)
@@ -107,7 +106,7 @@ class EnrichmentRunner:
         self.return_fig = return_fig
         self.plot_horizontal = plot_horizontal
         self.set_name = set_name
-        self.parallel = parallel
+        self.parallel_backend = parallel_backend
         self.enrichment_func = self._get_enrichment_func(enrichment_func_name)
         if not self.enrichment_func:
             return
@@ -450,7 +449,7 @@ class EnrichmentRunner:
 
     def calculate_enrichment(self) -> list:
         self.set_random_seed()
-        if self.parallel:
+        if self.parallel_backend != 'sequential':
             return self._calculate_enrichment_parallel()
         return self._calculate_enrichment_serial()
 
@@ -469,7 +468,8 @@ class EnrichmentRunner:
         return result
 
     def _calculate_enrichment_parallel(self) -> list:
-        result = generic.ProgressParallel(n_jobs=-1, desc="Calculating enrichment", unit='attribute')(
+        result = generic.ProgressParallel(desc="Calculating enrichment", unit='attribute', n_jobs=-1,
+                                          backend=self.parallel_backend)(
             joblib.delayed(self.enrichment_func)(attribute, **self.pvalue_kwargs) for attribute in self.attributes)
         return result
 
@@ -658,7 +658,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
     def __init__(self, genes: set, attributes: Union[Iterable, str, int], alpha: float, biotypes, background_set: set,
                  attr_ref_path: str, biotype_ref_path: str, save_csv: bool, fname: str,
                  return_fig: bool, plot_log_scale: bool, plot_style: str, n_bins: int, set_name: str,
-                 parallel: bool, parametric_test: bool):
+                 parallel_backend: Literal[PARALLEL_BACKENDS], parametric_test: bool):
 
         assert isinstance(plot_log_scale, bool), f"Invalid type for 'plot_log_scale': '{plot_log_scale}'."
         assert plot_style in {'interleaved', 'overlap'}, f"Invalid value for 'plot_style': '{plot_style}'."
@@ -671,7 +671,7 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         self.plot_style = plot_style
         self.n_bins = n_bins
         super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
-                         parallel,
+                         parallel_backend,
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set=False)
 
     def _get_enrichment_func(self, pval_func_name: str):
@@ -797,12 +797,14 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
 
     def __init__(self, genes: Union[set, np.ndarray], organism: Union[str, int], gene_id_type: str, alpha: float,
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
-                 plot_pathway_graphs: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
+                 plot_pathway_graphs: bool, set_name: str,
+                 parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str,
+                 biotypes=None,
                  background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, pathway_graphs_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                 random_seed: int = None, pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
                  **pvalue_kwargs):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                         set_name, parallel, enrichment_func_name, biotypes, background_set, biotype_ref_path,
+                         set_name, parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
                          single_set, random_seed, **pvalue_kwargs)
         if not self.enrichment_func:
             return
@@ -898,7 +900,8 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
             translator, _, self.gene_id_type = io.find_best_gene_mapping(
                 parsing.data_to_tuple(sparse_annotation_dict.keys()), (source,), None)
         else:
-            translator = io.map_gene_ids(parsing.data_to_tuple(sparse_annotation_dict.keys()), source, self.gene_id_type)
+            translator = io.map_gene_ids(parsing.data_to_tuple(sparse_annotation_dict.keys()), source,
+                                         self.gene_id_type)
         self.gene_id_translator = translator
         for gene_id in sparse_annotation_dict:
             if gene_id in translator:
@@ -964,14 +967,15 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  databases: Union[str, Iterable[str]], excluded_databases: Union[str, Iterable[str]],
                  qualifiers: Union[str, Iterable[str]], excluded_qualifiers: Union[str, Iterable[str]],
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
-                 plot_ontology_graph: bool, set_name: str, parallel: bool, enrichment_func_name: str, biotypes=None,
-                 background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, ontology_graph_format: Literal['pdf', 'png', 'svg','none'] = 'none',
+                 plot_ontology_graph: bool, set_name: str,
+                 parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str,
+                 biotypes=None, background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
+                 random_seed: int = None, ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
                  **pvalue_kwargs):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                         set_name, parallel,
+                         set_name, parallel_backend,
                          enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
                          **pvalue_kwargs)
         if not self.enrichment_func:
@@ -1226,7 +1230,8 @@ class GOEnrichmentRunner(EnrichmentRunner):
     def _parallel_over_grouping(self, func, grouping: Iterable, mod_df_inds: Iterable[int],
                                 max_nbytes: Union[str, None] = '1M', progress_bar_desc: str = '') -> dict:
         assert validation.is_method_of_class(func, type(self))
-        result_dicts = generic.ProgressParallel(n_jobs=-1, max_nbytes=max_nbytes, desc=progress_bar_desc)(
+        result_dicts = generic.ProgressParallel(desc=progress_bar_desc, n_jobs=-1, max_nbytes=max_nbytes,
+                                                backend=self.parallel_backend)(
             joblib.delayed(func)(group, ind) for group, ind in zip(grouping, mod_df_inds))
         result = {}
         for d in result_dicts:
