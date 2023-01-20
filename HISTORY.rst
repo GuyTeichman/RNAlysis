@@ -24,6 +24,10 @@ Fixed
 * In CountFilter.differential_expression_deseq2(), fixed a bug where design matrix files with non-comma delimiters would cause an error (thanks to `Mintxoklet <https://github.com/Mintxoklet>`_ in `#7 <https://github.com/GuyTeichman/RNAlysis/issues/7>`_)
 * Fixed bug where setup.py would install a directory named tests into site-packages folder (thanks to `Bipin Kumar <https://github.com/kbipinkumar>`_ in `#9 <https://github.com/GuyTeichman/RNAlysis/issues/9>`_)
 
+Removed
+********
+* Removed the previously-deprecated functions `enrichment.enrich_randomization()` and `enrichment.enrich_hypergeometric()`.
+
 New Contributors
 *****************
 * `Mintxoklet`_ in `#7`_

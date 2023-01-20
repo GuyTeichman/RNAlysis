@@ -179,15 +179,6 @@ def test_biotypes():
     assert np.all(df == truth)
 
 
-def tests_enrichment_randomization_api():
-    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
-    attrs = ['attribute1', 'attribute2']
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.enrich_randomization(attrs, reps=1, biotype='all', attr_ref_path=__attr_ref__,
-                                biotype_ref_path=__biotype_ref__)
-    plt.close('all')
-
-
 def test_enrichment_randomization_reliability():
     genes = {'WBGene00000041', 'WBGene00002074', 'WBGene00000019', 'WBGene00000105', 'WBGene00000106', 'WBGene00199484',
              'WBGene00001436', 'WBGene00000137', 'WBGene00001996', 'WBGene00014208'}
@@ -300,14 +291,6 @@ def test_enrichment_parallel_validity():
                                      biotype_ref_path=__biotype_ref__, random_seed=0, parallel=True)
     plt.close('all')
     _enrichment_validity(res, truth)
-
-
-def test_enrich_hypergeometric_api():
-    genes = {'WBGene00048865', 'WBGene00000864', 'WBGene00000105', 'WBGene00001996', 'WBGene00011910', 'WBGene00268195'}
-    attrs = ['attribute1', 'attribute2']
-    en = FeatureSet(gene_set=genes, set_name='test_set')
-    _ = en.enrich_hypergeometric(attrs, biotype='all', attr_ref_path=__attr_ref__, biotype_ref_path=__biotype_ref__)
-    plt.close('all')
 
 
 def test_enrich_hypergeometric_pvalues():
