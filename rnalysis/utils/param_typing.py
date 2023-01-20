@@ -7,6 +7,7 @@ import typing_extensions
 
 from rnalysis.utils import io, parsing
 
+PARALLEL_BACKENDS = ('multiprocessing', 'loky', 'threading', 'sequential')
 GRAPHVIZ_FORMATS = ('pdf', 'png', 'svg', 'none')
 BIOTYPES = ('protein_coding', 'pseudogene', 'lincRNA', 'miRNA', 'ncRNA', 'piRNA', 'rRNA', 'snoRNA', 'snRNA', 'tRNA')
 BIOTYPE_ATTRIBUTE_NAMES = ('biotype', 'gene_biotype', 'transcript_biotype', 'gene_type', 'transcript_type')
