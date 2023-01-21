@@ -1,3 +1,4 @@
+import abc
 import functools
 import itertools
 from pathlib import Path
@@ -62,36 +63,47 @@ class BaseInteractiveCanvas(FigureCanvasQTAgg):
         self.fig.canvas.mpl_connect('button_press_event', self.on_click)
         self.fig.canvas.mpl_connect('motion_notify_event', self.on_hover)
 
+    @abc.abstractmethod
     def on_click(self, event):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def on_hover(self, event):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def union(self):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def intersection(self):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def difference(self, primary_set: str):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def majority_vote_intersection(self, majority_threshold: float):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def clear_selection(self):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def select(self, ind, draw: bool = True):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def deselect(self, ind, draw: bool = True):
         raise NotImplementedError
 
+    @abc.abstractmethod
     def get_custom_selection(self) -> set:
         raise NotImplementedError
 
+    @abc.abstractmethod
     def get_tuple_patch_ids(self) -> List[Tuple[int, ...]]:
         raise NotImplementedError
 
