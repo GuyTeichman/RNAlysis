@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'V*' #
+  workflow_dispatch:
 
 env:
   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
