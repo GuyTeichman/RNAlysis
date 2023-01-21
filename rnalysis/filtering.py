@@ -2572,8 +2572,8 @@ class CountFilter(Filter):
         # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
         design_mat_df = io.load_csv(design_matrix, index_col=0)
         assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
-                                                        f"{design_mat_df.shape[0]} does not match the number of " \
-                                                        f"columns in the count matrix {self.shape[1]}."
+                                                        f"({design_mat_df.shape[0]}) does not match the number of " \
+                                                        f"columns in the count matrix ({self.shape[1]})."
         assert sorted(design_mat_df.index) == sorted(self.columns), f"The sample names in the design matrix do not " \
                                                                     f"match the sample names in the count matrix: " \
                                                                     f"{sorted(design_mat_df.index)} != " \
