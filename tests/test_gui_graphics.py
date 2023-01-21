@@ -1,4 +1,6 @@
 import pytest
+from matplotlib import patches
+
 from rnalysis.gui.gui_graphics import *
 
 LEFT_CLICK = QtCore.Qt.LeftButton
@@ -75,6 +77,75 @@ def test_VennInteractiveCanvas_clear_selection(qtbot, three_gene_sets):
     assert widget.get_custom_selection() == set()
 
 
+def test_VennInteractiveCanvas_select(qtbot, three_gene_sets_with_disjoint):
+    qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets_with_disjoint)
+    widget.select('100')
+    assert widget.get_custom_selection() == {'b'}
+    widget.select('011')
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+    widget.select('011')
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+
+
+def test_VennInteractiveCanvas_deselect(qtbot, three_gene_sets_with_disjoint):
+    qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets_with_disjoint)
+    widget.select('100')
+    widget.select('011')
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+
+    widget.deselect('110')
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+    widget.deselect('100')
+    assert widget.get_custom_selection() == {'e', 'f'}
+    widget.deselect('100')
+    assert widget.get_custom_selection() == {'e', 'f'}
+
+
+@pytest.mark.parametrize('clicked,expected', [({'011'}, {'e', 'f'}),
+                                              ({'100', '011'}, {'b', 'e', 'f'}),
+                                              (set(), set()),
+                                              ({'111'}, set())])
+def test_VennInteractiveCanvas_on_click(qtbot, monkeypatch, three_gene_sets_with_disjoint, clicked, expected):
+    def mock_contains_point(patch, point, radius=None):
+        for this_id in clicked:
+            if patch == widget.venn.get_patch_by_id(this_id):
+                return True
+        return False
+
+    monkeypatch.setattr(patches.Patch, 'contains_point', mock_contains_point)
+    qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets_with_disjoint)
+
+    qtbot.mouseClick(widget, LEFT_CLICK)
+    assert widget.get_custom_selection() == expected
+
+    qtbot.mouseClick(widget, LEFT_CLICK)
+    assert widget.get_custom_selection() == set()
+
+
+@pytest.mark.parametrize('clicked,expected', [({'011'}, [0, 0, 0, 0, 0, 2, 0]),
+                                              ({'100', '011'}, [2, 0, 0, 0, 0, 2, 0]),
+                                              (set(), [0, 0, 0, 0, 0, 0, 0]),
+                                              ({'111'}, [0, 0, 0, 0, 0, 0, 2])])
+def test_VennInteractiveCanvas_on_hover(qtbot, monkeypatch, three_gene_sets, clicked, expected):
+    def mock_contains_point(patch, point, radius=None):
+        for this_id in clicked:
+            if patch == widget.venn.get_patch_by_id(this_id):
+                return True
+        return False
+
+    monkeypatch.setattr(patches.Patch, 'contains_point', mock_contains_point)
+    qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets)
+
+    qtbot.wait(500)
+    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
+    qtbot.wait(250)
+    qtbot.mouseMove(widget)
+    qtbot.wait(250)
+    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
+
+    assert widget.states == expected
+
+
 def test_VennInteractiveCanvas_union(qtbot, three_gene_sets, three_gene_sets_with_disjoint):
     qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets)
     widget.union()
@@ -140,6 +211,77 @@ def test_UpSetInteractiveCanvas_clear_selection(qtbot, four_gene_sets):
     qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, four_gene_sets)
     widget.clear_selection()
     assert widget.get_custom_selection() == set()
+
+
+def test_UpSetInteractiveCanvas_select(qtbot, three_gene_sets_with_disjoint):
+    qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, three_gene_sets_with_disjoint)
+    widget.select(0)
+    assert widget.get_custom_selection() == {'b'}
+    widget.select(5)
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+    widget.select(5)
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+
+
+def test_UpSetInteractiveCanvas_deselect(qtbot, three_gene_sets_with_disjoint):
+    qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, three_gene_sets_with_disjoint)
+    widget.select(0)
+    widget.select(5)
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+
+    widget.deselect(3)
+    assert widget.get_custom_selection() == {'b', 'e', 'f'}
+    widget.deselect(0)
+    assert widget.get_custom_selection() == {'e', 'f'}
+    widget.deselect(0)
+    assert widget.get_custom_selection() == {'e', 'f'}
+
+
+@pytest.mark.parametrize('clicked,expected', [({5}, {'e', 'f'}),
+                                              ({0, 5}, {'b', 'e', 'f'}),
+                                              (set(), set()),
+                                              ({6}, set())])
+def test_UpSetInteractiveCanvas_on_click(qtbot, monkeypatch, three_gene_sets_with_disjoint, clicked, expected):
+    qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, three_gene_sets_with_disjoint)
+
+    def mock_contains_point(patch, point, radius=None):
+        for i, rec in enumerate(widget.bounding_boxes):
+            if (rec.get_center() == patch.get_center()).all() and i in clicked:
+                return True
+        return False
+
+    monkeypatch.setattr(patches.Patch, 'contains_point', mock_contains_point)
+
+    qtbot.mouseClick(widget, LEFT_CLICK)
+    assert widget.get_custom_selection() == expected
+
+    qtbot.mouseClick(widget, LEFT_CLICK)
+    assert widget.get_custom_selection() == set()
+
+
+@pytest.mark.parametrize('clicked,expected', [({5}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 2, 6: 0}),
+                                              ({0, 5}, {0: 2, 1: 0, 2: 0, 3: 0, 4: 0, 5: 2, 6: 0}),
+                                              (set(), {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}),
+                                              ({6}, {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 2})])
+def test_UpSetInteractiveCanvas_on_hover(qtbot, monkeypatch, three_gene_sets, clicked, expected):
+    qtbot, widget = widget_setup(qtbot, UpSetInteractiveCanvas, three_gene_sets)
+
+    def mock_contains_point(patch, point, radius=None):
+        for i, rec in enumerate(widget.bounding_boxes):
+            if (rec.get_center() == patch.get_center()).all() and i in clicked:
+                return True
+        return False
+
+    monkeypatch.setattr(patches.Patch, 'contains_point', mock_contains_point)
+
+    qtbot.wait(500)
+    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
+    qtbot.wait(250)
+    qtbot.mouseMove(widget)
+    qtbot.wait(250)
+    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
+
+    assert widget.subset_states == expected
 
 
 def test_UpSetInteractiveCanvas_union(qtbot, four_gene_sets, three_gene_sets_with_disjoint):

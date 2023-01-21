@@ -1,12 +1,12 @@
 import functools
 import itertools
+from pathlib import Path
 from typing import List, Tuple, Callable
 
-from pathlib import Path
 import matplotlib
 import matplotlib_venn
 import upsetplot
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT
 
