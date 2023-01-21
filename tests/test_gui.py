@@ -1,6 +1,5 @@
 import matplotlib
 import pytest
-from joblib import parallel_backend
 
 matplotlib.use('Agg')
 from rnalysis.gui.gui import *
@@ -508,7 +507,8 @@ def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
     assert clicom_window.get_analysis_kwargs() == truth
 
 
-def test_ClicomWindow_start_analysis(qtbot, clicom_window):
+def test_ClicomWindow_start_analysis(qtbot, clicom_window, monkeypatch):
+    monkeypatch.setattr(ClicomWindow, 'showMinimized', lambda *args, **kwargs: None)
     truth_setups = [dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
                          max_n_clusters_estimate='auto'),
                     dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
