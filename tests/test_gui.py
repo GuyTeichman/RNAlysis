@@ -529,9 +529,9 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window, monkeypatch):
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
 
-    with parallel_backend('multiprocessing'):
+    with parallel_backend('sequential'):
         with qtbot.waitSignal(clicom_window.paramsAccepted) as blocker:
-            qtbot.mouseClick(clicom_window.start_button, LEFT_CLICK)
+            clicom_window.start_button.click()
     assert blocker.args[0] == truth_setups
     assert blocker.args[1] == truth_params
 
@@ -2534,3 +2534,9 @@ def test_MainWindow_clear_session(qtbot, main_window_with_tabs):
     main_window_with_tabs.clear_session(confirm_action=False)
     assert main_window_with_tabs.tabs.count() == 1
     assert main_window_with_tabs.tabs.widget(0).is_empty()
+
+
+
+
+
+
