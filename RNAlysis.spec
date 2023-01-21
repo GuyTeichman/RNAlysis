@@ -1,5 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_submodules
 
+hiddenimports = []
+hiddenimports += collect_submodules('sklearn')
 
 block_cipher = None
 
@@ -16,7 +19,7 @@ a = Analysis(
     ('rnalysis/utils/r_templates','./rnalysis/utils/r_templates'),
     ('rnalysis/favicon.ico','./rnalysis'),
     ('rnalysis/utils/uniprot_dataset_abbreviation_dict.json','./rnalysis/utils')],
-    hiddenimports=[],
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={'pygraphviz':{}},
     runtime_hooks=[],
