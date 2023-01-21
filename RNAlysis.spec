@@ -57,5 +57,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='RNAlysis ' + '3.3.0',
+    name='RNAlysis-3.3.0',
 )

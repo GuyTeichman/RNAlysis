@@ -45,7 +45,7 @@ jobs:
             CMD_BUILD: >
                 pyinstaller RNAlysis.spec &&
                 cd dist/ &&
-                zip -r RNAlysis RNAlysis/
+                zip -r RNAlysis "RNAlysis-3.3.0/"
             OUT_FILE_NAME: RNAlysis.zip
             ASSET_MIME: application/zip
           - os: windows-latest
@@ -53,7 +53,7 @@ jobs:
             CMD_BUILD: >
                 pyinstaller RNAlysis.spec &&
                 cd dist/ &&
-                7z a RNAlysis.zip -r RNAlysis/
+                7z a RNAlysis.zip -r "RNAlysis-3.0.0/"
             OUT_FILE_NAME: RNAlysis.zip
             ASSET_MIME: application/zip
     steps:
