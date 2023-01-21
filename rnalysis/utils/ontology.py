@@ -3,8 +3,10 @@ import io as builtin_io
 import queue
 import re
 import warnings
-from typing import Dict, List, Union, Tuple, Iterable, Set
+from functools import lru_cache
 from pathlib import Path
+from typing import Dict, List, Union, Tuple, Iterable, Set
+
 import graphviz
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -13,7 +15,7 @@ import pandas as pd
 from defusedxml import ElementTree
 from matplotlib.cm import ScalarMappable
 from typing_extensions import Literal
-from functools import lru_cache
+
 from rnalysis.utils import parsing, io, param_typing
 
 
@@ -151,8 +153,13 @@ class KEGGPathway:
     for i, (node, _) in enumerate(KEGGEntry.NODE_TYPES.items()):
         LEGEND_GRAPH.edge(f'key1:node{i}', f'{node}', style='invis')
 
-    LEGEND_GRAPH_STR = LEGEND_GRAPH.pipe(format='png')
-
+    try:
+        LEGEND_GRAPH_STR = LEGEND_GRAPH.pipe(format='png')
+    except graphviz.ExecutableNotFound:
+        warnings.warn("'GraphViz' installation not found. If you want to generate Ontology and Pathway Graphs, "
+                      "Please install GraphViz and add it to PATH. \n"
+                      "See https://graphviz.org/download/ for more information. ")
+        LEGEND_GRAPH_STR = ''
     del node, attrs, i, rel
 
     def __init__(self, kgml_tree: ElementTree, compounds: Dict[str, str], gene_id_translator=None):
