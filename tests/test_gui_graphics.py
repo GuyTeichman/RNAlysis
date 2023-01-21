@@ -7,6 +7,12 @@ LEFT_CLICK = QtCore.Qt.LeftButton
 RIGHT_CLICK = QtCore.Qt.RightButton
 
 
+class MockEvent:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+
+
 @pytest.fixture
 def two_gene_sets():
     return {'first': {'a', 'b', 'c'}, 'second': {'a', 'c', 'e', 'f'}}
@@ -136,12 +142,7 @@ def test_VennInteractiveCanvas_on_hover(qtbot, monkeypatch, three_gene_sets, cli
     monkeypatch.setattr(patches.Patch, 'contains_point', mock_contains_point)
     qtbot, widget = widget_setup(qtbot, VennInteractiveCanvas, three_gene_sets)
 
-    qtbot.wait(500)
-    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
-    qtbot.wait(250)
-    qtbot.mouseMove(widget)
-    qtbot.wait(250)
-    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
+    widget.on_hover(MockEvent())
 
     assert widget.states == expected
 
@@ -246,7 +247,7 @@ def test_UpSetInteractiveCanvas_on_click(qtbot, monkeypatch, three_gene_sets_wit
 
     def mock_contains_point(patch, point, radius=None):
         for i, rec in enumerate(widget.bounding_boxes):
-            if (rec.get_center() == patch.get_center()).all() and i in clicked:
+            if (rec.xy == patch.xy) and i in clicked:
                 return True
         return False
 
@@ -268,19 +269,13 @@ def test_UpSetInteractiveCanvas_on_hover(qtbot, monkeypatch, three_gene_sets, cl
 
     def mock_contains_point(patch, point, radius=None):
         for i, rec in enumerate(widget.bounding_boxes):
-            if (rec.get_center() == patch.get_center()).all() and i in clicked:
+            if (rec.xy == patch.xy) and i in clicked:
                 return True
         return False
 
     monkeypatch.setattr(patches.Patch, 'contains_point', mock_contains_point)
 
-    qtbot.wait(500)
-    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
-    qtbot.wait(250)
-    qtbot.mouseMove(widget)
-    qtbot.wait(250)
-    qtbot.mouseMove(widget, widget.rect().bottomRight() - QtCore.QPoint(10, 10))
-
+    widget.on_hover(MockEvent())
     assert widget.subset_states == expected
 
 
