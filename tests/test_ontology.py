@@ -1,10 +1,39 @@
-import os
 import matplotlib
-import matplotlib.pyplot as plt
-import pytest
+
 from rnalysis.utils.ontology import *
 
 matplotlib.use('Agg')
+
+
+def test_render_graphviz_plot(monkeypatch):
+    rendered = []
+
+    def mock_render(*args, **kwargs):
+        rendered.append(True)
+
+    monkeypatch.setattr(graphviz.Digraph, 'render', mock_render)
+    assert render_graphviz_plot(graphviz.Digraph(), 'pth', 'format')
+    assert rendered == [True]
+
+
+def test_render_graphviz_plot_no_format(monkeypatch):
+    rendered = []
+
+    def mock_render(*args, **kwargs):
+        rendered.append(True)
+
+    monkeypatch.setattr(graphviz.Digraph, 'render', mock_render)
+    assert render_graphviz_plot(graphviz.Digraph(), 'pth', 'none')
+    assert rendered == []
+
+
+def test_render_graphviz_plot_no_graphviz(monkeypatch):
+    def mock_failed_render(*args, **kwargs):
+        raise graphviz.ExecutableNotFound(('', ''))
+
+    monkeypatch.setattr(graphviz.Digraph, 'render', mock_failed_render)
+
+    assert not render_graphviz_plot(graphviz.Digraph(), 'pth', 'format')
 
 
 def test_kegg_pathway_parser_construction():
