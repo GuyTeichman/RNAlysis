@@ -3114,9 +3114,20 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def check_for_updates(self, confirm_updated: bool = True):
         if io.is_rnalysis_outdated():
+            # frozen releases of RNAlysis cannot update using pip. new version must be downloaded manually
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                reply = QtWidgets.QMessageBox.question(self, 'A new version is available',
+                                                       'A new version of <i>RNAlysis</i> is available! '
+                                                       'Do you wish to download it?')
+                if reply == QtWidgets.QMessageBox.Yes:
+                    url = QtCore.QUrl('https://github.com/GuyTeichman/RNAlysis/releases/latest')
+                    if not QtGui.QDesktopServices.openUrl(url):
+                        QtGui.QMessageBox.warning(self, 'Connection failed', 'Could not download new version')
+                return
+
             reply = QtWidgets.QMessageBox.question(self, 'A new version is available',
-                                                   f'A new version of <i>RNAlysis</i> is available! '
-                                                   f'Do you wish to update?')
+                                                   'A new version of <i>RNAlysis</i> is available! '
+                                                   'Do you wish to update?')
             if reply == QtWidgets.QMessageBox.Yes:
                 io.update_rnalysis()
                 QtCore.QCoreApplication.quit()
@@ -3616,7 +3627,7 @@ def run():
     parallel_backend('multiprocessing')
     lockfile = QtCore.QLockFile(QtCore.QDir.tempPath() + '/RNAlysis.lock')
     if lockfile.tryLock(100):
-        show_app=True
+        show_app = True
     else:
         show_app = False
 
@@ -3630,7 +3641,6 @@ def run():
         app.processEvents()
         base_message = f"<i>RNAlysis</i> version {__version__}:\t"
         splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
-
 
         video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
         for i in io.get_gui_videos(video_files):
