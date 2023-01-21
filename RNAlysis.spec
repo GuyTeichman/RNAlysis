@@ -8,7 +8,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['rnalysis/gui/main.py'],
+    ['rnalysis_app.py'],
     pathex=[],
     binaries=[],
     datas=[('rnalysis/gui/styles','./rnalysis/gui/styles'),
