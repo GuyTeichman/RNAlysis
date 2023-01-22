@@ -3625,6 +3625,11 @@ def customwarn(message, category, filename, lineno, file=None, line=None):
 
 
 def run():
+    # close built-in splash screen in frozen app version of RNAlysis
+    if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
+        import pyi_splash
+        pyi_splash.close()
+
     parallel_backend('multiprocessing')
     lockfile = QtCore.QLockFile(QtCore.QDir.tempPath() + '/RNAlysis.lock')
     if lockfile.tryLock(100):
@@ -3638,11 +3643,6 @@ def run():
     app.setWindowIcon(QtGui.QIcon(icon_pth))
 
     if show_app:
-        # close built-in splash screen in frozen app version of RNAlysis
-        if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
-            import pyi_splash
-            pyi_splash.close()
-
         splash = gui_windows.splash_screen()
         app.processEvents()
         base_message = f"<i>RNAlysis</i> version {__version__}:\t"
