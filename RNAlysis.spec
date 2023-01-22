@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 import platform
 
-from PyInstaller.utils.hooks import collect_submodules, collect_all
+from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 # datas = [('rnalysis/gui/styles', './rnalysis/gui/styles'),
 #          ('rnalysis/gui/icons', './rnalysis/gui/icons'),
@@ -13,14 +13,12 @@ datas = []
 binaries = []
 hiddenimports = []
 
-tmp_ret = collect_all('rnalysis')
+tmp_ret = collect_data_files('rnalysis')
 
-for item in tmp_ret[0]:
-    if 'videos' in item[0] or '__pycache__' in item[0] or '.egg-info' in item[0]:
+for item in tmp_ret:
+    if 'videos' in item[0]:
         continue
     datas.append(item)
-binaries += tmp_ret[1]
-hiddenimports += tmp_ret[2]
 
 hiddenimports += collect_submodules('sklearn')
 

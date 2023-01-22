@@ -12,7 +12,7 @@ except ImportError:
 
 
 def install_deseq2(r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
-    script_path = Path.joinpath(Path(__file__).parent, 'r_templates/deseq2_install.R')
+    script_path = Path.joinpath(Path(__file__).parent, '../data_files/r_templates/deseq2_install.R')
     try:
         io.run_r_script(script_path, r_installation_folder)
     except AssertionError:
@@ -28,9 +28,9 @@ def create_deseq2_script(data: Union[str, Path], design_matrix: Union[str, Path]
         cache_dir.mkdir(parents=True)
     save_path = cache_dir.joinpath('deseq2_run.R')
 
-    with open(Path.joinpath(Path(__file__).parent, 'r_templates/deseq2_run_parametric.R')) as f:
+    with open(Path.joinpath(Path(__file__).parent, '../data_files/r_templates/deseq2_run_parametric.R')) as f:
         run_template = f.read()
-    with open(Path.joinpath(Path(__file__).parent, 'r_templates/deseq2_export_parametric.R')) as f:
+    with open(Path.joinpath(Path(__file__).parent, '../data_files/r_templates/deseq2_export_parametric.R')) as f:
         export_template = f.read()
 
     with open(save_path, 'w') as outfile:

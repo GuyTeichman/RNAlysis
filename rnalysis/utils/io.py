@@ -1228,7 +1228,8 @@ def get_legal_gene_id_types():
 
 
 @functools.lru_cache(maxsize=2)
-def _get_id_abbreviation_dicts(dict_path: str = os.path.join(__path__[0], 'uniprot_dataset_abbreviation_dict.json')):
+def _get_id_abbreviation_dicts(dict_path: str = os.path.join(__path__[0],
+                                                             '../data_files/uniprot_dataset_abbreviation_dict.json')):
     with open(dict_path) as f:
         abbrev_dict_to = json.load(f)
         abbrev_dict_from = abbrev_dict_to.copy()
