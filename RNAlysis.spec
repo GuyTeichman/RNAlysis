@@ -71,7 +71,7 @@ exe = EXE(
     entitlements_file=None,
 )
 
-if is_darwin:
+if not is_darwin:
     coll = COLLECT(
         exe,
         splash.binaries,
