@@ -31,8 +31,17 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+splash = Splash('rnalysis/gui/splash.png',
+                binaries=a.binaries,
+                datas=a.datas,
+                text_pos=(180, 510),
+                text_size=12,
+                text_color='black')
+
+
 exe = EXE(
     pyz,
+    splash,
     a.scripts,
     [],
     exclude_binaries=True,
@@ -41,7 +50,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,
+    console=True,
     icon='rnalysis/favicon.ico',
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -51,6 +60,7 @@ exe = EXE(
 )
 coll = COLLECT(
     exe,
+    splash.binaries,
     a.binaries,
     a.zipfiles,
     a.datas,
@@ -59,3 +69,4 @@ coll = COLLECT(
     upx_exclude=[],
     name='RNAlysis-3.3.0',
 )
+
