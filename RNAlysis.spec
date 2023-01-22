@@ -1,4 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
+import platform
+
 from PyInstaller.utils.hooks import collect_submodules, collect_all
 
 # datas = [('rnalysis/gui/styles', './rnalysis/gui/styles'),
@@ -41,17 +43,19 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-splash = Splash('rnalysis/gui/splash.png',
-                binaries=a.binaries,
-                datas=a.datas,
-                text_pos=(180, 510),
-                text_size=12,
-                text_color='black')
-
+if platform.system() == 'Darwin':
+    exe_contents = (pyz,)
+else:
+    splash = Splash('rnalysis/gui/splash.png',
+                    binaries=a.binaries,
+                    datas=a.datas,
+                    text_pos=(180, 510),
+                    text_size=12,
+                    text_color='black')
+    exe_contents = (pyz, splash,)
 
 exe = EXE(
-    pyz,
-    splash,
+    *exe_contents,
     a.scripts,
     [],
     exclude_binaries=True,
@@ -68,9 +72,14 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+
+if platform.system() == 'Darwin':
+    coll_contents = (exe,)
+else:
+    coll_contents = (exe, splash.binaries,)
+
 coll = COLLECT(
-    exe,
-    splash.binaries,
+    *coll_contents,
     a.binaries,
     a.zipfiles,
     a.datas,
@@ -79,4 +88,3 @@ coll = COLLECT(
     upx_exclude=[],
     name='RNAlysis-3.3.0',
 )
-
