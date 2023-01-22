@@ -31,6 +31,16 @@ def render_graphviz_plot(graph: graphviz.Digraph, save_path: Union[str, Path], f
         return False
 
 
+def pipe_graphviz_plot(graph: graphviz.Digraph, file_format: str = 'png'):
+    try:
+        return graph.pipe(format=file_format)
+    except graphviz.ExecutableNotFound:
+        warnings.warn("'GraphViz' installation not found. If you want to generate Ontology and Pathway Graphs, "
+                      "Please install GraphViz and add it to PATH. \n"
+                      "See https://graphviz.org/download/ for more information. ")
+        return ''
+
+
 class KEGGEntry:
     NODE_TYPES = {'gene/enzyme': dict(shape='box', style='rounded', label=''),
                   'compound': dict(shape='circle', label=''),
@@ -153,13 +163,7 @@ class KEGGPathway:
     for i, (node, _) in enumerate(KEGGEntry.NODE_TYPES.items()):
         LEGEND_GRAPH.edge(f'key1:node{i}', f'{node}', style='invis')
 
-    try:
-        LEGEND_GRAPH_STR = LEGEND_GRAPH.pipe(format='png')
-    except graphviz.ExecutableNotFound:
-        warnings.warn("'GraphViz' installation not found. If you want to generate Ontology and Pathway Graphs, "
-                      "Please install GraphViz and add it to PATH. \n"
-                      "See https://graphviz.org/download/ for more information. ")
-        LEGEND_GRAPH_STR = ''
+    LEGEND_GRAPH_STR = pipe_graphviz_plot(LEGEND_GRAPH)
     del node, attrs, i, rel
 
     def __init__(self, kgml_tree: ElementTree, compounds: Dict[str, str], gene_id_translator=None):
@@ -387,7 +391,7 @@ class KEGGPathway:
         fig.suptitle(title, fontsize=24)
 
         # show graph in a matplotlib window
-        kegg_png_str = kegg_graph.pipe(format='png')
+        kegg_png_str = pipe_graphviz_plot(kegg_graph)
         for ax, png_str in zip(axes, [kegg_png_str, self.LEGEND_GRAPH_STR]):
             sio = builtin_io.BytesIO()
             sio.write(png_str)
@@ -694,7 +698,7 @@ class DAGTree:
         if not res:
             return False
         # show graph in a matplotlib window
-        png_str = graph.pipe(format='png')
+        png_str = pipe_graphviz_plot(graph)
         sio = builtin_io.BytesIO()
         sio.write(png_str)
         sio.seek(0)
