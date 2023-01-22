@@ -1,8 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
-import platform
-
+from pathlib import Path
+from PyInstaller.compat import is_darwin
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 from _pyinstaller_hooks_contrib.hooks.stdhooks import get_hook_dirs
+
 datas = []
 binaries = []
 hiddenimports = []
@@ -16,6 +17,12 @@ for item in tmp_ret:
 
 hiddenimports += collect_submodules('sklearn')
 
+with open(Path(get_hook_dirs()[0]).joinpath('hook-pygraphviz.py')) as infile:
+    hook_path = Path('hooks')
+    hook_path.mkdir()
+    with open(hook_path.joinpath('hook-graphviz.py'),'w') as outfile:
+        outfile.write(infile.read())
+
 block_cipher = None
 
 a = Analysis(
@@ -24,7 +31,7 @@ a = Analysis(
     binaries=[],
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=get_hook_dirs(),
+    hookspath=[hook_path],
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
@@ -34,9 +41,9 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-if platform.system() == 'Darwin':
+if is_darwin:
     exe_contents = (pyz, a.scripts, a.binaries, a.zipfiles, a.datas, [],)
-    exe_kwargs = dict(runtime_tmpdir=None,)
+    exe_kwargs = dict(runtime_tmpdir=None, )
 else:
     splash = Splash('rnalysis/gui/splash.png',
                     binaries=a.binaries,
@@ -45,7 +52,7 @@ else:
                     text_size=12,
                     text_color='black')
     exe_contents = (pyz, splash, a.scripts, [],)
-    exe_kwargs = dict(exclude_binaries=True,)
+    exe_kwargs = dict(exclude_binaries=True, )
 
 exe = EXE(
     *exe_contents,
@@ -64,10 +71,10 @@ exe = EXE(
     entitlements_file=None,
 )
 
-if platform.system() != 'Darwin':
+if is_darwin:
     coll = COLLECT(
-        a.scripts,
-        [],
+        exe,
+        splash.binaries,
         a.binaries,
         a.zipfiles,
         a.datas,
