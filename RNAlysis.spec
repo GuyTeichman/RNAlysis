@@ -42,7 +42,8 @@ a = Analysis(
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 if platform.system() == 'Darwin':
-    exe_contents = (pyz,)
+    exe_contents = (pyz, a.scripts, a.binaries, a.zipfiles, a.datas, [],)
+    exe_kwargs = dict(runtime_tmpdir=None,)
 else:
     splash = Splash('rnalysis/gui/splash.png',
                     binaries=a.binaries,
@@ -50,13 +51,12 @@ else:
                     text_pos=(180, 510),
                     text_size=12,
                     text_color='black')
-    exe_contents = (pyz, splash,)
+    exe_contents = (pyz, splash, a.scripts, [],)
+    exe_kwargs = dict(exclude_binaries=True,)
 
 exe = EXE(
     *exe_contents,
-    a.scripts,
-    [],
-    exclude_binaries=True,
+    **exe_kwargs,
     name='RNAlysis',
     debug=False,
     bootloader_ignore_signals=False,
@@ -71,18 +71,15 @@ exe = EXE(
     entitlements_file=None,
 )
 
-if platform.system() == 'Darwin':
-    coll_contents = (exe,)
-else:
-    coll_contents = (exe, splash.binaries,)
-
-coll = COLLECT(
-    *coll_contents,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='RNAlysis-3.3.0',
-)
+if platform.system() != 'Darwin':
+    coll = COLLECT(
+        a.scripts,
+        [],
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        name='RNAlysis-3.3.0',
+    )
