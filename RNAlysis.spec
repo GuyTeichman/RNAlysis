@@ -2,13 +2,7 @@
 import platform
 
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-
-# datas = [('rnalysis/gui/styles', './rnalysis/gui/styles'),
-#          ('rnalysis/gui/icons', './rnalysis/gui/icons'),
-#          ('rnalysis/gui/splash.png', './rnalysis/gui'),
-#          ('rnalysis/gui/logo_small.png', './rnalysis/gui'),
-#          ('rnalysis/gui/splash_transparent.png', './rnalysis/gui'),
-#          ('rnalysis/favicon.ico', './rnalysis')]
+from _pyinstaller_hooks_contrib.hooks.stdhooks import get_hook_dirs
 datas = []
 binaries = []
 hiddenimports = []
@@ -30,8 +24,7 @@ a = Analysis(
     binaries=[],
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=[],
-    hooksconfig={'pygraphviz': {}},
+    hookspath=get_hook_dirs(),
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
