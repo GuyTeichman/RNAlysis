@@ -45,17 +45,17 @@ jobs:
                         CMD_BUILD: >
                             pyinstaller RNAlysis.spec &&
                             cd dist/ &&
-                            zip -r RNAlysis-3.3.0.zip ./RNAlysis* &&
+                            zip -r RNAlysis-3.3.0_macos.zip ./RNAlysis* &&
                             ls -ltr
-                        OUT_FILE_NAME: RNAlysis-3.3.0.zip
+                        OUT_FILE_NAME: RNAlysis-3.3.0_macos.zip
                         ASSET_MIME: application/zip
                     -   os: windows-latest
                         TARGET: windows
                         CMD_BUILD: >
                             pyinstaller RNAlysis.spec &&
                             cd dist/ &&
-                            7z a RNAlysis-3.3.0.zip -r "RNAlysis-3.3.0/"
-                        OUT_FILE_NAME: RNAlysis-3.3.0.zip
+                            7z a RNAlysis-3.3.0_windows.zip -r "RNAlysis-3.3.0/"
+                        OUT_FILE_NAME: RNAlysis-3.3.0_windows.zip
                         ASSET_MIME: application/zip
         steps:
             -   uses: actions/checkout@v2
@@ -105,5 +105,3 @@ jobs:
                 with:
                     files: ./dist/${{ matrix.OUT_FILE_NAME}}
                     tag_name: ${{ github.ref }}
-#        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-#        asset_content_type: ${{ matrix.ASSET_MIME}}
