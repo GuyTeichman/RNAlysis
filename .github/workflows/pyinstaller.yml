@@ -64,11 +64,18 @@ jobs:
                 run: brew update
             -   name: Setup Graphviz
                 uses: ts-graphviz/setup-graphviz@v1
+            -   name: Cache LLVM and Clang
+                id: cache-llvm
+                uses: actions/cache@v2
+                with:
+                    path: ${{ runner.temp }}/llvm
+                    key: llvm-9
             -   name: Install LLVM and Clang
                 uses: KyleMayes/install-llvm-action@v1
                 with:
                     version: "9.0"
                     directory: ${{ runner.temp }}/llvm
+                    cached: ${{ steps.cache-llvm.outputs.cache-hit }}
             -   name: Set up Python 3.8
                 uses: actions/setup-python@v2
                 with:
