@@ -3629,7 +3629,7 @@ def run():
     if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash
         pyi_splash.close()
-
+    # when using GUI, the joblib parallel backend should always be multiprocessing (since Loky is not supported in freeze mode)
     parallel_backend('multiprocessing')
     lockfile = QtCore.QLockFile(QtCore.QDir.tempPath() + '/RNAlysis.lock')
     if lockfile.tryLock(100):
