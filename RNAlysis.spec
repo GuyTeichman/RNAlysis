@@ -1,27 +1,37 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_submodules, collect_all
 
+# datas = [('rnalysis/gui/styles', './rnalysis/gui/styles'),
+#          ('rnalysis/gui/icons', './rnalysis/gui/icons'),
+#          ('rnalysis/gui/splash.png', './rnalysis/gui'),
+#          ('rnalysis/gui/logo_small.png', './rnalysis/gui'),
+#          ('rnalysis/gui/splash_transparent.png', './rnalysis/gui'),
+#          ('rnalysis/favicon.ico', './rnalysis')]
+datas = []
+binaries = []
 hiddenimports = []
+
+tmp_ret = collect_all('rnalysis')
+
+for item in tmp_ret[0]:
+    if 'videos' in item[0] or '__pycache__' in item[0] or '.egg-info' in item[0]:
+        continue
+    datas.append(item)
+binaries += tmp_ret[1]
+hiddenimports += tmp_ret[2]
+
 hiddenimports += collect_submodules('sklearn')
 
 block_cipher = None
-
 
 a = Analysis(
     ['rnalysis_app.py'],
     pathex=[],
     binaries=[],
-    datas=[('rnalysis/gui/styles','./rnalysis/gui/styles'),
-    ('rnalysis/gui/icons','./rnalysis/gui/icons'),
-    ('rnalysis/gui/splash.png','./rnalysis/gui'),
-    ('rnalysis/gui/logo_small.png','./rnalysis/gui'),
-    ('rnalysis/gui/splash_transparent.png','./rnalysis/gui'),
-    ('rnalysis/utils/r_templates','./rnalysis/utils/r_templates'),
-    ('rnalysis/favicon.ico','./rnalysis'),
-    ('rnalysis/utils/uniprot_dataset_abbreviation_dict.json','./rnalysis/utils')],
+    datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
-    hooksconfig={'pygraphviz':{}},
+    hooksconfig={'pygraphviz': {}},
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
