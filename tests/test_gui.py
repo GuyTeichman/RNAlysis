@@ -1310,9 +1310,9 @@ def test_FilterTabPage_obj_properties(qtbot, filter_obj, truth):
 def test_FilterTabPage_rename(qtbot, filtertabpage_with_undo_stack):
     new_name = 'my new table name'
     window, stack = filtertabpage_with_undo_stack
-    qtbot.keyClicks(window.overview_widgets['table_name'], new_name)
+    window.overview_widgets['table_name'].setText(new_name)
     with qtbot.waitSignal(window.tabNameChange) as blocker:
-        qtbot.mouseClick(window.overview_widgets['rename_button'], LEFT_CLICK)
+        window.overview_widgets['rename_button'].click()
     assert blocker.args[0] == new_name
     assert str(window.obj().fname.stem) == new_name
     assert new_name in window.overview_widgets['table_name_label'].text()
@@ -1326,7 +1326,7 @@ def test_FilterTabPage_undo_rename(qtbot, filtertabpage_with_undo_stack):
     prev_name = window.name
     qtbot.keyClicks(window.overview_widgets['table_name'], new_name)
     with qtbot.waitSignal(window.tabNameChange) as blocker:
-        qtbot.mouseClick(window.overview_widgets['rename_button'], LEFT_CLICK)
+        window.overview_widgets['rename_button'].click()
     assert blocker.args[0] == new_name
 
     with qtbot.waitSignal(window.tabNameChange) as blocker:
@@ -1376,7 +1376,7 @@ def test_FilterTabPage_save_table(qtbot, monkeypatch):
 
 
 def test_FilterTabPage_view_full_table(qtbot, filtertabpage):
-    qtbot.mouseClick(filtertabpage.overview_widgets['view_button'], LEFT_CLICK)
+    filtertabpage.overview_widgets['view_button'].click()
     assert isinstance(filtertabpage.overview_widgets['full_table_view'], gui_windows.DataFrameView)
     assert filtertabpage.overview_widgets['full_table_view'].data_view.model()._dataframe.equals(filtertabpage.obj().df)
 
