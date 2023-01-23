@@ -33,7 +33,7 @@ jobs:
                 run: brew update
             -   name: Set up XCode (macOS)
                 if: runner.os == 'MacOS'
-                run: open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
+                run: open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS*.pkg
             -   name: Setup Qt requirements for Linux
                 uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
