@@ -24,6 +24,10 @@
 .. autosummary::
     :toctree: .
     
+    gene_ontology_graph
+    
+    kegg_pathway_graph
+    
     plot_enrichment_results
     
     upset_plot

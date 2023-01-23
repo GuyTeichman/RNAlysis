@@ -137,33 +137,14 @@ going all the way from exploratory data analysis and data visualization through 
 <hr class="docutils" />
 <section id="how-do-i-install-it">
 <h1>How do I install it?<a class="headerlink" href="#how-do-i-install-it" title="Permalink to this heading"></a></h1>
-<p>You can install <em>RNAlysis</em> via PyPI.</p>
-<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines), you should first install <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater (on Windows computers only), <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, <a class="reference external" href="https://cran.r-project.org/bin/">R</a>, and <a class="reference external" href="https://pachterlab.github.io/kallisto/download">kallisto</a>.
-Then use the following command in your terminal window:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="nb">all</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span>
-</pre></div>
-</div>
-<p>You can also install <em>RNAlysis</em> with only some of the following additional features:</p>
-<ul class="simple">
-<li><p><cite>fastq</cite> - adapter trimming and RNA-seq transcript quantification of Fastq files</p></li>
-<li><p><cite>hdbscan</cite> - clustering analysis using the HDBSCAN method</p></li>
-<li><p><cite>single-set</cite> - single-set enrichment analysis using the XL-mHG test</p></li>
-<li><p><cite>randomization</cite> - improved performance for randomization tests</p></li>
-</ul>
-<p>by calling the install command with one or more additional features inside the square brackets, separated by commas. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">RNAlysis</span><span class="p">[</span><span class="n">fastq</span><span class="p">,</span><span class="n">single</span><span class="o">-</span><span class="nb">set</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>will install the basic version of <em>RNAlysis</em>, along with the <cite>fastq</cite> and <cite>single-set</cite> additional features.</p>
+<p>You can either install <em>RNAlysis</em> as a stand-alone app, or via PyPI.
+To learn how to install <em>RNAlysis</em>, visit the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/installation.html">Installation page</a>.</p>
 </section>
 <hr class="docutils" />
 <section id="how-do-i-use-it">
 <h1>How do I use it?<a class="headerlink" href="#how-do-i-use-it" title="Permalink to this heading"></a></h1>
-<p>You can launch the <em>RNAlysis</em> software by typing the following command:</p>
+<p>If you installed <em>RNAlysis</em> as a stand-alone app, simply open the app (“RNAlysis.exe” on Windows, “RNAlysis.dmg” on MacOS) and wait for it to load (it may take a minute or two, so be patient!).</p>
+<p>If you installed <em>RNAlysis</em> from PyPi, you can launch <em>RNAlysis</em> by typing the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rnalysis</span><span class="o">-</span><span class="n">gui</span>
 </pre></div>
 </div>
@@ -172,7 +153,7 @@ Then use the following command in your terminal window:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gui</span><span class="o">.</span><span class="n">run_gui</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Alternatively, you can write Python code that uses <em>RNAlysis</em> functions as described in the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html">user guide</a>.</p>
+<p>In addition, you can write Python code that uses <em>RNAlysis</em> functions as described in the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html">programmatic interface user guide</a>.</p>
 </section>
 <hr class="docutils" />
 <section id="dependencies">
@@ -202,6 +183,7 @@ Then use the following command in your terminal window:</p>
 <li><p><a class="reference external" href="https://github.com/python/typing_extensions">typing_extensions</a></p></li>
 <li><p><a class="reference external" href="https://www.riverbankcomputing.com/software/pyqt/">PyQt5</a></p></li>
 <li><p><a class="reference external" href="https://github.com/ColinDuquesnoy/QDarkStyleSheet">qdarkstyle</a></p></li>
+<li><p><a class="reference external" href="https://https://github.com/tiran/defusedxml">defusedxml</a></p></li>
 <li><p><a class="reference external" href="https://github.com/marcelm/cutadapt">cutadapt</a></p></li>
 </ul>
 </section>
@@ -266,6 +248,8 @@ https://doi.org/10.1186/s13059-014-0550-8
 <li><p>Or Ganon</p></li>
 <li><p>Netta Dunsky</p></li>
 <li><p>Shachar Shani</p></li>
+<li><p><a class="reference external" href="https://github.com/Mintxoklet">Mintxoklet</a></p></li>
+<li><p><a class="reference external" href="https://github.com/kbipinkumar">Bipin Kumar</a></p></li>
 </ul>
 <hr class="docutils" />
 <p>This package was created with <a class="reference external" href="https://github.com/audreyr/cookiecutter">Cookiecutter</a> and the <a class="reference external" href="https://github.com/audreyr/cookiecutter-pypackage">audreyr/cookiecutter-pypackage</a> project template.</p>

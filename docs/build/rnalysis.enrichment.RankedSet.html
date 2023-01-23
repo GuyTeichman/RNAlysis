@@ -80,8 +80,6 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes.html">rnalysis.enrichment.RankedSet.biotypes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html">rnalysis.enrichment.RankedSet.change_set_name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html">rnalysis.enrichment.RankedSet.difference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_hypergeometric.html">rnalysis.enrichment.RankedSet.enrich_hypergeometric</a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization.html">rnalysis.enrichment.RankedSet.enrich_randomization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html">rnalysis.enrichment.RankedSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html">rnalysis.enrichment.RankedSet.intersection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.kegg_enrichment.html">rnalysis.enrichment.RankedSet.kegg_enrichment</a></li>
@@ -95,6 +93,8 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.user_defined_enrichment.html">rnalysis.enrichment.RankedSet.user_defined_enrichment</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.gene_ontology_graph.html">rnalysis.enrichment.gene_ontology_graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.kegg_pathway_graph.html">rnalysis.enrichment.kegg_pathway_graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.plot_enrichment_results.html">rnalysis.enrichment.plot_enrichment_results</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.upset_plot.html">rnalysis.enrichment.upset_plot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.venn_diagram.html">rnalysis.enrichment.venn_diagram</a></li>
@@ -179,12 +179,6 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html#rnalysis.enrichment.RankedSet.difference" title="rnalysis.enrichment.RankedSet.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.difference</span></code></a>(*others)</p></td>
 <td><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_hypergeometric.html#rnalysis.enrichment.RankedSet.enrich_hypergeometric" title="rnalysis.enrichment.RankedSet.enrich_hypergeometric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_hypergeometric</span></code></a>([...])</p></td>
-<td><p>This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.enrich_randomization.html#rnalysis.enrichment.RankedSet.enrich_randomization" title="rnalysis.enrichment.RankedSet.enrich_randomization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.enrich_randomization</span></code></a>([attributes, ...])</p></td>
-<td><p>This function is depracated; please user 'FeatureSet.user_defined_enrichment' instead.</p></td>
-</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html#rnalysis.enrichment.RankedSet.go_enrichment" title="rnalysis.enrichment.RankedSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.go_enrichment</span></code></a>([organism, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set.</p></td>
 </tr>
@@ -207,7 +201,7 @@
 <td><p>Calculates enrichment and depletion of the sorted RankedSet for Gene Ontology (GO) terms         WITHOUT a background set, using the generalized Minimum Hypergeometric Test (XL-mHG, developed by          <a href="#id3"><span class="problematic" id="id4">`</span></a>Prof.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_kegg_enrichment.html#rnalysis.enrichment.RankedSet.single_set_kegg_enrichment" title="rnalysis.enrichment.RankedSet.single_set_kegg_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.single_set_kegg_enrichment</span></code></a>([...])</p></td>
-<td><p>Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG)         curated pathways WITHOUT a background set, using the generalized Minimum Hypergeometric Test         (XL-mHG, developed by <a class="reference external" href="https://dx.doi.org/10.1371/journal.pcbi.0030039/">Prof. Zohar Yakhini and colleagues</a>         and generalized by         <a class="reference external" href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0143196/">Florian Wagner</a>).         P-values are calculated using the generalized Minimum Hypergeometric Test.         P-values are corrected for multiple comparisons using the Benjamini–Hochberg step-up procedure         (original FDR method). In plots, for the clarity of display, complete depletion (linear enrichment = 0)         appears with the smallest value in the scale.</p></td>
+<td><p>Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG)         curated pathways WITHOUT a background set, using the generalized Minimum Hypergeometric Test         (XL-mHG, developed by <a href="#id5"><span class="problematic" id="id6">`</span></a>Prof.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference.html#rnalysis.enrichment.RankedSet.symmetric_difference" title="rnalysis.enrichment.RankedSet.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.symmetric_difference</span></code></a>(other)</p></td>
 <td><p>Calculates the set symmetric difference of the indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).</p></td>

@@ -1,4 +1,4 @@
-﻿rnalysis.enrichment.RankedSet
+rnalysis.enrichment.RankedSet
 =============================
 
 .. currentmodule:: rnalysis.enrichment
@@ -19,8 +19,6 @@
     RankedSet.biotypes
     RankedSet.change_set_name
     RankedSet.difference
-    RankedSet.enrich_hypergeometric
-    RankedSet.enrich_randomization
     RankedSet.go_enrichment
     RankedSet.intersection
     RankedSet.kegg_enrichment

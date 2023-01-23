@@ -56,8 +56,21 @@
 <p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#stable-release">Stable release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#from-sources">From sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-stand-alone-app-most-beginner-friendly"><em>RNAlysis</em> stand-alone app (most beginner-friendly)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-install-it">How to install it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-run-it">How to run it</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#install-as-a-python-package-with-pip-best-performance">Install as a Python package with <em>pip</em> (best performance)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">How to install it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">How to run it</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#from-sources">From sources</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">How to install it</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">How to run it</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
@@ -109,18 +122,53 @@
              
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
-<section id="stable-release">
-<h2>Stable release<a class="headerlink" href="#stable-release" title="Permalink to this heading"></a></h2>
-<p>current version: <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="pipimage" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a></p>
-<p>You can install <em>RNAlysis</em> via <a class="reference external" href="https://pip.pypa.io">pip</a>.
-If you don’t have <a class="reference external" href="https://pip.pypa.io">pip</a> installed, this <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">Python installation guide</a> can guide
+<p>Latest version: <a class="reference external" href="https://pypi.python.org/pypi/rnalysis"><img alt="pipimage" src="https://img.shields.io/pypi/v/rnalysis.svg" /></a></p>
+<section id="rnalysis-stand-alone-app-most-beginner-friendly">
+<h2><em>RNAlysis</em> stand-alone app (most beginner-friendly)<a class="headerlink" href="#rnalysis-stand-alone-app-most-beginner-friendly" title="Permalink to this heading"></a></h2>
+<p>A stand-alone version of <em>RNAlysis</em> is available for both Windows and MacOS.
+This version is the most beginner-friendly to install, since it requires the least amount of setup to make it work.</p>
+<section id="how-to-install-it">
+<h3>How to install it<a class="headerlink" href="#how-to-install-it" title="Permalink to this heading"></a></h3>
+<p>You can download the latest stand-alone of <em>RNAlysis</em> from the
+<a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/releases/latest">GitHub Releases page</a> (‘RNAlysis-X.Y.Z_windows.zip’ for Windows, and ‘RNAlysis-X.Y.Z_macos.zip’ for MacOS).</p>
+<p>If you use the <em>RNAlysis</em> stand-alone app, the only other programs you will need to install are external programs that interface with <em>RNAlysis</em> - such as <a class="reference external" href="https://cran.r-project.org/bin/">R</a> (if you want to use <em>DESeq2</em>), and <a class="reference external" href="https://pachterlab.github.io/kallisto/download">kallisto</a>.</p>
+</section>
+<section id="how-to-run-it">
+<h3>How to run it<a class="headerlink" href="#how-to-run-it" title="Permalink to this heading"></a></h3>
+<p>First, unzip the .zip file you downloaded.</p>
+<p><strong>On Windows:</strong></p>
+<p>After unzipping, enter the unzipped directory and open the “RNAlysis.exe” file:</p>
+<a class="reference internal image-reference" href="_images/01b01_open_windows.png"><img alt="Open *RNAlysis* stand-alone app on Windows - Open &quot;RNAlysis.exe&quot;" src="_images/01b01_open_windows.png" style="width: 600px;" /></a>
+<p>If this is the first time you launch <em>RNAlysis</em>, the following messagebox will show up.
+To get past it, first click on “More info”:</p>
+<a class="reference internal image-reference" href="_images/01b02_open_windows.png"><img alt="Open *RNAlysis* stand-alone app on Windows - click on &quot;More info&quot;" src="_images/01b02_open_windows.png" style="width: 600px;" /></a>
+<p>Next, click on the “Run anyway” button at the bottom-right corner:</p>
+<a class="reference internal image-reference" href="_images/01b03_open_windows.png"><img alt="Open *RNAlysis* stand-alone app on Windows - click on &quot;Run anyway&quot;" src="_images/01b03_open_windows.png" style="width: 600px;" /></a>
+<p>The <em>RNAlysis</em> app should launch now - this may take a minute or two, so be patient!</p>
+<p><strong>On MacOS:</strong></p>
+<p>After unzipping, open the “RNAlysis.dmg” file.
+The <em>RNAlysis</em> app should launch now - this may take a minute or two, so be patient!</p>
+</section>
+</section>
+<section id="install-as-a-python-package-with-pip-best-performance">
+<h2>Install as a Python package with <em>pip</em> (best performance)<a class="headerlink" href="#install-as-a-python-package-with-pip-best-performance" title="Permalink to this heading"></a></h2>
+<p>You can install <em>RNAlysis</em> as a Python package via <a class="reference external" href="https://pip.pypa.io">pip</a>.</p>
+<section id="id1">
+<h3>How to install it<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<p>If you don’t have <a class="reference external" href="https://pip.pypa.io">pip</a> installed, this <a class="reference external" href="http://docs.python-guide.org/en/latest/starting/installation/">Python installation guide</a> can guide
 you through the process.</p>
-<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines), you should first install <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater (on Windows computers only), <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, <a class="reference external" href="https://cran.r-project.org/bin/">R</a>, and <a class="reference external" href="https://pachterlab.github.io/kallisto/download">kallisto</a>.
-Then use the following command in your terminal window:</p>
+<p>To install the full version of <em>RNAlysis</em> (includes additional features that might not work out-of-the-box on all machines),
+you should first install <a class="reference external" href="https://graphviz.org/download/">GraphViz</a>, <a class="reference external" href="https://cran.r-project.org/bin/">R</a>, and <a class="reference external" href="https://pachterlab.github.io/kallisto/download">kallisto</a>.</p>
+<p><strong>On Windows:</strong> you may also need to install <a class="reference external" href="https://visualstudio.microsoft.com/visual-cpp-build-tools/">Microsoft Visual C++ 14.0</a> or greater.</p>
+<p><strong>On Linux:</strong> you may also need to install <strong>Qt 5 Image Formats</strong> to view tutorial videos from within <em>RNAlysis</em>.
+To do so on Debian/ubuntu systems, use the command <cite>sudo apt install qt5-image-formats-plugins</cite>.
+To do so on Red Hat-based distros such as Fedora, use the command <cite>dnf install qt5-qtimageformats</cite>.</p>
+<p>After installing these external dependencies, you can install <em>RNAlysis</em> by typing the following command in your terminal window:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis<span class="o">[</span>all<span class="o">]</span>
 </pre></div>
 </div>
-<p>To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
+<p>If you’re having trouble installing the full version of <em>RNAlysis</em>, you can install the basic version first.
+To install the basic version of <em>RNAlysis</em>, use the following command in your terminal window:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install RNAlysis
 </pre></div>
 </div>
@@ -137,17 +185,45 @@ Then use the following command in your terminal window:</p>
 </div>
 <p>will install the basic version of <em>RNAlysis</em>, along with the <cite>fastq</cite> and <cite>single-set</cite> additional features.</p>
 </section>
+<section id="id2">
+<h3>How to run it<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<p>If you installed <em>RNAlysis</em> with <em>pip</em>, you can open the <em>RNAlysis</em> app by executing the command <cite>rnalysis-gui</cite> from your terminal.</p>
+<p>Alternatively, you can open the <em>RNAlysis</em> app by typing the following code into a Python console:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; from rnalysis import gui
+&gt;&gt;&gt; gui.run_gui<span class="o">()</span>
+</pre></div>
+</div>
+<p>In addition, you can write Python code that uses <em>RNAlysis</em> functions as described in the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html">programmatic interface user guide</a>.</p>
+</section>
+</section>
 <section id="from-sources">
 <h2>From sources<a class="headerlink" href="#from-sources" title="Permalink to this heading"></a></h2>
 <p>The source code for RNAlysis can be downloaded from the <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">Github repository</a>.</p>
+<section id="id3">
+<h3>How to install it<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
 <p>First, clone the public repository:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone git://github.com/GuyTeichman/rnalysis
 </pre></div>
 </div>
-<p>Once you have a copy of the source, you can install it with:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python setup.py install
+<p>Once you have a copy of the source, you can install the basic version of <em>RNAlysis</em> with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip setup.py install
 </pre></div>
 </div>
+<p>Or you can install the full version of <em>RNAlysis</em> with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python -m pip setup.py install .<span class="o">[</span>all<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>How to run it<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<p>If you installed <em>RNAlysis</em> from source, you can open the <em>RNAlysis</em> app by executing the command <cite>rnalysis-gui</cite> from your terminal.</p>
+<p>Alternatively, you can open the <em>RNAlysis</em> app by typing the following code into a Python console:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; from rnalysis import gui
+&gt;&gt;&gt; gui.run_gui<span class="o">()</span>
+</pre></div>
+</div>
+<p>In addition, you can write Python code that uses <em>RNAlysis</em> functions as described in the <a class="reference external" href="https://guyteichman.github.io/RNAlysis/build/user_guide.html">programmatic interface user guide</a>.</p>
+</section>
 </section>
 </section>
 

@@ -1,4 +1,4 @@
-﻿rnalysis.enrichment.FeatureSet
+rnalysis.enrichment.FeatureSet
 ==============================
 
 .. currentmodule:: rnalysis.enrichment
@@ -19,8 +19,6 @@
     FeatureSet.biotypes
     FeatureSet.change_set_name
     FeatureSet.difference
-    FeatureSet.enrich_hypergeometric
-    FeatureSet.enrich_randomization
     FeatureSet.go_enrichment
     FeatureSet.intersection
     FeatureSet.kegg_enrichment

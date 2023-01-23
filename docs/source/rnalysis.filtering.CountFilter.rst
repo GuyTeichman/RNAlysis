@@ -47,10 +47,8 @@
     CountFilter.normalize_rle
     CountFilter.normalize_tmm
     CountFilter.normalize_to_quantile
-    CountFilter.normalize_to_rpkm
     CountFilter.normalize_to_rpm
     CountFilter.normalize_to_rpm_htseqcount
-    CountFilter.normalize_to_tpm
     CountFilter.normalize_with_scaling_factors
     CountFilter.number_filters
     CountFilter.pairplot
@@ -62,6 +60,7 @@
     CountFilter.sort
     CountFilter.split_by_attribute
     CountFilter.split_by_percentile
+    CountFilter.split_by_principal_components
     CountFilter.split_by_reads
     CountFilter.split_clicom
     CountFilter.split_hdbscan
