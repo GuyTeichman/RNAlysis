@@ -15,6 +15,10 @@
 .. autosummary::
     :toctree: .
     
+    clear_all_cache
+    
+    clear_gui_cache
+    
     parse_gene_name_string
     
     parse_sequence_name_string
