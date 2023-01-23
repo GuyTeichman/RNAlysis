@@ -15,6 +15,8 @@ jobs:
         name: Create Release
         runs-on: [ ubuntu-latest ]
         steps:
+            -   name: Get latest change log
+                run: python packaging/parse_changelog.py
             -   name: Create Release
                 id: create_release
                 uses: actions/create-release@v1
@@ -23,6 +25,7 @@ jobs:
                 with:
                     tag_name: ${{ github.ref }}
                     release_name: Stable release ${{ github.ref_name }}
+                    body_path: latest_changelog.md
                     draft: false
                     prerelease: false
             -   name: Output Release URL File

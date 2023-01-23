@@ -12,3 +12,7 @@ pytest-runner
 sphinx_rtd_theme
 pytest-qt
 pytest-xvfb
+typing_extensions
+pyinstaller
+pyinstaller-hooks-contrib
+rst-to-myst
