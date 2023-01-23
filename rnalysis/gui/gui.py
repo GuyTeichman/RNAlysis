@@ -3004,13 +3004,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_action = QtWidgets.QAction("&Save...", self)
         self.save_action.triggered.connect(self.save_file)
 
-        self.load_session_action = QtWidgets.QAction("&Load session...")
+        self.load_session_action = QtWidgets.QAction("&Load session...", self)
         self.load_session_action.triggered.connect(self.load_session)
-        self.save_session_action = QtWidgets.QAction("Sa&ve session...")
+        self.save_session_action = QtWidgets.QAction("Sa&ve session...", self)
         self.save_session_action.triggered.connect(self.save_session)
-        self.clear_session_action = QtWidgets.QAction("Clea&r session...")
+        self.clear_session_action = QtWidgets.QAction("Clea&r session...", self)
         self.clear_session_action.triggered.connect(self.clear_session)
 
+        self.clear_cache_action = QtWidgets.QAction("&Clear cache...", self)
+        self.clear_cache_action.triggered.connect(self.clear_cache)
         self.settings_action = QtWidgets.QAction("&Settings...", self)
         self.settings_action.triggered.connect(self.settings)
         self.exit_action = QtWidgets.QAction("&Exit", self)
@@ -3111,6 +3113,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.import_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+I"))
         self.export_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+E"))
         self.delete_pipeline_action.setShortcut(QtGui.QKeySequence("Ctrl+Alt+D"))
+
+    @QtCore.pyqtSlot()
+    def clear_cache(self):
+        reply = QtWidgets.QMessageBox.question(self, 'Clear cache?',
+                                               'Are you sure you want to clear the <i>RNAlysis</i> cache? '
+                                               'This cannot be undone!',
+                                               defaultButton=QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            io.clear_gui_cache()
+            io.clear_cache()
 
     @QtCore.pyqtSlot()
     def check_for_updates(self, confirm_updated: bool = True):
@@ -3261,7 +3273,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.new_menu.addActions([self.new_table_action, self.new_multiple_action, self.new_table_from_folder_action])
         file_menu.addActions(
             [self.save_action, self.load_session_action, self.save_session_action, self.clear_session_action,
-             self.settings_action, self.exit_action])
+             self.clear_cache_action, self.settings_action, self.exit_action])
 
         edit_menu = self.menu_bar.addMenu("&Edit")
         edit_menu.addActions([self.undo_action, self.redo_action, self.restore_tab_action, self.close_current_action,

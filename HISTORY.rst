@@ -2,7 +2,7 @@
 History
 =======
 
-3.4.0 (2023-01-??)
+3.4.0 (2023-01-24)
 ------------------
 From this release forward, *RNAlysis* is made available as a stand-alone app for Windows and MacOS. You can download these stand-alone versions from the GitHub Releases page.
 In addition, new features were added, including new plots, filtering functions, and the ability to generate Gene Ontology Graphs and KEGG Pathway Graphs without running enrichment analysis from scratch.
@@ -15,6 +15,7 @@ Added
 * Added support for the Sharpened Cosine distance metric in clustering analyses
 * KEGG enrichment can now generate KEGG pathway graphs for pathways that were found to be statistically significant
 * Added functions to the enrichment module that can generate KEGG Pathway or Gene Ontology plots based on previously-generated enrichment results
+* You can now clear the *RNAlysis* cache from the *RNAlysis* GUI, or through the general menu.
 
 Changed
 ********

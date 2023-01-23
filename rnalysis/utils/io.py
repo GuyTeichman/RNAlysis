@@ -15,19 +15,18 @@ from functools import lru_cache
 from io import BytesIO, StringIO
 from itertools import chain
 from pathlib import Path
+from sys import executable
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable
 from urllib.parse import urlparse, parse_qs, urlencode
-
-from defusedxml import ElementTree
 
 import appdirs
 import numpy as np
 import pandas as pd
 import requests
 import yaml
+from defusedxml import ElementTree
 from requests.adapters import HTTPAdapter, Retry
 from tqdm.auto import tqdm
-from sys import executable
 
 try:
     from typing import Literal
@@ -77,8 +76,8 @@ def cache_file(content: str, filename: str):
         f.write(content)
 
 
-def clear_gui_cache():
-    directory = get_gui_cache_dir()
+def clear_directory(directory: Union[str, Path]):
+    directory = Path(directory)
     if not directory.exists():
         return
 
@@ -87,6 +86,16 @@ def clear_gui_cache():
             item.unlink()
         elif item.is_dir():
             shutil.rmtree(item, ignore_errors=True)
+
+
+def clear_cache():
+    cache_dir = Path(appdirs.user_cache_dir('RNAlysis'))
+    clear_directory(cache_dir)
+
+
+def clear_gui_cache():
+    directory = get_gui_cache_dir()
+    clear_directory(directory)
 
 
 def load_cached_gui_file(filename: str):

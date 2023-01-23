@@ -9,8 +9,16 @@ from typing import Union
 import pandas as pd
 
 from rnalysis import __attr_file_key__, __biotype_file_key__
-from rnalysis.utils import io, validation, settings
 from rnalysis.filtering import Filter
+from rnalysis.utils import io, validation, settings
+
+
+def clear_all_cache():
+    io.clear_cache()
+    io.clear_gui_cache()
+
+def clear_gui_cache():
+    io.clear_gui_cache()
 
 
 def parse_wbgene_string(string):
