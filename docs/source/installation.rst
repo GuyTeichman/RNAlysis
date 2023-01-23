@@ -12,28 +12,37 @@ Latest version: |pipimage|
 *RNAlysis* stand-alone app (most beginner-friendly)
 -----------------------------------------------------
 A stand-alone version of *RNAlysis* is available for both Windows and MacOS.
-This version requires the least amount of setup #TODO
+This version is the most beginner-friendly to install, since it requires the least amount of setup to make it work.
 
 How to install it
 ^^^^^^^^^^^^^^^^^
 You can download the latest stand-alone of *RNAlysis* from the
-`GitHub Releases page<https://github.com/GuyTeichman/RNAlysis/releases/latest>`_ ('RNAlysis-X.Y.Z_windows.zip' for Windows, and 'RNAlysis-X.Y.Z_macos.zip' for MacOS).
+`GitHub Releases page <https://github.com/GuyTeichman/RNAlysis/releases/latest>`_ ('RNAlysis-X.Y.Z_windows.zip' for Windows, and 'RNAlysis-X.Y.Z_macos.zip' for MacOS).
 
-If you use the *RNAlysis* stand-alone app,
-
+If you use the *RNAlysis* stand-alone app, the only other programs you will need to install are external programs that interface with *RNAlysis* - such as `R <https://cran.r-project.org/bin/>`_ (if you want to use *DESeq2*), and `kallisto <https://pachterlab.github.io/kallisto/download>`_.
 
 How to run it
 ^^^^^^^^^^^^^
+First, unzip the .zip file you downloaded.
+
 **On Windows:**
 
+After unzipping, enter the unzipped directory and open the "RNAlysis.exe" file:
 
 .. image:: /installation_screenshots/01b01_open_windows.png
+  :width: 600
+  :alt: Open *RNAlysis* stand-alone app on Windows - Open "RNAlysis.exe"
+
+If this is the first time you launch *RNAlysis*, the following messagebox will show up.
+To get past it, first click on "More info":
+
+.. image:: /installation_screenshots/01b02_open_windows.png
   :width: 600
   :alt: Open *RNAlysis* stand-alone app on Windows - click on "More info"
 
 Next, click on the "Run anyway" button at the bottom-right corner:
 
-.. image:: /installation_screenshots/01b02_open_windows.png
+.. image:: /installation_screenshots/01b03_open_windows.png
   :width: 600
   :alt: Open *RNAlysis* stand-alone app on Windows - click on "Run anyway"
 
@@ -41,14 +50,14 @@ The *RNAlysis* app should launch now - this may take a minute or two, so be pati
 
 **On MacOS:**
 
+After unzipping, open the "RNAlysis.dmg" file.
 The *RNAlysis* app should launch now - this may take a minute or two, so be patient!
 
 
 Install as a Python package with *pip* (best performance)
 ----------------------------------------------------------
 
-
-You can install *RNAlysis* via `pip`_.
+You can install *RNAlysis* as a Python package via `pip`_.
 
 How to install it
 ^^^^^^^^^^^^^^^^^
@@ -57,7 +66,7 @@ If you don't have `pip`_ installed, this `Python installation guide`_ can guide
 you through the process.
 
 To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines),
-you should first install `GraphViz <https://graphviz.org/download/>`_, `R <https://cran.r-project.org/bin/>`_, and `kallisto <https://pachterlab.github.io/kallisto/download>`_
+you should first install `GraphViz <https://graphviz.org/download/>`_, `R`_, and `kallisto`_.
 
 **On Windows:** you may also need to install `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater.
 
@@ -103,6 +112,7 @@ Alternatively, you can open the *RNAlysis* app by typing the following code into
     >>> gui.run_gui()
 
 
+In addition, you can write Python code that uses *RNAlysis* functions as described in the `programmatic interface user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
 
 From sources
 ------------
@@ -146,4 +156,4 @@ Alternatively, you can open the *RNAlysis* app by typing the following code into
     >>> gui.run_gui()
 
 
-
+In addition, you can write Python code that uses *RNAlysis* functions as described in the `programmatic interface user guide`_.

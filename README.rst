@@ -37,49 +37,17 @@ To get an overview of what *RNAlysis* can do, read the `tutorial <https://guytei
 
 How do I install it?
 ---------------------
-You can install *RNAlysis* via PyPI.
-
-To install the full version of *RNAlysis* (includes additional features that might not work out-of-the-box on all machines),
-you should first install `GraphViz <https://graphviz.org/download/>`_, `R <https://cran.r-project.org/bin/>`_, `kallisto <https://pachterlab.github.io/kallisto/download>`_, and `Microsoft Visual C++ 14.0 <https://visualstudio.microsoft.com/visual-cpp-build-tools/>`_ or greater (on Windows computers only.
-Then use the following command in your terminal window::
-
-    pip install RNAlysis[all]
-
-
-To install the basic version of *RNAlysis*, use the following command in your terminal window::
-
-    pip install RNAlysis
-
-
-You can also install *RNAlysis* with only some of the following additional features:
-
-* `fastq` - adapter trimming and RNA-seq transcript quantification of Fastq files
-* `hdbscan` - clustering analysis using the HDBSCAN method
-* `single-set` - single-set enrichment analysis using the XL-mHG test
-* `randomization` - improved performance for randomization tests
-
-by calling the install command with one or more additional features inside the square brackets, separated by commas. For example::
-
-    pip install RNAlysis[fastq,single-set]
-
-
-will install the basic version of *RNAlysis*, along with the `fastq` and `single-set` additional features.
-
-If you install *RNAlysis* on a Linux system, you may need to install **Qt 5 Image Formats** to view tutorial videos from within *RNAlysis*.
-To do so on Debian/ubuntu systems::
-
-    $ sudo apt install qt5-image-formats-plugins
-
-or on Red Hat-based distros such as Fedora::
-
-    $ dnf install qt5-qtimageformats
+You can either install *RNAlysis* as a stand-alone app, or via PyPI.
+To learn how to install *RNAlysis*, visit the `Installation page <https://guyteichman.github.io/RNAlysis/build/installation.html>`_.
 
 ----
 
 
 How do I use it?
 ---------------------
-You can launch the *RNAlysis* software by typing the following command::
+If you installed *RNAlysis* as a stand-alone app, simply open the app ("RNAlysis.exe" on Windows, "RNAlysis.dmg" on MacOS) and wait for it to load (it may take a minute or two, so be patient!).
+
+If you installed *RNAlysis* from PyPi, you can launch *RNAlysis* by typing the following command::
 
     rnalysis-gui
 
@@ -88,7 +56,7 @@ Or through a python console::
     >>> from rnalysis import gui
     >>> gui.run_gui()
 
-Alternatively, you can write Python code that uses *RNAlysis* functions as described in the `user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
+In addition, you can write Python code that uses *RNAlysis* functions as described in the `programmatic interface user guide <https://guyteichman.github.io/RNAlysis/build/user_guide.html>`_.
 
 ----
 
