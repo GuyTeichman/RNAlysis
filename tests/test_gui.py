@@ -507,8 +507,7 @@ def test_ClicomWindow_get_analysis_params(qtbot, clicom_window):
     assert clicom_window.get_analysis_kwargs() == truth
 
 
-def test_ClicomWindow_start_analysis(qtbot, clicom_window, monkeypatch):
-    monkeypatch.setattr(ClicomWindow, 'showMinimized', lambda *args, **kwargs: None)
+def test_ClicomWindow_start_analysis(qtbot, clicom_window):
     truth_setups = [dict(method='kmeans', n_clusters=3, n_init=3, max_iter=300, random_seed=None,
                          max_n_clusters_estimate='auto'),
                     dict(method='hierarchical', n_clusters='silhouette', metric='Euclidean', linkage='Average',
@@ -516,7 +515,7 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window, monkeypatch):
     truth_params = dict(replicate_grouping='ungrouped', power_transform=[True, False], evidence_threshold=0.35,
                         cluster_unclustered_features=True, min_cluster_size=15, plot_style='all', split_plots=False)
 
-    qtbot.keyClicks(clicom_window.stack.func_combo, filtering.CountFilter.split_kmeans.readable_name)
+    clicom_window.stack.func_combo.setCurrentText(filtering.CountFilter.split_kmeans.readable_name)
     clicom_window.stack.parameter_widgets['n_clusters'].other.setValue(3)
     qtbot.mouseClick(clicom_window.setups_widgets['add_button'], LEFT_CLICK)
 
@@ -529,9 +528,8 @@ def test_ClicomWindow_start_analysis(qtbot, clicom_window, monkeypatch):
     clicom_window.param_widgets['evidence_threshold'].clear()
     qtbot.keyClicks(clicom_window.param_widgets['evidence_threshold'], '0.35')
 
-    with parallel_backend('sequential'):
-        with qtbot.waitSignal(clicom_window.paramsAccepted) as blocker:
-            clicom_window.start_button.click()
+    with qtbot.waitSignal(clicom_window.paramsAccepted) as blocker:
+        clicom_window.start_button.click()
     assert blocker.args[0] == truth_setups
     assert blocker.args[1] == truth_params
 
@@ -1246,7 +1244,7 @@ def test_FilterTabPage_load_file(qtbot):
 
     window.basic_widgets['file_path'].clear()
     qtbot.keyClicks(window.basic_widgets['file_path'].file_path, str(Path('tests/test_files/counted.csv').absolute()))
-    qtbot.keyClicks(window.basic_widgets['table_type_combo'], 'Count matrix')
+    window.basic_widgets['table_type_combo'].setCurrentText('Count matrix')
     qtbot.mouseClick(window.basic_widgets['start_button'], LEFT_CLICK)
 
     assert not window.is_empty()
