@@ -17,6 +17,8 @@ jobs:
         steps:
             -   name: Checkout repository
                 uses: actions/checkout@v2
+            -   name: Install dev requirements
+                run: python -m pip install --upgrade -r requirements_dev.txt
             -   name: Get latest change log
                 run: python packaging/parse_changelog.py
             -   name: Create Release
@@ -87,7 +89,6 @@ jobs:
                     cache: 'pip'
             -   name: Install dependencies
                 run: |
-                    python -m pip install --upgrade pip wheel pyinstaller
                     python -m pip install .[all]
             -   name: Build with pyinstaller for ${{matrix.TARGET}}
                 run: ${{matrix.CMD_BUILD}}
