@@ -48,7 +48,7 @@ else:
     splash = Splash('rnalysis/gui/splash.png',
                     binaries=a.binaries,
                     datas=a.datas,
-                    text_pos=(180, 510),
+                    text_pos=(175, 510),
                     text_size=12,
                     text_color='black')
     exe_contents = (pyz, splash, a.scripts, [],)
