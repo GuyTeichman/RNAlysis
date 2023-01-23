@@ -31,6 +31,9 @@ jobs:
             -   name: brew update (macOS)
                 if: runner.os == 'MacOS'
                 run: brew update
+            -   name: Set up XCode (macOS)
+                if: runner.os == 'MacOS'
+                uses: maxim-lobanov/setup-xcode@v1
             -   name: Setup Qt requirements for Linux
                 uses: tlambert03/setup-qt-libs@v1
             -   name: Setup Graphviz
