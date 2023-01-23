@@ -15,6 +15,8 @@ jobs:
         name: Create Release
         runs-on: [ ubuntu-latest ]
         steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v2
             -   name: Get latest change log
                 run: python packaging/parse_changelog.py
             -   name: Create Release
@@ -61,7 +63,6 @@ jobs:
                         OUT_FILE_NAME: RNAlysis-3.3.0_windows.zip
                         ASSET_MIME: application/zip
         steps:
-            -   uses: actions/checkout@v2
             -   name: brew update (macOS)
                 if: runner.os == 'MacOS'
                 run: brew update
