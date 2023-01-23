@@ -111,7 +111,8 @@ def get_biotype_ref_path(ref: Union[str, Path]):
 
         return pth
     else:
-        print(f'Biotype Reference Table used: {ref}')
+        if ref is not None and ref != '':
+            print(f'Biotype Reference Table used: {ref}')
         return ref
 
 
@@ -131,7 +132,7 @@ def get_attr_ref_path(ref):
         print(f'Attribute Reference Table used: {pth}')
         return pth
     else:
-        if ref is not None:
+        if ref is not None and ref != '':
             print(f'Attribute Reference Table used: {ref}')
         return ref
 
