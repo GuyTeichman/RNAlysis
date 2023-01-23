@@ -33,7 +33,7 @@ jobs:
                 run: brew update
             -   name: Set up XCode (macOS)
                 if: runner.os == 'MacOS'
-                run: maxim-lobanov/setup-xcode@v1
+                uses: maxim-lobanov/setup-xcode@v1
                 with:
                     xcode-version: '9.0'
             -   name: Setup Qt requirements for Linux
