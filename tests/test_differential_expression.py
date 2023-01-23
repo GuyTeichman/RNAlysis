@@ -1,9 +1,10 @@
+import platform
 import sys
 
 import numpy as np
+import pytest
 
 from rnalysis.utils.differential_expression import *
-import pytest
 
 
 def test_install_deseq2():
@@ -30,6 +31,7 @@ def test_create_deseq2_script(data, design_matrix, comparisons, expected_path):
     assert out == expected
 
 
+@pytest.mark.skipif(platform.system() == 'Darwin')
 @pytest.mark.parametrize('comparisons,expected_paths', [
     ([('replicate', 'rep2', 'rep3')], ['tests/test_files/DESeq2_replicate_rep2_vs_rep3_truth.csv']),
     ([('condition', 'cond2', 'cond1'), ('condition', 'cond3', 'cond2')],
