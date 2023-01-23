@@ -5,9 +5,9 @@
 
 Open the program
 =================
-If you installed *RNAlysis* from pypi, you can open the graphical user interface by either executing the command `rnalysis-gui` from your terminal, or by typing the following code into a Python console::
+If you installed *RNAlysis* from PyPi, you can open the graphical user interface by either executing the command `rnalysis-gui` from your terminal, or by typing the following code into a Python console::
 
-    >>> from *RNAlysis* import gui
+    >>> from rnalysis import gui
     >>> gui.run_gui()
 
 Load a table
