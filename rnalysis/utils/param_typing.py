@@ -25,6 +25,9 @@ DEFAULT_ORGANISMS = tuple(sorted(['Caenorhabditis elegans',
                                   'Schizosaccharomyces pombe']))
 
 Fraction = typing.NewType('Fraction', float)
+PositiveInt = typing.NewType('PositiveInt', int)
+NegativeInt = typing.NewType('NegativeInt', int)
+NonNegativeInt = typing.NewType('NonNegativeInt', int)
 
 ColumnName = typing.NewType('ColumnName', str)
 ColumnNames = typing.NewType('ColumnNames', typing.Union[ColumnName, typing.Iterable[ColumnName]])

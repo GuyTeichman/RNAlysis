@@ -1601,6 +1601,35 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
+
+    elif param.annotation == param_typing.PositiveInt:
+        widget = QtWidgets.QSpinBox()
+        widget.setMinimum(1)
+        widget.setMaximum(2147483647)
+        default = param.default if is_default else 0
+        widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif param.annotation == param_typing.NonNegativeInt:
+        widget = QtWidgets.QSpinBox()
+        widget.setMinimum(0)
+        widget.setMaximum(2147483647)
+        default = param.default if is_default else 0
+        widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif param.annotation == param_typing.NegativeInt:
+        widget = QtWidgets.QSpinBox()
+        widget.setMinimum(-2147483648)
+        widget.setMaximum(-1)
+        default = param.default if is_default else 0
+        widget.setValue(default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+
     elif param.annotation == float:
         widget = QtWidgets.QDoubleSpinBox()
         widget.setMinimum(float("-inf"))
