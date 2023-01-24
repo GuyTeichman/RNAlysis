@@ -7,7 +7,8 @@ from tqdm.auto import tqdm
 
 from rnalysis import filtering
 from rnalysis.utils import parsing, io
-from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction
+from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
+    LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES
 
 try:
     from typing import Literal
@@ -21,7 +22,197 @@ try:
 except ImportError:
     HAS_CUTADAPT = False
 
-LEGAL_FASTQ_SUFFIXES = ['.fastq', '.fastq.gz', '.fq', '.fq.gz']
+
+def bowtie2_create_index(genome_fastas: List[Union[str, Path]], index_name: Union[str, Literal['auto']] = 'auto',
+                         bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                         random_seed: Union[NonNegativeInt, None] = None, threads: PositiveInt = 1):
+    """
+    builds a bowtie index from FASTA formatted files of target sequences (genome). \
+    The index files will be saved in the same folder as your first FASTA file, with the `.bt2` suffix. \
+    Be aware that there are pre-built bowtie2 indices for popular model organisms. \
+    These can be downloaded from  the \
+    `bowtie2 website <https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_ (from menu on the right).
+
+    :param genome_fastas: Path to the FASTA file/files which contain reference sequences to be aligned to.
+    :type genome_fastas: list of str or Path
+    :param index_name: The basename of the index files. \
+    bowtie2 will create files named index_name.1.bt2, index_name.2.bt2, index_name.3.bt2, index_name.4.bt2, \
+    index_name.rev.1.bt2, and index_name.rev.2.bt2. \
+    if index_name='auto', the index name used will be the stem of the first supplied genome FASTA file \
+    (for example: if the first genome FASTA file is 'path/to/genome.fa.gz', the index name will be 'genome').
+    :type index_name: str or 'auto' (default='auto')
+    :param bowtie2_installation_folder: Path to the installation folder of bowtie2. For example:
+    'C:/Program Files/bowtie2-2.5.1'. if installation folder is set to 'auto', \
+    RNAlysis will attempt to find it automatically.
+    :type bowtie2_installation_folder: str, Path, or 'auto' (default='auto')
+    :param random_seed: if specified, determines the seed for pseudo-random number generator.
+    :type random_seed: int >=0 or None (default=None)
+    :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
+    :type threads: int > 0 (default=1)
+    """
+
+    call = io.generate_base_call('bowtie2-build', bowtie2_installation_folder)
+
+    if random_seed is not None:
+        assert isinstance(random_seed, int) and random_seed >= 0, f"'random_seed' must be an integer >=0 !"
+        call.extend(['--seed', str(random_seed)])
+
+    assert isinstance(threads, int) and threads > 0, f"'threads' must be an integer >0 !"
+    call.extend(['--threads', str(threads)])
+
+    genome_fastas = [Path(pth) for pth in parsing.data_to_list(genome_fastas)]
+    for fasta in genome_fastas:
+        assert fasta.exists(), f"the FASTA file '{fasta.as_posix()}' does not exist!"
+    call.append(','.join([fasta.as_posix() for fasta in genome_fastas]))
+
+    if index_name == 'auto':
+        index_name = parsing.remove_suffixes(genome_fastas[0]).stem
+    else:
+        assert isinstance(index_name, str), f"'index_name' must be a string, instead got {type(index_name)}."
+    call.extend([index_name])
+
+    print(f"Running command: \n{' '.join(call)}")
+    with tqdm(total=1, desc='Building bowtie2 index', unit='index') as pbar:
+        io.run_subprocess(call)
+        pbar.update()
+
+
+def _get_legal_samples(fastq_folder: Union[str, Path]) -> List[Path]:
+    fastq_folder = Path(fastq_folder)
+    assert fastq_folder.exists(), "'fastq_folder' does not exist!"
+
+    legal_samples = []
+    for item in sorted(fastq_folder.iterdir()):
+        if item.is_file():
+            name = item.name
+            if any([name.endswith(suffix) for suffix in LEGAL_FASTQ_SUFFIXES]):
+                legal_samples.append(item)
+    return legal_samples
+
+
+def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Union[str, Path],
+                             index_file: Union[str, Path],
+                             bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                             mode: Literal[LEGAL_BOWTIE2_MODES] = 'end-to-end',
+                             settings_preset: Literal[LEGAL_BOWTIE2_PRESETS] = 'very-sensitive',
+                             ignore_qualities: bool = False,
+                             quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
+                             random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+    call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
+                                    ignore_qualities, quality_score_type, random_seed, threads)
+
+    legal_samples = _get_legal_samples(fastq_folder)
+
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
+        f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
+
+    calls = []
+    for i, item in enumerate(sorted(legal_samples)):
+        this_call = call.copy()
+        if new_sample_names == 'auto':
+            this_name = parsing.remove_suffixes(item).stem
+        else:
+            this_name = new_sample_names[i]
+
+        this_call.extend(['-U', item.as_posix()])
+        this_call.extend(['-S', item.with_name(f'{this_name}.sam').as_posix()])
+        calls.append(this_call)
+
+    with tqdm(total=len(calls), desc='Aligning reads', unit='files') as pbar:
+        for bt2_call in calls:
+            io.run_subprocess(bt2_call)
+            print(f"File saved successfully at {bt2_call[-1]}")
+            pbar.update(1)
+
+
+def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_folder: Union[str, Path],
+                             index_file: Union[str, Path],
+                             bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                             mode: Literal[LEGAL_BOWTIE2_MODES] = 'end-to-end',
+                             settings_preset: Literal[LEGAL_BOWTIE2_PRESETS] = 'very-sensitive',
+                             ignore_qualities: bool = False,
+                             quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
+                             mate_orientations: Literal['fwd-rev', 'rev-fwd', 'fwd-fwd'] = 'fwd-rev',
+                             min_fragment_length: NonNegativeInt = 0,
+                             max_fragment_length: Union[PositiveInt, None] = 500,
+                             allow_individual_alignment: bool = True,
+                             allow_disconcordant_alignment: bool = True,
+                             random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+    call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
+                                    ignore_qualities, quality_score_type, random_seed, threads)
+
+    assert isinstance(min_fragment_length, int) and min_fragment_length >= 0, \
+        f"'min_fragment_len' must be a non-negative int!"
+    assert isinstance(max_fragment_length, int) and max_fragment_length >= 0, \
+        f"'max_fragment_len' must be a non-negative int!"
+    call.extend([['-I', str(min_fragment_length)]])
+    call.extend([['-X', str(max_fragment_length)]])
+
+    if not allow_disconcordant_alignment:
+        call.append('--no-discorcordant')
+    if not allow_individual_alignment:
+        call.append('--no-mixed')
+
+    if mate_orientations == 'fwd-rev':
+        call.append('--fr')
+    elif mate_orientations == 'rev-fwd':
+        call.append('--rf')
+    elif mate_orientations == 'fwd-fwd':
+        call.append('--ff')
+    else:
+        raise ValueError(f"Invalid value for 'mate_orientations': '{mate_orientations}'.")
+
+    calls = []
+    for i, (file1, file2) in enumerate(zip(r1_files, r2_files)):
+        file1 = Path(file1)
+        file2 = Path(file2)
+        this_call = call.copy()
+        if new_sample_names == 'auto':
+            this_name = f"{parsing.remove_suffixes(file1).stem}_{parsing.remove_suffixes(file2).stem}.sam"
+        else:
+            this_name = Path(new_sample_names[i]).with_suffix('.sam').name
+
+        this_call.extend(['-1', file1.as_posix(), '-2', file2.as_posix()])
+        this_call.extend(['-S', output_folder.joinpath(this_name).as_posix()])
+        calls.append(this_call)
+
+    with tqdm(total=len(calls), desc='Aligning reads', unit='file pairs') as pbar:
+        for bt2_call in calls:
+            io.run_subprocess(bt2_call)
+            print(f"File saved successfully at {bt2_call[-1]}")
+            pbar.update(1)
+
+
+def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installation_folder: Union[str, Path],
+                             mode: Literal[LEGAL_BOWTIE2_MODES], settings_preset: Literal[LEGAL_BOWTIE2_PRESETS],
+                             ignore_qualities: bool, quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES],
+                             random_seed: NonNegativeInt, threads: PositiveInt):
+    output_folder = Path(output_folder)
+    index_file = Path(index_file)
+    assert output_folder.exists(), "supplied 'output_folder' does not exist!"
+    assert index_file.exists(), f"supplied 'index_file' does not exist!"  # TODO: change me!
+
+    call = io.generate_base_call('bowtie2', bowtie2_installation_folder)
+
+    assert mode in LEGAL_BOWTIE2_MODES, f"Invalid value for 'mode': '{mode}'."
+    call.append(f'--{mode}')
+    assert settings_preset in LEGAL_BOWTIE2_PRESETS, f"Invalid value for 'settings_preset': '{settings_preset}'."
+    call.append(f'--{settings_preset}')
+    assert quality_score_type in LEGAL_QUAL_SCORE_TYPES, \
+        f"Invalid value for 'quality_score_type': '{quality_score_type}'."
+    call.append(f'--{quality_score_type}')
+
+    if ignore_qualities:
+        call.append('--ignore-quals')
+
+    assert isinstance(random_seed, int) and random_seed >= 0, f"'random_seed' must be a non-negative int!"
+    call.extend(['--seed', str(random_seed)])
+    assert isinstance(threads, int) and threads >= 0, f"'threads' must be a non-negative int!"
+    call.extend(['--threads', str(threads)])
+
+    return call
 
 
 def kallisto_create_index(transcriptome_fasta: Union[str, Path],
@@ -48,14 +239,10 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     assert isinstance(kmer_length, int), f"parameter 'kmer_length' must be an integer. Instead, got {type(kmer_length)}"
     assert 0 < kmer_length <= 31 and kmer_length % 2 == 1, f"'kmer_length' must be an odd integer between 1 and 31"
 
-    if kallisto_installation_folder == 'auto':
-        call = ['kallisto']
-    else:
-        call = [Path(kallisto_installation_folder).joinpath("kallisto").as_posix()]
-    call.append('index')
-
+    command = 'kallisto index'
+    call = io.generate_base_call(command, kallisto_installation_folder)
     transcriptome_fasta = Path(transcriptome_fasta)
-    assert Path(transcriptome_fasta).exists(), 'the transcriptome FASTA file does not exist!'
+    assert transcriptome_fasta.exists(), 'the transcriptome FASTA file does not exist!'
 
     index_filename = parsing.remove_suffixes(transcriptome_fasta).with_suffix('.idx').as_posix()
     call.extend(['-i', index_filename])
@@ -155,12 +342,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     call.extend(["-s", str(stdev_fragment_length)])
     call.extend(["-l", str(average_fragment_length)])
 
-    legal_samples = []
-    for item in sorted(Path(fastq_folder).iterdir()):
-        if item.is_file():
-            name = item.name
-            if any([name.endswith(suffix) for suffix in LEGAL_FASTQ_SUFFIXES]):
-                legal_samples.append(item)
+    legal_samples = _get_legal_samples(fastq_folder)
 
     assert (new_sample_names == 'auto') or (len(new_sample_names) == len(legal_samples)), \
         f'Number of samples ({len(legal_samples)}) does not match number of sample names ({len(new_sample_names)})!'
@@ -255,8 +437,8 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
         new_sample_names = parsing.data_to_list(new_sample_names)
     assert len(r1_files) == len(r2_files), f"Got an uneven number of R1 and R2 files: " \
                                            f"{len(r1_files)} and {len(r2_files)} respectively"
-    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(
-        r1_files)), f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
+    assert (new_sample_names == 'auto') or (len(new_sample_names) == len(r1_files)), \
+        f'Number of samples ({len(r1_files)}) does not match number of sample names ({len(new_sample_names)})!'
 
     output_folder = Path(output_folder)
     call = _parse_kallisto_misc_args(output_folder, index_file, kallisto_installation_folder, stranded, learn_bias,
@@ -307,11 +489,7 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
     assert isinstance(stranded, str) and stranded.lower() in ["no", "forward", "reverse"], \
         f"invalid value for parameter 'stranded': {stranded}"
 
-    if kallisto_installation_folder == 'auto':
-        call = ['kallisto']
-    else:
-        call = [Path(kallisto_installation_folder).joinpath("kallisto").as_posix()]
-    call.append('quant')
+    call = io.generate_base_call('kallisto quant', kallisto_installation_folder)
     call.extend(["-i", index_file.as_posix()])
 
     if learn_bias:
