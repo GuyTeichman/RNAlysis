@@ -829,3 +829,38 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         except Exception as e:
             self.showNormal()
             raise e
+
+
+class PairedFuncExternalWindow(FuncExternalWindow):
+    __slots__ = {'pairs_group': 'widget group for picking file pairs',
+                 'pairs_grid': 'layout for widget group',
+                 'pairs_widgets': 'widgets for picking file pairs'}
+    EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
+
+    def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, parent=None):
+        super().__init__(func_name, func, help_link, excluded_params, parent)
+
+        self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
+        self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
+        self.pairs_widgets = {}
+
+    def init_ui(self):
+        self.scroll_layout.addWidget(self.pairs_group, 0, 1)
+        self.setMinimumSize(1250, 650)
+        super().init_ui()
+        self.init_pairs_ui()
+
+    def init_pairs_ui(self):
+        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList(self)
+        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList(self)
+
+        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 1, 0)
+        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 1, 1)
+        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
+        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
+
+    def get_analysis_kwargs(self):
+        kwargs = super().get_analysis_kwargs()
+        kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
+        kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
+        return kwargs
