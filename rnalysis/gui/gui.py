@@ -67,11 +67,11 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto create index', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Kallisto build index', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('Kallisto - create transcriptome index')
+        self.setWindowTitle('Kallisto - build transcriptome index')
         super().init_ui()
 
 
@@ -91,45 +91,19 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
         super().init_ui()
 
 
-class KallistoPairedWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
+class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
+    __slots__ = {}
     FUNC = fastq.kallisto_quantify_paired_end
     HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
-
-    __slots__ = {'pairs_group': 'widget group for picking file pairs',
-                 'pairs_grid': 'layout for widget group',
-                 'pairs_widgets': 'widgets for picking file pairs'}
 
     def __init__(self, parent=None):
         super().__init__('Kallisto quantify (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS,
                          parent)
-
-        self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
-        self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
-        self.pairs_widgets = {}
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('Kallisto paired-end quantification setup')
-        self.scroll_layout.addWidget(self.pairs_group, 0, 1)
-        self.setMinimumSize(1250, 650)
         super().init_ui()
-        self.init_pairs_ui()
-
-    def init_pairs_ui(self):
-        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList(self)
-        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList(self)
-
-        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 1, 0)
-        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 1, 1)
-        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
-        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
-
-    def get_analysis_kwargs(self):
-        kwargs = super().get_analysis_kwargs()
-        kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
-        kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
-        return kwargs
+        self.setWindowTitle('Kallisto paired-end quantification setup')
 
 
 class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
@@ -147,44 +121,18 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
         super().init_ui()
 
 
-class CutAdaptPairedWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
+class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
     FUNC = fastq.trim_adapters_paired_end
     HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
-
-    __slots__ = {'pairs_group': 'widget group for picking file pairs',
-                 'pairs_grid': 'layout for widget group',
-                 'pairs_widgets': 'widgets for picking file pairs'}
+    __slots__ = {}
 
     def __init__(self, parent=None):
         super().__init__('CutAdapt (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
-
-        self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
-        self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
-        self.pairs_widgets = {}
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('CutAdapt paired-end adapter trimming setup')
-        self.scroll_layout.addWidget(self.pairs_group, 0, 1)
-        self.setMinimumSize(1250, 650)
         super().init_ui()
-        self.init_pairs_ui()
-
-    def init_pairs_ui(self):
-        self.pairs_widgets['r1_list'] = gui_widgets.OrderedFileList(self)
-        self.pairs_widgets['r2_list'] = gui_widgets.OrderedFileList(self)
-
-        self.pairs_grid.addWidget(self.pairs_widgets['r1_list'], 1, 0)
-        self.pairs_grid.addWidget(self.pairs_widgets['r2_list'], 1, 1)
-        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R1 files:</b>"), 0, 0)
-        self.pairs_grid.addWidget(QtWidgets.QLabel("<b>R2 files:</b>"), 0, 1)
-
-    def get_analysis_kwargs(self):
-        kwargs = super().get_analysis_kwargs()
-        kwargs['r1_files'] = self.pairs_widgets['r1_list'].get_sorted_names()
-        kwargs['r2_files'] = self.pairs_widgets['r2_list'].get_sorted_names()
-        return kwargs
+        self.setWindowTitle('CutAdapt paired-end adapter trimming setup')
 
 
 class DESeqWindow(gui_windows.FuncExternalWindow):
@@ -3069,12 +3017,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cutadapt_paired_action.triggered.connect(
             functools.partial(self.start_external_window, CutAdaptPairedWindow))
 
-        self.kallisto_index_action = QtWidgets.QAction("Create kallisto &index...", self)
+        self.kallisto_index_action = QtWidgets.QAction("kallisto build &index...", self)
         self.kallisto_index_action.triggered.connect(functools.partial(self.start_external_window, KallistoIndexWindow))
-        self.kallisto_single_action = QtWidgets.QAction("&Single-end RNA-seq quantification...", self)
+        self.kallisto_single_action = QtWidgets.QAction("&kallisto Single-end RNA-seq quantification...", self)
         self.kallisto_single_action.triggered.connect(
             functools.partial(self.start_external_window, KallistoSingleWindow))
-        self.kallisto_paired_action = QtWidgets.QAction("&Paired-end RNA-seq quantification...", self)
+        self.kallisto_paired_action = QtWidgets.QAction("kallisto &Paired-end RNA-seq quantification...", self)
         self.kallisto_paired_action.triggered.connect(
             functools.partial(self.start_external_window, KallistoPairedWindow))
 
