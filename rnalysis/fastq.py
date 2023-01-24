@@ -222,7 +222,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     builds a kallisto index from a FASTA formatted file of target sequences (transcriptome). \
     The index file will be saved in the same folder as your FASTA file, with the `.idx` suffix. \
     Be aware that there are pre-built kallisto indices for popular model organisms. \
-    These can be downloaded from  the \
+    These can be downloaded from the \
     `kallisto transcriptome indices site <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_.
 
     :param transcriptome_fasta: Path to the FASTA file of your desired transcriptome.
@@ -239,8 +239,9 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     assert isinstance(kmer_length, int), f"parameter 'kmer_length' must be an integer. Instead, got {type(kmer_length)}"
     assert 0 < kmer_length <= 31 and kmer_length % 2 == 1, f"'kmer_length' must be an odd integer between 1 and 31"
 
-    command = 'kallisto index'
-    call = io.generate_base_call(command, kallisto_installation_folder)
+    call = io.generate_base_call('kallisto', kallisto_installation_folder)
+    call.append('index')
+
     transcriptome_fasta = Path(transcriptome_fasta)
     assert transcriptome_fasta.exists(), 'the transcriptome FASTA file does not exist!'
 
@@ -489,7 +490,8 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
     assert isinstance(stranded, str) and stranded.lower() in ["no", "forward", "reverse"], \
         f"invalid value for parameter 'stranded': {stranded}"
 
-    call = io.generate_base_call('kallisto quant', kallisto_installation_folder)
+    call = io.generate_base_call('kallisto', kallisto_installation_folder)
+    call.append('quant')
     call.extend(["-i", index_file.as_posix()])
 
     if learn_bias:

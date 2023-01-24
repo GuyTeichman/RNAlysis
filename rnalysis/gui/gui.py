@@ -32,12 +32,12 @@ INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 class OntologyGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    FUNC = enrichment.gene_ontology_graph
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Gene Ontology graph', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = enrichment.gene_ontology_graph
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('Gene Ontology graph', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -47,12 +47,12 @@ class OntologyGraphWindow(gui_windows.FuncExternalWindow):
 
 class PathwayGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    FUNC = enrichment.kegg_pathway_graph
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('KEGG Pathway graph', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = enrichment.kegg_pathway_graph
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('KEGG Pathway graph', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -64,12 +64,12 @@ class PathwayGraphWindow(gui_windows.FuncExternalWindow):
 
 class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    FUNC = fastq.bowtie2_create_index
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Bowtie2 build index', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = fastq.bowtie2_create_index
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('Bowtie2 build index', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -79,12 +79,12 @@ class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
 
 class Bowtie2SingleWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    FUNC = fastq.bowtie2_align_single_end
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Bowtie2 align (single-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = fastq.bowtie2_align_single_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('Bowtie2 align (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -93,12 +93,12 @@ class Bowtie2SingleWindow(gui_windows.FuncExternalWindow):
 
 
 class Bowtie2PairedWindow(gui_windows.PairedFuncExternalWindow):
-    FUNC = fastq.bowtie2_align_paired_end
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Bowtie2 align (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = fastq.bowtie2_align_paired_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('Bowtie2 align (paired-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -108,12 +108,13 @@ class Bowtie2PairedWindow(gui_windows.PairedFuncExternalWindow):
 
 class KallistoIndexWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    FUNC = fastq.kallisto_create_index
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
+
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto build index', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = fastq.kallisto_create_index
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('Kallisto build index', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -123,13 +124,12 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
 
 class KallistoSingleWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    FUNC = fastq.kallisto_quantify_single_end
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto quantify (single-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS,
-                         parent)
+        func = fastq.kallisto_quantify_single_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('Kallisto quantify (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -139,11 +139,12 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
 
 class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
     __slots__ = {}
-    FUNC = fastq.kallisto_quantify_paired_end
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto quantify (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS,
+        func = fastq.kallisto_quantify_paired_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+
+        super().__init__('Kallisto quantify (paired-end reads)', func, help_link, self.EXCLUDED_PARAMS,
                          parent)
         self.init_ui()
 
@@ -154,12 +155,12 @@ class KallistoPairedWindow(gui_windows.PairedFuncExternalWindow):
 
 class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    FUNC = fastq.trim_adapters_single_end
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('CutAdapt (single-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = fastq.trim_adapters_single_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('CutAdapt (single-end reads)', UNC, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -168,12 +169,12 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
 
 
 class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
-    FUNC = fastq.trim_adapters_paired_end
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('CutAdapt (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = fastq.trim_adapters_paired_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('CutAdapt (paired-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -184,8 +185,6 @@ class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
 class DESeqWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'comparisons'}
     IGNORED_WIDGETS = gui_windows.FuncExternalWindow.IGNORED_WIDGETS | {'load_design'}
-    FUNC = filtering.CountFilter.differential_expression_deseq2
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{FUNC.__name__}.html"
 
     __slots__ = {'comparisons': 'list of comparisons to make',
                  'design_mat': 'design matrix',
@@ -194,7 +193,9 @@ class DESeqWindow(gui_windows.FuncExternalWindow):
                  'comparisons_widgets': 'widgets for choosing comparisons'}
 
     def __init__(self, parent=None):
-        super().__init__('DESeq2', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = filtering.CountFilter.differential_expression_deseq2
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
+        super().__init__('DESeq2', func, help_link, self.EXCLUDED_PARAMS, parent)
 
         self.comparisons = []
         self.design_mat = None
@@ -241,11 +242,11 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode', 'parallel_backend'}
     ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode',
                                   'parallel_backend'}
-    FUNC = filtering.CountFilter.split_clicom
-    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{FUNC.__name__}.html"
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
-        super().__init__('CLICOM', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        func = filtering.CountFilter.split_clicom
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
+        super().__init__('CLICOM', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.parameter_dicts: List[dict] = []
         self.funcs = funcs
         self.setups_counter = {key: 0 for key in self.funcs.keys()}

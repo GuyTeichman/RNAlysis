@@ -49,8 +49,8 @@ def are_dir_trees_equal(dir1, dir2):
 
 
 @pytest.mark.parametrize("transcriptome_fasta,kallisto_installation_folder,kmer_length,make_unique,expected_command", [
-    ('tests/test_files/kallisto_tests/transcripts.fasta', 'path/to/kallisto', 5, True,
-     ['path/to/kallisto/kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '5',
+    ('tests/test_files/kallisto_tests/transcripts.fasta', 'auto', 5, True,
+     ['kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '5',
       '--unique', 'tests/test_files/kallisto_tests/transcripts.fasta']),
     ('tests/test_files/kallisto_tests/transcripts.fasta', 'auto', 3, False,
      ['kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '3',
@@ -61,6 +61,8 @@ def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallist
     index_created = []
 
     def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None):
+        if args[-1] == '--version':
+            return True
         assert args == expected_command
         assert print_stdout
         assert print_stderr
@@ -134,13 +136,13 @@ def test_kallisto_quantify_paired_end():
     "new_sample_names,stranded,learn_bias,seek_fusion_genes,bootstrap_samples,expected_command", [
         ('tests/test_files/kallisto_tests', 'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         125, 14, 'path/to/kallisto', 'auto', 'no', False, False, None,
-         ['path/to/kallisto/kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
+         125, 14, 'kallisto', 'auto', 'no', False, False, None,
+         ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '-o', 'outfolder', '--single', '-s', '14', '-l', '125']),
         ('tests/test_files/kallisto_tests', 'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         8.5, 0.2, 'path/to/kallisto', ['new_name_1', 'new_name_2'], 'reverse', True, True, 3,
-         ['path/to/kallisto/kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
+         8.5, 0.2, 'kallisto', ['new_name_1', 'new_name_2'], 'reverse', True, True, 3,
+         ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '--bias', '--fusion', '--rf-stranded', '-b', '3', '-o', 'outfolder', '--single', '-s', '0.2', '-l', '8.5']),
     ])
 def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_folder, index_file, gtf_file,
@@ -189,14 +191,14 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
         (['tests/test_files/kallisto_tests/reads_1.fastq.gz'], ['tests/test_files/kallisto_tests/reads_2.fastq.gz'],
          'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         'path/to/kallisto', 'auto', 'no', False, False, None,
-         ['path/to/kallisto/kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
+         'auto', 'auto', 'no', False, False, None,
+         ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '-o', ]),
         (['tests/test_files/kallisto_tests/reads_1.fastq.gz'], ['tests/test_files/kallisto_tests/reads_2.fastq.gz'],
          'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         'path/to/kallisto', ['new_pair_name'], 'reverse', True, True, 3,
-         ['path/to/kallisto/kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
+         'auto', ['new_pair_name'], 'reverse', True, True, 3,
+         ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '--bias', '--fusion', '--rf-stranded', '-b', '3', '-o', ]),
     ])
 def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, output_folder, index_file, gtf_file,

@@ -725,7 +725,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                  'desc': 'description of the function',
                  'param_desc': 'description of the function parameters',
                  'help_link': 'link to the documentation page of the function',
-                 'exluded_params': 'parameters to be excluded from the window',
+                 'excluded_params': 'parameters to be excluded from the window',
                  'scroll': 'scroll area',
                  'scroll_widget': 'widget containing the scroll area',
                  'scroll_layout': 'layout for the scroll widget',
