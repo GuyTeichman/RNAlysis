@@ -1445,3 +1445,20 @@ def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False,
 
                 mapping[transcript_id] = gene_name if use_name else gene_id
     return mapping
+
+
+def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']]):
+    if installation_folder == 'auto':
+        call = [command]
+    else:
+        installation_folder = Path(installation_folder)
+        assert installation_folder.exists(), "installation folder does not exist!"
+        call = [installation_folder.joinpath(command).as_posix()]
+
+    try:
+        run_subprocess(call + ['--version'])
+    except FileNotFoundError:
+        raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
+                                'Please ensure that your installation folder is correct, or add it to PATH. ')
+
+    return call
