@@ -69,6 +69,7 @@ class EnrichmentRunner:
                  'plot_horizontal': 'indicates whether to plot the results horizontally or vertically',
                  'set_name': 'name of the set of genes/genomic features whose enrichment is calculated',
                  'parallel_backend': 'indicates whether to use parallel processing, and with which backend',
+                 'exclude_unannotated_genes': 'indicates whether to discard unannotated genes from the background and enrichment sets',
                  'enrichment_func': 'the function to be used to calculate enrichment p-values',
                  'pvalue_kwargs': 'key-worded arguments for the function which calculates enrichment p-values',
                  'single_set': 'indicates whether enrichment is calculated on a single set of genes '
@@ -85,8 +86,8 @@ class EnrichmentRunner:
     def __init__(self, genes: Union[set, np.ndarray], attributes: Union[Iterable, str, int], alpha: float,
                  attr_ref_path: str, return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool,
                  plot_horizontal: bool, set_name: str,
-                 parallel_backend: Literal[PARALLEL_BACKENDS],
-                 enrichment_func_name: str, biotypes=None, background_set: set = None, biotype_ref_path: str = None,
+                 parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str, biotypes=None,
+                 background_set: set = None, biotype_ref_path: str = None, exclude_unannotated_genes: bool = True,
                  single_set: bool = False, random_seed: int = None, **pvalue_kwargs):
         self.results: pd.DataFrame = pd.DataFrame()
         self.annotation_df: pd.DataFrame = pd.DataFrame()
@@ -111,6 +112,7 @@ class EnrichmentRunner:
         if not self.enrichment_func:
             return
         self.pvalue_kwargs = pvalue_kwargs
+        self.exclude_unannotated_genes = exclude_unannotated_genes
         self.single_set = single_set
         if self.single_set:
             assert biotypes is None, "Enrichment in single_set mode does not accept a 'biotypes' argument."
@@ -194,12 +196,23 @@ class EnrichmentRunner:
             self._get_background_set_from_set()
 
         orig_bg_size = len(self.background_set)
-        self.background_set = self.background_set.intersection(self.annotation_df.index)
+        if self.exclude_unannotated_genes:
+            self.background_set = self.background_set.intersection(self.annotation_df.index)
+        else:
+            self.background_set = self.background_set.union(self.annotation_df.index)
+            ann_missing = self.background_set.difference(self.annotation_df.index)
+            self.annotation_df[ann_missing] = np.nan
+
         if orig_bg_size - len(self.background_set) > 0:
-            warnings.warn(
-                f"{orig_bg_size - len(self.background_set)} genes out of the requested {orig_bg_size} background genes "
-                f"do not {self.printout_params}, and are therefore ignored."
-                f" \nThis leaves a total of {len(self.background_set)} background genes.")
+            warning = f"{orig_bg_size - len(self.background_set)} genes out of the requested {orig_bg_size} " \
+                      f"background genes do not {self.printout_params}"
+            if self.exclude_unannotated_genes:
+                warning += f", and are therefore ignored. " \
+                           f"\nThis leaves a total of {len(self.background_set)} background genes."
+            else:
+                warning += ". \nThese genes are not discarded from the background set because you set the paremeter " \
+                           "'exclude_unannotated_genes' to False. Note that this is not a recommended practice. "
+            warnings.warn(warning)
 
         print(f"{len(self.background_set)} background genes are used.")
 
@@ -405,9 +418,11 @@ class EnrichmentRunner:
             not_in_bg = len(self.gene_set) - len(updated_gene_set)
             self.gene_set = updated_gene_set
             if not_in_bg > 0:
-                warnings.warn(f"{not_in_bg} genes in the enrichment set do not {self.printout_params} "
-                              f"and/or do not appear in the background gene set. \n"
-                              f"Enrichment will be computed on the remaining {len(self.gene_set)} genes.")
+                warning = f"{not_in_bg} genes in the enrichment set do not appear in the background gene set"
+                if self.exclude_unannotated_genes:
+                    warning += f" and/or do not {self.printout_params}"
+                warning += f". \nEnrichment will be computed on the remaining {len(self.gene_set)} genes."
+                warnings.warn(warning)
 
     def fetch_annotations(self):
         self.annotation_df = io.load_csv(self.attr_ref_path)
@@ -671,8 +686,8 @@ class NonCategoricalEnrichmentRunner(EnrichmentRunner):
         self.plot_style = plot_style
         self.n_bins = n_bins
         super().__init__(genes, attributes, alpha, attr_ref_path, True, save_csv, fname, return_fig, True, set_name,
-                         parallel_backend,
-                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set=False)
+                         parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
+                         single_set=False, exclude_unannotated_genes=True)
 
     def _get_enrichment_func(self, pval_func_name: str):
         assert isinstance(pval_func_name, str), f"Invalid type for 'pval_func_name': {type(pval_func_name)}."
@@ -799,13 +814,12 @@ class KEGGEnrichmentRunner(EnrichmentRunner):
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
                  plot_pathway_graphs: bool, set_name: str,
                  parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str,
-                 biotypes=None,
-                 background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none',
-                 **pvalue_kwargs):
+                 biotypes=None, background_set: set = None, biotype_ref_path: str = None,
+                 exclude_unannotated_genes: bool = True, single_set: bool = False, random_seed: int = None,
+                 pathway_graphs_format: Literal[GRAPHVIZ_FORMATS] = 'none', **pvalue_kwargs):
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                          set_name, parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
-                         single_set, random_seed, **pvalue_kwargs)
+                         exclude_unannotated_genes, single_set, random_seed, **pvalue_kwargs)
         if not self.enrichment_func:
             return
         self.gene_id_type = gene_id_type
@@ -967,17 +981,15 @@ class GOEnrichmentRunner(EnrichmentRunner):
                  databases: Union[str, Iterable[str]], excluded_databases: Union[str, Iterable[str]],
                  qualifiers: Union[str, Iterable[str]], excluded_qualifiers: Union[str, Iterable[str]],
                  return_nonsignificant: bool, save_csv: bool, fname: str, return_fig: bool, plot_horizontal: bool,
-                 plot_ontology_graph: bool, set_name: str,
-                 parallel_backend: Literal[PARALLEL_BACKENDS], enrichment_func_name: str,
-                 biotypes=None, background_set: set = None, biotype_ref_path: str = None, single_set: bool = False,
-                 random_seed: int = None, ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none',
-                 **pvalue_kwargs):
+                 plot_ontology_graph: bool, set_name: str, parallel_backend: Literal[PARALLEL_BACKENDS],
+                 enrichment_func_name: str, biotypes=None, background_set: set = None, biotype_ref_path: str = None,
+                 exclude_unannotated_genes: bool = True, single_set: bool = False, random_seed: int = None,
+                 ontology_graph_format: Literal[GRAPHVIZ_FORMATS] = 'none', **pvalue_kwargs):
 
         self.propagate_annotations = propagate_annotations.lower()
         super().__init__(genes, [], alpha, '', return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
-                         set_name, parallel_backend,
-                         enrichment_func_name, biotypes, background_set, biotype_ref_path, single_set, random_seed,
-                         **pvalue_kwargs)
+                         set_name, parallel_backend, enrichment_func_name, biotypes, background_set, biotype_ref_path,
+                         exclude_unannotated_genes, single_set, random_seed, **pvalue_kwargs)
         if not self.enrichment_func:
             return
         self.dag_tree: ontology.DAGTree = ontology.fetch_go_basic()

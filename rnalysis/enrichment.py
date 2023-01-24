@@ -267,7 +267,7 @@ class FeatureSet:
                       excluded_databases: Union[str, Iterable[str]] = (),
                       qualifiers: Union[Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
                       excluded_qualifiers: Union[Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
-                      return_nonsignificant: bool = False,
+                      exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                       plot_ontology_graph: bool = True,
                       ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
@@ -346,6 +346,10 @@ class FeatureSet:
         :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis. \
         Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
         :type excluded_qualifiers: str, Iterable of str, or None (default='not')
+        :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
+        excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
+        keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
+        :type exclude_unannotated_genes: bool (deafult=True)
         :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
         both significant and non-significant terms. If False (default), only significant GO terms will be returned.
         :type return_nonsignificant: bool (default=False)
@@ -414,7 +418,7 @@ class FeatureSet:
                                                       qualifiers, excluded_qualifiers, return_nonsignificant, save_csv,
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
                                                       self.set_name, parallel_backend, statistical_test, biotype,
-                                                      background_genes, biotype_ref_path,
+                                                      background_genes, biotype_ref_path, exclude_unannotated_genes,
                                                       ontology_graph_format=ontology_graph_format, **kwargs)
 
         if gui_mode:
@@ -428,7 +432,7 @@ class FeatureSet:
                         biotype: Union[str, List[str], Literal['all']] = 'all',
                         background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                         biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                        return_nonsignificant: bool = False,
+                        exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         plot_pathway_graphs: bool = True,
                         pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
@@ -471,6 +475,10 @@ class FeatureSet:
         :type biotype_ref_path: str or pathlib.Path (default='predefined')
         :param biotype_ref_path: the path of the Biotype Reference Table. \
         Will be used to generate background set if 'biotype' is specified.
+        :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
+        excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
+        keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
+        :type exclude_unannotated_genes: bool (deafult=True)
         :param return_nonsignificant: if True, the results DataFrame will include all tested pathways - \
         both significant and non-significant ones. If False (default), only significant pathways will be returned.
         :type return_nonsignificant: bool (default=False)
@@ -528,8 +536,8 @@ class FeatureSet:
         runner = enrichment_runner.KEGGEnrichmentRunner(self.gene_set, organism, gene_id_type, alpha,
                                                         return_nonsignificant, save_csv, fname, return_fig,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
-                                                        parallel_backend,
-                                                        statistical_test, biotype, background_genes, biotype_ref_path,
+                                                        parallel_backend, statistical_test, biotype, background_genes,
+                                                        biotype_ref_path, exclude_unannotated_genes,
                                                         pathway_graphs_format=pathway_graphs_format, **kwargs)
 
         if gui_mode:
@@ -543,7 +551,7 @@ class FeatureSet:
                                 background_genes: Union[Set[str], Filter, 'FeatureSet'] = None,
                                 attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                                return_nonsignificant: bool = True,
+                                exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
                                 plot_horizontal: bool = True, randomization_reps: int = 10000,
                                 random_seed: Union[int, None] = None,
@@ -584,6 +592,10 @@ class FeatureSet:
         (default=None)
         :param background_genes: a set of specific feature indices to be used as background genes. \
         Cannot be specified together with 'biotype'.
+        :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
+        excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
+        keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
+        :type exclude_unannotated_genes: bool (deafult=True)
         :param return_nonsignificant: if True (default), the results DataFrame will include all tested attributes - \
         both significant and non-significant ones. If False, only significant attributes will be returned.
         :type return_nonsignificant: bool (default=True)
@@ -636,8 +648,8 @@ class FeatureSet:
         runner = enrichment_runner.EnrichmentRunner(self.gene_set, attributes, alpha, attr_ref_path,
                                                     return_nonsignificant, save_csv, fname, return_fig, plot_horizontal,
                                                     self.set_name, parallel_backend, statistical_test, biotype,
-                                                    background_genes, biotype_ref_path, single_set=False,
-                                                    random_seed=random_seed, **kwargs)
+                                                    background_genes, biotype_ref_path, exclude_unannotated_genes,
+                                                    single_set=False, random_seed=random_seed, **kwargs)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()
@@ -836,7 +848,7 @@ class RankedSet(FeatureSet):
                                      Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
                                  excluded_qualifiers: Union[
                                      Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
-                                 return_nonsignificant: bool = False,
+                                 exclude_unannotated_genes: bool = True, return_nonsignificant: bool = False,
                                  save_csv: bool = False, fname=None,
                                  return_fig: bool = False, plot_horizontal: bool = True,
                                  plot_ontology_graph: bool = True,
@@ -907,6 +919,10 @@ class RankedSet(FeatureSet):
         will be excluded from the analysis. \
         Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
         :type excluded_qualifiers: str, Iterable of str, or None (default='not')
+        :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
+        excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
+        keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
+        :type exclude_unannotated_genes: bool (deafult=True)
         :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
         both significant and non-significant terms. If False (default), \
         only significant GO terms will be returned.
@@ -963,8 +979,8 @@ class RankedSet(FeatureSet):
                                                       fname, return_fig, plot_horizontal, plot_ontology_graph,
                                                       self.set_name,
                                                       parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
-                                                      single_set=True,
-                                                      ontology_graph_format=ontology_graph_format)
+                                                      exclude_unannotated_genes=exclude_unannotated_genes,
+                                                      single_set=True, ontology_graph_format=ontology_graph_format)
 
         if gui_mode:
             return runner.run(plot=False), runner
@@ -973,13 +989,12 @@ class RankedSet(FeatureSet):
     def single_set_kegg_enrichment(self,
                                    organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
                                    gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                                   alpha: param_typing.Fraction = 0.05, return_nonsignificant: bool = False,
-                                   save_csv: bool = False,
+                                   alpha: param_typing.Fraction = 0.05, exclude_unannotated_genes: bool = True,
+                                   return_nonsignificant: bool = False, save_csv: bool = False,
                                    fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                                    plot_pathway_graphs: bool = True,
                                    pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                                   parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                                   gui_mode: bool = False
+                                   parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
         Calculates enrichment and depletion of the sorted RankedSet for Kyoto Encyclopedia of Genes and Genomes (KEGG) \
@@ -1003,6 +1018,13 @@ class RankedSet(FeatureSet):
         :type gene_id_type: str or 'auto' (default='auto')
         :type alpha: float between 0 and 1
         :param alpha: Indicates the FDR threshold for significance.
+        :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
+        excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
+        keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
+        :type exclude_unannotated_genes: bool (deafult=True)
+        :param return_nonsignificant: if True, the results DataFrame will include all tested GO terms - \
+        both significant and non-significant terms. If False (default), \
+        only significant KEGG pathways will be returned.
         :type return_nonsignificant: bool (default=False)
         :type save_csv: bool, default False
         :param save_csv: If True, will save the results to a .csv file, under the name specified in 'fname'.
@@ -1052,6 +1074,7 @@ class RankedSet(FeatureSet):
                                                         return_nonsignificant, save_csv, fname, return_fig,
                                                         plot_horizontal, plot_pathway_graphs, self.set_name,
                                                         parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
+                                                        exclude_unannotated_genes=exclude_unannotated_genes,
                                                         single_set=True, pathway_graphs_format=pathway_graphs_format)
 
         if gui_mode:
@@ -1061,10 +1084,9 @@ class RankedSet(FeatureSet):
     def single_set_enrichment(self, attributes: Union[List[str], str, List[int], int, Literal['all']],
                               alpha: param_typing.Fraction = 0.05,
                               attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
-                              return_nonsignificant: bool = True,
+                              exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                               save_csv: bool = False, fname=None, return_fig: bool = False,
-                              plot_horizontal: bool = True,
-                              parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
+                              plot_horizontal: bool = True, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                               gui_mode: bool = False):
         """
         Calculates enrichment and depletion of the sorted RankedSet for user-defined attributes \
@@ -1087,6 +1109,10 @@ class RankedSet(FeatureSet):
         :param alpha: Indicates the FDR threshold for significance.
         :type attr_ref_path: str or pathlib.Path (default='predefined')
         :param attr_ref_path: path of the Attribute Reference Table from which user-defined attributes will be drawn.
+        :param exclude_unannotated_genes: if True, genes that have no annotation associated with them will be \
+        excluded from the enrichment analysis. This is the recommended practice for enrichment analysis, since \
+        keeping unannotated genes in the analysis increases the chance of discovering spurious enrichment results.
+        :type exclude_unannotated_genes: bool (default=True)
         :param return_nonsignificant: if True (default), the results DataFrame will include all tested attributes - \
         both significant and non-significant ones. If False, only significant attributes will be returned.
         :type return_nonsignificant: bool (default=True)
@@ -1126,7 +1152,8 @@ class RankedSet(FeatureSet):
                                                     return_nonsignificant, save_csv,
                                                     fname, return_fig, plot_horizontal, self.set_name,
                                                     parallel_backend=parallel_backend, enrichment_func_name='xlmhg',
-                                                    single_set=True)
+                                                    single_set=True,
+                                                    exclude_unannotated_genes=exclude_unannotated_genes)
         if gui_mode:
             return runner.run(plot=False), runner
         return runner.run()

@@ -9,6 +9,7 @@ Added
 ******
 * Added bowtie2 alignment to the fastq module.
 * Added FeatureCounts feature-counting to the fastq module.
+* You can now choose whether or not to discard
 
 Fixed
 ******
