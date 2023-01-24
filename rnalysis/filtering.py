@@ -34,7 +34,6 @@ import seaborn as sns
 from grid_strategy import strategies
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import PowerTransformer, StandardScaler
-from sklearn.utils import parallel_backend as sklearn_parallel_backend
 from datetime import datetime
 
 from rnalysis import __version__
@@ -42,7 +41,7 @@ from rnalysis.utils import clustering, io, parsing, generic, ontology, settings,
     param_typing
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
-    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, get_gene_id_types
+    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, get_gene_id_types, PositiveInt, NonNegativeInt
 
 
 def readable_name(name: str):
@@ -287,7 +286,7 @@ class Filter:
         return split
 
     @readable_name('Table head')
-    def head(self, n: int = 5) -> pd.DataFrame:
+    def head(self, n: PositiveInt = 5) -> pd.DataFrame:
 
         """
         Return the first n rows of the Filter object. See pandas.DataFrame.head documentation.
@@ -322,7 +321,7 @@ class Filter:
         return self.df.head(n)
 
     @readable_name('Table tail')
-    def tail(self, n: int = 5) -> pd.DataFrame:
+    def tail(self, n: PositiveInt = 5) -> pd.DataFrame:
 
         """
         Return the last n rows of the Filter object. See pandas.DataFrame.tail documentation.
@@ -1543,13 +1542,14 @@ class Filter:
         return self.df.sort_values(by=by, axis=0, ascending=ascending, inplace=inplace, na_position=na_position)
 
     @readable_name('Filter all but top N values')
-    def filter_top_n(self, by: Union[str, List[str]], n: int = 100, ascending: Union[bool, List[bool]] = True,
-                     na_position: str = 'last', opposite: bool = False, inplace: bool = True, ):
+    def filter_top_n(self, by: param_typing.ColumnNames, n: NonNegativeInt = 100,
+                     ascending: Union[bool, List[bool]] = True, na_position: str = 'last', opposite: bool = False,
+                     inplace: bool = True, ):
 
         """
         Sort the rows by the values of specified column or columns, then keep only the top 'n' rows.
 
-        :type by: string or list of strings
+        :type by: name of column/columns (str/List[str])
         :param by: Names of the column or columns to sort and then filter by.
         :type n: int
         :param n: How many features to keep in the Filter object.
@@ -1940,7 +1940,8 @@ class FoldChangeFilter(Filter):
         return [self.df.name]
 
     @readable_name('Perform randomization test')
-    def randomization_test(self, ref, alpha: param_typing.Fraction = 0.05, reps: int = 10000, save_csv: bool = False,
+    def randomization_test(self, ref, alpha: param_typing.Fraction = 0.05, reps: PositiveInt = 10000,
+                           save_csv: bool = False,
                            fname: Union[str, None] = None, random_seed: Union[int, None] = None) -> pd.DataFrame:
 
         """
@@ -2009,7 +2010,7 @@ class FoldChangeFilter(Filter):
 
     @staticmethod
     @generic.numba.jit(nopython=True)
-    def _foldchange_randomization(vals: np.ndarray, reps: int, obs_fc: float, exp_fc: float, n: int):
+    def _foldchange_randomization(vals: np.ndarray, reps: PositiveInt, obs_fc: float, exp_fc: float, n: int):
         success = 0
         # determine the randomization test's direction (is observed greater/lesser than expected)
         if obs_fc > exp_fc:
@@ -3061,8 +3062,8 @@ class CountFilter(Filter):
                              _is_normalized=True)
 
     @readable_name('Normalize with the "Median of Ratios" (MRN) method')
-    def normalize_median_of_ratios(self, sample_grouping: param_typing.GroupedColumns, reference_group: int = 0,
-                                   inplace: bool = True):
+    def normalize_median_of_ratios(self, sample_grouping: param_typing.GroupedColumns,
+                                   reference_group: NonNegativeInt = 0, inplace: bool = True):
         """
         Normalizes the count matrix using the 'Median of Ratios Normalization' (MRN) method \
         `(Maza et al 2013) <https://doi.org/10.4161%2Fcib.25849>`_. \
@@ -3357,11 +3358,11 @@ class CountFilter(Filter):
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('K-Means clustering')
-    def split_kmeans(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
-                     max_iter: int = 300,
-                     random_seed: Union[int, None] = None, power_transform: bool = True,
+    def split_kmeans(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal['gap', 'silhouette']],
+                     n_init: PositiveInt = 3, max_iter: PositiveInt = 300,
+                     random_seed: Union[NonNegativeInt, None] = None, power_transform: bool = True,
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
-                     split_plots: bool = False, max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                     split_plots: bool = False, max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                      gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
@@ -3443,13 +3444,14 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('Hierarchical clustering')
-    def split_hierarchical(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette', 'distance']],
+    def split_hierarchical(self, n_clusters: Union[PositiveInt, List[PositiveInt],
+                            Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
                            power_transform: bool = True, distance_threshold: Union[float, None] = None,
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                           max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                           max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                            parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                            gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
@@ -3534,14 +3536,14 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('K-Medoids clustering')
-    def split_kmedoids(self, n_clusters: Union[int, List[int], Literal['gap', 'silhouette']], n_init: int = 3,
-                       max_iter: int = 300,
-                       random_seed: Union[int, None] = None,
+    def split_kmedoids(self, n_clusters: Union[PositiveInt, List[PositiveInt], Literal['gap', 'silhouette']],
+                       n_init: PositiveInt = 3, max_iter: PositiveInt = 300,
+                       random_seed: Union[NonNegativeInt, None] = None,
                        metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                        'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                        power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
-                       max_n_clusters_estimate: Union[int, Literal['auto']] = 'auto',
+                       max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                        parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                        gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
         """
@@ -3629,7 +3631,7 @@ class CountFilter(Filter):
                      replicate_grouping: Union[param_typing.GroupedColumns, Literal['ungrouped']] = 'ungrouped',
                      power_transform: Union[bool, Tuple[bool, bool]] = True,
                      evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
-                     min_cluster_size: int = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
+                     min_cluster_size: PositiveInt = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                      gui_mode: bool = False) -> Tuple['CountFilter']:
         """
@@ -3760,7 +3762,7 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('HDBSCAN (density) clustering')
-    def split_hdbscan(self, min_cluster_size: int, min_samples: Union[int, None] = 1,
+    def split_hdbscan(self, min_cluster_size: PositiveInt, min_samples: Union[PositiveInt, None] = 1,
                       metric: Union[str, Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                       'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine', 'Hamming']] = 'Euclidean',
                       cluster_selection_epsilon: float = 0, cluster_selection_method: Literal['eom', 'leaf'] = 'eom',
@@ -3842,7 +3844,7 @@ class CountFilter(Filter):
 
         runner = clustering.HDBSCANRunner(self.df.loc[:, self._numeric_columns], power_transform, min_cluster_size,
                                           min_samples, metric, cluster_selection_epsilon, cluster_selection_method,
-                                          return_probabilities, plot_style, split_plots,parallel_backend)
+                                          return_probabilities, plot_style, split_plots, parallel_backend)
         if return_probabilities:
             [clusterer], probabilities = runner.run(plot=not gui_mode)
         else:
@@ -4015,7 +4017,7 @@ class CountFilter(Filter):
         return fig
 
     @readable_name('Split table by contribution to Principal Components (PCA)')
-    def split_by_principal_components(self, components: Union[int, List[int]],
+    def split_by_principal_components(self, components: Union[PositiveInt, List[PositiveInt]],
                                       gene_fraction: param_typing.Fraction = 0.1, power_transform: bool = True
                                       ) -> Union[
         Tuple['CountFilter', 'CountFilter'], Tuple[Tuple['CountFilter', 'CountFilter'], ...]]:
@@ -4068,7 +4070,7 @@ class CountFilter(Filter):
         return filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else tuple(filt_obj_tuples)
 
     @readable_name('Principal Component Analysis (PCA) plot')
-    def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: int = 3,
+    def pca(self, samples: Union[param_typing.GroupedColumns, Literal['all']] = 'all', n_components: PositiveInt = 3,
             power_transform: bool = True, labels: bool = True, title: Union[str, Literal['auto']] = 'auto',
             title_fontsize: float = 20, label_fontsize: float = 16, tick_fontsize: float = 12
             ) -> Tuple[PCA, List[plt.Figure]]:

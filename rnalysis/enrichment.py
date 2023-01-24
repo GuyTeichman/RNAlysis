@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
-    PARALLEL_BACKENDS, get_gene_id_types
+    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt,NonNegativeInt
 
 try:
     from typing import Literal
@@ -271,7 +271,7 @@ class FeatureSet:
                       save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                       plot_ontology_graph: bool = True,
                       ontology_graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                      randomization_reps: int = 10000, random_seed: Union[int, None] = None,
+                      randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                       gui_mode: bool = False) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
         """
@@ -436,7 +436,7 @@ class FeatureSet:
                         save_csv: bool = False, fname=None, return_fig: bool = False, plot_horizontal: bool = True,
                         plot_pathway_graphs: bool = True,
                         pathway_graphs_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none',
-                        randomization_reps: int = 10000, random_seed: Union[int, None] = None,
+                        randomization_reps: PositiveInt = 10000, random_seed: Union[int, None] = None,
                         parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                         gui_mode: bool = False
                         ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, plt.Figure]]:
@@ -553,7 +553,7 @@ class FeatureSet:
                                 biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                 exclude_unannotated_genes: bool = True, return_nonsignificant: bool = True,
                                 save_csv: bool = False, fname=None, return_fig: bool = False,
-                                plot_horizontal: bool = True, randomization_reps: int = 10000,
+                                plot_horizontal: bool = True, randomization_reps: PositiveInt = 10000,
                                 random_seed: Union[int, None] = None,
                                 parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
                                 gui_mode: bool = False
@@ -661,7 +661,7 @@ class FeatureSet:
                                    attr_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                    biotype_ref_path: Union[str, Path, Literal['predefined']] = 'predefined',
                                    plot_log_scale: bool = True,
-                                   plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: int = 50,
+                                   plot_style: Literal['interleaved', 'overlap'] = 'overlap', n_bins: PositiveInt = 50,
                                    save_csv: bool = False, fname=None, return_fig: bool = False, gui_mode: bool = False
                                    ) -> Union[pd.DataFrame, Tuple[pd.DataFrame, List[plt.Figure]]]:
         """
@@ -1235,7 +1235,7 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
 
 
 def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: param_typing.ColorList = ('black',),
-               title: str = 'UpSet Plot', title_fontsize: int = 20, show_percentages: bool = True,
+               title: str = 'UpSet Plot', title_fontsize: float = 20, show_percentages: bool = True,
                attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined', fig: plt.Figure = None):
     """
     Generate an UpSet plot of 2 or more sets, FeatureSets or attributes from the Attribute Reference Table.
@@ -1252,7 +1252,7 @@ def upset_plot(objs: Dict[str, Union[str, FeatureSet, Set[str]]], set_colors: pa
     :param title: determines the title of the plot.
     :type title: str
     :param title_fontsize: font size for the plot's title
-    :type title_fontsize: int (default=20)
+    :type title_fontsize: float (default=20)
     :param show_percentages: if True, shows the percentage that each set or subset takes out of the entire dataset.
     :type show_percentages: bool (default=True)
     :param attr_ref_table_path: the path of the Attribute Reference Table from which user-defined attributes will be drawn, \
@@ -1328,9 +1328,9 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
                  attr_ref_table_path: Union[str, Path, Literal['predefined']] = 'predefined',
                  set_colors: param_typing.ColorList = ('r', 'g', 'b'),
                  transparency: param_typing.Fraction = 0.4, weighted: bool = True, add_outline: bool = True,
-                 linecolor: param_typing.Color = 'black',
-                 linestyle: Literal['solid', 'dashed'] = 'solid', linewidth: float = 2.0, title_fontsize: int = 14,
-                 set_fontsize: int = 12, subset_fontsize: int = 10, normalize_to: float = 1.0, fig: plt.Figure = None):
+                 linecolor: param_typing.Color = 'black', linestyle: Literal['solid', 'dashed'] = 'solid',
+                 linewidth: float = 2.0, title_fontsize: float = 14, set_fontsize: float = 12,
+                 subset_fontsize: float = 10, normalize_to: float = 1.0, fig: plt.Figure = None):
     """
     Generate a Venn diagram of 2 to 3 sets, FeatureSets or attributes from the Attribute Reference Table.
 
@@ -1360,11 +1360,11 @@ def venn_diagram(objs: Dict[str, Union[str, FeatureSet, Set[str]]], title: Union
     :param linewidth: the widdth of the circles' outlines.
     :type linewidth: float (default=2.0)
     :param title_fontsize: font size for the plot's title.
-    :type title_fontsize: int (default=14)
+    :type title_fontsize: float (default=14)
     :param set_fontsize: font size for the set labels.
-    :type set_fontsize: int (default=12)
+    :type set_fontsize: float (default=12)
     :param subset_fontsize: font size for the subset labels.
-    :type subset_fontsize: int (default=10)
+    :type subset_fontsize: float (default=10)
     :param fig: optionally, supply your own Figure to generate the plot onto.
     :type fig: matplotlib.Figure
 
@@ -1430,7 +1430,7 @@ def gene_ontology_graph(namespace: Literal[param_typing.GO_ASPECTS], enrichment_
                         enrichment_score_col: Union[
                             str, Literal['log2_enrichment_score', 'log2_fold_enrichment']] = 'log2_fold_enrichment',
                         title: Union[str, Literal['auto']] = 'auto', ylabel: str = r"$\log_2$(Fold Enrichment)",
-                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300):
+                        graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300):
     results_df = io.load_csv(enrichment_results_path, index_col=0)
     assert enrichment_score_col in results_df, f"Invalid enrichment_score_col '{enrichment_score_col}'"
     dag_tree = ontology.fetch_go_basic()
@@ -1440,7 +1440,7 @@ def gene_ontology_graph(namespace: Literal[param_typing.GO_ASPECTS], enrichment_
 def kegg_pathway_graph(pathway_id: str, marked_genes: Union[Sequence[str], None],
                        gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
                        title: Union[str, Literal['auto']] = 'auto', ylabel: str = '',
-                       graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: int = 300):
+                       graph_format: Literal[param_typing.GRAPHVIZ_FORMATS] = 'none', dpi: PositiveInt = 300):
     if marked_genes is None:
         translator = None
     else:
