@@ -60,6 +60,52 @@ class PathwayGraphWindow(gui_windows.FuncExternalWindow):
         super().init_ui()
 
 
+
+
+class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    FUNC = fastq.bowtie2_create_index
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        super().__init__('Bowtie2 build index', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Bowtie2 - build genome index')
+        super().init_ui()
+
+
+class Bowtie2SingleWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    FUNC = fastq.bowtie2_align_single_end
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        super().__init__('Bowtie2 align (single-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Bowtie2 single-end alignment setup')
+        super().init_ui()
+
+
+class Bowtie2PairedWindow(gui_windows.PairedFuncExternalWindow):
+    FUNC = fastq.bowtie2_align_paired_end
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        super().__init__('Bowtie2 align (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Bowtie2 paired-end alignment setup')
+        super().init_ui()
+
+
 class KallistoIndexWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     FUNC = fastq.kallisto_create_index
@@ -3026,6 +3072,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.kallisto_paired_action.triggered.connect(
             functools.partial(self.start_external_window, KallistoPairedWindow))
 
+        self.bowtie2_index_action = QtWidgets.QAction("Bowtie2 build &index...", self)
+        self.bowtie2_index_action.triggered.connect(functools.partial(self.start_external_window, Bowtie2IndexWindow))
+        self.bowtie2_single_action = QtWidgets.QAction("Bowtie2 &Single-end alignment...", self)
+        self.bowtie2_single_action.triggered.connect(
+            functools.partial(self.start_external_window, Bowtie2SingleWindow))
+        self.bowtie2_paired_action = QtWidgets.QAction("Bowtie2 &Paired-end alignment...", self)
+        self.bowtie2_paired_action.triggered.connect(
+            functools.partial(self.start_external_window, Bowtie2PairedWindow))
+
+
         self.ontology_graph_action = QtWidgets.QAction("Visualize &Gene Ontology...")
         self.ontology_graph_action.triggered.connect(functools.partial(self.start_external_window, OntologyGraphWindow))
         self.pathway_graph_action = QtWidgets.QAction("Visualize &KEGG Pathway...")
@@ -3247,9 +3303,13 @@ class MainWindow(QtWidgets.QMainWindow):
         fastq_menu = self.menu_bar.addMenu("&FASTQ")
         self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
         self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
+        self.alignment_menu = fastq_menu.addMenu("Read alignment")
+
         self.trimming_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
         self.kallisto_menu.addActions(
             [self.kallisto_index_action, self.kallisto_single_action, self.kallisto_paired_action])
+        self.alignment_menu.addActions(
+            [self.bowtie2_index_action, self.bowtie2_single_action, self.bowtie2_paired_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
