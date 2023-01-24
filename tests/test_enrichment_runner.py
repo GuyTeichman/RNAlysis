@@ -1,14 +1,11 @@
+import copy
 from collections import namedtuple
 
-import copy
-import joblib
 import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
 import pytest
 
 from rnalysis import filtering
-from rnalysis.utils import enrichment_runner, validation
+from rnalysis.utils import enrichment_runner
 from rnalysis.utils.enrichment_runner import *
 from rnalysis.utils.io import *
 from tests import __attr_ref__, __biotype_ref__
@@ -418,9 +415,11 @@ def test_enrichment_runner_fisher_enrichment(monkeypatch, params, truth):
     assert runner._fisher_enrichment('attribute') == truth
 
 
-def test_enrichment_runner_update_gene_set():
+@pytest.mark.parametrize('exclude_unannotated', [True, False])
+def test_enrichment_runner_update_gene_set(exclude_unannotated):
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
     runner.single_set = False
+    runner.exclude_unannotated_genes = exclude_unannotated
     runner.background_set = set(pd.read_csv('tests/test_files/attr_ref_table_for_tests.csv', index_col=0).index)
     runner.gene_set = {'WBGene00000019', 'WBGene00000041', 'WBGene00000106', 'WBGene00001133', 'WBGene00003915',
                        'WBGene99991111'}
@@ -441,6 +440,7 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
     assert runner.gene_set == updated_gene_set_truth
 
 
+@pytest.mark.parametrize('exclude_unannotated', [True, False])
 @pytest.mark.parametrize('save_csv,', [True, False])
 @pytest.mark.parametrize('return_nonsignificant,', [True, False])
 @pytest.mark.parametrize('fname', ['fname', None])
@@ -450,13 +450,13 @@ def test_enrichment_runner_update_gene_set_single_list(monkeypatch):
      (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
       {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
       'path/to/biotype/ref', 42, {'reps': 10000})])
-def test_enrichment_runner_api(return_nonsignificant, save_csv, fname, single_list, genes, biotypes, pval_func,
-                               background_set, biotype_ref_path, random_seed, kwargs, monkeypatch):
+def test_enrichment_runner_api(exclude_unannotated, return_nonsignificant, save_csv, fname, single_list, genes,
+                               biotypes, pval_func, background_set, biotype_ref_path, random_seed, kwargs, monkeypatch):
     monkeypatch.setattr('builtins.input', lambda x: 'fname')
 
     runner = EnrichmentRunner(genes, ['attr1', 'attr2'], 0.05, 'path/to/attr/ref', return_nonsignificant, save_csv,
                               fname, False, False, 'set_name', False, pval_func, biotypes,
-                              background_set, biotype_ref_path, single_list, random_seed, **kwargs)
+                              background_set, biotype_ref_path, exclude_unannotated, single_list, random_seed, **kwargs)
     if save_csv:
         assert runner.fname == 'fname'
     else:
@@ -641,7 +641,7 @@ def test_enrichment_runner_calculate_enrichment(monkeypatch):
 
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
 
-    for backend in ['loky','threading','multiprocessing']:
+    for backend in ['loky', 'threading', 'multiprocessing']:
         runner.parallel_backend = backend
         assert runner.calculate_enrichment() == 'parallel'
         assert random_seed_status[0]
@@ -886,17 +886,19 @@ def test_noncategorical_enrichment_runner_enrichment_histogram(plot_style, plot_
     assert isinstance(res, plt.Figure)
 
 
+@pytest.mark.parametrize('exclude_unannotated', [True, False])
 @pytest.mark.parametrize('single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,kwargs',
                          [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, {}),
                           (False, {'WBGene00000001', 'WBGene00000002'}, 'protein_coding', 'randomization',
                            {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
                            'path/to/biotype/ref', 42, {'reps': 10000})])
 def test_go_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
-                                  biotype_ref_path, random_seed, kwargs):
+                                  biotype_ref_path, random_seed, kwargs, exclude_unannotated):
     monkeypatch.setattr(ontology, 'fetch_go_basic', lambda: 'dag_tree')
     runner = GOEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, 'elim', 'any', 'any', None, 'any', None, 'any',
                                 None, False, False, 'fname', False, False, False, 'set_name', False, pval_func,
-                                biotypes, background_set, biotype_ref_path, single_list, random_seed, **kwargs)
+                                biotypes, background_set, biotype_ref_path, exclude_unannotated, single_list,
+                                random_seed, **kwargs)
     if pval_func.lower() == 'xlmhg' and not does_python_version_support_single_set():
         assert runner.enrichment_func == False
         return
@@ -1735,6 +1737,7 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
     assert log2escore == log2escore_truth
 
 
+@pytest.mark.parametrize('exclude_unannotated', [True, False])
 @pytest.mark.parametrize(
     'single_list,genes,biotypes,pval_func,background_set,biotype_ref_path, random_seed,graph_format,kwargs',
     [(True, np.array(['WBGene1', 'WBGene2'], dtype=str), None, 'xlmhg', None, None, None, 'none', {}),
@@ -1742,11 +1745,11 @@ def test_enrichment_runner_extract_xlmhg_results(pval_fwd, pval_rev, escore_fwd,
       {'WBGene00000001', 'WBGene00000002', 'EBGene00000003'},
       'path/to/biotype/ref', 42, 'pdf', {'reps': 10000})])
 def test_kegg_enrichment_runner_api(monkeypatch, single_list, genes, biotypes, pval_func, background_set,
-                                    biotype_ref_path, random_seed, graph_format, kwargs):
+                                    biotype_ref_path, random_seed, graph_format, kwargs, exclude_unannotated):
     monkeypatch.setattr(KEGGEnrichmentRunner, 'get_taxon_id', lambda *args: ('a', 'b'))
     runner = KEGGEnrichmentRunner(genes, 'organism', 'gene_id_type', 0.05, True, False, 'fname', False, False, True,
-                                  'set_name', False, pval_func, biotypes, background_set, biotype_ref_path, single_list,
-                                  random_seed, graph_format, **kwargs)
+                                  'set_name', False, pval_func, biotypes, background_set, biotype_ref_path,
+                                  exclude_unannotated, single_list, random_seed, graph_format, **kwargs)
 
 
 @pytest.mark.parametrize('got_gene_id_type', (True, False))
