@@ -11,9 +11,14 @@ Added
 * Added FeatureCounts feature-counting to the fastq module.
 * You can now choose whether or not to discard
 
+Changed
+********
+* Updated type annotations of some functions to be more precise and helpful (for example, setting a lower bound on some int function parameters).
+
 Fixed
 ******
 * Fixed bug where the windows of some functions (differential expression, adapter trimming, etc) did not show a link to the function's documentation page.
+* Fixed typos in some parts of the *RNAlysis* documentation
 
 3.4.0 (2023-01-24)
 ------------------
