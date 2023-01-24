@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Union, Iterable, Tuple
 import types
 import pandas as pd
-import warnings
 from rnalysis.utils import parsing
 import typing_extensions
 

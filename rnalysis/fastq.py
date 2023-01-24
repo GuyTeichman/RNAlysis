@@ -7,6 +7,7 @@ from tqdm.auto import tqdm
 
 from rnalysis import filtering
 from rnalysis.utils import parsing, io
+from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt
 
 try:
     from typing import Literal
@@ -36,7 +37,8 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     :param transcriptome_fasta: Path to the FASTA file of your desired transcriptome.
     :type transcriptome_fasta: str or Path
     :param kallisto_installation_folder: Path to the installation folder of kallisto. For example: \
-    'C:/Program Files/kallisto'
+    'C:/Program Files/kallisto'. if installation folder is set to 'auto', \
+    RNAlysis will attempt to find it automatically.
     :type kallisto_installation_folder: str, Path, or 'auto' (default='auto')
     :param kmer_length: k-mer length of the index.
     :type kmer_length: an odd int between 1 and 31 (default=31)
@@ -66,7 +68,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     call.append(transcriptome_fasta.as_posix())
 
     print(f"Running command: \n{' '.join(call)}")
-    with tqdm(total=1, desc='Building index', unit='index') as pbar:
+    with tqdm(total=1, desc='Building kallisto index', unit='index') as pbar:
         io.run_subprocess(call)
         pbar.update()
 
@@ -116,7 +118,8 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     with an instrument such as an Agilent Bioanalyzer.
     :type stdev_fragment_length: float > 0
     :param kallisto_installation_folder: Path to the installation folder of kallisto. For example: \
-    'C:/Program Files/kallisto'
+    'C:/Program Files/kallisto'. if installation folder is set to 'auto', \
+    RNAlysis will attempt to find it automatically.
     :type kallisto_installation_folder: str, Path, or 'auto' (default='auto')
     :param new_sample_names: Give a new name to each quantified sample (optional). \
     If sample_names='auto', sample names \
@@ -223,7 +226,8 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     we recommend downloading cDNA FASTA/index files and GTF files from the same data source.
     :type gtf_file: str or Path
     :param kallisto_installation_folder: Path to the installation folder of kallisto. For example: \
-        'C:/Program Files/kallisto'
+        'C:/Program Files/kallisto'. if installation folder is set to 'auto', \
+    RNAlysis will attempt to find it automatically.
     :type kallisto_installation_folder: str, Path, or 'auto' (default='auto')
     :param new_sample_names: Give a new name to each quantified sample (optional). If sample_names='auto', sample names \
     will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
