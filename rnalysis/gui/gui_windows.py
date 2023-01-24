@@ -724,6 +724,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                  'signature': 'signature of the function',
                  'desc': 'description of the function',
                  'param_desc': 'description of the function parameters',
+                 'help_link': 'link to the documentation page of the function',
                  'exluded_params': 'parameters to be excluded from the window',
                  'scroll': 'scroll area',
                  'scroll_widget': 'widget containing the scroll area',
@@ -734,12 +735,13 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                  'start_button': 'start button',
                  'close_button': 'close button'}
 
-    def __init__(self, func_name: str, func: Callable, excluded_params: set, parent=None):
+    def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, parent=None):
         super().__init__(parent)
         self.func_name = func_name
         self.func = func
         self.signature = generic.get_method_signature(self.func)
         self.desc, self.param_desc = io.get_method_docstring(self.func)
+        self.help_link = help_link
         self.excluded_params = excluded_params.copy()
 
         self.widgets = {}
@@ -763,6 +765,11 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.scroll_layout.setSizeConstraint(QtWidgets.QLayout.SetMinAndMaxSize)
 
         self.main_layout.addWidget(self.scroll)
+
+        self.param_widgets['help_link'] = QtWidgets.QLabel(
+            text=f'<a href="{self.help_link}">Open documentation for <b>{self.func_name}</b></a>')
+        self.param_widgets['help_link'].setOpenExternalLinks(True)
+        self.main_layout.addWidget(self.param_widgets['help_link'])
 
         self.scroll_layout.addWidget(self.param_group, 0, 0)
         self.scroll_layout.addWidget(self.start_button, 1, 0, 1, 2)
@@ -791,6 +798,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             self.param_grid.addWidget(self.param_widgets[name], i, 1)
             help_button.connect_param_help(name, this_desc)
             i += 1
+
         self.param_grid.setRowStretch(i, 1)
 
     def connect_widget(self, widget: QtWidgets.QWidget):

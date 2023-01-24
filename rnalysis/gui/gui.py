@@ -32,11 +32,12 @@ INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 class OntologyGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    IGNORED_WIDGETS = {'help_link'}
+    FUNC = enrichment.gene_ontology_graph
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Gene Ontology graph', enrichment.gene_ontology_graph, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Gene Ontology graph', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -46,11 +47,12 @@ class OntologyGraphWindow(gui_windows.FuncExternalWindow):
 
 class PathwayGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    IGNORED_WIDGETS = {'help_link'}
+    FUNC = enrichment.kegg_pathway_graph
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('KEGG Pathway graph', enrichment.kegg_pathway_graph, self.EXCLUDED_PARAMS, parent)
+        super().__init__('KEGG Pathway graph', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -60,11 +62,12 @@ class PathwayGraphWindow(gui_windows.FuncExternalWindow):
 
 class KallistoIndexWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    IGNORED_WIDGETS = {'help_link'}
+    FUNC = fastq.kallisto_create_index
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto create index', fastq.kallisto_create_index, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Kallisto create index', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -74,12 +77,13 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
 
 class KallistoSingleWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    IGNORED_WIDGETS = {'help_link'}
+    FUNC = fastq.kallisto_quantify_single_end
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto quantify (single-end reads)', fastq.kallisto_quantify_single_end,
-                         self.EXCLUDED_PARAMS, parent)
+        super().__init__('Kallisto quantify (single-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS,
+                         parent)
         self.init_ui()
 
     def init_ui(self):
@@ -89,14 +93,16 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
 
 class KallistoPairedWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
-    IGNORED_WIDGETS = {'help_link'}
+    FUNC = fastq.kallisto_quantify_paired_end
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
+
     __slots__ = {'pairs_group': 'widget group for picking file pairs',
                  'pairs_grid': 'layout for widget group',
                  'pairs_widgets': 'widgets for picking file pairs'}
 
     def __init__(self, parent=None):
-        super().__init__('Kallisto quantify (paired-end reads)', fastq.kallisto_quantify_paired_end,
-                         self.EXCLUDED_PARAMS, parent)
+        super().__init__('Kallisto quantify (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS,
+                         parent)
 
         self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
         self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
@@ -128,11 +134,12 @@ class KallistoPairedWindow(gui_windows.FuncExternalWindow):
 
 class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
-    IGNORED_WIDGETS = {'help_link'}
+    FUNC = fastq.trim_adapters_single_end
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
     __slots__ = {}
 
     def __init__(self, parent=None):
-        super().__init__('CutAdapt (single-end reads)', fastq.trim_adapters_single_end, self.EXCLUDED_PARAMS, parent)
+        super().__init__('CutAdapt (single-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
@@ -142,13 +149,15 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
 
 class CutAdaptPairedWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
-    IGNORED_WIDGETS = {'help_link'}
+    FUNC = fastq.trim_adapters_paired_end
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{FUNC.__name__}.html"
+
     __slots__ = {'pairs_group': 'widget group for picking file pairs',
                  'pairs_grid': 'layout for widget group',
                  'pairs_widgets': 'widgets for picking file pairs'}
 
     def __init__(self, parent=None):
-        super().__init__('CutAdapt (paired-end reads)', fastq.trim_adapters_paired_end, self.EXCLUDED_PARAMS, parent)
+        super().__init__('CutAdapt (paired-end reads)', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
 
         self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
         self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
@@ -180,7 +189,10 @@ class CutAdaptPairedWindow(gui_windows.FuncExternalWindow):
 
 class DESeqWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'comparisons'}
-    IGNORED_WIDGETS = {'help_link', 'load_design'}
+    IGNORED_WIDGETS = gui_windows.FuncExternalWindow.IGNORED_WIDGETS | {'load_design'}
+    FUNC = filtering.CountFilter.differential_expression_deseq2
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{FUNC.__name__}.html"
+
     __slots__ = {'comparisons': 'list of comparisons to make',
                  'design_mat': 'design matrix',
                  'comparisons_group': 'widget group for choosing comparisons',
@@ -188,7 +200,7 @@ class DESeqWindow(gui_windows.FuncExternalWindow):
                  'comparisons_widgets': 'widgets for choosing comparisons'}
 
     def __init__(self, parent=None):
-        super().__init__('DESeq2', filtering.CountFilter.differential_expression_deseq2, self.EXCLUDED_PARAMS, parent)
+        super().__init__('DESeq2', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
 
         self.comparisons = []
         self.design_mat = None
@@ -235,9 +247,11 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'parameter_dicts', 'gui_mode', 'parallel_backend'}
     ADDITIONAL_EXCLUDED_PARAMS = {'power_transform', 'plot_style', 'split_plots', 'return_probabilities', 'gui_mode',
                                   'parallel_backend'}
+    FUNC = filtering.CountFilter.split_clicom
+    HELP_LINK = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{FUNC.__name__}.html"
 
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
-        super().__init__('CLICOM', filtering.CountFilter.split_clicom, self.EXCLUDED_PARAMS, parent)
+        super().__init__('CLICOM', self.FUNC, self.HELP_LINK, self.EXCLUDED_PARAMS, parent)
         self.parameter_dicts: List[dict] = []
         self.funcs = funcs
         self.setups_counter = {key: 0 for key in self.funcs.keys()}

@@ -2,6 +2,18 @@
 History
 =======
 
+3.5.0 (2023-02-??)
+------------------
+
+Added
+******
+* Added bowtie2 alignment to the fastq module.
+* Added FeatureCounts feature-counting to the fastq module.
+
+Fixed
+******
+* Fixed bug where the windows of some functions (differential expression, adapter trimming, etc) did not show a link to the function's documentation page.
+
 3.4.0 (2023-01-24)
 ------------------
 From this release forward, *RNAlysis* is made available as a stand-alone app for Windows and MacOS. You can download these stand-alone versions from the GitHub Releases page.
