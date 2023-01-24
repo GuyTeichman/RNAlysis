@@ -1346,12 +1346,19 @@ class MultiColorPicker(QMultiInput):
 
 
 class QMultiSpinBox(QMultiInput):
+    __slots__ = {'minimum': 'minimum value for spin boxes',
+                 'maximum': 'maximum value for spinboxes'}
     CHILD_QWIDGET = QtWidgets.QSpinBox
+
+    def __init__(self, label: str = '', text='Set input', parent=None, minimum=-2147483648, maximum=2147483647):
+        self.minimum = minimum
+        self.maximum = maximum
+        super().__init__(label, text, parent)
 
     def add_widget(self):
         super().add_widget()
-        self.dialog_widgets['inputs'][-1].setMinimum(-2147483648)
-        self.dialog_widgets['inputs'][-1].setMaximum(2147483647)
+        self.dialog_widgets['inputs'][-1].setMinimum(self.minimum)
+        self.dialog_widgets['inputs'][-1].setMaximum(self.maximum)
 
     def get_widget_value(self, widget: type(CHILD_QWIDGET)):
         return widget.value()
@@ -1361,12 +1368,23 @@ class QMultiSpinBox(QMultiInput):
 
 
 class QMultiDoubleSpinBox(QMultiSpinBox):
+    __slots__ = {'minimum': 'minimum value for spinboxes',
+                 'maximum': 'maximum value for spinboxes',
+                 'step_size': 'default step size of spinboxes'}
     CHILD_QWIDGET = QtWidgets.QDoubleSpinBox
+
+    def __init__(self, label: str = '', text='Set input', parent=None, minimum=float("-inf"), maximum=float("inf"),
+                 step_size: float = 0.05):
+        self.minimum = minimum
+        self.maximum = maximum
+        self.step_size = step_size
+        super().__init__(label, text, parent)
 
     def add_widget(self):
         super().add_widget()
-        self.dialog_widgets['inputs'][-1].setMinimum(float("-inf"))
-        self.dialog_widgets['inputs'][-1].setMaximum(float("inf"))
+        self.dialog_widgets['inputs'][-1].setMinimum(self.minimum)
+        self.dialog_widgets['inputs'][-1].setMaximum(self.maximum)
+        self.dialog_widgets['inputs'][-1].setSingleStep(self.step_size)
 
 
 class QMultiLineEdit(QMultiInput):
@@ -1601,7 +1619,6 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
-
     elif param.annotation == param_typing.PositiveInt:
         widget = QtWidgets.QSpinBox()
         widget.setMinimum(1)
@@ -1684,8 +1701,43 @@ def param_to_widget(param, name: str,
         for action in actions_to_connect:
             widget.valueChanged.connect(action)
 
+    elif param.annotation in (Union[param_typing.Fraction, List[param_typing.Fraction]],
+                              Union[param_typing.Fraction, Iterable[param_typing.Fraction]]):
+        widget = QMultiDoubleSpinBox(name, minimum=0, maximum=1, step_size=0.05)
+        if is_default:
+            widget.setValue(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
     elif param.annotation in (Union[int, List[int]], Union[int, Iterable[int]], List[int], Iterable[int]):
         widget = QMultiSpinBox(name)
+        if is_default:
+            widget.setValue(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif param.annotation in (Union[param_typing.PositiveInt, List[param_typing.PositiveInt]],
+                              Union[param_typing.PositiveInt, Iterable[param_typing.PositiveInt]],
+                              List[param_typing.PositiveInt], Iterable[param_typing.PositiveInt]):
+        widget = QMultiSpinBox(name, minimum=1)
+        if is_default:
+            widget.setValue(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif param.annotation in (Union[param_typing.NonNegativeInt, List[param_typing.NonNegativeInt]],
+                              Union[param_typing.NonNegativeInt, Iterable[param_typing.NonNegativeInt]],
+                              List[param_typing.NonNegativeInt], Iterable[param_typing.NonNegativeInt]):
+        widget = QMultiSpinBox(name, minimum=0)
+        if is_default:
+            widget.setValue(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif param.annotation in (Union[param_typing.NegativeInt, List[param_typing.NegativeInt]],
+                              Union[param_typing.NegativeInt, Iterable[param_typing.NegativeInt]],
+                              List[param_typing.NegativeInt], Iterable[param_typing.NegativeInt]):
+        widget = QMultiSpinBox(name, maximum=-1)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
