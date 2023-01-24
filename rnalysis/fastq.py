@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 
 from rnalysis import filtering
 from rnalysis.utils import parsing, io
-from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt
+from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction
 
 try:
     from typing import Literal
@@ -26,10 +26,10 @@ LEGAL_FASTQ_SUFFIXES = ['.fastq', '.fastq.gz', '.fq', '.fq.gz']
 
 def kallisto_create_index(transcriptome_fasta: Union[str, Path],
                           kallisto_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
-                          kmer_length: int = 31, make_unique: bool = False):
+                          kmer_length: PositiveInt = 31, make_unique: bool = False):
     """
     builds a kallisto index from a FASTA formatted file of target sequences (transcriptome). \
-    The index file will be saved in the sam folder as your FASTA file, with the `.idx` suffix. \
+    The index file will be saved in the same folder as your FASTA file, with the `.idx` suffix. \
     Be aware that there are pre-built kallisto indices for popular model organisms. \
     These can be downloaded from  the \
     `kallisto transcriptome indices site <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_.
@@ -80,7 +80,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
                                  new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no',
                                  learn_bias: bool = False, seek_fusion_genes: bool = False,
-                                 bootstrap_samples: Union[int, None] = None) -> filtering.CountFilter:
+                                 bootstrap_samples: Union[PositiveInt, None] = None) -> filtering.CountFilter:
     """
     Quantify transcript abundance in single-end mRNA sequencing data using kallisto. \
     The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder. \
@@ -142,7 +142,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     estimated count values, but generates an additional .hdf5 output file which contains \
     uncertainty estimates for the expression levels. This is required if you use tools such as Sleuth for downstream \
     differential expression analysis, but not for more traditional tools such as DESeq2 and edgeR.
-    :type bootstrap_samples: int >=0 or None (default=None)
+    :type bootstrap_samples: int >0 or None (default=None)
     """
     if new_sample_names != 'auto':
         new_sample_names = parsing.data_to_list(new_sample_names)
@@ -192,7 +192,7 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
                                  new_sample_names: Union[List[str], Literal['auto']] = 'auto',
                                  stranded: Literal['no', 'forward', 'reverse'] = 'no', learn_bias: bool = False,
                                  seek_fusion_genes: bool = False,
-                                 bootstrap_samples: Union[int, None] = None) -> filtering.CountFilter:
+                                 bootstrap_samples: Union[PositiveInt, None] = None) -> filtering.CountFilter:
     """
     Quantify transcript abundance in paired-end mRNA sequencing data using kallisto. \
     The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder. \
@@ -249,7 +249,7 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     estimated count values, but generates an additional .hdf5 output file which contains \
     uncertainty estimates for the expression levels. This is required if you use tools such as Sleuth for downstream \
     differential expression analysis, but not for more traditional tools such as DESeq2 and edgeR.
-    :type bootstrap_samples: int >=0 or None (default=None)
+    :type bootstrap_samples: int >0 or None (default=None)
     """
     if new_sample_names != 'auto':
         new_sample_names = parsing.data_to_list(new_sample_names)
@@ -385,10 +385,11 @@ def trim_adapters_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                              three_prime_adapters: Union[None, str, List[str]],
                              five_prime_adapters: Union[None, str, List[str]] = None,
                              any_position_adapters: Union[None, str, List[str]] = None,
-                             quality_trimming: Union[int, None] = 20, trim_n: bool = True,
-                             minimum_read_length: Union[int, None] = 10, maximum_read_length: Union[int, None] = None,
-                             discard_untrimmed_reads: bool = True, error_tolerance: float = 0.1,
-                             minimum_overlap: int = 3, allow_indels: bool = True, parallel: bool = True):
+                             quality_trimming: Union[NonNegativeInt, None] = 20, trim_n: bool = True,
+                             minimum_read_length: NonNegativeInt = 10,
+                             maximum_read_length: Union[PositiveInt, None] = None,
+                             discard_untrimmed_reads: bool = True, error_tolerance: Fraction = 0.1,
+                             minimum_overlap: NonNegativeInt = 3, allow_indels: bool = True, parallel: bool = True):
     """
     Trim adapters from single-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
@@ -476,12 +477,13 @@ def trim_adapters_paired_end(r1_files: List[Union[str, Path]], r2_files: List[Un
                              five_prime_adapters_r2: Union[None, str, List[str]] = None,
                              any_position_adapters_r1: Union[None, str, List[str]] = None,
                              any_position_adapters_r2: Union[None, str, List[str]] = None,
-                             quality_trimming: Union[int, None] = 20, trim_n: bool = True,
-                             minimum_read_length: Union[int, None] = 10, maximum_read_length: Union[int, None] = None,
+                             quality_trimming: Union[NonNegativeInt, None] = 20, trim_n: bool = True,
+                             minimum_read_length: NonNegativeInt = 10,
+                             maximum_read_length: Union[PositiveInt, None] = None,
                              discard_untrimmed_reads: bool = True,
                              pair_filter_if: Literal['both', 'any', 'first'] = 'both',
-                             error_tolerance: float = 0.1, minimum_overlap: int = 3, allow_indels: bool = True,
-                             parallel: bool = True):
+                             error_tolerance: Fraction = 0.1, minimum_overlap: NonNegativeInt = 3,
+                             allow_indels: bool = True, parallel: bool = True):
     """
     Trim adapters from paired-end reads using `CutAdapt <https://cutadapt.readthedocs.io/>`_.
 
