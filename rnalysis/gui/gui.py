@@ -160,7 +160,7 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.trim_adapters_single_end
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('CutAdapt (single-end reads)', UNC, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('CutAdapt (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
         self.init_ui()
 
     def init_ui(self):
