@@ -136,12 +136,12 @@ def test_kallisto_quantify_paired_end():
     "new_sample_names,stranded,learn_bias,seek_fusion_genes,bootstrap_samples,expected_command", [
         ('tests/test_files/kallisto_tests', 'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         125, 14, 'kallisto', 'auto', 'no', False, False, None,
+         125, 14, 'auto', 'auto', 'no', False, False, None,
          ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '-o', 'outfolder', '--single', '-s', '14', '-l', '125']),
         ('tests/test_files/kallisto_tests', 'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         8.5, 0.2, 'kallisto', ['new_name_1', 'new_name_2'], 'reverse', True, True, 3,
+         8.5, 0.2, 'auto', ['new_name_1', 'new_name_2'], 'reverse', True, True, 3,
          ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '--bias', '--fusion', '--rf-stranded', '-b', '3', '-o', 'outfolder', '--single', '-s', '0.2', '-l', '8.5']),
     ])
