@@ -19,6 +19,7 @@ Fixed
 ******
 * Fixed bug where the windows of some functions (differential expression, adapter trimming, etc) did not show a link to the function's documentation page.
 * Fixed typos in some parts of the *RNAlysis* documentation
+* When filtering a table by a single user-defined attribute, the automatic table name will now be more informative about the operation applied.
 
 3.4.0 (2023-01-24)
 ------------------
@@ -46,6 +47,7 @@ Fixed
 ******
 * In CountFilter.differential_expression_deseq2(), fixed a bug where design matrix files with non-comma delimiters would cause an error (thanks to `Mintxoklet <https://github.com/Mintxoklet>`_ in `#7 <https://github.com/GuyTeichman/RNAlysis/issues/7>`_)
 * Fixed bug where setup.py would install a directory named tests into site-packages folder (thanks to `Bipin Kumar <https://github.com/kbipinkumar>`_ in `#9 <https://github.com/GuyTeichman/RNAlysis/issues/9>`_)
+
 
 Removed
 ********

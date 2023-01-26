@@ -908,18 +908,20 @@ class Filter:
         indices = pd.Index([])
         # if in union mode, calculate union between the indices of all attributes
         if mode == 'union':
-            suffix += 'Union'
             for idx in attr_indices_list:
                 indices = indices.union(idx)
             indices = indices.intersection(self.df.index)
         # if in intersection mode, calculate intersection between the indices of all attributes
         elif mode == 'intersection':
-            suffix += 'Intersection'
             indices = self.df.index
             for idx in attr_indices_list:
                 indices = indices.intersection(idx)
 
         new_df = self.df.loc[indices]
+        if len(attributes) > 1:
+            suffix += mode.capitalize()
+        else:
+            suffix += str(attributes[0])
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @readable_name('Split by user-defined attribute')
@@ -3445,7 +3447,7 @@ class CountFilter(Filter):
 
     @readable_name('Hierarchical clustering')
     def split_hierarchical(self, n_clusters: Union[PositiveInt, List[PositiveInt],
-                            Literal['gap', 'silhouette', 'distance']],
+    Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
