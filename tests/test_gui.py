@@ -2536,5 +2536,21 @@ def test_MainWindow_clear_session(qtbot, main_window_with_tabs):
 
 
 
+@pytest.mark.parametrize('action_name, window_attr_name',
+                         [('new_pipeline_action', 'pipeline_window'),
+                          ('cite_action', 'cite_window'),
+                          ('about_action', 'about_window'),
+                          ('settings_action', 'settings_window')])
+def test_MainWindow_open_dialogs(qtbot, main_window_with_tabs, action_name, window_attr_name, monkeypatch):
+    action = getattr(main_window_with_tabs, action_name)
 
+    def win():
+        return getattr(main_window_with_tabs, window_attr_name)
 
+    def handle_dialog():
+        while win() is None or not win().isVisible():
+            QtWidgets.QApplication.processEvents()
+        win().close()
+
+    QtCore.QTimer.singleShot(100, handle_dialog)
+    action.trigger()
