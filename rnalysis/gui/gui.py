@@ -60,6 +60,36 @@ class PathwayGraphWindow(gui_windows.FuncExternalWindow):
         super().init_ui()
 
 
+class FeatureCountsSingleWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.featurecounts_single_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('featureCounts count (single-end reads)', func, help_link, self.EXCLUDED_PARAMS,
+                         parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('featureCounts single-end counting setup')
+        super().init_ui()
+
+
+class FeatureCountsPairedWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = fastq.featurecounts_paired_end
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
+        super().__init__('featureCounts count (paired-end reads)', func, help_link, self.EXCLUDED_PARAMS,
+                         parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('featureCounts paired-end counting setup')
+        super().init_ui()
 
 
 class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
@@ -3082,6 +3112,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bowtie2_paired_action.triggered.connect(
             functools.partial(self.start_external_window, Bowtie2PairedWindow))
 
+        self.featurecounts_single_action = QtWidgets.QAction("&featureCounts Single-end counting...", self)
+        self.featurecounts_single_action.triggered.connect(
+            functools.partial(self.start_external_window, FeatureCountsSingleWindow))
+        self.featurecounts_paired_action = QtWidgets.QAction("featureCounts &Paired-end counting...", self)
+        self.featurecounts_paired_action.triggered.connect(
+            functools.partial(self.start_external_window, FeatureCountsPairedWindow))
 
         self.ontology_graph_action = QtWidgets.QAction("Visualize &Gene Ontology...")
         self.ontology_graph_action.triggered.connect(functools.partial(self.start_external_window, OntologyGraphWindow))
@@ -3305,12 +3341,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.trimming_menu = fastq_menu.addMenu('&Adapter trimming')
         self.kallisto_menu = fastq_menu.addMenu("RNA-sequencing &quantification")
         self.alignment_menu = fastq_menu.addMenu("Read alignment")
+        self.count_menu = fastq_menu.addMenu("Feature counting")
 
         self.trimming_menu.addActions([self.cutadapt_single_action, self.cutadapt_paired_action])
         self.kallisto_menu.addActions(
             [self.kallisto_index_action, self.kallisto_single_action, self.kallisto_paired_action])
         self.alignment_menu.addActions(
             [self.bowtie2_index_action, self.bowtie2_single_action, self.bowtie2_paired_action])
+        self.count_menu.addActions([self.featurecounts_single_action, self.featurecounts_paired_action])
 
         gene_sets_menu = self.menu_bar.addMenu("&Gene sets")
         gene_sets_menu.addActions(
