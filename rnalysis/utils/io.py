@@ -1029,7 +1029,7 @@ def map_gene_ids(ids: Union[str, Iterable[str]], map_from: str, map_to: str = 'U
 
     # if map_from and map_to are the same, return an empty GeneIDTranslator (which will map any given gene ID to itself)
     id_dicts = _get_id_abbreviation_dicts()
-    validation.validate_uniprot_dataset_name(id_dicts, map_to, map_from)
+    validation.validate_uniprot_dataset_name(id_dicts, parsing.data_to_list(map_to), parsing.data_to_list(map_from))
     id_dict_to, id_dict_from = id_dicts
     if id_dict_to[map_to] == id_dict_from[map_from]:
         return GeneIDTranslator()
