@@ -99,6 +99,7 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                              ignore_qualities: bool = False,
                              quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
                              random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+    output_folder = Path(output_folder)
     call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
                                     ignore_qualities, quality_score_type, random_seed, threads)
 
@@ -116,12 +117,13 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
             this_name = new_sample_names[i]
 
         this_call.extend(['-U', item.as_posix()])
-        this_call.extend(['-S', item.with_name(f'{this_name}.sam').as_posix()])
+        this_call.extend(['-S', output_folder.joinpath(f'{this_name}.sam').as_posix()])
         calls.append(this_call)
 
     with tqdm(total=len(calls), desc='Aligning reads', unit='files') as pbar:
         for bt2_call in calls:
-            io.run_subprocess(bt2_call)
+            print(f"Running command: \n{' '.join(bt2_call)}")
+            io.run_subprocess(bt2_call, shell=True)
             print(f"File saved successfully at {bt2_call[-1]}")
             pbar.update(1)
 
@@ -140,6 +142,7 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
                              allow_individual_alignment: bool = True,
                              allow_disconcordant_alignment: bool = True,
                              random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+    output_folder = Path(output_folder)
     call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
                                     ignore_qualities, quality_score_type, random_seed, threads)
 
@@ -147,8 +150,8 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
         f"'min_fragment_len' must be a non-negative int!"
     assert isinstance(max_fragment_length, int) and max_fragment_length >= 0, \
         f"'max_fragment_len' must be a non-negative int!"
-    call.extend([['-I', str(min_fragment_length)]])
-    call.extend([['-X', str(max_fragment_length)]])
+    call.extend(['-I', str(min_fragment_length)])
+    call.extend(['-X', str(max_fragment_length)])
 
     if not allow_disconcordant_alignment:
         call.append('--no-discorcordant')
@@ -180,7 +183,8 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
 
     with tqdm(total=len(calls), desc='Aligning reads', unit='file pairs') as pbar:
         for bt2_call in calls:
-            io.run_subprocess(bt2_call)
+            print(f"Running command: \n{' '.join(bt2_call)}")
+            io.run_subprocess(bt2_call, shell=True)
             print(f"File saved successfully at {bt2_call[-1]}")
             pbar.update(1)
 
@@ -190,11 +194,11 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
                              ignore_qualities: bool, quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES],
                              random_seed: NonNegativeInt, threads: PositiveInt):
     output_folder = Path(output_folder)
-    index_file = Path(index_file)
+    index_file = parsing.remove_suffixes(Path(index_file))
     assert output_folder.exists(), "supplied 'output_folder' does not exist!"
     assert index_file.exists(), f"supplied 'index_file' does not exist!"  # TODO: change me!
 
-    call = io.generate_base_call('bowtie2', bowtie2_installation_folder)
+    call = io.generate_base_call('bowtie2', bowtie2_installation_folder, shell=True)
 
     assert mode in LEGAL_BOWTIE2_MODES, f"Invalid value for 'mode': '{mode}'."
     call.append(f'--{mode}')
@@ -211,6 +215,8 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
     call.extend(['--seed', str(random_seed)])
     assert isinstance(threads, int) and threads >= 0, f"'threads' must be a non-negative int!"
     call.extend(['--threads', str(threads)])
+
+    call.extend(['-x', index_file.as_posix()])
 
     return call
 
