@@ -299,7 +299,6 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
     output_folder = Path(output_folder)
     index_file = parsing.remove_suffixes(Path(index_file))
     assert output_folder.exists(), "supplied 'output_folder' does not exist!"
-    # assert index_file.exists(), f"supplied 'index_file' does not exist!"  # TODO: change me!
 
     call = io.generate_base_call('bowtie2', bowtie2_installation_folder, shell=True)
 

@@ -899,6 +899,7 @@ class GeneSetComboBox(MandatoryComboBox):
 
 class MinMaxDialog(QtWidgets.QDialog):
     __slots__ = {}
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowFlag(QtCore.Qt.WindowMinMaxButtonsHint)
@@ -962,7 +963,7 @@ class PathLineEdit(QtWidgets.QWidget):
                  '_is_legal': 'is the current path legal',
                  'layout': 'layout'}
 
-    def __init__(self, contents: str = 'No file chosen', button_text: str = 'Load', is_file: bool = True, parent=None):
+    def __init__(self, contents: str = 'auto', button_text: str = 'Load', is_file: bool = True, parent=None):
         super().__init__(parent)
         self.file_path = QtWidgets.QLineEdit('', self)
         self.open_button = QtWidgets.QPushButton(button_text, self)
@@ -980,6 +981,11 @@ class PathLineEdit(QtWidgets.QWidget):
         else:
             self.open_button.clicked.connect(self.choose_folder)
 
+        if contents == 'auto':
+            if self.is_file:
+                contents = 'No file chosen'
+            else:
+                contents = 'No folder chosen'
         self.file_path.setText(contents)
 
     def clear(self):
@@ -1403,6 +1409,22 @@ class QMultiLineEdit(QMultiInput):
         return res
 
 
+class QMultiPathLineEdit(QMultiLineEdit):
+    CHILD_QWIDGET = PathLineEdit
+
+    def __init__(self, is_file: bool = True, label: str = '', text='Set input', parent=None):
+        self.is_file = is_file
+        super().__init__(label, text, parent)
+
+    def add_widget(self):
+        self.dialog_widgets['inputs'].append(self.CHILD_QWIDGET(is_file=self.is_file))
+        self.dialog_layout.addWidget(self.dialog_widgets['inputs'][-1], len(self.dialog_widgets['inputs']) + 2, 1)
+
+        self.dialog_widgets['input_labels'].append(
+            QtWidgets.QLabel(f'{self.label}:', self.dialog_widgets['inputs'][-1]))
+        self.dialog_layout.addWidget(self.dialog_widgets['input_labels'][-1], len(self.dialog_widgets['inputs']) + 2, 0)
+
+
 class TwoLayerMultiLineEdit(QMultiInput):
     CHILD_QWIDGET = QMultiLineEdit
 
@@ -1682,6 +1704,14 @@ def param_to_widget(param, name: str,
 
     elif param.annotation in (Union[str, List[str]], Union[str, Iterable[str]], List[str], Iterable[str]):
         widget = QMultiLineEdit(name)
+        if is_default:
+            widget.setValue(param.default)
+        for action in actions_to_connect:
+            widget.valueChanged.connect(action)
+
+    elif param.annotation == List[Union[str, Path]]:
+        is_file = 'folder' not in name
+        widget = QMultiPathLineEdit(is_file, name)
         if is_default:
             widget.setValue(param.default)
         for action in actions_to_connect:
