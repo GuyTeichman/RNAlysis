@@ -1,7 +1,7 @@
-import pandas
 import pytest
 
 from rnalysis.utils.parsing import *
+from rnalysis.utils.parsing import _parse_r_arg
 
 
 class DummyClass:
@@ -198,3 +198,29 @@ def test_parse_version(version, expected):
 ])
 def test_parse_gtf_attributes(attribute_str, expected):
     assert parse_gtf_attributes(attribute_str) == expected
+
+
+@pytest.mark.parametrize('arg,expected', [
+    (None, 'NULL'),
+    (35, '35'),
+    (7.22, '7.22'),
+    (-3.52, '-3.52'),
+    ('my str', '"my str"'),
+    (True, 'TRUE'),
+    (False, 'FALSE'),
+    (['a', 'ab', 'cde'], 'c("a", "ab", "cde")'),
+    ({}, 'c()')
+])
+def test_parse_r_arg(arg, expected):
+    res = _parse_r_arg(arg)
+    assert res == expected
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    ({'arg1': False},'arg1 = FALSE'),
+    ({'arg1': 'val1', 'arg2': -0.25, 'arg3': True},'arg1 = "val1", \narg2 = -0.25, \narg3 = TRUE'),
+    ({'arg1': None, 'arg2': ['b', 'dc', 'ad f']},'arg1 = NULL, \narg2 = c("b", "dc", "ad f")')
+])
+def test_python_to_r_kwargs(kwargs, expected):
+    res = python_to_r_kwargs(kwargs)
+    assert res == expected

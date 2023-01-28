@@ -1,13 +1,40 @@
 import itertools
 import re
-from tqdm.auto import tqdm
 import warnings
 from itertools import islice
+from pathlib import Path
 from typing import Any, Dict, Union, List, Tuple
 
 import numpy as np
 import pandas as pd
-from pathlib import Path
+from tqdm.auto import tqdm
+
+from rnalysis.utils import validation
+
+
+def python_to_r_kwargs(kwargs: dict, delimiter: str = ', \n'):
+    kwargs_str = ''
+    for key, val in kwargs.items():
+        val = _parse_r_arg(val)
+        this_arg = f'{key} = {val}{delimiter}'
+        kwargs_str += this_arg
+    return kwargs_str[:-len(delimiter)]  # ignore the last delimiter
+
+
+def _parse_r_arg(arg):
+    if isinstance(arg, bool):
+        return str(arg).upper()
+    elif isinstance(arg, (int, float)):
+        return str(arg)
+    elif isinstance(arg, str):
+        return f'"{arg}"'
+    elif arg is None:
+        return 'NULL'
+    elif validation.isinstanceiter(arg, str):
+        base = ', '.join([f'"{item}"' for item in arg])
+        return f'c({base})'
+    else:
+        raise TypeError(f"Cannot parse argument: {arg} of type: {type(arg)}")
 
 
 def remove_suffixes(path: Union[str, Path]) -> Union[str, Path]:
