@@ -12,7 +12,7 @@ from tqdm.auto import tqdm
 from rnalysis.utils import validation
 
 
-def python_to_r_kwargs(kwargs: dict, delimiter: str = ', \n'):
+def python_to_r_kwargs(kwargs: dict, delimiter: str = ',\n'):
     kwargs_str = ''
     for key, val in kwargs.items():
         val = _parse_r_arg(val)

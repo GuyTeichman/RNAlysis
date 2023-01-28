@@ -218,8 +218,8 @@ def test_parse_r_arg(arg, expected):
 
 @pytest.mark.parametrize('kwargs,expected', [
     ({'arg1': False},'arg1 = FALSE'),
-    ({'arg1': 'val1', 'arg2': -0.25, 'arg3': True},'arg1 = "val1", \narg2 = -0.25, \narg3 = TRUE'),
-    ({'arg1': None, 'arg2': ['b', 'dc', 'ad f']},'arg1 = NULL, \narg2 = c("b", "dc", "ad f")')
+    ({'arg1': 'val1', 'arg2': -0.25, 'arg3': True},'arg1 = "val1",\narg2 = -0.25,\narg3 = TRUE'),
+    ({'arg1': None, 'arg2': ['b', 'dc', 'ad f']},'arg1 = NULL,\narg2 = c("b", "dc", "ad f")')
 ])
 def test_python_to_r_kwargs(kwargs, expected):
     res = python_to_r_kwargs(kwargs)
