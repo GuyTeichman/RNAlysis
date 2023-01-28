@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from rnalysis import filtering
-from rnalysis.utils import parsing, io
+from rnalysis.utils import parsing, io, feature_counting
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES
 
@@ -21,6 +21,109 @@ try:
 
 except ImportError:
     HAS_CUTADAPT = False
+
+
+def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                             gtf_file: Union[str, Path],
+                             gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
+                             r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                             stranded: Literal['no', 'forward', 'reverse'] = 'no', min_mapping_quality: int = 0,
+                             count_multi_mapping_reads: bool = False, count_multi_overlapping_reads: bool = False,
+                             ignore_secondary: bool = True,
+                             count_fractionally: bool = False, is_long_read: bool = False,
+                             report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
+                             report_read_assignment_path: Union[str, Path, None] = None,
+                             threads: PositiveInt = 1):
+    if new_sample_names != 'auto':
+        new_sample_names = parsing.data_to_list(new_sample_names)
+    output_folder = Path(output_folder)
+    kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
+                                            min_mapping_quality, count_multi_mapping_reads,
+                                            count_multi_overlapping_reads, ignore_secondary, count_fractionally,
+                                            is_long_read, report_read_assignment, report_read_assignment_path, threads)
+
+    feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
+    return _process_featurecounts_output(output_folder, new_sample_names)
+
+
+def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
+                             gtf_file: Union[str, Path], gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
+                             r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                             new_sample_names: Union[List[str], Literal['auto']] = 'auto',
+                             stranded: Literal['no', 'forward', 'reverse'] = 'no', min_mapping_quality: int = 0,
+                             count_multi_mapping_reads: bool = False, count_multi_overlapping_reads: bool = False,
+                             ignore_secondary: bool = True, count_fractionally: bool = False,
+                             is_long_read: bool = False,
+                             report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
+                             report_read_assignment_path: Union[str, Path, None] = None,
+                             require_both_mapped: bool = True, count_chimeric_fragments: bool = False,
+                             min_fragment_length: NonNegativeInt = 50,
+                             max_fragment_length: Union[PositiveInt, None] = 600, threads: PositiveInt = 1):
+    if new_sample_names != 'auto':
+        new_sample_names = parsing.data_to_list(new_sample_names)
+    output_folder = Path(output_folder)
+    kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
+                                            min_mapping_quality, count_multi_mapping_reads,
+                                            count_multi_overlapping_reads, ignore_secondary, count_fractionally,
+                                            is_long_read, report_read_assignment, report_read_assignment_path, threads)
+    paired_kwargs = {'isPairedEnd': True, 'requireBothEndsMapped': require_both_mapped,
+                     'countChimericFragments': count_chimeric_fragments, 'minFragLength': min_fragment_length,
+                     'maxFragLength': max_fragment_length, 'countReadPairs': True}
+    kwargs.update(paired_kwargs)
+
+    feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
+    return _process_featurecounts_output(output_folder, new_sample_names)
+
+
+def _parse_featurecounts_misc_args(input_folder: Union[str, Path], gtf_file: Union[str, Path], gtf_feature_type: str,
+                                   gtf_attr_name: str,
+                                   stranded: Literal['no', 'forward', 'reverse'], min_mapping_quality: int,
+                                   count_multi_mapping_reads: bool, count_multi_overlapping_reads: bool,
+                                   ignore_secondary: bool, count_fractionally: bool, is_long_read: bool,
+                                   report_read_assignment: Union[Literal['bam', 'sam', 'core'], None],
+                                   report_read_assignment_path: Union[str, Path, None], threads: PositiveInt):
+    strand_dict = {'no': 0, 'forward': 1, 'reverse': 2}
+    assert stranded in strand_dict, f"Invalid value for 'stranded': '{stranded}'."
+    read_assignment_formats = {'bam': 'BAM', 'sam': 'SAM', 'core': 'CORE', None: None}
+    assert report_read_assignment in read_assignment_formats, \
+        f"Invalid value for 'report_read_asignment': {report_read_assignment}"
+
+    gtf_file = Path(gtf_file)
+    assert gtf_file.exists() and gtf_file.is_file(), f"'gtf_file' does not exist!"
+
+    input_folder = Path(input_folder)
+    assert input_folder.exists() and input_folder.is_dir(), f"input_folder does not exist!"
+    files = []
+    for item in input_folder.iterdir():
+        if item.suffix.lower() in ['.bam', '.sam']:
+            files.append(item.as_posix())
+    assert len(files) > 0, f"No legal input files were find in input_folder '{input_folder.as_posix()}'!"
+
+    kwargs = {'files': files, 'annot.ext': gtf_file.as_posix(), 'isGTFAnnotationFile': True,
+              'GTF.featureType': gtf_feature_type, 'GTF.attrType': gtf_attr_name,
+              'allowMultiOverlap': count_multi_overlapping_reads, 'countMultiMappingReads': count_multi_mapping_reads,
+              'fraction': count_fractionally, 'isLongRead': is_long_read, 'minMQS': min_mapping_quality,
+              'primaryOnly': ignore_secondary, 'strandSpecific': strand_dict[stranded], 'nthreads': threads}
+
+    if report_read_assignment is not None:
+        report_read_assignment_path = Path(report_read_assignment_path)
+        assert report_read_assignment_path.exists(), f"report_read_assignment_path does not exist!"
+        kwargs += {'reportReads': read_assignment_formats[report_read_assignment],
+                   'reportReadsPath': report_read_assignment_path.as_posix()}
+    return kwargs
+
+
+def _process_featurecounts_output(output_folder, new_sample_names):
+    counts_path = Path(output_folder).joinpath('featureCounts_counts.csv')
+    annotation_path = Path(output_folder).joinpath('featureCounts_annotation.csv')
+    stats_path = Path(output_folder).joinpath('featureCounts_stats.csv')
+
+    counts = filtering.CountFilter(counts_path)
+    annotations = pd.read_csv(annotation_path)
+    stats = pd.read_csv(stats_path)
+
+    return counts, annotations, stats
 
 
 def bowtie2_create_index(genome_fastas: List[Union[str, Path]], index_name: Union[str, Literal['auto']] = 'auto',
@@ -196,7 +299,7 @@ def _parse_bowtie2_misc_args(output_folder, index_file: str, bowtie2_installatio
     output_folder = Path(output_folder)
     index_file = parsing.remove_suffixes(Path(index_file))
     assert output_folder.exists(), "supplied 'output_folder' does not exist!"
-    assert index_file.exists(), f"supplied 'index_file' does not exist!"  # TODO: change me!
+    # assert index_file.exists(), f"supplied 'index_file' does not exist!"  # TODO: change me!
 
     call = io.generate_base_call('bowtie2', bowtie2_installation_folder, shell=True)
 
