@@ -898,7 +898,7 @@ class GeneSetComboBox(MandatoryComboBox):
 
 
 class MinMaxDialog(QtWidgets.QDialog):
-
+    __slots__ = {}
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowFlag(QtCore.Qt.WindowMinMaxButtonsHint)
