@@ -1150,17 +1150,6 @@ class TabPage(QtWidgets.QWidget):
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
     geneSetsRequested = QtCore.pyqtSignal(object)
-    __slots__ = {'undo_stack': 'undo stack',
-                 'sup_layout': '',
-                 'container': 'container widget for scrollbar',
-                 'layout': 'layout for container',
-                 'scroll': 'scroll area widget',
-                 'name': 'tab name',
-                 'creation_time': 'tab creation time',
-                 'stdout_group': 'widget group for stdout area',
-                 'splitter': 'vertical splitter beetween stdout group and the rest of the widget',
-                 'stdout_grid': 'stdout layout',
-                 'stdout_widgets': 'widgets for stdout area'}
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent)
@@ -1243,10 +1232,6 @@ class TabPage(QtWidgets.QWidget):
 
 
 class SetTabPage(TabPage):
-    __slots__ = {'gene_set': 'FeatureSet object with gene set',
-                 'overview_group': 'widget group of overview area',
-                 'overview_grid': 'layout for overview area',
-                 'overview_widgets': 'widgets for overview area'}
 
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
                  undo_stack: QtWidgets.QUndoStack = None):
@@ -1512,10 +1497,6 @@ class FilterTabPage(TabPage):
     startedClustering = QtCore.pyqtSignal(object, str, object)
     startedJob = QtCore.pyqtSignal(object, str, object)
     widthChanged = QtCore.pyqtSignal()
-    __slots__ = ('basic_group', 'basic_grid', 'basic_widgets', 'basic_param_container', 'basic_param_widgets',
-                 'basic_param_grid', 'overview_group', 'overview_grid', 'overview_widgets', 'function_group',
-                 'function_grid', 'function_widgets', 'stack', 'button_box', 'stack_buttons', 'stack_widgets',
-                 'clicom_window', 'deseq_window')
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
@@ -1967,7 +1948,7 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
                  'is_unsaved': 'indicates whether the Pipeline was saved since changes were last made'}
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(parent=parent)
         self.setLayout(self.layout)
         self.setWindowTitle(f'Create new Pipeline')
         self.setGeometry(500, 200, 800, 800)
