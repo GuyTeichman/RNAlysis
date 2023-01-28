@@ -2132,7 +2132,18 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
 
     def __init__(self, objs: List[filtering.Filter], parent=None):
         super().__init__(parent)
-        self.objs = {str(obj.fname.stem): obj for obj in objs}
+        # make sure there are no two objects with the sane name
+        self.objs = {}
+        for obj in objs:
+            key = str(obj.fname.stem)
+            if key in self.objs:
+                i = 1
+                key += '_{i}'
+                while key.format(i=i) in self.objs:
+                    i += 1
+                key = key.format(i=i)
+            self.objs[key] = obj
+
         self.files = list(self.objs.keys())
         self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.labels = dict()
@@ -2984,7 +2995,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pipeline_window.pipelineSaved.connect(self.save_pipeline)
         self.pipeline_window.pipelineExported.connect(self._export_pipeline_from_obj)
         self.pipeline_window.exec()
-        self.pipeline_window = None
+        # self.pipeline_window = None
 
     @QtCore.pyqtSlot(str)
     def edit_pipeline(self, pipeline_name: str):

@@ -20,6 +20,7 @@ Fixed
 * Fixed bug where the windows of some functions (differential expression, adapter trimming, etc) did not show a link to the function's documentation page.
 * Fixed typos in some parts of the *RNAlysis* documentation
 * When filtering a table by a single user-defined attribute, the automatic table name will now be more informative about the operation applied.
+* Fixed bug where occasionally a Pipeline or Function would generate multiple tables of the same name, but only one of them will appear in the GUI.
 
 3.4.0 (2023-01-24)
 ------------------
