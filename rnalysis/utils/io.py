@@ -1301,7 +1301,7 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
 
 
 def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True,
-                   log_filename: Union[str, None] = None):
+                   log_filename: Union[str, None] = None, shell:bool=False):
     if print_stdout or print_stderr:
         if print_stdout and print_stderr:
             stdout = subprocess.PIPE
@@ -1313,7 +1313,7 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
             stdout = subprocess.DEVNULL
             stderr = subprocess.PIPE
 
-        with subprocess.Popen(args, stdout=stdout, stderr=stderr) as process:
+        with subprocess.Popen(args, stdout=stdout, stderr=stderr, shell=shell) as process:
             stream = process.stdout if print_stdout else process.stderr
             if log_filename is not None:
                 with open(log_filename, 'w') as logfile:
@@ -1327,7 +1327,7 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
                     print(text)
         return_code = process.returncode
     else:
-        return_code = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+        return_code = subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=shell).returncode
 
     return return_code
 
