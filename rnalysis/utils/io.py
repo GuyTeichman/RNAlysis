@@ -1447,7 +1447,7 @@ def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False,
     return mapping
 
 
-def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']]):
+def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']], shell:bool=False):
     if installation_folder == 'auto':
         call = [command]
     else:
@@ -1456,7 +1456,8 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
         call = [installation_folder.joinpath(command).as_posix()]
 
     try:
-        run_subprocess(call + ['--version'])
+        exit_code = run_subprocess(call + ['--version'], shell=shell)
+        assert exit_code == 0, f"call to {call[0]} exited with exit status {exit_code}."
     except FileNotFoundError:
         raise FileNotFoundError(f"RNAlysis could not find '{command}'. "
                                 'Please ensure that your installation folder is correct, or add it to PATH. ')
