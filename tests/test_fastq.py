@@ -9,6 +9,16 @@ from rnalysis.fastq import *
 from rnalysis.utils import io
 
 
+def unlink_tree(dir):
+    for item in Path(dir).iterdir():
+        if 'gitignore' in item.name:
+            continue
+        if item.is_file():
+            item.unlink()
+        else:
+            shutil.rmtree(item)
+
+
 def are_dir_trees_equal(dir1, dir2):
     """
     Compare two directories recursively. Files in each directory are \
@@ -82,14 +92,13 @@ def test_bowtie2_create_index_command(monkeypatch, genome_fastas, output_folder,
 
 
 def test_bowtie2_create_index():
-    out_path = 'tests/test_files/bowtie2_tests/output'
+    out_path = 'tests/test_files/bowtie2_tests/outdir'
     truth_path = 'tests/test_files/bowtie2_tests/index'
     try:
         bowtie2_create_index(['tests/test_files/bowtie2_tests/transcripts.fasta'], out_path, random_seed=0)
         assert are_dir_trees_equal(out_path, truth_path)
     finally:
-        for file in Path(out_path).iterdir():
-            file.unlink()
+        unlink_tree(out_path)
 
 
 @pytest.mark.parametrize("transcriptome_fasta,kallisto_installation_folder,kmer_length,make_unique,expected_command", [
@@ -143,13 +152,7 @@ def test_kallisto_quantify_single_end():
             item.unlink()
         assert are_dir_trees_equal(out_dir, truth_dir)
     finally:
-        for item in Path(out_dir).iterdir():
-            if 'gitignore' in item.name:
-                continue
-            if item.is_file():
-                item.unlink()
-            else:
-                shutil.rmtree(item)
+        unlink_tree(out_dir)
 
 
 def test_kallisto_quantify_paired_end():
@@ -166,13 +169,7 @@ def test_kallisto_quantify_paired_end():
         assert are_dir_trees_equal(out_dir, truth_dir)
 
     finally:
-        for item in Path(out_dir).iterdir():
-            if 'gitignore' in item.name:
-                continue
-            if item.is_file():
-                item.unlink()
-            else:
-                shutil.rmtree(item)
+        unlink_tree(out_dir)
 
 
 @pytest.mark.parametrize(
