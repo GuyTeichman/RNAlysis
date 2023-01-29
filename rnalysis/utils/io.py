@@ -1453,7 +1453,6 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
         call = [command]
     else:
         installation_folder = Path(installation_folder)
-        assert installation_folder.exists(), "installation folder does not exist!"
         call = [installation_folder.joinpath(command).as_posix()]
 
     try:
