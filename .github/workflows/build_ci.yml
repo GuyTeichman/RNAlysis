@@ -82,6 +82,26 @@ jobs:
                 run: |
                     echo ${PATH}
                     kallisto version
+            -   name: Install bowtie2
+                run: |
+                    if [ "$RUNNER_OS" == "Linux" ]; then
+                         brew install bowtie2
+                    elif [ "$RUNNER_OS" == "macOS" ]; then
+                         brew install bowtie2
+                    elif [ "$RUNNER_OS" == "Windows" ]; then
+                         choco install wget -y
+                         wget  https://github.com/BenLangmead/bowtie2/releases/download/v2.5.1/bowtie2-2.5.1-mingw-x86_64.zip
+                         7z x bowtie2-2.5.1-mingw-x86_64.zip
+                         echo "${GITHUB_WORKSPACE}/bowtie2-2.5.1-mingw-x86_64" >> $GITHUB_PATH
+                    else
+                         echo "$RUNNER_OS not supported"
+                         exit 1
+                    fi
+                shell: bash
+            -   name: Test bowtie2 installation
+                run: |
+                    echo ${PATH}
+                    bowtie2 --version
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
                 with:
