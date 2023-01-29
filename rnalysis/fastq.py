@@ -126,7 +126,8 @@ def _process_featurecounts_output(output_folder, new_sample_names):
     return counts, annotations, stats
 
 
-def bowtie2_create_index(genome_fastas: List[Union[str, Path]], index_name: Union[str, Literal['auto']] = 'auto',
+def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: Union[str, Path],
+                         index_name: Union[str, Literal['auto']] = 'auto',
                          bowtie2_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
                          random_seed: Union[NonNegativeInt, None] = None, threads: PositiveInt = 1):
     """
@@ -138,6 +139,8 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], index_name: Unio
 
     :param genome_fastas: Path to the FASTA file/files which contain reference sequences to be aligned to.
     :type genome_fastas: list of str or Path
+    :param output_folder: Path to the folder in which the bowtie2 index files will be saved.
+    :type output_folder: str or Path
     :param index_name: The basename of the index files. \
     bowtie2 will create files named index_name.1.bt2, index_name.2.bt2, index_name.3.bt2, index_name.4.bt2, \
     index_name.rev.1.bt2, and index_name.rev.2.bt2. \
@@ -167,6 +170,9 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], index_name: Unio
     for fasta in genome_fastas:
         assert fasta.exists(), f"the FASTA file '{fasta.as_posix()}' does not exist!"
     call.append(','.join([fasta.as_posix() for fasta in genome_fastas]))
+
+    output_folder = Path(output_folder)
+    assert output_folder.exists(), f"output_folder does not exist!"
 
     if index_name == 'auto':
         index_name = parsing.remove_suffixes(genome_fastas[0]).stem
