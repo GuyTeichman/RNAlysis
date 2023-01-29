@@ -1,3 +1,4 @@
+import os
 import warnings
 from pathlib import Path
 from typing import Union, List
@@ -156,8 +157,20 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
     :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
     :type threads: int > 0 (default=1)
     """
+    # determine where to create a small or large bowtie2 index
+    small_index_max_size = 4 * 1024 ** 3 - 200
+    total_size = 0
+    for fasta in parsing.data_to_list(genome_fastas):
+        fasta = Path(fasta)
+        if fasta.exists():
+            if fasta.suffix in ['.gz', '.Z']:
+                total_size += io.get_gunzip_size(fasta)
+            else:
+                statinfo = os.stat(fasta)
+                total_size += statinfo.st_size
 
-    call = io.generate_base_call('bowtie2-build', bowtie2_installation_folder)
+    command = 'bowtie2-build-l' if total_size > small_index_max_size else 'bowtie2-build-s'
+    call = io.generate_base_call(command, bowtie2_installation_folder, shell=True)
 
     if random_seed is not None:
         assert isinstance(random_seed, int) and random_seed >= 0, f"'random_seed' must be an integer >=0 !"
@@ -178,11 +191,11 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
         index_name = parsing.remove_suffixes(genome_fastas[0]).stem
     else:
         assert isinstance(index_name, str), f"'index_name' must be a string, instead got {type(index_name)}."
-    call.extend([index_name])
+    call.append(output_folder.joinpath(index_name).as_posix())
 
     print(f"Running command: \n{' '.join(call)}")
     with tqdm(total=1, desc='Building bowtie2 index', unit='index') as pbar:
-        io.run_subprocess(call)
+        io.run_subprocess(call, shell=True)
         pbar.update()
 
 
