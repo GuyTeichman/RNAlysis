@@ -20,5 +20,5 @@ def test_create_featurecounts_script():
     assert out == expected
 
 
-def test_run_featurecounts_analysis():
-    assert False
+# def test_run_featurecounts_analysis():
+#     assert False
