@@ -102,6 +102,31 @@ def test_bowtie2_create_index():
         unlink_tree(out_path)
 
 
+def test_bowtie2_align_single_end():
+    in_dir = 'tests/test_files/kallisto_tests'
+    index_file = 'tests/test_files/bowtie2_tests/index/transcripts.1.bt2'
+    out_dir = 'tests/test_files/bowtie2_tests/outdir'
+    truth_dir = 'tests/test_files/bowtie2_tests/truth/single'
+    try:
+        bowtie2_align_single_end(in_dir, out_dir, index_file)
+        assert are_dir_trees_equal(out_dir, truth_dir, compare_contents=False)
+    finally:
+        unlink_tree(out_dir)
+
+
+def test_bowtie2_align_paired_end():
+    in_1 = 'tests/test_files/kallisto_tests/reads_1.fastq'
+    in_2 = 'tests/test_files/kallisto_tests/reads_2.fastq'
+    index_file = 'tests/test_files/bowtie2_tests/index/transcripts.1.bt2'
+    out_dir = 'tests/test_files/bowtie2_tests/outdir'
+    truth_dir = 'tests/test_files/bowtie2_tests/truth/paired'
+    try:
+        bowtie2_align_paired_end([in_1], [in_2], out_dir, index_file, random_seed=42)
+        assert are_dir_trees_equal(out_dir, truth_dir, compare_contents=False)
+    finally:
+        unlink_tree(out_dir)
+
+
 @pytest.mark.parametrize("transcriptome_fasta,kallisto_installation_folder,kmer_length,make_unique,expected_command", [
     ('tests/test_files/kallisto_tests/transcripts.fasta', 'auto', 5, True,
      ['kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '5',
