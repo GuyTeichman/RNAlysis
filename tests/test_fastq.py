@@ -48,6 +48,50 @@ def are_dir_trees_equal(dir1, dir2):
     return True
 
 
+@pytest.mark.parametrize(
+    'genome_fastas,output_folder,index_name,bowtie2_installation_folder,random_seed,threads,expected_command', [
+        ('tests/test_files/bowtie2_tests/transcripts.fasta', 'tests/test_files/bowtie2_tests/index', 'transcripts',
+         'auto', 0, 1,
+         ['bowtie2-build-s', '--seed', '0', '--threads', '1', 'tests/test_files/bowtie2_tests/transcripts.fasta',
+          'tests/test_files/bowtie2_tests/index/transcripts']),
+
+        (['tests/test_files/bowtie2_tests/transcripts.fasta', 'tests/test_files/bowtie2_tests/transcripts.fasta'],
+         'tests/test_files/bowtie2_tests/index', 'transcripts', 'path/to/bt2', 42, 10,
+         ['path/to/bt2/bowtie2-build-s', '--seed', '42', '--threads', '10',
+          'tests/test_files/bowtie2_tests/transcripts.fasta,tests/test_files/bowtie2_tests/transcripts.fasta',
+          'tests/test_files/bowtie2_tests/index/transcripts']),
+    ])
+def test_bowtie2_create_index_command(monkeypatch, genome_fastas, output_folder, index_name,
+                                      bowtie2_installation_folder, random_seed, threads, expected_command):
+    index_created = []
+
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
+        assert shell
+        if args[-1] == '--version':
+            return 0
+        assert args == expected_command
+        assert print_stdout
+        assert print_stderr
+        index_created.append(True)
+
+    monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
+
+    bowtie2_create_index(genome_fastas, output_folder, index_name,
+                         bowtie2_installation_folder, random_seed, threads)
+    assert index_created == [True]
+
+
+def test_bowtie2_create_index():
+    out_path = 'tests/test_files/bowtie2_tests/output'
+    truth_path = 'tests/test_files/bowtie2_tests/index'
+    try:
+        bowtie2_create_index(['tests/test_files/bowtie2_tests/transcripts.fasta'], out_path, random_seed=0)
+        assert are_dir_trees_equal(out_path, truth_path)
+    finally:
+        for file in Path(out_path).iterdir():
+            file.unlink()
+
+
 @pytest.mark.parametrize("transcriptome_fasta,kallisto_installation_folder,kmer_length,make_unique,expected_command", [
     ('tests/test_files/kallisto_tests/transcripts.fasta', 'auto', 5, True,
      ['kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '5',

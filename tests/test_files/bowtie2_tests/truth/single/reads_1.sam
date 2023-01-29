@@ -1,0 +1,16 @@
+@HD	VN:1.5	SO:unsorted	GO:query
+@SQ	SN:ENST00000513300.5	LN:1924
+@SQ	SN:ENST00000282507.7	LN:2355
+@SQ	SN:ENST00000504685.5	LN:1476
+@SQ	SN:ENST00000243108.4	LN:1733
+@SQ	SN:ENST00000303450.4	LN:1516
+@SQ	SN:ENST00000243082.4	LN:2039
+@SQ	SN:ENST00000303406.4	LN:1524
+@SQ	SN:ENST00000303460.4	LN:1936
+@SQ	SN:ENST00000243056.4	LN:2423
+@SQ	SN:ENST00000312492.2	LN:1805
+@SQ	SN:ENST00000040584.5	LN:1889
+@SQ	SN:ENST00000430889.2	LN:1666
+@SQ	SN:ENST00000394331.3	LN:2943
+@SQ	SN:ENST00000243103.3	LN:3335
+@PG	ID:bowtie2	PN:bowtie2	VN:2.5.0	CL:"D:\Guy_Teichman\Downloads\bowtie2-2.5.0\bowtie2-align-s.exe --wrapper basic-0 --local --very-sensitive --phred33 --seed 0 --threads 1 -x D:/Guy_Teichman/PyCharmProjects/RNAlysis/tests/test_files/bowtie2_tests/index/transcripts -S C:/Users/Guy_Teichman/Desktop/test123/out/reads_1.sam -U D:/Guy_Teichman/PyCharmProjects/RNAlysis/tests/test_files/kallisto_tests/reads_1.fastq.gz"
