@@ -103,7 +103,6 @@ jobs:
             -   name: Test bowtie2 installation
                 run: |
                     echo ${PATH}
-                    bowtie2 --version
                     bowtie2-build-s --version
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
