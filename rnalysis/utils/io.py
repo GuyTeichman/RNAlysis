@@ -1301,7 +1301,7 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
 
 
 def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True,
-                   log_filename: Union[str, None] = None, shell:bool=False):
+                   log_filename: Union[str, None] = None, shell: bool = False):
     if print_stdout or print_stderr:
         if print_stdout and print_stderr:
             stdout = subprocess.PIPE
@@ -1447,7 +1447,8 @@ def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False,
     return mapping
 
 
-def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']], shell:bool=False):
+def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']],
+                       version_command: str = '--version', shell: bool = False):
     if installation_folder == 'auto':
         call = [command]
     else:
@@ -1456,7 +1457,7 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
         call = [installation_folder.joinpath(command).as_posix()]
 
     try:
-        exit_code = run_subprocess(call + ['--version'], shell=shell)
+        exit_code = run_subprocess(call + [version_command], shell=shell)
         assert exit_code == 0, f"call to {call[0]} exited with exit status {exit_code}."
     except FileNotFoundError:
         raise FileNotFoundError(f"RNAlysis could not find '{command}'. "

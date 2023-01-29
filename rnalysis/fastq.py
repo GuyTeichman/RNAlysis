@@ -347,7 +347,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     assert isinstance(kmer_length, int), f"parameter 'kmer_length' must be an integer. Instead, got {type(kmer_length)}"
     assert 0 < kmer_length <= 31 and kmer_length % 2 == 1, f"'kmer_length' must be an odd integer between 1 and 31"
 
-    call = io.generate_base_call('kallisto', kallisto_installation_folder)
+    call = io.generate_base_call('kallisto', kallisto_installation_folder, 'version')
     call.append('index')
 
     transcriptome_fasta = Path(transcriptome_fasta)
@@ -598,7 +598,7 @@ def _parse_kallisto_misc_args(output_folder, index_file: str, kallisto_installat
     assert isinstance(stranded, str) and stranded.lower() in ["no", "forward", "reverse"], \
         f"invalid value for parameter 'stranded': {stranded}"
 
-    call = io.generate_base_call('kallisto', kallisto_installation_folder)
+    call = io.generate_base_call('kallisto', kallisto_installation_folder, 'version')
     call.append('quant')
     call.extend(["-i", index_file.as_posix()])
 

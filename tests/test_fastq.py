@@ -60,9 +60,10 @@ def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallist
                                        make_unique, expected_command):
     index_created = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None):
-        if args[-1] == '--version':
-            return True
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell:bool=False):
+        assert not shell
+        if args[-1] == 'version':
+            return 0
         assert args == expected_command
         assert print_stdout
         assert print_stderr
@@ -154,7 +155,10 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
     files_covered = []
     output_processed = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell:bool=False):
+        assert not shell
+        if args[1] == 'version':
+            return 0
         for i in range(len(files_to_cover)):
             if files_to_cover[i] in args[-1]:
                 exp = expected_command.copy()
@@ -209,7 +213,11 @@ def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, o
     pairs_covered = []
     output_processed = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell:bool=False):
+        assert not shell
+        if args[1] == 'version':
+            return 0
+
         for i in range(len(pairs_to_cover)):
             if pairs_to_cover[i][-1] in args[-1]:
                 if new_sample_names == 'auto':
