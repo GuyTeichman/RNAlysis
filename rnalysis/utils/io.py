@@ -1,5 +1,6 @@
 import concurrent.futures
 import functools
+import gzip
 import inspect
 import json
 import os
@@ -1463,3 +1464,14 @@ def generate_base_call(command: str, installation_folder: Union[str, Path, Liter
                                 'Please ensure that your installation folder is correct, or add it to PATH. ')
 
     return call
+
+
+def get_gunzip_size(fn):
+    size = 0
+    with gzip.open(fn) as f:
+        while True:
+            data = f.read(8192)
+            size += len(data)
+            if not data:
+                break
+    return size
