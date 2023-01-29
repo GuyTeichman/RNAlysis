@@ -19,7 +19,7 @@ def unlink_tree(dir):
             shutil.rmtree(item)
 
 
-def are_dir_trees_equal(dir1, dir2):
+def are_dir_trees_equal(dir1, dir2, compare_contents: bool = True):
     """
     Compare two directories recursively. Files in each directory are \
     assumed to be equal if their names and contents are equal.\
@@ -40,7 +40,7 @@ def are_dir_trees_equal(dir1, dir2):
         return False
     (_, mismatch, errors) = filecmp.cmpfiles(
         dir1, dir2, dirs_cmp.common_files, shallow=False)
-    if len(mismatch) > 0 or len(errors) > 0:
+    if (len(mismatch) > 0 or len(errors) > 0) and compare_contents:
         print(f"mismatch between {dir1} and {dir2} in the files {mismatch} with errors {errors}")
         for item in mismatch:
             for this_dir in [dir1, dir2]:
@@ -53,7 +53,7 @@ def are_dir_trees_equal(dir1, dir2):
     for common_dir in dirs_cmp.common_dirs:
         new_dir1 = Path(dir1).joinpath(common_dir).as_posix()
         new_dir2 = Path(dir2).joinpath(common_dir).as_posix()
-        if not are_dir_trees_equal(new_dir1, new_dir2):
+        if not are_dir_trees_equal(new_dir1, new_dir2, compare_contents):
             return False
     return True
 
@@ -62,12 +62,13 @@ def are_dir_trees_equal(dir1, dir2):
     'genome_fastas,output_folder,index_name,bowtie2_installation_folder,random_seed,threads,expected_command', [
         ('tests/test_files/bowtie2_tests/transcripts.fasta', 'tests/test_files/bowtie2_tests/index', 'transcripts',
          'auto', 0, 1,
-         ['bowtie2-build-s', '--seed', '0', '--threads', '1', 'tests/test_files/bowtie2_tests/transcripts.fasta',
+         ['bowtie2-build-s', '--wrapper', 'basic-0', '--seed', '0', '--threads', '1',
+          'tests/test_files/bowtie2_tests/transcripts.fasta',
           'tests/test_files/bowtie2_tests/index/transcripts']),
 
         (['tests/test_files/bowtie2_tests/transcripts.fasta', 'tests/test_files/bowtie2_tests/transcripts.fasta'],
          'tests/test_files/bowtie2_tests/index', 'transcripts', 'path/to/bt2', 42, 10,
-         ['path/to/bt2/bowtie2-build-s', '--seed', '42', '--threads', '10',
+         ['path/to/bt2/bowtie2-build-s', '--wrapper', 'basic-0', '--seed', '42', '--threads', '10',
           'tests/test_files/bowtie2_tests/transcripts.fasta,tests/test_files/bowtie2_tests/transcripts.fasta',
           'tests/test_files/bowtie2_tests/index/transcripts']),
     ])

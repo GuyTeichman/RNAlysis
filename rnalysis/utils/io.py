@@ -1449,12 +1449,12 @@ def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False,
 
 
 def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']],
-                       version_command: str = '--version', shell: bool = False):
+                       version_command: str = '--version', args=tuple(), shell: bool = False):
     if installation_folder == 'auto':
-        call = [command]
+        call = [command] + parsing.data_to_list(args)
     else:
         installation_folder = Path(installation_folder)
-        call = [installation_folder.joinpath(command).as_posix()]
+        call = [installation_folder.joinpath(command).as_posix()] + parsing.data_to_list(args)
 
     try:
         exit_code = run_subprocess(call + [version_command], shell=shell)

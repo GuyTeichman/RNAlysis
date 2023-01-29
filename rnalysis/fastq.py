@@ -170,7 +170,7 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
                 total_size += statinfo.st_size
 
     command = 'bowtie2-build-l' if total_size > small_index_max_size else 'bowtie2-build-s'
-    call = io.generate_base_call(command, bowtie2_installation_folder, shell=True)
+    call = io.generate_base_call(command, bowtie2_installation_folder, shell=True, args=['--wrapper', 'basic-0'])
 
     if random_seed is not None:
         assert isinstance(random_seed, int) and random_seed >= 0, f"'random_seed' must be an integer >=0 !"
