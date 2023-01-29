@@ -96,15 +96,15 @@ def test_bowtie2_create_index():
     ('tests/test_files/kallisto_tests/transcripts.fasta', 'auto', 5, True,
      ['kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '5',
       '--unique', 'tests/test_files/kallisto_tests/transcripts.fasta']),
-    ('tests/test_files/kallisto_tests/transcripts.fasta', 'auto', 3, False,
-     ['kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '3',
+    ('tests/test_files/kallisto_tests/transcripts.fasta', 'pth/to/kallisto', 3, False,
+     ['pth/to/kallisto/kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '3',
       'tests/test_files/kallisto_tests/transcripts.fasta']),
 ])
 def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallisto_installation_folder, kmer_length,
                                        make_unique, expected_command):
     index_created = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell:bool=False):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert not shell
         if args[-1] == 'version':
             return 0
@@ -153,8 +153,8 @@ def test_kallisto_quantify_single_end():
 
 
 def test_kallisto_quantify_paired_end():
-    in1_path = 'tests/test_files/kallisto_tests/reads_1.fastq.gz'
-    in2_path = 'tests/test_files/kallisto_tests/reads_2.fastq.gz'
+    in1_path = 'tests/test_files/kallisto_tests/reads_1.fastq'
+    in2_path = 'tests/test_files/kallisto_tests/reads_2.fastq'
     gtf_file = 'tests/test_files/kallisto_tests/transcripts.gtf'
     index_file = 'tests/test_files/kallisto_tests/transcripts_truth.idx'
     out_dir = 'tests/test_files/kallisto_tests/outdir'
@@ -186,20 +186,20 @@ def test_kallisto_quantify_paired_end():
           '-o', 'outfolder', '--single', '-s', '14', '-l', '125']),
         ('tests/test_files/kallisto_tests', 'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         8.5, 0.2, 'auto', ['new_name_1', 'new_name_2'], 'reverse', True, True, 3,
-         ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
+         8.5, 0.2, 'inst/folder', ['new_name_1', 'new_name_2'], 'reverse', True, True, 3,
+         ['inst/folder/kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '--bias', '--fusion', '--rf-stranded', '-b', '3', '-o', 'outfolder', '--single', '-s', '0.2', '-l', '8.5']),
     ])
 def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_folder, index_file, gtf_file,
                                               average_fragment_length, stdev_fragment_length,
                                               kallisto_installation_folder, new_sample_names, stranded, learn_bias,
                                               seek_fusion_genes, bootstrap_samples, expected_command):
-    files_to_cover = ['reads_1.fastq.gz', 'reads_2.fastq.gz']
+    files_to_cover = ['reads_1.fastq', 'reads_2.fastq']
     file_stems = ['reads_1', 'reads_2']
     files_covered = []
     output_processed = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell:bool=False):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert not shell
         if args[1] == 'version':
             return 0
@@ -236,28 +236,28 @@ def test_kallisto_quantify_single_end_command(monkeypatch, fastq_folder, output_
 @pytest.mark.parametrize(
     "r1_files,r2_files,output_folder,index_file,gtf_file,kallisto_installation_folder,"
     "new_sample_names,stranded,learn_bias,seek_fusion_genes,bootstrap_samples,expected_command", [
-        (['tests/test_files/kallisto_tests/reads_1.fastq.gz'], ['tests/test_files/kallisto_tests/reads_2.fastq.gz'],
+        (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
          'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
          'auto', 'auto', 'no', False, False, None,
          ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '-o', ]),
-        (['tests/test_files/kallisto_tests/reads_1.fastq.gz'], ['tests/test_files/kallisto_tests/reads_2.fastq.gz'],
+        (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
          'tests/test_files/kallisto_tests/outdir',
          'tests/test_files/kallisto_tests/transcripts_truth.idx', 'tests/test_files/kallisto_tests/transcripts.gtf',
-         'auto', ['new_pair_name'], 'reverse', True, True, 3,
-         ['kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
+         'kallisto/inst/folder', ['new_pair_name'], 'reverse', True, True, 3,
+         ['kallisto/inst/folder/kallisto', 'quant', '-i', 'tests/test_files/kallisto_tests/transcripts_truth.idx',
           '--bias', '--fusion', '--rf-stranded', '-b', '3', '-o', ]),
     ])
 def test_kallisto_quantify_paired_end_command(monkeypatch, r1_files, r2_files, output_folder, index_file, gtf_file,
                                               kallisto_installation_folder, new_sample_names, stranded, learn_bias,
                                               seek_fusion_genes, bootstrap_samples, expected_command):
-    pairs_to_cover = [('reads_1.fastq.gz', 'reads_2.fastq.gz'), ]
+    pairs_to_cover = [('reads_1.fastq', 'reads_2.fastq'), ]
     pair_stems = [('reads_1', 'reads_2'), ]
     pairs_covered = []
     output_processed = []
 
-    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell:bool=False):
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
         assert not shell
         if args[1] == 'version':
             return 0
