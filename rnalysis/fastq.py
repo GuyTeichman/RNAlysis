@@ -7,7 +7,7 @@ the *bowtie2* alignment tool, and the *featureCounts* feature counting tool.
 import os
 import warnings
 from pathlib import Path
-from typing import Union, List
+from typing import Union, List, Tuple
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -41,48 +41,67 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
                              count_fractionally: bool = False, is_long_read: bool = False,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
                              report_read_assignment_path: Union[str, Path, None] = None,
-                             threads: PositiveInt = 1):
+                             threads: PositiveInt = 1) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
     """
-    #TODO
+    Assign mapped single-end sequencing reads to specified genomic features using \
+    `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_.
+    Returns a count matrix (CountFilter) containing feature counts for all input files, \
+    a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
 
-    :param input_folder: Path to the folder containing the SAM/BAM files you want to quantify
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to quantfy.
     :type input_folder: str or Path
-    :param output_folder:
-    :type output_folder:
-    :param gtf_file: Path to a GTF annotation file. This file will be used to map per-transcript abundances to \
-    per-gene estimated counts. The transcript names in the GTF files should match the ones in the index file - \
-    we recommend downloading cDNA FASTA/index files and GTF files from the same data source.
+    :param output_folder: Path to a folder in which the quantified results, as well as the log files, will be saved.
+    :type output_folder: str or Path
+    :param gtf_file: Path to a GTF annotation file. This file will be used to map reads to features. \
+    The chromosome names in the GTF files should match the ones in the index file with which you aligned the reads.
     :type gtf_file: str or Path
-    :param gtf_feature_type:
-    :type gtf_feature_type:
-    :param gtf_attr_name:
-    :type gtf_attr_name:
-    :param r_installation_folder:
-    :type r_installation_folder:
-    :param new_sample_names:
-    :type new_sample_names:
-    :param stranded:
-    :type stranded:
-    :param min_mapping_quality:
-    :type min_mapping_quality:
-    :param count_multi_mapping_reads:
-    :type count_multi_mapping_reads:
-    :param count_multi_overlapping_reads:
-    :type count_multi_overlapping_reads:
-    :param ignore_secondary:
-    :type ignore_secondary:
-    :param count_fractionally:
-    :type count_fractionally:
-    :param is_long_read:
-    :type is_long_read:
-    :param report_read_assignment:
-    :type report_read_assignment:
-    :param report_read_assignment_path:
-    :type report_read_assignment_path:
-    :param threads:
-    :type threads:
-    :return:
-    :rtype:
+    :param gtf_feature_type: the feature type or types used to select rows in the GTF annotation \
+    which will be used for read summarization.
+    :type gtf_feature_type: str (default='exon')
+    :param gtf_attr_name: the attribute type in the GTF annotation which will be used to group features (eg. exons) \
+    into meta-features (eg. genes).
+    :type gtf_attr_name: str (default='gene_id')
+    :param r_installation_folder: Path to the installation folder of R. For example: \
+    'C:/Program Files/R/R-4.2.1'
+    :type r_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each quantified sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the alphabetical order of the files in the directory.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param stranded: Indicates the strandedness of the data. 'no' indicates the data is not stranded. \
+    'forward' indicates the data is stranded, where the reads align \
+    to the forward strand of a transcript. 'reverse' indicates the data is stranded, where the reads align \
+    to the reverse strand of a transcript.
+    :type stranded: 'no', 'forward', 'reverse' (default='no')
+    :param min_mapping_quality: the minimum mapping quality score a read must satisfy in order to be counted.
+    :type min_mapping_quality: int >= 0 (default=0)
+    :param count_multi_mapping_reads:  indicating if multi-mapping reads/fragments should be counted \
+    ('NH' tag in BAM/SAM files).
+    :type count_multi_mapping_reads: bool (default=True)
+    :param count_multi_overlapping_reads:  indicating if a read is allowed to be assigned to more than one feature \
+    (or meta-feature) if it is found to overlap with more than one feature (or meta-feature).
+    :type count_multi_overlapping_reads: bool (default=False)
+    :param ignore_secondary: indicating if only primary alignments should be counted. Primary and secondary alignments \
+    are identified using bit 0x100 in the Flag field of SAM/BAM files. \
+    If True, all primary alignments in a dataset will be counted no matter they are from multi-mapping reads or not.
+    :type ignore_secondary: bool (default=True)
+    :param count_fractionally: indicating if fractional counts are produced for \
+    multi-mapping reads and/or multi-overlapping reads.
+    :type count_fractionally: bool (default=False)
+    :param is_long_read: indicating if input data contain long reads. \
+    This option should be set to True if counting Nanopore or PacBio long reads.
+    :type is_long_read: bool (default=False)
+    :param report_read_assignment: if not None, featureCounts will generated detailed read assignment results \
+    for each read. These results can be saved in one of three formats: BAM, SAM, or CORE.
+    :type report_read_assignment: 'bam', 'sam', 'core', or None (default=None)
+    :param report_read_assignment_path: path to the folder where files including detailed read assignemt are saved.
+    :type report_read_assignment_path: str, Path, or None (default=None)
+    :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
+    :type threads: int > 0 (default=1)
+    :return: a count matrix (CountFilter) containing feature counts for all input files, \
+    a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
+    :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
     if new_sample_names != 'auto':
         new_sample_names = parsing.data_to_list(new_sample_names)
@@ -108,54 +127,81 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                              report_read_assignment_path: Union[str, Path, None] = None,
                              require_both_mapped: bool = True, count_chimeric_fragments: bool = False,
                              min_fragment_length: NonNegativeInt = 50,
-                             max_fragment_length: Union[PositiveInt, None] = 600, threads: PositiveInt = 1):
+                             max_fragment_length: Union[PositiveInt, None] = 600, threads: PositiveInt = 1
+                             ) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
     """
-    #TODO
+    Assign mapped paired-end sequencing reads to specified genomic features using \
+    `RSubread featureCounts <https://doi.org/10.1093/bioinformatics/btt656>`_. \
+    Returns a count matrix (CountFilter) containing feature counts for all input files, \
+    a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
 
-    :param input_folder:
-    :type input_folder:
-    :param output_folder:
-    :type output_folder:
-    :param gtf_file:
-    :type gtf_file:
-    :param gtf_feature_type:
-    :type gtf_feature_type:
-    :param gtf_attr_name:
-    :type gtf_attr_name:
-    :param r_installation_folder:
-    :type r_installation_folder:
-    :param new_sample_names:
-    :type new_sample_names:
-    :param stranded:
-    :type stranded:
-    :param min_mapping_quality:
-    :type min_mapping_quality:
-    :param count_multi_mapping_reads:
-    :type count_multi_mapping_reads:
-    :param count_multi_overlapping_reads:
-    :type count_multi_overlapping_reads:
-    :param ignore_secondary:
-    :type ignore_secondary:
-    :param count_fractionally:
-    :type count_fractionally:
-    :param is_long_read:
-    :type is_long_read:
-    :param report_read_assignment:
-    :type report_read_assignment:
-    :param report_read_assignment_path:
-    :type report_read_assignment_path:
-    :param require_both_mapped:
-    :type require_both_mapped:
-    :param count_chimeric_fragments:
-    :type count_chimeric_fragments:
-    :param min_fragment_length:
-    :type min_fragment_length:
-    :param max_fragment_length:
-    :type max_fragment_length:
-    :param threads:
-    :type threads:
-    :return:
-    :rtype:
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to quantfy.
+    :type input_folder: str or Path
+    :param output_folder: Path to a folder in which the quantified results, as well as the log files, will be saved.
+    :type output_folder: str or Path
+    :param gtf_file: Path to a GTF annotation file. This file will be used to map reads to features. \
+    The chromosome names in the GTF files should match the ones in the index file with which you aligned the reads.
+    :type gtf_file: str or Path
+    :param gtf_feature_type: the feature type or types used to select rows in the GTF annotation \
+    which will be used for read summarization.
+    :type gtf_feature_type: str (default='exon')
+    :param gtf_attr_name: the attribute type in the GTF annotation which will be used to group features (eg. exons) \
+    into meta-features (eg. genes).
+    :type gtf_attr_name: str (default='gene_id')
+    :param r_installation_folder: Path to the installation folder of R. For example: \
+    'C:/Program Files/R/R-4.2.1'
+    :type r_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each quantified sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the file pairs.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param stranded: Indicates the strandedness of the data. 'no' indicates the data is not stranded. \
+    'forward' indicates the data is stranded, where the first read in the pair aligns \
+    to the forward strand of a transcript. 'reverse' indicates the data is stranded, where the first read in the pair \
+    aligns to the reverse strand of a transcript.
+    :type stranded: 'no', 'forward', 'reverse' (default='no')
+    :param min_mapping_quality: the minimum mapping quality score a read must satisfy in order to be counted. \
+    For paired-end reads, at least one end should satisfy this criteria.
+    :type min_mapping_quality: int >= 0 (default=0)
+    :param count_multi_mapping_reads:  indicating if multi-mapping reads/fragments should be counted \
+    ('NH' tag in BAM/SAM files).
+    :type count_multi_mapping_reads: bool (default=True)
+    :param count_multi_overlapping_reads:  indicating if a read is allowed to be assigned to more than one feature \
+    (or meta-feature) if it is found to overlap with more than one feature (or meta-feature).
+    :type count_multi_overlapping_reads: bool (default=False)
+    :param ignore_secondary: indicating if only primary alignments should be counted. Primary and secondary alignments \
+    are identified using bit 0x100 in the Flag field of SAM/BAM files. \
+    If True, all primary alignments in a dataset will be counted no matter they are from multi-mapping reads or not.
+    :type ignore_secondary: bool (default=True)
+    :param count_fractionally: indicating if fractional counts are produced for \
+    multi-mapping reads and/or multi-overlapping reads.
+    :type count_fractionally: bool (default=False)
+    :param is_long_read: indicating if input data contain long reads. \
+    This option should be set to True if counting Nanopore or PacBio long reads.
+    :type is_long_read: bool (default=False)
+    :param report_read_assignment: if not None, featureCounts will generated detailed read assignment results \
+    for each read pair. These results can be saved in one of three formats: BAM, SAM, or CORE.
+    :type report_read_assignment: 'bam', 'sam', 'core', or None (default=None)
+    :param report_read_assignment_path: path to the folder where files including detailed read assignemt are saved.
+    :type report_read_assignment_path: str, Path, or None (default=None)
+    :param require_both_mapped: indicating if both ends from the same fragment are required to be successfully aligned \
+    before the fragment can be assigned to a feature or meta-feature.
+    :type require_both_mapped: bool (default=True)
+    :param count_chimeric_fragments: indicating whether a chimeric fragment, \
+    which has its two reads mapped to different chromosomes, should be counted or not.
+    :type count_chimeric_fragments: bool(default=False)
+    :param min_fragment_length: The minimum fragment length for valid paired-end alignments. \
+    Read pairs with shorter fragments will not be counted.
+    :type min_fragment_length: int >= 0 (default=50)
+    :param max_fragment_length: The maximum fragment length for valid paired-end alignments. \
+    Read pairs with longer fragments will not be counted.
+    :type max_fragment_length: int > 0 or None (default=600)
+    :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
+    :type threads: int > 0 (default=1)
+    :return: a count matrix (CountFilter) containing feature counts for all input files, \
+    a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
+    :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
     if new_sample_names != 'auto':
         new_sample_names = parsing.data_to_list(new_sample_names)
@@ -170,7 +216,8 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     kwargs.update(paired_kwargs)
 
     feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
-    return _process_featurecounts_output(output_folder, new_sample_names)
+    counts, annotations, stats = _process_featurecounts_output(output_folder, new_sample_names)
+    return counts, annotations, stats
 
 
 def _parse_featurecounts_misc_args(input_folder: Union[str, Path], gtf_file: Union[str, Path], gtf_feature_type: str,
