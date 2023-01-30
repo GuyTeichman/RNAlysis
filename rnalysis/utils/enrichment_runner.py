@@ -465,7 +465,7 @@ class EnrichmentRunner:
 
     def calculate_enrichment(self) -> list:
         self.set_random_seed()
-        if self.parallel_backend != 'sequential':
+        if self.parallel_backend != 'sequential' and len(self.attributes) > 5:
             return self._calculate_enrichment_parallel()
         return self._calculate_enrichment_serial()
 

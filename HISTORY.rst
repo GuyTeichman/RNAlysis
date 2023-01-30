@@ -28,6 +28,7 @@ Changed
 * Updated type annotations of some functions to be more precise and helpful (for example, setting a lower bound on some int function parameters).
 * The colorbar ticks in enrichment bar plots now match the axis ticks on the main axis.
 * Slight improvements in GUI performance, stability, and looks.
+* Slight improvements in performance of enrichment analysis when examining a small number of attributes.
 
 Fixed
 ******
