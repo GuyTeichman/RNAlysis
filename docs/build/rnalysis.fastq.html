@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.fastq.kallisto_create_index" href="rnalysis.fastq.kallisto_create_index.html" />
+    <link rel="next" title="rnalysis.fastq.bowtie2_align_paired_end" href="rnalysis.fastq.bowtie2_align_paired_end.html" />
     <link rel="prev" title="History" href="history.html" /> 
 </head>
 
@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How can I contribute to <em>RNAlysis</em>?</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul>
@@ -69,6 +70,11 @@
 <p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">rnalysis.fastq</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html">rnalysis.fastq.bowtie2_align_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html">rnalysis.fastq.bowtie2_align_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html">rnalysis.fastq.bowtie2_create_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_paired_end.html">rnalysis.fastq.featurecounts_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_single_end.html">rnalysis.fastq.featurecounts_single_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html">rnalysis.fastq.kallisto_create_index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html">rnalysis.fastq.kallisto_quantify_paired_end</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html">rnalysis.fastq.kallisto_quantify_single_end</a></li>
@@ -113,8 +119,9 @@
   <section id="rnalysis-fastq">
 <h1>rnalysis.fastq<a class="headerlink" href="#rnalysis-fastq" title="Permalink to this heading"></a></h1>
 <p class="rubric">Description</p>
-<span class="target" id="module-rnalysis.fastq"></span><p>The <em>fastq</em> module provides a unified programmatic interface to external tools that process FASTQ files. 
-Those currently include the <em>CutAdapt</em> adapter-trimming tool and the <em>kallisto</em> RNA-sequencing quantification tool.</p>
+<span class="target" id="module-rnalysis.fastq"></span><p>The <em>fastq</em> module provides a unified programmatic interface to external tools that process FASTQ files.
+Those currently include the <em>CutAdapt</em> adapter-trimming tool, the <em>kallisto</em> RNA-sequencing quantification tool,
+the <em>bowtie2</em> alignment tool, and the <em>featureCounts</em> feature counting tool.</p>
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
@@ -122,19 +129,41 @@ Those currently include the <em>CutAdapt</em> adapter-trimming tool and the <em>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html#rnalysis.fastq.kallisto_create_index" title="rnalysis.fastq.kallisto_create_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_create_index</span></code></a>(transcriptome_fasta[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html#rnalysis.fastq.bowtie2_align_paired_end" title="rnalysis.fastq.bowtie2_align_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bowtie2_align_paired_end</span></code></a>(r1_files, r2_files, ...)</p></td>
+<td><p>Align paired-end reads from FASTQ files to a reference sequence using the     <a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2">bowtie2</a> aligner.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html#rnalysis.fastq.bowtie2_align_single_end" title="rnalysis.fastq.bowtie2_align_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bowtie2_align_single_end</span></code></a>(fastq_folder, ...)</p></td>
+<td><p><p>Align single-end reads from FASTQ files to a reference sequence using the     <a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2">bowtie2</a> aligner.</p>
+</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html#rnalysis.fastq.bowtie2_create_index" title="rnalysis.fastq.bowtie2_create_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bowtie2_create_index</span></code></a>(genome_fastas, ...[, ...])</p></td>
+<td><p>builds a bowtie index from FASTA formatted files of target sequences (genome).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.featurecounts_paired_end.html#rnalysis.fastq.featurecounts_paired_end" title="rnalysis.fastq.featurecounts_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">featurecounts_paired_end</span></code></a>(input_folder, ...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.featurecounts_single_end.html#rnalysis.fastq.featurecounts_single_end" title="rnalysis.fastq.featurecounts_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">featurecounts_single_end</span></code></a>(input_folder, ...)</p></td>
+<td><p><dl class="field-list simple">
+<dt class="field-odd">param input_folder</dt>
+<dd class="field-odd"><p>Path to the folder containing the SAM/BAM files you want to quantify</p>
+</dd>
+</dl>
+</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html#rnalysis.fastq.kallisto_create_index" title="rnalysis.fastq.kallisto_create_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_create_index</span></code></a>(transcriptome_fasta[, ...])</p></td>
 <td><p>builds a kallisto index from a FASTA formatted file of target sequences (transcriptome).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html#rnalysis.fastq.kallisto_quantify_paired_end" title="rnalysis.fastq.kallisto_quantify_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_paired_end</span></code></a>(r1_files, ...)</p></td>
-<td><p>Quantify transcript abundance in paired-end mRNA sequencing data using kallisto.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_paired_end.html#rnalysis.fastq.kallisto_quantify_paired_end" title="rnalysis.fastq.kallisto_quantify_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_paired_end</span></code></a>(r1_files, ...)</p></td>
+<td><p>Quantify transcript abundance in paired-end mRNA sequencing data using     <a class="reference external" href="https://pachterlab.github.io/kallisto/">kallisto</a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html#rnalysis.fastq.kallisto_quantify_single_end" title="rnalysis.fastq.kallisto_quantify_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_single_end</span></code></a>(fastq_folder, ...)</p></td>
-<td><p>Quantify transcript abundance in single-end mRNA sequencing data using kallisto.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html#rnalysis.fastq.kallisto_quantify_single_end" title="rnalysis.fastq.kallisto_quantify_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kallisto_quantify_single_end</span></code></a>(fastq_folder, ...)</p></td>
+<td><p><p>Quantify transcript abundance in single-end mRNA sequencing data using     <a class="reference external" href="https://pachterlab.github.io/kallisto/">kallisto</a>.</p>
+</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html#rnalysis.fastq.trim_adapters_paired_end" title="rnalysis.fastq.trim_adapters_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_paired_end</span></code></a>(r1_files, r2_files, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html#rnalysis.fastq.trim_adapters_paired_end" title="rnalysis.fastq.trim_adapters_paired_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_paired_end</span></code></a>(r1_files, r2_files, ...)</p></td>
 <td><p>Trim adapters from paired-end reads using <a class="reference external" href="https://cutadapt.readthedocs.io/">CutAdapt</a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html#rnalysis.fastq.trim_adapters_single_end" title="rnalysis.fastq.trim_adapters_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_single_end</span></code></a>(fastq_folder, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html#rnalysis.fastq.trim_adapters_single_end" title="rnalysis.fastq.trim_adapters_single_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trim_adapters_single_end</span></code></a>(fastq_folder, ...)</p></td>
 <td><p><p>Trim adapters from single-end reads using <a class="reference external" href="https://cutadapt.readthedocs.io/">CutAdapt</a>.</p>
 </p></td>
 </tr>
@@ -147,7 +176,7 @@ Those currently include the <em>CutAdapt</em> adapter-trimming tool and the <em>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="history.html" class="btn btn-neutral float-left" title="History" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.fastq.kallisto_create_index.html" class="btn btn-neutral float-right" title="rnalysis.fastq.kallisto_create_index" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.fastq.bowtie2_align_paired_end.html" class="btn btn-neutral float-right" title="rnalysis.fastq.bowtie2_align_paired_end" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

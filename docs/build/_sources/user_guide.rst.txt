@@ -6,8 +6,9 @@ User guide - programmatic interface
 *RNAlysis* fastq module
 ****************************
 
-RNAlysis's fastq module (rnalysis.fastq) provides a unified programmatic interface to external tools that process FASTQ files.
-Those currently include the *CutAdapt* adapter-trimming tool and the *kallisto* RNA-sequencing quantification tool.
+The *fastq* module provides a unified programmatic interface to external tools that process FASTQ files.
+Those currently include the *CutAdapt* adapter-trimming tool, the *kallisto* RNA-sequencing quantification tool,
+the *bowtie2* alignment tool, and the *featureCounts* feature counting tool.
 
 Working with the fastq module
 =================================
@@ -36,10 +37,34 @@ Single-end read quantification
 Paired-end read quantification
 -------------------------------
 
+RRead alignment with bowtie2
+=============================
+(coming soon!)
+
+Building or acquiring index files
+-----------------------------------
+
+Single-end read alignment
+-------------------------------
+
+Paired-end read alignment
+-------------------------------
+
+Feature counting with featureCounts
+====================================
+(coming soon!)
+
+Single-end read feature counting
+----------------------------------
+
+Paired-end read feature counting
+----------------------------------
+
+
 ****************************
 *RNAlysis* filtering module
 ****************************
-RNAlysis's filtering module (rnalysis.filtering) is built to allow rapid and easy-to-understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
+The filtering module (rnalysis.filtering) is built to allow rapid and easy-to-understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.
 
 The filtering module is built around :term:`Filter objects`, which are containers for tabular sequencing data. You can use the different types of :term:`Filter objects` to apply filtering operations to various types of tabular data. You will learn more about :term:`Filter objects` in the next section.
 

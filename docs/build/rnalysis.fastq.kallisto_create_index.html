@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.fastq.kallisto_quantify_paired_end" href="rnalysis.fastq.kallisto_quantify_paired_end.html" />
-    <link rel="prev" title="rnalysis.fastq" href="rnalysis.fastq.html" /> 
+    <link rel="prev" title="rnalysis.fastq.featurecounts_single_end" href="rnalysis.fastq.featurecounts_single_end.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How can I contribute to <em>RNAlysis</em>?</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
 <ul>
@@ -69,6 +70,11 @@
 <p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_paired_end.html">rnalysis.fastq.bowtie2_align_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_align_single_end.html">rnalysis.fastq.bowtie2_align_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.bowtie2_create_index.html">rnalysis.fastq.bowtie2_create_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_paired_end.html">rnalysis.fastq.featurecounts_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.featurecounts_single_end.html">rnalysis.fastq.featurecounts_single_end</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.kallisto_create_index</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#rnalysis.fastq.kallisto_create_index"><code class="docutils literal notranslate"><span class="pre">kallisto_create_index()</span></code></a></li>
 </ul>
@@ -118,13 +124,13 @@
 <h1>rnalysis.fastq.kallisto_create_index<a class="headerlink" href="#rnalysis-fastq-kallisto-create-index" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="rnalysis.fastq.kallisto_create_index">
-<span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">kallisto_create_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transcriptome_fasta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kallisto_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmer_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">31</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_unique</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.fastq.kallisto_create_index" title="Permalink to this definition"></a></dt>
-<dd><p>builds a kallisto index from a FASTA formatted file of target sequences (transcriptome).     The index file will be saved in the sam folder as your FASTA file, with the <cite>.idx</cite> suffix.     Be aware that there are pre-built kallisto indices for popular model organisms.     These can be downloaded from  the     <a class="reference external" href="https://github.com/pachterlab/kallisto-transcriptome-indices/releases">kallisto transcriptome indices site</a>.</p>
+<span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">kallisto_create_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transcriptome_fasta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kallisto_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmer_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">31</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_unique</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rnalysis.fastq.kallisto_create_index" title="Permalink to this definition"></a></dt>
+<dd><p>builds a kallisto index from a FASTA formatted file of target sequences (transcriptome).     The index file will be saved in the same folder as your FASTA file, with the <cite>.idx</cite> suffix.     Be aware that there are pre-built kallisto indices for popular model organisms.     These can be downloaded from the     <a class="reference external" href="https://github.com/pachterlab/kallisto-transcriptome-indices/releases">kallisto transcriptome indices site</a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>transcriptome_fasta</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the FASTA file of your desired transcriptome.</p></li>
-<li><p><strong>kallisto_installation_folder</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Path to the installation folder of kallisto. For example:     ‘C:/Program Files/kallisto’</p></li>
+<li><p><strong>kallisto_installation_folder</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Path to the installation folder of kallisto. For example:     ‘C:/Program Files/kallisto’. if installation folder is set to ‘auto’,     RNAlysis will attempt to find it automatically.</p></li>
 <li><p><strong>kmer_length</strong> (<em>an odd int between 1 and 31</em><em> (</em><em>default=31</em><em>)</em>) – k-mer length of the index.</p></li>
 <li><p><strong>make_unique</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, replace repeated target names with unique names.</p></li>
 </ul>
@@ -138,7 +144,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.fastq.html" class="btn btn-neutral float-left" title="rnalysis.fastq" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.fastq.featurecounts_single_end.html" class="btn btn-neutral float-left" title="rnalysis.fastq.featurecounts_single_end" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.fastq.kallisto_quantify_paired_end.html" class="btn btn-neutral float-right" title="rnalysis.fastq.kallisto_quantify_paired_end" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
