@@ -640,6 +640,7 @@ def test_enrichment_runner_calculate_enrichment(monkeypatch):
     monkeypatch.setattr(EnrichmentRunner, '_calculate_enrichment_serial', lambda self: 'serial')
 
     runner = EnrichmentRunner.__new__(EnrichmentRunner)
+    runner.attributes = list(range(10))
 
     for backend in ['loky', 'threading', 'multiprocessing']:
         runner.parallel_backend = backend
