@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.stats.multitest as multitest
 from matplotlib.cm import ScalarMappable
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import hypergeom, ttest_1samp, fisher_exact
 from statsmodels.stats.descriptivestats import sign_test
 from tqdm.auto import tqdm
@@ -554,7 +555,8 @@ class EnrichmentRunner:
             figsize = [10.5, 0.4 * (4.8 + self.results.shape[0])]
             bar_func = plt.Axes.barh
             line_func = plt.Axes.axvline
-            cbar_kwargs = dict(location='bottom')
+            cbar_location = 'bottom'
+            cbar_orientation = 'horizontal'
             tick_func = plt.Axes.set_yticks
             ticklabels_func = plt.Axes.set_yticklabels
             ticklabels_kwargs = dict(fontsize=13, rotation=0)
@@ -564,7 +566,8 @@ class EnrichmentRunner:
             figsize = [0.5 * (4.8 + self.results.shape[0]), 4.2]
             bar_func = plt.Axes.bar
             line_func = plt.Axes.axhline
-            cbar_kwargs = dict(location='left')
+            cbar_location = 'left'
+            cbar_orientation = 'vertical'
             tick_func = plt.Axes.set_xticks
             ticklabels_func = plt.Axes.set_xticklabels
             ticklabels_kwargs = dict(fontsize=13, rotation=45)
@@ -604,13 +607,6 @@ class EnrichmentRunner:
             linewidth = 1 if ind == 0 else 0.5
             linestyle = '-' if ind == 0 else '-.'
             line_func(ax, ind, color=color, linewidth=linewidth, linestyle=linestyle, zorder=0)
-        # add colorbar
-        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
-        sm.set_array(np.array([]))
-        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15)
-        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), **cbar_kwargs)
-        cbar.set_label(**cbar_label_kwargs)
-        cbar.ax.tick_params(labelsize=14, pad=6)
         # apply xticks
         tick_func(ax, range(len(enrichment_names)))
         ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
@@ -644,6 +640,19 @@ class EnrichmentRunner:
             else:
                 ax.set_ybound(bounds)
                 plt.tick_params(axis='y', which='both', left=False, right=False, labelleft=False)
+        # add colorbar
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes(cbar_location, size=f"{5 * (1 + self.plot_horizontal)}%", pad=0.05)
+        sm = ScalarMappable(cmap=my_cmap, norm=plt.Normalize(*bounds))
+        sm.set_array(np.array([]))
+        cbar_label_kwargs = dict(label=ylabel, fontsize=16, labelpad=15, )
+        cbar = fig.colorbar(sm, ticks=range(int(bounds[0]), int(bounds[1]) + 1), cax=cax, orientation=cbar_orientation)
+        cbar.set_label(**cbar_label_kwargs)
+        cax.tick_params(labelsize=14, pad=6)
+
+        if not self.plot_horizontal:
+            cax.yaxis.set_ticks_position('left')
+            cax.yaxis.set_label_position('left')
 
         plt.show()
         return fig

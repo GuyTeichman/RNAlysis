@@ -26,6 +26,7 @@ Changed
 * Added 'parallel_backend' parameter to all clustering functions under the filtering module.
 * When generating Gene Ontology/KEGG Pathway graphs, users can choose whether or not to generate the figure in an additional separate file.
 * Updated type annotations of some functions to be more precise and helpful (for example, setting a lower bound on some int function parameters).
+* The colorbar ticks in enrichment bar plots now match the axis ticks on the main axis.
 * Slight improvements in GUI performance, stability, and looks.
 
 Fixed
