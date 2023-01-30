@@ -570,16 +570,19 @@ class EnrichmentRunner:
             ticklabels_kwargs = dict(fontsize=13, rotation=45)
 
         # set enrichment scores which are 'inf' or '-inf' to be the second highest/lowest enrichment score in the list
-        scores_no_inf = [i for i in enrichment_scores if i != np.inf and i != -np.inf and i < 0]
+        scores_no_inf = [abs(score) for score in enrichment_scores if score != np.inf and score != -np.inf]
         if len(scores_no_inf) == 0:
-            scores_no_inf.append(-1)
+            scores_no_inf.append(3)
+
         for i in range(len(enrichment_scores)):
             if enrichment_scores[i] == -np.inf:
-                enrichment_scores[i] = min(scores_no_inf)
-        if len(enrichment_scores) > 3:
-            max_score = max(np.max(np.abs(enrichment_scores)), 2)
+                enrichment_scores[i] = -max(scores_no_inf)
+            elif enrichment_scores[i] == np.inf:
+                enrichment_scores[i] = max(scores_no_inf)
+        if len(scores_no_inf) > 0:
+            max_score = max(max(scores_no_inf), 3)
         else:
-            max_score = 2
+            max_score = 3
 
         # get color values for bars
         data_color_norm = [0.5 * (1 + i / (np.floor(max_score) + 1)) * 255 for i in enrichment_scores]
@@ -589,7 +592,7 @@ class EnrichmentRunner:
         colors = my_cmap(data_color_norm_8bit)
 
         # generate bar plot
-        fig, ax = plt.subplots(constrained_layout=True, figsize=figsize)
+        fig, ax = plt.subplots(tight_layout=True, figsize=figsize)
         bar = bar_func(ax, range(len(enrichment_names)), enrichment_scores, color=colors, edgecolor='black',
                        linewidth=1, zorder=2)
         bar.tick_labels = enrichment_names

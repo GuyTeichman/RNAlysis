@@ -36,7 +36,7 @@ Fixed
 * Fixed typos in some parts of the *RNAlysis* documentation
 * When filtering a table by a single user-defined attribute, the automatic table name will now be more informative about the operation applied.
 * Fixed bug where occasionally a Pipeline or Function would generate multiple tables of the same name, but only one of them will appear in the GUI.
-
+* Fixed bug where occasionally significance asterisks on enrichment bar-plots would appear in the wrong location.
 
 Removed
 ********
