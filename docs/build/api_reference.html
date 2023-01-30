@@ -215,34 +215,75 @@ the <em>bowtie2</em> alignment tool, and the <em>featureCounts</em> feature coun
 
 <dl class="py function">
 <dt class="sig sig-object py">
-<span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">featurecounts_single_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exon'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_attr_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gene_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stranded</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'no'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'forward'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'reverse'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'no'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mapping_quality</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_multi_mapping_reads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_multi_overlapping_reads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_secondary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_fractionally</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_long_read</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_read_assignment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'bam'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sam'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'core'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_read_assignment_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span></dt>
-<dd><dl class="field-list simple">
+<span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">featurecounts_paired_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exon'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_attr_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gene_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stranded</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'no'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'forward'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'reverse'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'no'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mapping_quality</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_multi_mapping_reads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_multi_overlapping_reads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_secondary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_fractionally</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_long_read</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_read_assignment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'bam'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sam'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'core'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_read_assignment_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_both_mapped</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_chimeric_fragments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_fragment_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">NonNegativeInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_fragment_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">PositiveInt</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Assign mapped paired-end sequencing reads to specified genomic features using     <a class="reference external" href="https://doi.org/10.1093/bioinformatics/btt656">RSubread featureCounts</a>.     Returns a count matrix (CountFilter) containing feature counts for all input files,     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the folder containing the SAM/BAM files you want to quantify</p></li>
-<li><p><strong>output_folder</strong> – </p></li>
-<li><p><strong>gtf_file</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a GTF annotation file. This file will be used to map per-transcript abundances to     per-gene estimated counts. The transcript names in the GTF files should match the ones in the index file -     we recommend downloading cDNA FASTA/index files and GTF files from the same data source.</p></li>
-<li><p><strong>gtf_feature_type</strong> – </p></li>
-<li><p><strong>gtf_attr_name</strong> – </p></li>
-<li><p><strong>r_installation_folder</strong> – </p></li>
-<li><p><strong>new_sample_names</strong> – </p></li>
-<li><p><strong>stranded</strong> – </p></li>
-<li><p><strong>min_mapping_quality</strong> – </p></li>
-<li><p><strong>count_multi_mapping_reads</strong> – </p></li>
-<li><p><strong>count_multi_overlapping_reads</strong> – </p></li>
-<li><p><strong>ignore_secondary</strong> – </p></li>
-<li><p><strong>count_fractionally</strong> – </p></li>
-<li><p><strong>is_long_read</strong> – </p></li>
-<li><p><strong>report_read_assignment</strong> – </p></li>
-<li><p><strong>report_read_assignment_path</strong> – </p></li>
-<li><p><strong>threads</strong> – </p></li>
+<li><p><strong>input_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the folder containing the SAM/BAM files you want to quantfy.</p></li>
+<li><p><strong>output_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a folder in which the quantified results, as well as the log files, will be saved.</p></li>
+<li><p><strong>gtf_file</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a GTF annotation file. This file will be used to map reads to features.     The chromosome names in the GTF files should match the ones in the index file with which you aligned the reads.</p></li>
+<li><p><strong>gtf_feature_type</strong> (<em>str</em><em> (</em><em>default='exon'</em><em>)</em>) – the feature type or types used to select rows in the GTF annotation     which will be used for read summarization.</p></li>
+<li><p><strong>gtf_attr_name</strong> (<em>str</em><em> (</em><em>default='gene_id'</em><em>)</em>) – the attribute type in the GTF annotation which will be used to group features (eg. exons)     into meta-features (eg. genes).</p></li>
+<li><p><strong>r_installation_folder</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Path to the installation folder of R. For example:     ‘C:/Program Files/R/R-4.2.1’</p></li>
+<li><p><strong>new_sample_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Give a new name to each quantified sample (optional).     If sample_names=’auto’, sample names     will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names     matching the order of the file pairs.</p></li>
+<li><p><strong>stranded</strong> (<em>'no'</em><em>, </em><em>'forward'</em><em>, </em><em>'reverse'</em><em> (</em><em>default='no'</em><em>)</em>) – Indicates the strandedness of the data. ‘no’ indicates the data is not stranded.     ‘forward’ indicates the data is stranded, where the first read in the pair aligns     to the forward strand of a transcript. ‘reverse’ indicates the data is stranded, where the first read in the pair     aligns to the reverse strand of a transcript.</p></li>
+<li><p><strong>min_mapping_quality</strong> (<em>int &gt;= 0</em><em> (</em><em>default=0</em><em>)</em>) – the minimum mapping quality score a read must satisfy in order to be counted.     For paired-end reads, at least one end should satisfy this criteria.</p></li>
+<li><p><strong>count_multi_mapping_reads</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – indicating if multi-mapping reads/fragments should be counted     (‘NH’ tag in BAM/SAM files).</p></li>
+<li><p><strong>count_multi_overlapping_reads</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – indicating if a read is allowed to be assigned to more than one feature     (or meta-feature) if it is found to overlap with more than one feature (or meta-feature).</p></li>
+<li><p><strong>ignore_secondary</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – indicating if only primary alignments should be counted. Primary and secondary alignments     are identified using bit 0x100 in the Flag field of SAM/BAM files.     If True, all primary alignments in a dataset will be counted no matter they are from multi-mapping reads or not.</p></li>
+<li><p><strong>count_fractionally</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – indicating if fractional counts are produced for     multi-mapping reads and/or multi-overlapping reads.</p></li>
+<li><p><strong>is_long_read</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – indicating if input data contain long reads.     This option should be set to True if counting Nanopore or PacBio long reads.</p></li>
+<li><p><strong>report_read_assignment</strong> (<em>'bam'</em><em>, </em><em>'sam'</em><em>, </em><em>'core'</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – if not None, featureCounts will generated detailed read assignment results     for each read pair. These results can be saved in one of three formats: BAM, SAM, or CORE.</p></li>
+<li><p><strong>report_read_assignment_path</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – path to the folder where files including detailed read assignemt are saved.</p></li>
+<li><p><strong>require_both_mapped</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – indicating if both ends from the same fragment are required to be successfully aligned     before the fragment can be assigned to a feature or meta-feature.</p></li>
+<li><p><strong>count_chimeric_fragments</strong> (<em>bool</em><em>(</em><em>default=False</em><em>)</em>) – indicating whether a chimeric fragment,     which has its two reads mapped to different chromosomes, should be counted or not.</p></li>
+<li><p><strong>min_fragment_length</strong> (<em>int &gt;= 0</em><em> (</em><em>default=50</em><em>)</em>) – The minimum fragment length for valid paired-end alignments.     Read pairs with shorter fragments will not be counted.</p></li>
+<li><p><strong>max_fragment_length</strong> (<em>int &gt; 0</em><em> or </em><em>None</em><em> (</em><em>default=600</em><em>)</em>) – The maximum fragment length for valid paired-end alignments.     Read pairs with longer fragments will not be counted.</p></li>
+<li><p><strong>threads</strong> (<em>int &gt; 0</em><em> (</em><em>default=1</em><em>)</em>) – number of threads to run bowtie2-build on. More threads will generally make index building faster.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>a count matrix (CountFilter) containing feature counts for all input files,     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p></p>
+<dd class="field-odd"><p>(<a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter">filtering.CountFilter</a>, pd.DataFrame, pd.DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">featurecounts_single_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_feature_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exon'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_attr_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gene_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stranded</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'no'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'forward'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'reverse'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'no'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_mapping_quality</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_multi_mapping_reads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_multi_overlapping_reads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_secondary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_fractionally</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_long_read</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_read_assignment</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'bam'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sam'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'core'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_read_assignment_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PositiveInt</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span></span></span></dt>
+<dd><p>Assign mapped single-end sequencing reads to specified genomic features using     <a class="reference external" href="https://doi.org/10.1093/bioinformatics/btt656">RSubread featureCounts</a>.
+Returns a count matrix (CountFilter) containing feature counts for all input files,     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to the folder containing the SAM/BAM files you want to quantfy.</p></li>
+<li><p><strong>output_folder</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a folder in which the quantified results, as well as the log files, will be saved.</p></li>
+<li><p><strong>gtf_file</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a GTF annotation file. This file will be used to map reads to features.     The chromosome names in the GTF files should match the ones in the index file with which you aligned the reads.</p></li>
+<li><p><strong>gtf_feature_type</strong> (<em>str</em><em> (</em><em>default='exon'</em><em>)</em>) – the feature type or types used to select rows in the GTF annotation     which will be used for read summarization.</p></li>
+<li><p><strong>gtf_attr_name</strong> (<em>str</em><em> (</em><em>default='gene_id'</em><em>)</em>) – the attribute type in the GTF annotation which will be used to group features (eg. exons)     into meta-features (eg. genes).</p></li>
+<li><p><strong>r_installation_folder</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Path to the installation folder of R. For example:     ‘C:/Program Files/R/R-4.2.1’</p></li>
+<li><p><strong>new_sample_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Give a new name to each quantified sample (optional).     If sample_names=’auto’, sample names     will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names     matching the order of the alphabetical order of the files in the directory.</p></li>
+<li><p><strong>stranded</strong> (<em>'no'</em><em>, </em><em>'forward'</em><em>, </em><em>'reverse'</em><em> (</em><em>default='no'</em><em>)</em>) – Indicates the strandedness of the data. ‘no’ indicates the data is not stranded.     ‘forward’ indicates the data is stranded, where the reads align     to the forward strand of a transcript. ‘reverse’ indicates the data is stranded, where the reads align     to the reverse strand of a transcript.</p></li>
+<li><p><strong>min_mapping_quality</strong> (<em>int &gt;= 0</em><em> (</em><em>default=0</em><em>)</em>) – the minimum mapping quality score a read must satisfy in order to be counted.</p></li>
+<li><p><strong>count_multi_mapping_reads</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – indicating if multi-mapping reads/fragments should be counted     (‘NH’ tag in BAM/SAM files).</p></li>
+<li><p><strong>count_multi_overlapping_reads</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – indicating if a read is allowed to be assigned to more than one feature     (or meta-feature) if it is found to overlap with more than one feature (or meta-feature).</p></li>
+<li><p><strong>ignore_secondary</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – indicating if only primary alignments should be counted. Primary and secondary alignments     are identified using bit 0x100 in the Flag field of SAM/BAM files.     If True, all primary alignments in a dataset will be counted no matter they are from multi-mapping reads or not.</p></li>
+<li><p><strong>count_fractionally</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – indicating if fractional counts are produced for     multi-mapping reads and/or multi-overlapping reads.</p></li>
+<li><p><strong>is_long_read</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – indicating if input data contain long reads.     This option should be set to True if counting Nanopore or PacBio long reads.</p></li>
+<li><p><strong>report_read_assignment</strong> (<em>'bam'</em><em>, </em><em>'sam'</em><em>, </em><em>'core'</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – if not None, featureCounts will generated detailed read assignment results     for each read. These results can be saved in one of three formats: BAM, SAM, or CORE.</p></li>
+<li><p><strong>report_read_assignment_path</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – path to the folder where files including detailed read assignemt are saved.</p></li>
+<li><p><strong>threads</strong> (<em>int &gt; 0</em><em> (</em><em>default=1</em><em>)</em>) – number of threads to run bowtie2-build on. More threads will generally make index building faster.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a count matrix (CountFilter) containing feature counts for all input files,     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter">filtering.CountFilter</a>, pd.DataFrame, pd.DataFrame)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -536,7 +577,7 @@ When you save filtered/modified data, its new file name will include by default 
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sample_grouping</strong> (<em>nested list</em><em> of </em><em>column names</em>) – grouping of the samples into conditions.         Each grouping should containg all replicates of the same condition.         Each condition will be averaged separately.</p></li>
-<li><p><strong>new_column_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em>) – names to be given to the columns in the new count matrix.         Each new name should match a group of samples to be averaged.         If <a href="#id11"><span class="problematic" id="id12">`</span></a>new_column_names`=’auto’, names will be generated automatically.</p></li>
+<li><p><strong>new_column_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em>) – names to be given to the columns in the new count matrix.         Each new name should match a group of samples to be averaged.         If <a href="#id12"><span class="problematic" id="id13">`</span></a>new_column_names`=’auto’, names will be generated automatically.</p></li>
 <li><p><strong>function</strong> (<em>'mean'</em><em>, </em><em>'median'</em><em>, or </em><em>'geometric_mean'</em><em> (</em><em>default='mean'</em><em>)</em>) – the function which will be used to average the values within each group.</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – If True (default), averaging will be applied to the current CountFilter object. If False,         the function will return a new CountFilter instance and the current instance will not be affected.</p></li>
 </ul>
@@ -624,10 +665,10 @@ which also provides descriptive statistics of each column per biotype.
 <dd class="field-even"><p>a matplotlib axes.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id25">
+<figure class="align-center" id="id26">
 <a class="reference internal image-reference" href="_images/box_plot.png"><img alt="_images/box_plot.png" src="_images/box_plot.png" style="width: 480.0px; height: 480.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of box_plot(add_scatter=True)</span><a class="headerlink" href="#id25" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of box_plot(add_scatter=True)</span><a class="headerlink" href="#id26" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -651,10 +692,10 @@ which also provides descriptive statistics of each column per biotype.
 <dd class="field-even"><p>A seaborn clustermap object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id26">
+<figure class="align-center" id="id27">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id26" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of clustergram()</span><a class="headerlink" href="#id27" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -826,10 +867,10 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>matplotlib Axes.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id27">
+<figure class="align-center" id="id28">
 <a class="reference internal image-reference" href="_images/enhanced_box_plot.png"><img alt="_images/enhanced_box_plot.png" src="_images/enhanced_box_plot.png" style="width: 480.0px; height: 480.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of enhanced_box_plot(add_scatter=True)</span><a class="headerlink" href="#id27" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of enhanced_box_plot(add_scatter=True)</span><a class="headerlink" href="#id28" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1620,10 +1661,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>An instance of seaborn.PairGrid.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id28">
+<figure class="align-center" id="id29">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 540.0px; height: 387.6px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id28" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of pairplot()</span><a class="headerlink" href="#id29" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1649,10 +1690,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>A tuple whose first element is an sklearn.decomposition.pca object,         and second element is a list of matplotlib.axis objects.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id29">
+<figure class="align-center" id="id30">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id29" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of pca()</span><a class="headerlink" href="#id30" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1671,10 +1712,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </ul>
 </dd>
 </dl>
-<figure class="align-center" id="id30">
+<figure class="align-center" id="id31">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 256.0px; height: 192.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id30" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of plot_expression()</span><a class="headerlink" href="#id31" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1750,10 +1791,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>a matplotlib axis object.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id31">
+<figure class="align-center" id="id32">
 <a class="reference internal image-reference" href="_images/rpm_vs_rpm.png"><img alt="_images/rpm_vs_rpm.png" src="_images/rpm_vs_rpm.png" style="width: 480.0px; height: 477.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id31" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of scatter_sample_vs_sample()</span><a class="headerlink" href="#id32" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -1907,7 +1948,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>replicate_grouping</strong> (<em>nested list</em><em> of </em><em>strings</em><em> or </em><em>'ungrouped'</em><em> (</em><em>default='ungrouped'</em><em>)</em>) – Allows you to group your data into replicates. Each replicate will be clustered         separately, and used as its own clustering setup. This can minimize the influence of batch effects         on the clustering results, and take advantage of repeated measures data         to improve the accuracy of your clustering. If <a href="#id13"><span class="problematic" id="id14">`</span></a>replicate_grouping`=’ungrouped’, the data will be         clustered normally as if no replicate data is available.         To read more about the theory behind this, see the following publication:         <a class="reference external" href="https://doi.org/10.1093/bib/bbs057">https://doi.org/10.1093/bib/bbs057</a></p></li>
+<li><p><strong>replicate_grouping</strong> (<em>nested list</em><em> of </em><em>strings</em><em> or </em><em>'ungrouped'</em><em> (</em><em>default='ungrouped'</em><em>)</em>) – Allows you to group your data into replicates. Each replicate will be clustered         separately, and used as its own clustering setup. This can minimize the influence of batch effects         on the clustering results, and take advantage of repeated measures data         to improve the accuracy of your clustering. If <a href="#id14"><span class="problematic" id="id15">`</span></a>replicate_grouping`=’ungrouped’, the data will be         clustered normally as if no replicate data is available.         To read more about the theory behind this, see the following publication:         <a class="reference external" href="https://doi.org/10.1093/bib/bbs057">https://doi.org/10.1093/bib/bbs057</a></p></li>
 <li><p><strong>power_transform</strong> (<em>True</em><em>, </em><em>False</em><em>, or </em><em>(</em><em>True</em><em>, </em><em>False</em><em>) </em><em>(</em><em>default=True</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering. If both True and False are supplied,         RNAlysis will run the initial clustering setups twice: once with a power transform, and once without.</p></li>
 <li><p><strong>evidence_threshold</strong> (<em>float between 0 and 1</em><em> (</em><em>default=2/3</em><em>)</em>) – determines whether each pair of features can be reliably clustered together.         For example, if evidence_threshold=0.5, a pair of features is considered reliably clustered together if         they were clustered together in at least 50% of the tested clustering solutions.</p></li>
 <li><p><strong>cluster_unclustered_features</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, RNAlysis will force every feature to be part of a cluster,         even if they were not initially determined to reliably belong to any of the discovered clusters.         Larger values will lead to fewer clusters, with more features classified as noise.</p></li>
@@ -1955,16 +1996,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id32">
+<figure class="align-center" id="id33">
 <img alt="_images/clicom_all.png" src="_images/clicom_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_clicom(plot_style=’all’)</span><a class="headerlink" href="#id32" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_clicom(plot_style=’all’)</span><a class="headerlink" href="#id33" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id33">
+<figure class="align-center" id="id34">
 <img alt="_images/clustering_PCA_clicom.png" src="_images/clustering_PCA_clicom.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_clicom()</span><a class="headerlink" href="#id33" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_clicom()</span><a class="headerlink" href="#id34" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2015,16 +2056,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id34">
+<figure class="align-center" id="id35">
 <img alt="_images/hdbscan_all.png" src="_images/hdbscan_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_hdbscan(plot_style=’all’)</span><a class="headerlink" href="#id34" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_hdbscan(plot_style=’all’)</span><a class="headerlink" href="#id35" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id35">
+<figure class="align-center" id="id36">
 <img alt="_images/clustering_PCA_hdbscan.png" src="_images/clustering_PCA_hdbscan.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_hdbscan()</span><a class="headerlink" href="#id35" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_hdbscan()</span><a class="headerlink" href="#id36" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2043,7 +2084,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>distance_threshold</strong> (<em>float</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – a distance threshold above which clusters will not be merged.         If a number is specified, <cite>n_clusters</cite> must be None.</p></li>
 <li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
 <li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id15"><span class="problematic" id="id16">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id16"><span class="problematic" id="id17">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2073,10 +2114,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id36">
+<figure class="align-center" id="id37">
 <img alt="_images/hierarchical_all.png" src="_images/hierarchical_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_hierarchical(plot_style=’all’)</span><a class="headerlink" href="#id36" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_hierarchical(plot_style=’all’)</span><a class="headerlink" href="#id37" title="Permalink to this image"></a></p>
 <div class="legend">
 <blockquote>
 <div><figure class="align-default">
@@ -2108,7 +2149,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
 <li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
 <li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id17"><span class="problematic" id="id18">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id18"><span class="problematic" id="id19">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2139,16 +2180,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id37">
+<figure class="align-center" id="id38">
 <img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmeans(plot_style=’all’)</span><a class="headerlink" href="#id37" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmeans(plot_style=’all’)</span><a class="headerlink" href="#id38" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id38">
+<figure class="align-center" id="id39">
 <img alt="_images/clustering_PCA_kmeans.png" src="_images/clustering_PCA_kmeans.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmeans()</span><a class="headerlink" href="#id38" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmeans()</span><a class="headerlink" href="#id39" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2168,7 +2209,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <li><p><strong>power_transform</strong> (<em>bool</em><em> (</em><em>default=True</em><em>)</em>) – if True, RNAlysis will apply a power transform (Box-Cox)         to the data prior to clustering.</p></li>
 <li><p><strong>plot_style</strong> (<em>'all'</em><em>, </em><em>'std_area'</em><em>, or </em><em>'std_bar'</em><em> (</em><em>default='all'</em><em>)</em>) – determines the visual style of the cluster expression plot.</p></li>
 <li><p><strong>split_plots</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, each discovered cluster will be plotted on its own.         Otherwise, all clusters will be plotted in the same Figure.</p></li>
-<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id19"><span class="problematic" id="id20">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
+<li><p><strong>max_n_clusters_estimate</strong> (<em>int</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – the maximum number of clusters to test if trying to discover the optimal         number of clusters using the Silhouette or Gap Statistic methods. If <a href="#id20"><span class="problematic" id="id21">`</span></a>max_n_clusters_estimate`=’default’,         an appropriate value will be picked automatically.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -2198,16 +2239,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </div>
 </dd>
 </dl>
-<figure class="align-center" id="id39">
+<figure class="align-center" id="id40">
 <img alt="_images/kmedoids_all.png" src="_images/kmedoids_all.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmedoids(plot_style=’all’)</span><a class="headerlink" href="#id39" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmedoids(plot_style=’all’)</span><a class="headerlink" href="#id40" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id40">
+<figure class="align-center" id="id41">
 <img alt="_images/clustering_PCA_kmedoids.png" src="_images/clustering_PCA_kmedoids.png" />
 <figcaption>
-<p><span class="caption-text">Example plot of split_kmedoids()</span><a class="headerlink" href="#id40" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of split_kmedoids()</span><a class="headerlink" href="#id41" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -2436,10 +2477,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-even"><p>a matplotlib Axes.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id41">
+<figure class="align-center" id="id42">
 <a class="reference internal image-reference" href="_images/violin.png"><img alt="_images/violin.png" src="_images/violin.png" style="width: 1152.0px; height: 556.1999999999999px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id41" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of violin_plot()</span><a class="headerlink" href="#id42" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -3681,10 +3722,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </ul>
 </dd>
 </dl>
-<figure class="align-center" id="id42">
+<figure class="align-center" id="id43">
 <a class="reference internal image-reference" href="_images/volcano.png"><img alt="_images/volcano.png" src="_images/volcano.png" style="width: 448.0px; height: 333.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id42" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of volcano_plot()</span><a class="headerlink" href="#id43" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -6441,22 +6482,22 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel_backend: if not ‘none’, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with GO terms as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id43">
+<figure class="align-center" id="id44">
 <a class="reference internal image-reference" href="_images/ontology_graph.png"><img alt="_images/ontology_graph.png" src="_images/ontology_graph.png" style="width: 840.0px; height: 540.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id43" title="Permalink to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id44">
-<a class="reference internal image-reference" href="_images/plot_enrichment_results_go.png"><img alt="_images/plot_enrichment_results_go.png" src="_images/plot_enrichment_results_go.png" style="width: 840.0px; height: 609.0px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id44" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id44" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id45">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_go.png"><img alt="_images/plot_enrichment_results_go.png" src="_images/plot_enrichment_results_go.png" style="width: 840.0px; height: 609.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id45" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id46">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go_vertical.png"><img alt="_images/plot_enrichment_results_go_vertical.png" src="_images/plot_enrichment_results_go_vertical.png" style="width: 1153.8px; height: 336.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id45" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id46" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -6523,16 +6564,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated pathway names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id46">
+<figure class="align-center" id="id47">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg.png"><img alt="_images/plot_enrichment_results_kegg.png" src="_images/plot_enrichment_results_kegg.png" style="width: 630.0px; height: 283.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of kegg_enrichment()</span><a class="headerlink" href="#id46" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of kegg_enrichment()</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id47">
+<figure class="align-center" id="id48">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg_vertical.png"><img alt="_images/plot_enrichment_results_kegg_vertical.png" src="_images/plot_enrichment_results_kegg_vertical.png" style="width: 354.0px; height: 252.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -6566,16 +6607,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id48">
+<figure class="align-center" id="id49">
 <a class="reference internal image-reference" href="_images/hist_overlap.png"><img alt="_images/hist_overlap.png" src="_images/hist_overlap.png" style="width: 720.0px; height: 357.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style`=’overlap’)</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style`=’overlap’)</span><a class="headerlink" href="#id49" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id49">
+<figure class="align-center" id="id50">
 <a class="reference internal image-reference" href="_images/hist_interleaved.png"><img alt="_images/hist_interleaved.png" src="_images/hist_interleaved.png" style="width: 720.0px; height: 357.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style=’interleaved’)</span><a class="headerlink" href="#id49" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style=’interleaved’)</span><a class="headerlink" href="#id50" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -6687,16 +6728,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id50">
+<figure class="align-center" id="id51">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of user_defined_enrichment()</span><a class="headerlink" href="#id50" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of user_defined_enrichment()</span><a class="headerlink" href="#id51" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id51">
+<figure class="align-center" id="id52">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of user_defined_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id51" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of user_defined_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id52" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -6843,22 +6884,22 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel_backend: if not ‘none’, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with GO terms as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id52">
+<figure class="align-center" id="id53">
 <a class="reference internal image-reference" href="_images/ontology_graph.png"><img alt="_images/ontology_graph.png" src="_images/ontology_graph.png" style="width: 840.0px; height: 540.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id52" title="Permalink to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id53">
-<a class="reference internal image-reference" href="_images/plot_enrichment_results_go.png"><img alt="_images/plot_enrichment_results_go.png" src="_images/plot_enrichment_results_go.png" style="width: 840.0px; height: 609.0px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id53" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id53" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id54">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_go.png"><img alt="_images/plot_enrichment_results_go.png" src="_images/plot_enrichment_results_go.png" style="width: 840.0px; height: 609.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example plot of go_enrichment()</span><a class="headerlink" href="#id54" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id55">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go_vertical.png"><img alt="_images/plot_enrichment_results_go_vertical.png" src="_images/plot_enrichment_results_go_vertical.png" style="width: 1153.8px; height: 336.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id54" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id55" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -6925,16 +6966,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated pathway names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id55">
+<figure class="align-center" id="id56">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg.png"><img alt="_images/plot_enrichment_results_kegg.png" src="_images/plot_enrichment_results_kegg.png" style="width: 630.0px; height: 283.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of kegg_enrichment()</span><a class="headerlink" href="#id55" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of kegg_enrichment()</span><a class="headerlink" href="#id56" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id56">
+<figure class="align-center" id="id57">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg_vertical.png"><img alt="_images/plot_enrichment_results_kegg_vertical.png" src="_images/plot_enrichment_results_kegg_vertical.png" style="width: 354.0px; height: 252.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id56" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id57" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -6968,16 +7009,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id57">
+<figure class="align-center" id="id58">
 <a class="reference internal image-reference" href="_images/hist_overlap.png"><img alt="_images/hist_overlap.png" src="_images/hist_overlap.png" style="width: 720.0px; height: 357.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style`=’overlap’)</span><a class="headerlink" href="#id57" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style`=’overlap’)</span><a class="headerlink" href="#id58" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id58">
+<figure class="align-center" id="id59">
 <a class="reference internal image-reference" href="_images/hist_interleaved.png"><img alt="_images/hist_interleaved.png" src="_images/hist_interleaved.png" style="width: 720.0px; height: 357.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style=’interleaved’)</span><a class="headerlink" href="#id58" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of non_categorical_enrichment(plot_style=’interleaved’)</span><a class="headerlink" href="#id59" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -7030,16 +7071,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id59">
+<figure class="align-center" id="id60">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set.png"><img alt="_images/plot_enrichment_results_single_set.png" src="_images/plot_enrichment_results_single_set.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id59" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_enrichment()</span><a class="headerlink" href="#id60" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id60">
+<figure class="align-center" id="id61">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_single_set_vertical.png"><img alt="_images/plot_enrichment_results_single_set_vertical.png" src="_images/plot_enrichment_results_single_set_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id60" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id61" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -7091,22 +7132,22 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :param parallel_backend: if True, will calculate the statistical tests using parallel processing.         In most cases parallel processing will lead to shorter computation time, but does not affect the results of         the analysis otherwise.
 :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
 :return: a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
-<figure class="align-center" id="id61">
+<figure class="align-center" id="id62">
 <a class="reference internal image-reference" href="_images/ontology_graph_singlelist.png"><img alt="_images/ontology_graph_singlelist.png" src="_images/ontology_graph_singlelist.png" style="width: 840.0px; height: 540.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id61" title="Permalink to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id62">
-<a class="reference internal image-reference" href="_images/plot_enrichment_results_go_singlelist.png"><img alt="_images/plot_enrichment_results_go_singlelist.png" src="_images/plot_enrichment_results_go_singlelist.png" style="width: 840.0px; height: 609.0px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id62" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_ontology_graph=True)</span><a class="headerlink" href="#id62" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id63">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_go_singlelist.png"><img alt="_images/plot_enrichment_results_go_singlelist.png" src="_images/plot_enrichment_results_go_singlelist.png" style="width: 840.0px; height: 609.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example plot of single_set_go_enrichment()</span><a class="headerlink" href="#id63" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id64">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go_singlelist_vertical.png"><img alt="_images/plot_enrichment_results_go_singlelist_vertical.png" src="_images/plot_enrichment_results_go_singlelist_vertical.png" style="width: 1153.8px; height: 336.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id63" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_go_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id64" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -7139,22 +7180,22 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id64">
+<figure class="align-center" id="id65">
 <a class="reference internal image-reference" href="figures/pathway_graph_singlelist.png"><img alt="figures/pathway_graph_singlelist.png" src="figures/pathway_graph_singlelist.png" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_kegg_enrichment(plot_pathway_graphs=True)</span><a class="headerlink" href="#id64" title="Permalink to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id65">
-<a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg_single_set.png"><img alt="_images/plot_enrichment_results_kegg_single_set.png" src="_images/plot_enrichment_results_kegg_single_set.png" style="width: 630.0px; height: 163.2px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example plot of single_set_kegg_enrichment()</span><a class="headerlink" href="#id65" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_kegg_enrichment(plot_pathway_graphs=True)</span><a class="headerlink" href="#id65" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id66">
+<a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg_single_set.png"><img alt="_images/plot_enrichment_results_kegg_single_set.png" src="_images/plot_enrichment_results_kegg_single_set.png" style="width: 630.0px; height: 163.2px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example plot of single_set_kegg_enrichment()</span><a class="headerlink" href="#id66" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id67">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_kegg_single_set_vertical.png"><img alt="_images/plot_enrichment_results_kegg_single_set_vertical.png" src="_images/plot_enrichment_results_kegg_single_set_vertical.png" style="width: 478.2px; height: 252.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of single_set_kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id66" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of single_set_kegg_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id67" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -7249,16 +7290,16 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><p>a pandas DataFrame with the indicated attribute names as rows/index;         and a matplotlib Figure, if ‘return_figure’ is set to True.</p>
 </dd>
 </dl>
-<figure class="align-center" id="id67">
+<figure class="align-center" id="id68">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 336.0px; height: 391.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of user_defined_enrichment()</span><a class="headerlink" href="#id67" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of user_defined_enrichment()</span><a class="headerlink" href="#id68" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<figure class="align-center" id="id68">
+<figure class="align-center" id="id69">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 491.4px; height: 333.59999999999997px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of user_defined_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id68" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of user_defined_enrichment(plot_horizontal = False)</span><a class="headerlink" href="#id69" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </dd></dl>
@@ -7328,10 +7369,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><p>a dictionary of matplotlib axes, where the keys are ‘matrix’, ‘intersections’, ‘totals’, ‘shading’.</p>
-<figure class="align-center" id="id69">
+<figure class="align-center" id="id70">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id69" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id70" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </p>
@@ -7368,10 +7409,10 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 :type normalize_to: float (default=1.0)
 :return: a tuple of a VennDiagram object; and a list of 2-3 Circle patches.</p>
 <blockquote>
-<div><figure class="align-center" id="id70">
+<div><figure class="align-center" id="id71">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id70" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id71" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
