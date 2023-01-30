@@ -4,12 +4,13 @@ import gzip
 import inspect
 import json
 import os
+import platform
 import queue
 import re
+import shlex
 import shutil
 import subprocess
 import time
-import shlex
 import typing
 import warnings
 from datetime import date, datetime
@@ -1304,8 +1305,15 @@ def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str
 
 def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: bool = True,
                    log_filename: Union[str, None] = None, shell: bool = False):
+    # join List of args into a string of args when running in shell mode
     if shell:
-        args = shlex.join(args)
+        if platform.system() == 'Windows':
+            args = subprocess.list2cmdline(args)
+        else:
+            try:
+                args = shlex.join(args)
+            except AttributeError:
+                args = ' '.join([shlex.quote(arg) for arg in args])
 
     if print_stdout or print_stderr:
         if print_stdout and print_stderr:
