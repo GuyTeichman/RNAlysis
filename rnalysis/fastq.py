@@ -1,6 +1,7 @@
 """
 The *fastq* module provides a unified programmatic interface to external tools that process FASTQ files.
-Those currently include the *CutAdapt* adapter-trimming tool and the *kallisto* RNA-sequencing quantification tool.
+Those currently include the *CutAdapt* adapter-trimming tool, the *kallisto* RNA-sequencing quantification tool,
+the *bowtie2* alignment tool, and the *featureCounts* feature counting tool.
 """
 
 import os
@@ -41,6 +42,48 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
                              report_read_assignment_path: Union[str, Path, None] = None,
                              threads: PositiveInt = 1):
+    """
+
+
+    :param input_folder: Path to the folder containing the SAM/BAM files you want to quantify
+    :type input_folder: str or Path
+    :param output_folder:
+    :type output_folder:
+    :param gtf_file: Path to a GTF annotation file. This file will be used to map per-transcript abundances to \
+    per-gene estimated counts. The transcript names in the GTF files should match the ones in the index file - \
+    we recommend downloading cDNA FASTA/index files and GTF files from the same data source.
+    :type gtf_file: str or Path
+    :param gtf_feature_type:
+    :type gtf_feature_type:
+    :param gtf_attr_name:
+    :type gtf_attr_name:
+    :param r_installation_folder:
+    :type r_installation_folder:
+    :param new_sample_names:
+    :type new_sample_names:
+    :param stranded:
+    :type stranded:
+    :param min_mapping_quality:
+    :type min_mapping_quality:
+    :param count_multi_mapping_reads:
+    :type count_multi_mapping_reads:
+    :param count_multi_overlapping_reads:
+    :type count_multi_overlapping_reads:
+    :param ignore_secondary:
+    :type ignore_secondary:
+    :param count_fractionally:
+    :type count_fractionally:
+    :param is_long_read:
+    :type is_long_read:
+    :param report_read_assignment:
+    :type report_read_assignment:
+    :param report_read_assignment_path:
+    :type report_read_assignment_path:
+    :param threads:
+    :type threads:
+    :return:
+    :rtype:
+    """
     if new_sample_names != 'auto':
         new_sample_names = parsing.data_to_list(new_sample_names)
     output_folder = Path(output_folder)
@@ -226,6 +269,34 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                              ignore_qualities: bool = False,
                              quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
                              random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+    """
+
+
+    :param fastq_folder:
+    :type fastq_folder:
+    :param output_folder:
+    :type output_folder:
+    :param index_file:
+    :type index_file:
+    :param bowtie2_installation_folder:
+    :type bowtie2_installation_folder:
+    :param new_sample_names:
+    :type new_sample_names:
+    :param mode:
+    :type mode:
+    :param settings_preset:
+    :type settings_preset:
+    :param ignore_qualities:
+    :type ignore_qualities:
+    :param quality_score_type:
+    :type quality_score_type:
+    :param random_seed:
+    :type random_seed:
+    :param threads:
+    :type threads:
+    :return:
+    :rtype:
+    """
     output_folder = Path(output_folder)
     call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
                                     ignore_qualities, quality_score_type, random_seed, threads)
