@@ -60,6 +60,17 @@
 <li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User guide - programmatic interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rnalysis-fastq-module"><em>RNAlysis</em> fastq module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#working-with-the-fastq-module">Working with the fastq module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adapter-trimming-with-cutadapt">Adapter trimming with CutAdapt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rna-sequencing-quantification-with-kallisto">RNA sequencing quantification with kallisto</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#building-or-acquiring-index-files">Building or acquiring index files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#single-end-read-quantification">Single-end read quantification</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#paired-end-read-quantification">Paired-end read quantification</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-filtering-module"><em>RNAlysis</em> filtering module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-filter-objects">Working with Filter objects</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#initialize-a-filter-object">Initialize a Filter object</a></li>
@@ -146,6 +157,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
@@ -182,6 +194,36 @@
              
   <section id="user-guide-programmatic-interface">
 <h1>User guide - programmatic interface<a class="headerlink" href="#user-guide-programmatic-interface" title="Permalink to this heading"></a></h1>
+<section id="rnalysis-fastq-module">
+<h2><em>RNAlysis</em> fastq module<a class="headerlink" href="#rnalysis-fastq-module" title="Permalink to this heading"></a></h2>
+<p>RNAlysis’s fastq module (rnalysis.fastq) provides a unified programmatic interface to external tools that process FASTQ files.
+Those currently include the <em>CutAdapt</em> adapter-trimming tool and the <em>kallisto</em> RNA-sequencing quantification tool.</p>
+<section id="working-with-the-fastq-module">
+<h3>Working with the fastq module<a class="headerlink" href="#working-with-the-fastq-module" title="Permalink to this heading"></a></h3>
+<p>We will start by importing the fastq module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">fastq</span>
+</pre></div>
+</div>
+<p>You can now access the different functions of the fastq module, as explained below:</p>
+</section>
+<section id="adapter-trimming-with-cutadapt">
+<h3>Adapter trimming with CutAdapt<a class="headerlink" href="#adapter-trimming-with-cutadapt" title="Permalink to this heading"></a></h3>
+<p>(coming soon!)</p>
+</section>
+<section id="rna-sequencing-quantification-with-kallisto">
+<h3>RNA sequencing quantification with kallisto<a class="headerlink" href="#rna-sequencing-quantification-with-kallisto" title="Permalink to this heading"></a></h3>
+<p>(coming soon!)</p>
+<section id="building-or-acquiring-index-files">
+<h4>Building or acquiring index files<a class="headerlink" href="#building-or-acquiring-index-files" title="Permalink to this heading"></a></h4>
+</section>
+<section id="single-end-read-quantification">
+<h4>Single-end read quantification<a class="headerlink" href="#single-end-read-quantification" title="Permalink to this heading"></a></h4>
+</section>
+<section id="paired-end-read-quantification">
+<h4>Paired-end read quantification<a class="headerlink" href="#paired-end-read-quantification" title="Permalink to this heading"></a></h4>
+</section>
+</section>
+</section>
 <section id="rnalysis-filtering-module">
 <h2><em>RNAlysis</em> filtering module<a class="headerlink" href="#rnalysis-filtering-module" title="Permalink to this heading"></a></h2>
 <p>RNAlysis’s filtering module (rnalysis.filtering) is built to allow rapid and easy-to-understand filtering of various forms of RNA sequencing data. The module also contains specific methods for visualization and clustering of data.</p>
