@@ -1,3 +1,8 @@
+"""
+The *fastq* module provides a unified programmatic interface to external tools that process FASTQ files.
+Those currently include the *CutAdapt* adapter-trimming tool and the *kallisto* RNA-sequencing quantification tool.
+"""
+
 import os
 import warnings
 from pathlib import Path
