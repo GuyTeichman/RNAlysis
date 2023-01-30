@@ -92,6 +92,107 @@ def test_bowtie2_create_index_command(monkeypatch, genome_fastas, output_folder,
     assert index_created == [True]
 
 
+@pytest.mark.parametrize(
+    "r1_files,r2_files,output_folder,index_file,bowtie2_installation_folder,"
+    "new_sample_names,mode,settings_preset,ignore_qualities,quality_score_type,mate_orientations,"
+    "min_fragment_length,max_fragment_length, allow_individual_alignment,allow_disconcordant_alignment,"
+    "random_seed,threads,expected_command", [
+        (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
+         'tests/test_files/bowtie2_tests/outdir', 'tests/test_files/bowtie2_tests/index/transcripts', 'auto',
+         'auto', 'end-to-end', 'very-sensitive', False, 'phred33', 'fwd-rev', 50, 500, True, False, 0, 1,
+         ['bowtie2', '--end-to-end', '--very-sensitive', '--phred33', '--seed', '0', '--threads', '1', '-x',
+          'tests/test_files/bowtie2_tests/index/transcripts', '-I', '50', '-X', '500', '--no-discorcordant', '--fr',
+          '-1', 'tests/test_files/kallisto_tests/reads_1.fastq', '-2',
+          'tests/test_files/kallisto_tests/reads_2.fastq', '-S',
+          'tests/test_files/bowtie2_tests/outdir/reads_1_reads_2.sam']
+         ),
+        (['tests/test_files/kallisto_tests/reads_1.fastq'], ['tests/test_files/kallisto_tests/reads_2.fastq'],
+         'tests/test_files/bowtie2_tests/outdir', 'tests/test_files/bowtie2_tests/index/transcripts.1.bt2',
+         'path/to/bowtie2inst', ['newName'], 'local', 'fast', True, 'phred64', 'fwd-fwd', 0, 250, False, True, 42, 12,
+         ['path/to/bowtie2inst/bowtie2', '--local', '--fast', '--phred64', '--ignore-quals', '--seed', '42',
+          '--threads', '12', '-x', 'tests/test_files/bowtie2_tests/index/transcripts', '-I', '0', '-X', '250',
+          '--no-mixed', '--ff', '-1', 'tests/test_files/kallisto_tests/reads_1.fastq', '-2',
+          'tests/test_files/kallisto_tests/reads_2.fastq', '-S', 'tests/test_files/bowtie2_tests/outdir/newName.sam']
+         ),
+    ])
+def test_bowtie2_align_paired_end_command(monkeypatch, r1_files, r2_files, output_folder, index_file,
+                                          bowtie2_installation_folder, new_sample_names, mode, settings_preset,
+                                          ignore_qualities, quality_score_type,
+                                          mate_orientations, min_fragment_length, max_fragment_length,
+                                          allow_individual_alignment,
+                                          allow_disconcordant_alignment, random_seed, threads, expected_command):
+    pairs_to_cover = [('reads_1.fastq', 'reads_2.fastq')]
+    pairs_covered = []
+
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
+        assert shell
+        if args[1] == '--version':
+            return 0
+
+        assert args == expected_command
+        pairs_covered.append(pairs_to_cover[0])
+        assert print_stdout
+        assert print_stderr
+
+    monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
+
+    bowtie2_align_paired_end(r1_files, r2_files, output_folder, index_file, bowtie2_installation_folder,
+                             new_sample_names, mode, settings_preset, ignore_qualities, quality_score_type,
+                             mate_orientations, min_fragment_length, max_fragment_length, allow_individual_alignment,
+                             allow_disconcordant_alignment, random_seed, threads)
+    assert sorted(pairs_covered) == sorted(pairs_to_cover)
+
+
+@pytest.mark.parametrize(
+    "fastq_folder,output_folder,index_file,bowtie2_installation_folder,new_sample_names,mode,settings_preset,"
+    "ignore_qualities,quality_score_type,random_seed,threads,expected_command", [
+        ('tests/test_files/kallisto_tests',
+         'tests/test_files/bowtie2_tests/outdir', 'tests/test_files/bowtie2_tests/index/transcripts', 'auto',
+         'auto', 'end-to-end', 'very-sensitive', False, 'phred33', 0, 1,
+         ['bowtie2', '--end-to-end', '--very-sensitive', '--phred33', '--seed', '0', '--threads', '1', '-x',
+          'tests/test_files/bowtie2_tests/index/transcripts', '-U', '', '-S', '']
+         ),
+        ('tests/test_files/kallisto_tests',
+         'tests/test_files/bowtie2_tests/outdir', 'tests/test_files/bowtie2_tests/index/transcripts.1.bt2',
+         'path/to/bowtie2inst', ['newName1', 'newName2', ], 'local', 'fast', True, 'phred64', 42, 12,
+         ['path/to/bowtie2inst/bowtie2', '--local', '--fast', '--phred64', '--ignore-quals', '--seed', '42',
+          '--threads', '12', '-x', 'tests/test_files/bowtie2_tests/index/transcripts', '-U', '', '-S', '']
+         ),
+    ])
+def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_folder, index_file,
+                                          bowtie2_installation_folder, new_sample_names, mode, settings_preset,
+                                          ignore_qualities, quality_score_type, random_seed, threads, expected_command):
+    files_to_cover = ['reads_1.fastq', 'reads_2.fastq']
+    file_stems = ['reads_1', 'reads_2']
+    files_covered = []
+
+    def mock_run_subprocess(args, print_stdout=True, print_stderr=True, log_filename: str = None, shell: bool = False):
+        assert shell
+        if args[1] == '--version':
+            return 0
+        for i in range(len(files_to_cover)):
+            if files_to_cover[i] in args[-3]:
+                exp = expected_command.copy()
+                exp[-3] = fastq_folder + '/' + files_to_cover[i]
+                if new_sample_names == 'auto':
+                    exp[-1] = f'{output_folder}/{file_stems[i]}.sam'
+                else:
+                    exp[-1] = f'{output_folder}/{new_sample_names[i]}.sam'
+
+                assert args == exp
+                files_covered.append(files_to_cover[i])
+                break
+        assert print_stdout
+        assert print_stderr
+
+    monkeypatch.setattr(io, 'run_subprocess', mock_run_subprocess)
+
+    bowtie2_align_single_end(fastq_folder, output_folder, index_file,
+                             bowtie2_installation_folder, new_sample_names, mode, settings_preset,
+                             ignore_qualities, quality_score_type, random_seed, threads)
+    assert sorted(files_covered) == sorted(files_to_cover)
+
+
 def test_bowtie2_create_index():
     out_path = 'tests/test_files/bowtie2_tests/outdir'
     truth_path = 'tests/test_files/bowtie2_tests/index'
