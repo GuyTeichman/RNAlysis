@@ -5,6 +5,15 @@ API Reference
 
     Private functions are not meant to be used out of context, and doing so may lead to unexpected results.
 
+rnalysis.fastq module
+-------------------------
+
+.. automodule:: rnalysis.fastq
+   :private-members:
+   :noindex:
+   :show-inheritance:
+   :inherited-members:
+
 rnalysis.filtering module
 -------------------------
 
