@@ -2,26 +2,6 @@
 History
 =======
 
-3.5.0 (2023-02-??)
-------------------
-
-Added
-******
-* Added bowtie2 alignment to the fastq module.
-* Added FeatureCounts feature-counting to the fastq module.
-* You can now choose whether or not to discard
-
-Changed
-********
-* Updated type annotations of some functions to be more precise and helpful (for example, setting a lower bound on some int function parameters).
-
-Fixed
-******
-* Fixed bug where the windows of some functions (differential expression, adapter trimming, etc) did not show a link to the function's documentation page.
-* Fixed typos in some parts of the *RNAlysis* documentation
-* When filtering a table by a single user-defined attribute, the automatic table name will now be more informative about the operation applied.
-* Fixed bug where occasionally a Pipeline or Function would generate multiple tables of the same name, but only one of them will appear in the GUI.
-
 3.4.0 (2023-01-24)
 ------------------
 From this release forward, *RNAlysis* is made available as a stand-alone app for Windows and MacOS. You can download these stand-alone versions from the GitHub Releases page.
@@ -35,24 +15,34 @@ Added
 * Added support for the Sharpened Cosine distance metric in clustering analyses
 * KEGG enrichment can now generate KEGG pathway graphs for pathways that were found to be statistically significant
 * Added functions to the enrichment module that can generate KEGG Pathway or Gene Ontology plots based on previously-generated enrichment results
-* You can now clear the *RNAlysis* cache from the *RNAlysis* GUI, or through the general menu.
+* You can now clear the *RNAlysis* cache from the *RNAlysis* GUI, or through the general module.
+* Added bowtie2 alignment to the fastq module.
+* Added FeatureCounts feature-counting to the fastq module.
+* You can now choose whether or not to discard
 
 Changed
 ********
 * Replaced the 'parallel' parameter in enrichment functions with the 'parallel_backend' parameter, allowing users to choose which parallel backend (if any) will be used in the function.
 * Added 'parallel_backend' parameter to all clustering functions under the filtering module.
 * When generating Gene Ontology/KEGG Pathway graphs, users can choose whether or not to generate the figure in an additional separate file.
+* Updated type annotations of some functions to be more precise and helpful (for example, setting a lower bound on some int function parameters).
 * Slight improvements in GUI performance, stability, and looks.
 
 Fixed
 ******
 * In CountFilter.differential_expression_deseq2(), fixed a bug where design matrix files with non-comma delimiters would cause an error (thanks to `Mintxoklet <https://github.com/Mintxoklet>`_ in `#7 <https://github.com/GuyTeichman/RNAlysis/issues/7>`_)
 * Fixed bug where setup.py would install a directory named tests into site-packages folder (thanks to `Bipin Kumar <https://github.com/kbipinkumar>`_ in `#9 <https://github.com/GuyTeichman/RNAlysis/issues/9>`_)
+* Fixed bug where the windows of some functions (differential expression, adapter trimming, etc) did not show a link to the function's documentation page.
+* Fixed typos in some parts of the *RNAlysis* documentation
+* When filtering a table by a single user-defined attribute, the automatic table name will now be more informative about the operation applied.
+* Fixed bug where occasionally a Pipeline or Function would generate multiple tables of the same name, but only one of them will appear in the GUI.
 
 
 Removed
 ********
 * Removed the previously-deprecated functions `enrichment.enrich_randomization()` and `enrichment.enrich_hypergeometric()`.
+
+
 
 New Contributors
 *****************
