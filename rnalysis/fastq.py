@@ -270,32 +270,50 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
                              quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
                              random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
     """
+    Align single-end reads from FASTQ files to a reference sequence using the \
+    `bowtie2 <https://bowtie-bio.sourceforge.net/bowtie2>`_ aligner. \
+    The FASTQ files will be individually aligned, and the aligned SAM files will be saved in the output folder. \
+    You can read more about how bowtie2 works in the \
+    `bowtie2 manual <https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_.
 
-
-    :param fastq_folder:
-    :type fastq_folder:
-    :param output_folder:
-    :type output_folder:
-    :param index_file:
-    :type index_file:
-    :param bowtie2_installation_folder:
-    :type bowtie2_installation_folder:
-    :param new_sample_names:
-    :type new_sample_names:
-    :param mode:
-    :type mode:
-    :param settings_preset:
-    :type settings_preset:
-    :param ignore_qualities:
-    :type ignore_qualities:
-    :param quality_score_type:
-    :type quality_score_type:
-    :param random_seed:
-    :type random_seed:
-    :param threads:
-    :type threads:
-    :return:
-    :rtype:
+    :param fastq_folder: Path to the folder containing the FASTQ files you want to quantify
+    :type fastq_folder: str or Path
+    :param output_folder: Path to a folder in which the aligned reads, as well as the log files, will be saved.
+    :type output_folder: str/Path to an existing folder
+    :param index_file: Path to a pre-built bowtie2 index of the target genome. \
+    Can either be downloaded from the `bowtie2 website <https://bowtie-bio.sourceforge.net/bowtie2>`_ \
+    (menu on the right), or generated manually from FASTA files using the function 'bowtie2_create_index'. \
+    Note that bowtie2 indices are composed of multiple files ending with the '.bt2' suffix. \
+    All of those files should be in the same location. It is enough to specify the path to one of those files \
+    (for example, 'path/to/index.1.bt2'), or to the main name of the index (for example, 'path/to/index').
+    :type index_file: str or Path
+    :param bowtie2_installation_folder: Path to the installation folder of bowtie2. For example: \
+    'C:/Program Files/bowtie2-2.5.1'. if installation folder is set to 'auto', \
+    RNAlysis will attempt to find it automatically.
+    :type bowtie2_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each quantified sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the file pairs.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param mode: determines the alignment mode of bowtie2. \
+    end-to-end mode will look for alignments involving all the read characters. \
+    local mode will allow 'clipping' of nucleotides from both sides of the read, if that maximizes the alignment score.
+    :type mode: 'end-to-end' or 'local' (default='end-to-end')
+    :param settings_preset: determines the alignment sensitivity preset. Higher sensitivity will result in more \
+    accurate alignments, but will take longer to calculate. You can read more about the settings presets in the \
+    `bowtie2 manual`_.
+    :type settings_preset: 'very-sensitive', 'sensitive', 'fast', or 'very-fast' (default='very-sensitive')
+    :param ignore_qualities: if True, bowtie2 will ignore the qualities of the reads and treat them all as \
+    maximum quality.
+    :type ignore_qualities: bool (default=False)
+    :param quality_score_type: determines the encoding type of the read quality scores. \
+    Most modern sequencing setups use phred+33.
+    :type quality_score_type: 'phred33', 'phred64', 'solexa-quals', or 'int-quals' (default='phred33')
+    :param random_seed:  determines the seed for pseudo-random number generator.
+    :type random_seed: int >=0 (default=0)
+    :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
+    :type threads: int > 0 (default=1)
     """
     output_folder = Path(output_folder)
     call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
@@ -340,6 +358,66 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
                              allow_individual_alignment: bool = True,
                              allow_disconcordant_alignment: bool = True,
                              random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
+    """
+    Align paired-end reads from FASTQ files to a reference sequence using the \
+    `bowtie2 <https://bowtie-bio.sourceforge.net/bowtie2>`_ aligner. \
+    The FASTQ file pairs will be individually aligned, and the aligned SAM files will be saved in the output folder. \
+    You can read more about how bowtie2 works in the \
+    `bowtie2 manual <https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_.
+
+    :param r1_files: a list of paths to your Read#1 files. The files should be sorted in tandem with r2_files, \
+    so that they line up to form pairs of R1 and R2 files.
+    :type r1_files: list of str/Path to existing FASTQ files
+    :param r2_files: a list of paths to your Read#2 files. The files should be sorted in tandem with r1_files, \
+    so that they line up to form pairs of R1 and R2 files.
+    :type r2_files: list of str/Path to existing FASTQ files
+    :param output_folder: Path to a folder in which the aligned reads, as well as the log files, will be saved.
+    :type output_folder: str/Path to an existing folder
+    :param index_file: Path to a pre-built bowtie2 index of the target genome. \
+    Can either be downloaded from the `bowtie2 website <https://bowtie-bio.sourceforge.net/bowtie2>`_ \
+    (menu on the right), or generated manually from FASTA files using the function 'bowtie2_create_index'. \
+    Note that bowtie2 indices are composed of multiple files ending with the '.bt2' suffix. \
+    All of those files should be in the same location. It is enough to specify the path to one of those files \
+    (for example, 'path/to/index.1.bt2'), or to the main name of the index (for example, 'path/to/index').
+    :type index_file: str or Path
+    :param bowtie2_installation_folder: Path to the installation folder of bowtie2. For example: \
+    'C:/Program Files/bowtie2-2.5.1'. if installation folder is set to 'auto', \
+    RNAlysis will attempt to find it automatically.
+    :type bowtie2_installation_folder: str, Path, or 'auto' (default='auto')
+    :param new_sample_names: Give a new name to each quantified sample (optional). \
+    If sample_names='auto', sample names \
+    will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names \
+    matching the order of the file pairs.
+    :type new_sample_names: list of str or 'auto' (default='auto')
+    :param mode: determines the alignment mode of bowtie2. \
+    end-to-end mode will look for alignments involving all the read characters. \
+    local mode will allow 'clipping' of nucleotides from both sides of the read, if that maximizes the alignment score.
+    :type mode: 'end-to-end' or 'local' (default='end-to-end')
+    :param settings_preset: determines the alignment sensitivity preset. Higher sensitivity will result in more \
+    accurate alignments, but will take longer to calculate. You can read more about the settings presets in the \
+    `bowtie2 manual`_.
+    :type settings_preset: 'very-sensitive', 'sensitive', 'fast', or 'very-fast' (default='very-sensitive')
+    :param ignore_qualities: if True, bowtie2 will ignore the qualities of the reads and treat them all as \
+    maximum quality.
+    :type ignore_qualities: bool (default=False)
+    :param quality_score_type: determines the encoding type of the read quality scores. \
+    Most modern sequencing setups use phred+33.
+    :type quality_score_type: 'phred33', 'phred64', 'solexa-quals', or 'int-quals' (default='phred33')
+    :param mate_orientations:
+    :type mate_orientations: 'fwd-rev', 'rev-fwd', or 'fwd-fwd' (default='fwd-rev')
+    :param min_fragment_length: The minimum fragment length for valid paired-end alignments.
+    :type min_fragment_length: int >= 0 (default=0)
+    :param max_fragment_length: The maximum fragment length for valid paired-end alignments.
+    :type max_fragment_length: int > 0 (default=500)
+    :param allow_individual_alignment:
+    :type allow_individual_alignment: bool (default=
+    :param allow_disconcordant_alignment:
+    :type allow_disconcordant_alignment: bool (default=
+    :param random_seed:  determines the seed for pseudo-random number generator.
+    :type random_seed: int >=0 (default=0)
+    :param threads: number of threads to run bowtie2-build on. More threads will generally make index building faster.
+    :type threads: int > 0 (default=1)
+    """
     output_folder = Path(output_folder)
     call = _parse_bowtie2_misc_args(output_folder, index_file, bowtie2_installation_folder, mode, settings_preset,
                                     ignore_qualities, quality_score_type, random_seed, threads)
@@ -473,7 +551,8 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
                                  learn_bias: bool = False, seek_fusion_genes: bool = False,
                                  bootstrap_samples: Union[PositiveInt, None] = None) -> filtering.CountFilter:
     """
-    Quantify transcript abundance in single-end mRNA sequencing data using kallisto. \
+    Quantify transcript abundance in single-end mRNA sequencing data using \
+    `kallisto <https://pachterlab.github.io/kallisto/>`_. \
     The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder. \
     Alongside these files, three .csv files will be saved: a per-transcript count estimate table, \
     a per-transcript TPM estimate table, and a per-gene scaled output table. \
@@ -492,7 +571,7 @@ def kallisto_quantify_single_end(fastq_folder: Union[str, Path], output_folder: 
     and a summarized results table will be saved in the output folder itself.
     :type output_folder: str/Path to an existing folder
     :param index_file: Path to a pre-built kallisto index of the target transcriptome. \
-    Can either be downloaded from  the \
+    Can either be downloaded from the \
     `kallisto transcriptome indices site <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_, \
     or generated manually from a FASTA file using the function `kallisto_create_index`.
     :type index_file: str or Path
@@ -580,7 +659,8 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
                                  seek_fusion_genes: bool = False,
                                  bootstrap_samples: Union[PositiveInt, None] = None) -> filtering.CountFilter:
     """
-    Quantify transcript abundance in paired-end mRNA sequencing data using kallisto. \
+    Quantify transcript abundance in paired-end mRNA sequencing data using \
+    `kallisto <https://pachterlab.github.io/kallisto/>`_. \
     The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder. \
     Alongside these files, three .csv files will be saved: a per-transcript count estimate table, \
     a per-transcript TPM estimate table, and a per-gene scaled output table. \
