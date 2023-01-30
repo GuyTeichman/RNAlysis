@@ -1308,7 +1308,7 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
     # join List of args into a string of args when running in shell mode
     if shell:
         if platform.system() == 'Windows':
-            args = subprocess.list2cmdline(args)
+            pass
         else:
             try:
                 args = shlex.join(args)
