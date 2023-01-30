@@ -336,7 +336,7 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
                              quality_score_type: Literal[LEGAL_QUAL_SCORE_TYPES] = 'phred33',
                              mate_orientations: Literal['fwd-rev', 'rev-fwd', 'fwd-fwd'] = 'fwd-rev',
                              min_fragment_length: NonNegativeInt = 0,
-                             max_fragment_length: Union[PositiveInt, None] = 500,
+                             max_fragment_length: PositiveInt = 500,
                              allow_individual_alignment: bool = True,
                              allow_disconcordant_alignment: bool = True,
                              random_seed: NonNegativeInt = 0, threads: PositiveInt = 1):
