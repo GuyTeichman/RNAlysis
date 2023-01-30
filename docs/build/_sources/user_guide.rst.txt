@@ -2,7 +2,39 @@
 User guide - programmatic interface
 ####################################
 
+****************************
+*RNAlysis* fastq module
+****************************
 
+RNAlysis's fastq module (rnalysis.fastq) provides a unified programmatic interface to external tools that process FASTQ files.
+Those currently include the *CutAdapt* adapter-trimming tool and the *kallisto* RNA-sequencing quantification tool.
+
+Working with the fastq module
+=================================
+
+We will start by importing the fastq module::
+
+    >>> from *RNAlysis* import fastq
+
+You can now access the different functions of the fastq module, as explained below:
+
+Adapter trimming with CutAdapt
+===============================
+(coming soon!)
+
+
+RNA sequencing quantification with kallisto
+=============================================
+(coming soon!)
+
+Building or acquiring index files
+-----------------------------------
+
+Single-end read quantification
+-------------------------------
+
+Paired-end read quantification
+-------------------------------
 
 ****************************
 *RNAlysis* filtering module
@@ -672,22 +704,22 @@ Moreover, ths modified version of the algorithm can cluster each batch of biolog
 
 Specialized clustering distance metrics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In addition to the commonly-used distance metrics, such as euclidean distance and spearman correlation, *RNAlysis* offers a selection of distance metrics that were either developed especially for transcriptomics clustering, or found to work particularly well for transcriptomics clustering. 
+In addition to the commonly-used distance metrics, such as euclidean distance and spearman correlation, *RNAlysis* offers a selection of distance metrics that were either developed especially for transcriptomics clustering, or found to work particularly well for transcriptomics clustering.
 Those methods include:
 
-1. jackknife distance - a modified Pearson dissimilarity coefficient. 
-Instead of measuring the linear correlation between expression levels of two genes, you measure the linear correlation coefficient N times (where N is the number of samples in the data), every time excluding a single sample from the correlation, and then taking the smallest correlation coefficient found. 
-The correlation score is then converted into a dissimilarity score. 
-This distance metric can detect linear correlation, like Pearson correlation, but is less sensitive to extreme values. 
-(see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_). 
-2. YR1 distance - a distance metric developed especially for time-series gene expression data. 
-This distance metric combines the Pearson dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
-This means that the YR1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
-(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
-3. YS1 distance - a distance metric developed especially for time-series gene expression data. 
-This distance metric combines the Spearman dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score. 
-This means that the YS1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another. 
-(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_). 
+1. jackknife distance - a modified Pearson dissimilarity coefficient.
+Instead of measuring the linear correlation between expression levels of two genes, you measure the linear correlation coefficient N times (where N is the number of samples in the data), every time excluding a single sample from the correlation, and then taking the smallest correlation coefficient found.
+The correlation score is then converted into a dissimilarity score.
+This distance metric can detect linear correlation, like Pearson correlation, but is less sensitive to extreme values.
+(see `Heyer, Kruglyak and Yooseph 1999 <https://doi.org/10.1101%2Fgr.9.11.1106>`_).
+2. YR1 distance - a distance metric developed especially for time-series gene expression data.
+This distance metric combines the Pearson dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score.
+This means that the YR1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another.
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_).
+3. YS1 distance - a distance metric developed especially for time-series gene expression data.
+This distance metric combines the Spearman dissimilarity, along with the positon of the minimal and maximal values of each sample, and the agreement of their slopes. These three values are combined into a single distance score.
+This means that the YS1 metric captures more accurately the shape of the expression pattern of each gene, and ranks genes with similar expression patterns as more similar to one another.
+(see `Son and Baek 2007 <https://doi.org/10.1016/j.patrec.2007.09.015>`_).
 
 Data visualization and exploratory data analysis with CountFilter
 ------------------------------------------------------------------------
@@ -938,9 +970,9 @@ We can apply the same Pipeline to as many Filter objects as we want, as long as 
 
 Importing a Pipeline
 ----------------------
-If you have previously exported a Pipeline, or you want to use a Pipeline that someone else exported, you can import Pipeline files into any *RNAlysis* session. 
-*RNAlysis* Pipelines are saved as YAML (.yaml) files. Those files contain the name of the Pipeline, the functions and parameters added to it, as well as some metadata such as the time it was exported. 
-To import a Pipeline into *RNAlysis*, use the Pipeline.import_pipeline() method.  
+If you have previously exported a Pipeline, or you want to use a Pipeline that someone else exported, you can import Pipeline files into any *RNAlysis* session.
+*RNAlysis* Pipelines are saved as YAML (.yaml) files. Those files contain the name of the Pipeline, the functions and parameters added to it, as well as some metadata such as the time it was exported.
+To import a Pipeline into *RNAlysis*, use the Pipeline.import_pipeline() method.
 
 
 ****************************

@@ -51,6 +51,7 @@ Modules:
   :toctree:
   :caption: Modules:
 
+  rnalysis.fastq
   rnalysis.filtering
   rnalysis.enrichment
   rnalysis.general

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rnalysis.fastq.kallisto_quantify_paired_end &mdash; RNAlysis 3.3.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rnalysis.fastq.kallisto_quantify_single_end" href="rnalysis.fastq.kallisto_quantify_single_end.html" />
+    <link rel="prev" title="rnalysis.fastq.kallisto_create_index" href="rnalysis.fastq.kallisto_create_index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">About RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">What is <em>RNAlysis?</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#what-can-i-do-with-rnalysis">What can I do with <em>RNAlysis</em>?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-install-it">How do I install it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#how-do-i-use-it">How do I use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#dependencies">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html#credits">Credits</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/GuyTeichman/RNAlysis">GitHub page</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Starting with RNAlysis:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html"><em>RNAlysis</em> quick-start video guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">A-to-Z tutorial - example analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide_gui.html">User guide - graphical interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User guide - programmatic interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary - programmatic interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="rnalysis.fastq.html">rnalysis.fastq</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_create_index.html">rnalysis.fastq.kallisto_create_index</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">rnalysis.fastq.kallisto_quantify_paired_end</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rnalysis.fastq.kallisto_quantify_paired_end"><code class="docutils literal notranslate"><span class="pre">kallisto_quantify_paired_end()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.kallisto_quantify_single_end.html">rnalysis.fastq.kallisto_quantify_single_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_paired_end.html">rnalysis.fastq.trim_adapters_paired_end</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnalysis.fastq.trim_adapters_single_end.html">rnalysis.fastq.trim_adapters_single_end</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.filtering.html">rnalysis.filtering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.enrichment.html">rnalysis.enrichment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnalysis.general.html">rnalysis.general</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Indices and tables:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">RNAlysis</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="rnalysis.fastq.html">rnalysis.fastq</a> &raquo;</li>
+      <li>rnalysis.fastq.kallisto_quantify_paired_end</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rnalysis.fastq.kallisto_quantify_paired_end.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rnalysis-fastq-kallisto-quantify-paired-end">
+<h1>rnalysis.fastq.kallisto_quantify_paired_end<a class="headerlink" href="#rnalysis-fastq-kallisto-quantify-paired-end" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="rnalysis.fastq.kallisto_quantify_paired_end">
+<span class="sig-prename descclassname"><span class="pre">rnalysis.fastq.</span></span><span class="sig-name descname"><span class="pre">kallisto_quantify_paired_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r1_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r2_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gtf_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kallisto_installation_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_sample_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stranded</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'no'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'forward'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'reverse'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'no'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seek_fusion_genes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="rnalysis.filtering.CountFilter.html#rnalysis.filtering.CountFilter" title="rnalysis.filtering.CountFilter"><span class="pre">CountFilter</span></a></span></span><a class="headerlink" href="#rnalysis.fastq.kallisto_quantify_paired_end" title="Permalink to this definition"></a></dt>
+<dd><p>Quantify transcript abundance in paired-end mRNA sequencing data using kallisto.     The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder.     Alongside these files, three .csv files will be saved: a per-transcript count estimate table,     a per-transcript TPM estimate table, and a per-gene scaled output table.     The per-gene scaled output table is generated using the <em>scaledTPM</em> method     (scaling the TPM estimates up to the library size) as described by     <a class="reference external" href="https://doi.org/10.12688/f1000research.7563.2">Soneson et al 2015</a> and used in the     <a class="reference external" href="https://ycl6.gitbook.io/guide-to-rna-seq-analysis/differential-expression-analysis/tximport#scaling">tximport</a>     R package. This table format is considered un-normalized for library size,     and can therefore be used directly by count-based statistical inference tools such as DESeq2.
+<em>RNAlysis</em> will return this table once the analysis is finished.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r1_files</strong> (<em>list</em><em> of </em><em>str/Path to existing FASTQ files</em>) – a list of paths to your Read#1 files. The files should be sorted in tandem with r2_files,     so that they line up to form pairs of R1 and R2 files.</p></li>
+<li><p><strong>r2_files</strong> (<em>list</em><em> of </em><em>str/Path to existing FASTQ files</em>) – a list of paths to your Read#2 files. The files should be sorted in tandem with r1_files,     so that they line up to form pairs of R1 and R2 files.</p></li>
+<li><p><strong>output_folder</strong> (<em>str/Path to an existing folder</em>) – Path to a folder in which the quantified results, as well as the log files, will be saved.     The individual output of each pair of FASTQ files will reside in a different sub-folder within the output folder,     and a summarized results table will be saved in the output folder itself.</p></li>
+<li><p><strong>index_file</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a pre-built kallisto index of the target transcriptome.     Can either be downloaded from  the     <a class="reference external" href="https://github.com/pachterlab/kallisto-transcriptome-indices/releases">kallisto transcriptome indices site</a>,     or generated manually from a FASTA file using the function <cite>kallisto_create_index</cite>.</p></li>
+<li><p><strong>gtf_file</strong> (<em>str</em><em> or </em><em>Path</em>) – Path to a GTF annotation file. This file will be used to map per-transcript abundances to     per-gene estimated counts. The transcript names in the GTF files should match the ones in the index file -     we recommend downloading cDNA FASTA/index files and GTF files from the same data source.</p></li>
+<li><p><strong>kallisto_installation_folder</strong> (<em>str</em><em>, </em><em>Path</em><em>, or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Path to the installation folder of kallisto. For example:         ‘C:/Program Files/kallisto’</p></li>
+<li><p><strong>new_sample_names</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>'auto'</em><em> (</em><em>default='auto'</em><em>)</em>) – Give a new name to each quantified sample (optional). If sample_names=’auto’, sample names     will be given automatically. Otherwise, sample_names should be a list of new names, with the order of the names     matching the order of the file pairs.</p></li>
+<li><p><strong>stranded</strong> (<em>'no'</em><em>, </em><em>'forward'</em><em>, </em><em>'reverse'</em><em> (</em><em>default='no'</em><em>)</em>) – Indicates the strandedness of the data. ‘no’ indicates the data is not stranded.     ‘forward’ indicates the data is stranded, where the first read in the pair pseudoaligns     to the forward strand of a transcript. ‘reverse’ indicates the data is stranded, where the first read in the pair     pseudoaligns to the reverse strand of a transcript.</p></li>
+<li><p><strong>learn_bias</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, kallisto learns parameters for a model of sequences specific bias     and corrects the abundances accordlingly.</p></li>
+<li><p><strong>seek_fusion_genes</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – if True, does normal quantification, but additionally looks for reads that do not     pseudoalign because they are potentially from fusion genes.     All output is written to the file fusion.txt in the output folder.</p></li>
+<li><p><strong>bootstrap_samples</strong> (<em>int &gt;=0</em><em> or </em><em>None</em><em> (</em><em>default=None</em><em>)</em>) – Number of bootstrap samples to be generated. Bootstrap samples do not affect the     estimated count values, but generates an additional .hdf5 output file which contains     uncertainty estimates for the expression levels. This is required if you use tools such as Sleuth for downstream     differential expression analysis, but not for more traditional tools such as DESeq2 and edgeR.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rnalysis.fastq.kallisto_create_index.html" class="btn btn-neutral float-left" title="rnalysis.fastq.kallisto_create_index" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.fastq.kallisto_quantify_single_end.html" class="btn btn-neutral float-right" title="rnalysis.fastq.kallisto_quantify_single_end" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Guy Teichman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
