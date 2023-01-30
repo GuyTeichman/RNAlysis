@@ -18,7 +18,3 @@ def test_create_featurecounts_script():
         out = f.read()
 
     assert out == expected
-
-
-# def test_run_featurecounts_analysis():
-#     assert False

@@ -554,3 +554,34 @@ def test_trim_adapters_paired_end_command(monkeypatch, fastq_1, fastq_2, output_
                              discard_untrimmed_reads, pair_filter_if,
                              error_tolerance, minimum_overlap, allow_indels, parallel)
     assert sorted(pairs_covered) == sorted(pairs_to_cover)
+
+
+def test_featurecounts_single_end():
+    counts_truth = filtering.CountFilter('tests/test_files/featurecounts_tests/truth/single/featureCounts_counts.csv')
+    annotations_truth = pd.read_csv('tests/test_files/featurecounts_tests/truth/single/featureCounts_annotation.csv')
+    stats_truth = pd.read_csv('tests/test_files/featurecounts_tests/truth/single/featureCounts_stats.csv')
+    outdir = 'tests/test_files/featurecounts_tests/outdir'
+    gtf_file = 'tests/test_files/featurecounts_tests/single/bamfile_no_qualities.gtf'
+    try:
+        counts, annotations, stats = featurecounts_single_end('tests/test_files/featurecounts_tests/single', outdir,
+                                                              gtf_file)
+        assert counts == counts_truth
+        assert annotations.equals(annotations_truth)
+        assert stats.equals(stats_truth)
+    finally:
+        unlink_tree(outdir)
+
+
+def test_featurecounts_paired_end():
+    counts_truth = filtering.CountFilter('tests/test_files/featurecounts_tests/truth/paired/featureCounts_counts.csv')
+    annotations_truth = pd.read_csv('tests/test_files/featurecounts_tests/truth/paired/featureCounts_annotation.csv')
+    stats_truth = pd.read_csv('tests/test_files/featurecounts_tests/truth/paired/featureCounts_stats.csv')
+    outdir = 'tests/test_files/featurecounts_tests/outdir'
+    try:
+        counts, annotations, stats = featurecounts_paired_end('tests/test_files/featurecounts_tests', outdir,
+                                                              'tests/test_files/featurecounts_tests/test-minimum.gtf')
+        assert counts == counts_truth
+        assert annotations.equals(annotations_truth)
+        assert stats.equals(stats_truth)
+    finally:
+        unlink_tree(outdir)
