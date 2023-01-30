@@ -43,7 +43,7 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
                              report_read_assignment_path: Union[str, Path, None] = None,
                              threads: PositiveInt = 1):
     """
-
+    #TODO
 
     :param input_folder: Path to the folder containing the SAM/BAM files you want to quantify
     :type input_folder: str or Path
@@ -109,6 +109,54 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                              require_both_mapped: bool = True, count_chimeric_fragments: bool = False,
                              min_fragment_length: NonNegativeInt = 50,
                              max_fragment_length: Union[PositiveInt, None] = 600, threads: PositiveInt = 1):
+    """
+    #TODO
+
+    :param input_folder:
+    :type input_folder:
+    :param output_folder:
+    :type output_folder:
+    :param gtf_file:
+    :type gtf_file:
+    :param gtf_feature_type:
+    :type gtf_feature_type:
+    :param gtf_attr_name:
+    :type gtf_attr_name:
+    :param r_installation_folder:
+    :type r_installation_folder:
+    :param new_sample_names:
+    :type new_sample_names:
+    :param stranded:
+    :type stranded:
+    :param min_mapping_quality:
+    :type min_mapping_quality:
+    :param count_multi_mapping_reads:
+    :type count_multi_mapping_reads:
+    :param count_multi_overlapping_reads:
+    :type count_multi_overlapping_reads:
+    :param ignore_secondary:
+    :type ignore_secondary:
+    :param count_fractionally:
+    :type count_fractionally:
+    :param is_long_read:
+    :type is_long_read:
+    :param report_read_assignment:
+    :type report_read_assignment:
+    :param report_read_assignment_path:
+    :type report_read_assignment_path:
+    :param require_both_mapped:
+    :type require_both_mapped:
+    :param count_chimeric_fragments:
+    :type count_chimeric_fragments:
+    :param min_fragment_length:
+    :type min_fragment_length:
+    :param max_fragment_length:
+    :type max_fragment_length:
+    :param threads:
+    :type threads:
+    :return:
+    :rtype:
+    """
     if new_sample_names != 'auto':
         new_sample_names = parsing.data_to_list(new_sample_names)
     output_folder = Path(output_folder)
