@@ -98,9 +98,10 @@ jobs:
                          exit 1
                     fi
                 shell: bash
+            -   name: display PATH
+                run: echo ${PATH}
             -   name: Test bowtie2 installation
                 run: |
-                    echo ${PATH}
                     bowtie2 --version
                     bowtie2-build-s --version
             -   name: Set up Python ${{ matrix.python-version }}
