@@ -335,10 +335,10 @@ def test_featureset_repr():
     assert repr(en) == "FeatureSet: 'my very important set'"
 
 
-def test_plot_enrichment_results():
+def test_enrichment_bar_plot():
     df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
-    plot_enrichment_results(df, plot_horizontal=True)
-    plot_enrichment_results(df, plot_horizontal=False, ylabel='different ylabel', alpha=0.1, name_col='name')
+    enrichment_bar_plot(df, plot_horizontal=True)
+    enrichment_bar_plot(df, plot_horizontal=False, ylabel='different ylabel', alpha=0.1, name_col='name')
     plt.close('all')
 
 

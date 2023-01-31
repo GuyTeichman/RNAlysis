@@ -103,13 +103,19 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
     :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
-    if new_sample_names != 'auto':
-        new_sample_names = parsing.data_to_list(new_sample_names)
     output_folder = Path(output_folder)
     kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
                                             min_mapping_quality, count_multi_mapping_reads,
                                             count_multi_overlapping_reads, ignore_secondary, count_fractionally,
                                             is_long_read, report_read_assignment, report_read_assignment_path, threads)
+
+    if new_sample_names == 'auto':
+        new_sample_names = [Path(fname).stem for fname in kwargs['files']]
+    else:
+        new_sample_names = parsing.data_to_list(new_sample_names)
+        assert len(new_sample_names) == len(kwargs['files']), f"The number of samples {len(kwargs['files'])} " \
+                                                              f"does not match the number of new sample names " \
+                                                              f"({len(new_sample_names)})!"
 
     feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
     return _process_featurecounts_output(output_folder, new_sample_names)
@@ -203,8 +209,6 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     a DataFrame summarizing the features reads were aligned to, and a DataFrame summarizing the alignment statistics.
     :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
-    if new_sample_names != 'auto':
-        new_sample_names = parsing.data_to_list(new_sample_names)
     output_folder = Path(output_folder)
     kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
                                             min_mapping_quality, count_multi_mapping_reads,
@@ -214,6 +218,14 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                      'countChimericFragments': count_chimeric_fragments, 'minFragLength': min_fragment_length,
                      'maxFragLength': max_fragment_length, 'countReadPairs': True}
     kwargs.update(paired_kwargs)
+
+    if new_sample_names == 'auto':
+        new_sample_names = [Path(fname).stem for fname in kwargs['files']]
+    else:
+        new_sample_names = parsing.data_to_list(new_sample_names)
+        assert len(new_sample_names) == len(kwargs['files']), f"The number of samples {len(kwargs['files'])} " \
+                                                              f"does not match the number of new sample names " \
+                                                              f"({len(new_sample_names)})!"
 
     feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
     counts, annotations, stats = _process_featurecounts_output(output_folder, new_sample_names)
@@ -264,8 +276,10 @@ def _process_featurecounts_output(output_folder, new_sample_names):
     stats_path = Path(output_folder).joinpath('featureCounts_stats.csv')
 
     counts = filtering.CountFilter(counts_path)
-    annotations = pd.read_csv(annotation_path)
-    stats = pd.read_csv(stats_path)
+    counts.df.columns = new_sample_names
+    annotations = io.load_csv(annotation_path, 0)
+    stats = io.load_csv(stats_path, 0)
+    stats.columns = ['Status'] + new_sample_names
 
     return counts, annotations, stats
 
@@ -756,7 +770,7 @@ def kallisto_quantify_paired_end(r1_files: List[str], r2_files: List[str], outpu
     """
     Quantify transcript abundance in paired-end mRNA sequencing data using \
     `kallisto <https://pachterlab.github.io/kallisto/>`_. \
-    The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder. \
+    The FASTQ file pairs will be individually quantified and saved in the output folder, each in its own sub-folder. \
     Alongside these files, three .csv files will be saved: a per-transcript count estimate table, \
     a per-transcript TPM estimate table, and a per-gene scaled output table. \
     The per-gene scaled output table is generated using the *scaledTPM* method \
