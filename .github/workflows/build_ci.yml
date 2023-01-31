@@ -106,6 +106,7 @@ jobs:
                   echo %PATH%
                   where bowtie2-build
                   where bowtie2-build-s
+              shell: cmd
             -   name: Test bowtie2 installation
                 run: |
                     bowtie2 --version
