@@ -1,5 +1,6 @@
 import filecmp
 import gzip
+import platform
 import shutil
 
 import pytest
@@ -194,6 +195,8 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
 
 
 def test_bowtie2_create_index():
+    if platform.system() == 'Windows':
+        pytest.xfail('bowtie2 PATH is not defined properly on GitHub Actions Windows')
     out_path = 'tests/test_files/bowtie2_tests/outdir'
     truth_path = 'tests/test_files/bowtie2_tests/index'
     try:
