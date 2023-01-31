@@ -195,13 +195,16 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
 
 
 def test_bowtie2_create_index():
-    if platform.system() == 'Windows':
-        pytest.xfail('bowtie2 PATH is not defined properly on GitHub Actions Windows')
+
     out_path = 'tests/test_files/bowtie2_tests/outdir'
     truth_path = 'tests/test_files/bowtie2_tests/index'
     try:
         bowtie2_create_index(['tests/test_files/bowtie2_tests/transcripts.fasta'], out_path, random_seed=0)
-        assert are_dir_trees_equal(out_path, truth_path)
+        assert are_dir_trees_equal(out_path, truth_path, compare_contents=False)
+    except Exception as e:
+        if platform.system() == 'Windows':
+            pytest.xfail('bowtie2 PATH is not defined properly on GitHub Actions Windows')
+        raise e
     finally:
         unlink_tree(out_path)
 
@@ -261,13 +264,20 @@ def test_kallisto_create_index_command(monkeypatch, transcriptome_fasta, kallist
 def test_kallisto_create_index():
     out_path = 'tests/test_files/kallisto_tests/transcripts.idx'
     truth_path = 'tests/test_files/kallisto_tests/transcripts_truth.idx'
+
+    log_path = 'tests/test_files/kallisto_tests/kallisto-index_transcripts.log'
+    log_truth_path = 'tests/test_files/kallisto_tests/kallisto-index_transcripts_truth.log'
     try:
         kallisto_create_index('tests/test_files/kallisto_tests/transcripts.fasta')
         with open(truth_path, 'rb') as truth, open(out_path, 'rb') as out:
             assert truth.read() == out.read()
+        with open(log_truth_path) as truth, open(log_path) as out:
+            assert truth.read() == out.read()
     finally:
         if Path(out_path).exists():
             Path(out_path).unlink()
+        if Path(log_path).exists():
+            Path(log_path).unlink()
 
 
 def test_kallisto_quantify_single_end():

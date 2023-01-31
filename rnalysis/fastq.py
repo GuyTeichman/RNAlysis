@@ -352,7 +352,8 @@ def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: U
 
     print(f"Running command: \n{' '.join(call)}")
     with tqdm(total=1, desc='Building bowtie2 index', unit='index') as pbar:
-        io.run_subprocess(call, shell=True)
+        log_filename = Path(output_folder).joinpath(f'bowtie2-build_{index_name}.log').absolute().as_posix()
+        io.run_subprocess(call, shell=True, log_filename=log_filename)
         pbar.update()
 
 
@@ -448,7 +449,9 @@ def bowtie2_align_single_end(fastq_folder: Union[str, Path], output_folder: Unio
     with tqdm(total=len(calls), desc='Aligning reads', unit='files') as pbar:
         for bt2_call in calls:
             print(f"Running command: \n{' '.join(bt2_call)}")
-            io.run_subprocess(bt2_call, shell=True)
+            log_filename = Path(output_folder).joinpath(
+                f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
+            io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
             print(f"File saved successfully at {bt2_call[-1]}")
             pbar.update(1)
 
@@ -569,7 +572,9 @@ def bowtie2_align_paired_end(r1_files: List[str], r2_files: List[str], output_fo
     with tqdm(total=len(calls), desc='Aligning reads', unit='file pairs') as pbar:
         for bt2_call in calls:
             print(f"Running command: \n{' '.join(bt2_call)}")
-            io.run_subprocess(bt2_call, shell=True)
+            log_filename = Path(output_folder).joinpath(
+                f'bowtie2-align_{Path(bt2_call[-1]).stem}.log').absolute().as_posix()
+            io.run_subprocess(bt2_call, shell=True, log_filename=log_filename)
             print(f"File saved successfully at {bt2_call[-1]}")
             pbar.update(1)
 
@@ -647,7 +652,9 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
 
     print(f"Running command: \n{' '.join(call)}")
     with tqdm(total=1, desc='Building kallisto index', unit='index') as pbar:
-        io.run_subprocess(call)
+        log_filename = transcriptome_fasta.parent.joinpath(
+            f'kallisto-index_{transcriptome_fasta.stem}.log').absolute().as_posix()
+        io.run_subprocess(call, log_filename=log_filename)
         pbar.update()
 
 
