@@ -80,7 +80,6 @@ jobs:
                 shell: bash
             -   name: Test kallisto installation
                 run: |
-                    echo ${PATH}
                     kallisto version
             -   name: Install bowtie2
                 run: |
@@ -99,7 +98,12 @@ jobs:
                     fi
                 shell: bash
             -   name: display PATH
-                run: echo ${PATH}
+                run: |
+                        if [ "$RUNNER_OS" == "Windows" ]; then
+                         echo %PATH%
+                    else
+                         echo ${PATH}
+                    fi
             -   name: Test bowtie2 installation
                 run: |
                     bowtie2 --version
