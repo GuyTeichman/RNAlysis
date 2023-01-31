@@ -82,8 +82,6 @@ jobs:
                 run: |
                     echo ${PATH}
                     kallisto version
-            -   name: Install Perl
-                uses: shogo82148/actions-setup-perl@v1
             -   name: Install bowtie2
                 run: |
                     if [ "$RUNNER_OS" == "Linux" ]; then
@@ -103,6 +101,7 @@ jobs:
             -   name: Test bowtie2 installation
                 run: |
                     echo ${PATH}
+                    bowtie2 --version
                     bowtie2-build-s --version
             -   name: Set up Python ${{ matrix.python-version }}
                 uses: actions/setup-python@v2
