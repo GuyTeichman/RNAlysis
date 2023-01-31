@@ -1307,10 +1307,14 @@ def run_subprocess(args: List[str], print_stdout: bool = True, print_stderr: boo
                    log_filename: Union[str, None] = None, shell: bool = False):
     # join List of args into a string of args when running in shell mode
     if shell:
-        try:
-            args = shlex.join(args)
-        except AttributeError:
-            args = ' '.join([shlex.quote(arg) for arg in args])
+        if platform.system() == 'Windows':
+            shell = False
+            args = ["powershell", "-Command"] + args
+        else:
+            try:
+                args = shlex.join(args)
+            except AttributeError:
+                args = ' '.join([shlex.quote(arg) for arg in args])
 
     if print_stdout or print_stderr:
         if print_stdout and print_stderr:
