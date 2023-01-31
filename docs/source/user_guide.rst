@@ -13,31 +13,136 @@ the *bowtie2* alignment tool, and the *featureCounts* feature counting tool.
 Working with the fastq module
 =================================
 
+The fastq module contains functions that interface with the different external tools.
+Most of these tools require different sets of parameters for single-end vs paired-end reads, and therefore all of the functions in this module are split into single-end functions and paired-end functions.
+
 We will start by importing the fastq module::
 
     >>> from *RNAlysis* import fastq
 
-You can now access the different functions of the fastq module, as explained below:
+You can now access the different functions of the fastq module, as explained in the sections below.
 
 Adapter trimming with CutAdapt
 ===============================
-(coming soon!)
+Cutadapt is a program that finds and removes adapter sequences, primers, poly-A tails and other types of unwanted sequencea from high-throughput sequencing reads.
+Cutadapt can also trim bases based on their quality scores, high incidence of N ('any') bases, and perform basic filtering of reads.
 
+Single-end adapter trimming
+----------------------------
+
+If you want to trim single-end reads, use the `trim_adapters_single_end` functions::
+
+    >>> fastq_folder = 'path/to/fastq/folder'
+    >>> output_folder = 'path/to/output/folder'
+    >>> adapter = 'ATGGCGTTGA'
+    >>> trim_adapters_single_end(fastq_folder, output_folder, adapter)
+
+This function takes two mandatory parameters:
+* `fastq_folder` - the folder containing the FASTQ files you want to trim
+* `output_folder` - the folder to which you want to write the trimmed FASTQ files
+
+The other parameters allow you to specify the adapter/adapters you wish to trim according to their type (3' adapters, 5' adapters, or any position adapters), and to apply additional trimming/filtering actions.
+You can read more about those parameters in the `Cutadapt user guide <https://cutadapt.readthedocs.io/en/stable/guide.html>`_.
+
+Paired-end adapter trimming
+----------------------------
+If you want to trim paired-end reads, use the `trim_adapters_paired_end` functions::
+
+    >>> read1_files = ['path/to/sample1read1.fastq', 'path/to/sample2read1.fastq', 'path/to/sample3read1.fastq']
+    >>> read2_files = ['path/to/sample1read2.fastq', 'path/to/sample2read2.fastq', 'path/to/sample3read2.fastq']
+    >>> output_folder = 'path/to/output/folder'
+    >>> adapter1 = 'ATGGCGT'
+    >>> adapter2 = 'CGTTATC'
+    >>> trim_adapters_paired_end(read1_files, read2_files, output_folder, adapter1, adapter2)
+
+This function takes three mandatory parameters:
+* `r1_files` - list of paths the read#1 FASTQ files you want to trim
+* `r2_files` - list of paths the read#2 FASTQ files you want to trim. The order of these should match the order of `r1_files`, so that they pair up.
+* `output_folder` - the folder to which you want to write the trimmed FASTQ files
+
+The other parameters allow you to specify the adapter/adapters you wish to trim according to their type (3' adapters, 5' adapters, or any position adapters), and to apply additional trimming/filtering actions.
+Note that in paired-end mode, you can (and usually would) specify a different adapter for the read#1 files and the read#2 files.
+You can read more about those parameters in the `Cutadapt user guide <https://cutadapt.readthedocs.io/en/stable/guide.html>`_.
 
 RNA sequencing quantification with kallisto
 =============================================
-(coming soon!)
+`kallisto <https://pachterlab.github.io/kallisto/>`_ is a program for quantifying abundances of transcripts from bulk and single-cell RNA sequencing data.
+Kallisto uses an approach known as **pseudoalignment** - identifying the transcripts from which the reads could have originated, instead of trying to pinpoint exactly how the sequences of the reads and transcripts align.
+This allows kallisto to run incredibly quickly, but still produce accurate and valid results.
+You can read more about it in the `kallisto publication <https://doi.org/10.1038/nbt.3519>`_.
 
 Building or acquiring index files
 -----------------------------------
+To quantify expression using *kallisto*, in addition to processed FASTQ files, you will need a transcriptome indexed by *kallisto*, and a matching GTF file describing the names of the transcripts and genes in the transcriptome.
+kallisto provides pre-indexed transcriptomes and their matching GTF files for most common model organisms, which can be downloaded `here <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_.
+If your experiment requires a different transcriptome that is not available above, you can index any FASTA file through *RNAlysis*, by using the function `create_kallisto_index`::
+
+    >>> transcriptome = 'path/to/transcriptome.fasta'
+    >>> fastq.create_kallisto_index(transcriptome)
+
+The function takes one mandatory parameter - `transcriptome_fasts`. This should point to the path of a fasta file containing your target transcriptome.
+
+Three additional optional paremeters are supported:
+* `kallisto_installation_folder` - path to the installation folder of *kallisto* (or 'auto', if you have already added it to your PATH).
+* `kmer_length` - length of the k-mer used to construct the index. Must be an odd integer <= 31. The default k-mer length is optimized for usual NGS read lengths (50-100bp) - if your reads are much shorter you may get better mapping results if you lower the k-mer length.
+* `make_unique` - if True, replaces repeated target names with unique names.
 
 Single-end read quantification
 -------------------------------
 
+Once you have an indexed transcriptome and trimmed FASTQ files, you can proceed with quantification.
+If your FASTQ files contain single-end reads, you can use the `kallisto_quantify_single_end` function::
+
+    >>> fastq_folder = 'path/to/fastq/files'
+    >>> output_folder = 'path/to/output/folder'
+    >>> index_file = 'path/to/index.idx'
+    >>> avg_frag_len = 200
+    >>> stdev_frag_len = 40
+    >>> kallisto_quantify_single_end(fastq_folder, output_folder, index_file, avg_frag_len, stdev_frag_len)
+
+The function takes 5 mandatory parameters:
+* `fastq_folder` - the folder containing the FASTQ files you want to quantify
+* `output_folder` - the folder to which you want to write the output of the quantification
+* `index_file` - path to your index file
+* `average_fragment_length` - estimated average length of fragments produced by your library preperation protocol
+* `stdev_fragment_length` - estimated standard deviation of the length of fragments produced by your library preperation protocol
+
+The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder.
+Alongside these files, three .csv files will be saved: a per-transcript count estimate table,
+a per-transcript TPM estimate table, and a per-gene scaled output table.
+
+The per-gene scaled output table is generated using the *scaledTPM* method
+(scaling the TPM estimates up to the library size) as described by
+`Soneson et al 2015 <https://doi.org/10.12688/f1000research.7563.2>`_ and used in the
+`tximport <https://ycl6.gitbook.io/guide-to-rna-seq-analysis/differential-expression-analysis/tximport#scaling>`_
+R package. This table format is considered un-normalized for library size,
+and can therefore be used directly by count-based statistical inference tools such as DESeq2.
+*RNAlysis* will return this table once the analysis is finished.
+
 Paired-end read quantification
 -------------------------------
 
-RRead alignment with bowtie2
+If your FASTQ files contain paired-end reads (meaning, two FASTQ files for each sample - a 'read#1' file and 'read#2' file), you can quantify them using the `kallisto_quantify_paired_end` function::
+
+    >>> read1_files = ['path/to/sample1read1.fastq', 'path/to/sample2read1.fastq', 'path/to/sample3read1.fastq']
+    >>> read2_files = ['path/to/sample1read2.fastq', 'path/to/sample2read2.fastq', 'path/to/sample3read2.fastq']
+    >>> output_folder = 'path/to/output/folder'
+    >>> index_file = 'path/to/index.idx'
+    >>> kallisto_quantify_paired_end(read1_files, read2_files, output_folder, index_file)
+
+The function takes 4 mandatory parameters:
+* `r1_files` - list of paths the read#1 FASTQ files you want to quantify
+* `r2_files` - list of paths the read#2 FASTQ files you want to quantify. The order of these should match the order of `r1_files`, so that they pair up.
+* `output_folder` - the folder to which you want to write the output of the quantification
+* `index_file` - path to your index file
+
+The FASTQ file-pairs will be individually quantified and saved in the output folder, each in its own sub-folder.
+Alongside these files, three .csv files will be saved: a per-transcript count estimate table,
+a per-transcript TPM estimate table, and a per-gene scaled output table.
+You can read more about these outputs in the section above.
+
+
+Read alignment with bowtie2
 =============================
 (coming soon!)
 
