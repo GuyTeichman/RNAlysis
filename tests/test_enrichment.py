@@ -336,9 +336,9 @@ def test_featureset_repr():
 
 
 def test_enrichment_bar_plot():
-    df = pd.read_csv('tests/test_files/enrichment_hypergeometric_res.csv')
-    enrichment_bar_plot(df, plot_horizontal=True)
-    enrichment_bar_plot(df, plot_horizontal=False, ylabel='different ylabel', alpha=0.1, name_col='name')
+    pth = 'tests/test_files/enrichment_hypergeometric_res.csv'
+    enrichment_bar_plot(pth, plot_horizontal=True)
+    enrichment_bar_plot(pth, plot_horizontal=False, ylabel='different ylabel', alpha=0.1)
     plt.close('all')
 
 
