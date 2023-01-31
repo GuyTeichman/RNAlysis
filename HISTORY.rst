@@ -39,6 +39,7 @@ Fixed
 * When filtering a table by a single user-defined attribute, the automatic table name will now be more informative about the operation applied.
 * Fixed bug where occasionally a Pipeline or Function would generate multiple tables of the same name, but only one of them will appear in the GUI.
 * Fixed bug where occasionally significance asterisks on enrichment bar-plots would appear in the wrong location.
+* Fixed bug where fastq.create_kallisto_index() (Create Kallisto Index) would not make use of the `make_unique` parameter (thanks to Matthias Wilm)
 
 Removed
 ********
@@ -50,6 +51,7 @@ New Contributors
 *****************
 * `Mintxoklet`_ in `#7`_
 * `Bipin Kumar`_ in `#9`_
+* Matthias Wilm
 
 3.3.0 (2022-12-02)
 ------------------

@@ -627,7 +627,7 @@ def kallisto_create_index(transcriptome_fasta: Union[str, Path],
     call.extend(['-k', str(kmer_length)])
 
     if make_unique:
-        call.append('--unique')
+        call.append('--make-unique')
 
     call.append(transcriptome_fasta.as_posix())
 

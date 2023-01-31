@@ -231,7 +231,7 @@ def test_bowtie2_align_paired_end():
 @pytest.mark.parametrize("transcriptome_fasta,kallisto_installation_folder,kmer_length,make_unique,expected_command", [
     ('tests/test_files/kallisto_tests/transcripts.fasta', 'auto', 5, True,
      ['kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '5',
-      '--unique', 'tests/test_files/kallisto_tests/transcripts.fasta']),
+      '--make-unique', 'tests/test_files/kallisto_tests/transcripts.fasta']),
     ('tests/test_files/kallisto_tests/transcripts.fasta', 'pth/to/kallisto', 3, False,
      ['pth/to/kallisto/kallisto', 'index', '-i', 'tests/test_files/kallisto_tests/transcripts.idx', '-k', '3',
       'tests/test_files/kallisto_tests/transcripts.fasta']),

@@ -154,6 +154,7 @@ Contributors
 * Shachar Shani
 * `Mintxoklet <https://github.com/Mintxoklet>`_
 * `Bipin Kumar <https://github.com/kbipinkumar>`_
+* Matthias Wilm
 
 ----
 
