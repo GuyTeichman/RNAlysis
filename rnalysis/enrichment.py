@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
-    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt,NonNegativeInt
+    PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
 
 try:
     from typing import Literal
@@ -1159,26 +1159,41 @@ class RankedSet(FeatureSet):
         return runner.run()
 
 
-def plot_enrichment_results(results_df: pd.DataFrame, alpha=0.05, en_score_col: str = 'log2_fold_enrichment',
-                            name_col: str = None, title: str = '', center_bars: bool = True,
-                            plot_horizontal: bool = True, ylabel: str = r"$\log_2$(Fold Enrichment)") -> plt.Figure:
+def enrichment_histogram(results_table_path: Union[str, Path], alpha: param_typing.Fraction = 0.05,
+                         parametric_test: bool = False,
+                         plot_log_scale: bool = True, plot_style: Literal['interleaved', 'overlap'] = 'overlap',
+                         n_bins: PositiveInt = 50, ):
+    results_table = io.load_csv(results_table_path, 0)
+    runner = enrichment_runner.NonCategoricalEnrichmentRunner(set(), results_table.index, alpha, '', set(), '', '',
+                                                              True, '', True, plot_log_scale, plot_style, n_bins, '',
+                                                              'sequential', parametric_test)
+    runner.results = results_table
+    return runner.plot_results()
+
+
+def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typing.Fraction = 0.05,
+                        enrichment_score_column: Union[
+                            str, Literal['log2_fold_enrichment', 'log2_enrichment_score']] = 'log2_fold_enrichment',
+                        n_bars: Union[param_typing.PositiveInt, Literal['all']] = 'all',
+                        title: str = 'Enrichment results', center_bars: bool = True,
+                        plot_horizontal: bool = True, ylabel: Union[str, Literal[
+        r"$\log_2$(Fold Enrichment)", r"$\log_2$(Enrichment Score)"]] = r"$\log_2$(Fold Enrichment)") -> plt.Figure:
     """
-    Receives a DataFrame output from an enrichment function and plots it in a bar plot. \
+    Generate an enrichment bar-plot based on an enrichment results table. \
     For the clarity of display, complete depletion (linear enrichment = 0) \
     appears with the smallest value in the scale.
 
-    :param results_df: the results DataFrame returned by enrichment functions.
-    :type results_df: pandas DataFrame
+    :param results_table_path: Path to the results table returned by enrichment functions.
+    :type results_table_path: str or Path
     :param alpha: the threshold for statistical significance. Used to draw significance asterisks on the graph.
-    :type alpha: float (default=0.05)
-    :param en_score_col: name of the DataFrame column containing enrichment scores.
-    :type en_score_col: str (default='log2_fold_enrichment')
-    :param name_col: name of the DataFrame column containing attribute/GO term names.
-    :type name_col: str (default=None)
-    :param results_df: a pandas DataFrame created by FeatureSet.enrich_randomization.
-    :type results_df: pd.DataFrame
-    :param en_score_col: name of the DataFrame column that contains the enrichment scores.
-    :type en_score_col: str (default='log2_fold_enrichment')
+    :type alpha: float between 0 and 1 (default=0.05)
+    :param enrichment_score_column: name of the table column containing enrichment scores.
+    :type enrichment_score_column: str (default='log2_fold_enrichment')
+    :param enrichment_score_column: name of the table column that contains the enrichment scores.
+    :type enrichment_score_column: str (default='log2_fold_enrichment')
+    :param n_bars: number of bars to display in the bar plot. If n_bars='all', \
+     all the results will be displayed on the graph. Otherwise, only the top n results will be displayed on the graph.
+     :type n_bars: int > 1 or 'all' (default='all')
     :param title: plot title.
     :type title: str
     :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. \
@@ -1191,11 +1206,12 @@ def plot_enrichment_results(results_df: pd.DataFrame, alpha=0.05, en_score_col: 
     :return: Figure object containing the bar plot
     :rtype: matplotlib.figure.Figure instance
     """
-    runner = enrichment_runner.EnrichmentRunner(set(), results_df.index, alpha, '', True, False, '', True,
+    results_table = io.load_csv(results_table_path, 0)
+    runner = enrichment_runner.EnrichmentRunner(set(), results_table.index, alpha, '', True, False, '', True,
                                                 plot_horizontal, '', False, 'hypergeometric', 'all')
-    runner.en_score_col = en_score_col
-    runner.results = results_df
-    return runner.enrichment_bar_plot(name_col=name_col, center_bars=center_bars, ylabel=ylabel, title=title)
+    runner.en_score_col = enrichment_score_column
+    runner.results = results_table
+    return runner.enrichment_bar_plot(n_bars, center_bars, ylabel, title)
 
 
 def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'predefined'):

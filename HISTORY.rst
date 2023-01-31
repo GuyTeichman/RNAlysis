@@ -19,6 +19,7 @@ Added
 * Added bowtie2 alignment to the fastq module.
 * Added FeatureCounts feature-counting to the fastq module.
 * You can now choose whether or not to discard
+* Added sections to the programmatic user guide about the `fastq` module.
 
 Changed
 ********
@@ -29,6 +30,7 @@ Changed
 * The colorbar ticks in enrichment bar plots now match the axis ticks on the main axis.
 * Slight improvements in GUI performance, stability, and looks.
 * Slight improvements in performance of enrichment analysis when examining a small number of attributes.
+* enrichment.plot_enrichment() was replaced by enrichment.enrichment_bar_plot() and enrichment.enrichment_histogram().
 
 Fixed
 ******

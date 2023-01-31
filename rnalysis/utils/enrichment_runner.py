@@ -514,7 +514,7 @@ class EnrichmentRunner:
                                             title=f"Single-list enrichment for {self.set_name}")
         return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL, title=f"Enrichment for {self.set_name}")
 
-    def enrichment_bar_plot(self, n_bars: int = 'all', name_col: str = None, center_bars: bool = True,
+    def enrichment_bar_plot(self, n_bars: int = 'all', center_bars: bool = True,
                             ylabel: str = r"$\log_2$(Fold Enrichment)",
                             title: str = 'Enrichment results') -> plt.Figure:
 
@@ -527,8 +527,6 @@ class EnrichmentRunner:
         :type title:
         :param n_bars:
         :type n_bars:
-        :param name_col:
-        :type name_col:
         :param ylabel: plot ylabel.
         :type ylabel: str
         :param center_bars: if True, centers the bars around Y=0. Otherwise, ylim is determined by min/max values.
@@ -546,7 +544,10 @@ class EnrichmentRunner:
         else:
             results = self.results
         # pull names/scores/pvals out to avoid accidentally changing the results DataFrame in-place
-        enrichment_names = results.index.values.tolist() if name_col is None else results[name_col].values.tolist()
+        if 'name' in results.columns:
+            enrichment_names = results['name'].values.tolist()
+        else:
+            enrichment_names = results.index.values.tolist()
         enrichment_scores = results[self.en_score_col].values.tolist()
         enrichment_pvalue = results['padj'].values.tolist()
 
