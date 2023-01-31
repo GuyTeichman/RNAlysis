@@ -17,7 +17,6 @@ The fastq module contains functions that interface with the different external t
 Most of these tools require different sets of parameters for single-end vs paired-end reads, and therefore all of the functions in this module are split into single-end functions and paired-end functions.
 
 We will start by importing the fastq module::
-
     >>> from *RNAlysis* import fastq
 
 You can now access the different functions of the fastq module, as explained in the sections below.
@@ -31,7 +30,6 @@ Single-end adapter trimming
 ----------------------------
 
 If you want to trim single-end reads, use the `trim_adapters_single_end` functions::
-
     >>> fastq_folder = 'path/to/fastq/folder'
     >>> output_folder = 'path/to/output/folder'
     >>> adapter = 'ATGGCGTTGA'
@@ -47,7 +45,6 @@ You can read more about those parameters in the `Cutadapt user guide <https://cu
 Paired-end adapter trimming
 ----------------------------
 If you want to trim paired-end reads, use the `trim_adapters_paired_end` functions::
-
     >>> read1_files = ['path/to/sample1read1.fastq', 'path/to/sample2read1.fastq', 'path/to/sample3read1.fastq']
     >>> read2_files = ['path/to/sample1read2.fastq', 'path/to/sample2read2.fastq', 'path/to/sample3read2.fastq']
     >>> output_folder = 'path/to/output/folder'
@@ -75,10 +72,9 @@ Building or acquiring index files
 -----------------------------------
 To quantify expression using *kallisto*, in addition to processed FASTQ files, you will need a transcriptome indexed by *kallisto*, and a matching GTF file describing the names of the transcripts and genes in the transcriptome.
 kallisto provides pre-indexed transcriptomes and their matching GTF files for most common model organisms, which can be downloaded `here <https://github.com/pachterlab/kallisto-transcriptome-indices/releases>`_.
-If your experiment requires a different transcriptome that is not available above, you can index any FASTA file through *RNAlysis*, by using the function `create_kallisto_index`::
-
+If your experiment requires a different transcriptome that is not available above, you can index any FASTA file through *RNAlysis*, by using the function `kallisto_create_index`::
     >>> transcriptome = 'path/to/transcriptome.fasta'
-    >>> fastq.create_kallisto_index(transcriptome)
+    >>> fastq.kallisto_create_index(transcriptome)
 
 The function takes one mandatory parameter - `transcriptome_fasts`. This should point to the path of a fasta file containing your target transcriptome.
 
@@ -92,7 +88,6 @@ Single-end read quantification
 
 Once you have an indexed transcriptome and trimmed FASTQ files, you can proceed with quantification.
 If your FASTQ files contain single-end reads, you can use the `kallisto_quantify_single_end` function::
-
     >>> fastq_folder = 'path/to/fastq/files'
     >>> output_folder = 'path/to/output/folder'
     >>> index_file = 'path/to/index.idx'
@@ -123,7 +118,6 @@ Paired-end read quantification
 -------------------------------
 
 If your FASTQ files contain paired-end reads (meaning, two FASTQ files for each sample - a 'read#1' file and 'read#2' file), you can quantify them using the `kallisto_quantify_paired_end` function::
-
     >>> read1_files = ['path/to/sample1read1.fastq', 'path/to/sample2read1.fastq', 'path/to/sample3read1.fastq']
     >>> read2_files = ['path/to/sample1read2.fastq', 'path/to/sample2read2.fastq', 'path/to/sample3read2.fastq']
     >>> output_folder = 'path/to/output/folder'
@@ -144,16 +138,57 @@ You can read more about these outputs in the section above.
 
 Read alignment with bowtie2
 =============================
-(coming soon!)
+`Bowtie2 <https://bowtie-bio.sourceforge.net/bowtie2>`_ is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.
 
 Building or acquiring index files
 -----------------------------------
+To align reads using bowtie2, in addition to processed FASTQ files, you will need a reference genome indexed by bowtie2.
+Bowtie2 provides pre-indexed genome files for most common model organisms.
+These can be downloaded from  the `bowtie2 website <https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_ (from menu on the right).
+If your experiment requires a different transcriptome that is not available above, you can index any FASTA file (or files) through *RNAlysis*, by using the function `bowtie2_create_index`::
+    >>> genome = 'path/to/genome/file.fasta' # can also be a list of paths to FASTA files
+    >>> output_folder = 'path/to/output/folder'
+    >>> bowtie2_create_index(genome, output_folder)
+
+This function takes two mandatory parameters:
+* `genome_fastas` - path to FASTA file/files containing the reference sequences you wish to align to
+* `output_folder` - the folder to which you want to write the genome index files
+
 
 Single-end read alignment
 -------------------------------
+Once you have an index and trimmed FASTQ files, you can proceed with alignment.
+If your FASTQ files contain single-end reads, you can align them using the `bowtie2_align_single_end` function::
+    >>> fastq_folder = 'path/to/fastq/files'
+    >>> output_folder = 'path/to/output/folder'
+    >>> index_file = 'path/to/index.1.bt2' # can be any of the index files
+    >>> bowtie2_align_single_end(fastq_folder, output_folder, index_file)
+
+The function takes 3 mandatory parameters:
+* `fastq_folder` - the folder containing the FASTQ files you want to align
+* `output_folder` - the folder to which you want to write the output of the alignment (SAM files)
+* `index_file` - path to your index file. This can be either the path to one of the multiple index files bowtie2 generates (doesn't matter which), or a path to the prefix/name of the index files. The important thing is that all of the index files are in the same folder.
+
+Bowtie2 supports many additional paramaters - you can read about them in the `bowtie2 manual <https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_.
 
 Paired-end read alignment
 -------------------------------
+Once you have an index and trimmed FASTQ files, you can proceed with alignment.
+If your FASTQ files contain paired-end reads, you can align them using the `bowtie2_align_paired_end` function::
+    >>> read1_files = ['path/to/sample1read1.fastq', 'path/to/sample2read1.fastq', 'path/to/sample3read1.fastq']
+    >>> read2_files = ['path/to/sample1read2.fastq', 'path/to/sample2read2.fastq', 'path/to/sample3read2.fastq']
+    >>> output_folder = 'path/to/output/folder'
+    >>> index_file = 'path/to/index.1.bt2' # can be any of the index files
+    >>> bowtie2_align_paired_end(read1_files, read2_files, output_folder, index_file)
+
+The function takes 4 mandatory parameters:
+* `r1_files` - list of paths the read#1 FASTQ files you want to align
+* `r2_files` - list of paths the read#2 FASTQ files you want to align. The order of these should match the order of `r1_files`, so that they pair up.
+* `output_folder` - the folder to which you want to write the output of the alignment (SAM files)
+* `index_file` - path to your index file. This can be either the path to one of the multiple index files bowtie2 generates (doesn't matter which), or a path to the prefix/name of the index files. The important thing is that all of the index files are in the same folder.
+
+Bowtie2 supports many additional paramaters - you can read about them in the `bowtie2 manual <https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml>`_.
+
 
 Feature counting with featureCounts
 ====================================
