@@ -502,7 +502,7 @@ The datasets we will use are:
 
 Quantify FASTQ files and Differential Expression Analysis
 ==========================================================
-RNAlysis offers user the opportunity to start analysis right from raw FASTQ data, using XYZ tools.
+RNAlysis offers user the opportunity to start analysis right from raw FASTQ data.
 
 Since our input data is raw FASTQ files, we will first have to pre-process them, quantify them, and then detect differentially expressed genes.
 When using RNAlysis, you can start analyzing your data at any point in the analysis pipeline: raw FASTQ files, trimmed FASTQ files, quantified read counts, or differential expression tables.
