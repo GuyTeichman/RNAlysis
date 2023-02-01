@@ -1,14 +1,13 @@
 =======
 History
 =======
-3.4.1 (2023-02-01)
+3.4.2 (2023-02-01)
 ------------------
 This version introduces minor bug fixes.
 
 Fixed
 ******
 * Fixed bug where updating RNAlysis through the graphical interface would not update some of the optional dependencies.
-* Fixed bug where RNAlysis packaging scripts would be installed alongside RNAlysis.
 * Fixed typos in the documentation.
 
 3.4.0 (2023-02-01)
