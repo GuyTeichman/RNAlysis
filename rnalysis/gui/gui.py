@@ -37,7 +37,7 @@ class OntologyGraphWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = enrichment.gene_ontology_graph
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('Gene Ontology graph', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Gene Ontology graph', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -52,7 +52,7 @@ class PathwayGraphWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = enrichment.kegg_pathway_graph
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('KEGG Pathway graph', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('KEGG Pathway graph', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
         self.init_ui()
 
     def init_ui(self):
