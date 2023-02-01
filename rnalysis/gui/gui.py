@@ -45,21 +45,6 @@ class BarPlotWindow(gui_windows.FuncExternalWindow):
         super().init_ui()
 
 
-class HistogramWindow(gui_windows.FuncExternalWindow):
-    EXCLUDED_PARAMS = set()
-    __slots__ = {}
-
-    def __init__(self, parent=None):
-        func = enrichment.enrichment_histogram
-        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{func.__name__}.html"
-        super().__init__('Enrichment histogram', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
-        self.init_ui()
-
-    def init_ui(self):
-        self.setWindowTitle('Create enrichment histogram (non-categorical enrichment)')
-        super().init_ui()
-
-
 class OntologyGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     __slots__ = {}
@@ -3141,8 +3126,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.bar_plot_action = QtWidgets.QAction("Create enrichment &bar-plot...")
         self.bar_plot_action.triggered.connect(functools.partial(self.start_external_window, BarPlotWindow))
-        self.hist_plot_action = QtWidgets.QAction("Create enrichment &histogram...")
-        self.hist_plot_action.triggered.connect(functools.partial(self.start_external_window, HistogramWindow))
         self.ontology_graph_action = QtWidgets.QAction("Visualize &Gene Ontology...")
         self.ontology_graph_action.triggered.connect(functools.partial(self.start_external_window, OntologyGraphWindow))
         self.pathway_graph_action = QtWidgets.QAction("Visualize &KEGG Pathway...")
@@ -3378,7 +3361,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gene_sets_menu.addActions(
             [self.copy_action, self.import_set_action, self.import_multiple_sets_action,
              self.export_set_action, self.set_op_action, self.set_vis_action, self.enrichment_action,
-             self.ontology_graph_action, self.pathway_graph_action, self.bar_plot_action, self.hist_plot_action])
+             self.ontology_graph_action, self.pathway_graph_action, self.bar_plot_action])
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
         pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action,

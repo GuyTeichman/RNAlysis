@@ -2539,7 +2539,7 @@ def test_MainWindow_clear_session(qtbot, main_window_with_tabs):
                                          'bowtie2_single_action', 'bowtie2_paired_action', 'kallisto_index_action',
                                          'kallisto_single_action', 'kallisto_paired_action', 'cutadapt_single_action',
                                          'cutadapt_paired_action', 'set_op_action', 'enrichment_action',
-                                         'set_vis_action', 'bar_plot_action', 'hist_plot_action'])
+                                         'set_vis_action', 'bar_plot_action'])
 def test_MainWindow_open_windows(qtbot, main_window_with_tabs, action_name):
     action = getattr(main_window_with_tabs, action_name)
     action.trigger()
