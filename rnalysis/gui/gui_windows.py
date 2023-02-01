@@ -735,7 +735,8 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
                  'start_button': 'start button',
                  'close_button': 'close button'}
 
-    def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, parent=None):
+    def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, threaded=True,
+                 parent=None):
         super().__init__(parent)
         self.func_name = func_name
         self.func = func
@@ -743,6 +744,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.desc, self.param_desc = io.get_method_docstring(self.func)
         self.help_link = help_link
         self.excluded_params = excluded_params.copy()
+        self.threaded = threaded
 
         self.widgets = {}
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -775,7 +777,11 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         self.scroll_layout.addWidget(self.start_button, 1, 0, 1, 2)
         self.scroll_layout.addWidget(self.close_button, 2, 0, 1, 2)
 
-        self.start_button.clicked.connect(self.start_analysis)
+        if self.threaded:
+            self.start_button.clicked.connect(self.run_function_threaded)
+        else:
+            self.start_button.clicked.connect(self.run_function_in_main_loop)
+
         self.close_button.clicked.connect(self.close)
 
         self.init_param_ui()
@@ -820,7 +826,7 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
         args = []
         return args
 
-    def start_analysis(self):
+    def run_function_threaded(self):
         args = self.get_analysis_args()
         kwargs = self.get_analysis_kwargs()
         try:
@@ -830,6 +836,11 @@ class FuncExternalWindow(gui_widgets.MinMaxDialog):
             self.showNormal()
             raise e
 
+    def run_function_in_main_loop(self):
+        args = self.get_analysis_args()
+        kwargs = self.get_analysis_kwargs()
+        self.func(*args, **kwargs)
+
 
 class PairedFuncExternalWindow(FuncExternalWindow):
     __slots__ = {'pairs_group': 'widget group for picking file pairs',
@@ -838,7 +849,7 @@ class PairedFuncExternalWindow(FuncExternalWindow):
     EXCLUDED_PARAMS = {'r1_files', 'r2_files'}
 
     def __init__(self, func_name: str, func: Callable, help_link: str, excluded_params: set, parent=None):
-        super().__init__(func_name, func, help_link, excluded_params, parent)
+        super().__init__(func_name, func, help_link, excluded_params, parent=parent)
 
         self.pairs_group = QtWidgets.QGroupBox("2. Choose FASTQ file pairs")
         self.pairs_grid = QtWidgets.QGridLayout(self.pairs_group)
