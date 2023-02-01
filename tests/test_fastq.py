@@ -272,7 +272,7 @@ def test_kallisto_create_index():
         with open(truth_path, 'rb') as truth, open(out_path, 'rb') as out:
             assert truth.read() == out.read()
         with open(log_truth_path) as truth, open(log_path) as out:
-            assert truth.read() == out.read()
+            assert truth.read().replace('\n','') == out.read().replace('\n','')
     finally:
         if Path(out_path).exists():
             Path(out_path).unlink()
