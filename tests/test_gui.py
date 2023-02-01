@@ -430,7 +430,7 @@ def test_DESeqWindow_load_design_mat(qtbot, deseq_window):
 
 def test_DESeqWindow_get_analysis_params(qtbot, deseq_window):
     design_mat_path = 'tests/test_files/test_design_matrix.csv'
-    truth = dict(r_installation_folder='auto', design_matrix=design_mat_path,
+    truth = dict(r_installation_folder='auto', design_matrix=design_mat_path, output_folder=None,
                  comparisons=[('replicate', 'rep3', 'rep2'), ('condition', 'cond1', 'cond1')])
 
     deseq_window.param_widgets['design_matrix'].setText(design_mat_path)
