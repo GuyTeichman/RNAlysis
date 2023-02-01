@@ -175,8 +175,8 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
     :target: https://pypi.python.org/pypi/rnalysis
     :alt: Python versions supported
 
-..  |githubactions| image:: https://github.com/guyteichman/RNAlysis/actions/workflows/python-package.yml/badge.svg
-    :target: https://github.com/GuyTeichman/RNAlysis/actions/workflows/python-package.yml
+..  |githubactions| image:: https://github.com/guyteichman/RNAlysis/actions/workflows/build_ci.yml/badge.svg
+    :target: https://github.com/GuyTeichman/RNAlysis/actions/workflows/build_ci.yml
     :alt: Build status
 
 .. |coveralls| image:: https://coveralls.io/repos/github/GuyTeichman/RNAlysis/badge.svg?branch=master
