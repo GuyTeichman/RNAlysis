@@ -1358,7 +1358,7 @@ def is_rnalysis_outdated():
 
 
 def update_rnalysis():
-    run_subprocess([executable, '-m', 'pip', 'install', '--upgrade', 'RNAlysis'])
+    run_subprocess([executable, '-m', 'pip', 'install', '--upgrade', 'RNAlysis[all]'])
 
 
 def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool,
