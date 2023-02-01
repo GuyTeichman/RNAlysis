@@ -66,7 +66,7 @@
 <p class="caption" role="heading"><span class="caption-text">Change history:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">3.4.0 (2023-01-24)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">3.4.0 (2023-02-01)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#added">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
@@ -192,9 +192,9 @@
   <section id="history">
 <h1>History<a class="headerlink" href="#history" title="Permalink to this heading"></a></h1>
 <section id="id1">
-<h2>3.4.0 (2023-01-24)<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<h2>3.4.0 (2023-02-01)<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
 <p>From this release forward, <em>RNAlysis</em> is made available as a stand-alone app for Windows and MacOS. You can download these stand-alone versions from the GitHub Releases page.
-In addition, new features were added, including new plots, filtering functions, and the ability to generate Gene Ontology Graphs and KEGG Pathway Graphs without running enrichment analysis from scratch.</p>
+In addition, new features were added, including new plots, filtering functions, integration of the external tools bowtie2 and featureCounts, and the ability to generate Gene Ontology Graphs and KEGG Pathway Graphs without running enrichment analysis from scratch.</p>
 <section id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this heading"></a></h3>
 <ul class="simple">
@@ -208,6 +208,7 @@ In addition, new features were added, including new plots, filtering functions, 
 <li><p>Added bowtie2 alignment to the fastq module.</p></li>
 <li><p>Added FeatureCounts feature-counting to the fastq module.</p></li>
 <li><p>You can now choose whether or not to discard</p></li>
+<li><p>Added sections to the programmatic user guide about the <cite>fastq</cite> module.</p></li>
 </ul>
 </section>
 <section id="changed">
@@ -220,6 +221,8 @@ In addition, new features were added, including new plots, filtering functions, 
 <li><p>The colorbar ticks in enrichment bar plots now match the axis ticks on the main axis.</p></li>
 <li><p>Slight improvements in GUI performance, stability, and looks.</p></li>
 <li><p>Slight improvements in performance of enrichment analysis when examining a small number of attributes.</p></li>
+<li><p>enrichment.plot_enrichment() was replaced by enrichment.enrichment_bar_plot().</p></li>
+<li><p>CountFilter.differential_expression() has new optional parameter <cite>output_folder</cite>, which allows users to save the generated data tables and the R script that generated them into a specified folder.</p></li>
 </ul>
 </section>
 <section id="fixed">
@@ -232,6 +235,7 @@ In addition, new features were added, including new plots, filtering functions, 
 <li><p>When filtering a table by a single user-defined attribute, the automatic table name will now be more informative about the operation applied.</p></li>
 <li><p>Fixed bug where occasionally a Pipeline or Function would generate multiple tables of the same name, but only one of them will appear in the GUI.</p></li>
 <li><p>Fixed bug where occasionally significance asterisks on enrichment bar-plots would appear in the wrong location.</p></li>
+<li><p>Fixed bug where fastq.create_kallisto_index() (Create Kallisto Index) would not make use of the <cite>make_unique</cite> parameter (thanks to Matthias Wilm)</p></li>
 </ul>
 </section>
 <section id="removed">
@@ -245,6 +249,7 @@ In addition, new features were added, including new plots, filtering functions, 
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/Mintxoklet">Mintxoklet</a> in <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues/7">#7</a></p></li>
 <li><p><a class="reference external" href="https://github.com/kbipinkumar">Bipin Kumar</a> in <a class="reference external" href="https://github.com/GuyTeichman/RNAlysis/issues/9">#9</a></p></li>
+<li><p>Matthias Wilm</p></li>
 </ul>
 </section>
 </section>

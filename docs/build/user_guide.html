@@ -63,15 +63,19 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User guide - programmatic interface</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#rnalysis-fastq-module"><em>RNAlysis</em> fastq module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#working-with-the-fastq-module">Working with the fastq module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#adapter-trimming-with-cutadapt">Adapter trimming with CutAdapt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adapter-trimming-with-cutadapt">Adapter trimming with CutAdapt</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#single-end-adapter-trimming">Single-end adapter trimming</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#paired-end-adapter-trimming">Paired-end adapter trimming</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#rna-sequencing-quantification-with-kallisto">RNA sequencing quantification with kallisto</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#building-or-acquiring-index-files">Building or acquiring index files</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#single-end-read-quantification">Single-end read quantification</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#paired-end-read-quantification">Paired-end read quantification</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#rread-alignment-with-bowtie2">RRead alignment with bowtie2</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id1">Building or acquiring index files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#read-alignment-with-bowtie2">Read alignment with bowtie2</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Building or acquiring index files</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#single-end-read-alignment">Single-end read alignment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#paired-end-read-alignment">Paired-end read alignment</a></li>
 </ul>
@@ -213,50 +217,220 @@ Those currently include the <em>CutAdapt</em> adapter-trimming tool, the <em>kal
 the <em>bowtie2</em> alignment tool, and the <em>featureCounts</em> feature counting tool.</p>
 <section id="working-with-the-fastq-module">
 <h3>Working with the fastq module<a class="headerlink" href="#working-with-the-fastq-module" title="Permalink to this heading"></a></h3>
-<p>We will start by importing the fastq module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">fastq</span>
+<p>The fastq module contains functions that interface with the different external tools.
+Most of these tools require different sets of parameters for single-end vs paired-end reads, and therefore all of the functions in this module are split into single-end functions and paired-end functions.</p>
+<dl>
+<dt>We will start by importing the fastq module::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="o">*</span><span class="n">RNAlysis</span><span class="o">*</span> <span class="kn">import</span> <span class="nn">fastq</span>
 </pre></div>
 </div>
-<p>You can now access the different functions of the fastq module, as explained below:</p>
+</dd>
+</dl>
+<p>You can now access the different functions of the fastq module, as explained in the sections below.</p>
 </section>
 <section id="adapter-trimming-with-cutadapt">
 <h3>Adapter trimming with CutAdapt<a class="headerlink" href="#adapter-trimming-with-cutadapt" title="Permalink to this heading"></a></h3>
-<p>(coming soon!)</p>
+<p>Cutadapt is a program that finds and removes adapter sequences, primers, poly-A tails and other types of unwanted sequencea from high-throughput sequencing reads.
+Cutadapt can also trim bases based on their quality scores, high incidence of N (‘any’) bases, and perform basic filtering of reads.</p>
+<section id="single-end-adapter-trimming">
+<h4>Single-end adapter trimming<a class="headerlink" href="#single-end-adapter-trimming" title="Permalink to this heading"></a></h4>
+<dl>
+<dt>If you want to trim single-end reads, use the <cite>trim_adapters_single_end</cite> functions::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fastq_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/fastq/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adapter</span> <span class="o">=</span> <span class="s1">&#39;ATGGCGTTGA&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trim_adapters_single_end</span><span class="p">(</span><span class="n">fastq_folder</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">adapter</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>This function takes two mandatory parameters:
+* <cite>fastq_folder</cite> - the folder containing the FASTQ files you want to trim
+* <cite>output_folder</cite> - the folder to which you want to write the trimmed FASTQ files</p>
+<p>The other parameters allow you to specify the adapter/adapters you wish to trim according to their type (3’ adapters, 5’ adapters, or any position adapters), and to apply additional trimming/filtering actions.
+You can read more about those parameters in the <a class="reference external" href="https://cutadapt.readthedocs.io/en/stable/guide.html">Cutadapt user guide</a>.</p>
+</section>
+<section id="paired-end-adapter-trimming">
+<h4>Paired-end adapter trimming<a class="headerlink" href="#paired-end-adapter-trimming" title="Permalink to this heading"></a></h4>
+<dl>
+<dt>If you want to trim paired-end reads, use the <cite>trim_adapters_paired_end</cite> functions::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">read1_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;path/to/sample1read1.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample2read1.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample3read1.fastq&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">read2_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;path/to/sample1read2.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample2read2.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample3read2.fastq&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adapter1</span> <span class="o">=</span> <span class="s1">&#39;ATGGCGT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">adapter2</span> <span class="o">=</span> <span class="s1">&#39;CGTTATC&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trim_adapters_paired_end</span><span class="p">(</span><span class="n">read1_files</span><span class="p">,</span> <span class="n">read2_files</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">adapter1</span><span class="p">,</span> <span class="n">adapter2</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>This function takes three mandatory parameters:
+* <cite>r1_files</cite> - list of paths the read#1 FASTQ files you want to trim
+* <cite>r2_files</cite> - list of paths the read#2 FASTQ files you want to trim. The order of these should match the order of <cite>r1_files</cite>, so that they pair up.
+* <cite>output_folder</cite> - the folder to which you want to write the trimmed FASTQ files</p>
+<p>The other parameters allow you to specify the adapter/adapters you wish to trim according to their type (3’ adapters, 5’ adapters, or any position adapters), and to apply additional trimming/filtering actions.
+Note that in paired-end mode, you can (and usually would) specify a different adapter for the read#1 files and the read#2 files.
+You can read more about those parameters in the <a class="reference external" href="https://cutadapt.readthedocs.io/en/stable/guide.html">Cutadapt user guide</a>.</p>
+</section>
 </section>
 <section id="rna-sequencing-quantification-with-kallisto">
 <h3>RNA sequencing quantification with kallisto<a class="headerlink" href="#rna-sequencing-quantification-with-kallisto" title="Permalink to this heading"></a></h3>
-<p>(coming soon!)</p>
+<p><a class="reference external" href="https://pachterlab.github.io/kallisto/">kallisto</a> is a program for quantifying abundances of transcripts from bulk and single-cell RNA sequencing data.
+Kallisto uses an approach known as <strong>pseudoalignment</strong> - identifying the transcripts from which the reads could have originated, instead of trying to pinpoint exactly how the sequences of the reads and transcripts align.
+This allows kallisto to run incredibly quickly, but still produce accurate and valid results.
+You can read more about it in the <a class="reference external" href="https://doi.org/10.1038/nbt.3519">kallisto publication</a>.</p>
 <section id="building-or-acquiring-index-files">
 <h4>Building or acquiring index files<a class="headerlink" href="#building-or-acquiring-index-files" title="Permalink to this heading"></a></h4>
+<p>To quantify expression using <em>kallisto</em>, in addition to processed FASTQ files, you will need a transcriptome indexed by <em>kallisto</em>, and a matching GTF file describing the names of the transcripts and genes in the transcriptome.
+kallisto provides pre-indexed transcriptomes and their matching GTF files for most common model organisms, which can be downloaded <a class="reference external" href="https://github.com/pachterlab/kallisto-transcriptome-indices/releases">here</a>.
+If your experiment requires a different transcriptome that is not available above, you can index any FASTA file through <em>RNAlysis</em>, by using the function <cite>kallisto_create_index</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">transcriptome</span> <span class="o">=</span> <span class="s1">&#39;path/to/transcriptome.fasta&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fastq</span><span class="o">.</span><span class="n">kallisto_create_index</span><span class="p">(</span><span class="n">transcriptome</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function takes one mandatory parameter - <cite>transcriptome_fasts</cite>. This should point to the path of a fasta file containing your target transcriptome.</p>
+<p>Three additional optional paremeters are supported:
+* <cite>kallisto_installation_folder</cite> - path to the installation folder of <em>kallisto</em> (or ‘auto’, if you have already added it to your PATH).
+* <cite>kmer_length</cite> - length of the k-mer used to construct the index. Must be an odd integer &lt;= 31. The default k-mer length is optimized for usual NGS read lengths (50-100bp) - if your reads are much shorter you may get better mapping results if you lower the k-mer length.
+* <cite>make_unique</cite> - if True, replaces repeated target names with unique names.</p>
 </section>
 <section id="single-end-read-quantification">
 <h4>Single-end read quantification<a class="headerlink" href="#single-end-read-quantification" title="Permalink to this heading"></a></h4>
+<p>Once you have an indexed transcriptome and trimmed FASTQ files, you can proceed with quantification.
+If your FASTQ files contain single-end reads, you can use the <cite>kallisto_quantify_single_end</cite> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fastq_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/fastq/files&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_file</span> <span class="o">=</span> <span class="s1">&#39;path/to/index.idx&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">avg_frag_len</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stdev_frag_len</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kallisto_quantify_single_end</span><span class="p">(</span><span class="n">fastq_folder</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">index_file</span><span class="p">,</span> <span class="n">avg_frag_len</span><span class="p">,</span> <span class="n">stdev_frag_len</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function takes 5 mandatory parameters:
+* <cite>fastq_folder</cite> - the folder containing the FASTQ files you want to quantify
+* <cite>output_folder</cite> - the folder to which you want to write the output of the quantification
+* <cite>index_file</cite> - path to your index file
+* <cite>average_fragment_length</cite> - estimated average length of fragments produced by your library preperation protocol
+* <cite>stdev_fragment_length</cite> - estimated standard deviation of the length of fragments produced by your library preperation protocol</p>
+<p>The FASTQ files will be individually quantified and saved in the output folder, each in its own sub-folder.
+Alongside these files, three .csv files will be saved: a per-transcript count estimate table,
+a per-transcript TPM estimate table, and a per-gene scaled output table.</p>
+<p>The per-gene scaled output table is generated using the <em>scaledTPM</em> method
+(scaling the TPM estimates up to the library size) as described by
+<a class="reference external" href="https://doi.org/10.12688/f1000research.7563.2">Soneson et al 2015</a> and used in the
+<a class="reference external" href="https://ycl6.gitbook.io/guide-to-rna-seq-analysis/differential-expression-analysis/tximport#scaling">tximport</a>
+R package. This table format is considered un-normalized for library size,
+and can therefore be used directly by count-based statistical inference tools such as DESeq2.
+<em>RNAlysis</em> will return this table once the analysis is finished.</p>
 </section>
 <section id="paired-end-read-quantification">
 <h4>Paired-end read quantification<a class="headerlink" href="#paired-end-read-quantification" title="Permalink to this heading"></a></h4>
+<dl>
+<dt>If your FASTQ files contain paired-end reads (meaning, two FASTQ files for each sample - a ‘read#1’ file and ‘read#2’ file), you can quantify them using the <cite>kallisto_quantify_paired_end</cite> function::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">read1_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;path/to/sample1read1.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample2read1.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample3read1.fastq&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">read2_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;path/to/sample1read2.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample2read2.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample3read2.fastq&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_file</span> <span class="o">=</span> <span class="s1">&#39;path/to/index.idx&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kallisto_quantify_paired_end</span><span class="p">(</span><span class="n">read1_files</span><span class="p">,</span> <span class="n">read2_files</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">index_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The function takes 4 mandatory parameters:
+* <cite>r1_files</cite> - list of paths the read#1 FASTQ files you want to quantify
+* <cite>r2_files</cite> - list of paths the read#2 FASTQ files you want to quantify. The order of these should match the order of <cite>r1_files</cite>, so that they pair up.
+* <cite>output_folder</cite> - the folder to which you want to write the output of the quantification
+* <cite>index_file</cite> - path to your index file</p>
+<p>The FASTQ file-pairs will be individually quantified and saved in the output folder, each in its own sub-folder.
+Alongside these files, three .csv files will be saved: a per-transcript count estimate table,
+a per-transcript TPM estimate table, and a per-gene scaled output table.
+You can read more about these outputs in the section above.</p>
 </section>
 </section>
-<section id="rread-alignment-with-bowtie2">
-<h3>RRead alignment with bowtie2<a class="headerlink" href="#rread-alignment-with-bowtie2" title="Permalink to this heading"></a></h3>
-<p>(coming soon!)</p>
-<section id="id1">
-<h4>Building or acquiring index files<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h4>
+<section id="read-alignment-with-bowtie2">
+<h3>Read alignment with bowtie2<a class="headerlink" href="#read-alignment-with-bowtie2" title="Permalink to this heading"></a></h3>
+<p><a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2">Bowtie2</a> is an ultrafast and memory-efficient tool for aligning sequencing reads to long reference sequences.</p>
+<section id="id2">
+<h4>Building or acquiring index files<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h4>
+<p>To align reads using bowtie2, in addition to processed FASTQ files, you will need a reference genome indexed by bowtie2.
+Bowtie2 provides pre-indexed genome files for most common model organisms.
+These can be downloaded from  the <a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml">bowtie2 website</a> (from menu on the right).
+If your experiment requires a different transcriptome that is not available above, you can index any FASTA file (or files) through <em>RNAlysis</em>, by using the function <cite>bowtie2_create_index</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="s1">&#39;path/to/genome/file.fasta&#39;</span> <span class="c1"># can also be a list of paths to FASTA files</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bowtie2_create_index</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This function takes two mandatory parameters:
+* <cite>genome_fastas</cite> - path to FASTA file/files containing the reference sequences you wish to align to
+* <cite>output_folder</cite> - the folder to which you want to write the genome index files</p>
 </section>
 <section id="single-end-read-alignment">
 <h4>Single-end read alignment<a class="headerlink" href="#single-end-read-alignment" title="Permalink to this heading"></a></h4>
+<p>Once you have an index and trimmed FASTQ files, you can proceed with alignment.
+If your FASTQ files contain single-end reads, you can align them using the <cite>bowtie2_align_single_end</cite> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fastq_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/fastq/files&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_file</span> <span class="o">=</span> <span class="s1">&#39;path/to/index.1.bt2&#39;</span> <span class="c1"># can be any of the index files</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bowtie2_align_single_end</span><span class="p">(</span><span class="n">fastq_folder</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">index_file</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function takes 3 mandatory parameters:
+* <cite>fastq_folder</cite> - the folder containing the FASTQ files you want to align
+* <cite>output_folder</cite> - the folder to which you want to write the output of the alignment (SAM files)
+* <cite>index_file</cite> - path to your index file. This can be either the path to one of the multiple index files bowtie2 generates (doesn’t matter which), or a path to the prefix/name of the index files. The important thing is that all of the index files are in the same folder.</p>
+<p>Bowtie2 supports many additional paramaters - you can read about them in the <a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml">bowtie2 manual</a>.</p>
 </section>
 <section id="paired-end-read-alignment">
 <h4>Paired-end read alignment<a class="headerlink" href="#paired-end-read-alignment" title="Permalink to this heading"></a></h4>
+<p>Once you have an index and trimmed FASTQ files, you can proceed with alignment.
+If your FASTQ files contain paired-end reads, you can align them using the <cite>bowtie2_align_paired_end</cite> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">read1_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;path/to/sample1read1.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample2read1.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample3read1.fastq&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">read2_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;path/to/sample1read2.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample2read2.fastq&#39;</span><span class="p">,</span> <span class="s1">&#39;path/to/sample3read2.fastq&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index_file</span> <span class="o">=</span> <span class="s1">&#39;path/to/index.1.bt2&#39;</span> <span class="c1"># can be any of the index files</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bowtie2_align_paired_end</span><span class="p">(</span><span class="n">read1_files</span><span class="p">,</span> <span class="n">read2_files</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">index_file</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function takes 4 mandatory parameters:
+* <cite>r1_files</cite> - list of paths the read#1 FASTQ files you want to align
+* <cite>r2_files</cite> - list of paths the read#2 FASTQ files you want to align. The order of these should match the order of <cite>r1_files</cite>, so that they pair up.
+* <cite>output_folder</cite> - the folder to which you want to write the output of the alignment (SAM files)
+* <cite>index_file</cite> - path to your index file. This can be either the path to one of the multiple index files bowtie2 generates (doesn’t matter which), or a path to the prefix/name of the index files. The important thing is that all of the index files are in the same folder.</p>
+<p>Bowtie2 supports many additional paramaters - you can read about them in the <a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml">bowtie2 manual</a>.</p>
 </section>
 </section>
 <section id="feature-counting-with-featurecounts">
 <h3>Feature counting with featureCounts<a class="headerlink" href="#feature-counting-with-featurecounts" title="Permalink to this heading"></a></h3>
-<p>(coming soon!)</p>
+<p><a class="reference external" href="https://subread.sourceforge.net/featureCounts.html">featureCounts</a>
+is a highly efficient general-purpose read summarization program that counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations.
+It can be used to count both RNA-seq and genomic DNA-seq reads.
+featureCounts is part of the Subread package, which was also adapted into R as <a class="reference external" href="https://bioconductor.org/packages/release/bioc/html/Rsubread.html">RSubread</a>.</p>
+<p>In order to use featureCounts through <em>RNAlysis</em>, you will need SAM/BAM files containing your aligned reads (such as those generated by <a class="reference external" href="https://bowtie-bio.sourceforge.net/bowtie2">bowtie2</a>), and a GTF annotation file that matches the genome you aligned your reads to.
+Furthermore, you will need to define the folder that contains your SAM/BAM files, and the folder to which you want to write the outputs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/input/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_folder</span> <span class="o">=</span> <span class="s1">&#39;path/to/output/folder&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gtf_file</span> <span class="o">=</span> <span class="s1">&#39;path/to/gtf_file.gtf&#39;</span>
+</pre></div>
+</div>
+<p>Usually, you would want to assign reads to specific exons, and then sum up the exons into their corresponding genes, to get a final count of how many reads aligned to each gene.
+If you want to count your reads differently, or your GTF file is non-standard, you can specify different values for the <cite>gtf_feature_type</cite> and <cite>gtf_attr_name</cite> parameters.</p>
+<p>featureCounts supports many more options and parameters - you can read about them in the <em>RNAlysis</em> documentation and the <a class="reference external" href="https://rdrr.io/bioc/Rsubread/man/featureCounts.html">featureCounts documentation</a>.</p>
 <section id="single-end-read-feature-counting">
 <h4>Single-end read feature counting<a class="headerlink" href="#single-end-read-feature-counting" title="Permalink to this heading"></a></h4>
+<dl>
+<dt>To apply featureCounts to single-end reads, you can use the <cite>featurecounts_single_end</cite> function::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">featurecounts_single_end</span><span class="p">(</span><span class="n">input_folder</span><span class="p">,</span><span class="n">output_folder</span><span class="p">,</span><span class="n">gtf_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </section>
 <section id="paired-end-read-feature-counting">
 <h4>Paired-end read feature counting<a class="headerlink" href="#paired-end-read-feature-counting" title="Permalink to this heading"></a></h4>
+<dl>
+<dt>To apply featureCounts to paired-end reads, you can use the <cite>featurecounts_paired_end</cite> function::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">featurecounts_paired_end</span><span class="p">(</span><span class="n">input_folder</span><span class="p">,</span><span class="n">output_folder</span><span class="p">,</span><span class="n">gtf_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>While the mandatory paramters of this function are identical to those of single-end read counting, paired-end feature counting supports a few additional optional parameters.
+Those include minimum/maximum fragment lengths, and the option to exclude chimeric reads or pairs where only one read was aligned.</p>
 </section>
 </section>
 </section>
@@ -413,7 +587,7 @@ We can view the current automatic filename by looking at the ‘fname’ attribu
 <section id="using-an-attribute-reference-table-for-filter-operations">
 <h4>Using an Attribute Reference Table for filter operations<a class="headerlink" href="#using-an-attribute-reference-table-for-filter-operations" title="Permalink to this heading"></a></h4>
 <p>An <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> contains various user-defined attributes (such as ‘genes expressed in intestine’, ‘epigenetic genes’ or ‘genes that have paralogs’) and their value for each genomic feature.
-You can read more about the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> format and loading an <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
+You can read more about the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> format and loading an <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> in the <a class="reference internal" href="user_guide_gui.html#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
 Using the function Filter.filter_by_attribute(), you can filter your genomic features by one of the user-defined attributes in the Reference Table:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_by_attribute</span><span class="p">(</span><span class="s1">&#39;attribute1&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/test_files/attr_ref_table_for_examples.csv&#39;</span><span class="p">)</span>
@@ -424,7 +598,7 @@ Using the function Filter.filter_by_attribute(), you can filter your genomic fea
 <section id="using-a-biotype-reference-table-for-filter-operations">
 <h4>Using a Biotype Reference Table for filter operations<a class="headerlink" href="#using-a-biotype-reference-table-for-filter-operations" title="Permalink to this heading"></a></h4>
 <p>A <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> contains annotations of the biotype of each genomic features (‘protein_coding’, ‘piRNAs’, ‘lincRNAs’, ‘pseudogenes’, etc).
-You can read more about the <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> format and loading a <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> in the <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
+You can read more about the <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> format and loading a <a class="reference internal" href="glossary.html#term-Biotype-Reference-Table"><span class="xref std std-term">Biotype Reference Table</span></a> in the <a class="reference internal" href="user_guide_gui.html#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a> section.
 Using the function Filter.filter_biotype_from_ref_table(), you can filter your genomic features by their annotated biotype in the Biotype Reference Table:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">DESeqFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/test_deseq.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">filter_biotype_from_ref_table</span><span class="p">(</span><span class="s1">&#39;protein_coding&#39;</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="s1">&#39;tests/test_files/biotype_ref_table_for_tests.csv&#39;</span><span class="p">)</span>
@@ -571,10 +745,10 @@ By default, <em>RNAlysis</em> assumes that log2 fold change values will be speci
 <h4>Data visualization and exploratory data analysis with DESeqFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-deseqfilter" title="Permalink to this heading"></a></h4>
 <p><a class="reference internal" href="glossary.html#term-DESeqFilter"><span class="xref std std-term">DESeqFilter</span></a> supports methods for visualization and exploratory analysis of differential expression data.</p>
 <p>With DESeqFilter.volcano_plot, you can observe the direction, magnitude, and significance of differential expression within your data:</p>
-<figure class="align-center" id="id45">
+<figure class="align-center" id="id47">
 <a class="reference internal image-reference" href="_images/volcano.png"><img alt="_images/volcano.png" src="_images/volcano.png" style="width: 448.0px; height: 333.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id45" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example output of DESeqFilter.volcano_plot()</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </section>
@@ -838,7 +1012,7 @@ An HTSeq-count output file would follow the following format:</p>
 </tr>
 </tbody>
 </table>
-<p>Such a <cite>csv</cite> table is generated automatically when you create a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="#from-folder-ref"><span class="std std-ref">Generating an CountFilter object from a folder of HTSeq-count output .txt files</span></a>).
+<p>Such a <cite>csv</cite> table is generated automatically when you create a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object from a folder of text files (CountFilter.from_folder(), see <a class="reference internal" href="user_guide_gui.html#from-folder-ref"><span class="std std-ref">Generating a count matrix from a folder of HTSeq-count output .txt files</span></a>).
 We would then supply the normalization function with the path to the special counter file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span> <span class="o">=</span> <span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">counts</span><span class="o">.</span><span class="n">normalize_to_rpm_htseqcount</span><span class="p">(</span><span class="s2">&quot;tests/test_files/uncounted.csv&quot;</span><span class="p">)</span>
@@ -853,28 +1027,28 @@ We would then supply the normalization function with the path to the special cou
 <p>When clustering genomic features in a <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> object, the called function returns a tuple of <a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> objects, with each object corresponding to one cluster of genomic features.</p>
 <p>Expression plots of the resulting clusters can be generated in one of multiple styles:</p>
 <blockquote>
-<div><figure class="align-center" id="id46">
+<div><figure class="align-center" id="id48">
 <a class="reference internal image-reference" href="_images/kmeans_all.png"><img alt="_images/kmeans_all.png" src="_images/kmeans_all.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id46" title="Permalink to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id47">
-<a class="reference internal image-reference" href="_images/kmeans_std_area.png"><img alt="_images/kmeans_std_area.png" src="_images/kmeans_std_area.png" style="width: 560.0px; height: 360.0px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id47" title="Permalink to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id48">
-<a class="reference internal image-reference" href="_images/kmeans_std_bar.png"><img alt="_images/kmeans_std_bar.png" src="_images/kmeans_std_bar.png" style="width: 560.0px; height: 360.0px;" /></a>
-<figcaption>
-<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’all’</span><a class="headerlink" href="#id48" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id49">
+<a class="reference internal image-reference" href="_images/kmeans_std_area.png"><img alt="_images/kmeans_std_area.png" src="_images/kmeans_std_area.png" style="width: 560.0px; height: 360.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_area’</span><a class="headerlink" href="#id49" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id50">
+<a class="reference internal image-reference" href="_images/kmeans_std_bar.png"><img alt="_images/kmeans_std_bar.png" src="_images/kmeans_std_bar.png" style="width: 560.0px; height: 360.0px;" /></a>
+<figcaption>
+<p><span class="caption-text">Example expression plot of clustering results with plot_style=’std_bar’</span><a class="headerlink" href="#id50" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id51">
 <a class="reference internal image-reference" href="_images/clustering_PCA_clicom.png"><img alt="_images/clustering_PCA_clicom.png" src="_images/clustering_PCA_clicom.png" style="width: 380.8px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example PCA plot of clustering results</span><a class="headerlink" href="#id49" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example PCA plot of clustering results</span><a class="headerlink" href="#id51" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1076,36 +1250,36 @@ This means that the YS1 metric captures more accurately the shape of the express
 <h4>Data visualization and exploratory data analysis with CountFilter<a class="headerlink" href="#data-visualization-and-exploratory-data-analysis-with-countfilter" title="Permalink to this heading"></a></h4>
 <p><a class="reference internal" href="glossary.html#term-CountFilter"><span class="xref std std-term">CountFilter</span></a> includes multiple methods for visualization and exploratory analysis of count data.</p>
 <p>With CountFilter.pairplot, you can get a quick overview of the distribution of counts within each sample, and the correlation between different samples:</p>
-<figure class="align-center" id="id50">
+<figure class="align-center" id="id52">
 <a class="reference internal image-reference" href="_images/pairplot.png"><img alt="_images/pairplot.png" src="_images/pairplot.png" style="width: 540.0px; height: 387.6px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id50" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example output of CountFilter.pairplot()</span><a class="headerlink" href="#id52" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <p>With CountFilter.pca, you can perform a principal component analysis and look for strong patterns in your dataset:</p>
 <blockquote>
-<div><figure class="align-center" id="id51">
+<div><figure class="align-center" id="id53">
 <a class="reference internal image-reference" href="_images/pca.png"><img alt="_images/pca.png" src="_images/pca.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id51" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of CountFilter.pca()</span><a class="headerlink" href="#id53" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.plot_expression, you can examine the average expression of specific genomic features under the specific conditions:</p>
 <blockquote>
-<div><figure class="align-center" id="id52">
+<div><figure class="align-center" id="id54">
 <a class="reference internal image-reference" href="_images/plot_expression.png"><img alt="_images/plot_expression.png" src="_images/plot_expression.png" style="width: 384.0px; height: 288.0px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id52" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of CountFilter.plot_expression()</span><a class="headerlink" href="#id54" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>With CountFilter.clustergram, you can cluster your samples according to specified distance and linkage metrics:</p>
 <blockquote>
-<div><figure class="align-center" id="id53">
+<div><figure class="align-center" id="id55">
 <a class="reference internal image-reference" href="_images/clustergram.png"><img alt="_images/clustergram.png" src="_images/clustergram.png" style="width: 768.0px; height: 370.8px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id53" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of CountFilter.clustergram()</span><a class="headerlink" href="#id55" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1482,10 +1656,10 @@ Annotations with the <em>NOT</em> qualifier are usually ignored during enrichmen
 <p>Gene Ontology terms have a somewhat hierarchical relationship that is defined as a directed a-cyclic graph (DAG). This means that each GO term is a node in the graph, and that each node has defined parents that are less specific than itself, going up to the top of the graph.</p>
 <p>For example:</p>
 <blockquote>
-<div><figure class="align-center" id="id54">
+<div><figure class="align-center" id="id56">
 <a class="reference internal image-reference" href="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png"><img alt="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png" src="/figures/http://geneontology.org/assets/hexose-biosynthetic-process.png" /></a>
 <figcaption>
-<p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id54" title="Permalink to this image"></a></p>
+<p><span class="caption-text">taken from the Gene Ontology Consortium site</span><a class="headerlink" href="#id56" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -1508,18 +1682,18 @@ You can decide which propagation method to use by specifying the <cite>propagati
 <em>RNAlysis</em> plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.</p>
 <p>You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
 <blockquote>
-<div><figure class="align-center" id="id55">
+<div><figure class="align-center" id="id57">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go.png"><img alt="_images/plot_enrichment_results_go.png" src="_images/plot_enrichment_results_go.png" style="width: 560.0px; height: 406.0px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id13"><span class="problematic" id="id14">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id55" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id15"><span class="problematic" id="id16">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id57" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id56">
+<figure class="align-center" id="id58">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_go_vertical.png"><img alt="_images/plot_enrichment_results_go_vertical.png" src="_images/plot_enrichment_results_go_vertical.png" style="width: 769.2px; height: 224.0px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id15"><span class="problematic" id="id16">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id56" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id17"><span class="problematic" id="id18">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id58" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
@@ -1529,10 +1703,10 @@ You can decide which propagation method to use by specifying the <cite>propagati
 <p>If you don’t specify plotting parameters, <em>RNAlysis</em> will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.</p>
 <p>In addition, <em>RNAlysis</em> can generate an ontology graph, depicting all of the statistically significant GO terms and their hierarchical relationships:</p>
 <blockquote>
-<div><figure class="align-center" id="id57">
+<div><figure class="align-center" id="id59">
 <a class="reference internal image-reference" href="_images/ontology_graph.png"><img alt="_images/ontology_graph.png" src="_images/ontology_graph.png" style="width: 560.0px; height: 360.0px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id17"><span class="problematic" id="id18">`</span></a>plot_ontology_graph`=True</span><a class="headerlink" href="#id57" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id19"><span class="problematic" id="id20">`</span></a>plot_ontology_graph`=True</span><a class="headerlink" href="#id59" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
@@ -1605,8 +1779,8 @@ You can read more about KEGG pathways on the <a class="reference external" href=
 <span class="gp">&gt;&gt;&gt; </span><span class="n">en</span> <span class="o">=</span> <span class="n">enrichment</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">index_set</span><span class="p">,</span> <span class="s1">&#39;my set&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<section id="id19">
-<h5>Define the correct <em>organism</em> and <em>gene ID type</em> for your dataset<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h5>
+<section id="id21">
+<h5>Define the correct <em>organism</em> and <em>gene ID type</em> for your dataset<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h5>
 <p>Since KEGG annotations refer to specific gene products, which can differ between different species, <em>RNAlysis</em> needs to know which organism your dataset refers to.
 The organism can be specified as either the organism’s name, or the organism’s <em>NCBI Taxon ID</em> (for example: 6239 for <em>Caenorhabditis elegans</em>).</p>
 <p>It is recommended to manually determine your organism’s <em>NCBI Taxon ID</em> to avoid mischaracterization of annotations.
@@ -1614,8 +1788,8 @@ However, if you are not sure, <em>RNAlysis</em> will attempt to automatically de
 <p>Furthermore, since different annotations use different gene ID types to annotate the same gene products (such as UniProtKB ID, Entrez Gene ID, or Wormbase WBGene), <em>RNAlysis</em> can translate gene IDs from one gene ID type to another.
 In order to do that, you need to specify which gene ID type your dataset uses.</p>
 </section>
-<section id="id20">
-<h5>Define the background set<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h5>
+<section id="id22">
+<h5>Define the background set<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain KEGG pathway, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
 <p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, <em>RNAlysis</em> uses all of the protein-coding genes that have at least one KEGG annotation as a background set.
@@ -1635,8 +1809,8 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 </section>
-<section id="id21">
-<h5>Choose the statistical test (optional)<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h5>
+<section id="id23">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h5>
 <p>Significance testing for KEGG enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
 <p>The hypergeometric test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute (‘success’) and <em>X</em> genes from the test set belonging to that attribute.
 If we were to randomly draw <em>n</em> genes from the background set (without replacement), what is the probability of drawing <em>X</em> or more (in case of enrichment)/<em>X</em> or less (in case of depletion) genes belonging to the given attribute?</p>
@@ -1651,24 +1825,24 @@ You can read more about the topic in the following publication: <a class="refere
 <p>To choose the statistical test you want to use, utilize the <cite>statistical_test</cite> parameter, which accepts either ‘fisher’, ‘hypergeometric’, or ‘randomization’.
 If you choose to use a randomization test, you can specify the number of randomization repititions to run using the <cite>randomization_reps</cite> parameter, and set the random seed using the <cite>random_seed</cite> parameter.</p>
 </section>
-<section id="id22">
-<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h5>
+<section id="id24">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h5>
 <p>After <em>RNAlysis</em> is done calculating the results of your enrichment analysis, it will automatically plot a summary of the enrichment results.
 <em>RNAlysis</em> plots the results as a bar plot, with the Y axis showing log2 fold enrichment, and asterisks indicating whether this enrichment is statistically significant after correcting for multiple comparisons.</p>
 <p>You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
 <blockquote>
-<div><figure class="align-center" id="id58">
+<div><figure class="align-center" id="id60">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 224.0px; height: 260.8px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id23"><span class="problematic" id="id24">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id58" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id25"><span class="problematic" id="id26">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id60" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id59">
+<figure class="align-center" id="id61">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 327.6px; height: 222.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id25"><span class="problematic" id="id26">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id59" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id27"><span class="problematic" id="id28">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id61" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
@@ -1677,8 +1851,8 @@ If you choose to use a randomization test, you can specify the number of randomi
 <p>If you want to further customize this plot, you can request <em>RNAlysis</em> to return a Matplotlib Figure object of the barplot, by using the <cite>return_fig</cite> parameter.</p>
 <p>If you don’t specify plotting parameters, <em>RNAlysis</em> will generate a horizontal bar plot by default, and will not return a Matplotlib Figure object of the bar plot.</p>
 </section>
-<section id="id27">
-<h5>Enrichment analysis output<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h5>
+<section id="id29">
+<h5>Enrichment analysis output<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h5>
 <p>Running enrichment analysis will calculate enrichment for each of the KEGG pathways, and return a pandas DataFrame in the following format:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -1741,13 +1915,13 @@ If you choose to use a randomization test, you can specify the number of randomi
 </div>
 <section id="choose-which-user-defined-attributes-to-calculate-enrichment-for">
 <h5>Choose which user-defined attributes to calculate enrichment for<a class="headerlink" href="#choose-which-user-defined-attributes-to-calculate-enrichment-for" title="Permalink to this heading"></a></h5>
-<p>Our attributes should be defined in a Reference Table <cite>csv</cite> file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
+<p>Our attributes should be defined in a Reference Table <cite>csv</cite> file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="user_guide_gui.html#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
 Once we have a Reference Table, we can perform enrichment analysis for those attributes using the function FeatureSet.enrich_randomization.
-If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables’ path.
+If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="user_guide_gui.html#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling enrich_randomization. Otherwise, you need to specify your Reference Tables’ path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 </section>
-<section id="id28">
-<h5>Define the background set<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h5>
+<section id="id30">
+<h5>Define the background set<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
 <p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, <em>RNAlysis</em> uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
@@ -1767,8 +1941,8 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 </section>
-<section id="id29">
-<h5>Choose the statistical test (optional)<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h5>
+<section id="id31">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h5>
 <p>Significance testing for enrichment analysis can be done using either the Hypergeometric Test, Fisher’s Exact Test, or a randomization test.</p>
 <p>The hypergeometric test is defined as: Given <em>M</em> genes in the background set, <em>n</em> genes in the test set, with <em>N</em> genes from the background set belonging to a specific attribute (‘success’) and <em>X</em> genes from the test set belonging to that attribute.
 If we were to randomly draw <em>n</em> genes from the background set (without replacement), what is the probability of drawing <em>X</em> or more (in case of enrichment)/<em>X</em> or less (in case of depletion) genes belonging to the given attribute?</p>
@@ -1783,23 +1957,23 @@ You can read more about the topic in the following publication: <a class="refere
 <p>To choose the statistical test you want to use, utilize the <cite>statistical_test</cite> parameter, which accepts either ‘fisher’, ‘hypergeometric’, or ‘randomization’.
 If you choose to use a randomization test, you may specify the number of randomization repititions to run using the <cite>randomization_reps</cite> parameter, and set the random seed using the <cite>random_seed</cite> parameter.</p>
 </section>
-<section id="id30">
-<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h5>
+<section id="id32">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h5>
 <p>After performing enrichment analysis, <em>RNAlysis</em> will automatically plot a summary of your enrichment results as a bar plot of log-transformed enrichment scores.
 You can determine the orientation of the bar plot (horizontal or vertical) using the <cite>plot_horizontal</cite> parameter:</p>
 <blockquote>
-<div><figure class="align-center" id="id60">
+<div><figure class="align-center" id="id62">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results.png"><img alt="_images/plot_enrichment_results.png" src="_images/plot_enrichment_results.png" style="width: 224.0px; height: 260.8px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id31"><span class="problematic" id="id32">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id60" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id33"><span class="problematic" id="id34">`</span></a>plot_horizontal`=True</span><a class="headerlink" href="#id62" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id61">
+<figure class="align-center" id="id63">
 <a class="reference internal image-reference" href="_images/plot_enrichment_results_vertical.png"><img alt="_images/plot_enrichment_results_vertical.png" src="_images/plot_enrichment_results_vertical.png" style="width: 327.6px; height: 222.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id33"><span class="problematic" id="id34">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id61" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id35"><span class="problematic" id="id36">`</span></a>plot_horizontal`=False</span><a class="headerlink" href="#id63" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
@@ -1808,8 +1982,8 @@ You can determine the orientation of the bar plot (horizontal or vertical) using
 <p>If you want to further customize your plot, you can retreive the matplotlib Figure object of your plot using the <cite>return_fig</cite> parameter.
 When it is set as ‘True’, <em>RNAlysis</em> will return the Figure object it generated in addition to the results table.</p>
 </section>
-<section id="id35">
-<h5>Enrichment analysis output<a class="headerlink" href="#id35" title="Permalink to this heading"></a></h5>
+<section id="id37">
+<h5>Enrichment analysis output<a class="headerlink" href="#id37" title="Permalink to this heading"></a></h5>
 <p>Running enrichment analysis will calculate enrichment for each of the specified attributes, and return a pandas DataFrame in the following format:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -1863,14 +2037,14 @@ When it is set as ‘True’, <em>RNAlysis</em> will return the Figure object it
 <p>Instead of peforming enrichment analysis for categorical attributes (“genes which are expressed exclusively in neurons”, “genes enriched in males”, “epigenetic gene-products”, etc), you can test whether your FeatureSet is enriched for a non-categorical attribute (“number of paralogs”, “gene length”, or any other numeric attribute) using the function <cite>FeatureSet.non_categorical_enrichment()</cite>.</p>
 <section id="choose-which-user-defined-non-categorical-attributes-to-calculate-enrichment-for">
 <h5>Choose which user-defined non-categorical attributes to calculate enrichment for<a class="headerlink" href="#choose-which-user-defined-non-categorical-attributes-to-calculate-enrichment-for" title="Permalink to this heading"></a></h5>
-<p>The attributes should be defined in an Attribute Reference Table <cite>csv</cite> file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
+<p>The attributes should be defined in an Attribute Reference Table <cite>csv</cite> file. You can read more about Reference Tables and their format in the section <a class="reference internal" href="user_guide_gui.html#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>.
 Once we have an Attirubte Reference Table, we can perform enrichment analysis for those non-categorical attributes using the function <cite>FeatureSet.non_categorical_enrichment</cite>.
-If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling non_categorical_enrichment. Otherwise, you need to specify your Reference Tables’ path.
+If your Reference Tables are set to be the default Reference Tables (as explained in <a class="reference internal" href="user_guide_gui.html#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>) you do not need to specify them when calling non_categorical_enrichment. Otherwise, you need to specify your Reference Tables’ path.
 The names of the attributes you want to calculate enrichment for can be specified as a list of names (for example, [‘attribute1’, ‘attribute2’]).</p>
 <p>Note that the variables you use for non-categorical enrichment analysis must be non-categorical, and must be defined for every genomic feature in the background and test sets (meaning, no NaN values).</p>
 </section>
-<section id="id36">
-<h5>Define the background set<a class="headerlink" href="#id36" title="Permalink to this heading"></a></h5>
+<section id="id38">
+<h5>Define the background set<a class="headerlink" href="#id38" title="Permalink to this heading"></a></h5>
 <p>In enrichment analysis, we test whether our set of genomic features is enriched/depleted for a certain attribute, in comparison to a more generalized set of genomic features that we determined as ‘background’.
 This could be the set of all protein-coding genes, the set of all genomic features that show expression above a certain threshold, or any other set of background genes which you deem appropriate. Importantly, the background set must contain all of the genes in the enrichment set.</p>
 <p>Enrichment analysis is usually performed on protein-coding genes. Therefore, by default, <em>RNAlysis</em> uses all of the protein-coding genes that appear in the Attribute Reference Table as a background set.
@@ -1890,35 +2064,35 @@ When specifying a biotype, the Biotype Reference Table that you specified is use
 <p>It is not possible to specify both a biotype and a specific background set.</p>
 <p>If some of the features in the background set or the enrichment set do no appear in the Reference Table, they will be ignored when calculating enrichment.</p>
 </section>
-<section id="id37">
-<h5>Choose the statistical test (optional)<a class="headerlink" href="#id37" title="Permalink to this heading"></a></h5>
+<section id="id39">
+<h5>Choose the statistical test (optional)<a class="headerlink" href="#id39" title="Permalink to this heading"></a></h5>
 <p>When calculating enrichment for a non-categorical attribute, you can use either a parametric or non-parametric statistical test.</p>
 <p>If the <cite>parametric_test</cite> parameter is True, <em>RNAlysis</em> will calculate enrichment using the <em>one-sample Student’s T-test</em>, comparing the value of the non-categorical attribute in your enrichment set to the mean value of the non-categorical attribute in the background set.</p>
 <p>If the <cite>parametric_test</cite> parameter is False, <em>RNAlysis</em> will calculate enrichment using the non-parametric <em>one-sample Sign test</em>, comparing the value of the non-categorical attribute in your enrichment set to the median value of the non-categorical attribute in the background set.</p>
 <p>The parametric T-test assumes that the values of your non-categorical attribute distribute normally. Therefore, if you are not sure your data meets this assumption, it is recommended to use the less-powerful non-parametric test.</p>
 <p>If you don’t specify the statistical test, <em>RNAlysis</em> will automatically use a non-parametric test.</p>
 </section>
-<section id="id38">
-<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id38" title="Permalink to this heading"></a></h5>
+<section id="id40">
+<h5>Choose plotting parameters (optional)<a class="headerlink" href="#id40" title="Permalink to this heading"></a></h5>
 <p>The results of non-categorical enrichment analysis will be plotted as a histogram, comparing the distribution of the non-categorical attribute within the enrichment set compared to the background set.
 If you used a parametric test, the mean of each set will be marked on the histogram. Alternatively, if you used a non-parametric test, the median of each set will be marked on the graph.
 The enrichment results of each attribute will be plotted in a different Figure.</p>
 <p>To better fit the visualization of the results to your needs, you can specify two parameters:</p>
 <p><cite>plot_log_scale</cite> can accept either <cite>True</cite> or <cite>False</cite>, and will determine whether the X-axis of the histogram will be plotting on a logarithmic or linear scale.</p>
-<p><a href="#id39"><span class="problematic" id="id40">`</span></a>plot_style’ can accept either ‘overlap’ or ‘interleaved’, and will draw the histogram in one of the following two styles:</p>
+<p><a href="#id41"><span class="problematic" id="id42">`</span></a>plot_style’ can accept either ‘overlap’ or ‘interleaved’, and will draw the histogram in one of the following two styles:</p>
 <blockquote>
-<div><figure class="align-center" id="id62">
+<div><figure class="align-center" id="id64">
 <a class="reference internal image-reference" href="_images/hist_overlap.png"><img alt="_images/hist_overlap.png" src="_images/hist_overlap.png" style="width: 480.0px; height: 238.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id41"><span class="problematic" id="id42">`</span></a>plot_style`=’overlap’</span><a class="headerlink" href="#id62" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id43"><span class="problematic" id="id44">`</span></a>plot_style`=’overlap’</span><a class="headerlink" href="#id64" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
 </figure>
-<figure class="align-center" id="id63">
+<figure class="align-center" id="id65">
 <a class="reference internal image-reference" href="_images/hist_interleaved.png"><img alt="_images/hist_interleaved.png" src="_images/hist_interleaved.png" style="width: 480.0px; height: 238.4px;" /></a>
 <figcaption>
-<p><span class="caption-text"><a href="#id43"><span class="problematic" id="id44">`</span></a>plot_style`=’interleaved’</span><a class="headerlink" href="#id63" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><a href="#id45"><span class="problematic" id="id46">`</span></a>plot_style`=’interleaved’</span><a class="headerlink" href="#id65" title="Permalink to this image"></a></p>
 <div class="legend">
 </div>
 </figcaption>
@@ -1985,22 +2159,22 @@ When it is set as ‘True’, <em>RNAlysis</em> will return the Figure object it
 </div>
 <p>When performing set operations, the return type will always be a python set. This means you can use the output of the set operation as an input for yet another set operation, or as input to a new FeatureSet object.</p>
 <p>In addition, the enrichment module includes functions for visualisation of sets and overlap, such as enrichment.venn_diagram() and enrichment.upset_plot().
-Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> (you can read more about attributes in <a class="reference internal" href="#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
+Both functions receive a similar input: a dictionary whose keys are the names of the sets, and values are either FeatureSet objects, Filter objects, sets of genomic feature names, or the name of an attribute from the <a class="reference internal" href="glossary.html#term-Attribute-Reference-Table"><span class="xref std std-term">Attribute Reference Table</span></a> (you can read more about attributes in <a class="reference internal" href="user_guide_gui.html#reference-table-ref"><span class="std std-ref">Set and load a Reference Table</span></a>).
 Venn diagrams are limited to 2-3 sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id64">
+<div><figure class="align-center" id="id66">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id64" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id66" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>While UpSet plots can include any number of sets:</p>
 <blockquote>
-<div><figure class="align-center" id="id65">
+<div><figure class="align-center" id="id67">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id65" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id67" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
@@ -2103,19 +2277,19 @@ Those sets can be represented using a python dictionary, where each key represen
 <p>After defining the dictionary of sets, we can use it to plot set intersection via the <cite>enrichment.venn_diagram()</cite> or <cite>enrichment.upset_plot()</cite> functions.
 Venn diagrams in <em>RNAlysis</em> are plotted with relatively accurate proportions and overlaps, and therefore only support up to 3 sets.</p>
 <blockquote>
-<div><figure class="align-center" id="id66">
+<div><figure class="align-center" id="id68">
 <a class="reference internal image-reference" href="_images/venn.png"><img alt="_images/venn.png" src="_images/venn.png" style="width: 550.1999999999999px; height: 416.5px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id66" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of venn_diagram()</span><a class="headerlink" href="#id68" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
 <p>UpSet plots support the visualization of much larger groups of sets. You can read more about UpSet plots here: <a class="reference external" href="https://upset.app/">https://upset.app/</a></p>
 <blockquote>
-<div><figure class="align-center" id="id67">
+<div><figure class="align-center" id="id69">
 <a class="reference internal image-reference" href="_images/upsetplot.png"><img alt="_images/upsetplot.png" src="_images/upsetplot.png" style="width: 552.3px; height: 340.2px;" /></a>
 <figcaption>
-<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id67" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Example plot of upset_plot()</span><a class="headerlink" href="#id69" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
