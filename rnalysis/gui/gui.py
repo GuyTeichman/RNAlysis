@@ -30,6 +30,36 @@ FILTER_OBJ_TYPES_INV = {val.__name__: key for key, val in FILTER_OBJ_TYPES.items
 INIT_EXCLUDED_PARAMS = {'self', 'fname', 'suppress_warnings'}
 
 
+class BarPlotWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = enrichment.enrichment_bar_plot
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{func.__name__}.html"
+        super().__init__('Enrichment bar-plot', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Create enrichment bar-plot')
+        super().init_ui()
+
+
+class HistogramWindow(gui_windows.FuncExternalWindow):
+    EXCLUDED_PARAMS = set()
+    __slots__ = {}
+
+    def __init__(self, parent=None):
+        func = enrichment.enrichment_histogram
+        help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.enrichment.{func.__name__}.html"
+        super().__init__('Enrichment histogram', func, help_link, self.EXCLUDED_PARAMS, threaded=False, parent=parent)
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle('Create enrichment histogram (non-categorical enrichment)')
+        super().init_ui()
+
+
 class OntologyGraphWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = set()
     __slots__ = {}
@@ -67,8 +97,7 @@ class FeatureCountsSingleWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.featurecounts_single_end
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('featureCounts count (single-end reads)', func, help_link, self.EXCLUDED_PARAMS,
-                         parent)
+        super().__init__('featureCounts count (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -83,8 +112,7 @@ class FeatureCountsPairedWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.featurecounts_paired_end
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('featureCounts count (paired-end reads)', func, help_link, self.EXCLUDED_PARAMS,
-                         parent)
+        super().__init__('featureCounts count (paired-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -99,7 +127,7 @@ class Bowtie2IndexWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.bowtie2_create_index
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('Bowtie2 build index', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Bowtie2 build index', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -114,7 +142,7 @@ class Bowtie2SingleWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.bowtie2_align_single_end
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('Bowtie2 align (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Bowtie2 align (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -144,7 +172,7 @@ class KallistoIndexWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.kallisto_create_index
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('Kallisto build index', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Kallisto build index', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -159,7 +187,7 @@ class KallistoSingleWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.kallisto_quantify_single_end
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('Kallisto quantify (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('Kallisto quantify (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -190,7 +218,7 @@ class CutAdaptSingleWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = fastq.trim_adapters_single_end
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.fastq.{func.__name__}.html"
-        super().__init__('CutAdapt (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('CutAdapt (single-end reads)', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.init_ui()
 
     def init_ui(self):
@@ -225,7 +253,7 @@ class DESeqWindow(gui_windows.FuncExternalWindow):
     def __init__(self, parent=None):
         func = filtering.CountFilter.differential_expression_deseq2
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
-        super().__init__('DESeq2', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('DESeq2', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
 
         self.comparisons = []
         self.design_mat = None
@@ -276,7 +304,7 @@ class ClicomWindow(gui_windows.FuncExternalWindow):
     def __init__(self, funcs: dict, filter_obj: filtering.Filter, parent=None):
         func = filtering.CountFilter.split_clicom
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
-        super().__init__('CLICOM', func, help_link, self.EXCLUDED_PARAMS, parent)
+        super().__init__('CLICOM', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
         self.parameter_dicts: List[dict] = []
         self.funcs = funcs
         self.setups_counter = {key: 0 for key in self.funcs.keys()}
@@ -3111,6 +3139,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.featurecounts_paired_action.triggered.connect(
             functools.partial(self.start_external_window, FeatureCountsPairedWindow))
 
+        self.bar_plot_action = QtWidgets.QAction("Create enrichment &bar-plot...")
+        self.bar_plot_action.triggered.connect(functools.partial(self.start_external_window, BarPlotWindow))
+        self.hist_plot_action = QtWidgets.QAction("Create enrichment &histogram...")
+        self.hist_plot_action.triggered.connect(functools.partial(self.start_external_window, HistogramWindow))
         self.ontology_graph_action = QtWidgets.QAction("Visualize &Gene Ontology...")
         self.ontology_graph_action.triggered.connect(functools.partial(self.start_external_window, OntologyGraphWindow))
         self.pathway_graph_action = QtWidgets.QAction("Visualize &KEGG Pathway...")
@@ -3346,7 +3378,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gene_sets_menu.addActions(
             [self.copy_action, self.import_set_action, self.import_multiple_sets_action,
              self.export_set_action, self.set_op_action, self.set_vis_action, self.enrichment_action,
-             self.ontology_graph_action, self.pathway_graph_action])
+             self.ontology_graph_action, self.pathway_graph_action, self.bar_plot_action, self.hist_plot_action])
 
         pipeline_menu = self.menu_bar.addMenu("&Pipelines")
         pipeline_menu.addActions([self.new_pipeline_action, self.import_pipeline_action, self.export_pipeline_action,
