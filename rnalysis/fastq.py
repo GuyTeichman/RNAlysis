@@ -30,7 +30,7 @@ except ImportError:
     HAS_CUTADAPT = False
 
 
-def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
+def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Union[str, Path, None],
                              gtf_file: Union[str, Path],
                              gtf_feature_type: str = 'exon', gtf_attr_name: str = 'gene_id',
                              r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
@@ -104,21 +104,17 @@ def featurecounts_single_end(input_folder: Union[str, Path], output_folder: Unio
     :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
     output_folder = Path(output_folder)
+    assert output_folder.exists(), f'Output folder does not exist!'
     kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
                                             min_mapping_quality, count_multi_mapping_reads,
                                             count_multi_overlapping_reads, ignore_secondary, count_fractionally,
                                             is_long_read, report_read_assignment, report_read_assignment_path, threads)
 
-    if new_sample_names == 'auto':
-        new_sample_names = [Path(fname).stem for fname in kwargs['files']]
-    else:
-        new_sample_names = parsing.data_to_list(new_sample_names)
-        assert len(new_sample_names) == len(kwargs['files']), f"The number of samples {len(kwargs['files'])} " \
-                                                              f"does not match the number of new sample names " \
-                                                              f"({len(new_sample_names)})!"
+    new_sample_names = _featurecounts_get_sample_names(kwargs['files'], new_sample_names)
 
     feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
-    return _process_featurecounts_output(output_folder, new_sample_names)
+    counts, annotation, stats = _process_featurecounts_output(output_folder, new_sample_names)
+    return counts, annotation, stats
 
 
 def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Union[str, Path],
@@ -128,12 +124,11 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                              stranded: Literal['no', 'forward', 'reverse'] = 'no', min_mapping_quality: int = 0,
                              count_multi_mapping_reads: bool = False, count_multi_overlapping_reads: bool = False,
                              ignore_secondary: bool = True, count_fractionally: bool = False,
-                             is_long_read: bool = False,
+                             is_long_read: bool = False, require_both_mapped: bool = True,
+                             count_chimeric_fragments: bool = False, min_fragment_length: NonNegativeInt = 50,
+                             max_fragment_length: Union[PositiveInt, None] = 600,
                              report_read_assignment: Union[Literal['bam', 'sam', 'core'], None] = None,
-                             report_read_assignment_path: Union[str, Path, None] = None,
-                             require_both_mapped: bool = True, count_chimeric_fragments: bool = False,
-                             min_fragment_length: NonNegativeInt = 50,
-                             max_fragment_length: Union[PositiveInt, None] = 600, threads: PositiveInt = 1
+                             report_read_assignment_path: Union[str, Path, None] = None, threads: PositiveInt = 1
                              ) -> Tuple[filtering.CountFilter, pd.DataFrame, pd.DataFrame]:
     """
     Assign mapped paired-end sequencing reads to specified genomic features using \
@@ -210,6 +205,8 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
     :rtype: (filtering.CountFilter, pd.DataFrame, pd.DataFrame)
     """
     output_folder = Path(output_folder)
+    assert output_folder.exists(), f'Output folder does not exist!'
+
     kwargs = _parse_featurecounts_misc_args(input_folder, gtf_file, gtf_feature_type, gtf_attr_name, stranded,
                                             min_mapping_quality, count_multi_mapping_reads,
                                             count_multi_overlapping_reads, ignore_secondary, count_fractionally,
@@ -219,17 +216,11 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
                      'maxFragLength': max_fragment_length, 'countReadPairs': True}
     kwargs.update(paired_kwargs)
 
-    if new_sample_names == 'auto':
-        new_sample_names = [Path(fname).stem for fname in kwargs['files']]
-    else:
-        new_sample_names = parsing.data_to_list(new_sample_names)
-        assert len(new_sample_names) == len(kwargs['files']), f"The number of samples {len(kwargs['files'])} " \
-                                                              f"does not match the number of new sample names " \
-                                                              f"({len(new_sample_names)})!"
+    new_sample_names = _featurecounts_get_sample_names(kwargs['files'], new_sample_names)
 
     feature_counting.run_featurecounts_analysis(kwargs, output_folder, r_installation_folder)
-    counts, annotations, stats = _process_featurecounts_output(output_folder, new_sample_names)
-    return counts, annotations, stats
+    counts, annotation, stats = _process_featurecounts_output(output_folder, new_sample_names)
+    return counts, annotation, stats
 
 
 def _parse_featurecounts_misc_args(input_folder: Union[str, Path], gtf_file: Union[str, Path], gtf_feature_type: str,
@@ -270,6 +261,16 @@ def _parse_featurecounts_misc_args(input_folder: Union[str, Path], gtf_file: Uni
     return kwargs
 
 
+def _featurecounts_get_sample_names(files: list, new_sample_names):
+    if new_sample_names == 'auto':
+        new_sample_names = [Path(fname).stem for fname in files]
+    else:
+        new_sample_names = parsing.data_to_list(new_sample_names)
+        assert len(new_sample_names) == len(files), f"The number of samples {len(files)} does not match the number of " \
+                                                    f"new sample names ({len(new_sample_names)})!"
+    return new_sample_names
+
+
 def _process_featurecounts_output(output_folder, new_sample_names):
     counts_path = Path(output_folder).joinpath('featureCounts_counts.csv')
     annotation_path = Path(output_folder).joinpath('featureCounts_annotation.csv')
@@ -277,11 +278,16 @@ def _process_featurecounts_output(output_folder, new_sample_names):
 
     counts = filtering.CountFilter(counts_path)
     counts.df.columns = new_sample_names
-    annotations = io.load_csv(annotation_path, 0)
+    io.save_csv(counts.df, counts_path)  # re-save to reflect changes in column names
+
+    annotation = io.load_csv(annotation_path, 0)
+    io.save_csv(annotation, annotation_path)  # re-save to reflect changes in column names
+
     stats = io.load_csv(stats_path, 0)
     stats.columns = ['Status'] + new_sample_names
+    io.save_csv(stats, stats_path)  # re-save to reflect changes in column names
 
-    return counts, annotations, stats
+    return counts, annotation, stats
 
 
 def bowtie2_create_index(genome_fastas: List[Union[str, Path]], output_folder: Union[str, Path],

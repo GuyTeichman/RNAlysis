@@ -26,10 +26,7 @@ def install_rsubread(r_installation_folder: Union[str, Path, Literal['auto']] = 
 
 
 def create_featurecounts_script(kwargs: dict, output_dir: Path):
-    cache_dir = io.get_todays_cache_dir().joinpath(hashlib.sha1(str(time.time_ns()).encode('utf-8')).hexdigest())
-    if not cache_dir.exists():
-        cache_dir.mkdir(parents=True)
-    save_path = cache_dir.joinpath('featurecounts_run.R')
+    save_path = output_dir.joinpath('featurecounts_run.R')
 
     with open(
         Path.joinpath(Path(__file__).parent, '../data_files/r_templates/rsubread_featurecounts_run_parametric.R')) as f:

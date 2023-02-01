@@ -195,7 +195,6 @@ def test_bowtie2_align_single_end_command(monkeypatch, fastq_folder, output_fold
 
 
 def test_bowtie2_create_index():
-
     out_path = 'tests/test_files/bowtie2_tests/outdir'
     truth_path = 'tests/test_files/bowtie2_tests/index'
     try:
@@ -272,7 +271,7 @@ def test_kallisto_create_index():
         with open(truth_path, 'rb') as truth, open(out_path, 'rb') as out:
             assert truth.read() == out.read()
         with open(log_truth_path) as truth, open(log_path) as out:
-            assert truth.read().replace('\n','') == out.read().replace('\n','')
+            assert truth.read().replace('\n', '') == out.read().replace('\n', '')
     finally:
         if Path(out_path).exists():
             Path(out_path).unlink()
@@ -573,6 +572,7 @@ def test_featurecounts_single_end():
     counts_truth = filtering.CountFilter('tests/test_files/featurecounts_tests/truth/single/featureCounts_counts.csv')
     annotations_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/single/featureCounts_annotation.csv', 0)
     stats_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/single/featureCounts_stats.csv', 0)
+    truth_outdir = 'tests/test_files/featurecounts_tests/truth/single'
     outdir = 'tests/test_files/featurecounts_tests/outdir'
     gtf_file = 'tests/test_files/featurecounts_tests/single/bamfile_no_qualities.gtf'
     new_sample_names = ['sample1_new']
@@ -582,6 +582,7 @@ def test_featurecounts_single_end():
         assert counts == counts_truth
         assert annotations.equals(annotations_truth)
         assert stats.equals(stats_truth)
+        assert are_dir_trees_equal(outdir, truth_outdir)
     finally:
         unlink_tree(outdir)
 
@@ -590,6 +591,7 @@ def test_featurecounts_paired_end():
     counts_truth = filtering.CountFilter('tests/test_files/featurecounts_tests/truth/paired/featureCounts_counts.csv')
     annotations_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/paired/featureCounts_annotation.csv', 0)
     stats_truth = io.load_csv('tests/test_files/featurecounts_tests/truth/paired/featureCounts_stats.csv', 0)
+    truth_outdir = 'tests/test_files/featurecounts_tests/truth/paired'
     outdir = 'tests/test_files/featurecounts_tests/outdir'
     try:
         counts, annotations, stats = featurecounts_paired_end('tests/test_files/featurecounts_tests', outdir,
@@ -597,5 +599,6 @@ def test_featurecounts_paired_end():
         assert counts == counts_truth
         assert annotations.equals(annotations_truth)
         assert stats.equals(stats_truth)
+        assert are_dir_trees_equal(outdir, truth_outdir)
     finally:
         unlink_tree(outdir)
