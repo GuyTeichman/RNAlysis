@@ -9,6 +9,6 @@ counts <- fc$counts
 annotation <- fc$annotation
 stats <- fc$stat
 
-write.csv(as.data.frame(counts),file="C:/specified/output/dir/featureCounts_counts.csv")
-write.csv(as.data.frame(annotation),file="C:/specified/output/dir/featureCounts_annotation.csv")
-write.csv(as.data.frame(stats),file="C:/specified/output/dir/featureCounts_stats.csv")
+write.csv(as.data.frame(counts),file="tests/test_files/featurecounts_tests/outdir/featureCounts_counts.csv")
+write.csv(as.data.frame(annotation),file="tests/test_files/featurecounts_tests/outdir/featureCounts_annotation.csv")
+write.csv(as.data.frame(stats),file="tests/test_files/featurecounts_tests/outdir/featureCounts_stats.csv")
