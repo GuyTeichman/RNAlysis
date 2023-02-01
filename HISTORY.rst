@@ -30,7 +30,7 @@ Changed
 * The colorbar ticks in enrichment bar plots now match the axis ticks on the main axis.
 * Slight improvements in GUI performance, stability, and looks.
 * Slight improvements in performance of enrichment analysis when examining a small number of attributes.
-* enrichment.plot_enrichment() was replaced by enrichment.enrichment_bar_plot() and enrichment.enrichment_histogram().
+* enrichment.plot_enrichment() was replaced by enrichment.enrichment_bar_plot().
 * CountFilter.differential_expression() has new optional parameter `output_folder`, which allows users to save the generated data tables and the R script that generated them into a specified folder.
 
 Fixed

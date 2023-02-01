@@ -1159,18 +1159,6 @@ class RankedSet(FeatureSet):
         return runner.run()
 
 
-def enrichment_histogram(results_table_path: Union[str, Path], alpha: param_typing.Fraction = 0.05,
-                         parametric_test: bool = False,
-                         plot_log_scale: bool = True, plot_style: Literal['interleaved', 'overlap'] = 'overlap',
-                         n_bins: PositiveInt = 50, ):
-    results_table = io.load_csv(results_table_path, 0)
-    runner = enrichment_runner.NonCategoricalEnrichmentRunner(set(), results_table.index, alpha, '', set(), '', '',
-                                                              True, '', True, plot_log_scale, plot_style, n_bins, '',
-                                                              'sequential', parametric_test)
-    runner.results = results_table
-    return runner.plot_results()
-
-
 def enrichment_bar_plot(results_table_path: Union[str, Path], alpha: param_typing.Fraction = 0.05,
                         enrichment_score_column: Union[
                             str, Literal['log2_fold_enrichment', 'log2_enrichment_score']] = 'log2_fold_enrichment',
