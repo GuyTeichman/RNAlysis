@@ -2,7 +2,7 @@
 History
 =======
 
-3.4.0 (2023-01-24)
+3.4.0 (2023-02-01)
 ------------------
 From this release forward, *RNAlysis* is made available as a stand-alone app for Windows and MacOS. You can download these stand-alone versions from the GitHub Releases page.
 In addition, new features were added, including new plots, filtering functions, integration of the external tools bowtie2 and featureCounts, and the ability to generate Gene Ontology Graphs and KEGG Pathway Graphs without running enrichment analysis from scratch.
