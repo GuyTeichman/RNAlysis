@@ -112,5 +112,3 @@ jobs:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                 with:
                     files: ./dist/${{ matrix.OUT_FILE_NAME}}
-                    tag_name: ${{ github.ref }}
-                    allowUpdates: true
