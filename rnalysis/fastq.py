@@ -138,7 +138,8 @@ def featurecounts_paired_end(input_folder: Union[str, Path], output_folder: Unio
 
     :param input_folder: Path to the folder containing the SAM/BAM files you want to quantfy.
     :type input_folder: str or Path
-    :param output_folder: Path to a folder in which the quantified results, as well as the log files, will be saved.
+    :param output_folder: Path to a folder in which the quantified results, \
+    as well as the log files and R script used to generate them, will be saved.
     :type output_folder: str or Path
     :param gtf_file: Path to a GTF annotation file. This file will be used to map reads to features. \
     The chromosome names in the GTF files should match the ones in the index file with which you aligned the reads.

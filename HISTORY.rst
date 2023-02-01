@@ -5,7 +5,7 @@ History
 3.4.0 (2023-01-24)
 ------------------
 From this release forward, *RNAlysis* is made available as a stand-alone app for Windows and MacOS. You can download these stand-alone versions from the GitHub Releases page.
-In addition, new features were added, including new plots, filtering functions, and the ability to generate Gene Ontology Graphs and KEGG Pathway Graphs without running enrichment analysis from scratch.
+In addition, new features were added, including new plots, filtering functions, integration of the external tools bowtie2 and featureCounts, and the ability to generate Gene Ontology Graphs and KEGG Pathway Graphs without running enrichment analysis from scratch.
 
 Added
 ******
@@ -31,6 +31,7 @@ Changed
 * Slight improvements in GUI performance, stability, and looks.
 * Slight improvements in performance of enrichment analysis when examining a small number of attributes.
 * enrichment.plot_enrichment() was replaced by enrichment.enrichment_bar_plot() and enrichment.enrichment_histogram().
+* CountFilter.differential_expression() has new optional parameter `output_folder`, which allows users to save the generated data tables and the R script that generated them into a specified folder.
 
 Fixed
 ******

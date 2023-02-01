@@ -2538,7 +2538,8 @@ class CountFilter(Filter):
     @readable_name('Run DESeq2 differential expression')
     def differential_expression_deseq2(self, design_matrix: Union[str, Path],
                                        comparisons: Iterable[Tuple[str, str, str]],
-                                       r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'
+                                       r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                                       output_folder: Union[str, Path, None] = None
                                        ) -> Tuple['DESeqFilter', ...]:
         """
         Run differential expression analysis on the count matrix using the DESeq2 algorithm. \
@@ -2559,8 +2560,16 @@ class CountFilter(Filter):
         :param r_installation_folder: Path to the installation folder of R. For example: \
         'C:/Program Files/R/R-4.2.1'
         :type r_installation_folder: str, Path, or 'auto' (default='auto')
+        :param output_folder: Path to a folder in which the analysis results, \
+        as well as the log files and R script used to generate them, will be saved. \
+        if output_folder is None, the results will not be saved to a specified directory.
+        :type output_folder: str, Path, or None
         :return: a tuple of DESeqFilter objects, one for each comparison
         """
+        if output_folder is not None:
+            output_folder = Path(output_folder)
+            assert output_folder.exists(), f'Output folder does not exist!'
+
         self._validate_is_normalized(expect_normalized=False)
         data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
         design_mat_path = None
@@ -2584,12 +2593,18 @@ class CountFilter(Filter):
 
         io.save_csv(design_mat_df, design_mat_path)
 
-        output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,
-                                                                 r_installation_folder)
+        r_output_dir = differential_expression.run_deseq2_analysis(data_path, design_mat_path, comparisons,
+                                                                   r_installation_folder)
         outputs = []
-        for item in output_dir.iterdir():
-            if item.is_file() and item.suffix == '.csv':
+        for item in r_output_dir.iterdir():
+            if not item.is_file():
+                continue
+            if item.suffix == '.csv':
                 outputs.append(DESeqFilter(item))
+
+            if output_folder is not None:
+                with open(item) as infile, open(output_folder.joinpath(item.name), 'w') as outfile:
+                    outfile.write(infile.read())
 
         return parsing.data_to_tuple(outputs)
 
