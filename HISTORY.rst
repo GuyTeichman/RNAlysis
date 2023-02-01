@@ -18,7 +18,7 @@ Added
 * You can now clear the *RNAlysis* cache from the *RNAlysis* GUI, or through the general module.
 * Added bowtie2 alignment to the fastq module.
 * Added FeatureCounts feature-counting to the fastq module.
-* You can now choose whether or not to discard
+* You can now choose whether or not to discard genes from enrichment analysis if they have no annotations associated with them.
 * Added sections to the programmatic user guide about the `fastq` module.
 
 Changed
