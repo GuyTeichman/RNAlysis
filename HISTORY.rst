@@ -8,6 +8,7 @@ History
 Changed
 ********
 * Improved documentation for some functions.
+* Function selection tooltips should now display information more clearly.
 
 3.4.2 (2023-02-01)
 ------------------

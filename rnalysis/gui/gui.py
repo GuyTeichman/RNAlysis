@@ -1435,7 +1435,7 @@ class FuncTypeStack(QtWidgets.QWidget):
         signature = generic.get_method_signature(chosen_func_name, self.filter_obj)
         desc, param_desc = io.get_method_docstring(chosen_func_name, self.filter_obj)
         self.func_combo.setToolTip(desc)
-        self.func_help_button.connect_param_help(chosen_func_name, desc)
+        self.func_help_button.connect_param_help(self.get_function_readable_name(), desc)
 
         i = 1
         for name, param in signature.items():
@@ -1487,8 +1487,11 @@ class FuncTypeStack(QtWidgets.QWidget):
             func_params[param_name] = val
         return func_params
 
+    def get_function_readable_name(self):
+        return self.func_combo.currentText()
+
     def get_function_name(self):
-        readable_name = self.func_combo.currentText()
+        readable_name = self.get_function_readable_name()
         if readable_name == self.NO_FUNC_CHOSEN_TEXT:
             return self.NO_FUNC_CHOSEN_TEXT
         name = self.funcs[readable_name]
