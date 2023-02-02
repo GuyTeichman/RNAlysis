@@ -11,7 +11,6 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
-import filtering
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
     PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
 
@@ -109,7 +108,7 @@ class FeatureSet(set):
                 :type remove_unmapped_genes: bool (default=False)
                 :return: returns a new and translated FeatureSet.
     """
-        filter_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)),
+        filter_obj = Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)),
                                                      self.set_name)
         translated = filter_obj.translate_gene_ids(translate_to, translate_from, remove_unmapped_genes, inplace=False)
         return FeatureSet(translated.index_set(), translated.fname.name)
