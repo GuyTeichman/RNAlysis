@@ -11,6 +11,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
+import filtering
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
     PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
 
@@ -26,11 +27,11 @@ import numpy as np
 import pandas as pd
 import upsetplot
 
-from rnalysis.filtering import Filter
+from rnalysis.filtering import Filter, readable_name
 from rnalysis.utils import io, parsing, settings, validation, enrichment_runner, generic, param_typing, ontology
 
 
-class FeatureSet:
+class FeatureSet(set):
     """ Receives a filtered gene set and the set's name (optional) and preforms various enrichment analyses on them. """
     __slots__ = {'gene_set': 'set of feature names/indices', 'set_name': 'name of the FeatureSet'}
 
@@ -58,28 +59,21 @@ class FeatureSet:
                 "(example: \n'WBGene00000001\nWBGene00000002\nWBGene00000003')", delimiter='\n'))
         elif validation.isinstanceinh(gene_set, Filter):
             gene_set = gene_set.index_set
+        # elif isinstance(gene_set,type(self)):
+        #     gene_set = gene_set.gene_set
         else:
             gene_set = parsing.data_to_set(gene_set)
         self.gene_set = gene_set
         self.set_name = set_name
 
+        super().__init__(self.gene_set)
+
     def __copy__(self):
-        obj = type(self).__new__(type(self))
-        obj.gene_set = self.gene_set.copy()
-        obj.set_name = self.set_name
+        obj = type(self)(self.gene_set.copy(),self.set_name)
         return obj
 
     def __repr__(self):
         return f"{self.__class__.__name__}: '{self.set_name}'"
-
-    def __len__(self):
-        return len(self.gene_set)
-
-    def __contains__(self, item):
-        return True if item in self.gene_set else False
-
-    def __iter__(self):
-        return self.gene_set.__iter__()
 
     def __eq__(self, other):
         if type(self) != type(other):
@@ -92,6 +86,33 @@ class FeatureSet:
             return False
 
         return True
+
+    @readable_name('Translate gene IDs')
+    def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
+                           translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                           remove_unmapped_genes: bool = False) -> 'FeatureSet':
+        """
+                Translates gene names/IDs from one type to another. \
+                Mapping is done using the UniProtKB Gene ID Mapping service. \
+                You can choose to optionally drop from the table all rows that failed to be translated.
+
+                :param translate_to: the gene ID type to translate gene names/IDs to. \
+                For example: UniProtKB, Ensembl, Wormbase.
+                :type translate_to: str
+                :param translate_from: the gene ID type to translate gene names/IDs from. \
+                For example: UniProtKB, Ensembl, Wormbase. If translate_from='auto', \
+                *RNAlysis* will attempt to automatically determine the gene ID type of the features in the table.
+                :type translate_from: str or 'auto' (default='auto')
+                :param remove_unmapped_genes: if True, rows with gene names/IDs that could not be translated \
+                will be dropped from the table. \
+                Otherwise, they will remain in the table with their original gene name/ID.
+                :type remove_unmapped_genes: bool (default=False)
+                :return: returns a new and translated FeatureSet.
+    """
+        filter_obj = filtering.Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)),
+                                                     self.set_name)
+        translated = filter_obj.translate_gene_ids(translate_to, translate_from, remove_unmapped_genes, inplace=False)
+        return FeatureSet(translated.index_set(), translated.fname.name)
 
     def change_set_name(self, new_name: str):
         """
@@ -1224,12 +1245,12 @@ def _fetch_sets(objs: dict, ref: Union[str, Path, Literal['predefined']] = 'pred
         attr_ref_table.set_index('gene', inplace=True)
 
     for set_name, set_obj in zip(objs.keys(), objs.values()):
-        if isinstance(objs[set_name], (set, list, tuple)):
+        if validation.isinstanceinh(set_obj, FeatureSet):
+            fetched_sets[set_name] = set_obj.gene_set
+        elif isinstance(objs[set_name], (set, list, tuple)):
             fetched_sets[set_name] = parsing.data_to_set(set_obj)
         elif validation.isinstanceinh(set_obj, Filter):
             fetched_sets[set_name] = set_obj.index_set
-        elif validation.isinstanceinh(set_obj, FeatureSet):
-            fetched_sets[set_name] = set_obj.gene_set
         elif isinstance(set_obj, str):
             fetched_sets[set_name] = set(attr_ref_table[set_obj].loc[attr_ref_table[set_obj].notna()].index)
         else:

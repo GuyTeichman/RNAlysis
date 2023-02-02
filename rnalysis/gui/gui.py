@@ -1261,13 +1261,13 @@ class SetTabPage(TabPage):
         self.init_overview_ui(set_name)
 
     def obj(self):
-        return self.gene_set.gene_set
+        return self.gene_set
 
     def update_obj(self, obj: set):
         self.update_gene_set(obj)
 
     def obj_type(self):
-        return type(self.gene_set.gene_set)
+        return type(self.gene_set)
 
     def get_index_string(self):
         return "\n".join(self.obj())
@@ -1295,10 +1295,6 @@ class SetTabPage(TabPage):
         self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 3, 4)
         this_row += 3
 
-        self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save gene set')
-        self.overview_widgets['save_button'].clicked.connect(self.save_file)
-        self.overview_grid.addWidget(self.overview_widgets['save_button'], this_row, 3, 2, 1)
-
         self.overview_widgets['shape'] = QtWidgets.QLabel()
         self.overview_grid.addWidget(self.overview_widgets['shape'], this_row, 0, 1, 2)
         self.update_set_shape()
@@ -1306,6 +1302,10 @@ class SetTabPage(TabPage):
         self.overview_widgets['view_button'] = QtWidgets.QPushButton('View full gene set')
         self.overview_widgets['view_button'].clicked.connect(self.view_full_gene_set)
         self.overview_grid.addWidget(self.overview_widgets['view_button'], this_row, 2, 2, 1)
+
+        self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save gene set')
+        self.overview_widgets['save_button'].clicked.connect(self.save_file)
+        self.overview_grid.addWidget(self.overview_widgets['save_button'], this_row, 3, 2, 1)
         this_row += 2
 
         self.overview_grid.addWidget(QtWidgets.QWidget(self), this_row, 0)
@@ -1354,7 +1354,7 @@ class SetTabPage(TabPage):
             self.overview_widgets['preview'].addItems([str(item) for item in self.gene_set])
 
     def update_gene_set(self, gene_set: set):
-        self.gene_set.gene_set = gene_set
+        self.gene_set = enrichment.FeatureSet(gene_set,self.gene_set.set_name)
         self.update_tab()
 
     def update_tab(self, is_unsaved: bool = True):
