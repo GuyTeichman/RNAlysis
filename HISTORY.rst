@@ -37,6 +37,7 @@ Added
 * Added bowtie2 alignment to the fastq module.
 * Added FeatureCounts feature-counting to the fastq module.
 * You can now choose whether or not to discard genes from enrichment analysis if they have no annotations associated with them.
+* When right-clicking on a specific cell in a table or line in a gene set view, a context menu will open, allowing you to copy the associated value, or look it up in one of few common biology databases.
 * Added sections to the programmatic user guide about the `fastq` module.
 
 Changed
