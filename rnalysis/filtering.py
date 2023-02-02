@@ -2546,11 +2546,15 @@ class CountFilter(Filter):
         The analysis will be based on a design matrix supplied by the user. \
         The design matrix should contain at least two columns: the first column contains all the sample names, \
         and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
-        (see User Guide for a complete example). \
+        (see the User Guide and Tutorial for a complete example). \
         The analysis formula will contain all the factors in the design matrix. \
         To run this function, a version of R must be installed.
 
-        :param design_matrix: path to a csv file containing the experiment's design matrix.
+        :param design_matrix: path to a csv file containing the experiment's design matrix. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix.
         :type design_matrix: str or Path
         :param comparisons: specifies what comparisons to build results tables out of. \
         each individual comparison should be a tuple with exactly three elements: \

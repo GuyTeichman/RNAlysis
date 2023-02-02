@@ -1,6 +1,14 @@
 =======
 History
 =======
+
+3.4.3 (2023-02-??)
+------------------
+
+Changed
+********
+* Improved documentation for some functions.
+
 3.4.2 (2023-02-01)
 ------------------
 This version introduces minor bug fixes.
