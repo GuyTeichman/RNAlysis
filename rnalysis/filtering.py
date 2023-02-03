@@ -643,6 +643,68 @@ class Filter:
                                  excluded_qualifiers: Union[
                                      Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
                                  opposite: bool = False, inplace: bool = True):
+        """
+        Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term. \
+        When multiple GO terms are given, filtering can be done in 'union' mode \
+        (where genes that belong to at least one GO term are not filtered out), or in 'intersection' mode \
+        (where only genes that belong to ALL GO terms are not filtered out).
+
+        :param go_ids:
+        :type go_ids: str or list of str
+        :type mode: 'union' or 'intersection'.
+        :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
+        of the indicated attributes. If 'intersection', \
+        filters out every genomic feature that does not belong to ALL of the indicated attributes.
+        param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param propagate_annotations: determines the propagation method of GO annotations. \
+        'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
+        'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
+        combination of all proopagation methods. To read more about the propagation methods, \
+        see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
+        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
+        :param evidence_types: only annotations with the specified evidence types will be included in the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+        'curator', 'electronic', or 'any' (default='any')
+        :param excluded_evidence_types: annotations with the specified evidence types will be \
+        excluded from the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
+        'author', 'curator', 'electronic', or None (default=None)
+        :param databases: only annotations from the specified databases will be included in the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type databases: str, Iterable of str, or 'any' (default)
+        :param excluded_databases: annotations from the specified databases will be excluded from the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type excluded_databases: str, Iterable of str, or None (default)
+        :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type qualifiers: str, Iterable of str, or 'any' (default)
+        :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type excluded_qualifiers: str, Iterable of str, or None (default='not')
+        :type opposite: bool (default=False)
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current FeatureSet object. If False, \
+        the function will return a new FeatureSet instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new, filtered instance of the FeatureSet object.
+        """
         suffix = '_filtGO'
         go_ids = parsing.data_to_set(go_ids)
         # make sure 'mode' is legal
