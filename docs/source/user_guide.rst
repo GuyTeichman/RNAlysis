@@ -616,7 +616,7 @@ To normalize a :term:`CountFilter` with one of these functions, simply call the 
 
     >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
     >>> counts.normalize_rle()
-    Normalized the values of 22 features. Normalized inplace.
+    Normalized 22 features. Normalized inplace.
 
 To normalize a :term:`CountFilter` with user-generated scaling factors, we need a `csv` table with the scaling factor for each sample:
 
@@ -630,7 +630,7 @@ We would then supply the function with the path to the scaling factors file::
 
     >>> counts = filtering.CountFilter('tests/test_files/counted.csv')
     >>> counts.normalize_with_scaling_factors('scaling_factors.csv')
-    Normalized the values of 22 features. Normalized inplace.
+    Normalized 22 features. Normalized inplace.
 
 The resulting :term:`CountFilter` object will be normalized with the scaling factors (dividing the value of each column by the value of the corresponding scaling factor).
 
@@ -656,7 +656,7 @@ We would then supply the normalization function with the path to the special cou
 
     >>> counts = CountFilter("tests/test_files/counted.csv")
     >>> counts.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
-    Normalized the values of 22 features. Normalized inplace.
+    Normalized 22 features. Normalized inplace.
 
 The resulting :term:`CountFilter` object will be normalized to RPM with the formula (1,000,000 * reads in cell) / (sum of aligned reads + __no_feature + __ambiguous + __alignment_no_unique)
 

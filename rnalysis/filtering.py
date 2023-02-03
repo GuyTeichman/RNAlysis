@@ -181,9 +181,11 @@ class Filter:
         :return: If inplace is False, returns a new instance of the Filter object.
 
         """
+        legal_operations = {'filter': 'Filtering', 'normalize': 'Normalization', 'sort': 'Sorting',
+                            'transform': 'Transformation', 'translate': 'Translation'}
         assert isinstance(inplace, bool), "'inplace' must be True or False!"
         assert isinstance(opposite, bool), "'opposite' must be True or False!"
-        assert printout_operation.lower() in ['filter', 'normalize', 'sort', 'transform', 'translate'], \
+        assert printout_operation.lower() in legal_operations, \
             f"Invalid input for variable 'printout_operation': {printout_operation}"
         # when user requests the opposite of a filter, return the Set Difference between the filtering result and self
         if opposite:
@@ -196,49 +198,24 @@ class Filter:
         # generate printout for user ("Filtered X features, leaving Y... filtered inplace/not inplace")
         printout = ''
         if printout_operation.lower() == 'filter':
-            printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
-                        f"of the original {self.df.shape[0]} features. "
+            printout += f"Filtered {self.shape[0] - new_df.shape[0]} features, leaving {new_df.shape[0]} " \
+                        f"of the original {self.shape[0]} features. "
         elif printout_operation.lower() == 'translate':
             printout += f"Translated the gene IDs of {new_df.shape[0]} features. "
             if self.shape[0] != new_df.shape[0]:
-                printout += f"Filtered {self.df.shape[0] - new_df.shape[0]} unmapped features, " \
-                            f"leaving {new_df.shape[0]} of the original {self.df.shape[0]} features. "
+                printout += f"Filtered {self.shape[0] - new_df.shape[0]} unmapped features, " \
+                            f"leaving {new_df.shape[0]} of the original {self.shape[0]} features. "
 
         else:
-            if printout_operation.lower() == 'normalize':
-                printout += "Normalized the values of"
-            elif printout_operation.lower() == 'sort':
-                printout += "Sorted"
-            elif printout_operation.lower() == 'transform':
-                printout += "Transformed"
-
-            printout += f" {new_df.shape[0]} features. "
-        # if inplace, modify the df, fname and shape properties of self
+            printout += f'{printout_operation.capitalize().rstrip("e")}ed {new_df.shape[0]} features. '
+        # if inplace, modify the df, fname and other attributes of self
         if inplace:
-            if printout_operation.lower() == 'filter':
-                printout += 'Filtered'
-            elif printout_operation.lower() == 'normalize':
-                printout += 'Normalized'
-            elif printout_operation.lower() == 'sort':
-                printout += 'Sorted'
-            elif printout_operation.lower() == 'transform':
-                printout += 'Transformed'
-            elif printout_operation.lower() == 'translate':
-                printout += 'Translated'
-            printout += ' inplace.'
+            printout += f'{printout_operation.capitalize().rstrip("e")}ed inplace.'
             print(printout)
             self._update(df=new_df, fname=new_fname, **filter_update_kwargs)
         # if not inplace, copy self, modify the df/fname properties of the copy, and return it
         else:
-            if printout_operation.lower() == 'filter':
-                printout += 'Filtering'
-            elif printout_operation.lower() == 'normalize':
-                printout += 'Normalization'
-            elif printout_operation.lower() == 'sort':
-                printout += 'Sorting'
-            elif printout_operation.lower() == 'transform':
-                printout += 'Transformation'
-            printout += ' result saved to new object.'
+            printout += f'{legal_operations[printout_operation]} result saved to new object.'
             print(printout)
             new_obj = self.__copy__()
             new_obj._update(df=new_df, fname=new_fname, **filter_update_kwargs)
@@ -1658,10 +1635,10 @@ class Filter:
         # sort the DataFrame by the specified column/columns, in the specified order
         self._sort(by=by, ascending=ascending, na_position=na_position, inplace=True)
         # keep only the top n values in the DataFrame after the sort (or the top len(self) items, if n>len(self))
-        if n > self.df.shape[0]:
-            warnings.warn(f'Current number of rows {self.df.shape[0]} is smaller than the specified n={n}. '
-                          f'Therefore output Filter object will only have {self.df.shape[0]} rows. ')
-        new_df = self.df.iloc[0:min(n, self.df.shape[0])]
+        if n > self.shape[0]:
+            warnings.warn(f'Current number of rows {self.shape[0]} is smaller than the specified n={n}. '
+                          f'Therefore output Filter object will only have {self.shape[0]} rows. ')
+        new_df = self.df.iloc[0:min(n, self.shape[0])]
         return self._inplace(new_df, opposite, inplace, suffix)
 
     @staticmethod
@@ -2052,7 +2029,7 @@ class FoldChangeFilter(Filter):
         # calculate observed and expected mean fold-change, and the set size (n)
         obs_fc = self.df.mean(axis=0)
         exp_fc = ref.df.mean()
-        n = self.df.shape[0]
+        n = self.shape[0]
         # set random seed if requested
         if random_seed is not None:
             assert isinstance(random_seed, int) and random_seed >= 0, f"random_seed must be a non-negative integer. " \
@@ -2278,13 +2255,13 @@ class DESeqFilter(Filter):
         return type(self).from_dataframe(self.df, self.fname, self.log2fc_col, self.padj_col, suppress_warnings=True)
 
     def _assert_padj_col(self):
-        if self.padj_col not in self.df.columns:
+        if self.padj_col not in self.columns:
             raise KeyError(f"A column with adjusted p-values under the name padj_col='{self.padj_col}' "
                            f"could not be found. Try setting a different value for the parameter 'padj_col' "
                            f"when creating the DESeqFilter object.")
 
     def _assert_log2fc_col(self):
-        if self.log2fc_col not in self.df.columns:
+        if self.log2fc_col not in self.columns:
             raise KeyError(f"A column with log2 fold change values under the name log2fc_col='{self.log2fc_col}' "
                            f"could not be found. Try setting a different value for the parameter 'log2fc_col' "
                            f"when creating the DESeqFilter object.")
@@ -2550,7 +2527,7 @@ class CountFilter(Filter):
         if len(self._numeric_columns) < len(self.columns):
             warnings.warn(f"The following columns in the CountFilter are not numeric, and will therefore be ignored "
                           f"when running some CountFilter-specific functions: "
-                          f"{set(self.df.columns).difference(self._numeric_columns)}")
+                          f"{set(self.columns).difference(self._numeric_columns)}")
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame, name: Union[str, Path], is_normalized: bool = False,
@@ -2940,7 +2917,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_to_rpm_htseqcount("tests/test_files/uncounted.csv")
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
 
         """
         suffix = '_normtoRPMhtseqcount'
@@ -2976,7 +2953,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_to_rpm()
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
 
         """
         suffix = '_normtoRPM'
@@ -3012,7 +2989,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_to_quantile(0.75)
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         suffix = f'_normto{quantile}quantile'
         data = self.df[self._numeric_columns]
@@ -3067,7 +3044,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_tmm()
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         assert 0 <= log_ratio_trim < 0.5, f"'log_ratio_trim' must be a value in the range 0 <= log_ratio_trim < 5"
         assert 0 <= sum_trim < 0.5, f"'sum_trim' must be a value in the range 0 <= sum_trim < 5"
@@ -3129,7 +3106,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_rle()
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         suffix = f'_normRLE'
         data = self.df[self._numeric_columns].dropna(axis=0)
@@ -3174,7 +3151,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_median_of_ratios([['cond1','cond2'],['cond3','cond4']])
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
         """
         flat_grouping = parsing.flatten(sample_grouping)
         assert len(flat_grouping) >= len(self._numeric_columns), f"'sample_grouping' must include all columns. " \
@@ -3227,7 +3204,7 @@ class CountFilter(Filter):
             >>> from rnalysis import filtering
             >>> c = filtering.CountFilter("tests/test_files/counted.csv")
             >>> c.normalize_with_scaling_factors("tests/test_files/scaling_factors.csv")
-            Normalized the values of 22 features. Normalized inplace.
+           Normalized 22 features. Normalized inplace.
 
         """
         suffix = '_normwithscalingfactors'
@@ -3999,7 +3976,7 @@ class CountFilter(Filter):
         assert linkage in linkages, f"Invalid linkage {linkage}."
 
         if sample_names == 'all':
-            sample_names = list(self.df.columns)
+            sample_names = list(self.columns)
         print('Calculating clustergram...')
         plt.style.use('seaborn-whitegrid')
         clustergram = sns.clustermap(np.log2(self.df[sample_names] + 1), method=linkage, metric=metric,
@@ -4588,7 +4565,7 @@ class CountFilter(Filter):
             >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder')
 
             >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', norm_to_rpm=True) # This will also normalize the CountFilter to reads-per-million (RPM).
-            Normalized the values of 10 features. Normalized inplace.
+           Normalized 10 features. Normalized inplace.
 
             >>> c = filtering.CountFilter.from_folder('tests/test_files/test_count_from_folder', save_csv=True, counted_fname='name_for_reads_csv_file', uncounted_fname='name_for_uncounted_reads_csv_file') # This will also save the counted reads and uncounted reads as separate .csv files
 

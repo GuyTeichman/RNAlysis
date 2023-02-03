@@ -11,7 +11,7 @@
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
+
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -21,10 +21,10 @@
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -101,7 +101,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-             
+
   <section id="rnalysis-package">
 <h1>rnalysis package<a class="headerlink" href="#rnalysis-package" title="Permalink to this heading"></a></h1>
 <section id="rnalysis-filtering-module">
@@ -792,7 +792,7 @@ Filtered 2 features, leaving 26 of the original 28 features. Filtered inplace.</
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">norm_to_rpm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># This will also normalize the CountFilter to reads-per-million (RPM).</span>
-<span class="go">Normalized the values of 10 features. Normalized inplace.</span>
+<span class="go">Normalized 10 features. Normalized inplace.</span>
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="o">.</span><span class="n">from_folder</span><span class="p">(</span><span class="s1">&#39;tests/test_files/test_count_from_folder&#39;</span><span class="p">,</span> <span class="n">save_csv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">counted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_reads_csv_file&#39;</span><span class="p">,</span> <span class="n">uncounted_fname</span><span class="o">=</span><span class="s1">&#39;name_for_uncounted_reads_csv_file&#39;</span><span class="p">)</span> <span class="c1"># This will also save the counted reads and uncounted reads as separate .csv files</span>
@@ -1024,7 +1024,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_median_of_ratios</span><span class="p">([[</span><span class="s1">&#39;cond1&#39;</span><span class="p">,</span><span class="s1">&#39;cond2&#39;</span><span class="p">],[</span><span class="s1">&#39;cond3&#39;</span><span class="p">,</span><span class="s1">&#39;cond4&#39;</span><span class="p">]])</span>
-<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -1046,7 +1046,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_rle</span><span class="p">()</span>
-<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -1074,7 +1074,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_tmm</span><span class="p">()</span>
-<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -1099,7 +1099,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_quantile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">)</span>
-<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -1121,7 +1121,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm</span><span class="p">()</span>
-<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -1146,7 +1146,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_to_rpm_htseqcount</span><span class="p">(</span><span class="s2">&quot;tests/test_files/uncounted.csv&quot;</span><span class="p">)</span>
-<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -1171,7 +1171,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_with_scaling_factors</span><span class="p">(</span><span class="s2">&quot;tests/test_files/scaling_factors.csv&quot;</span><span class="p">)</span>
-<span class="go">Normalized the values of 22 features. Normalized inplace.</span>
+<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
 </dd>
@@ -5484,7 +5484,7 @@ Filtered 26 features, leaving 2 of the original 28 features. Filtered inplace.</
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">add_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">function</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
-<dd><p>Add a function to the pipeline. Arguments can be stated with or without the correspoding keywords.         For example: Pipeline.add_function(‘sort’, ‘columnName’, ascending=False, na_position=’first’).         Pipelines support virtually all functions in the filtering module, including         filtering functions, normalization functions, splitting functions and plotting functions.         Do not include the ‘inplace’ argument when adding functions to a pipeline; instead,         include it when applying the pipeline to a Filter object using Pipeline.apply_to(). 
+<dd><p>Add a function to the pipeline. Arguments can be stated with or without the correspoding keywords.         For example: Pipeline.add_function(‘sort’, ‘columnName’, ascending=False, na_position=’first’).         Pipelines support virtually all functions in the filtering module, including         filtering functions, normalization functions, splitting functions and plotting functions.         Do not include the ‘inplace’ argument when adding functions to a pipeline; instead,         include it when applying the pipeline to a Filter object using Pipeline.apply_to().
 :param func: function to be added
 :type func: function or name of function from the filtering module
 :param args: unkeyworded arguments for the added function in their natural order. For example: 0.1, True
@@ -6454,7 +6454,7 @@ a set of the WBGene indices that appear in the given string.</p>
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
+
 
 </footer>
         </div>
@@ -6465,7 +6465,7 @@ a set of the WBGene indices that appear in the given string.</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
 
 </body>
 </html>
