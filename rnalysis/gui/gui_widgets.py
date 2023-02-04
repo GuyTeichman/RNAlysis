@@ -1905,6 +1905,8 @@ class ReactiveListWidget(QtWidgets.QListWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.context_menu = None
+        self.setUniformItemSizes(True)
+        self.setSpacing(2)
 
     def contextMenu(self, value: str):
         self.context_menu = QtWidgets.QMenu(self)

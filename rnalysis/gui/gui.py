@@ -1159,10 +1159,19 @@ class SetVisualizationWindow(gui_widgets.MinMaxDialog):
 
 
 class TabPage(QtWidgets.QWidget):
+    filterObjectCreated = QtCore.pyqtSignal(object)
+    featureSetCreated = QtCore.pyqtSignal(object)
+    startedJob = QtCore.pyqtSignal(object, str, object)
     tabNameChange = QtCore.pyqtSignal(str, bool)
     tabSaved = QtCore.pyqtSignal()
     changeIcon = QtCore.pyqtSignal(str)
     geneSetsRequested = QtCore.pyqtSignal(object)
+
+    EXCLUDED_FUNCS = set()
+    SUMMARY_FUNCS = set()
+    CLUSTERING_FUNCS = ()
+    GENERAL_FUNCS = ()
+    THREADED_FUNCS = set()
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent)
@@ -1178,22 +1187,48 @@ class TabPage(QtWidgets.QWidget):
 
         self.name = None
         self.creation_time = time.time()
+        self.object_views = []
+
+        # initiate function stack
+        self.stack = QtWidgets.QStackedWidget(self)
+        self.button_box = QtWidgets.QButtonGroup(self)
+        self.stack_buttons = []
+        self.stack_widgets = {}
+
+        # initiate standard tab groups and their widget containers
+        self.overview_group = QtWidgets.QGroupBox('Data overview')
+        self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
+        self.overview_widgets = {}
+
+        self.function_group = QtWidgets.QGroupBox('Apply functions')
+        self.function_grid = QtWidgets.QGridLayout(self.function_group)
+        self.function_widgets = {}
+        self.layout.insertWidget(2, self.function_group)
+        self.function_group.setVisible(False)
 
         self.stdout_group = QtWidgets.QGroupBox('Log')
+        self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
+        self.stdout_widgets = {}
 
+        # initiate apply button
+        self.apply_button = QtWidgets.QPushButton('Apply')
+        self.apply_button.clicked.connect(self.apply_function)
+        self.layout.insertWidget(3, self.apply_button)
+        self.apply_button.setVisible(False)
+
+        # initiate the splitter layout for the tab
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.sup_layout.addWidget(self.splitter)
         self.splitter.addWidget(self.scroll)
         self.splitter.addWidget(self.stdout_group)
         self.splitter.setStretchFactor(0, 1)
 
-        # self.sup_layout.addStretch(1)
-        self.stdout_grid = QtWidgets.QGridLayout(self.stdout_group)
-        self.stdout_widgets = {}
-
         self.init_stdout_ui()
 
     def obj(self):
+        raise NotImplementedError
+
+    def obj_name(self):
         raise NotImplementedError
 
     def update_obj(self, obj):
@@ -1210,6 +1245,124 @@ class TabPage(QtWidgets.QWidget):
 
     def is_empty(self):
         return True
+
+    def init_overview_ui(self):
+        raise NotImplementedError
+
+    def init_function_ui(self):
+        self.function_group.setVisible(True)
+        sorted_actions = self.get_all_actions()
+
+        self.stack.addWidget(QtWidgets.QWidget(self))  # start the stack empty
+        i = 0
+        for i, action_type in enumerate(sorted_actions):
+            bttn = QtWidgets.QPushButton(action_type)
+            bttn.setCheckable(True)
+            bttn.setStyleSheet('''QPushButton::checked {background-color : purple;
+                                                        color: white;
+                                                        border: 1px solid #ba32ba;
+                                                        border-radius: 4px;}''')
+            bttn.setEnabled(len(sorted_actions[action_type]) > 0)  # disable the button if there are no relevant actions
+
+            self.stack_widgets[action_type] = FuncTypeStack(sorted_actions[action_type], self.obj())
+            self.stack_widgets[action_type].funcSelected.connect(self.apply_button.setVisible)
+            self.stack_widgets[action_type].funcSelected.connect(self._check_for_special_functions)
+            self.stack_widgets[action_type].geneSetsRequested.connect(self.geneSetsRequested)
+            self.stack.addWidget(self.stack_widgets[action_type])
+            bttn.clicked.connect(functools.partial(self.stack.setCurrentIndex, i + 1))
+            self.button_box.addButton(bttn)
+            self.stack_buttons.append(bttn)
+            self.function_grid.addWidget(bttn, 0, i)
+        self.stack.currentChanged.connect(self._update_stack_status)
+
+        self.function_grid.addWidget(self.stack, 1, 0, 1, i + 1)
+
+    def _check_for_special_functions(self):
+        pass
+
+    def _update_stack_status(self, ind: int):
+        self.stack.widget(ind).check_selection_status()
+
+    def get_all_actions(self):
+        assert self.obj() is not None, "No object was loaded!"
+        all_methods = dir(self.obj())
+        public_methods = [mthd for mthd in all_methods if
+                          (not mthd.startswith('_')) and (callable(getattr(type(self.obj()), mthd))) and (
+                              mthd not in self.EXCLUDED_FUNCS)]
+        sorted_methods = {'Filter': [], 'Normalize': [], 'Summarize': [], 'Visualize': [], 'Cluster': [], 'General': []}
+
+        for method in public_methods:
+            if method in self.SUMMARY_FUNCS:
+                sorted_methods['Summarize'].append(method)
+            elif method in self.CLUSTERING_FUNCS:
+                sorted_methods['Cluster'].append(method)
+            elif method in self.GENERAL_FUNCS:
+                sorted_methods['General'].append(method)
+            elif 'normalize' in method:
+                sorted_methods['Normalize'].append(method)
+            elif 'filter' in method or 'split' in method:
+                sorted_methods['Filter'].append(method)
+            else:
+                sorted_methods['Visualize'].append(method)
+
+        return sorted_methods
+
+    def apply_function(self):
+        this_stack: FuncTypeStack = self.stack.currentWidget()
+        func_name = this_stack.get_function_name()
+        func_params = this_stack.get_function_params()
+        if func_params.get('inplace', False):
+            if func_name in self.THREADED_FUNCS:
+                command = InplaceCachedCommand(self, func_name, args=[], kwargs=func_params,
+                                               description=f'Apply "{func_name}"')
+            else:
+                command = InplaceCommand(self, func_name, args=[], kwargs=func_params,
+                                         description=f'Apply "{func_name}"')
+            self.undo_stack.push(command)
+        else:
+            self._apply_function_from_params(func_name, args=[], kwargs=func_params)
+
+    def _apply_function_from_params(self, func_name, args: list, kwargs: dict, finish_slot=None):
+        if func_name in self.THREADED_FUNCS and (not kwargs.get('inplace', False)):
+            partial = functools.partial(getattr(self.obj(), func_name), *args, **kwargs)
+            self.startedJob.emit(partial, func_name, finish_slot)
+            return
+
+        prev_name = self.get_tab_name()
+        result = getattr(self.obj(), func_name)(*args, **kwargs)
+        self.update_tab(prev_name != self.obj_name())
+        self.process_outputs(result, func_name)
+
+    def process_outputs(self, outputs, source_name: str = ''):
+        if validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
+            self.filterObjectCreated.emit(outputs)
+        elif validation.isinstanceinh(outputs, enrichment.FeatureSet):
+            self.featureSetCreated.emit(outputs)
+        elif isinstance(outputs, pd.DataFrame):
+            self.object_views.append(gui_windows.DataFrameView(outputs, source_name))
+            self.object_views[-1].show()
+        elif isinstance(outputs, np.ndarray):
+            df = pd.DataFrame(outputs)
+            self.process_outputs(df, source_name)
+
+        elif isinstance(outputs, (tuple, list)):
+            if validation.isinstanceiter_inh(outputs,
+                                             (filtering.Filter, fastq.filtering.Filter, enrichment.FeatureSet)):
+                dialog = MultiKeepWindow(outputs, self)
+                dialog.accepted.connect(functools.partial(self._multi_keep_window_accepted, dialog, source_name))
+                dialog.exec()
+            else:
+                for output in outputs:
+                    self.process_outputs(output, source_name)
+        elif isinstance(outputs, dict):
+            tab_name = self.get_tab_name()
+            for this_src_name, output in outputs.items():
+                self.process_outputs(output, f"{this_src_name} {tab_name}")
+
+    def _multi_keep_window_accepted(self, dialog: QtWidgets.QDialog, source_name: str):
+        kept_outputs = dialog.result()
+        for output in kept_outputs:
+            self.process_outputs(output, source_name)
 
     def init_stdout_ui(self):
         self.stdout_widgets['text_edit_stdout'] = gui_widgets.StdOutTextEdit(self)
@@ -1245,6 +1398,10 @@ class TabPage(QtWidgets.QWidget):
 
 
 class SetTabPage(TabPage):
+    EXCLUDED_FUNCS = {'union', 'intersection', 'majority_vote_intersection', 'difference', 'symmetric_difference'}
+    SUMMARY_FUNCS = {'biotypes_from_ref_table', 'biotypes_from_gtf'}
+    GENERAL_FUNCS = {'translate_gene_ids'}
+    THREADED_FUNCS = {'translate_gene_ids', 'filter_by_kegg_annotations', 'filter_by_go_annotations'}
 
     def __init__(self, set_name: str, gene_set: typing.Union[set, enrichment.FeatureSet] = None, parent=None,
                  undo_stack: QtWidgets.QUndoStack = None):
@@ -1255,13 +1412,15 @@ class SetTabPage(TabPage):
             gene_set = enrichment.FeatureSet(gene_set, set_name)
         self.gene_set = gene_set
         self.name = set_name
-        self.overview_group = QtWidgets.QGroupBox('Data overview')
-        self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
-        self.overview_widgets = {}
-        self.init_overview_ui(set_name)
+
+        self.init_overview_ui()
+        self.init_function_ui()
 
     def obj(self):
         return self.gene_set
+
+    def obj_name(self):
+        return self.gene_set.set_name
 
     def update_obj(self, obj: set):
         self.update_gene_set(obj)
@@ -1272,11 +1431,10 @@ class SetTabPage(TabPage):
     def get_index_string(self):
         return "\n".join(self.obj())
 
-    def init_overview_ui(self, set_name: str):
+    def init_overview_ui(self):
         this_row = 0
         self.layout.insertWidget(0, self.overview_group)
-        self.layout.addStretch(1)
-        self.overview_widgets['table_name_label'] = QtWidgets.QLabel(f"Gene set name: '<b>{set_name}</b>'")
+        self.overview_widgets['table_name_label'] = QtWidgets.QLabel(f"Gene set name: '<b>{self.obj().set_name}</b>'")
         self.overview_widgets['table_name_label'].setWordWrap(True)
 
         self.overview_widgets['preview'] = gui_widgets.ReactiveListWidget()
@@ -1292,8 +1450,8 @@ class SetTabPage(TabPage):
         self.overview_grid.addWidget(self.overview_widgets['table_name'], this_row, 1)
         self.overview_grid.addWidget(self.overview_widgets['rename_button'], this_row, 2)
         this_row += 1
-        self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 3, 4)
-        this_row += 3
+        self.overview_grid.addWidget(self.overview_widgets['preview'], this_row, 0, 1, 4)
+        this_row += 1
 
         self.overview_widgets['shape'] = QtWidgets.QLabel()
         self.overview_grid.addWidget(self.overview_widgets['shape'], this_row, 0, 1, 2)
@@ -1306,12 +1464,9 @@ class SetTabPage(TabPage):
         self.overview_widgets['save_button'] = QtWidgets.QPushButton('Save gene set')
         self.overview_widgets['save_button'].clicked.connect(self.save_file)
         self.overview_grid.addWidget(self.overview_widgets['save_button'], this_row, 3, 2, 1)
-        this_row += 2
-
-        self.overview_grid.addWidget(QtWidgets.QWidget(self), this_row, 0)
-        self.overview_grid.addWidget(QtWidgets.QWidget(self), 0, 4)
-        self.overview_grid.setRowStretch(this_row, 1)
-        self.overview_grid.setColumnStretch(4, 1)
+        this_row += 1
+        self.overview_grid.addWidget(QtWidgets.QLabel(''), this_row, 0, 1, 1)
+        this_row += 1
 
     def view_full_gene_set(self):
         set_window = gui_windows.GeneSetView(self.gene_set.gene_set, self.get_tab_name())
@@ -1352,15 +1507,28 @@ class SetTabPage(TabPage):
     def update_set_preview(self):
         if self.gene_set is not None:
             self.overview_widgets['preview'].addItems([str(item) for item in self.gene_set])
+        if self.overview_widgets['preview'].count() > 0:
+            item_height = self.overview_widgets['preview'].sizeHintForRow(0)
+            self.overview_widgets['preview'].setFixedHeight((item_height + 8) * 4)
 
-    def update_gene_set(self, gene_set: set):
-        self.gene_set = enrichment.FeatureSet(gene_set,self.gene_set.set_name)
+    def update_gene_set(self, gene_set: set, set_name: str = None):
+        if isinstance(gene_set, enrichment.FeatureSet):
+            self.gene_set = gene_set
+        else:
+            set_name = self.gene_set.set_name if set_name is None else set_name
+            self.gene_set = enrichment.FeatureSet(gene_set, set_name)
         self.update_tab()
 
     def update_tab(self, is_unsaved: bool = True):
         self.update_set_shape()
         self.update_set_preview()
         self.changeIcon.emit('set')
+
+    def get_all_actions(self):
+        sorted_methods = super().get_all_actions()
+        for discarded_category in ('Normalize', 'Cluster', 'Visualize'):
+            sorted_methods[discarded_category] = []
+        return sorted_methods
 
 
 class FuncTypeStack(QtWidgets.QWidget):
@@ -1509,15 +1677,12 @@ class FilterTabPage(TabPage):
                      'average_replicate_samples', 'drop_columns'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
                       'filter_by_go_annotations'}
-    filterObjectCreated = QtCore.pyqtSignal(object)
     startedClustering = QtCore.pyqtSignal(object, str, object)
-    startedJob = QtCore.pyqtSignal(object, str, object)
     widthChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, undo_stack: QtWidgets.QUndoStack = None):
         super().__init__(parent, undo_stack)
         self.filter_obj = None
-        self.df_views = []
 
         self.basic_group = QtWidgets.QGroupBox('Load a data table')
         self.basic_grid = QtWidgets.QGridLayout(self.basic_group)
@@ -1525,19 +1690,6 @@ class FilterTabPage(TabPage):
         self.basic_param_container = QtWidgets.QWidget(self)
         self.basic_param_widgets = {}
         self.basic_param_grid = QtWidgets.QGridLayout(self.basic_param_container)
-
-        self.overview_group = QtWidgets.QGroupBox('Data overview')
-        self.overview_grid = QtWidgets.QGridLayout(self.overview_group)
-        self.overview_widgets = {}
-
-        self.function_group = QtWidgets.QGroupBox('Apply functions')
-        self.function_grid = QtWidgets.QGridLayout(self.function_group)
-        self.function_widgets = {}
-
-        self.stack = QtWidgets.QStackedWidget(self)
-        self.button_box = QtWidgets.QButtonGroup(self)
-        self.stack_buttons = []
-        self.stack_widgets = {}
 
         self.clicom_window = None
         self.deseq_window = None
@@ -1548,6 +1700,9 @@ class FilterTabPage(TabPage):
 
     def obj(self):
         return self.filter_obj
+
+    def obj_name(self):
+        return self.filter_obj.fname.name
 
     def update_obj(self, obj: filtering.Filter):
         self.filter_obj = obj
@@ -1688,11 +1843,6 @@ class FilterTabPage(TabPage):
         self.basic_widgets['type_label'] = QtWidgets.QLabel('Choose table type:')
         self.basic_widgets['name_label'] = QtWidgets.QLabel('Name your table (optional):')
 
-        self.basic_widgets['apply_button'] = QtWidgets.QPushButton('Apply')
-        self.basic_widgets['apply_button'].clicked.connect(self.apply_function)
-        self.layout.insertWidget(1, self.basic_widgets['apply_button'])
-        self.basic_widgets['apply_button'].setVisible(False)
-
         self.basic_grid.addWidget(self.basic_widgets['file_label'], 0, 0, 1, 2)
         self.basic_grid.addWidget(self.basic_widgets['type_label'], 0, 2)
         self.basic_grid.addWidget(self.basic_widgets['name_label'], 0, 3)
@@ -1707,35 +1857,6 @@ class FilterTabPage(TabPage):
         self.basic_grid.addWidget(QtWidgets.QWidget(self), 0, 4, 4, 1)
         self.basic_grid.setRowStretch(4, 1)
         self.basic_grid.setColumnStretch(4, 1)
-
-    @QtCore.pyqtSlot(int)
-    def _update_stack_status(self, ind: int):
-        self.stack.widget(ind).check_selection_status()
-
-    def init_function_ui(self):
-        self.layout.insertWidget(2, self.function_group)
-        sorted_actions = self.get_all_actions()
-
-        self.stack.addWidget(QtWidgets.QWidget(self))  # start the stack empty
-        for i, action_type in enumerate(sorted_actions):
-            bttn = QtWidgets.QPushButton(action_type)
-            bttn.setCheckable(True)
-            bttn.setStyleSheet('''QPushButton::checked {background-color : purple;
-                                                        color: white;
-                                                        border: 1px solid #ba32ba;
-                                                        border-radius: 4px;}''')
-            self.stack_widgets[action_type] = FuncTypeStack(sorted_actions[action_type], self.filter_obj)
-            self.stack_widgets[action_type].funcSelected.connect(self.basic_widgets['apply_button'].setVisible)
-            self.stack_widgets[action_type].funcSelected.connect(self._check_for_special_functions)
-            self.stack_widgets[action_type].geneSetsRequested.connect(self.geneSetsRequested)
-            self.stack.addWidget(self.stack_widgets[action_type])
-            bttn.clicked.connect(functools.partial(self.stack.setCurrentIndex, i + 1))
-            self.button_box.addButton(bttn)
-            self.stack_buttons.append(bttn)
-            self.function_grid.addWidget(bttn, 0, i)
-        self.stack.currentChanged.connect(self._update_stack_status)
-
-        self.function_grid.addWidget(self.stack, 1, 0, 1, i + 1)
 
     def _check_for_special_functions(self, is_selected: bool):
         if not is_selected:
@@ -1787,21 +1908,6 @@ class FilterTabPage(TabPage):
         if a0.size().width() != a0.oldSize().width():
             self.widthChanged.emit()
 
-    def apply_function(self):
-        this_stack: FuncTypeStack = self.stack.currentWidget()
-        func_name = this_stack.get_function_name()
-        func_params = this_stack.get_function_params()
-        if func_params.get('inplace', False):
-            if func_name in self.THREADED_FUNCS:
-                command = InplaceCachedCommand(self, func_name, args=[], kwargs=func_params,
-                                               description=f'Apply "{func_name}"')
-            else:
-                command = InplaceCommand(self, func_name, args=[], kwargs=func_params,
-                                         description=f'Apply "{func_name}"')
-            self.undo_stack.push(command)
-        else:
-            self._apply_function_from_params(func_name, args=[], kwargs=func_params)
-
     def update_tab(self, is_unsaved: bool = True):
         if self.is_empty():
             return
@@ -1827,38 +1933,7 @@ class FilterTabPage(TabPage):
             self.startedJob.emit(partial, func_name, finish_slot)
             return
 
-        prev_name = self.get_tab_name()
-        result = getattr(self.filter_obj, func_name)(*args, **kwargs)
-        self.update_tab(prev_name != self.filter_obj.fname.name)
-        self.process_outputs(result, func_name)
-
-    def process_outputs(self, outputs, source_name: str = ''):
-        if validation.isinstanceinh(outputs, (filtering.Filter, fastq.filtering.Filter)):
-            self.filterObjectCreated.emit(outputs)
-        elif isinstance(outputs, pd.DataFrame):
-            self.df_views.append(gui_windows.DataFrameView(outputs, source_name))
-            self.df_views[-1].show()
-        elif isinstance(outputs, np.ndarray):
-            df = pd.DataFrame(outputs)
-            self.process_outputs(df, source_name)
-
-        elif isinstance(outputs, (tuple, list)):
-            if validation.isinstanceiter_inh(outputs, filtering.Filter):
-                dialog = MultiKeepWindow(outputs, self)
-                dialog.accepted.connect(functools.partial(self._multi_keep_window_accepted, dialog, source_name))
-                dialog.exec()
-            else:
-                for output in outputs:
-                    self.process_outputs(output, source_name)
-        elif isinstance(outputs, dict):
-            tab_name = self.get_tab_name()
-            for this_src_name, output in outputs.items():
-                self.process_outputs(output, f"{this_src_name} {tab_name}")
-
-    def _multi_keep_window_accepted(self, dialog: QtWidgets.QDialog, source_name: str):
-        kept_outputs = dialog.result()
-        for output in kept_outputs:
-            self.process_outputs(output, source_name)
+        return super()._apply_function_from_params(func_name, args, kwargs, finish_slot)
 
     def apply_pipeline(self, pipeline: filtering.Pipeline, pipeline_name: str, inplace: bool):
         if inplace:
@@ -1877,30 +1952,6 @@ class FilterTabPage(TabPage):
         if self.is_empty():
             return ''
         return self.filter_obj.index_string
-
-    def get_all_actions(self):
-        assert self.filter_obj is not None, "No table was loaded!"
-        all_methods = dir(self.filter_obj)
-        public_methods = [mthd for mthd in all_methods if
-                          (not mthd.startswith('_')) and (callable(getattr(type(self.filter_obj), mthd))) and (
-                              mthd not in self.EXCLUDED_FUNCS)]
-        sorted_methods = {'Filter': [], 'Normalize': [], 'Summarize': [], 'Visualize': [], 'Cluster': [], 'General': []}
-
-        for method in public_methods:
-            if method in self.SUMMARY_FUNCS:
-                sorted_methods['Summarize'].append(method)
-            elif method in self.CLUSTERING_FUNCS:
-                sorted_methods['Cluster'].append(method)
-            elif method in self.GENERAL_FUNCS:
-                sorted_methods['General'].append(method)
-            elif 'normalize' in method:
-                sorted_methods['Normalize'].append(method)
-            elif 'filter' in method or 'split' in method:
-                sorted_methods['Filter'].append(method)
-            else:
-                sorted_methods['Visualize'].append(method)
-
-        return sorted_methods
 
     def save_file(self):
         if self.filter_obj is None:
@@ -1999,10 +2050,10 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.basic_widgets['start_button'] = QtWidgets.QPushButton('Start')
         self.basic_widgets['start_button'].clicked.connect(self.start)
 
-        self.basic_widgets['apply_button'] = QtWidgets.QPushButton('Add to Pipeline')
-        self.basic_widgets['apply_button'].clicked.connect(self.apply_function)
-        self.layout.insertWidget(1, self.basic_widgets['apply_button'])
-        self.basic_widgets['apply_button'].setVisible(False)
+        self.apply_button = QtWidgets.QPushButton('Add to Pipeline')
+        self.apply_button.clicked.connect(self.apply_function)
+        self.layout.insertWidget(1, self.apply_button)
+        self.apply_button.setVisible(False)
 
         self.basic_widgets['type_label'] = QtWidgets.QLabel('Choose table type:')
 
@@ -2016,10 +2067,6 @@ class CreatePipelineWindow(gui_widgets.MinMaxDialog, FilterTabPage):
         self.basic_grid.addWidget(QtWidgets.QWidget(), 0, 4)
         self.basic_grid.setRowStretch(2, 1)
         self.basic_grid.setColumnStretch(4, 1)
-
-    @QtCore.pyqtSlot(int)
-    def _update_stack_status(self, ind: int):
-        self.stack.widget(ind).check_selection_status()
 
     def init_function_ui(self):
         super().init_function_ui()
@@ -2146,12 +2193,13 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
                  'scroll_widget': 'widget containing scroll area',
                  'main_layout': 'main layout for the window'}
 
-    def __init__(self, objs: List[filtering.Filter], parent=None):
+    def __init__(self, objs: List[Union[filtering.Filter, enrichment.FeatureSet]], parent=None):
         super().__init__(parent)
         # make sure there are no two objects with the sane name
         self.objs = {}
         for obj in objs:
-            key = str(obj.fname.stem)
+            key = str(obj.fname.stem) if validation.isinstanceinh(obj, (
+                filtering.Filter, fastq.filtering.Filter)) else obj.set_name
             if key in self.objs:
                 i = 1
                 key += '_{i}'
@@ -2218,7 +2266,10 @@ class MultiKeepWindow(gui_widgets.MinMaxDialog):
             if keep_tables[file]:
                 obj = self.objs[file]
                 if new_names[file] != '':
-                    obj.fname = Path(new_names[file])
+                    if validation.isinstanceinh(obj, (filtering.Filter, fastq.filtering.Filter)):
+                        obj.fname = Path(new_names[file])
+                    else:
+                        obj.set_name = new_names[file]
                 out.append(obj)
         return out
 
@@ -2425,7 +2476,7 @@ class InplaceCommand(QtWidgets.QUndoCommand):
                  'kwargs': 'function kwargs',
                  'obj_copy': 'copy of the original object'}
 
-    def __init__(self, tab: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
+    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str):
         super().__init__(description)
         self.tab = tab
         self.func_name = func_name
@@ -2447,7 +2498,7 @@ class InplaceCachedCommand(InplaceCommand):
     __slots__ = {'first_pass': 'indicates whether the command was already applied once',
                  'processed_obj': 'object after application of the function'}
 
-    def __init__(self, tab: FilterTabPage, func_name: str, args: list, kwargs: dict, description: str):
+    def __init__(self, tab: TabPage, func_name: str, args: list, kwargs: dict, description: str):
         super().__init__(tab, func_name, args, kwargs, description)
         self.first_pass = True
         self.processed_obj = None
@@ -2787,6 +2838,8 @@ class MainWindow(QtWidgets.QMainWindow):
             tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
             tab.startedClustering.connect(self.start_clustering)
             tab.startedJob.connect(self.start_generic_job)
+        tab.filterObjectCreated.connect(self.new_tab_from_filter_obj)
+        tab.featureSetCreated.connect(self.new_tab_from_gene_set)
         tab.changeIcon.connect(self.set_current_tab_icon)
         tab.tabNameChange.connect(self.rename_tab)
         tab.geneSetsRequested.connect(self.update_gene_sets_widget)
@@ -2872,7 +2925,7 @@ class MainWindow(QtWidgets.QMainWindow):
             icon = gui_graphics.get_icon(icon_name)
         self.tabs.setTabIcon(ind, icon)
 
-    def new_tab_from_gene_set(self, gene_set: set, gene_set_name: str):
+    def new_tab_from_gene_set(self, gene_set: set, gene_set_name: str = None):
         self.add_new_tab(gene_set_name, is_set=True)
         self.tabs.currentWidget().update_gene_set(gene_set)
         QtWidgets.QApplication.processEvents()
