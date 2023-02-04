@@ -8,6 +8,7 @@ History
 Changed
 ********
 * Classes enrichment.FeatureSet and enrichment.RankedSet now inherit from Python base-class set, and can be interacted with like other Python sets. The old API and attributes of these classes were maintained as they were.
+* enrichment.FeatureSet and enrichment.RankedSet now support some filtering operations from the filtering module (such as filtering by user-defined attributes, GO terms, or KEGG pathways).
 * Improved documentation for some functions.
 * Function selection tooltips should now display information more clearly.
 

@@ -11,6 +11,7 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
+import filtering
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
     PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
 
@@ -68,7 +69,7 @@ class FeatureSet(set):
         super().__init__(self.gene_set)
 
     def __copy__(self):
-        obj = type(self)(self.gene_set.copy(),self.set_name)
+        obj = type(self)(self.gene_set.copy(), self.set_name)
         return obj
 
     def __repr__(self):
@@ -86,10 +87,43 @@ class FeatureSet(set):
 
         return True
 
+    def _update(self, **kwargs):
+        for key, val in kwargs.items():
+            try:
+                setattr(self, key, val)
+            except AttributeError:
+                raise AttributeError(f"Cannot update attribute {key} for {type(self)} object: attribute does not exist")
+
+    def _inplace(self, func, func_kwargs, inplace: bool, **update_kwargs):
+        """
+        Executes the user's choice whether to filter in-place or create a new instance of the FeatureSet object.
+        """
+        filter_obj = self._convert_to_filter_obj()
+        applied = func(filter_obj, **func_kwargs, inplace=inplace)
+        if inplace:
+            applied = filter_obj
+
+        new_set = applied.index_set
+        suffix = applied.fname.stem.split('_')[-1]
+        new_name = self.set_name + suffix
+
+        # if inplace, modify self, name and other properties of self
+        if inplace:
+            self.intersection_update(new_set)
+            self._update(gene_set=new_set, set_name=new_name, **update_kwargs)
+        # if not inplace, copy self, modify the self, name, and other properties of the copy, and return it
+        else:
+            new_obj = type(self)(new_set, new_name)
+            new_obj._update(**update_kwargs)
+            return new_obj
+
+    def _convert_to_filter_obj(self) -> filtering.Filter:
+        return Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)), self.set_name)
+
     @readable_name('Translate gene IDs')
     def translate_gene_ids(self, translate_to: Union[str, Literal[get_gene_id_types()]],
                            translate_from: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
-                           remove_unmapped_genes: bool = False) -> 'FeatureSet':
+                           remove_unmapped_genes: bool = False, inplace: bool = True) -> 'FeatureSet':
         """
                 Translates gene names/IDs from one type to another. \
                 Mapping is done using the UniProtKB Gene ID Mapping service. \
@@ -108,24 +142,185 @@ class FeatureSet(set):
                 :type remove_unmapped_genes: bool (default=False)
                 :return: returns a new and translated FeatureSet.
     """
-        filter_obj = Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)),
-                                                     self.set_name)
-        translated = filter_obj.translate_gene_ids(translate_to, translate_from, remove_unmapped_genes, inplace=False)
-        return FeatureSet(translated.index_set(), translated.fname.name)
+        kwargs = dict(translate_to=translate_to,
+                      translate_from=translate_from,
+                      remove_unmapped_genes=remove_unmapped_genes)
+        return self._inplace(Filter.translate_gene_ids, kwargs, inplace)
+
+    @readable_name('Filter by KEGG Pathways annotations')
+    def filter_by_kegg_annotations(self, kegg_ids: Union[str, List[str]],
+                                   mode: Literal['union', 'intersection'] = 'union',
+                                   organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                                   gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                                   opposite: bool = False, inplace: bool = True):
+        """
+        Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway. \
+        When multiple KEGG IDs are given, filtering can be done in 'union' mode \
+        (where genes that belong to at least one pathway are not filtered out), or in 'intersection' mode \
+        (where only genes that belong to ALL pathways are not filtered out).
+
+        :param kegg_ids: the KEGG pathway IDs according to which the table will be filtered. \
+        An example for a legal KEGG pathway ID would be 'path:cel04020' for the C. elegans calcium signaling pathway.
+        :type kegg_ids: str or list of str
+        :type mode: 'union' or 'intersection'.
+        :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
+        of the indicated attributes. If 'intersection', \
+        filters out every genomic feature that does not belong to ALL of the indicated attributes.
+        param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :type opposite: bool (default=False)
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current FeatureSet object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new, filtered instance of the FeatureSet object.
+        """
+
+        kwargs = dict(kegg_ids=kegg_ids, mode=mode, organism=organism, gene_id_type=gene_id_type, opposite=opposite)
+        return self._inplace(Filter.filter_by_kegg_annotations, kwargs, inplace)
+
+    @readable_name('Filter by Gene Ontology (GO) annotation')
+    def filter_by_go_annotations(self, go_ids: Union[str, List[str]], mode: Literal['union', 'intersection'] = 'union',
+                                 organism: Union[str, int, Literal['auto'], Literal[DEFAULT_ORGANISMS]] = 'auto',
+                                 gene_id_type: Union[str, Literal['auto'], Literal[get_gene_id_types()]] = 'auto',
+                                 propagate_annotations: bool = True,
+                                 evidence_types: Union[Literal[('any',) + GO_EVIDENCE_TYPES], Iterable[
+                                     Literal[GO_EVIDENCE_TYPES]]] = 'any',
+                                 excluded_evidence_types: Union[Literal[GO_EVIDENCE_TYPES], Iterable[Literal[
+                                     GO_EVIDENCE_TYPES]]] = (),
+                                 databases: Union[str, Iterable[str]] = 'any',
+                                 excluded_databases: Union[str, Iterable[str]] = (),
+                                 qualifiers: Union[
+                                     Literal[('any',) + GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'any',
+                                 excluded_qualifiers: Union[
+                                     Literal[GO_QUALIFIERS], Iterable[Literal[GO_QUALIFIERS]]] = 'not',
+                                 opposite: bool = False, inplace: bool = True):
+        """
+        Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term. \
+        When multiple GO terms are given, filtering can be done in 'union' mode \
+        (where genes that belong to at least one GO term are not filtered out), or in 'intersection' mode \
+        (where only genes that belong to ALL GO terms are not filtered out).
+
+        :param go_ids:
+        :type go_ids: str or list of str
+        :type mode: 'union' or 'intersection'.
+        :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
+        of the indicated attributes. If 'intersection', \
+        filters out every genomic feature that does not belong to ALL of the indicated attributes.
+        param organism: organism name or NCBI taxon ID for which the function will fetch GO annotations.
+        :type organism: str or int
+        :param gene_id_type: the identifier type of the genes/features in the FeatureSet object \
+        (for example: 'UniProtKB', 'WormBase', 'RNACentral', 'Entrez Gene ID'). \
+        If the annotations fetched from the KEGG server do not match your gene_id_type, RNAlysis will attempt to map \
+        the annotations' gene IDs to your identifier type. \
+        For a full list of legal 'gene_id_type' names, see the UniProt website: \
+        https://www.uniprot.org/help/api_idmapping
+        :type gene_id_type: str or 'auto' (default='auto')
+        :param propagate_annotations: determines the propagation method of GO annotations. \
+        'no' does not propagate annotations at all; 'classic' propagates all annotations up to the DAG tree's root; \
+        'elim' terminates propagation at nodes which show significant enrichment; 'weight' performs propagation in a \
+        weighted manner based on the significance of children nodes relatively to their parents; and 'allm' uses a \
+        combination of all proopagation methods. To read more about the propagation methods, \
+        see Alexa et al: https://pubmed.ncbi.nlm.nih.gov/16606683/
+        :type propagate_annotations: 'classic', 'elim', 'weight', 'all.m', or 'no' (default='elim')
+        :param evidence_types: only annotations with the specified evidence types will be included in the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', 'author', \
+        'curator', 'electronic', or 'any' (default='any')
+        :param excluded_evidence_types: annotations with the specified evidence types will be \
+        excluded from the analysis. \
+        For a full list of legal evidence codes and evidence code categories see the GO Consortium website: \
+        http://geneontology.org/docs/guide-go-evidence-codes/
+        :type excluded_evidence_types: str, Iterable of str, 'experimental', 'phylogenetic' ,'computational', \
+        'author', 'curator', 'electronic', or None (default=None)
+        :param databases: only annotations from the specified databases will be included in the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type databases: str, Iterable of str, or 'any' (default)
+        :param excluded_databases: annotations from the specified databases will be excluded from the analysis. \
+        For a full list of legal databases see the GO Consortium website:
+        http://amigo.geneontology.org/xrefs
+        :type excluded_databases: str, Iterable of str, or None (default)
+        :param qualifiers: only annotations with the speficied qualifiers will be included in the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type qualifiers: str, Iterable of str, or 'any' (default)
+        :param excluded_qualifiers: annotations with the speficied qualifiers will be excluded from the analysis. \
+        Legal qualifiers are 'not', 'contributes_to', and/or 'colocalizes_with'.
+        :type excluded_qualifiers: str, Iterable of str, or None (default='not')
+        :type opposite: bool (default=False)
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current FeatureSet object. If False, \
+        the function will return a new FeatureSet instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new, filtered instance of the FeatureSet object.
+        """
+        kwargs = dict(go_ids=go_ids, mode=mode, organism=organism, gene_id_type=gene_id_type,
+                      propagate_annotations=propagate_annotations, evidence_types=evidence_types,
+                      excluded_evidence_types=excluded_evidence_types, databases=databases,
+                      excluded_databases=excluded_databases, qualifiers=qualifiers,
+                      excluded_qualifiers=excluded_qualifiers, opposite=opposite)
+        return self._inplace(Filter.filter_by_go_annotations, kwargs, inplace)
+
+    @readable_name('Filter by user-defined attribute')
+    def filter_by_attribute(self, attributes: Union[str, List[str]] = None,
+                            mode: Literal['union', 'intersection'] = 'union',
+                            ref: Union[str, Path, Literal['predefined']] = 'predefined',
+                            opposite: bool = False, inplace: bool = True):
+
+        """
+        Filters features according to user-defined attributes from an Attribute Reference Table. \
+        When multiple attributes are given, filtering can be done in 'union' mode \
+        (where features that belong to at least one attribute are not filtered out), or in 'intersection' mode \
+        (where only features that belong to ALL attributes are not filtered out). \
+        To learn more about user-defined attributes and Attribute Reference Tables, read the user guide.
+
+        :type attributes: string or list of strings, \
+        which are column titles in the user-defined Attribute Reference Table.
+        :param attributes: attributes to filter by.
+        :type mode: 'union' or 'intersection'.
+        :param mode: If 'union', filters out every genomic feature that does not belong to one or more \
+        of the indicated attributes. If 'intersection', \
+        filters out every genomic feature that does not belong to ALL of the indicated attributes.
+        :type ref: str or pathlib.Path (default='predefined')
+        :param ref: filename/path of the attribute reference table to be used as reference.
+        :type opposite: bool (default=False)
+        :param opposite: If True, the output of the filtering will be the OPPOSITE of the specified \
+        (instead of filtering out X, the function will filter out anything BUT X). \
+        If False (default), the function will filter as expected.
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current Filter object. If False, \
+        the function will return a new Filter instance and the current instance will not be affected.
+        :return: If 'inplace' is False, returns a new and filtered instance of the Filter object.
+        """
+        kwargs = dict(attributes=attributes, mode=mode, opposite=opposite)
+        return self._inplace(Filter.filter_by_attribute, kwargs, inplace)
 
     def change_set_name(self, new_name: str):
-        """
-        Change the 'set_name' of a FeatureSet to a new name.
-
-        :param new_name: the new set name
-        :type new_name: str
 
         """
+            Change the 'set_name' of a FeatureSet to a new name.
+
+            :param new_name: the new set name
+            :type new_name: str
+
+            """
+
         assert isinstance(new_name, str), f"New set name must be of type str. Instead, got {type(new_name)}"
         self.set_name = new_name
 
     def save_txt(self, fname: Union[str, Path]):
-
         """
         Save the list of features in the FeatureSet object under the specified filename and path.
 
@@ -147,7 +342,6 @@ class FeatureSet(set):
 
     def _set_ops(self, others: Union[set, 'FeatureSet', Tuple[Union[set, 'FeatureSet']]],
                  op: types.FunctionType) -> set:
-
         """
         Performs a given set operation on self and on another object (FeatureSet or set).
         :type others: FeatureSet or set
@@ -175,7 +369,6 @@ class FeatureSet(set):
                 raise e
 
     def union(self, *others: Union[set, 'FeatureSet']) -> 'FeatureSet':
-
         """
          Calculates the set union of the indices from multiple FeatureSet objects \
         (the indices that exist in at least one of the FeatureSet objects).
@@ -199,7 +392,6 @@ class FeatureSet(set):
         return FeatureSet(self._set_ops(others, set.union))
 
     def intersection(self, *others: Union[set, 'FeatureSet']) -> 'FeatureSet':
-
         """
         Calculates the set intersection of the indices from multiple FeatureSet objects \
         (the indices that exist in ALL of the FeatureSet objects).
@@ -223,7 +415,6 @@ class FeatureSet(set):
         return FeatureSet(self._set_ops(others, set.intersection))
 
     def difference(self, *others: Union[set, 'FeatureSet']) -> 'FeatureSet':
-
         """
         Calculates the set difference of the indices from multiple FeatureSet objects \
         (the indices that appear in the first FeatureSet object but NOT in the other objects).
@@ -247,7 +438,6 @@ class FeatureSet(set):
         return FeatureSet(self._set_ops(others, set.difference))
 
     def symmetric_difference(self, other: Union[set, 'FeatureSet']) -> 'FeatureSet':
-
         """
         Calculates the set symmetric difference of the indices from two FeatureSet objects \
         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither). \
@@ -763,8 +953,8 @@ class FeatureSet(set):
             return runner.run(plot=False), runner
         return runner.run()
 
-    def biotypes(self, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
-
+    @readable_name('Summarize feature biotypes (based on a reference table)')
+    def biotypes_from_ref_table(self, ref: Union[str, Path, Literal['predefined']] = 'predefined'):
         """
         Returns a DataFrame of the biotypes in the gene set and their count.
 
@@ -793,8 +983,8 @@ class FeatureSet(set):
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
-            ref_df = ref_df.append(pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'}))
-        return ref_df.set_index('gene', drop=False).loc[self.gene_set].groupby('biotype').count()
+            ref_df = pd.concat([ref_df, pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})])
+        return ref_df.set_index('gene', drop=False).loc[parsing.data_to_list(self.gene_set)].groupby('biotype').count()
 
 
 class RankedSet(FeatureSet):
@@ -826,10 +1016,7 @@ class RankedSet(FeatureSet):
         assert len(self.ranked_genes) == len(self.gene_set), f"'ranked_genes' must have no repeating elements!"
 
     def __copy__(self):
-        obj = type(self).__new__(type(self))
-        obj.ranked_genes = self.ranked_genes.copy()
-        obj.gene_set = self.gene_set.copy()
-        obj.set_name = self.set_name
+        obj = type(self)(self.ranked_genes.copy(), self.set_name)
         return obj
 
     def __iter__(self):
@@ -846,6 +1033,26 @@ class RankedSet(FeatureSet):
             return False
 
         return True
+
+    def _inplace(self, func, func_kwargs, inplace: bool, **update_kwargs):
+        """
+        Executes the user's choice whether to filter in-place or create a new instance of the FeatureSet object.
+        """
+        res = super()._inplace(func, func_kwargs, inplace, **update_kwargs)
+        if inplace:
+            new_ranked = []
+            for item in self.ranked_genes:
+                if item in self.gene_set:
+                    new_ranked.append(item)
+            self.ranked_genes = np.array(new_ranked, dtype='str')
+        # TODO: resolve translate case
+        else:
+            new_ranked = []
+            for item in self.ranked_genes:
+                if item in res.gene_set:
+                    new_ranked.append(item)
+            res.ranked_genes = np.array(new_ranked, dtype='str')
+            return res
 
     def _set_ops(self, others: Union[set, 'FeatureSet'], op: types.FunctionType):
         warnings.warn("Warning: when performing set operations with RankedSet objects, "

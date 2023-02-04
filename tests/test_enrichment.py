@@ -165,7 +165,7 @@ def test_set_operations_with_set():
     assert np.all(symm_diff.gene_set == truth)
 
 
-def test_biotypes():
+def test_biotypes_from_ref_table():
     truth = io.load_csv('tests/test_files/biotypes_truth.csv', 0)
     genes = {'WBGene00048865', 'WBGene00000106', 'WBGene00000137', 'WBGene00199484', 'WBGene00268190', 'WBGene00048864',
              'WBGene00268189', 'WBGene00268195', 'WBGene00255734', 'WBGene00199485', 'WBGene00048863', 'WBGene00000019',
@@ -173,7 +173,7 @@ def test_biotypes():
              'index_that_is_not_in_biotype_ref_table'}
 
     en = FeatureSet(genes)
-    df = en.biotypes(ref=__biotype_ref__)
+    df = en.biotypes_from_ref_table(ref=__biotype_ref__)
     df.sort_index(inplace=True)
     truth.sort_index(inplace=True)
     assert np.all(df == truth)
