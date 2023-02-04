@@ -11,7 +11,6 @@ import warnings
 from pathlib import Path
 from typing import Dict, Iterable, List, Set, Tuple, Union, Sequence
 
-import filtering
 from rnalysis.utils.param_typing import GO_ASPECTS, GO_EVIDENCE_TYPES, GO_QUALIFIERS, DEFAULT_ORGANISMS, \
     PARALLEL_BACKENDS, get_gene_id_types, PositiveInt
 
@@ -117,7 +116,7 @@ class FeatureSet(set):
             new_obj._update(**update_kwargs)
             return new_obj
 
-    def _convert_to_filter_obj(self) -> filtering.Filter:
+    def _convert_to_filter_obj(self) -> Filter:
         return Filter.from_dataframe(pd.DataFrame(index=parsing.data_to_list(self.gene_set)), self.set_name)
 
     @readable_name('Translate gene IDs')
