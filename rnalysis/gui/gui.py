@@ -225,7 +225,7 @@ class CutAdaptPairedWindow(gui_windows.PairedFuncExternalWindow):
         self.setWindowTitle('CutAdapt paired-end adapter trimming setup')
 
 
-class DESeqWindow(gui_windows.FuncExternalWindow):
+class DiffExpWindow(gui_windows.FuncExternalWindow):
     EXCLUDED_PARAMS = {'self', 'comparisons'}
     IGNORED_WIDGETS = gui_windows.FuncExternalWindow.IGNORED_WIDGETS | {'load_design'}
 
@@ -235,24 +235,26 @@ class DESeqWindow(gui_windows.FuncExternalWindow):
                  'comparisons_grid': 'layout for choosing comparisons',
                  'comparisons_widgets': 'widgets for choosing comparisons'}
 
-    def __init__(self, parent=None):
-        func = filtering.CountFilter.differential_expression_deseq2
+    def __init__(self, func: Callable, name: str, parent=None):
+        self.name = name
         help_link = f"https://guyteichman.github.io/RNAlysis/build/rnalysis.filtering.CountFilter.{func.__name__}.html"
-        super().__init__('DESeq2', func, help_link, self.EXCLUDED_PARAMS, parent=parent)
+        super().__init__(name, func, help_link, self.EXCLUDED_PARAMS, parent=parent)
 
         self.comparisons = []
         self.design_mat = None
 
-        self.comparisons_group = QtWidgets.QGroupBox("2. Choose pairwise comparisons for DESeq2")
+        self.comparisons_group = QtWidgets.QGroupBox(f"2. Choose pairwise comparisons for {name}")
         self.comparisons_grid = QtWidgets.QGridLayout(self.comparisons_group)
         self.comparisons_widgets = {}
 
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('DESeq2 differential expression setup')
+        self.setWindowTitle(f'{self.name} differential expression setup')
         self.scroll_layout.addWidget(self.comparisons_group, 0, 1)
         super().init_ui()
+        _, _, width, height = self.scroll.geometry().getRect()
+        self.resize(1100, height)
 
     def init_param_ui(self):
         super().init_param_ui()
@@ -279,6 +281,20 @@ class DESeqWindow(gui_windows.FuncExternalWindow):
         kwargs = super().get_analysis_kwargs()
         kwargs['comparisons'] = self.comparisons_widgets['picker'].get_comparison_values()
         return kwargs
+
+
+class DESeqWindow(DiffExpWindow):
+    def __init__(self, parent=None):
+        func = filtering.CountFilter.differential_expression_deseq2
+        name = 'DESeq2'
+        super().__init__(func, name, parent)
+
+
+class LimmaWindow(DiffExpWindow):
+    def __init__(self, parent=None):
+        func = filtering.CountFilter.differential_expression_limma_voom
+        name = 'Limma-Voom'
+        super().__init__(func, name, parent)
 
 
 class ClicomWindow(gui_windows.FuncExternalWindow):
@@ -1674,9 +1690,9 @@ class FilterTabPage(TabPage):
                         'split_clicom': 'CLICOM (Ensemble)'}
     SUMMARY_FUNCS = {'describe', 'head', 'tail', 'biotypes_from_ref_table', 'biotypes_from_gtf', 'print_features'}
     GENERAL_FUNCS = {'sort', 'transform', 'translate_gene_ids', 'differential_expression_deseq2', 'fold_change',
-                     'average_replicate_samples', 'drop_columns'}
+                     'average_replicate_samples', 'drop_columns', 'differential_expression_limma_voom'}
     THREADED_FUNCS = {'translate_gene_ids', 'differential_expression_deseq2', 'filter_by_kegg_annotations',
-                      'filter_by_go_annotations'}
+                      'filter_by_go_annotations', 'differential_expression_limma_voom'}
     startedClustering = QtCore.pyqtSignal(object, str, object)
     widthChanged = QtCore.pyqtSignal()
 
@@ -1693,6 +1709,7 @@ class FilterTabPage(TabPage):
 
         self.clicom_window = None
         self.deseq_window = None
+        self.limma_window = None
 
         self.widthChanged.connect(self.update_table_preview_width)
 
@@ -1877,6 +1894,11 @@ class FilterTabPage(TabPage):
             self.deseq_window = DESeqWindow(self)
             self.deseq_window.paramsAccepted.connect(functools.partial(self._apply_function_from_params, func_name))
             self.deseq_window.show()
+        elif func_name == 'differential_expression_limma_voom':
+            this_stack.deselect()
+            self.limma_window = LimmaWindow(self)
+            self.limma_window.paramsAccepted.connect(functools.partial(self._apply_function_from_params, func_name))
+            self.limma_window.show()
 
     def view_full_dataframe(self):
         df_window = gui_windows.DataFrameView(self.filter_obj.df, self.name)
