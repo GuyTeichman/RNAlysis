@@ -1,0 +1,38 @@
+{
+    "rnalysis": {
+        "name": "<b>RNAlysis</b>",
+        "citation": "\nTeichman, G., Cohen, D., Ganon, O., Dunsky, N., Shani, S., Gingold, H., and Rechavi, O. (2022).\nRNAlysis: analyze your RNA sequencing data without writing a single line of code. BioRxiv 2022.11.25.517851.\n<br>\n<a href=https://doi.org/10.1101/2022.11.25.517851>doi.org/10.1101/2022.11.25.517851</a>\n"
+    },
+    "cutadapt": {
+        "name": "the <b>CutAdapt</b> adapter trimming tool",
+        "citation": "\nMartin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads.\nEMBnet.journal, 17(1), pp. 10-12.\n<br>\n<a href=https://doi.org/10.14806/ej.17.1.200>doi.org/10.14806/ej.17.1.200</a>\n"
+    },
+    "kallisto": {
+        "name": "the <b>kallisto</b> RNA sequencing quantification tool",
+        "citation": "\nBray, N., Pimentel, H., Melsted, P. et al.\nNear-optimal probabilistic RNA-seq quantification.\nNat Biotechnol 34, 525–527 (2016).\n<br>\n<a href=https://doi.org/10.1038/nbt.3519>doi.org/10.1038/nbt.3519</a>\n"
+    },
+    "bowtie2": {
+        "name": "the <b>bowtie2</b> aligner",
+        "citation": ""
+    },
+    "featurecounts": {
+        "name": "the <b>featureCounts</b> read summarization program",
+        "citation": ""
+    },
+    "deseq2": {
+        "name": "the <b>DESeq2</b> differential expression program",
+        "citation": "\nLove MI, Huber W, Anders S (2014).\n“Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2.”\nGenome Biology, 15, 550.\n<br>\n<a href=https://doi.org/10.1186/s13059-014-0550-8>doi.org/10.1186/s13059-014-0550-8</a>\n"
+    },
+    "limma": {
+        "name": "the <b>Limma-Voom</b> differential expression pipeline",
+        "citation": ""
+    },
+    "hdbscan": {
+        "name": "the <b>HDBSCAN</b> clustering method",
+        "citation": "\nL. McInnes, J. Healy, S. Astels, hdbscan:\nHierarchical density based clustering In:\nJournal of Open Source Software, The Open Journal, volume 2, number 11. 2017\n<br>\n<a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>"
+    },
+    "xlmhg": {
+        "name": "the <b>XL-mHG</b> single-set enrichment test",
+        "citation": "\n<p>\nEden, E., Lipson, D., Yogev, S., and Yakhini, Z. (2007).\n Discovering Motifs in Ranked Lists of DNA Sequences. PLOS Comput. Biol. 3, e39.\n<br>\n<a href=https://doi.org/10.1371/journal.pcbi.0030039>doi.org/10.1371/journal.pcbi.0030039</a>\n</p>\n<p>\nWagner, F. (2017). The XL-mHG test for gene set enrichment. ArXiv.\n<br>\n<a href=https://doi.org/10.48550/arXiv.1507.07905>doi.org/10.48550/arXiv.1507.07905</a>\n</p>"
+    }
+}
