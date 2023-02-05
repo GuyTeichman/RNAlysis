@@ -2574,6 +2574,85 @@ class CountFilter(Filter):
                           f'Appending the remaining {n_cols % multiplier} as an inncomplete triplicate.')
         return triplicate
 
+    @readable_name('Run Limma-Voom differential expression')
+    def differential_expression_limma_voom(self, design_matrix: Union[str, Path],
+                                           comparisons: Iterable[Tuple[str, str, str]],
+                                           r_installation_folder: Union[str, Path, Literal['auto']] = 'auto',
+                                           output_folder: Union[str, Path, None] = None
+                                           ) -> Tuple['DESeqFilter', ...]:
+        """
+        Run differential expression analysis on the count matrix using the \
+        `Limma-Voom <https://doi.org/10.1186/gb-2014-15-2-r29>`_ pipeline. \
+        The count matrix you are analyzing should be normalized (typically to Reads Per Million). \
+        The analysis will be based on a design matrix supplied by the user. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix. \
+        To run this function, a version of R must be installed.
+
+        :param design_matrix: path to a csv file containing the experiment's design matrix. \
+        The design matrix should contain at least two columns: the first column contains all the sample names, \
+        and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \
+        (see the User Guide and Tutorial for a complete example). \
+        The analysis formula will contain all the factors in the design matrix.
+        :type design_matrix: str or Path
+        :param comparisons: specifies what comparisons to build results tables out of. \
+        each individual comparison should be a tuple with exactly three elements: \
+        the name of a factor in the design formula, the name of the numerator level for the fold change, \
+        and the name of the denominator level for the fold change.
+        :type comparisons: Iterable of tuple(factor, numerator_value, denominator_value)
+        :param r_installation_folder: Path to the installation folder of R. For example: \
+        'C:/Program Files/R/R-4.2.1'
+        :type r_installation_folder: str, Path, or 'auto' (default='auto')
+        :param output_folder: Path to a folder in which the analysis results, \
+        as well as the log files and R script used to generate them, will be saved. \
+        if output_folder is None, the results will not be saved to a specified directory.
+        :type output_folder: str, Path, or None
+        :return: a tuple of DESeqFilter objects, one for each comparison
+        """
+        if output_folder is not None:
+            output_folder = Path(output_folder)
+            assert output_folder.exists(), f'Output folder does not exist!'
+
+        self._validate_is_normalized(expect_normalized=True)
+        data_path = io.get_todays_cache_dir().joinpath(self.fname.name)
+        design_mat_path = None
+        i = 0
+        while design_mat_path is None or design_mat_path.exists():
+            design_mat_path = io.get_todays_cache_dir().joinpath(f'design_mat_{i}.csv')
+            i += 1
+
+        if not io.get_todays_cache_dir().exists():
+            io.get_todays_cache_dir().mkdir(parents=True)
+        io.save_csv(self.df.round(), data_path)
+        # use Pandas to automatically detect file delimiter type, then export it as a CSV file.
+        design_mat_df = io.load_csv(design_matrix, index_col=0)
+        assert design_mat_df.shape[0] == self.shape[1], f"The number of items in the design matrix " \
+                                                        f"({design_mat_df.shape[0]}) does not match the number of " \
+                                                        f"columns in the count matrix ({self.shape[1]})."
+        assert sorted(design_mat_df.index) == sorted(self.columns), f"The sample names in the design matrix do not " \
+                                                                    f"match the sample names in the count matrix: " \
+                                                                    f"{sorted(design_mat_df.index)} != " \
+                                                                    f"{sorted(self.columns)}"
+
+        io.save_csv(design_mat_df, design_mat_path)
+
+        r_output_dir = differential_expression.run_limma_analysis(data_path, design_mat_path, comparisons,
+                                                                  r_installation_folder)
+        outputs = []
+        for item in r_output_dir.iterdir():
+            if not item.is_file():
+                continue
+            if item.suffix == '.csv':
+                outputs.append(DESeqFilter(item, log2fc_col='logFC', padj_col='adj.P.Val'))
+
+            if output_folder is not None:
+                with open(item) as infile, open(output_folder.joinpath(item.name), 'w') as outfile:
+                    outfile.write(infile.read())
+
+        return parsing.data_to_tuple(outputs)
+
     @readable_name('Run DESeq2 differential expression')
     def differential_expression_deseq2(self, design_matrix: Union[str, Path],
                                        comparisons: Iterable[Tuple[str, str, str]],
@@ -2581,7 +2660,9 @@ class CountFilter(Filter):
                                        output_folder: Union[str, Path, None] = None
                                        ) -> Tuple['DESeqFilter', ...]:
         """
-        Run differential expression analysis on the count matrix using the DESeq2 algorithm. \
+        Run differential expression analysis on the count matrix using the \
+        `DESeq2 <https://doi.org/10.1186/s13059-014-0550-8>`_ algorithm. \
+        The count matrix you are analyzing should be unnormalized (meaning, raw read counts). \
         The analysis will be based on a design matrix supplied by the user. \
         The design matrix should contain at least two columns: the first column contains all the sample names, \
         and each of the following columns contains an experimental design factor (e.g. 'condition', 'replicate', etc). \

@@ -7,6 +7,7 @@ History
 
 Added
 *******
+* Added differential expression analysis with the Limma-Voom pipelines (CountFilter.differential_expression_limma_voom)
 * You can now select which databases to display in the right-click quick-search menu, using the settings menu.
 * Gene sets now support some basic operations (filtering, gene ID translating, etc) through the graphical interface.
 * enrichment.FeatureSet and enrichment.RankedSet now support some filtering operations from the filtering module (such as filtering by user-defined attributes, GO terms, or KEGG pathways).
