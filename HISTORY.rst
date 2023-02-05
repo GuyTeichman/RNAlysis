@@ -5,6 +5,10 @@ History
 3.4.3 (2023-02-??)
 ------------------
 
+Added
+*******
+* You can now select which databases to display in the right-click quick-search menu, using the settings menu.
+
 Changed
 ********
 * Classes enrichment.FeatureSet and enrichment.RankedSet now inherit from Python base-class set, and can be interacted with like other Python sets. The old API and attributes of these classes were maintained as they were.

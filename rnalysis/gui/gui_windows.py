@@ -1,5 +1,6 @@
 import functools
 import itertools
+import json
 import traceback
 import warnings
 from pathlib import Path
@@ -443,6 +444,7 @@ class AboutWindow(QtWidgets.QMessageBox):
 
 
 class SettingsWindow(gui_widgets.MinMaxDialog):
+    LOOKUP_DATABASES_PATH = Path(__file__).parent.joinpath('../data_files/lookup_databases.json')
     THEMES = gui_style.get_stylesheet_names()
     FONT_SIZES = [str(i) for i in [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 48, 72]]
     styleSheetUpdated = QtCore.pyqtSignal()
@@ -484,13 +486,18 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         super().exec()
 
     def set_choices(self):
-        current_font, current_font_size, current_theme, current_show_tutorial = settings.get_gui_settings()
+        current_font, current_font_size, current_theme, current_dbs, current_show_tutorial = settings.get_gui_settings()
         current_theme = {val: key for key, val in self.THEMES.items()}[current_theme]
 
         self.appearance_widgets['app_theme'].setCurrentText(current_theme)
         self.appearance_widgets['app_font'].setCurrentText(current_font)
         self.appearance_widgets['app_font_size'].setCurrentText(str(current_font_size))
         self.appearance_widgets['show_tutorial'].setChecked(current_show_tutorial)
+
+        for i in range(self.appearance_widgets['databases'].count()):
+            item = self.appearance_widgets['databases'].item(i)
+            if item.text() in current_dbs:
+                item.setCheckState(QtCore.Qt.Checked)
 
         attr_ref_path = settings.get_attr_ref_path('predefined') if settings.is_setting_in_file(
             settings.__attr_file_key__) else 'No file chosen'
@@ -514,6 +521,13 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_widgets['app_font_size'] = QtWidgets.QComboBox(self.appearance_group)
         self.appearance_widgets['app_font_size'].addItems(self.FONT_SIZES)
 
+        self.appearance_widgets['databases'] = QtWidgets.QListWidget(self)
+        with open(self.LOOKUP_DATABASES_PATH) as f:
+            for key in json.load(f).keys():
+                item = QtWidgets.QListWidgetItem(key)
+                item.setCheckState(QtCore.Qt.Unchecked)
+                self.appearance_widgets['databases'].addItem(item)
+
         self.appearance_widgets['show_tutorial'] = QtWidgets.QCheckBox("Show tutorial page on startup")
 
         for widget_name in ['app_theme', 'app_font', 'app_font_size']:
@@ -526,7 +540,9 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
         self.appearance_grid.addWidget(self.appearance_widgets['app_font'], 1, 1)
         self.appearance_grid.addWidget(QtWidgets.QLabel('Application Font Size'), 2, 0)
         self.appearance_grid.addWidget(self.appearance_widgets['app_font_size'], 2, 1)
-        self.appearance_grid.addWidget(self.appearance_widgets['show_tutorial'], 3, 0, 1, 2)
+        self.appearance_grid.addWidget(QtWidgets.QLabel('Right-click databases'), 3, 0)
+        self.appearance_grid.addWidget(self.appearance_widgets['databases'], 3, 1)
+        self.appearance_grid.addWidget(self.appearance_widgets['show_tutorial'], 4, 0, 1, 2)
 
     def save_settings(self):
         if self.settings_changed:
@@ -535,7 +551,13 @@ class SettingsWindow(gui_widgets.MinMaxDialog):
             font_size = int(self.appearance_widgets['app_font_size'].currentText())
             theme = self.THEMES[self.appearance_widgets['app_theme'].currentText()]
             show_tutorial = self.appearance_widgets['show_tutorial'].isChecked()
-            settings.set_gui_settings(font, font_size, theme, show_tutorial)
+            dbs = []
+            for i in range(self.appearance_widgets['databases'].count()):
+                item = self.appearance_widgets['databases'].item(i)
+                if item.checkState():
+                    dbs.append(item.text())
+
+            settings.set_gui_settings(font, font_size, theme, dbs, show_tutorial)
 
             attr_ref_path = self.tables_widgets['attr_ref_path'].text() if self.tables_widgets[
                 'attr_ref_path'].is_legal else ''
