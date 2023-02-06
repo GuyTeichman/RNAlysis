@@ -1,8 +1,10 @@
+import types
 from pathlib import Path
 from typing import Union, Iterable, Tuple
-import types
+
 import pandas as pd
 import typing_extensions
+
 
 def is_legal_file_path(file_path: str):
     pth = Path(file_path)
@@ -69,6 +71,7 @@ def isinstanceinh(obj, parent_class):
                 return True
         return False
     return True if issubclass(obj.__class__, parent_class) else False
+
 
 def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...]]):
     """
@@ -212,7 +215,8 @@ def validate_hdbscan_parameters(min_cluster_size: int, metric: str, cluster_sele
     assert isinstance(metric, str), f"'metric' must be a string. Instead got {type(metric)}."
 
 
-def validate_genome_annotation_file(pth: Union[str, Path]) -> typing_extensions.Literal['gtf','gff3']:
+def validate_genome_annotation_file(pth: Union[str, Path], accept_gtf: bool = True, accept_gff3: bool = True) -> \
+typing_extensions.Literal['gtf', 'gff3']:
     """
     Makes sure that the given genome annotation file exists and is a supported type (GTF or GFF3), \
     and returns a string representing the type of file ('gtf' or 'gff3')
@@ -222,10 +226,10 @@ def validate_genome_annotation_file(pth: Union[str, Path]) -> typing_extensions.
     :return: 'gtf' or 'gff3' (the format of the genome annotation file)
     """
     assert Path(pth).exists(), f"The provided gtf_path doesn't exist: {pth}"
-    if Path(pth).suffix.lower() == '.gtf':
+    if Path(pth).suffix.lower() == '.gtf' and accept_gtf:
         file_type = 'gtf'
-    elif Path(pth).suffix.lower() == '.gff3':
+    elif Path(pth).suffix.lower() == '.gff3' and accept_gff3:
         file_type = 'gff3'
     else:
-        raise ValueError(f"The supplied annotation file has an illegal format: '{Path(pth).suffix.lower()}'")
+        raise ValueError(f"The supplied annotation file has an unsupported format: '{Path(pth).suffix.lower()}'")
     return file_type

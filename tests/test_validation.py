@@ -1,4 +1,5 @@
 import pytest
+
 from rnalysis.utils.validation import *
 
 
@@ -264,15 +265,21 @@ def test_is_legal_dir_path(path, is_legal_truth):
     assert is_legal_dir_path(path) == is_legal_truth
 
 
-@pytest.mark.parametrize('path,err_exp,truth', [
-    ('tests/test_files/counted.csv', True, None),
-    ('tests/test_files/kallisto_tests/transcripts.gtf', False, 'gtf'),
-    ('tests/test_files/doesnt_exist.gtf', True, None),
-    ('tests/test_files/test_gff_wormbase.gff3', False, 'gff3'), ])
-def test_validate_genome_annotation_file(path, err_exp, truth):
+@pytest.mark.parametrize('path,accept_gtf,accept_gff3,err_exp,truth', [
+    ('tests/test_files/counted.csv', True, True, True, None),
+    ('tests/test_files/kallisto_tests/transcripts.gtf', True, True, False, 'gtf'),
+    ('tests/test_files/doesnt_exist.gtf', True, True, True, None),
+    ('tests/test_files/test_gff_wormbase.gff3', True, True, False, 'gff3'),
+    ('tests/test_files/kallisto_tests/transcripts.gtf', True, False, False, 'gtf'),
+    ('tests/test_files/kallisto_tests/transcripts.gtf', False, True, True, None),
+    ('tests/test_files/test_gff_wormbase.gff3', False, True, False, 'gff3'),
+    ('tests/test_files/test_gff_wormbase.gff3', True, False, True, None),
+
+])
+def test_validate_genome_annotation_file(path, accept_gtf, accept_gff3, err_exp, truth):
     if err_exp:
         with pytest.raises((AssertionError, ValueError)):
-            validate_genome_annotation_file(path)
+            validate_genome_annotation_file(path, accept_gtf, accept_gff3)
     else:
-        res = validate_genome_annotation_file(path)
+        res = validate_genome_annotation_file(path, accept_gtf, accept_gff3)
         assert res == truth
