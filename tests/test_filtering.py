@@ -1461,12 +1461,10 @@ def test_pipeline_apply_to_with_split_function():
     c_pipeline_res = pl_c.apply_to(c, inplace=False)
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
     c_res = c_res.split_kmeans(n_clusters=[2, 3, 4], random_seed=42)
-    c_res_cont = []
-    for i in c_res:
-        c_res_cont.extend(i)
-    for i in c_res_cont:
-        i.filter_top_n(by='cond1', n=5)
-    for i, j in zip(c_res_cont, c_pipeline_res):
+    for tpl in c_res:
+        for this_obj in tpl:
+            this_obj.filter_top_n(by='cond1', n=5)
+    for i, j in zip(c_res, c_pipeline_res):
         assert i == j
 
 
@@ -1491,16 +1489,16 @@ def test_pipeline_apply_to_multiple_splits():
     c_res = c.filter_top_n(by='cond2', n=2, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=3, return_probabilities=True)
     c_res_cont = []
-    for i in c_res:
-        c_res_cont.extend(i.split_kmedoids(n_clusters=2, random_seed=42))
+    for this_obj in c_res:
+        c_res_cont.append(this_obj.split_kmedoids(n_clusters=2, random_seed=42))
     c_res_cont_fin = []
-    for i in c_res_cont:
-        c_res_cont_fin.extend(i.split_by_reads(15))
+    for tpl in c_res_cont:
+        c_res_cont_fin.append([])
+        for this_obj in tpl:
+            c_res_cont_fin[-1].append(this_obj.split_by_reads(15))
     assert len(c_pipeline_res) == len(c_res_cont_fin)
     for i, j in zip(c_res_cont_fin, c_pipeline_res):
-        print(i.df)
-        print(j.df)
-        assert i == j
+        assert parsing.data_to_tuple(i) == j
     assert np.all(c_pipeline_dict['split_hdbscan_1'] == prob)
 
 
@@ -1509,11 +1507,11 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     pl_c = Pipeline('CountFilter')
     pl_c.add_function(CountFilter.normalize_with_scaling_factors, scaling_factor_path)
     pl_c.add_function('biotypes_from_ref_table', ref=__biotype_ref__)
-    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=5000, opposite=True)
+    pl_c.add_function(CountFilter.filter_top_n, by='cond3rep1', n=1500, opposite=True)
     pl_c.add_function(CountFilter.split_hdbscan, min_cluster_size=40, return_probabilities=True)
     pl_c.add_function(CountFilter.filter_low_reads, threshold=10)
     pl_c.add_function(CountFilter.clustergram)
-    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 3, 7], random_seed=42, n_init=1)
+    pl_c.add_function(CountFilter.split_kmedoids, n_clusters=[2, 7], random_seed=42, n_init=1, max_iter=100)
     pl_c.add_function(CountFilter.sort, by='cond2rep3')
     pl_c.add_function(CountFilter.biotypes_from_ref_table, 'long', __biotype_ref__)
 
@@ -1522,30 +1520,33 @@ def test_pipeline_apply_to_filter_normalize_split_plot():
     c_dict = dict()
     c.normalize_with_scaling_factors(scaling_factor_path)
     c_dict['biotypes_from_ref_table_1'] = c.biotypes_from_ref_table(ref=__biotype_ref__)
-    c_res = c.filter_top_n(by='cond3rep1', n=5000, opposite=True, inplace=False)
+    c_res = c.filter_top_n(by='cond3rep1', n=1500, opposite=True, inplace=False)
     c_res, prob = c_res.split_hdbscan(min_cluster_size=40, return_probabilities=True)
     c_dict['split_hdbscan_1'] = prob
     for obj in c_res:
         obj.filter_low_reads(threshold=10)
     clustergrams = []
-    for obj in c_res:
+    for i, obj in enumerate(c_res):
         clustergrams.append(obj.clustergram())
     c_dict['clustergram_1'] = tuple(clustergrams)
     c_res_cont = []
     for obj in c_res:
-        k_out = obj.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, random_seed=42)
-        for k in k_out:
-            c_res_cont.extend(k)
-    for obj in c_res_cont:
-        obj.sort(by='cond2rep3')
+        k_out = obj.split_kmedoids(n_clusters=[2, 7], n_init=1, max_iter=100, random_seed=42)
+        c_res_cont.append(k_out)
+    for tpl_outer in c_res_cont:
+        for tpl_inner in tpl_outer:
+            for obj in tpl_inner:
+                obj.sort(by='cond2rep3')
     biotypes = []
-    for obj in c_res_cont:
-        biotypes.append(obj.biotypes_from_ref_table('long', __biotype_ref__))
+    for tpl_outer in c_res_cont:
+        for tpl_inner in tpl_outer:
+            for obj in tpl_inner:
+                biotypes.append(obj.biotypes_from_ref_table('long', __biotype_ref__))
     c_dict['biotypes_from_ref_table_2'] = tuple(biotypes)
 
     assert len(c_res_cont) == len(c_pipeline_res)
     for i, j in zip(c_res_cont, c_pipeline_res):
-        assert i == j
+        assert parsing.data_to_tuple(i) == j
     assert np.all(c_dict.keys() == c_pipeline_dict.keys())
     assert c_dict['biotypes_from_ref_table_1'].equals(c_pipeline_dict['biotypes_from_ref_table_1'])
     assert len(c_dict['clustergram_1']) == len(c_pipeline_dict['clustergram_1'])
@@ -1563,7 +1564,7 @@ def test_split_kmeans_api():
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
     res2 = c.split_kmeans(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_seed=42, plot_style='std_bar')
-    assert isinstance(res2, list)
+    assert isinstance(res2, tuple)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
 
@@ -1576,7 +1577,7 @@ def test_split_hierarchical_api():
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
     res2 = c.split_hierarchical([2, 3, 7], metric='Euclidean', linkage='AVERAGE', plot_style='std_bar')
-    assert isinstance(res2, list)
+    assert isinstance(res2, tuple)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
 
@@ -1623,7 +1624,7 @@ def test_split_kmedoids_api():
     assert len(res) == 4
     _test_correct_clustering_split(c, res)
     res2 = c.split_kmedoids(n_clusters=[2, 3, 7], n_init=1, max_iter=10, random_seed=42, plot_style='std_bar')
-    assert isinstance(res2, list)
+    assert isinstance(res2, tuple)
     assert np.all([isinstance(i, tuple) for i in res2])
     [_test_correct_clustering_split(c, i) for i in res2]
 

@@ -3585,8 +3585,8 @@ class CountFilter(Filter):
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmeanscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
-        # if only a single K was calculated, don't return it as a list of length
-        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        # if only a single K was calculated, don't return it as a tuple of length 1
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else parsing.data_to_tuple(filt_obj_tuples)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('Hierarchical clustering')
@@ -3683,8 +3683,8 @@ class CountFilter(Filter):
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(this_n_clusters)]))
-        # if only a single K was calculated, don't return it as a list of length
-        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        # if only a single K was calculated, don't return it as a tuple of length 1
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else parsing.data_to_tuple(filt_obj_tuples)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('K-Medoids clustering')
@@ -3779,8 +3779,8 @@ class CountFilter(Filter):
             filt_obj_tuples.append(
                 tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
                                      suffix=f'_kmedoidscluster{i + 1}') for i in range(clusterer.n_clusters_)]))
-        # if only a single K was calculated, don't return it as a list of length 1
-        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else filt_obj_tuples
+        # if only a single K was calculated, don't return it as a tuple of length 1
+        return_val = filt_obj_tuples[0] if len(filt_obj_tuples) == 1 else parsing.data_to_tuple(filt_obj_tuples)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('CLICOM (ensemble) clustering')
@@ -3917,10 +3917,10 @@ class CountFilter(Filter):
                   f"Number of unclustered genes is {unclustered}, "
                   f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
 
-        filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                         suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)])
+        filt_objs = [self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
+                                   suffix=f'_clicomcluster{i + 1}') for i in range(n_clusters)]
 
-        return_val = filt_objs
+        return_val = parsing.data_to_tuple(filt_objs)
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('HDBSCAN (density) clustering')
@@ -4029,8 +4029,9 @@ class CountFilter(Filter):
                   f"Number of unclustered genes is {unclustered}, "
                   f"which are {100 * (unclustered / len(clusterer.labels_)) :.2f}% of the genes.")
 
-        filt_objs = tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False, inplace=False,
-                                         suffix=f'_hdbscancluster{i + 1}') for i in range(n_clusters)])
+        filt_objs = parsing.data_to_tuple([self._inplace(self.df.loc[clusterer.labels_ == i], opposite=False,
+                                                         inplace=False, suffix=f'_hdbscancluster{i + 1}') for i in
+                                           range(n_clusters)])
 
         # noinspection PyUnboundLocalVariable
         return_val = [filt_objs, probabilities] if return_probabilities else filt_objs
@@ -4937,10 +4938,9 @@ class Pipeline:
             kwargs['inplace'] = False
             try:
                 if isinstance(filter_object, tuple):
-                    temp_object = []
-                    for obj in filter_object:
-                        temp_object.append(func(obj, *args, **kwargs))
-                    filter_object = tuple(temp_object)
+                    temp_object = [self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace)
+                                   for this_obj in filter_object]
+                    filter_object = parsing.data_to_tuple(temp_object)
                 else:
                     filter_object = func(filter_object, *args, **kwargs)
             except (ValueError, AssertionError, TypeError) as e:
@@ -4949,8 +4949,8 @@ class Pipeline:
             kwargs['inplace'] = True
             try:
                 if isinstance(filter_object, tuple):
-                    for obj in filter_object:
-                        func(obj, *args, **kwargs)
+                    _ = [self._apply_filter_norm_sort(func, this_obj, args, kwargs, inplace)
+                         for this_obj in filter_object]
                 else:
                     func(filter_object, *args, **kwargs)
             except (ValueError, AssertionError, TypeError) as e:
@@ -4979,22 +4979,11 @@ class Pipeline:
         """
         try:
             if isinstance(filter_object, tuple):
-                temp_object = []
-                for obj in filter_object:
-                    temp_res = func(obj, *args, **kwargs)
-                    if isinstance(temp_res, tuple):
-                        temp_object.extend(temp_res)
-                    elif isinstance(temp_res, list):
-                        for item in temp_res:
-                            if isinstance(item, tuple):
-                                temp_object.extend(item)
-                            elif item is not None:
-                                other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = item
-                                other_cnt[func.__name__] += 1
+                temp_object = [item for item in
+                               [self._apply_split(func, this_obj, args, kwargs, other_outputs, other_cnt) for this_obj
+                                in filter_object] if item is not None]
+                filter_object = parsing.data_to_tuple(temp_object)
 
-                    else:
-                        raise ValueError(f"Unrecognized output type {type(temp_res)} from function {func}:\n{temp_res}")
-                filter_object = tuple(temp_object)
             else:
                 temp_res = func(filter_object, *args, **kwargs)
                 if isinstance(temp_res, tuple):
@@ -5007,14 +4996,16 @@ class Pipeline:
                         elif item is not None:
                             other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = item
                             other_cnt[func.__name__] += 1
-                    filter_object = tuple(temp_object)
+                    filter_object = parsing.data_to_tuple(temp_object)
+                else:
+                    raise ValueError(f"Unrecognized output type {type(temp_res)} from function {func}:\n{temp_res}")
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
         return filter_object
 
     def _apply_other(self, func: types.FunctionType,
                      filter_object: Union['Filter', 'CountFilter', 'DESeqFilter', 'FoldChangeFilter'],
-                     args: tuple, kwargs: dict, other_outputs: dict, other_cnt: dict):
+                     args: tuple, kwargs: dict, other_outputs: dict, other_cnt: dict, recursive_call: bool = False):
         """
         Apply a non filtering/splitting/normalizing/sorting function.
 
@@ -5032,21 +5023,24 @@ class Pipeline:
         :type other_cnt: dict
         :return: Filter object to which the function was applied.
         """
+        key = f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"
         try:
             if isinstance(filter_object, tuple):
-                tmp_outputs = []
-                for obj in filter_object:
-                    this_output = func(obj, *args, **kwargs)
-                    if this_output is not None:
-                        tmp_outputs.append(this_output)
-                if len(tmp_outputs) > 0:
-                    other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = tuple(tmp_outputs)
+                for this_obj in filter_object:
+                    self._apply_other(func, this_obj, args, kwargs, other_outputs, other_cnt, True)
+                if len(other_outputs[key]) > 0 and not recursive_call:
+                    other_outputs[key] = parsing.data_to_tuple(other_outputs[key])
                     other_cnt[func.__name__] += 1
             else:
                 this_output = func(filter_object, *args, **kwargs)
                 if this_output is not None:
-                    other_outputs[f"{func.__name__}_{other_cnt.setdefault(func.__name__, 1)}"] = this_output
-                    other_cnt[func.__name__] += 1
+                    if not recursive_call:
+                        other_outputs[key] = this_output
+                        other_cnt[func.__name__] += 1
+                    else:
+                        if key not in other_outputs:
+                            other_outputs[key] = []
+                        other_outputs[key].append(this_output)
         except (ValueError, AssertionError, TypeError) as e:
             raise e.__class__(f"Invalid function signature {self._func_signature(func, args, kwargs)}")
 

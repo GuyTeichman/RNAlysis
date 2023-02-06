@@ -17,6 +17,7 @@ Changed
 * Classes enrichment.FeatureSet and enrichment.RankedSet now inherit from Python base-class set, and can be interacted with like other Python sets. The old API and attributes of these classes were maintained as they were.
 * Improved documentation for some functions.
 * Function selection tooltips should now display information more clearly.
+* Pipelines that contain consecutive clustering/splitting functions will now return their outputs in a clearer format.
 
 Fixed
 ******
