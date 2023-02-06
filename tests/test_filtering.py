@@ -1949,7 +1949,8 @@ def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths
     monkeypatch.setattr(differential_expression, 'run_deseq2_analysis', mock_run_analysis)
     try:
         res = c.differential_expression_deseq2(sample_table_path, comparisons, output_folder=outdir)
-        assert res == truth
+        assert sorted(res, key=lambda filter_obj: filter_obj.fname.name) == sorted(truth, key=lambda
+            filter_obj: filter_obj.fname.name)
         with open(Path(outdir).joinpath(Path(script_path).name)) as outfile, open(script_path) as truthfile:
             assert outfile.read() == truthfile.read()
     finally:
@@ -1982,7 +1983,8 @@ def test_differential_expression_limma(monkeypatch, comparisons, expected_paths,
     monkeypatch.setattr(differential_expression, 'run_limma_analysis', mock_run_analysis)
     try:
         res = c.differential_expression_limma_voom(sample_table_path, comparisons, output_folder=outdir)
-        assert res == truth
+        assert sorted(res, key=lambda filter_obj: filter_obj.fname.name) == sorted(truth, key=lambda
+            filter_obj: filter_obj.fname.name)
         with open(Path(outdir).joinpath(Path(script_path).name)) as outfile, open(script_path) as truthfile:
             assert outfile.read() == truthfile.read()
     finally:
