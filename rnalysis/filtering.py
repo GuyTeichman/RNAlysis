@@ -5102,7 +5102,8 @@ class Pipeline:
         other_cnt = dict()
         # iterate over all functions and arguments
         for func, (args, kwargs) in zip(self.functions, self.params):
-            if 'filter' in func.__name__ or func.__name__.startswith('normalize') or func.__name__ == 'sort':
+            keywords = ['filter','normalize','sort','translate']
+            if any([kw in func.__name__ for kw in keywords]):
                 filter_object = self._apply_filter_norm_sort(func, filter_object, args, kwargs, inplace)
             elif func.__name__.startswith('split'):
                 assert not inplace, f"Cannot apply the split function {self._func_signature(func, args, kwargs)} " \

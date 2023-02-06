@@ -18,6 +18,10 @@ Changed
 * Improved documentation for some functions.
 * Function selection tooltips should now display information more clearly.
 
+Fixed
+******
+* Fixed bug where Pipelines would not always properly run 'translate_gene_ids'
+
 3.4.2 (2023-02-01)
 ------------------
 This version introduces minor bug fixes.
