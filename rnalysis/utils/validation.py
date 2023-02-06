@@ -70,7 +70,6 @@ def isinstanceinh(obj, parent_class):
         return False
     return True if issubclass(obj.__class__, parent_class) else False
 
-
 def isinstanceiter(iterable: Iterable, object_class: Union[type, Tuple[type, ...]]):
     """
     Returns True if all members of an Iterable object are instances of a class or of a subclass thereof. \
