@@ -587,7 +587,8 @@ class FeatureSet(set):
         Otherwise, this parameter will not affect the analysis.
         :type randomization_reps: int larger than 0 (default=10000)
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
-        :param parallel_backend: if not 'none', will calculate the statistical tests using parallel processing. \
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -715,7 +716,8 @@ class FeatureSet(set):
         Otherwise, this parameter will not affect the analysis.
         :type randomization_reps: int larger than 0 (default=10000)
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
-        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -827,7 +829,8 @@ class FeatureSet(set):
         Otherwise, this parameter will not affect the analysis.
         :type randomization_reps: int larger than 0 (default=10000)
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
-        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -1171,7 +1174,8 @@ class RankedSet(FeatureSet):
         :param ontology_graph_format: if ontology_graph_format is not 'none', the ontology graph will additonally be \
         generated in the specified file format.
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
-        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -1269,7 +1273,8 @@ class RankedSet(FeatureSet):
         :param pathway_graphs_format: if pathway_graphs_format is not 'none', the pathway graphs will additonally be \
         generated in the specified file format.
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
-        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]
@@ -1353,7 +1358,8 @@ class RankedSet(FeatureSet):
         :param plot_horizontal: if True, results will be plotted with a horizontal bar plot. Otherwise, results \
         will be plotted with a vertical plot.
         :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
-        :param parallel_backend: if True, will calculate the statistical tests using parallel processing. \
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
         In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
         the analysis otherwise.
         :rtype: pd.DataFrame (default) or Tuple[pd.DataFrame, matplotlib.figure.Figure]

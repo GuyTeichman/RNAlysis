@@ -3505,7 +3505,7 @@ class CountFilter(Filter):
                      plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                      parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                     gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                     gui_mode: bool = False) -> Union[Tuple['CountFilter', ...], Tuple[Tuple['CountFilter', ...], ...]]:
         """
         Clusters the features in the CountFilter object using the K-means clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3533,6 +3533,11 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
         each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
@@ -3585,8 +3590,8 @@ class CountFilter(Filter):
         return (return_val, runner) if gui_mode else return_val
 
     @readable_name('Hierarchical clustering')
-    def split_hierarchical(self, n_clusters: Union[PositiveInt, List[PositiveInt],
-    Literal['gap', 'silhouette', 'distance']],
+    def split_hierarchical(self, n_clusters: Union[
+        PositiveInt, List[PositiveInt], Literal['gap', 'silhouette', 'distance']],
                            metric: Literal['Euclidean', 'Cosine', 'Pearson', 'Spearman', 'Manhattan',
                            'L1', 'L2', 'Jackknife', 'YS1', 'YR1', 'Sharpened_Cosine'] = 'Euclidean',
                            linkage: Literal['Single', 'Average', 'Complete', 'Ward'] = 'Average',
@@ -3594,7 +3599,8 @@ class CountFilter(Filter):
                            plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                            max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
                            parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                           gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                           gui_mode: bool = False
+                           ) -> Union[Tuple['CountFilter', ...], Tuple[Tuple['CountFilter', ...], ...]]:
         """
         Clusters the features in the CountFilter object using the Hierarchical clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3625,6 +3631,11 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
         each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
@@ -3685,8 +3696,8 @@ class CountFilter(Filter):
                        power_transform: bool = True,
                        plot_style: Literal['all', 'std_area', 'std_bar'] = 'all', split_plots: bool = False,
                        max_n_clusters_estimate: Union[PositiveInt, Literal['auto']] = 'auto',
-                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                       gui_mode: bool = False) -> Union[Tuple['CountFilter'], Tuple[Tuple['CountFilter']]]:
+                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
+                       ) -> Union[Tuple['CountFilter', ...], Tuple[Tuple['CountFilter', ...], ...]]:
         """
         Clusters the features in the CountFilter object using the K-medoids clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3717,6 +3728,11 @@ class CountFilter(Filter):
         number of clusters using the Silhouette or Gap Statistic methods. If `max_n_clusters_estimate`='default', \
         an appropriate value will be picked automatically.
         :type max_n_clusters_estimate: int or 'auto' (default='auto')
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `n_clusters` is an int, returns a tuple of `n_clusters` CountFilter objects, \
         each corresponding to a discovered cluster. \
         If `n_clusters` is a list, returns one tuple of CountFilter objects per value in `n_clusters`.
@@ -3774,7 +3790,7 @@ class CountFilter(Filter):
                      evidence_threshold: param_typing.Fraction = 2 / 3, cluster_unclustered_features: bool = False,
                      min_cluster_size: PositiveInt = 15, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                      split_plots: bool = False, parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky',
-                     gui_mode: bool = False) -> Tuple['CountFilter']:
+                     gui_mode: bool = False) -> Tuple['CountFilter', ...]:
         """
         Clusters the features in the CountFilter object using the modified CLICOM ensemble clustering algorithm \
         `(Mimaroglu and Yagci 2012) <https://doi.org/10.1016/j.eswa.2011.08.059/>`_, \
@@ -3826,6 +3842,11 @@ class CountFilter(Filter):
         :param split_plots: if True, each discovered cluster will be plotted on its own. \
         Otherwise, all clusters will be plotted in the same Figure.
         :type split_plots: bool (default=False)
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: returns a tuple of CountFilter objects, each corresponding to a discovered cluster.
 
 
@@ -3910,7 +3931,7 @@ class CountFilter(Filter):
                       power_transform: bool = True, plot_style: Literal['all', 'std_area', 'std_bar'] = 'all',
                       split_plots: bool = False, return_probabilities: bool = False,
                       parallel_backend: Literal[PARALLEL_BACKENDS] = 'loky', gui_mode: bool = False
-                      ) -> Union[Tuple['CountFilter'], List[Union[Tuple['CountFilter'], np.ndarray]], None]:
+                      ) -> Union[Tuple['CountFilter', ...], List[Union[Tuple['CountFilter', ...], np.ndarray]], None]:
         """
         Clusters the features in the CountFilter object using the HDBSCAN clustering algorithm, \
         and then splits those features into multiple non-overlapping CountFilter objects, \
@@ -3945,6 +3966,11 @@ class CountFilter(Filter):
         the probability with which each sample is a member of its assigned cluster, \
         in addition to returning the clustering results. Points which were categorized as noise have probability 0.
         :type return_probabilities: bool (default False)
+        :type parallel_backend: Literal[PARALLEL_BACKENDS] (default='loky')
+        :param parallel_backend: Determines the babckend used to run the analysis. \
+        if parallel_backend not 'sequential', will calculate the statistical tests using parallel processing. \
+        In most cases parallel processing will lead to shorter computation time, but does not affect the results of \
+        the analysis otherwise.
         :return: if `return_probabilities` is False, returns a tuple of CountFilter objects, \
         each corresponding to a discovered cluster. \
         Otherswise, returns a tuple of CountFilter objects, and a numpy array containing the probability values.
