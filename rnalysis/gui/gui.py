@@ -1548,7 +1548,7 @@ class SetTabPage(TabPage):
 
 
 class FuncTypeStack(QtWidgets.QWidget):
-    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode'}
+    EXCLUDED_PARAMS = {'self', 'backend', 'gui_mode', 'parallel_backend'}
     NO_FUNC_CHOSEN_TEXT = "Choose a function..."
     funcSelected = QtCore.pyqtSignal(bool)
     geneSetsRequested = QtCore.pyqtSignal(object)
