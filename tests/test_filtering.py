@@ -1,3 +1,5 @@
+import shutil
+
 import matplotlib
 import pytest
 
@@ -6,6 +8,16 @@ from rnalysis.filtering import *
 from tests import __attr_ref__, __biotype_ref__
 
 matplotlib.use('Agg')
+
+
+def unlink_tree(dir):
+    for item in Path(dir).iterdir():
+        if 'gitignore' in item.name:
+            continue
+        if item.is_file():
+            item.unlink()
+        else:
+            shutil.rmtree(item)
 
 
 def test_filter_api():
@@ -1579,7 +1591,7 @@ def test_split_hierarchical_api():
 
 
 def test_split_hdbscan_api():
-    c = CountFilter('tests/test_files/big_counted.csv').filter_top_n('cond1rep1',n=2000,inplace=False)
+    c = CountFilter('tests/test_files/big_counted.csv').filter_top_n('cond1rep1', n=2000, inplace=False)
     res = c.split_hdbscan(100)
     _test_correct_clustering_split(c, res, True)
     res2 = c.split_hdbscan(4, 5, 'manhattan', 0.2, 'leaf', plot_style='std_area', return_probabilities=True)
@@ -1910,3 +1922,68 @@ def test_drop_columns(pth, cols, truth_pth):
     truth = Filter(truth_pth)
     obj.drop_columns(cols)
     assert obj.df.sort_index().equals(truth.df.sort_index())
+
+
+@pytest.mark.parametrize('comparisons,expected_paths,script_path', [
+    ([('replicate', 'rep2', 'rep3')], ['tests/test_files/deseq2_tests/case1/DESeq2_replicate_rep2_vs_rep3_truth.csv'],
+     'tests/test_files/deseq2_tests/case1/expected_deseq_script_1.R'),
+    ([('condition', 'cond2', 'cond1'), ('condition', 'cond3', 'cond2')],
+     ['tests/test_files/deseq2_tests/case2/DESeq2_condition_cond2_vs_cond1_truth.csv',
+      'tests/test_files/deseq2_tests/case2/DESeq2_condition_cond3_vs_cond2_truth.csv'],
+     'tests/test_files/deseq2_tests/case2/expected_deseq_script_2.R')
+])
+def test_differential_expression_deseq2(monkeypatch, comparisons, expected_paths, script_path):
+    outdir = 'tests/test_files/deseq2_tests/outdir'
+    sample_table_path = 'tests/test_files/test_design_matrix.csv'
+    truth = parsing.data_to_tuple([DESeqFilter(file) for file in expected_paths])
+    c = CountFilter('tests/test_files/big_counted.csv')
+
+    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder):
+        assert r_installation_folder == 'auto'
+        assert comps == comparisons
+        assert CountFilter(data_path) == c
+        assert io.load_csv(design_mat_path, 0).equals(io.load_csv(sample_table_path, 0))
+
+        return Path(script_path).parent
+
+    monkeypatch.setattr(differential_expression, 'run_deseq2_analysis', mock_run_analysis)
+    try:
+        res = c.differential_expression_deseq2(sample_table_path, comparisons, output_folder=outdir)
+        assert res == truth
+        with open(Path(outdir).joinpath(Path(script_path).name)) as outfile, open(script_path) as truthfile:
+            assert outfile.read() == truthfile.read()
+    finally:
+        unlink_tree(outdir)
+
+
+@pytest.mark.parametrize('comparisons,expected_paths,script_path', [
+    ([('replicate', 'rep2', 'rep3')], ['tests/test_files/limma_tests/case1/LimmaVoom_replicate_rep2_vs_rep3_truth.csv'],
+     'tests/test_files/limma_tests/case1/expected_limma_script_1.R'),
+    ([('condition', 'cond2', 'cond1'), ('condition', 'cond3', 'cond2')],
+     ['tests/test_files/limma_tests/case2/LimmaVoom_condition_cond2_vs_cond1_truth.csv',
+      'tests/test_files/limma_tests/case2/LimmaVoom_condition_cond3_vs_cond2_truth.csv'],
+     'tests/test_files/limma_tests/case2/expected_limma_script_2.R')
+])
+def test_differential_expression_limma(monkeypatch, comparisons, expected_paths, script_path):
+    outdir = 'tests/test_files/limma_tests/outdir'
+    sample_table_path = 'tests/test_files/test_design_matrix.csv'
+    truth = parsing.data_to_tuple(
+        [DESeqFilter(file, log2fc_col='logFC', padj_col='adj.P.Val') for file in expected_paths])
+    c = CountFilter('tests/test_files/big_counted.csv')
+
+    def mock_run_analysis(data_path, design_mat_path, comps, r_installation_folder):
+        assert r_installation_folder == 'auto'
+        assert comps == comparisons
+        assert CountFilter(data_path) == c
+        assert io.load_csv(design_mat_path, 0).equals(io.load_csv(sample_table_path, 0))
+
+        return Path(script_path).parent
+
+    monkeypatch.setattr(differential_expression, 'run_limma_analysis', mock_run_analysis)
+    try:
+        res = c.differential_expression_limma_voom(sample_table_path, comparisons, output_folder=outdir)
+        assert res == truth
+        with open(Path(outdir).joinpath(Path(script_path).name)) as outfile, open(script_path) as truthfile:
+            assert outfile.read() == truthfile.read()
+    finally:
+        unlink_tree(outdir)
