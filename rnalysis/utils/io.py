@@ -4,7 +4,6 @@ import gzip
 import inspect
 import json
 import os
-import platform
 import queue
 import re
 import shlex
@@ -1363,6 +1362,7 @@ def update_rnalysis():
 
 def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool,
                      split_ids: bool):
+    validation.validate_genome_annotation_file(gtf_path, accept_gff3=False)
     assert feature_type in {'gene', 'transcript'}, f"Invalid feature_type: '{feature_type}'"
 
     mapping = {}
@@ -1425,6 +1425,8 @@ def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tu
 
 def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True,
                              split_ids: bool = True):
+    validation.validate_genome_annotation_file(gtf_path, accept_gff3=False)
+
     mapping = {}
     with open(gtf_path, errors="ignore") as f:
         for line in f.readlines():
