@@ -1360,57 +1360,6 @@ def update_rnalysis():
     run_subprocess([executable, '-m', 'pip', 'install', '--upgrade', 'RNAlysis[all]'])
 
 
-def map_gene_to_attr(gtf_path: Union[str, Path], attribute: str, feature_type: str, use_name: bool, use_version: bool,
-                     split_ids: bool):
-    validation.validate_genome_annotation_file(gtf_path, accept_gff3=False)
-    assert feature_type in {'gene', 'transcript'}, f"Invalid feature_type: '{feature_type}'"
-
-    mapping = {}
-    with open(gtf_path, errors="ignore") as f:
-        for line in f.readlines():
-            if len(line) == 0 or line[0] == '#':
-                continue
-            line_split = line.strip().split('\t')
-            attributes = line_split[8]
-            attributes_dict = parsing.parse_gtf_attributes(attributes)
-            if attribute not in attributes_dict:
-                continue
-
-            feature_name = None
-            if feature_type == 'gene':
-                feature_id = attributes_dict['gene_id'].split(".")[0] if split_ids else attributes_dict['gene_id']
-                if use_version:
-                    feature_id += '.' + attributes_dict['gene_version']
-
-                if use_name:
-                    if 'gene_name' in attributes_dict:
-                        feature_name = attributes_dict['gene_name']
-                    elif 'name' in attributes_dict:
-                        feature_name = attributes_dict['name']
-                    else:
-                        continue
-
-            else:
-                feature_id = attributes_dict['transcript_id'].split(".")[0] if split_ids else attributes_dict[
-                    'transcript_id']
-                if use_version:
-                    feature_id += '.' + attributes_dict['transcript_version']
-
-                if use_name:
-                    if 'gene_name' in attributes_dict:
-                        feature_name = attributes_dict['transcript_name']
-                    elif 'name' in attributes_dict:
-                        feature_name = attributes_dict['name']
-                    else:
-                        continue
-
-            if feature_id in mapping:
-                continue
-            mapping[feature_name if use_name else feature_id] = attributes_dict[attribute]
-
-    return mapping
-
-
 def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tuple[str, dict]:
     try:
         if isinstance(method, str):
@@ -1421,42 +1370,6 @@ def get_method_docstring(method: Union[str, Callable], obj: object = None) -> Tu
         return parsing.parse_docstring(raw_docstring)
     except AttributeError:
         return '', {}
-
-
-def map_transcripts_to_genes(gtf_path: Union[str, Path], use_name: bool = False, use_version: bool = True,
-                             split_ids: bool = True):
-    validation.validate_genome_annotation_file(gtf_path, accept_gff3=False)
-
-    mapping = {}
-    with open(gtf_path, errors="ignore") as f:
-        for line in f.readlines():
-            if len(line) == 0 or line[0] == '#':
-                continue
-            line_split = line.strip().split('\t')
-            if line_split[2] == 'transcript':
-                attributes = line_split[8]
-                attributes_dict = parsing.parse_gtf_attributes(attributes)
-                if 'transcript_id' not in attributes_dict or 'gene_id' not in attributes_dict:
-                    continue
-
-                transcript_id = attributes_dict['transcript_id'].split(".")[0] if split_ids else attributes_dict[
-                    'transcript_id']
-                gene_id = attributes_dict['gene_id'].split(".")[0] if split_ids else attributes_dict['gene_id']
-                if use_version:
-                    if 'transcript_version' in attributes_dict and 'gene_version' in attributes_dict:
-                        transcript_id += '.' + attributes_dict['transcript_version']
-                        gene_id += '.' + attributes_dict['gene_version']
-                gene_name = None
-                if use_name:
-                    if 'gene_name' not in attributes_dict:
-                        continue
-                    gene_name = attributes_dict['gene_name']
-
-                if transcript_id in mapping:
-                    continue
-
-                mapping[transcript_id] = gene_name if use_name else gene_id
-    return mapping
 
 
 def generate_base_call(command: str, installation_folder: Union[str, Path, Literal['auto']],

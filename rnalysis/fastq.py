@@ -13,7 +13,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from rnalysis import filtering
-from rnalysis.utils import parsing, io, feature_counting
+from rnalysis.utils import parsing, io, feature_counting, genome_annotation
 from rnalysis.utils.param_typing import PositiveInt, NonNegativeInt, Fraction, LEGAL_FASTQ_SUFFIXES, \
     LEGAL_BOWTIE2_PRESETS, LEGAL_BOWTIE2_MODES, LEGAL_QUAL_SCORE_TYPES
 
@@ -948,7 +948,8 @@ def _sum_transcripts_to_genes(tpm: pd.DataFrame, counts: pd.DataFrame, gtf_path:
         for use_name in [False, True]:
             for use_version in [True, False]:
                 for split_ids in [True, False]:
-                    transcript_to_gene_map = io.map_transcripts_to_genes(gtf_path, use_name, use_version, split_ids)
+                    transcript_to_gene_map = genome_annotation.map_transcripts_to_genes(gtf_path, use_name, use_version,
+                                                                                        split_ids)
                     pbar.update(1)
                     if len(transcript_to_gene_map) == 0:
                         continue

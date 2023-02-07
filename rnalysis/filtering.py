@@ -38,7 +38,7 @@ from datetime import datetime
 
 from rnalysis import __version__
 from rnalysis.utils import clustering, io, parsing, generic, ontology, settings, validation, differential_expression, \
-    param_typing
+    param_typing, genome_annotation
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
     DEFAULT_ORGANISMS, PARALLEL_BACKENDS, get_gene_id_types, PositiveInt, NonNegativeInt
@@ -484,8 +484,8 @@ class Filter:
                 for use_version in [True, False]:
                     for split_ids in [True, False]:
                         try:
-                            mapping = io.map_gene_to_attr(gtf_path, attribute_name, feature_type, use_name, use_version,
-                                                          split_ids)
+                            mapping = genome_annotation.map_gene_to_attr(gtf_path, attribute_name, feature_type,
+                                                                         use_name, use_version, split_ids)
                         except KeyError:
                             continue
                         pbar.update(1)
@@ -5096,7 +5096,7 @@ class Pipeline:
         other_cnt = dict()
         # iterate over all functions and arguments
         for func, (args, kwargs) in zip(self.functions, self.params):
-            keywords = ['filter','normalize','sort','translate']
+            keywords = ['filter', 'normalize', 'sort', 'translate']
             if any([kw in func.__name__ for kw in keywords]):
                 filter_object = self._apply_filter_norm_sort(func, filter_object, args, kwargs, inplace)
             elif func.__name__.startswith('split'):
