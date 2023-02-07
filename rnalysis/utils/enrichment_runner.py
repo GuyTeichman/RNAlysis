@@ -198,10 +198,10 @@ class EnrichmentRunner:
 
         orig_bg_size = len(self.background_set)
         if self.exclude_unannotated_genes:
-            self.background_set = self.background_set.intersection(self.annotation_df.index)
+            self.background_set = self.background_set.intersection(parsing.data_to_set(self.annotation_df.index))
         else:
-            self.background_set = self.background_set.union(self.annotation_df.index)
-            ann_missing = self.background_set.difference(self.annotation_df.index)
+            self.background_set = self.background_set.union(parsing.data_to_set(self.annotation_df.index))
+            ann_missing = self.background_set.difference(parsing.data_to_set(self.annotation_df.index))
             self.annotation_df[ann_missing] = np.nan
 
         if orig_bg_size - len(self.background_set) > 0:
@@ -406,7 +406,7 @@ class EnrichmentRunner:
 
     def update_gene_set(self):
         if self.single_set:
-            updated_gene_set = self.gene_set.intersection(self.annotation_df.index)
+            updated_gene_set = self.gene_set.intersection(parsing.data_to_set(self.annotation_df.index))
             not_annotated = len(self.gene_set) - len(updated_gene_set)
             self.gene_set = updated_gene_set
             self._update_ranked_genes()

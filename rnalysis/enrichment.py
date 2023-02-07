@@ -357,7 +357,7 @@ class FeatureSet(set):
             elif isinstance(other, FeatureSet):
                 others[i] = other.gene_set
             else:
-                raise TypeError("'other' must be an FeatureSet object or a set!")
+                raise TypeError(f"'other' must be an FeatureSet object or a set, instead got {type(other)}")
         try:
             return op(self.gene_set, *others)
         except TypeError as e:
@@ -616,8 +616,10 @@ class FeatureSet(set):
            Example plot of go_enrichment(plot_horizontal = False)
         """
         propagate_annotations = propagate_annotations.lower()
-        if validation.isinstanceinh(background_genes, FeatureSet):
+        try:
             background_genes = background_genes.gene_set
+        except AttributeError:
+            pass
         if statistical_test.lower() == 'randomization':
             kwargs = dict(reps=randomization_reps, random_seed=random_seed)
         else:
@@ -738,8 +740,10 @@ class FeatureSet(set):
 
            Example plot of kegg_enrichment(plot_horizontal = False)
         """
-        if validation.isinstanceinh(background_genes, FeatureSet):
+        try:
             background_genes = background_genes.gene_set
+        except AttributeError:
+            pass
         if statistical_test.lower() == 'randomization':
             kwargs = dict(reps=randomization_reps, random_seed=random_seed)
         else:
@@ -851,8 +855,11 @@ class FeatureSet(set):
            Example plot of user_defined_enrichment(plot_horizontal = False)
 
         """
-        if validation.isinstanceinh(background_genes, FeatureSet):
+        try:
             background_genes = background_genes.gene_set
+        except AttributeError:
+            pass
+
         if statistical_test == 'randomization':
             kwargs = dict(reps=randomization_reps)
         else:
@@ -943,8 +950,10 @@ class FeatureSet(set):
            Example plot of non_categorical_enrichment(plot_style='interleaved')
         """
 
-        if validation.isinstanceinh(background_genes, FeatureSet):
+        try:
             background_genes = background_genes.gene_set
+        except AttributeError:
+            pass
         runner = enrichment_runner.NonCategoricalEnrichmentRunner(self.gene_set, attributes, alpha, biotype,
                                                                   background_genes, attr_ref_path,
                                                                   biotype_ref_path, save_csv, fname,
@@ -985,7 +994,8 @@ class FeatureSet(set):
         if len(not_in_ref) > 0:
             warnings.warn(
                 f'{len(not_in_ref)} of the features in the Filter object do not appear in the Biotype Reference Table. ')
-            ref_df = pd.concat([ref_df, pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})])
+            ref_df = pd.concat(
+                [ref_df, pd.DataFrame({'gene': not_in_ref, 'biotype': '_missing_from_biotype_reference'})])
         return ref_df.set_index('gene', drop=False).loc[parsing.data_to_list(self.gene_set)].groupby('biotype').count()
 
 
