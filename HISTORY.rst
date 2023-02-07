@@ -19,6 +19,8 @@ Changed
 * Improved documentation for some functions.
 * Function selection tooltips should now display information more clearly.
 * Pipelines that contain consecutive clustering/splitting functions will now return their outputs in a clearer format.
+* Enrichment bar-plots should now adjust the x-axis limits more tightly to fit the displayed data.
+* Improved clarity of automatic titles in enrichment plots.
 
 Fixed
 ******

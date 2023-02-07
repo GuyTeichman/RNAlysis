@@ -511,8 +511,9 @@ class EnrichmentRunner:
     def plot_results(self) -> plt.Figure:
         if self.single_set:
             return self.enrichment_bar_plot(ylabel=self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL,
-                                            title=f"Single-list enrichment for {self.set_name}")
-        return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL, title=f"Enrichment for {self.set_name}")
+                                            title=f"Single-list enrichment for gene set '{self.set_name}'")
+        return self.enrichment_bar_plot(ylabel=self.ENRICHMENT_SCORE_YLABEL,
+                                        title=f"Enrichment for gene set '{self.set_name}'")
 
     def enrichment_bar_plot(self, n_bars: int = 'all', center_bars: bool = True,
                             ylabel: str = r"$\log_2$(Fold Enrichment)",
@@ -589,7 +590,7 @@ class EnrichmentRunner:
             max_score = 3
 
         # get color values for bars
-        data_color_norm = [0.5 * (1 + i / (np.floor(max_score) + 1)) * 255 for i in enrichment_scores]
+        data_color_norm = [0.5 * (1 + i / (np.ceil(max_score))) * 255 for i in enrichment_scores]
         data_color_norm_8bit = [int(i) if i != np.inf and i != -np.inf else np.sign(i) * max(np.abs(scores_no_inf)) for
                                 i in data_color_norm]
         my_cmap = plt.cm.get_cmap('coolwarm')
@@ -601,9 +602,9 @@ class EnrichmentRunner:
                        linewidth=1, zorder=2)
         bar.tick_labels = enrichment_names
         # determine bounds, and enlarge the bound by a small margin (0.2%) so nothing gets cut out of the figure
-        bounds = np.array([np.ceil(-max_score) - 1, (np.floor(max_score) + 1)]) * 1.002
+        bounds = np.array([np.floor(-max_score), np.ceil(max_score)]) * 1.005
         # add black line at y=0 and grey lines at every round positive/negative integer in range
-        for ind in range(int(bounds[0]) + 1, int(bounds[1]) + 1):
+        for ind in range(int(bounds[0]), int(bounds[1]) + 1):
             color = 'black' if ind == 0 else 'grey'
             linewidth = 1 if ind == 0 else 0.5
             linestyle = '-' if ind == 0 else '-.'
@@ -611,6 +612,7 @@ class EnrichmentRunner:
         # apply xticks
         tick_func(ax, range(len(enrichment_names)))
         ticklabels_func(ax, enrichment_names, **ticklabels_kwargs)
+        ax.tick_params(axis='both', which='major', pad=10)
         # title
         ax.set_title(title, fontsize=18)
         # add significance asterisks
@@ -632,7 +634,7 @@ class EnrichmentRunner:
             ax.text(x=x, y=y, s=asterisks, fontname='DejaVu Sans', fontweight=fontweight, rotation=rotation,
                     fontsize=9, horizontalalignment=halign, verticalalignment=valign, zorder=1)
         # despine
-        _ = [ax.spines[side].set_visible(False) for side in ['top', 'right']]
+        _ = [ax.spines[side].set_visible(False) for side in ['top', 'bottom', 'left', 'right']]
         # center bars
         if center_bars:
             if self.plot_horizontal:
@@ -1146,16 +1148,18 @@ class GOEnrichmentRunner(EnrichmentRunner):
         kwargs = dict()
         if self.single_set:
             kwargs['ylabel'] = self.SINGLE_SET_ENRICHMENT_SCORE_YLABEL
-            kwargs['title'] = f"Single-list GO enrichment for {self.set_name}\ntop {n_bars} most specific GO terms"
+            kwargs['title'] = f"Single-list GO enrichment for gene set '{self.set_name}'\n" \
+                              f"top {n_bars} most specific GO terms"
         else:
             kwargs['ylabel'] = self.ENRICHMENT_SCORE_YLABEL
-            kwargs['title'] = f"GO enrichment for {self.set_name}\ntop {n_bars} most specific GO terms"
+            kwargs['title'] = f"GO enrichment for gene set '{self.set_name}'\n" \
+                              f"top {n_bars} most specific GO terms"
 
         bar_plot = self.enrichment_bar_plot(n_bars=n_bars, **kwargs)
         if self.plot_ontology_graph:
             ontology_kwargs = kwargs.copy()
-            ontology_kwargs['title'] = f"Single-list GO enrichment for {self.set_name}" if self.single_set \
-                else f"GO enrichment for {self.set_name}"
+            ontology_kwargs['title'] = f"Single-list GO enrichment for gene set '{self.set_name}'" if self.single_set \
+                else f"GO enrichment for gene set '{self.set_name}'"
             self.go_dag_plot(**ontology_kwargs)
         return bar_plot
 
