@@ -288,3 +288,17 @@ def parse_gtf_attributes(attr_str: str):
         val = this_attr[val_start + 1:val_end]
         attributes_dict[key] = val
     return attributes_dict
+
+
+def parse_gff3_attributes(attr_str: str):
+    attributes_dict = {}
+    for this_attr in attr_str.rstrip().split(';'):
+        this_attr = this_attr.strip()
+        if len(this_attr) == 0:
+            continue
+        key, val = this_attr.split('=')
+        val = val.split(',')
+        if len(val) == 1:
+            val = val[0]
+        attributes_dict[key] = val
+    return attributes_dict

@@ -217,10 +217,24 @@ def test_parse_r_arg(arg, expected):
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    ({'arg1': False},'arg1 = FALSE'),
-    ({'arg1': 'val1', 'arg2': -0.25, 'arg3': True},'arg1 = "val1",\narg2 = -0.25,\narg3 = TRUE'),
-    ({'arg1': None, 'arg2': ['b', 'dc', 'ad f']},'arg1 = NULL,\narg2 = c("b", "dc", "ad f")')
+    ({'arg1': False}, 'arg1 = FALSE'),
+    ({'arg1': 'val1', 'arg2': -0.25, 'arg3': True}, 'arg1 = "val1",\narg2 = -0.25,\narg3 = TRUE'),
+    ({'arg1': None, 'arg2': ['b', 'dc', 'ad f']}, 'arg1 = NULL,\narg2 = c("b", "dc", "ad f")')
 ])
 def test_python_to_r_kwargs(kwargs, expected):
     res = python_to_r_kwargs(kwargs)
+    assert res == expected
+
+
+@pytest.mark.parametrize('attrs,expected', [
+    ('ID=mrna0001;Name=sonichedgehog', {'ID': 'mrna0001', 'Name': 'sonichedgehog'}),
+    ('ID=exon00003;Parent=mrna0001', {'ID': 'exon00003', 'Parent': 'mrna0001'}),
+    ('ID=B0348.6a.1;Parent=WBGene00002061', {'ID': 'B0348.6a.1', 'Parent': 'WBGene00002061'}),
+    ('ID=exon00004;Parent=mRNA00001,mRNA00002,mRNA00003', {'ID': 'exon00004', 'Parent':
+        ['mRNA00001', 'mRNA00002', 'mRNA00003']}),
+    ('ID=exon00005;Parent=mRNA00001,mRNA00003', {'ID': 'exon00005', 'Parent': ['mRNA00001', 'mRNA00003']}),
+    ('ID=mRNA00003;Parent=gene00001;Name=EDEN.3', {'ID': 'mRNA00003', 'Parent': 'gene00001', 'Name': 'EDEN.3'}),
+])
+def test_parse_gff3_attributes(attrs, expected):
+    res = parse_gff3_attributes(attrs)
     assert res == expected
