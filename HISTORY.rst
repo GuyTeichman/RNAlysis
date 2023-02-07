@@ -11,6 +11,7 @@ Added
 * You can now select which databases to display in the right-click quick-search menu, using the settings menu.
 * Gene sets now support some basic operations (filtering, gene ID translating, etc) through the graphical interface.
 * enrichment.FeatureSet and enrichment.RankedSet now support some filtering operations from the filtering module (such as filtering by user-defined attributes, GO terms, or KEGG pathways).
+* Added reads-per-kilobase-million (RPKM) and transcripts-per-million (TPM) normalization methods (CountFilter.normalize_to_rpkm() and CountFilter.normalize_to_tpm()).
 
 Changed
 ********

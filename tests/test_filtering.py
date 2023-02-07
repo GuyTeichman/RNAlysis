@@ -1,3 +1,4 @@
+import json
 import shutil
 
 import matplotlib
@@ -166,6 +167,54 @@ def test_countfilter_normalize_to_rpm():
     not_inplace = h.normalize_to_rpm(inplace=False)
     assert np.isclose(truth, not_inplace.df).all()
     h.normalize_to_rpm()
+    assert np.isclose(truth, h.df).all()
+
+
+@pytest.mark.parametrize('gtf_path,feature_type,method',
+                         [
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'gene', 'merged_exons'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'gene', 'geometric_mean'),
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'transcript', 'mean'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'transcript', 'max')
+                         ])
+def test_countfilter_normalize_to_rpkm(monkeypatch, gtf_path, feature_type, method):
+    def mock_get_feature_lengths(this_gtf_path, this_feature_type, this_method):
+        assert this_gtf_path == gtf_path
+        assert this_feature_type == feature_type
+        assert this_method == method
+        with open('tests/test_files/feature_lengths.json') as f:
+            return json.load(f)
+
+    monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
+    truth = io.load_csv(r"tests/test_files/test_norm_to_rpkm.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_to_rpkm(gtf_path, feature_type, method, inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_to_rpkm(gtf_path, feature_type, method, )
+    assert np.isclose(truth, h.df).all()
+
+
+@pytest.mark.parametrize('gtf_path,feature_type,method',
+                         [
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'gene', 'merged_exons'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'gene', 'geometric_mean'),
+                             ('tests/test_files/test_gtf_wormbase.gtf', 'transcript', 'mean'),
+                             ('tests/test_files/test_gff3_wormbase.gff3', 'transcript', 'max')
+                         ])
+def test_countfilter_normalize_to_tpm(monkeypatch, gtf_path, feature_type, method):
+    def mock_get_feature_lengths(this_gtf_path, this_feature_type, this_method):
+        assert this_gtf_path == gtf_path
+        assert this_feature_type == feature_type
+        assert this_method == method
+        with open('tests/test_files/feature_lengths.json') as f:
+            return json.load(f)
+
+    monkeypatch.setattr(genome_annotation, 'get_genomic_feature_lengths', mock_get_feature_lengths)
+    truth = io.load_csv(r"tests/test_files/test_norm_to_tpm.csv", 0)
+    h = CountFilter("tests/test_files/counted.csv")
+    not_inplace = h.normalize_to_tpm(gtf_path, feature_type, method, inplace=False)
+    assert np.isclose(truth, not_inplace.df).all()
+    h.normalize_to_tpm(gtf_path, feature_type, method)
     assert np.isclose(truth, h.df).all()
 
 

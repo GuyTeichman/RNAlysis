@@ -41,7 +41,7 @@ from rnalysis.utils import clustering, io, parsing, generic, ontology, settings,
     param_typing, genome_annotation
 
 from rnalysis.utils.param_typing import BIOTYPES, BIOTYPE_ATTRIBUTE_NAMES, GO_EVIDENCE_TYPES, GO_QUALIFIERS, \
-    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, get_gene_id_types, PositiveInt, NonNegativeInt
+    DEFAULT_ORGANISMS, PARALLEL_BACKENDS, LEGAL_GENE_LENGTH_METHODS, get_gene_id_types, PositiveInt, NonNegativeInt
 
 
 def readable_name(name: str):
@@ -3044,6 +3044,92 @@ class CountFilter(Filter):
             if column in numeric_cols:
                 norm_factor = new_df[column].sum() / (10 ** 6)
                 new_df[column] /= norm_factor
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    @readable_name('Normalize to reads-per-kilobase-million (RPKM)')
+    def normalize_to_rpkm(self, gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'] = 'gene',
+                          method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True):
+        """
+        Normalizes the count matrix to Reads Per Kilobase Million (RPKM). \
+        Divides each column in the count matrix by (total reads)*(gene length / 1000)*10^-6. \
+
+
+       :param gtf_file: Path to a GTF/GFF3 annotation file. This file will be used to determine the length of each \
+        gene/transcript. The gene/transcript names in this annotation file should match the ones in count matrix.
+        :type gtf_file: str or Path
+        :param feature_type: the type of features in your count matrix. if feature_type is 'transcript', \
+        lengths will be calculated per-transcript, and the 'method' parameter is ignored. \
+        Otherwise, lengths will be aggregated per gene according to the method specified in the 'method' parameter.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :param method: if feature_type='gene', this determines the aggregation method to calculate gene lengths. \
+        'mean', 'median', 'min', and 'max' will calculate the \
+        mean/median/min/max of all transcripts' lengths of the given gene. \
+        'geometric_mean' will calculate the goemetric mean of all transcripts' lengths of the given gene. \
+        'merged_exons' will calculate the total lengths of all exons of a gene across all of its transcripts, \
+        while counting overlapping exons/regions exactly once.
+        :type method: 'mean', 'median', 'min', 'max', 'geometric_mean', or 'merged_exons' (deafult='mean')
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+        """
+        suffix = f"_normtoRPKM{method.replace('_', '')}"
+        gene_lengths_kbp = pd.Series(
+            genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
+        new_df = self.df.copy()
+        numeric_cols = self._numeric_columns
+        for column in new_df.columns:
+            if column in numeric_cols:
+                scaling_factor = new_df[column].sum() / (10 ** 6)
+                new_df[column] /= scaling_factor
+        new_df[numeric_cols] = new_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
+        new_df = new_df.dropna(axis=0)
+        return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
+                             _is_normalized=True)
+
+    @readable_name('Normalize to transcripts-per-million (TPM)')
+    def normalize_to_tpm(self, gtf_file: Union[str, Path], feature_type: Literal['gene', 'transcript'] = 'gene',
+                         method: Literal[LEGAL_GENE_LENGTH_METHODS] = 'mean', inplace: bool = True):
+        """
+        Normalizes the count matrix to Transcripts Per Million (TPM). \
+        First, normalizes each gene to Reads Per Kilobase (RPK) \
+        by dividing each gene in the count matrix by its length in Kbp (gene length / 1000). \
+        Then, divides each column in the RPK matrix by (total RPK in column)*10^-6. \
+        This calculation is similar to that of Reads Per Kilobase Million (RPKM), but in the opposite order: \
+        the "per million" normalization factors are calculated **after** normalizing to gene lengths, not before.
+
+       :param gtf_file: Path to a GTF/GFF3 annotation file. This file will be used to determine the length of each \
+        gene/transcript. The gene/transcript names in this annotation file should match the ones in count matrix.
+        :type gtf_file: str or Path
+        :param feature_type: the type of features in your count matrix. if feature_type is 'transcript', \
+        lengths will be calculated per-transcript, and the 'method' parameter is ignored. \
+        Otherwise, lengths will be aggregated per gene according to the method specified in the 'method' parameter.
+        :type feature_type: 'gene' or 'transcript' (default='gene')
+        :param method: if feature_type='gene', this determines the aggregation method to calculate gene lengths. \
+        'mean', 'median', 'min', and 'max' will calculate the \
+        mean/median/min/max of all transcripts' lengths of the given gene. \
+        'geometric_mean' will calculate the goemetric mean of all transcripts' lengths of the given gene. \
+        'merged_exons' will calculate the total lengths of all exons of a gene across all of its transcripts, \
+        while counting overlapping exons/regions exactly once.
+        :type method: 'mean', 'median', 'min', 'max', 'geometric_mean', or 'merged_exons' (deafult='mean')
+        :type inplace: bool (default=True)
+        :param inplace: If True (default), filtering will be applied to the current CountFilter object. If False, \
+        the function will return a new CountFilter instance and the current instance will not be affected.
+        :return: If inplace is False, returns a new instance of the Filter object.
+        """
+        suffix = f"_normtoTPM{method.replace('_', '')}"
+        gene_lengths_kbp = pd.Series(
+            genome_annotation.get_genomic_feature_lengths(gtf_file, feature_type, method)) / 1000
+        new_df = self.df.copy()
+        numeric_cols = self._numeric_columns
+        new_df[numeric_cols] = new_df[numeric_cols].div(gene_lengths_kbp, axis='rows')
+        new_df = new_df.dropna(axis=0)
+
+        for column in new_df.columns:
+            if column in numeric_cols:
+                scaling_factor = new_df[column].sum() / (10 ** 6)
+                new_df[column] /= scaling_factor
         return self._inplace(new_df, opposite=False, inplace=inplace, suffix=suffix, printout_operation='normalize',
                              _is_normalized=True)
 
