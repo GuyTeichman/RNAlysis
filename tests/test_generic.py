@@ -1,8 +1,6 @@
 import pytest
+
 from rnalysis.utils.generic import *
-import numpy as np
-import typing
-import inspect
 
 
 def test_intersection_nonempty():
@@ -115,3 +113,17 @@ def test_get_signature(func, obj, truth):
         assert param.name == key
         assert param.annotation == val['annotation']
         assert param.default == val['default']
+
+
+@pytest.mark.parametrize('intervals,expected', [
+    ([], 0),
+    ([(1, 3)], 3),
+    ([(1, 3), (4, 6), (7, 10)], 10),
+    ([(4, 6), (1, 3), (7, 10)], 10),
+    ([(1, 4), (3, 6), (3, 5), (3, 6), (4, 9)], 9),
+    ([(7, 10), (2, 5), (1, 4), (2, 5)], 9),
+
+])
+def test_sum_intervals_inclusive(intervals, expected):
+    res = sum_intervals_inclusive(intervals)
+    assert res == expected
