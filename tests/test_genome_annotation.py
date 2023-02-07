@@ -104,4 +104,6 @@ def test_map_gene_to_attr(feature_type, truth):
 ])
 def test_get_genomic_feature_lengths(gtf_path, feature_type, len_method, truth):
     res = get_genomic_feature_lengths(gtf_path, feature_type, len_method)
-    assert res == truth
+    assert res.keys() == truth.keys()
+    for key in res:
+        assert np.isclose(res[key], truth[key])
