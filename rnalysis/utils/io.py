@@ -1,3 +1,4 @@
+import asyncio
 import concurrent.futures
 import functools
 import gzip
@@ -15,13 +16,15 @@ import typing
 import warnings
 from datetime import date, datetime
 from functools import lru_cache
-from io import BytesIO, StringIO
+from io import StringIO
 from itertools import chain
 from pathlib import Path
 from sys import executable
 from typing import List, Set, Union, Iterable, Tuple, Dict, Any, Callable
 from urllib.parse import urlparse, parse_qs, urlencode
 
+import aiohttp
+import aiolimiter
 import appdirs
 import numpy as np
 import pandas as pd
@@ -1281,39 +1284,76 @@ def calculate_checksum(filename: Union[str, Path]):
         return md5_checksum
 
 
-def get_video_remote_checksum(video_name: str):
+async def get_video_remote_checksum(video_name: str, session, semaphore, limiter):
     url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/' \
           f'{Path(video_name).stem}.txt'
-    req = requests.get(url, params=dict(raw=True))
-    req.raise_for_status()
-    return req.text
+    await semaphore.acquire()
+    async with limiter:
+        async with session.get(url, params=dict(raw='True')) as response:
+            content = await response.text()
+            semaphore.release()
+            return content
 
 
-def download_video(video_path: Path):
-    req = requests.get('https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + video_path.name,
-                       params=dict(raw=True))
-    content = BytesIO(req.content)
+async def download_video(video_path: Path, session, semaphore, limiter) -> None:
+    content = await _get_video_content(video_path, session, semaphore, limiter)
+    await _write_video_to_file(video_path, content)
+
+
+async def _get_video_content(video_path: Path, session, semaphore, limiter) -> bytes:
+    url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + video_path.name
+    await semaphore.acquire()
+    async with limiter:
+        async with session.get(url, params=dict(raw='True')) as response:
+            content = await response.read()
+            semaphore.release()
+            return content
+
+
+async def _write_video_to_file(video_path: Path, content: bytes) -> None:
     with open(video_path, 'wb') as file:
-        file.write(content.getbuffer())
+        file.write(content)
 
 
-def get_gui_videos(video_filenames: Tuple[str, ...]):
+async def get_gui_videos(video_filenames: Tuple[str, ...]):
     video_dir_pth = get_tutorial_videos_dir()
     if not video_dir_pth.exists():
         video_dir_pth.mkdir(parents=True)
-    for i, vid in enumerate(video_filenames):
-        yield i
-        this_video_path = video_dir_pth.joinpath(vid)
-        if this_video_path.exists():
-            checksum = calculate_checksum(this_video_path)
-            try:
-                remote_checksum = get_video_remote_checksum(vid)
-            except (requests.HTTPError, requests.ConnectionError):
-                continue
-            if checksum == remote_checksum:
-                continue
-        # if the file doesn't exist, or if the video checksum doesn't match the remove checksum, download the video
-        download_video(this_video_path)
+
+    videos_to_download = []
+    local_checksums = []
+    remote_checksums = []
+    i = 0
+    try:
+        semaphore = asyncio.Semaphore(value=10)
+        limiter = aiolimiter.AsyncLimiter(10, 1)
+        async with aiohttp.ClientSession() as session:
+            for video_name in video_filenames:
+                this_video_path = video_dir_pth.joinpath(video_name)
+                if this_video_path.exists():
+                    remote_checksums.append(get_video_remote_checksum(video_name, session, semaphore, limiter))
+                    local_checksums.append(calculate_checksum(this_video_path))
+                else:
+                    videos_to_download.append(this_video_path)
+
+            for this_local, this_remote in zip(local_checksums, await asyncio.gather(*remote_checksums)):
+                if this_local == this_remote:
+                    yield i
+                    i += 1
+                else:
+                    this_video_path = video_dir_pth.joinpath(video_name)
+                    videos_to_download.append(this_video_path)
+
+            tasks = []
+            for this_video_path in videos_to_download:
+                tasks.append(download_video(this_video_path, session, semaphore, limiter))
+            for task in tasks:
+                yield i
+                i += 1
+                await asyncio.gather(task)
+
+    except aiohttp.ClientConnectorError:
+        pass
 
 
 def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):

@@ -89,6 +89,10 @@ All of *RNAlysis*'s dependencies can be installed automatically via PyPI.
 * `qdarkstyle <https://github.com/ColinDuquesnoy/QDarkStyleSheet>`_
 * `defusedxml <https://https://github.com/tiran/defusedxml>`_
 * `cutadapt <https://github.com/marcelm/cutadapt>`_
+* `aiohttp <https://docs.aiohttp.org/>`_
+* `aiodns <https://github.com/saghul/aiodns>`_
+* `aiolimiter <https://aiolimiter.readthedocs.io/>`_
+* `Brotli <https://github.com/google/brotli>`_
 
 ----
 

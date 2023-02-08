@@ -3782,7 +3782,7 @@ def customwarn(message, category, filename, lineno, file=None, line=None):
     sys.stdout.write(warnings.formatwarning(message, category, filename, lineno))
 
 
-def run():
+async def run():
     # close built-in splash screen in frozen app version of RNAlysis
     if '_PYIBoot_SPLASH' in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash
@@ -3807,10 +3807,10 @@ def run():
         splash.showMessage(base_message + 'loading dependencies', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
         video_files = gui_quickstart.QuickStartWizard.VIDEO_FILES
-        for i in io.get_gui_videos(video_files):
-            splash.showMessage(
-                base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
-                QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+        splash.showMessage(base_message + 'validating tutorial videos', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
+        async for i in io.get_gui_videos(video_files):
+            splash.showMessage(base_message + f'getting tutorial videos {i + 1}/{len(video_files)}',
+                               QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
 
         splash.showMessage(base_message + 'loading application', QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
     matplotlib.use('Qt5Agg')

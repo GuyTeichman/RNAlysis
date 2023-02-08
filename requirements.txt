@@ -20,3 +20,7 @@ typing_extensions>=4.4
 PyQt5>=5.15.7
 qdarkstyle
 defusedxml>=0.7.1
+aiohttp>=3.8.3
+aiodns>=3.0.0
+Brotli>=1.0.9
+aiolimiter>=1.0.0
