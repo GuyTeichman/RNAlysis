@@ -1,6 +1,7 @@
 import concurrent.futures
 import functools
 import gzip
+import hashlib
 import inspect
 import json
 import os
@@ -1270,19 +1271,49 @@ def save_gene_set(gene_set: set, path):
             [f"{item}\n" if (i + 1) < len(gene_set) else f"{item}" for i, item in enumerate(gene_set)])
 
 
-def get_gui_videos(video_paths: Tuple[str, ...]):
+def calculate_checksum(filename: Union[str, Path]):
+    assert Path(filename).exists(), f"file '{filename}' does not exist!"
+    with open(filename, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()
+        # pipe contents of the file through
+        md5_checksum = hashlib.md5(data).hexdigest()
+        return md5_checksum
+
+
+def get_video_remote_checksum(video_name: str):
+    url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/' \
+          f'{video_name.rstrip(".webp")}.txt'
+    req = requests.get(url, params=dict(raw=True))
+    req.raise_for_status()
+    return req.text
+
+
+def download_video(video_path: Path):
+    req = requests.get('https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + video_path.name,
+                       params=dict(raw=True))
+    content = BytesIO(req.content)
+    with open(video_path, 'wb') as file:
+        file.write(content.getbuffer())
+
+
+def get_gui_videos(video_filenames: Tuple[str, ...]):
     video_dir_pth = get_tutorial_videos_dir()
     if not video_dir_pth.exists():
         video_dir_pth.mkdir(parents=True)
-    for i, vid in enumerate(video_paths):
+    for i, vid in enumerate(video_filenames):
         yield i
-        this_vid_pth = video_dir_pth.joinpath(vid)
-        if not this_vid_pth.exists():
-            req = requests.get('https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/' + vid,
-                               params=dict(raw=True))
-            content = BytesIO(req.content)
-            with open(this_vid_pth, 'wb') as file:
-                file.write(content.getbuffer())
+        this_video_path = video_dir_pth.joinpath(vid)
+        if this_video_path.exists():
+            checksum = calculate_checksum(this_video_path)
+            try:
+                remote_checksum = get_video_remote_checksum(vid)
+            except (requests.HTTPError, requests.ConnectionError):
+                continue
+            if checksum == remote_checksum:
+                continue
+        # if the file doesn't exist, or if the video checksum doesn't match the remove checksum, download the video
+        download_video(this_video_path)
 
 
 def run_r_script(script_path: Union[str, Path], r_installation_folder: Union[str, Path, Literal['auto']] = 'auto'):
