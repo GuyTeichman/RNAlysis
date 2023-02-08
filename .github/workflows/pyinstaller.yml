@@ -27,6 +27,7 @@ jobs:
                     commit_message: Calculate quick-start video checksums
                     file_pattern: 'rnalysis/gui/videos/checksums/*.txt'
                     branch: master
+                    token: ${{ secrets.VID_CHECKSUM_PAT }}
             -   name: Get latest changelog
                 run: python packaging/parse_changelog.py
             -   name: Create Release
