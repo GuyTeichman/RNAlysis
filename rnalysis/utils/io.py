@@ -1283,7 +1283,7 @@ def calculate_checksum(filename: Union[str, Path]):
 
 def get_video_remote_checksum(video_name: str):
     url = 'https://github.com/GuyTeichman/RNAlysis/blob/master/rnalysis/gui/videos/checksums/' \
-          f'{video_name.rstrip(".webp")}.txt'
+          f'{Path(video_name).stem}.txt'
     req = requests.get(url, params=dict(raw=True))
     req.raise_for_status()
     return req.text
