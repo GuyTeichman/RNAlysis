@@ -1,6 +1,8 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
-from rnalysis.utils import settings, io
 from pathlib import Path
+
+from PyQt5 import QtCore, QtWidgets, QtGui
+
+from rnalysis.utils import settings, io
 
 
 class QuickStartWizard(QtWidgets.QWizard):
@@ -23,7 +25,8 @@ class QuickStartWizard(QtWidgets.QWizard):
         "Perform enrichment analysis on your tables and gene sets",
         "Create Pipelines to streamline your data analysis",
         "Apply Pipelines to one or more of your tables",
-        "Export and share Pipelines to make your analysis more reproducible")
+        "Export and share Pipelines to make your analysis more reproducible",
+        "Interface with other bioinformatic tools")
 
     CONTENTS = (
         "Choose a file from your computer, and click 'start' to load it into <i>RNAlysis</i>. ",
@@ -84,6 +87,9 @@ class QuickStartWizard(QtWidgets.QWizard):
 
         "Pipelines you export can be imported from any computer, and can be shared with others "
         "to help make your analysis easier to understand and more reproducible.",
+
+        "<i>RNAlysis</i> offers a graphic interface for many bioinformatic tools. "
+        "Analyze your data at any stage - adapter trimming, alignment, feature counting, or differential expression. ",
     )
 
     VIDEO_FILES = (
@@ -105,7 +111,8 @@ class QuickStartWizard(QtWidgets.QWizard):
         'enrichment_analysis.webp',
         'create_pipeline.webp',
         'apply_pipeline.webp',
-        'export_pipeline.webp'
+        'export_pipeline.webp',
+        'external_windows.webp',
     )
 
     def __init__(self, parent=None):

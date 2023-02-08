@@ -124,3 +124,10 @@ Export and share Pipelines to make your analysis more reproducible
 Pipelines you export can be imported from any computer, and can be shared with others to help make your analysis easier to understand and more reproducible.
 
 .. image:: ../../rnalysis/gui/videos/export_pipeline.webp
+
+Interface with other bioinformatic tools
+==================================================================
+*RNAlysis* offers a graphic interface for many bioinformatic tools.
+Analyze your data at any stage - adapter trimming, alignment, feature counting, or differential expression.
+
+.. image:: ../../rnalysis/gui/videos/external_windows.webp
