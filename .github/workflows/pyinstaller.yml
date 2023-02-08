@@ -17,6 +17,8 @@ jobs:
         steps:
             -   name: Checkout repository
                 uses: actions/checkout@v2
+                with:
+                    token: ${{ secrets.VID_CHECKSUM_PAT }}
             -   name: Install dev requirements
                 run: python -m pip install --upgrade -r requirements_dev.txt
             -   name: Calculate checksums
@@ -27,7 +29,6 @@ jobs:
                     commit_message: Calculate quick-start video checksums
                     file_pattern: 'rnalysis/gui/videos/checksums/*.txt'
                     branch: master
-                    token: ${{ secrets.VID_CHECKSUM_PAT }}
             -   name: Get latest changelog
                 run: python packaging/parse_changelog.py
             -   name: Create Release
