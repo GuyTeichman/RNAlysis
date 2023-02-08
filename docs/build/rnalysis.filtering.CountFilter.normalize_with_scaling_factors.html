@@ -4,14 +4,14 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.filtering.CountFilter.normalize_with_scaling_factors &mdash; RNAlysis 3.4.2 documentation</title>
+  <title>rnalysis.filtering.CountFilter.normalize_with_scaling_factors &mdash; RNAlysis 3.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-
+  
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
@@ -23,10 +23,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.filtering.CountFilter.number_filters" href="rnalysis.filtering.CountFilter.number_filters.html" />
-    <link rel="prev" title="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount" href="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount.html" />
+    <link rel="prev" title="rnalysis.filtering.CountFilter.normalize_to_tpm" href="rnalysis.filtering.CountFilter.normalize_to_tpm.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -81,6 +81,7 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.describe.html">rnalysis.filtering.CountFilter.describe</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.difference.html">rnalysis.filtering.CountFilter.difference</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_deseq2.html">rnalysis.filtering.CountFilter.differential_expression_deseq2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.differential_expression_limma_voom.html">rnalysis.filtering.CountFilter.differential_expression_limma_voom</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.drop_columns.html">rnalysis.filtering.CountFilter.drop_columns</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.enhanced_box_plot.html">rnalysis.filtering.CountFilter.enhanced_box_plot</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.filter_biotype_from_gtf.html">rnalysis.filtering.CountFilter.filter_biotype_from_gtf</a></li>
@@ -104,8 +105,10 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_rle.html">rnalysis.filtering.CountFilter.normalize_rle</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_tmm.html">rnalysis.filtering.CountFilter.normalize_tmm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_quantile.html">rnalysis.filtering.CountFilter.normalize_to_quantile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpkm.html">rnalysis.filtering.CountFilter.normalize_to_rpkm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm.html">rnalysis.filtering.CountFilter.normalize_to_rpm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount.html">rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.filtering.CountFilter.normalize_to_tpm.html">rnalysis.filtering.CountFilter.normalize_to_tpm</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.filtering.CountFilter.normalize_with_scaling_factors</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.filtering.CountFilter.normalize_with_scaling_factors"><code class="docutils literal notranslate"><span class="pre">CountFilter.normalize_with_scaling_factors()</span></code></a></li>
 </ul>
@@ -177,7 +180,7 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-
+             
   <section id="rnalysis-filtering-countfilter-normalize-with-scaling-factors">
 <h1>rnalysis.filtering.CountFilter.normalize_with_scaling_factors<a class="headerlink" href="#rnalysis-filtering-countfilter-normalize-with-scaling-factors" title="Permalink to this heading"></a></h1>
 <dl class="py method">
@@ -198,9 +201,9 @@
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">rnalysis</span> <span class="kn">import</span> <span class="n">filtering</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">filtering</span><span class="o">.</span><span class="n">CountFilter</span><span class="p">(</span><span class="s2">&quot;tests/test_files/counted.csv&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">normalize_with_scaling_factors</span><span class="p">(</span><span class="s2">&quot;tests/test_files/scaling_factors.csv&quot;</span><span class="p">)</span>
-<span class="go">Normalized 22 features. Normalized inplace.</span>
 </pre></div>
 </div>
+<p>Normalized 22 features. Normalized inplace.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -211,7 +214,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.normalize_to_rpm_htseqcount" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.filtering.CountFilter.normalize_to_tpm.html" class="btn btn-neutral float-left" title="rnalysis.filtering.CountFilter.normalize_to_tpm" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.filtering.CountFilter.number_filters.html" class="btn btn-neutral float-right" title="rnalysis.filtering.CountFilter.number_filters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -224,7 +227,7 @@
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+   
 
 </footer>
         </div>
@@ -235,7 +238,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
+  </script> 
 
 </body>
 </html>

@@ -69,6 +69,7 @@ Quickly look-up genes in your database of choice
 Easily access information about your genes with a simple right-click.
 Select from a range of biological databases such as GeneCards, NCBI Genes, UniProtKB and others,
 which can be configured in the settings menu to fit your specific needs.
+
 .. image:: ../../rnalysis/gui/videos/quick_search.webp
 
 Sort your tabs and change their icons

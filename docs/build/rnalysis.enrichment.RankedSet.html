@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.RankedSet &mdash; RNAlysis 3.4.2 documentation</title>
+  <title>rnalysis.enrichment.RankedSet &mdash; RNAlysis 3.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -22,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rnalysis.enrichment.RankedSet.biotypes" href="rnalysis.enrichment.RankedSet.biotypes.html" />
+    <link rel="next" title="rnalysis.enrichment.RankedSet.add" href="rnalysis.enrichment.RankedSet.add.html" />
     <link rel="prev" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment" href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html" /> 
 </head>
 
@@ -78,19 +78,36 @@
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.RankedSet.__init__"><code class="docutils literal notranslate"><span class="pre">RankedSet.__init__()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes.html">rnalysis.enrichment.RankedSet.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.add.html">rnalysis.enrichment.RankedSet.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_ref_table.html">rnalysis.enrichment.RankedSet.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html">rnalysis.enrichment.RankedSet.change_set_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.clear.html">rnalysis.enrichment.RankedSet.clear</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.copy.html">rnalysis.enrichment.RankedSet.copy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html">rnalysis.enrichment.RankedSet.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference_update.html">rnalysis.enrichment.RankedSet.difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.discard.html">rnalysis.enrichment.RankedSet.discard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_attribute.html">rnalysis.enrichment.RankedSet.filter_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_go_annotations.html">rnalysis.enrichment.RankedSet.filter_by_go_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_kegg_annotations.html">rnalysis.enrichment.RankedSet.filter_by_kegg_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html">rnalysis.enrichment.RankedSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html">rnalysis.enrichment.RankedSet.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection_update.html">rnalysis.enrichment.RankedSet.intersection_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.isdisjoint.html">rnalysis.enrichment.RankedSet.isdisjoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.issubset.html">rnalysis.enrichment.RankedSet.issubset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.issuperset.html">rnalysis.enrichment.RankedSet.issuperset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.kegg_enrichment.html">rnalysis.enrichment.RankedSet.kegg_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.non_categorical_enrichment.html">rnalysis.enrichment.RankedSet.non_categorical_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.pop.html">rnalysis.enrichment.RankedSet.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.remove.html">rnalysis.enrichment.RankedSet.remove</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.save_txt.html">rnalysis.enrichment.RankedSet.save_txt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_enrichment.html">rnalysis.enrichment.RankedSet.single_set_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_go_enrichment.html">rnalysis.enrichment.RankedSet.single_set_go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_kegg_enrichment.html">rnalysis.enrichment.RankedSet.single_set_kegg_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference.html">rnalysis.enrichment.RankedSet.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference_update.html">rnalysis.enrichment.RankedSet.symmetric_difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.translate_gene_ids.html">rnalysis.enrichment.RankedSet.translate_gene_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.union.html">rnalysis.enrichment.RankedSet.union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.update.html">rnalysis.enrichment.RankedSet.update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.user_defined_enrichment.html">rnalysis.enrichment.RankedSet.user_defined_enrichment</a></li>
 </ul>
 </li>
@@ -171,14 +188,38 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes.html#rnalysis.enrichment.RankedSet.biotypes" title="rnalysis.enrichment.RankedSet.biotypes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.biotypes</span></code></a>([ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.add.html#rnalysis.enrichment.RankedSet.add" title="rnalysis.enrichment.RankedSet.add"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.add</span></code></a></p></td>
+<td><p>Add an element to a set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_ref_table.html#rnalysis.enrichment.RankedSet.biotypes_from_ref_table" title="rnalysis.enrichment.RankedSet.biotypes_from_ref_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.biotypes_from_ref_table</span></code></a>([ref])</p></td>
 <td><p>Returns a DataFrame of the biotypes in the gene set and their count.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html#rnalysis.enrichment.RankedSet.change_set_name" title="rnalysis.enrichment.RankedSet.change_set_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.change_set_name</span></code></a>(new_name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html#rnalysis.enrichment.RankedSet.change_set_name" title="rnalysis.enrichment.RankedSet.change_set_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.change_set_name</span></code></a>(new_name)</p></td>
 <td><p>Change the 'set_name' of a FeatureSet to a new name.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html#rnalysis.enrichment.RankedSet.difference" title="rnalysis.enrichment.RankedSet.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.difference</span></code></a>(*others)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.clear.html#rnalysis.enrichment.RankedSet.clear" title="rnalysis.enrichment.RankedSet.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.clear</span></code></a></p></td>
+<td><p>Remove all elements from this set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.copy.html#rnalysis.enrichment.RankedSet.copy" title="rnalysis.enrichment.RankedSet.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.copy</span></code></a></p></td>
+<td><p>Return a shallow copy of a set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html#rnalysis.enrichment.RankedSet.difference" title="rnalysis.enrichment.RankedSet.difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.difference</span></code></a>(*others)</p></td>
 <td><p>Calculates the set difference of the indices from multiple FeatureSet objects         (the indices that appear in the first FeatureSet object but NOT in the other objects).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference_update.html#rnalysis.enrichment.RankedSet.difference_update" title="rnalysis.enrichment.RankedSet.difference_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.difference_update</span></code></a></p></td>
+<td><p>Remove all elements of another set from this set.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.discard.html#rnalysis.enrichment.RankedSet.discard" title="rnalysis.enrichment.RankedSet.discard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.discard</span></code></a></p></td>
+<td><p>Remove an element from a set if it is a member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_attribute.html#rnalysis.enrichment.RankedSet.filter_by_attribute" title="rnalysis.enrichment.RankedSet.filter_by_attribute"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.filter_by_attribute</span></code></a>([attributes, ...])</p></td>
+<td><p>Filters features according to user-defined attributes from an Attribute Reference Table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_go_annotations.html#rnalysis.enrichment.RankedSet.filter_by_go_annotations" title="rnalysis.enrichment.RankedSet.filter_by_go_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.filter_by_go_annotations</span></code></a>(go_ids[, ...])</p></td>
+<td><p>Filters genes according to GO annotations, keeping only genes that are annotated with a specific GO term.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_kegg_annotations.html#rnalysis.enrichment.RankedSet.filter_by_kegg_annotations" title="rnalysis.enrichment.RankedSet.filter_by_kegg_annotations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.filter_by_kegg_annotations</span></code></a>(kegg_ids)</p></td>
+<td><p>Filters genes according to KEGG pathways, keeping only genes that belong to specific KEGG pathway.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html#rnalysis.enrichment.RankedSet.go_enrichment" title="rnalysis.enrichment.RankedSet.go_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.go_enrichment</span></code></a>([organism, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Gene Ontology (GO) terms against a background set.</p></td>
@@ -186,11 +227,29 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html#rnalysis.enrichment.RankedSet.intersection" title="rnalysis.enrichment.RankedSet.intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.intersection</span></code></a>(*others)</p></td>
 <td><p>Calculates the set intersection of the indices from multiple FeatureSet objects         (the indices that exist in ALL of the FeatureSet objects).</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection_update.html#rnalysis.enrichment.RankedSet.intersection_update" title="rnalysis.enrichment.RankedSet.intersection_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.intersection_update</span></code></a></p></td>
+<td><p>Update a set with the intersection of itself and another.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.isdisjoint.html#rnalysis.enrichment.RankedSet.isdisjoint" title="rnalysis.enrichment.RankedSet.isdisjoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.isdisjoint</span></code></a></p></td>
+<td><p>Return True if two sets have a null intersection.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.issubset.html#rnalysis.enrichment.RankedSet.issubset" title="rnalysis.enrichment.RankedSet.issubset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.issubset</span></code></a></p></td>
+<td><p>Report whether another set contains this set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.issuperset.html#rnalysis.enrichment.RankedSet.issuperset" title="rnalysis.enrichment.RankedSet.issuperset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.issuperset</span></code></a></p></td>
+<td><p>Report whether this set contains another set.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.kegg_enrichment.html#rnalysis.enrichment.RankedSet.kegg_enrichment" title="rnalysis.enrichment.RankedSet.kegg_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.kegg_enrichment</span></code></a>([organism, ...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for Kyoto Encyclopedia of Genes and Genomes (KEGG)         curated pathways against a background set.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.non_categorical_enrichment.html#rnalysis.enrichment.RankedSet.non_categorical_enrichment" title="rnalysis.enrichment.RankedSet.non_categorical_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.non_categorical_enrichment</span></code></a>([...])</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for user-defined non-categorical attributes         against a background set using either a one-sample T-test or Sign test.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.pop.html#rnalysis.enrichment.RankedSet.pop" title="rnalysis.enrichment.RankedSet.pop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.pop</span></code></a></p></td>
+<td><p>Remove and return an arbitrary set element.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.remove.html#rnalysis.enrichment.RankedSet.remove" title="rnalysis.enrichment.RankedSet.remove"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.remove</span></code></a></p></td>
+<td><p>Remove an element from a set; it must be a member.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.save_txt.html#rnalysis.enrichment.RankedSet.save_txt" title="rnalysis.enrichment.RankedSet.save_txt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.save_txt</span></code></a>(fname)</p></td>
 <td><p>Save the list of features in the FeatureSet object under the specified filename and path.</p></td>
@@ -207,10 +266,19 @@
 <tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference.html#rnalysis.enrichment.RankedSet.symmetric_difference" title="rnalysis.enrichment.RankedSet.symmetric_difference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.symmetric_difference</span></code></a>(other)</p></td>
 <td><p>Calculates the set symmetric difference of the indices from two FeatureSet objects         (the indices that appear in EXACTLY ONE of the FeatureSet objects, and not both/neither).</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference_update.html#rnalysis.enrichment.RankedSet.symmetric_difference_update" title="rnalysis.enrichment.RankedSet.symmetric_difference_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.symmetric_difference_update</span></code></a></p></td>
+<td><p>Update a set with the symmetric difference of itself and another.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.translate_gene_ids.html#rnalysis.enrichment.RankedSet.translate_gene_ids" title="rnalysis.enrichment.RankedSet.translate_gene_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.translate_gene_ids</span></code></a>(translate_to[, ...])</p></td>
+<td><p>Translates gene names/IDs from one type to another.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.union.html#rnalysis.enrichment.RankedSet.union" title="rnalysis.enrichment.RankedSet.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.union</span></code></a>(*others)</p></td>
 <td><p>Calculates the set union of the indices from multiple FeatureSet objects         (the indices that exist in at least one of the FeatureSet objects).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.user_defined_enrichment.html#rnalysis.enrichment.RankedSet.user_defined_enrichment" title="rnalysis.enrichment.RankedSet.user_defined_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.user_defined_enrichment</span></code></a>(attributes)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.update.html#rnalysis.enrichment.RankedSet.update" title="rnalysis.enrichment.RankedSet.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.update</span></code></a></p></td>
+<td><p>Update a set with the union of itself and others.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rnalysis.enrichment.RankedSet.user_defined_enrichment.html#rnalysis.enrichment.RankedSet.user_defined_enrichment" title="rnalysis.enrichment.RankedSet.user_defined_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RankedSet.user_defined_enrichment</span></code></a>(attributes)</p></td>
 <td><p>Calculates enrichment and depletion of the FeatureSet for user-defined attributes against a background set.</p></td>
 </tr>
 </tbody>
@@ -222,7 +290,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="rnalysis.enrichment.FeatureSet.user_defined_enrichment.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.FeatureSet.user_defined_enrichment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rnalysis.enrichment.RankedSet.biotypes.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet.biotypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rnalysis.enrichment.RankedSet.add.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet.add" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rnalysis.enrichment.RankedSet.save_txt &mdash; RNAlysis 3.4.2 documentation</title>
+  <title>rnalysis.enrichment.RankedSet.save_txt &mdash; RNAlysis 3.5.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="shortcut icon" href="_static/favicon.ico"/>
@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="rnalysis.enrichment.RankedSet.single_set_enrichment" href="rnalysis.enrichment.RankedSet.single_set_enrichment.html" />
-    <link rel="prev" title="rnalysis.enrichment.RankedSet.non_categorical_enrichment" href="rnalysis.enrichment.RankedSet.non_categorical_enrichment.html" /> 
+    <link rel="prev" title="rnalysis.enrichment.RankedSet.remove" href="rnalysis.enrichment.RankedSet.remove.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -75,13 +75,27 @@
 <li class="toctree-l2"><a class="reference internal" href="rnalysis.enrichment.FeatureSet.html">rnalysis.enrichment.FeatureSet</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html">rnalysis.enrichment.RankedSet</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.html#rnalysis.enrichment.RankedSet"><code class="docutils literal notranslate"><span class="pre">RankedSet</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes.html">rnalysis.enrichment.RankedSet.biotypes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.add.html">rnalysis.enrichment.RankedSet.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.biotypes_from_ref_table.html">rnalysis.enrichment.RankedSet.biotypes_from_ref_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.change_set_name.html">rnalysis.enrichment.RankedSet.change_set_name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.clear.html">rnalysis.enrichment.RankedSet.clear</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.copy.html">rnalysis.enrichment.RankedSet.copy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference.html">rnalysis.enrichment.RankedSet.difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.difference_update.html">rnalysis.enrichment.RankedSet.difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.discard.html">rnalysis.enrichment.RankedSet.discard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_attribute.html">rnalysis.enrichment.RankedSet.filter_by_attribute</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_go_annotations.html">rnalysis.enrichment.RankedSet.filter_by_go_annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.filter_by_kegg_annotations.html">rnalysis.enrichment.RankedSet.filter_by_kegg_annotations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.go_enrichment.html">rnalysis.enrichment.RankedSet.go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection.html">rnalysis.enrichment.RankedSet.intersection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.intersection_update.html">rnalysis.enrichment.RankedSet.intersection_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.isdisjoint.html">rnalysis.enrichment.RankedSet.isdisjoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.issubset.html">rnalysis.enrichment.RankedSet.issubset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.issuperset.html">rnalysis.enrichment.RankedSet.issuperset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.kegg_enrichment.html">rnalysis.enrichment.RankedSet.kegg_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.non_categorical_enrichment.html">rnalysis.enrichment.RankedSet.non_categorical_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.pop.html">rnalysis.enrichment.RankedSet.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.remove.html">rnalysis.enrichment.RankedSet.remove</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">rnalysis.enrichment.RankedSet.save_txt</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#rnalysis.enrichment.RankedSet.save_txt"><code class="docutils literal notranslate"><span class="pre">RankedSet.save_txt()</span></code></a></li>
 </ul>
@@ -90,7 +104,10 @@
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_go_enrichment.html">rnalysis.enrichment.RankedSet.single_set_go_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.single_set_kegg_enrichment.html">rnalysis.enrichment.RankedSet.single_set_kegg_enrichment</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference.html">rnalysis.enrichment.RankedSet.symmetric_difference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.symmetric_difference_update.html">rnalysis.enrichment.RankedSet.symmetric_difference_update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.translate_gene_ids.html">rnalysis.enrichment.RankedSet.translate_gene_ids</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.union.html">rnalysis.enrichment.RankedSet.union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.update.html">rnalysis.enrichment.RankedSet.update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="rnalysis.enrichment.RankedSet.user_defined_enrichment.html">rnalysis.enrichment.RankedSet.user_defined_enrichment</a></li>
 </ul>
 </li>
@@ -154,7 +171,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="rnalysis.enrichment.RankedSet.non_categorical_enrichment.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.RankedSet.non_categorical_enrichment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rnalysis.enrichment.RankedSet.remove.html" class="btn btn-neutral float-left" title="rnalysis.enrichment.RankedSet.remove" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="rnalysis.enrichment.RankedSet.single_set_enrichment.html" class="btn btn-neutral float-right" title="rnalysis.enrichment.RankedSet.single_set_enrichment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
