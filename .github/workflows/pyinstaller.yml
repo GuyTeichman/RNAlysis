@@ -19,7 +19,14 @@ jobs:
                 uses: actions/checkout@v2
             -   name: Install dev requirements
                 run: python -m pip install --upgrade -r requirements_dev.txt
-            -   name: Get latest change log
+            -   name: Calculate checksums
+                run: python packaging/checksum_videos.py
+            -   uses: stefanzweifel/git-auto-commit-action@v4
+                with:
+                    # Commit message for the created commit.
+                    commit_message: Calculate quick-start video checksums
+                    file_pattern: 'rnalysis/gui/videos/checksums/*.txt'
+            -   name: Get latest changelog
                 run: python packaging/parse_changelog.py
             -   name: Create Release
                 id: create_release
