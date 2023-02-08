@@ -14,6 +14,7 @@ class QuickStartWizard(QtWidgets.QWizard):
         "Work on multiple tables at the same time",
         "Different types of tables offer different ways to filter and analyze your data",
         "Create and save graphs",
+        "Quickly look-up genes in your database of choice",
         "Sort your tabs and change their icons",
         "Restore tabs you closed",
         "Import lists of genes as Gene Sets",
@@ -51,6 +52,10 @@ class QuickStartWizard(QtWidgets.QWizard):
 
         "Some functions can generate graphs of your data. "
         "You can resize those graphs, and save them to your computer in multiple file formats. ",
+
+        "Easily get information about your genes with a right-click. "
+        "Select from a range of databases such as NCBI Genes, UniProtKB and others, "
+        "which can be configured from the settings menu. ",
 
         "To help organize your workspace, you can sort tabs by "
         "right-clicking a tab and choosing a sorting method. "
@@ -91,6 +96,7 @@ class QuickStartWizard(QtWidgets.QWizard):
         'new_tab.webp',
         'table_types.webp',
         'generate_graphs.webp',
+        'quick_search.webp',
         'sort_tabs.webp',
         'restore_tabs.webp',
         'import_gene_sets.webp',

@@ -64,6 +64,13 @@ Some functions can generate graphs of your data. You can resize those graphs, an
 
 .. image:: ../../rnalysis/gui/videos/generate_graphs.webp
 
+Quickly look-up genes in your database of choice
+==================================================
+Easily access information about your genes with a simple right-click.
+Select from a range of biological databases such as GeneCards, NCBI Genes, UniProtKB and others,
+which can be configured in the settings menu to fit your specific needs.
+.. image:: ../../rnalysis/gui/videos/quick_search.webp
+
 Sort your tabs and change their icons
 =====================================
 To help organize your workspace, you can sort tabs by right-clicking a tab and choosing a sorting method. You can also change specific tabs' colors, to help you differentiate them.
