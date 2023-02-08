@@ -2,8 +2,13 @@
 History
 =======
 
-3.5.0 (2023-02-??)
+3.5.0 (2023-02-08)
 ------------------
+This version introduces new features such as differential expression analysis with the Limma-Voom pipeline,
+customizable databases for the quick-search function, basic filtering and procrssing functions for gene sets,
+improved progammatic API for FeatureSet and RankedSet objects, and RPKM and TPM read count normalization.
+Several changes have been made to improve the user experience, including updated documentation,
+improved clarity of function tooltips, clearer output formats, and faster download speeds for tutorial videos.
 
 Added
 *******
